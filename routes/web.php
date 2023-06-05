@@ -301,6 +301,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/events/{id}/force', [EventController::class, 'forceDelete'])->name('events.force');
     Route::patch('/events/{id}/restore', [EventController::class, 'restore'])->name('events.restore');
 
+
+    //Shifts
+    Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])->name('shifts.plan');
+
     //EventTypes
     Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management');
     Route::post('/event_types', [EventTypeController::class, 'store'])->name('event_types.store');

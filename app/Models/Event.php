@@ -116,6 +116,10 @@ class Event extends Model
         return $this->hasMany(Shift::class);
     }
 
+    public function hasShifts(){
+        return collect($this->hasMany(Shift::class))->isNotEmpty();
+    }
+
     public function serializeDate(DateTimeInterface $date)
     {
         return $date->format('Y-m-d H:i:s');

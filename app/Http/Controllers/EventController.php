@@ -102,6 +102,15 @@ class EventController extends Controller
         ]);
     }
 
+    public function viewShiftPlan(Request $request): Response
+    {
+
+        $events = Event::with(['shifts'])->where('event.shifts', '!=', '[]')->get();
+        return inertia('Shifts/ShiftPlan', [
+            'events' => $events,
+        ]);
+    }
+
     /**
      * @param Request $request
      * @return Response

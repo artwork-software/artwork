@@ -216,6 +216,14 @@ const navigation = [
         has_permission: 'all'
     },
     {
+        name: 'Dienstplan',
+        href: route('shifts.plan'),
+        route: ['/shifts/view'],
+        svgSrc: '/Svgs/Sidebar/icon_shift_plan.svg',
+        svgSrc_active: '/Svgs/Sidebar/icon_shift_plan_active.svg',
+        has_permission: 'all'
+    },
+    {
         name: 'Aufgaben',
         href: route('tasks.own'),
         route: ['/tasks/own'],

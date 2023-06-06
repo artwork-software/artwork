@@ -39,12 +39,50 @@ MEILISEARCH_HOST=http://artwork_tools-meilisearch-1:7700
 docker-compose run --rm artisan migrate:fresh --seed
 ```
 
-6. To run `npm dev`, use the following command:
+6. Finally, visit the local development environment by opening your browser and navigating to [http://localhost](http://localhost).
+
+----------------
+
+To run various commands in the project, you can use the following instructions:
+
+- To run `npm` commands, use the following command:
 
 ```shell
-docker-compose run --rm npm run dev
+docker-compose run --rm npm <command>
 ```
 
-7. Finally, visit the local development environment by opening your browser and navigating to [http://localhost](http://localhost).
+For example, to install dependencies, you can run:
+
+```shell
+docker-compose run --rm npm install
+```
+
+- To run `composer` commands, use the following command:
+
+```shell
+docker-compose run --rm composer <command>
+```
+
+For example, to update dependencies, you can run:
+
+```shell
+docker-compose run --rm composer update
+```
+
+- To run `artisan` commands, use the following command:
+
+```shell
+docker-compose run --rm artisan <command>
+```
+
+For example, to generate a new migration file, you can run:
+
+```shell
+docker-compose run --rm artisan make:migration create_users_table
+```
+
+Feel free to use these commands to interact with the project and execute the necessary tasks efficiently.
+
+----------------
 
 Feel free to explore the features of Artwork and manage your projects effectively!

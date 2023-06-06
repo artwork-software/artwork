@@ -33,6 +33,7 @@ return new class extends Migration
             $table->boolean('temporary')->default(false);
             $table->date('employStart')->nullable();
             $table->date('employEnd')->nullable();
+            $table->boolean('can_master')->default(false);
             $table->timestamps();
         });
     }

@@ -17,7 +17,7 @@ export default defineComponent({
     props: ['item'],
     methods: {
         onDragStart(event) {
-            event.dataTransfer.setData('text/plain', this.item.id);
+            event.dataTransfer.setData('application/json', JSON.stringify([{id: this.item.id, master: this.item.can_master }])); // only pass the id
         }
     }
 })

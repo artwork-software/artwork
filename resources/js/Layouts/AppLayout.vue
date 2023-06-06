@@ -6,7 +6,6 @@
                 <div class="text-2xl font-bold text-secondaryHover">
                     <img src="/Svgs/Logos/artwork_logo_small.svg" class="h-16 w-16 mb-8" alt="artwork-logo"/>
                 </div>
-
                 <!-- <img alt="small-logo" v-else :src="$page.props.small_logo" class="rounded-full h-16 w-16"/> -->
                 <div class="flex-1 w-full space-y-1">
                     <a v-for="item in navigation" :key="item.name" :href="item.href"

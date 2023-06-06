@@ -42,8 +42,8 @@
                         </div>
                     </div>
 
-                    <div  @mousedown="preventContainerDrag">
-                        <div class="" v-for="user in users" >
+                    <div @mousedown="preventContainerDrag">
+                        <div v-for="user in users" >
                             <DragElement :item="user" />
                         </div>
                     </div>

@@ -5,6 +5,9 @@
             <div class=" flex items-center justify-between px-4 text-white text-xs relative" :class="shift.employee_count === shift.number_employees ? 'bg-green-500' : 'bg-gray-500'">
                 <div class="h-9 flex items-center">
                     {{shift.craft.abbreviation}} ({{ shift.employee_count }} / {{ shift.number_employees}})
+                    <span v-if="shift.number_masters > 0">
+                        ({{ shift.master_count }} / {{ shift.number_masters }})
+                    </span>
                 </div>
                 <div class="absolute flex items-center right-0">
                     <div v-if="shift.employee_count === shift.number_employees" class="h-9 flex items-center w-fit right-0 p-3">
@@ -21,12 +24,32 @@
                     </div>
                 </div>
             </div>
-            <div class="mt-1 h-[calc(100%-2.7rem)] bg-gray-200 p-4 max-h-96 overflow-x-scroll">
+            <div class="mt-1 h-[calc(100%-2.7rem)] bg-gray-200 p-1 max-h-96 overflow-x-scroll">
                 <p class="text-xs mb-1">
                     {{ shift.start }} - {{ shift.end }}
                     <span v-if="shift.break_minutes">| {{ shift.break_formatted }}</span>
                 </p>
                 <p class="text-xs mb-3">{{ shift.description }}</p>
+                <div v-for="user in shift.masters" class="">
+                    <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
+                        <div class="flex gap-2">
+                            <img :src="user.profile_photo_url" class="h-4 w-4 rounded-full block bg-gray-500 object-cover">
+                            <span class="text-xs flex">{{ user.full_name }}
+                            </span>
+                            <span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13.2" height="10.8" viewBox="0 0 13.2 10.8">
+                                    <path id="Icon_awesome-crown" data-name="Icon awesome-crown" d="M9.9,8.4H2.1a.3.3,0,0,0-.3.3v.6a.3.3,0,0,0,.3.3H9.9a.3.3,0,0,0,.3-.3V8.7A.3.3,0,0,0,9.9,8.4Zm1.2-6a.9.9,0,0,0-.9.9.882.882,0,0,0,.083.371l-1.358.814A.6.6,0,0,1,8.1,4.268L6.568,1.594a.9.9,0,1,0-1.136,0L3.9,4.267a.6.6,0,0,1-.829.218L1.719,3.671A.9.9,0,1,0,.9,4.2a.919.919,0,0,0,.144-.015L2.4,7.8H9.6l1.356-3.615A.919.919,0,0,0,11.1,4.2a.9.9,0,0,0,0-1.8Z" transform="translate(0.6 0.6)" fill="none" stroke="#82818a" stroke-width="1.2"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="hidden group-hover:block bg-buttonBlue rounded-full p-0.5" @click="removeUserFromShift(user.id, shift.id)">
+                            <XIcon class="h-3 w-3 text-white" />
+                        </div>
+                    </div>
+                </div>
+                <div v-for="user in shift.empty_master_count">
+                    <DropElement  :shift-id="shift.id" :master="true"/>
+                </div>
                 <div v-for="user in shift.employees" class="">
                     <div class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                         <div class="flex gap-2">
@@ -38,8 +61,8 @@
                         </div>
                     </div>
                 </div>
-                <div v-for="user in shift.empty_employee_count">
-                    <DropElement  :shift-id="shift.id"/>
+                <div v-for="user in shift.empty_employee_count ? shift.empty_employee_count : 0">
+                    <DropElement  :shift-id="shift.id" :master="false"/>
                 </div>
             </div>
         </div>
@@ -78,14 +101,6 @@ export default defineComponent({
     },
     methods: {
         dayjs,
-        onDragOver(event) {
-            event.preventDefault();
-        },
-        onDrop(event) {
-            event.preventDefault();
-            const item = event.dataTransfer.getData('text/plain');
-
-        },
         removeUserFromShift(user_id, shift_id){
             this.$inertia.delete(route('shifts.removeUser', shift_id),{
                 data: {

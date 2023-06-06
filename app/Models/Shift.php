@@ -29,7 +29,7 @@ class Shift extends Model
 
     protected $with = ['craft', 'employees', 'masters'];
 
-    protected $appends= ['break_formatted', 'employee_count', 'empty_employee_count'];
+    protected $appends= ['break_formatted', 'employee_count', 'empty_employee_count', 'master_count', 'empty_master_count'];
 
     public function event(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -58,6 +58,15 @@ class Shift extends Model
 
     public function getEmployeeCountAttribute(){
         return $this->employees()->count();
+    }
+
+    public function getEmptyMasterCountAttribute(){
+        $masterCount = $this->masters()->count();
+        return $this->number_masters - $masterCount;
+    }
+
+    public function getMasterCountAttribute(){
+        return $this->masters()->count();
     }
 
     public function getBreakFormattedAttribute(): string

@@ -105,8 +105,8 @@ class EventController extends Controller
 
     public function viewShiftPlan(Request $request): Response
     {
-        $calendar = new CalendarController();
-        $showCalendar = $calendar->createCalendarDataForShiftPlan();
+        $shiftPlan = new CalendarController();
+        $showCalendar = $shiftPlan->createCalendarDataForShiftPlan();
 
         if(\request('startDate') && \request('endDate')){
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
@@ -123,8 +123,10 @@ class EventController extends Controller
             ->get();
         return inertia('Shifts/ShiftPlan', [
             'events' => $events,
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => Project::all(),
-            'calendar' => $showCalendar['roomsWithEvents'],
+            'shiftPlan' => $showCalendar['roomsWithEvents'],
+            'rooms' => $shiftPlan->filterRooms($startDate, $endDate)->get(),
             'days' => $showCalendar['days'],
             'filterOptions' => $showCalendar['filterOptions'],
             'dateValue'=> $showCalendar['dateValue'],

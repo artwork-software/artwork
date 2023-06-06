@@ -69,7 +69,8 @@ class CalendarEventResource extends JsonResource
             'canAccept' => Auth::user()->can('update', $this->resource),
             'canDelete' => Auth::user()->can('delete', $this->resource),
             'subEvents' => SubEventResource::collection($this->subEvents),
-            'comments' => $this->comments()->get()
+            'comments' => $this->comments()->get(),
+            'shifts' => $this->shifts()->get(),
 
         ];
     }

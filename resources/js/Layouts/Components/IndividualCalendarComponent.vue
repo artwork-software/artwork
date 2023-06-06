@@ -427,16 +427,6 @@ export default {
     background-color: #a8bbbf;
 }
 
-.stickyHeader {
-    position: sticky;
-    align-self: flex-start;
-    position: -webkit-sticky;
-    display: block;
-    top: 60px;
-    z-index: 21;
-    background-color: #EDEDEC;
-}
-
 .stickyDays {
     position: sticky;
     align-self: flex-start;

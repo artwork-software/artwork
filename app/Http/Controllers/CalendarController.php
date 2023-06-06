@@ -237,12 +237,15 @@ class CalendarController extends Controller
                 ->with(['events.room', 'events.project', 'events.creator', 'events' => function ($query) use ($project, $room) {
                     $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC')->whereHas('shifts', function ($query) {
                         $query->whereNotNull('shifts.id');
-                    });;
+                    });
                 }])
                 ->get()
                 ->map(fn($room) => collect($calendarPeriod)
                     ->mapWithKeys(fn($date) => [
-                        $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
+                        $date->format('d.m.') => [
+                            'roomName' => $room->name,
+                            'events' => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
+                        ]
                     ]));
 
         return [

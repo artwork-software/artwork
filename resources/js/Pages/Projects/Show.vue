@@ -207,7 +207,7 @@
                 </div>
 
                 <div v-if="isShiftTab" class="mx-5 mt-6 p-5  bg-lightBackgroundGray">
-                    <ShiftTab :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" />
+                    <ShiftTab :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" :users="project.users"/>
                 </div>
                 <!-- Comment Tab -->
                 <div v-if="isCommentTab"

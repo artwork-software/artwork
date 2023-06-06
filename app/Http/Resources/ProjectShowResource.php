@@ -83,7 +83,7 @@ class ProjectShowResource extends JsonResource
                 'user' => $comment->user
             ]),
             'shift_relevant_event_types' => $this->shiftRelevantEventTypes()->get(),
-            'shift_contacts' => $this->shift_contact()->get()
+            'shift_contacts' => $this->shift_contact()->get(),
         ];
     }
 }

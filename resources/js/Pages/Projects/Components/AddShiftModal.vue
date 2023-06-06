@@ -36,7 +36,6 @@
                                                   required
                                            />
                                             <span class="text-xs text-red-500" v-show="helpTexts.start.length > 0">{{ helpTexts.start }}</span>
-                                            <span class="text-xs text-red-500" v-show="helpTexts.time.length > 0">{{ helpTexts.time }}</span>
 
                                        </div>
                                         <div>
@@ -47,6 +46,7 @@
                                                    required
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                             <span class="text-xs text-red-500" v-show="helpTexts.end.length > 0">{{ helpTexts.end }}</span>
+                                            <span class="text-xs text-red-500" v-show="helpTexts.time.length > 0">{{ helpTexts.time }}</span>
 
                                         </div>
                                        <div>
@@ -177,19 +177,18 @@ export default defineComponent({
         },
         saveShift(){
 
-            // Check if all fields are filled
-            if ( this.selectedCraft === null ){
-                this.helpTexts.craftText = 'Bitte wähle ein Gewerk aus.';
+            if(this.event.start > this.shift.start){
+                this.helpTexts.time = 'Die Schicht kann nicht vor dem Termin starten.';
                 return;
             } else {
-                this.helpTexts.craftText = '';
+                this.helpTexts.time = '';
             }
 
-            if ( this.shift.break_minutes === null ){
-                this.helpTexts.breakText = 'Bitte gib eine Pausenzeit an.';
+            if(this.event.end < this.shift.end){
+                this.helpTexts.time = 'Die Schicht kann nicht nach dem Termin enden.';
                 return;
             } else {
-                this.helpTexts.breakText = '';
+                this.helpTexts.time = '';
             }
 
             if ( this.shift.start === null ){
@@ -204,6 +203,20 @@ export default defineComponent({
                 return;
             } else {
                 this.helpTexts.end = '';
+            }
+
+            if ( this.selectedCraft === null ){
+                this.helpTexts.craftText = 'Bitte wähle ein Gewerk aus.';
+                return;
+            } else {
+                this.helpTexts.craftText = '';
+            }
+
+            if ( this.shift.break_minutes === null ){
+                this.helpTexts.breakText = 'Bitte gib eine Pausenzeit an.';
+                return;
+            } else {
+                this.helpTexts.breakText = '';
             }
 
             if(this.shift.start >= this.shift.end ){

@@ -79,7 +79,7 @@ class AuthUserSeeder extends Seeder
         ]);
         $user->calendar_settings()->create();
 
-        $user->givePermissionTo([PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::PROJECT_VIEW->value, PermissionNameEnum::EVENT_REQUEST->value, PermissionNameEnum::CONTRACT_SEE_DOWNLOAD->value]);
+        $user->givePermissionTo([PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::PROJECT_VIEW->value, PermissionNameEnum::EVENT_REQUEST->value, PermissionNameEnum::CONTRACT_SEE_DOWNLOAD->value, PermissionNameEnum::SHIFT_PLANNER->value]);
 
         foreach (NotificationConstEnum::cases() as $notificationType) {
 

@@ -58,7 +58,7 @@
         <div class="w-full flex items-center mb-4">
             <div class="xWhiteBold">Eintritt & Anmeldung</div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                           @click="openEntranceModal" v-if="projectMembersWriteAccess.includes($page.props.user.id) || $role('artwork admin')"/>
+                           @click="openEntranceModal" v-if="projectMembersWriteAccess.includes($page.props.user.id) || hasAdminRole()"/>
         </div>
         <div>
             <div class="text-secondary text-sm mb-1">Gäste:

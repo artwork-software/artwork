@@ -34,7 +34,8 @@ class UserShowResource extends JsonResource
             'permissions' => $this->getAllPermissions()->pluck('name'),
             'temporary' => $this->temporary,
             'employStart' => $this->employStart,
-            'employEnd' => $this->employEnd
+            'employEnd' => $this->employEnd,
+            'can_master' => $this->can_master,
         ];
     }
 }

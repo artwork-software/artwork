@@ -105,6 +105,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/users/{user}/areas', [UserController::class, 'update_area_status'])->name('user.areas.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
     Route::patch('/users/{user}', [UserController::class, 'temporaryUserUpdate'])->name('update.user.temporary');
+    Route::patch('/users/{user}/master', [UserController::class, 'updateCanMaster'])->name('user.update.can.master');
 
     Route::post('/users/reset-password', [UserController::class, 'reset_user_password'])->name('user.reset.password');
 
@@ -131,6 +132,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+    Route::patch('/projects/{project}/shiftDescription', [ProjectController::class, 'updateShiftDescription'])->name('projects.update.shift_description');
+    Route::patch('/projects/{project}/shiftContacts', [ProjectController::class, 'updateShiftContacts'])->name('projects.update.shift_contacts');
+    Route::patch('/projects/{project}/shiftRelevantEventTypes', [ProjectController::class, 'updateShiftRelevantEventTypes'])->name('projects.update.shift_event_types');
     Route::patch('/projects/{project}/attributes', [ProjectController::class, 'updateAttributes'])->name('projects.update_attributes');
     Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])->name('projects.update_team');
     Route::patch('/projects/{project}/updateDescription', [ProjectController::class, 'updateDescription'])->name('projects.update_description');
@@ -502,5 +506,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
         Route::delete('shift/delete/craft/{craft}', [\App\Http\Controllers\CraftController::class, 'destroy'])->name('craft.delete');
         Route::patch('shift/update/relevant/event-type/{eventType}', [\App\Http\Controllers\EventTypeController::class, 'updateRelevant'])->name('event-type.update.relevant');
     });
+
+    // timeline
+    Route::post('/project/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
+    Route::patch('/project/timelines/update', [ProjectController::class, 'updateTimeLines'])->name('update.timelines');
+    Route::post('/project/{event}/shift/store', [\App\Http\Controllers\ShiftController::class, 'store'])->name('event.shift.store');
+    Route::post('/project/{shift}/add/user', [\App\Http\Controllers\ShiftController::class, 'addShiftUser'])->name('add.shift.user');
+    Route::post('/project/{shift}/add/master', [\App\Http\Controllers\ShiftController::class, 'addShiftMaster'])->name('add.shift.master');
+    Route::delete('/project/{shift}/remove/user', [\App\Http\Controllers\ShiftController::class, 'removeUser'])->name('shifts.removeUser');
+    Route::delete('/project/{shift}/remove/master', [\App\Http\Controllers\ShiftController::class, 'removeMaster'])->name('shifts.removeMaster');
 });
 

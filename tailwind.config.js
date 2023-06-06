@@ -32,6 +32,7 @@ module.exports = {
                 buttonBlue:'#3017AD',
                 buttonHover:'#2D1FDE',
                 tagBg: 'rgba(48,23,173,0.1)',
+                tagBgGray: '#5E5C66',
                 tag: 'rgba(48,23,173,0.3)',
                 tagText: '#3017AD',
                 backgroundBlue: '#3017AD34',

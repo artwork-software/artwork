@@ -27,6 +27,7 @@ use App\Models\Column;
 use App\Models\ColumnCell;
 use App\Models\CompanyType;
 use App\Models\ContractType;
+use App\Models\Craft;
 use App\Models\Currency;
 use App\Models\Department;
 use App\Models\Event;
@@ -45,6 +46,7 @@ use App\Models\SubPositionRow;
 use App\Models\SubpositionSumDetail;
 use App\Models\Table;
 use App\Models\Task;
+use App\Models\TimeLine;
 use App\Models\User;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
@@ -240,6 +242,13 @@ class ProjectController extends Controller
         $project->departments()->sync($departments->pluck('id'));
 
         $this->generateBasicBudgetValues($project);
+
+        $eventRelevantEventTypes = EventType::where('relevant_for_shift', true)->get();
+        foreach ($eventRelevantEventTypes as $eventRelevantEventType ){
+            $project->shiftRelevantEventTypes()->create([
+                'event_type_id' => $eventRelevantEventType->id
+            ]);
+        }
 
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
@@ -1464,6 +1473,25 @@ class ProjectController extends Controller
 
         $events = $project->events()->get();
         $RoomsWithAudience = null;
+        $eventsWithRelevant = [];
+
+
+        $shiftRelevantEventTypes = $project->shiftRelevantEventTypes()->get();
+
+        $shiftRelevantEvents = $project->events()->whereIn('event_type_id', $shiftRelevantEventTypes->pluck('id'))->get();
+
+        //dd($shiftRelevantEvents);
+
+        foreach ($shiftRelevantEvents as $event){
+            $eventsWithRelevant[$event->id] = [
+                'event' => $event,
+                'timeline' => $event->timeline()->get(),
+                'shifts' => $event->shifts()->get(),
+                'event_type' => $event->event_type()->first(),
+                'room' => $event->room()->first(),
+            ];
+        }
+
         foreach ($events as $event){
             if(!$event->audience){
                 continue;
@@ -1481,6 +1509,8 @@ class ProjectController extends Controller
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
+
+        rsort($eventsWithRelevant);
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
@@ -1560,8 +1590,25 @@ class ProjectController extends Controller
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
             'projectMoneySources' => $project->moneySources()->get(),
-            'states' => ProjectStates::all()
+            'states' => ProjectStates::all(),
+            'eventsWithRelevant' => $eventsWithRelevant,
+            'crafts' => Craft::all(),
         ]);
+    }
+
+    public function addTimeLineRow(Event $event){
+        $event->timeline()->create();
+    }
+
+    public function updateTimeLines(Request $request){
+        foreach ($request->timelines as $timeline){
+            $findTimeLine = TimeLine::find($timeline['id']);
+            $findTimeLine->update([
+                'start' => $timeline['start'],
+                'end' => $timeline['end'],
+                'description' => $timeline['description']
+            ]);
+        }
     }
 
     /**
@@ -2202,4 +2249,15 @@ class ProjectController extends Controller
         Storage::delete('public/keyVisual/'. $project->key_visual_path);
         $project->update(['key_visual_path' => null]);
     }
+    public function updateShiftDescription(Request $request, Project $project){
+        $project->shift_description = $request->shiftDescription;
+        $project->save();
+    }
+    public function updateShiftContacts(Request $request, Project $project){
+        $project->shift_contact()->sync(collect($request->contactIds));
+    }
+    public function updateShiftRelevantEventTypes(Request $request, Project $project){
+        $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
+    }
+
 }

@@ -139,7 +139,7 @@
                         <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                             <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab?.name"
                                :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
-                               :aria-current="tab.current ? 'page' : undefined">
+                               :aria-current="tab.current ? 'page' : undefined" v-show="tab?.show">
                                 {{ tab?.name }}
                             </a>
                         </nav>
@@ -205,6 +205,10 @@
                     />
 
                 </div>
+
+                <div v-if="isShiftTab" class="mx-5 mt-6 p-5  bg-lightBackgroundGray">
+                    <ShiftTab :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" :users="project.users"/>
+                </div>
                 <!-- Comment Tab -->
                 <div v-if="isCommentTab"
                      class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
@@ -258,6 +262,7 @@
                         </div>
                     </div>
                 </div>
+
                 <!-- Info Tab -->
                 <div v-if="isInfoTab" class="mx-5 mt-6 p-5  bg-lightBackgroundGray">
                     <div class="grid grid-cols-6 mr-8">
@@ -501,6 +506,11 @@
                 :traits="{'categories': categories, 'genres': genres, 'sectors': sectors}"
                 :budget-access="access_budget"
             />
+            <ProjectShiftSidenav
+                v-else-if="isShiftTab"
+                :project="project"
+                :event-types="eventTypes"
+            />
             <ProjectSecondSidenav
                 v-else
                 :project="project"
@@ -585,6 +595,8 @@ import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendar
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import {isProjectMember} from "@/Helper/PermissionHelper";
 import Permissions from "@/mixins/Permissions.vue";
+import ShiftTab from "@/Pages/Projects/Components/ShiftTab.vue";
+import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
 
 export default {
     name: "ProjectShow",
@@ -627,9 +639,13 @@ export default {
         'calendarType',
         'eventsWithoutRoom',
         'filterOptions',
-        'personalFilters'
+        'personalFilters',
+        'eventsWithRelevant',
+        'crafts'
     ],
     components: {
+        ProjectShiftSidenav,
+        ShiftTab,
         ProjectSecondSidenav,
         ChecklistComponent,
         ProjectHistoryComponent,
@@ -684,7 +700,7 @@ export default {
         ProjectDataEditModal,
         PlusIcon, SwitchGroup, SwitchLabel,
         IndividualCalendarAtGlanceComponent,
-        IndividualCalendarComponent
+        IndividualCalendarComponent,
     },
     mixins: [Permissions],
     computed: {
@@ -695,22 +711,14 @@ export default {
             return this.$page.props.errors;
         },
         tabs() {
-            if (this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)) {
-                return [
-                    {name: 'Projektinformationen', href: '#', current: this.isInfoTab},
-                    {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
-                    {name: 'Checklisten', href: '#', current: this.isChecklistTab},
-                    {name: 'Kommentare', href: '#', current: this.isCommentTab},
-                    {name: 'Budget', href: '#', current: this.isBudgetTab}
-                ]
-            } else {
-                return [
-                    {name: 'Projektinformationen', href: '#', current: this.isInfoTab},
-                    {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
-                    {name: 'Checklisten', href: '#', current: this.isChecklistTab},
-                    {name: 'Kommentare', href: '#', current: this.isCommentTab},
-                ]
-            }
+            return [
+                {name: 'Projektinformationen', href: '#', current: this.isInfoTab, show: true},
+                {name: 'Ablaufplan', href: '#', current: this.isScheduleTab, show: true},
+                {name: 'Checklisten', href: '#', current: this.isChecklistTab, show: true},
+                {name: 'Schichten', href: '#', current: this.isShiftTab, show: true},
+                {name: 'Budget', href: '#', current: this.isBudgetTab, show: this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)},
+                {name: 'Kommentare', href: '#', current: this.isCommentTab, show: true},
+            ]
         },
         historyTabs() {
             if (this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id)) {
@@ -808,6 +816,7 @@ export default {
             editingProject: false,
             isScheduleTab: this.openTab ? this.openTab === 'calendar' : false,
             isChecklistTab: this.openTab ? this.openTab === 'checklist' : false,
+            isShiftTab: this.openTab ? this.openTab === 'shift' : false,
             isInfoTab: this.openTab ? this.openTab === 'info' : false,
             isBudgetTab: this.openTab ? this.openTab === 'budget' : false,
             isCommentTab: this.openTab ? this.openTab === 'comment' : false,
@@ -1002,6 +1011,7 @@ export default {
             this.isInfoTab = false;
             this.isBudgetTab = false;
             this.isCommentTab = false;
+            this.isShiftTab = false;
             if (selectedTab.name === 'Ablaufplan') {
                 this.isScheduleTab = true;
             } else if (selectedTab.name === 'Checklisten') {
@@ -1010,6 +1020,8 @@ export default {
                 this.isInfoTab = true;
             } else if (selectedTab.name === 'Kommentare') {
                 this.isCommentTab = true;
+            } else if (selectedTab.name === 'Schichten') {
+                this.isShiftTab = true;
             } else {
                 this.isBudgetTab = true;
             }

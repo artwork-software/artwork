@@ -86,7 +86,7 @@ class Event extends Model
     ];
 
     protected $appends = [
-        'days_of_event',
+        'days_of_event', 'start_time_without_day', 'end_time_without_day'
     ];
 
     public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -116,6 +116,15 @@ class Event extends Model
         return $this->hasMany(Shift::class);
     }
 
+    public function getStartTimeWithoutDayAttribute()
+    {
+        return Carbon::parse($this->start_time)->format('H:i');
+    }
+
+    public function getEndTimeWithoutDayAttribute()
+    {
+        return Carbon::parse($this->end_time)->format('H:i');
+    }
 
     public function serializeDate(DateTimeInterface $date)
     {

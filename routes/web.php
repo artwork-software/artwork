@@ -514,5 +514,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/project/{shift}/add/user', [\App\Http\Controllers\ShiftController::class, 'addShiftUser'])->name('add.shift.user');
     Route::post('/project/{shift}/add/master', [\App\Http\Controllers\ShiftController::class, 'addShiftMaster'])->name('add.shift.master');
     Route::delete('/project/{shift}/remove/user', [\App\Http\Controllers\ShiftController::class, 'removeUser'])->name('shifts.removeUser');
+    Route::delete('/project/{shift}/remove/master', [\App\Http\Controllers\ShiftController::class, 'removeMaster'])->name('shifts.removeMaster');
 });
 

@@ -42,7 +42,7 @@
                                 </svg>
                             </span>
                         </div>
-                        <div class="hidden group-hover:block bg-buttonBlue rounded-full p-0.5" @click="removeUserFromShift(user.id, shift.id)">
+                        <div class="hidden group-hover:block bg-buttonBlue rounded-full p-0.5" @click="removeMasterFromShift(user.id, shift.id)">
                             <XIcon class="h-3 w-3 text-white" />
                         </div>
                     </div>
@@ -103,6 +103,14 @@ export default defineComponent({
         dayjs,
         removeUserFromShift(user_id, shift_id){
             this.$inertia.delete(route('shifts.removeUser', shift_id),{
+                data: {
+                    user_id: user_id
+                },
+                preserveScroll: true,
+            });
+        },
+        removeMasterFromShift(user_id, shift_id){
+            this.$inertia.delete(route('shifts.removeMaster', shift_id),{
                 data: {
                     user_id: user_id
                 },

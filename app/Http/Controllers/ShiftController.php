@@ -104,4 +104,8 @@ class ShiftController extends Controller
     public function removeUser(Request $request, Shift $shift){
         $shift->employees()->detach($request->user_id);
     }
+
+    public function removeMaster(Request $request, Shift $shift){
+        $shift->masters()->detach($request->user_id);
+    }
 }

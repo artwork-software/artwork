@@ -2,7 +2,7 @@
     <div>
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1" :class="eventType.svg_name">
-                {{ eventType.abbreviation }}: {{ project.name }}
+                {{ eventType.abbreviation }}: {{ project?.name }}
             </div>
             <div class="bg-backgroundGray">
                 <div v-for="shift in event.shifts" class="flex justify-between px-1">

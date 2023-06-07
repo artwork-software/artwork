@@ -258,7 +258,7 @@ export default {
             if (this.$page.props.user.id === user.id && user.project_management) {
                 return true;
             }
-            if ($role('artwork admin')) {
+            if (this.hasAdminRole()) {
                 return true;
             }
             return false;

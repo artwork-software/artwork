@@ -1,52 +1,88 @@
-
 ## About Artwork
 
-Artwork is a project organisation tool. 
-It enables the scheduling of projects with multiple events, tasks, and responsibilities. 
+![Artwork Logo](https://artwork.software/wp-content/uploads/2023/05/artwork-logo.svg)
+
+Artwork is a project organization tool that allows you to schedule projects with multiple events, tasks, and responsibilities. It helps you keep track of all the essential components of your projects.
 
 ## Installation
 
-This projects support Docker using Sail, which means `docker-compose up` will give work as well
-as `./vendor/bin/sail up`.
+To install and run this project, please follow the steps below:
 
-After that run the following scripts to install dependencies and compile inertia:
+1. Clone the repository to your local machine:
 
 ```shell
-./vendor/bin/sail npm install
-./vendor/bin/sail npx mix
+git clone <repository_url>
 ```
 
-To migrate and seed the roles
+2. Build the Docker containers by running the following command in your terminal:
 
 ```shell
-./vendor/bin/sail artisan migrate:fresh
-./vendor/bin/sail artisan db:seed --class=TestDatabaseSeeder
+docker-compose build --no-cache
 ```
 
-Visit local development on http://localhost 
+3. Once the build is complete, start the containers:
 
-## Meilisearch
-
-Meilisearch is included in the Docker container and provides searchable indexes. 
-The Search Console can be viewed at: `http://0.0.0.0:7700/`
-
-To add Models to the index the artisan commands can be used: 
 ```shell
-./vendor/bin/sail artisan scout:import "App\Models\Department"
-./vendor/bin/sail artisan scout:import "App\Models\User"
-```
-
-## Push Notification
-To start the websocket server use this command:
-```shell
-./vendor/bin/sail artisan websockets:serve 
+docker-compose up -d
 ```
 
 
-## Debugging
+4. Update the `.env` file and change the MeiliSearch IP address accordingly:
 
-With PHPStorm mind to select the correct Interpreter (laravel.test), install the PEST Plugin and to include 
-`SAIL_XDEBUG_MODE=develop,debug,coverage` in your .env file. 
+```shell
+MEILISEARCH_HOST=http://artwork_tools-meilisearch-1:7700
+```
 
-Debugging hint: On Mac set the docker.host to `docker.for.mac.host.internal`. 
-`
+5. To migrate the database with fresh data, use the following command:
+
+```shell
+docker-compose run --rm artisan migrate:fresh --seed
+```
+
+6. Finally, visit the local development environment by opening your browser and navigating to [http://localhost](http://localhost).
+
+----------------
+
+To run various commands in the project, you can use the following instructions:
+
+- To run `npm` commands, use the following command:
+
+```shell
+docker-compose run --rm npm <command>
+```
+
+For example, to install dependencies, you can run:
+
+```shell
+docker-compose run --rm npm install
+```
+
+- To run `composer` commands, use the following command:
+
+```shell
+docker-compose run --rm composer <command>
+```
+
+For example, to update dependencies, you can run:
+
+```shell
+docker-compose run --rm composer update
+```
+
+- To run `artisan` commands, use the following command:
+
+```shell
+docker-compose run --rm artisan <command>
+```
+
+For example, to generate a new migration file, you can run:
+
+```shell
+docker-compose run --rm artisan make:migration create_users_table
+```
+
+Feel free to use these commands to interact with the project and execute the necessary tasks efficiently.
+
+----------------
+
+Feel free to explore the features of Artwork and manage your projects effectively!

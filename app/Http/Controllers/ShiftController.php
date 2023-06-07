@@ -91,4 +91,21 @@ class ShiftController extends Controller
     {
         //
     }
+
+    public function addShiftUser(Request $request, Shift $shift){
+        $shift->employees()->attach($request->user_id);
+    }
+
+    public function addShiftMaster(Request $request, Shift $shift): void
+    {
+        $shift->masters()->attach($request->user_id);
+    }
+
+    public function removeUser(Request $request, Shift $shift){
+        $shift->employees()->detach($request->user_id);
+    }
+
+    public function removeMaster(Request $request, Shift $shift){
+        $shift->masters()->detach($request->user_id);
+    }
 }

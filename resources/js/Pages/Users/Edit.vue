@@ -43,7 +43,25 @@
                             </div>
 
                             <div class="max-w-screen-lg py-4 pl-20 pr-4" v-if="currentTab === 3">
+                                // Can Master
+                                <div>
+                                    <SwitchGroup as="div" class="flex items-center">
+                                        <Switch v-model="userForm.can_master" :class="[userForm.can_master ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                                            <span aria-hidden="true" :class="[userForm.can_master ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                                        </Switch>
+                                        <SwitchLabel as="span" class="ml-3 text-sm">
+                                            <span class="text-gray-900">Als Meister einsetzbar</span>
+                                        </SwitchLabel>
+                                    </SwitchGroup>
+                                </div>
 
+                                <p>
+                                    Lege fest ob die Mitarbeiterin / der Mitarbeiter als Meister eingesetzt werden kann. Du kannst hierfür eigene Stundensätze festlegen.
+                                </p>
+
+                                <AddButton @click="updateCanMaster"
+                                           class=" inline-flex items-center px-12 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                           text="Einstellungen ändern" mode="modal"/>
                             </div>
 
                             <div class="max-w-screen-lg pl-20 pr-4" v-if="currentTab === 4">
@@ -410,7 +428,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
-
+import { Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue'
 
 export default defineComponent({
     mixins: [Permissions],
@@ -448,7 +466,7 @@ export default defineComponent({
         TeamIconCollection,
         JetValidationErrors,
         CheckIcon,
-        InformationCircleIcon
+        InformationCircleIcon, Switch, SwitchGroup, SwitchLabel
     },
     props: ['user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles', 'calendarData','dateToShow','vacations'],
     data() {
@@ -468,7 +486,8 @@ export default defineComponent({
                 phone_number: this.user_to_edit.phone_number,
                 description: this.user_to_edit.description,
                 permissions: this.user_to_edit.permissions,
-                roles: this.user_to_edit.roles
+                roles: this.user_to_edit.roles,
+                can_master: this.user_to_edit.can_master,
             }),
             resetPasswordForm: this.$inertia.form({
                 email: this.user_to_edit.email
@@ -550,7 +569,16 @@ export default defineComponent({
             this.userForm.departments = [];
             this.userForm.patch(route('user.update', this.user_to_edit.id));
             this.openSuccessModal();
-        }
+        },
+        updateCanMaster(){
+            this.userForm.patch(route('user.update.can.master', this.user_to_edit.id), {
+                can_master: this.user_to_edit.can_master,
+                preserveScroll: true,
+                onFinish: () => {
+                    this.openSuccessModal();
+                },
+            });
+        },
     },
 })
 </script>

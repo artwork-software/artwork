@@ -84,7 +84,8 @@ class User extends Authenticatable
         'opened_areas',
         'temporary',
         'employStart',
-        'employEnd'
+        'employEnd',
+        'can_master'
     ];
 
     /**
@@ -98,6 +99,7 @@ class User extends Authenticatable
         'opened_areas' => 'array',
         'toggle_hints' => 'boolean',
         'temporary' => 'boolean',
+        'can_master' => 'boolean',
     ];
 
     /**

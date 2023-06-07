@@ -28,18 +28,22 @@
 
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3" v-for="time in timeLine">
-                                        <input type="time"
-                                               placeholder="Name des Gewerks*"
-                                               v-model="time.start"
-                                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                               required
-                                        />
-                                        <input type="time"
-                                               placeholder="Abkürzung*"
-                                               v-model="time.end"
-                                               maxlength="3"
-                                               required
-                                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                        <div>
+                                            <input type="time"
+                                                   placeholder="Start*"
+                                                   v-model="time.start"
+                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                   required
+                                            />
+                                        </div>
+                                        <div>
+                                            <input type="time"
+                                                   placeholder="Ende*"
+                                                   v-model="time.end"
+                                                   maxlength="3"
+                                                   required
+                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                        </div>
                                         <div class="mt-2 col-span-2">
                                             <textarea v-model="time.description" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
                                         </div>
@@ -88,7 +92,7 @@ export default defineComponent({
     props: ['event', 'timeLine'],
     data(){
         return {
-            open: true
+            open: true,
         }
     },
     emits: ['closed'],

@@ -87,7 +87,7 @@
                 <div v-if="contracts?.length > 0">
                     <div v-for="contract in contracts">
                         <div
-                            v-if="contract.accessibleUsers.filter(user => user.id === $page.props.user.id).length > 0 || $page.props.is_admin"
+                            v-if="contract.accessibleUsers.filter(user => user.id === $page.props.user.id).length > 0 || hasAdminRole()"
                             class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
                         >
                             <DownloadIcon class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>

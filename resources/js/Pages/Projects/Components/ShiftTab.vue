@@ -76,8 +76,6 @@ export default defineComponent({
         return {
             enabled: false,
             userWindow: false,
-            top: 0,
-            left: 0,
         }
     },
     mounted() {

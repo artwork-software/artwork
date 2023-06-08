@@ -1,12 +1,12 @@
 <template>
     <div>
         <div>
-            <div class="text-secondaryHover xsWhiteBold px-1" :class="eventType.svg_name">
+            <div class="text-secondaryHover xsWhiteBold px-1 py-1" :class="eventType.svg_name">
                 {{ eventType.abbreviation }}: {{ project?.name }}
             </div>
             <div class="bg-backgroundGray">
                 <div v-for="shift in event.shifts" class="flex justify-between px-1">
-                    <div class="flex">
+                    <div class="flex text-sm subpixel-antialiased text-shiftText">
                         {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
                         ({{ shift.employee_count }}/{{ shift.number_employees }}
                         <span v-if="shift.number_masters > 0">

@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div id="shiftPlan" class="bg-white w-[98%]">
+        <div id="shiftPlan" class="bg-white w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
             <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
                                   @next-time-range="nextTimeRange"
                                   :date-value="dateValue"
@@ -9,24 +9,24 @@
             <table class="w-full bg-white relative">
                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                 <div>
-                    <tr class="flex w-full bg-secondaryHover">
-                        <th class="w-40"></th>
-                        <th v-for="day in days" class="flex w-64 h-16 items-center">
-                            <div class="flex calendarRoomHeader font-semibold">
+                    <tr class="flex w-full bg-secondaryHover stickyHeader">
+                        <th :style="{minWidth: 164 + 'px'}"></th>
+                        <th v-for="day in days" :style="{minWidth: 200 + 'px'}" class="h-16 py-3 border-r-4 border-secondaryHover truncate">
+                            <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
                                 {{ day.day_string }} {{ day.day }}
                             </div>
                         </th>
                     </tr>
                     <tbody class="w-full pt-3">
                     <tr v-for="(room,index) in shiftPlan" class="w-full flex">
-                        <th class="xsDark flex items-center text-right -mt-2 pr-1 h-28 w-40"
-                            :class="index % 2 === 0 ? 'bg-backgroundGray' : ''">
+                        <th class="xsDark flex items-center -mt-2 h-28 w-40"
+                            :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen ? 'stickyYAxisNoMarginLeft' : 'stickyYAxis']">
                             <Link class="flex font-semibold items-center ml-4">
                                 {{ room[days[0].day].roomName }}
                             </Link>
                         </th>
-                        <td v-for="day in days">
-                            <div v-for="event in room[day.day].events.data" class="w-64 pr-2">
+                        <td v-for="day in days" :style="{minWidth: 200 + 'px'}" class="max-h-28 overflow-y-auto cell">
+                            <div v-for="event in room[day.day].events.data" class="mb-1">
                                 <SingleShiftPlanEvent :eventType="this.findEventTypeById(event.eventTypeId)"
                                                       :project="this.findProjectById(event.projectId)" :event="event"/>
                             </div>
@@ -141,7 +141,9 @@ export default {
         },
     },
     data() {
-        return {}
+        return {
+            isFullscreen: false,
+        }
     },
 }
 
@@ -171,6 +173,29 @@ export default {
 
 ::-webkit-scrollbar-thumb:hover {
     background-color: #a8bbbf;
+}
+.stickyHeader {
+    position: sticky;
+    align-self: flex-start;
+    position: -webkit-sticky;
+    display: block;
+    top: 60px;
+    z-index: 23;
+}
+.stickyYAxis {
+    position: sticky;
+    align-self: flex-start;
+    position: -webkit-sticky;
+    left: 60px;
+    z-index: 22;
+}
+
+.stickyYAxisNoMarginLeft {
+    position: sticky;
+    align-self: flex-start;
+    position: -webkit-sticky;
+    left: 0;
+    z-index: 22;
 }
 
 </style>

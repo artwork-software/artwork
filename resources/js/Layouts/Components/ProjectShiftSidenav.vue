@@ -10,8 +10,8 @@
             </div>
         </div>
         <div>
-            <div class="flex py-2">
-                <div v-for="eventType in this.project.shift_relevant_event_types">
+            <div class="flex py-2 w-72 flex-wrap">
+                <div class="flex" v-for="eventType in this.project.shift_relevant_event_types">
                     <TagComponent type="gray" :displayed-text="eventType.name" hideX="true"></TagComponent>
                 </div>
             </div>

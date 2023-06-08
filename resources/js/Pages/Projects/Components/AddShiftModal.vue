@@ -156,7 +156,7 @@ export default defineComponent({
             this.$emit('closed', bool);
         },
         saveShift(){
-            this.shift.craft_id = this.selectedCraft.id;
+            this.shift.craft_id = this.selectedCraft?.id;
             this.shift.post(route('event.shift.store', this.event.id), {
                 preserveScroll: true,
                 onSuccess: () => {

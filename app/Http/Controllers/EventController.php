@@ -108,12 +108,19 @@ class EventController extends Controller
         $shiftPlan = new CalendarController();
         $showCalendar = $shiftPlan->createCalendarDataForShiftPlan();
 
+        $shiftFilterController = new ShiftFilterController();
+        $shiftFilters = $shiftFilterController->index();
+
         if(\request('startDate') && \request('endDate')){
+
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
+
         }else{
+
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
+
         }
 
         $events = Event::with(['shifts','event_type'])
@@ -121,6 +128,7 @@ class EventController extends Controller
                 $query->whereNotNull('shifts.id');
             })
             ->get();
+
         return inertia('Shifts/ShiftPlan', [
             'events' => $events,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
@@ -130,7 +138,7 @@ class EventController extends Controller
             'days' => $showCalendar['days'],
             'filterOptions' => $showCalendar['filterOptions'],
             'dateValue'=> $showCalendar['dateValue'],
-            'personalFilters' => $showCalendar['personalFilters'],
+            'personalFilters' => $shiftFilters,
             'selectedDate' => $showCalendar['selectedDate'],
         ]);
     }

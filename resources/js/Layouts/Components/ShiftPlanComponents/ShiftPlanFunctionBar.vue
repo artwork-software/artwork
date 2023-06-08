@@ -23,9 +23,18 @@
                 <img v-if="!isFullscreen" @click="enterFullscreenMode"
                      src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
                 <!-- PAUL HIER DAS NEUE FILTER COMPONENT EINBAUEN -->
+                <ShiftPlanFilter
+                    class="mt-1"
+                    :filter-options="filterOptions"
+                    :personal-filters="personalFilters"
+                    @filters-changed="filtersChanged"
+                />
 
             </div>
         </div>
+    </div>
+    <div class="mb-1 ml-4 flex items-center w-full">
+        <BaseFilterTag type="calendar" v-for="activeFilter in activeFilters" :filter="activeFilter.name" />
     </div>
 </template>
 
@@ -38,12 +47,16 @@ import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCa
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
+import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 
 
 export default {
     name: "CalendarFunctionBar",
     mixins: [Permissions],
     components: {
+        BaseFilterTag,
+        ShiftPlanFilter,
         Dropdown,
         Button,
         PlusCircleIcon,

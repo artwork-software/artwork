@@ -5,6 +5,8 @@
                                   @next-time-range="nextTimeRange"
                                   :date-value="dateValue"
                                   :all-shifts-committed="true"
+                                  :filter-options="filterOptions"
+                                  :personal-filters="personalFilters"
                                   @enterFullscreenMode="openFullscreen"></ShiftPlanFunctionBar>
             <table class="w-full bg-white relative">
                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->

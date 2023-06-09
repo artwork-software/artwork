@@ -426,7 +426,6 @@ export default {
 ::-webkit-scrollbar-thumb:hover {
     background-color: #a8bbbf;
 }
-
 .stickyHeader {
     position: sticky;
     align-self: flex-start;

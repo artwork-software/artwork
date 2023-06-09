@@ -86,14 +86,14 @@
 
 
             <div class="mt-10">
-                <h4 class="mb-6">Schichtrelevante Termintypen</h4>
+                <h4 class="mb-6 headline2">Schichtrelevante Termintypen</h4>
                 <p class="xxsLight">
                     Lege fest, welche Termintypen standardmäßig als Schichtrelevant angezeigt werden.
                     Diese werden dann automatisch im Projekttab „Schichten“ angezeigt.
                     Auf Projektebene kannst du weitere Termine als schichtrelevant definieren.
                 </p>
 
-                <div>
+                <div class="mt-3">
                     <Listbox as="div">
                         <div class="relative mt-2 w-1/2">
                             <ListboxButton class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">

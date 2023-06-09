@@ -42,6 +42,7 @@ module.exports = {
                 userBg: '#EDEDEC',
                 colorOfAction: '#E8E4f5',
                 menuButtonBlue: '#3017AD',
+                shiftText: '#82818A',
                 "vtd-primary": colors.sky,
                 "vtd-secondary": colors.gray,
             },

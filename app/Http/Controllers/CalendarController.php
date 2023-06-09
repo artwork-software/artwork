@@ -177,6 +177,7 @@ class CalendarController extends Controller
                 $endDate = Carbon::now()->addWeeks()->endOfDay();
             }
 
+
             $better = $this->filterRooms($startDate, $endDate)
                 ->with(['events.room', 'events.project', 'events.creator', 'events' => function ($query) use ($project, $room) {
                     $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC');
@@ -201,6 +202,58 @@ class CalendarController extends Controller
             'selectedDate' => $selectedDate,
             'roomsWithEvents' => $better,
             'eventsWithoutRoom' => $eventsWithoutRooms,
+            'filterOptions' => $this->getFilters(),
+            'personalFilters' => $filterController->index()
+        ];
+    }
+    public function createCalendarDataForShiftPlan(?Project $project = null, ?Room $room = null)
+    {
+        $selectedDate = null;
+        $this->startDate = Carbon::now()->startOfDay();
+
+        $filterController = new FilterController();
+        $this->endDate = Carbon::now()->addWeeks()->endOfDay();
+        $this->setDefaultDates();
+
+        $calendarPeriod = CarbonPeriod::create($this->startDate, $this->endDate);
+        $periodArray = [];
+
+        foreach ($calendarPeriod as $period) {
+            $periodArray[] = [
+                'day' => $period->format('d.m.'),
+                'day_string' => $period->shortDayName,
+                'is_weekend' => $period->isWeekend()
+            ];
+        }
+            if (\request('startDate') && \request('endDate')) {
+                $startDate = Carbon::create(\request('startDate'))->startOfDay();
+                $endDate = Carbon::create(\request('endDate'))->endOfDay();
+            } else {
+                $startDate = Carbon::now()->startOfDay();
+                $endDate = Carbon::now()->addWeeks()->endOfDay();
+            }
+
+            $better = $this->filterRooms($startDate, $endDate)
+                ->with(['events.room', 'events.project', 'events.creator', 'events' => function ($query) use ($project, $room) {
+                    $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC')->whereHas('shifts', function ($query) {
+                        $query->whereNotNull('shifts.id');
+                    });
+                }])
+                ->get()
+                ->map(fn($room) => collect($calendarPeriod)
+                    ->mapWithKeys(fn($date) => [
+                        $date->format('d.m.') => [
+                            'roomName' => $room->name,
+                            'events' => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
+                        ]
+                    ]));
+
+        return [
+            'days' => $periodArray,
+            'dateValue' => [$this->startDate->format('Y-m-d'), $this->endDate->format('Y-m-d')],
+            // Selected Date is needed for change from individual Calendar to VueCal-Daily, so that vuecal knows which date to load
+            'selectedDate' => $selectedDate,
+            'roomsWithEvents' => $better,
             'filterOptions' => $this->getFilters(),
             'personalFilters' => $filterController->index()
         ];

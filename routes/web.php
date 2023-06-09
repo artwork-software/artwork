@@ -35,6 +35,7 @@ use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\SectorController;
+use App\Http\Controllers\ShiftFilterController;
 use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\SumDetailsController;
 use App\Http\Controllers\TaskController;
@@ -277,6 +278,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/filters', [FilterController::class, 'store']);
     Route::delete('/filters/{filter}', [FilterController::class, 'destroy']);
 
+    //Shift Filters
+    Route::get('/shifts/filters', [ShiftFilterController::class, 'index']);
+    Route::post('/shifts/filters', [ShiftFilterController::class, 'store']);
+    Route::delete('/shifts/filters/{filter}', [ShiftFilterController::class, 'destroy']);
+
     /**
      * Event Views
      */
@@ -301,6 +307,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     //Trash
     Route::delete('/events/{id}/force', [EventController::class, 'forceDelete'])->name('events.force');
     Route::patch('/events/{id}/restore', [EventController::class, 'restore'])->name('events.restore');
+
+
+    //Shifts
+    Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])->name('shifts.plan');
 
     //EventTypes
     Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management');

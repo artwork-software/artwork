@@ -15,6 +15,7 @@ use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\TaskIndexResource;
+use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Project;
@@ -99,6 +100,46 @@ class EventController extends Controller
             'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters']
+        ]);
+    }
+
+    public function viewShiftPlan(Request $request): Response
+    {
+        $shiftPlan = new CalendarController();
+        $showCalendar = $shiftPlan->createCalendarDataForShiftPlan();
+
+        $shiftFilterController = new ShiftFilterController();
+        $shiftFilters = $shiftFilterController->index();
+
+        if(\request('startDate') && \request('endDate')){
+
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+
+        }else{
+
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+
+        }
+
+        $events = Event::with(['shifts','event_type'])
+            ->whereHas('shifts', function ($query) {
+                $query->whereNotNull('shifts.id');
+            })
+            ->get();
+
+        return inertia('Shifts/ShiftPlan', [
+            'events' => $events,
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'projects' => Project::all(),
+            'shiftPlan' => $showCalendar['roomsWithEvents'],
+            'rooms' => $shiftPlan->filterRooms($startDate, $endDate)->get(),
+            'days' => $showCalendar['days'],
+            'filterOptions' => $showCalendar['filterOptions'],
+            'dateValue'=> $showCalendar['dateValue'],
+            'personalFilters' => $shiftFilters,
+            'selectedDate' => $showCalendar['selectedDate'],
         ]);
     }
 

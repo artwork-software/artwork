@@ -386,6 +386,10 @@
 
             </template>
         </jet-dialog-modal>
+
+        <pre>
+            {{ shifts }}
+        </pre>
     </app-layout>
 </template>
 
@@ -468,7 +472,7 @@ export default defineComponent({
         CheckIcon,
         InformationCircleIcon, Switch, SwitchGroup, SwitchLabel
     },
-    props: ['user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles', 'calendarData','dateToShow','vacations'],
+    props: ['shifts','user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles', 'calendarData','dateToShow','vacations'],
     data() {
         return {
             showGlobalRoles: true,

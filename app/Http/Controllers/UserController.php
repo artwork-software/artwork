@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
 use App\Models\Department;
+use App\Models\Event;
 use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use App\Models\User;
@@ -110,6 +111,7 @@ class UserController extends Controller
             'vacations' => $user->vacations()->orderBy('from', 'ASC')->get(),
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
+            'shifts' => $user->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),
         ]);
     }
 

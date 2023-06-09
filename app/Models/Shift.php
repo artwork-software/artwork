@@ -41,14 +41,14 @@ class Shift extends Model
         return $this->belongsTo(Craft::class)->without(['users']);
     }
 
-    public function employees(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'shift_user', 'shift_id', 'user_id');
-    }
-
     public function masters(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'shift_master', 'shift_id', 'user_id');
+    }
+    
+    public function employees(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'shift_user', 'shift_id', 'user_id');
     }
 
     public function getEmptyEmployeeCountAttribute(){

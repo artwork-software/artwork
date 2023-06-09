@@ -1476,17 +1476,23 @@ class ProjectController extends Controller
         $eventsWithRelevant = [];
 
 
+        $shiftRelevantEventTypes = $project->shiftRelevantEventTypes()->get();
+
+        $shiftRelevantEvents = $project->events()->whereIn('event_type_id', $shiftRelevantEventTypes->pluck('id'))->get();
+
+        //dd($shiftRelevantEvents);
+
+        foreach ($shiftRelevantEvents as $event){
+            $eventsWithRelevant[$event->id] = [
+                'event' => $event,
+                'timeline' => $event->timeline()->get(),
+                'shifts' => $event->shifts()->get(),
+                'event_type' => $event->event_type()->first(),
+                'room' => $event->room()->first(),
+            ];
+        }
+
         foreach ($events as $event){
-            $eventType = $event->event_type()->first();
-            if ($eventType->relevant_for_shift){
-                $eventsWithRelevant[$event->id] = [
-                    'event' => $event,
-                    'timeline' => $event->timeline()->get(),
-                    'shifts' => $event->shifts()->get(),
-                    'event_type' => $eventType,
-                    'room' => $event->room()->first(),
-                ];
-            }
             if(!$event->audience){
                 continue;
             }
@@ -2253,4 +2259,5 @@ class ProjectController extends Controller
     public function updateShiftRelevantEventTypes(Request $request, Project $project){
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
+
 }

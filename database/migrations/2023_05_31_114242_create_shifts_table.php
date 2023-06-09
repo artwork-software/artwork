@@ -18,10 +18,10 @@ return new class extends Migration
             $table->unsignedBigInteger('event_id');
             $table->time('start');
             $table->time('end');
-            $table->integer('break_minutes')->nullable();
+            $table->integer('break_minutes')->default(0);
             $table->unsignedBigInteger('craft_id');
-            $table->integer('number_employees')->nullable();
-            $table->integer('number_masters')->nullable();
+            $table->integer('number_employees')->default(0);
+            $table->integer('number_masters')->default(0);
             $table->string('description')->nullable();
             $table->timestamps();
         });

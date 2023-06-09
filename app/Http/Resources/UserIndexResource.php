@@ -31,7 +31,8 @@ class UserIndexResource extends JsonResource
             'position' => $this->position,
             'business' => $this->business,
             'phone_number' => $this->phone_number,
-            'project_management' => $this->can(PermissionNameEnum::PROJECT_MANAGEMENT->value)
+            'project_management' => $this->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
+            'can_master' => $this->can_master,
         ];
     }
 }

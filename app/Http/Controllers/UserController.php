@@ -243,4 +243,11 @@ class UserController extends Controller
             'employEnd'
         ]));
     }
+
+    public function updateCanMaster(User $user, Request $request){
+        $user->update($request->only([
+            'can_master'
+        ]));
+
+    }
 }

@@ -28,25 +28,37 @@
 
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                                        <input type="time"
-                                               placeholder="Name des Gewerks*"
-                                               v-model="shift.start"
-                                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                               required
-                                        />
-                                        <input type="time"
-                                               placeholder="Abkürzung*"
-                                               v-model="shift.end"
-                                               maxlength="3"
-                                               required
-                                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                       <div>
+                                           <input type="time"
+                                                  placeholder="Schicht Start"
+                                                  v-model="shift.start"
+                                                  class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                  required
+                                           />
+                                            <span class="text-xs text-red-500" v-show="helpTexts.start.length > 0">{{ helpTexts.start }}</span>
 
-                                        <input type="number"
-                                               placeholder="Pausenlänge in Minuten*"
-                                               v-model="shift.break_minutes"
-                                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                               required
-                                        />
+                                       </div>
+                                        <div>
+                                            <input type="time"
+                                                   placeholder="Schicht Ende"
+                                                   v-model="shift.end"
+                                                   maxlength="3"
+                                                   required
+                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                            <span class="text-xs text-red-500" v-show="helpTexts.end.length > 0">{{ helpTexts.end }}</span>
+                                            <span class="text-xs text-red-500" v-show="helpTexts.time.length > 0">{{ helpTexts.time }}</span>
+
+                                        </div>
+                                       <div>
+                                           <input type="number"
+                                                  placeholder="Pausenlänge in Minuten*"
+                                                  v-model="shift.break_minutes"
+                                                  class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                  required
+                                           />
+                                           <span class="text-xs text-red-500" v-show="helpTexts.breakText.length > 0">{{ helpTexts.breakText }}</span>
+                                       </div>
+
                                         <div>
                                             <Listbox as="div" v-model="selectedCraft">
                                                 <div class="relative">
@@ -72,6 +84,7 @@
                                                     </transition>
                                                 </div>
                                             </Listbox>
+                                            <span class="text-xs text-red-500" v-show="helpTexts.craftText.length > 0">{{ helpTexts.craftText }}</span>
                                         </div>
                                         <input type="number"
                                                placeholder="Anzahl Mitarbeiter*innen"
@@ -148,6 +161,13 @@ export default defineComponent({
                 event_id: this.event.id
             }),
             selectedCraft: null,
+            helpTexts: {
+                craftText: '',
+                breakText: '',
+                start: '',
+                end: '',
+                time: ''
+            }
         }
     },
     emits: ['closed'],
@@ -157,10 +177,65 @@ export default defineComponent({
         },
         saveShift(){
             this.shift.craft_id = this.selectedCraft?.id;
+
+            if(this.event.start > this.shift.start){
+                this.helpTexts.time = 'Die Schicht kann nicht vor dem Termin starten.';
+                return;
+            } else {
+                this.helpTexts.time = '';
+            }
+
+            if(this.event.end < this.shift.end){
+                this.helpTexts.time = 'Die Schicht kann nicht nach dem Termin enden.';
+                return;
+            } else {
+                this.helpTexts.time = '';
+            }
+
+            if ( this.shift.start === null ){
+                this.helpTexts.start = 'Bitte gib einen Startzeitpunkt an.';
+                return;
+            } else {
+                this.helpTexts.start = '';
+            }
+
+            if ( this.shift.end === null ){
+                this.helpTexts.end = 'Bitte gib einen Endzeitpunkt an.';
+                return;
+            } else {
+                this.helpTexts.end = '';
+            }
+
+            if ( this.selectedCraft === null ){
+                this.helpTexts.craftText = 'Bitte wähle ein Gewerk aus.';
+                return;
+            } else {
+                this.helpTexts.craftText = '';
+            }
+
+            if ( this.shift.break_minutes === null ){
+                this.helpTexts.breakText = 'Bitte gib eine Pausenzeit an.';
+                return;
+            } else {
+                this.helpTexts.breakText = '';
+            }
+
+            if(this.shift.start >= this.shift.end ){
+                this.helpTexts.time = 'Der Endzeitpunkt muss nach dem Startzeitpunkt liegen.';
+                return;
+            } else {
+                this.helpTexts.time = '';
+            }
+
+            // set the craft id
+            this.shift.craft_id = this.selectedCraft.id;
+
+            // send the request
             this.shift.post(route('event.shift.store', this.event.id), {
-                preserveScroll: true,
+                preserveScroll: true,   // preserve scroll position
+                preserveState: true,    // preserve the state of the form
                 onSuccess: () => {
-                    this.closeModal(true);
+                    this.closeModal(true);  // close the modal
                 }
             })
         }

@@ -1,71 +1,141 @@
-# For more information: https://laravel.com/docs/sail
 version: '3'
+
+networks:
+    laravel:
+
+
 services:
-    laravel.test:
+    app:
         build:
-            context: ./docker/8.1
-            dockerfile: Dockerfile
+            context: ./dockerfiles
+            dockerfile: nginx.dockerfile
             args:
-                WWWGROUP: '${WWWGROUP}'
-                XDEBUG: ${SAIL_DEBUG}
-        image: sail-8.1/app
-        container_name: artwork_tools-laravel
-        extra_hosts:
-            - 'host.docker.internal:host-gateway'
+                - UID=${UID:-1000}
+                - GID=${GID:-1000}
         ports:
-            - '${APP_PORT:-80}:80'
-            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
-        environment:
-            WWWUSER: '${WWWUSER}'
-            LARAVEL_SAIL: 1
-            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
-            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+            - "80:80"
         volumes:
-            - '.:/var/www/html'
-        networks:
-            - sail
+            - .:/var/www/html
         depends_on:
+            - php
             - redis
+            - mysql
             - mailhog
-    redis:
-        image: 'redis:alpine'
-        container_name: artwork_tools-redis
-        ports:
-            - '${FORWARD_REDIS_PORT:-6379}:6379'
-        volumes:
-            - 'sail-redis:/data'
+            - meilisearch
         networks:
-            - sail
-        healthcheck:
-            test: ["CMD", "redis-cli", "ping"]
-            retries: 3
-            timeout: 5s
-    mailhog:
-        image: 'mailhog/mailhog:latest'
-        container_name: artwork_tools-mailhog
+            - laravel
+
+    mysql:
+        image: mariadb:latest
+        restart: unless-stopped
+        tty: true
         ports:
-            - '${FORWARD_MAILHOG_PORT:-1025}:1025'
-            - '${FORWARD_MAILHOG_DASHBOARD_PORT:-8025}:8025'
+            - "3306:3306"
+        environment:
+            MYSQL_DATABASE: artwork_tools
+            MYSQL_USER: root
+            MYSQL_PASSWORD: RootRoot
+            MYSQL_ROOT_PASSWORD: RootRoot
         networks:
-            - sail
+            - laravel
+
     meilisearch:
         image: getmeili/meilisearch:latest
-        container_name: artwork_tools-meilisearch
         volumes:
             - ./data.ms:/data.ms
-        ports:
-            - "7700:7700"
         networks:
-            - sail
-        healthcheck:
-            test: ['CMD', 'wget', '--spider', 'http://meilisearch:7700/health']
-            retries: 3
-            timeout: 5s
-networks:
-    sail:
-        driver: bridge
-volumes:
-    sail-mysql:
-        driver: local
-    sail-redis:
-        driver: local
+            - laravel
+        ports:
+            - "0.0.0.0:7700:7700"
+        environment:
+            - --master-key=masterKey
+            - --http-addr 'localhost:7700'
+
+    php:
+        build:
+            context: ./dockerfiles
+            dockerfile: php.root.dockerfile
+            args:
+                - UID=${UID:-1000}
+                - GID=${GID:-1000}
+        ports:
+            - "9000:9000"
+        volumes:
+            - .:/var/www/html
+        networks:
+            - laravel
+
+    websockets:
+        build:
+            context: ./dockerfiles/websockets
+            args:
+                - UID=${UID:-1000}
+                - GID=${GID:-1000}
+        restart: unless-stopped
+        volumes:
+            - .:/var/www/html
+        expose:
+            - "3341"
+        depends_on:
+            - app
+        networks:
+            - laravel
+
+    redis:
+        image: redis:alpine
+        restart: unless-stopped
+        ports:
+            - "6379:6379"
+        networks:
+            - laravel
+
+    composer:
+        build:
+            context: ./dockerfiles
+            dockerfile: php.root.dockerfile
+            args:
+                - UID=${UID:-1000}
+                - GID=${GID:-1000}
+        volumes:
+            - .:/var/www/html
+        depends_on:
+            - php
+        entrypoint: [ 'composer', '--ignore-platform-reqs' ]
+        networks:
+            - laravel
+
+    npm:
+        image: node:current-alpine
+        volumes:
+            - .:/var/www/html
+        ports:
+            - "3000:3000"
+            - "3001:3001"
+            - "5173:5173"
+        working_dir: /var/www/html
+        entrypoint: [ 'npm' ]
+        networks:
+            - laravel
+
+    artisan:
+        build:
+            context: ./dockerfiles
+            dockerfile: php.root.dockerfile
+            args:
+                - UID=${UID:-1000}
+                - GID=${GID:-1000}
+        volumes:
+            - .:/var/www/html
+        depends_on:
+            - mysql
+        entrypoint: [ 'php', '/var/www/html/artisan' ]
+        networks:
+            - laravel
+
+    mailhog:
+        image: mailhog/mailhog:latest
+        ports:
+            - "1025:1025"
+            - "8025:8025"
+        networks:
+            - laravel

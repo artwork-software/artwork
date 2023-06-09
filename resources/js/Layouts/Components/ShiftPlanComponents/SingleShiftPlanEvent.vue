@@ -1,7 +1,7 @@
 <template>
     <div>
         <div>
-            <div class="text-secondaryHover xsWhiteBold px-1" :class="eventType.svg_name">
+            <div class="text-secondaryHover xsWhiteBold px-1 py-1" :class="eventType.svg_name">
                 {{ eventType.abbreviation }}: {{ project?.name }}
             </div>
             <div class="bg-backgroundGray">

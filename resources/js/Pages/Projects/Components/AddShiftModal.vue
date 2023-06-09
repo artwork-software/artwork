@@ -176,6 +176,7 @@ export default defineComponent({
             this.$emit('closed', bool);
         },
         saveShift(){
+            this.shift.craft_id = this.selectedCraft?.id;
 
             if(this.event.start > this.shift.start){
                 this.helpTexts.time = 'Die Schicht kann nicht vor dem Termin starten.';

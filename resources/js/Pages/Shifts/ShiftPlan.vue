@@ -1,7 +1,7 @@
 <template>
     <app-layout>
-        <div>
-            <table class="w-full bg-white relative mt-24">
+        <div :class="showUserOverview ? 'h-[50vh] overflow-x-scroll mt-8' : ' mt-24'">
+            <table class="w-full bg-white relative">
                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                 <div>
                     <tr class="flex w-full bg-secondaryHover">
@@ -29,9 +29,16 @@
                 </div>
             </table>
         </div>
+
+
+        <pre>
+            {{ users }}
+        </pre>
+        <ShiftPlanUserOverview :users="users" @isOpen="showUserOverviewBar" :days="days"/>
+
+
     </app-layout>
 
-    <div class="w-full flex flex-wrap bg-secondaryHover"></div>
 </template>
 <script>
 
@@ -43,11 +50,13 @@ import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import {Link} from "@inertiajs/inertia-vue3";
+import ShiftPlanUserOverview from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanUserOverview.vue";
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        ShiftPlanUserOverview,
         Link, CalendarFunctionBar, SingleCalendarEvent, ExclamationIcon, EventComponent,
         SingleShiftPlanEvent,
         CheckIcon,
@@ -63,7 +72,8 @@ export default {
         'dateValue',
         'personalFilters',
         'selectedDate',
-        'eventTypes'
+        'eventTypes',
+        'users'
     ],
     methods: {
         findProjectById(projectId) {
@@ -72,9 +82,14 @@ export default {
         findEventTypeById(eventTypeId) {
             return this.eventTypes.find(eventType => eventType.id === eventTypeId);
         },
+        showUserOverviewBar(isOpen) {
+            this.showUserOverview = isOpen;
+        },
     },
     data() {
-        return {}
+        return {
+            showUserOverview: false,
+        }
     },
 }
 

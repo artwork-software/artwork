@@ -5,8 +5,9 @@
                 TIMELINE
             </div>
         </div>
+
         <div class="mt-1">
-            <div v-if="event.start_time_without_day === timeLine[0].start && event.end_time_without_day === timeLine[0].end" class="text-xs bg-gray-900 p-2 text-white my-1 cursor-pointer" @click="showAddTimeLineModal = true">
+            <div v-if="event?.start_time_without_day === timeLine[0]?.start && event?.end_time_without_day === timeLine[0]?.end" class="text-xs bg-gray-900 p-2 text-white my-1 cursor-pointer" @click="showAddTimeLineModal = true">
                 <p class="text-xs">
                     ganztägig
                 </p>

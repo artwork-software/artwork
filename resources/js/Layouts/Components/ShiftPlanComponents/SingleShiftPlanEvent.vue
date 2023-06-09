@@ -2,22 +2,12 @@
     <div>
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1" :class="eventType.svg_name">
-                {{ eventType.abbreviation }}: {{ project.name }}
+                {{ eventType.abbreviation }}: {{ project?.name }}
             </div>
             <div class="bg-backgroundGray">
                 <div v-for="shift in event.shifts" class="flex justify-between px-1">
-                    <div class="flex">
-                        {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
-                        ({{ shift.employee_count }}/{{ shift.number_employees }}
-                        <span v-if="shift.number_masters > 0">
-                                   | {{ shift.masters.length }}/{{ shift.number_masters }}
-                                </span>
-                        )
-                    </div>
-                    <div v-if="shift.empty_employee_count === 0">
-                        <CheckIcon class="h-5 w-5 flex text-success"
-                                   aria-hidden="true"/>
-                    </div>
+                    <!-- Drop Element --->
+                    <ShiftDropElement :shift="shift" />
                 </div>
             </div>
         </div>
@@ -29,10 +19,12 @@ import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Permissions from "@/mixins/Permissions.vue";
 import {CheckIcon} from "@heroicons/vue/outline";
+import ShiftDropElement from "@/Layouts/Components/ShiftPlanComponents/ShiftDropElement.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        ShiftDropElement,
         CheckIcon,
     },
     props: [
@@ -41,6 +33,7 @@ export default defineComponent({
         'eventType'
     ],
     methods: {
+
     },
     data() {
         return {}

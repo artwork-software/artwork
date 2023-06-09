@@ -15,6 +15,7 @@ use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\TaskIndexResource;
+use App\Http\Resources\UserIndexResource;
 use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
@@ -132,6 +133,7 @@ class EventController extends Controller
             'dateValue'=> $showCalendar['dateValue'],
             'personalFilters' => $showCalendar['personalFilters'],
             'selectedDate' => $showCalendar['selectedDate'],
+            'users' => UserIndexResource::collection(User::all())->resolve(),
         ]);
     }
 
@@ -218,9 +220,8 @@ class EventController extends Controller
             $this->associateProject($request, $firstEvent);
         }
 
-
         $projectFirstEvent = $firstEvent->project()->first();
-        //dd($projectFirstEvent);
+
         if($request->is_series){
             $series = SeriesEvents::create([
                 'frequency_id' => $request->seriesFrequency,
@@ -267,20 +268,20 @@ class EventController extends Controller
                 $projectHistory = new NewHistoryService('App\Models\Project');
                 $projectHistory->createHistory($eventProject->id, 'Ablaufplan hinzugefügt');
             }
+            $projectRelevantEventTypes = $eventProject->shiftRelevantEventTypes()->get();
+            if($projectRelevantEventTypes->contains($firstEvent->event_type_id)){
+                $firstEvent->timeline()->create([
+                    'start' => Carbon::parse($firstEvent->start_time)->format('H:i:s'),
+                    'end' => Carbon::parse($firstEvent->end_time)->format('H:i:s'),
+                ]);
+            }
+
         }
 
         if($request->isOption){
             $this->createRequestNotification($request, $firstEvent);
         }
 
-        $eventType = $firstEvent->event_type()->first();
-
-        if($eventType->relevant_for_shift){
-            $firstEvent->timeline()->create([
-                'start' => Carbon::parse($firstEvent->start_time)->format('H:i:s'),
-                'end' => Carbon::parse($firstEvent->end_time)->format('H:i:s'),
-            ]);
-        }
 
         broadcast(new OccupancyUpdated())->toOthers();
 

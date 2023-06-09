@@ -157,7 +157,8 @@ class CalendarController extends Controller
             $periodArray[] = [
                 'day' => $period->format('d.m.'),
                 'day_string' => $period->shortDayName,
-                'is_weekend' => $period->isWeekend()
+                'is_weekend' => $period->isWeekend(),
+                'full_day' => $period->format('d.m.Y')
             ];
         }
 
@@ -222,7 +223,8 @@ class CalendarController extends Controller
             $periodArray[] = [
                 'day' => $period->format('d.m.'),
                 'day_string' => $period->shortDayName,
-                'is_weekend' => $period->isWeekend()
+                'is_weekend' => $period->isWeekend(),
+                'full_day' => $period->format('d.m.Y')
             ];
         }
             if (\request('startDate') && \request('endDate')) {

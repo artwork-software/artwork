@@ -7,11 +7,14 @@ use App\Enums\PermissionNameEnum;
 use App\Events\UserUpdated;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
 use App\Models\Department;
 use App\Models\Event;
+use App\Models\EventType;
 use App\Models\Freelancer;
+use App\Models\Project;
 use App\Models\ServiceProvider;
 use App\Models\User;
 use Carbon\Carbon;
@@ -100,7 +103,29 @@ class UserController extends Controller
      */
     public function edit(User $user): Response|ResponseFactory
     {
+
+        $shiftPlan = new CalendarController();
+        $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan();
         $availabilityData = $this->getAvailabilityData($user, request('month'));
+
+        if(\request('startDate') && \request('endDate')){
+
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+
+        }else{
+
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+
+        }
+
+        $events = Event::with(['shifts','event_type'])
+            ->whereHas('shifts', function ($query) {
+                $query->whereNotNull('shifts.id');
+            })
+            ->get();
+
 
         return inertia('Users/Edit', [
             'user_to_edit' => new UserShowResource($user),
@@ -109,8 +134,14 @@ class UserController extends Controller
             'available_roles' => Role::all(),
             "all_permissions" => Permission::all()->groupBy('group'),
             'vacations' => $user->vacations()->orderBy('from', 'ASC')->get(),
+            //needed for availability calendar
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
+            //needed for UserShiftPlan
+            'dateValue'=> $showCalendar['dateValue'],
+            'daysWithEvents' => $showCalendar['daysWithEvents'],
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'projects' => Project::all(),
             'shifts' => $user->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),
         ]);
     }

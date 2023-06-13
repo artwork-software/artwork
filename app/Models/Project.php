@@ -66,7 +66,7 @@ class Project extends Model
         'closed_society' => 'boolean'
     ];
 
-    protected $with = ['historyChangesMorph', 'shiftRelevantEventTypes'];
+    protected $with = ['shiftRelevantEventTypes'];
 
     public function cost_center()
     {

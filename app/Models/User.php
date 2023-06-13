@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Resources\CalendarEventResource;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -88,6 +89,8 @@ class User extends Authenticatable
         'can_master'
     ];
 
+
+
     /**
      * The attributes that should be cast.
      *
@@ -125,6 +128,24 @@ class User extends Authenticatable
     ];
 
     protected $with = ['calendar_settings'];
+
+
+    public function shifts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Shift::class);
+    }
+
+    public function getShiftsAttribute(): Collection
+    {
+        return $this->shifts()
+            ->with(['event', 'event.room', 'event.project'])
+            ->without(['craft', 'employees', 'masters'])
+            ->without(['event.project.shiftRelevantEventTypes'])
+            ->get()
+            ->groupBy(function ($shift) {
+                return $shift->event->days_of_event;
+            });
+    }
 
     public function getFullNameAttribute(){
         return $this->first_name . ' ' . $this->last_name;

@@ -33,6 +33,7 @@ class UserIndexResource extends JsonResource
             'phone_number' => $this->phone_number,
             'project_management' => $this->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
             'can_master' => $this->can_master,
+            'shifts' => $this->getShiftsAttribute(),
         ];
     }
 }

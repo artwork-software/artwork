@@ -12,29 +12,7 @@
                     </button>
                 </div>
             </div>
-            <div class="flex items-center">
-                <!-- Hier Button "Alle Schichten festschreiben" -->
-            </div>
-
         </div>
-
-        <div class="flex items-center">
-            <div class="flex items-center">
-                <img v-if="!isFullscreen" @click="enterFullscreenMode"
-                     src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
-                <!-- PAUL HIER DAS NEUE FILTER COMPONENT EINBAUEN -->
-                <ShiftPlanFilter
-                    class="mt-1"
-                    :filter-options="filterOptions"
-                    :personal-filters="personalFilters"
-                    @filters-changed="filtersChanged"
-                />
-
-            </div>
-        </div>
-    </div>
-    <div class="mb-1 ml-4 flex items-center w-full">
-        <BaseFilterTag type="calendar" v-for="activeFilter in activeFilters" :filter="activeFilter.name" />
     </div>
 </template>
 
@@ -52,52 +30,35 @@ import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 
 
 export default {
-    name: "ShiftPlanFunctionBar",
+    name: "UserShiftPlanFunctionBar",
     mixins: [Permissions],
     components: {
         BaseFilterTag,
         ShiftPlanFilter,
         Dropdown,
         Button,
-        PlusCircleIcon,
         CalendarIcon,
         ChevronDownIcon,
-        IndividualCalendarFilterComponent,
         ChevronLeftIcon,
         ChevronRightIcon,
-        SwitchGroup,
-        SwitchLabel,
-        Switch,
         DatePickerComponent,
     },
     props: [
         'dateValue',
-        'isFullscreen',
-        'filterOptions',
-        'allShiftsCommitted',
-        'personalFilters'
     ],
-    emits: ['enterFullscreenMode','previousTimeRange','nextTimeRange','commitAllShifts'],
+    emits: ['previousTimeRange','nextTimeRange'],
     data() {
         return {
             activeFilters: []
         }
     },
     methods: {
-        enterFullscreenMode() {
-            this.$emit('enterFullscreenMode')
-        },
+
         previousTimeRange(){
             this.$emit('previousTimeRange')
         },
         nextTimeRange(){
             this.$emit('nextTimeRange')
-        },
-        filtersChanged(activeFilters) {
-            this.activeFilters = activeFilters
-        },
-        commitAllShifts(){
-            this.$emit('commitAllShifts')
         },
     },
 }

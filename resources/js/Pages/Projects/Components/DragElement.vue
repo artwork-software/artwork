@@ -1,6 +1,6 @@
 
 <template>
-    <div class="drag-item p-2 my-2 bg-gray-50/10 text-white text-xs rounded-lg flex items-center gap-2" draggable="true" @dragstart="onDragStart">
+    <div class="drag-item w-full p-2 my-2 bg-gray-50/10 text-white text-xs rounded-lg flex items-center gap-2" draggable="true" @dragstart="onDragStart">
         <div>
             <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover">
         </div>

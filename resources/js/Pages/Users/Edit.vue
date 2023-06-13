@@ -16,7 +16,6 @@
                                     <div class="headline1 flex my-auto ml-2">
                                         {{ userForm.last_name }}
                                     </div>
-
                                 </div>
                             </div>
 
@@ -29,13 +28,11 @@
                                     </div>
                                 </div>
                             </div>
-
-
                         </div>
 
                         <div class="">
-                            <div class="max-w-screen-lg py-4 pl-20 pr-4" v-if="currentTab === 1">
-
+                            <div class="w-full py-4 pl-20 pr-4" v-if="currentTab === 1">
+                                <UserShiftPlan :date-value="dateValue" :days-with-events="daysWithEvents" :projects="projects" :event-types="eventTypes" :rooms="rooms" :vacations="vacations"></UserShiftPlan>
                             </div>
 
                             <div class="max-w-screen-3xl py-4 pl-20 pr-4" v-if="currentTab === 2">
@@ -429,11 +426,15 @@ import Permissions from "@/mixins/Permissions.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import { Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue'
+import UserShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue";
+import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     name: 'Edit',
     components: {
+        UserShiftPlan,
+        UserShiftPlanFunctionBar,
         Availability,
         SvgCollection,
         AddButton,
@@ -468,7 +469,7 @@ export default defineComponent({
         CheckIcon,
         InformationCircleIcon, Switch, SwitchGroup, SwitchLabel
     },
-    props: ['user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles', 'calendarData','dateToShow','vacations'],
+    props: ['shifts','user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles', 'calendarData','dateToShow','vacations','daysWithEvents','dateValue','projects','eventTypes','rooms'],
     data() {
         return {
             showGlobalRoles: true,

@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div id="shiftPlan" class="bg-white w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
+        <div id="shiftPlan" class="bg-white w-[98%]" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? 'h-[50vh] overflow-x-scroll mt-8' : ' mt-24']">
             <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
                                   @next-time-range="nextTimeRange"
                                   :date-value="dateValue"
@@ -38,9 +38,16 @@
                 </div>
             </table>
         </div>
+
+
+        <pre>
+            {{ users }}
+        </pre>
+        <ShiftPlanUserOverview :users="users" @isOpen="showUserOverviewBar" :days="days"/>
+
+
     </app-layout>
 
-    <div class="w-full flex flex-wrap bg-secondaryHover"></div>
 </template>
 <script>
 
@@ -52,6 +59,7 @@ import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import {Link} from "@inertiajs/inertia-vue3";
+import ShiftPlanUserOverview from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanUserOverview.vue";
 import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
 import {Inertia} from "@inertiajs/inertia";
 
@@ -59,6 +67,7 @@ export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        ShiftPlanUserOverview,
         Link, CalendarFunctionBar, SingleCalendarEvent, ExclamationIcon, EventComponent,
         SingleShiftPlanEvent,
         CheckIcon,
@@ -75,7 +84,8 @@ export default {
         'dateValue',
         'personalFilters',
         'selectedDate',
-        'eventTypes'
+        'eventTypes',
+        'users'
     ],
     methods: {
         findProjectById(projectId) {
@@ -83,6 +93,9 @@ export default {
         },
         findEventTypeById(eventTypeId) {
             return this.eventTypes.find(eventType => eventType.id === eventTypeId);
+        },
+        showUserOverviewBar(isOpen) {
+            this.showUserOverview = isOpen;
         },
         openFullscreen() {
             let elem = document.getElementById('shiftPlan');
@@ -144,6 +157,7 @@ export default {
     },
     data() {
         return {
+            showUserOverview: false,
             isFullscreen: false,
         }
     },

@@ -12,6 +12,7 @@ use App\Models\Project;
 use App\Models\Room;
 use App\Models\RoomAttribute;
 use App\Models\RoomCategory;
+use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Barryvdh\Debugbar\Facades\Debugbar;
@@ -110,20 +111,26 @@ class CalendarController extends Controller
         return $eventsToday;
     }
 
-    private function get_events_per_day($date_of_day, $minDate, $maxDate): array
+    private function get_events_per_day($date_of_day, $minDate, $maxDate, $userId = null): array
     {
 
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
-        $events = Event::with(['shifts'])
+        $events = Event::with(['shifts' => function ($query) use ($userId) {
+                $query->whereHas('users', function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                });
+            }])
             ->where('start_time', '>=', $minDate)
             ->where('end_time', '<=', $maxDate)
             ->whereHas('shifts', function ($query) {
                 $query->whereNotNull('shifts.id');
             })
+            ->whereHas('shifts.users', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
             ->get();
-
         foreach ($events as $event) {
             if (in_array($today, $event->days_of_event)) {
                 $eventsToday[] = $event;
@@ -231,7 +238,7 @@ class CalendarController extends Controller
         ];
     }
 
-    public function createCalendarDataForUserShiftPlan(?Project $project = null, ?Room $room = null)
+    public function createCalendarDataForUserShiftPlan(?User $user = null)
     {
         $this->startDate = Carbon::now()->startOfDay();
 
@@ -260,7 +267,7 @@ class CalendarController extends Controller
         $daysWithEvents = [];
 
         foreach ($calendarPeriod as $date) {
-            $events = $this->get_events_per_day($date, $startDate, $endDate);
+            $events = $this->get_events_per_day($date, $startDate, $endDate, $user->id);
             $daysWithEvents[$date->format('Y-m-d')] = [
                 'day' => $date->format('d.m.'),
                 'day_string' => $date->shortDayName,

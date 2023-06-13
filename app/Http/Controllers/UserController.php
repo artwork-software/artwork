@@ -106,7 +106,7 @@ class UserController extends Controller
     {
 
         $shiftPlan = new CalendarController();
-        $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan();
+        $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
         $availabilityData = $this->getAvailabilityData($user, request('month'));
 
         if(\request('startDate') && \request('endDate')){

@@ -139,7 +139,7 @@ class User extends Authenticatable
     {
         return $this->shifts()
             ->with(['event', 'event.room', 'event.project'])
-            ->without(['craft', 'employees', 'masters'])
+            ->without(['craft', 'users'])
             ->without(['event.project.shiftRelevantEventTypes'])
             ->get()
             ->groupBy(function ($shift) {

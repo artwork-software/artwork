@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('shift_id');
             $table->unsignedBigInteger('user_id');
+            $table->boolean('is_master')->default(false);
             $table->timestamps();
         });
     }

@@ -10,7 +10,7 @@
             <div class="bg-backgroundGray">
                 <div v-for="shift in event.shifts" class="flex justify-between px-1">
                     <!-- Drop Element --->
-                    <ShiftDropElement :show-room="showRoom" :room="room" :event="event" :shift="shift"/>
+                    <ShiftDropElement :users="shift.users" :shift="shift" :show-room="showRoom" :room="room" :event="event" />
                 </div>
             </div>
         </div>

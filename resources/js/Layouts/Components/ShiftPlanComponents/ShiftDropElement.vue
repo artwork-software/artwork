@@ -53,13 +53,13 @@ export default defineComponent({
         <div>
             {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
         </div>
-        <div v-if="!showRoom && room">
-            ({{ shift.user_count ? shift.user_count : 0 }}/{{ shift.number_employees }}
+        <div v-if="!showRoom" class="ml-0.5">
+             ({{ shift.user_count ? shift.user_count : 0 }}/{{ shift.number_employees }}
             <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>
             )
         </div>
-        <div v-else class="truncate">
-            , {{room.name}}
+        <div v-else-if="room" class="truncate">
+            , {{room?.name}}
         </div>
         <div v-if="shift.empty_employee_count === 0 && shift.empty_master_count === 0">
             <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>

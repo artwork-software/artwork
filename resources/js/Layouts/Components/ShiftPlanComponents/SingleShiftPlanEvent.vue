@@ -7,7 +7,7 @@
             <div class="bg-backgroundGray">
                 <div v-for="shift in event.shifts" class="flex justify-between px-1">
                     <!-- Drop Element --->
-                    <ShiftDropElement :shift="shift" />
+                    <ShiftDropElement :users="shift.users" :shift="shift" />
                 </div>
             </div>
         </div>

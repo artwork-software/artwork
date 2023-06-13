@@ -3,7 +3,12 @@ import {defineComponent} from 'vue'
 
 export default defineComponent({
     name: "DropElement",
-    props: ['shiftId', 'master'],
+    props: ['shiftId', 'master', 'users'],
+    computed: {
+        userIds(){
+            return this.users.map(user => user.id);
+        }
+    },
     methods: {
         onDragOver(event) {
             event.preventDefault();
@@ -12,6 +17,12 @@ export default defineComponent({
             event.preventDefault();
             let dropElement = event.dataTransfer.getData('application/json');
             dropElement = JSON.parse(dropElement)[0];
+
+            // prevent adding the same user twice
+            if(this.userIds.includes(dropElement.id)){
+                return;
+            }
+
             if(dropElement.master && this.master){
                 this.$inertia.post(route('add.shift.master', this.shiftId), {
                         user_id: dropElement.id

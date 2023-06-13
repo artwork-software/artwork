@@ -27,9 +27,9 @@ class Shift extends Model
         'end' => TimeWithoutSeconds::class,
     ];
 
-    protected $with = ['craft', 'employees', 'masters'];
+    protected $with = ['craft', 'users'];
 
-    protected $appends= ['break_formatted', 'employee_count', 'empty_employee_count', 'master_count', 'empty_master_count'];
+    protected $appends= ['break_formatted', 'user_count', 'empty_user_count', 'empty_master_count', 'master_count', 'masters', 'employees'];
 
     public function event(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -41,32 +41,41 @@ class Shift extends Model
         return $this->belongsTo(Craft::class)->without(['users']);
     }
 
-    public function employees(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'shift_user', 'shift_id', 'user_id');
+        return $this->belongsToMany(User::class, 'shift_user', 'shift_id', 'user_id')->withPivot([
+            'is_master'
+        ])->orderByPivot('is_master', 'desc');
     }
 
-    public function masters(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function getMasterCountAttribute(): int
     {
-        return $this->belongsToMany(User::class, 'shift_master', 'shift_id', 'user_id');
-    }
-
-    public function getEmptyEmployeeCountAttribute(){
-        $employeeCount = $this->employees()->count();
-        return $this->number_employees - $employeeCount;
-    }
-
-    public function getEmployeeCountAttribute(){
-        return $this->employees()->count();
+        return $this->users()->wherePivot('is_master', true)->count();
     }
 
     public function getEmptyMasterCountAttribute(){
-        $masterCount = $this->masters()->count();
+        $masterCount = $this->users()->wherePivot('is_master', true)->count();
         return $this->number_masters - $masterCount;
     }
 
-    public function getMasterCountAttribute(){
-        return $this->masters()->count();
+    public function getEmptyUserCountAttribute(){
+        $employeeCount = $this->users()->wherePivot('is_master', false)->count();
+        return $this->number_employees - $employeeCount;
+    }
+
+    public function getUserCountAttribute(): int
+    {
+        return $this->users()->wherePivot('is_master', false)->count();
+    }
+
+    public function getMastersAttribute()
+    {
+        return $this->users()->wherePivot('is_master', true)->get();
+    }
+
+    public function getEmployeesAttribute()
+    {
+        return $this->users()->wherePivot('is_master', false)->get();
     }
 
     public function getBreakFormattedAttribute(): string

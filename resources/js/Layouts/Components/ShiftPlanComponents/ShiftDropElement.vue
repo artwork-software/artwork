@@ -5,7 +5,12 @@ import {CheckIcon} from "@heroicons/vue/outline";
 export default defineComponent({
     name: "ShiftDropElement",
     components: {CheckIcon},
-    props: ['shift'],
+    props: ['shift', 'users'],
+    computed: {
+        userIds(){
+            return this.users.map(user => user.id)
+        }
+    },
     methods: {
         onDragOver(event) {
             event.preventDefault();
@@ -14,6 +19,12 @@ export default defineComponent({
             event.preventDefault();
             let dropElement = event.dataTransfer.getData('application/json');
             dropElement = JSON.parse(dropElement)[0];
+
+            // prevent adding the same user twice
+            if (this.userIds.includes(dropElement.id)) {
+                return;
+            }
+
             if(dropElement.master){
                 this.$inertia.post(route('add.shift.master', this.shift.id), {
                         user_id: dropElement.id
@@ -39,13 +50,13 @@ export default defineComponent({
 
 <template>
     <div class="flex" @dragover="onDragOver" @drop="onDrop">
-        <div class="flex">
+        <div class="flex text-sm">
             {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
-            ({{ shift.employee_count }}/{{ shift.number_employees }}
-            <span v-if="shift.number_masters > 0">| {{ shift.masters.length }}/{{ shift.number_masters }}</span>
+            ({{ shift.user_count ? shift.user_count : 0 }}/{{ shift.number_employees }}
+            <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>
             )
         </div>
-        <div v-if="shift.empty_employee_count === 0">
+        <div v-if="shift.empty_user_count === 0 && shift.empty_master_count === 0">
             <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
         </div>
     </div>

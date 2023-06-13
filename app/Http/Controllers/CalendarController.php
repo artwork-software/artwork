@@ -110,6 +110,29 @@ class CalendarController extends Controller
         return $eventsToday;
     }
 
+    private function get_events_per_day($date_of_day, $minDate, $maxDate): array
+    {
+
+        $eventsToday = [];
+        $today = $date_of_day->format('d.m.Y');
+
+        $events = Event::with(['shifts'])
+            ->where('start_time', '>=', $minDate)
+            ->where('end_time', '<=', $maxDate)
+            ->whereHas('shifts', function ($query) {
+                $query->whereNotNull('shifts.id');
+            })
+            ->get();
+
+        foreach ($events as $event) {
+            if (in_array($today, $event->days_of_event)) {
+                $eventsToday[] = $event;
+            }
+        }
+
+        return $eventsToday;
+    }
+
     public function createCalendarData($type = '', ?Project $project = null, ?Room $room = null)
     {
 
@@ -207,6 +230,51 @@ class CalendarController extends Controller
             'personalFilters' => $filterController->index()
         ];
     }
+
+    public function createCalendarDataForUserShiftPlan(?Project $project = null, ?Room $room = null)
+    {
+        $this->startDate = Carbon::now()->startOfDay();
+
+        $this->endDate = Carbon::now()->addWeeks()->endOfDay();
+        $this->setDefaultDates();
+
+        $calendarPeriod = CarbonPeriod::create($this->startDate, $this->endDate);
+        $periodArray = [];
+
+        foreach ($calendarPeriod as $period) {
+            $periodArray[] = [
+                'day' => $period->format('d.m.'),
+                'day_string' => $period->shortDayName,
+                'is_weekend' => $period->isWeekend(),
+                'full_day' => $period->format('d.m.Y')
+            ];
+        }
+        if (\request('startDate') && \request('endDate')) {
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        } else {
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
+
+        $daysWithEvents = [];
+
+        foreach ($calendarPeriod as $date) {
+            $events = $this->get_events_per_day($date, $startDate, $endDate);
+            $daysWithEvents[$date->format('Y-m-d')] = [
+                'day' => $date->format('d.m.'),
+                'day_string' => $date->shortDayName,
+                'full_day' => $date->format('d.m.Y'),
+                'events' => $events
+            ];
+        }
+
+        return [
+            'dateValue' => [$this->startDate->format('Y-m-d'), $this->endDate->format('Y-m-d')],
+            'daysWithEvents' => $daysWithEvents,
+        ];
+    }
+
     public function createCalendarDataForShiftPlan(?Project $project = null, ?Room $room = null)
     {
         $selectedDate = null;
@@ -227,28 +295,28 @@ class CalendarController extends Controller
                 'full_day' => $period->format('d.m.Y')
             ];
         }
-            if (\request('startDate') && \request('endDate')) {
-                $startDate = Carbon::create(\request('startDate'))->startOfDay();
-                $endDate = Carbon::create(\request('endDate'))->endOfDay();
-            } else {
-                $startDate = Carbon::now()->startOfDay();
-                $endDate = Carbon::now()->addWeeks()->endOfDay();
-            }
+        if (\request('startDate') && \request('endDate')) {
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        } else {
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
 
-            $better = $this->filterRooms($startDate, $endDate)
-                ->with(['events.room', 'events.project', 'events.creator', 'events' => function ($query) use ($project, $room) {
-                    $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC')->whereHas('shifts', function ($query) {
-                        $query->whereNotNull('shifts.id');
-                    });
-                }])
-                ->get()
-                ->map(fn($room) => collect($calendarPeriod)
-                    ->mapWithKeys(fn($date) => [
-                        $date->format('d.m.') => [
-                            'roomName' => $room->name,
-                            'events' => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
-                        ]
-                    ]));
+        $better = $this->filterRooms($startDate, $endDate)
+            ->with(['events.room', 'events.project', 'events.creator', 'events' => function ($query) use ($project, $room) {
+                $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC')->whereHas('shifts', function ($query) {
+                    $query->whereNotNull('shifts.id');
+                });
+            }])
+            ->get()
+            ->map(fn($room) => collect($calendarPeriod)
+                ->mapWithKeys(fn($date) => [
+                    $date->format('d.m.') => [
+                        'roomName' => $room->name,
+                        'events' => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
+                    ]
+                ]));
 
         return [
             'days' => $periodArray,

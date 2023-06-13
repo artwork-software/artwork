@@ -145,7 +145,6 @@ class User extends Authenticatable
             ->groupBy(function ($shift) {
                 return $shift->event->days_of_event;
             });
-
     }
 
     public function getFullNameAttribute(){

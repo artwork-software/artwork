@@ -1,13 +1,16 @@
 <template>
     <div>
         <div>
+            <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1" :class="eventType.svg_name">
                 {{ eventType.abbreviation }}: {{ project?.name }}
+            </div>
+
             </div>
             <div class="bg-backgroundGray">
                 <div v-for="shift in event.shifts" class="flex justify-between px-1">
                     <!-- Drop Element --->
-                    <ShiftDropElement :users="shift.users" :shift="shift" />
+                    <ShiftDropElement :users="shift.users" :shift="shift" :show-room="showRoom" :room="room" :event="event" />
                 </div>
             </div>
         </div>
@@ -30,11 +33,10 @@ export default defineComponent({
     props: [
         'event',
         'project',
-        'eventType'
+        'eventType',
+        'showRoom',
+        'room',
     ],
-    methods: {
-
-    },
     data() {
         return {}
     },

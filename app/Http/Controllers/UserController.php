@@ -15,6 +15,7 @@ use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Freelancer;
 use App\Models\Project;
+use App\Models\Room;
 use App\Models\ServiceProvider;
 use App\Models\User;
 use Carbon\Carbon;
@@ -140,6 +141,7 @@ class UserController extends Controller
             //needed for UserShiftPlan
             'dateValue'=> $showCalendar['dateValue'],
             'daysWithEvents' => $showCalendar['daysWithEvents'],
+            'rooms' => Room::all(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => Project::all(),
             'shifts' => $user->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),

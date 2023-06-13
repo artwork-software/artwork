@@ -31,8 +31,8 @@
                         </div>
 
                         <div class="">
-                            <div class="max-w-screen-lg py-4 pl-20 pr-4" v-if="currentTab === 1">
-                                <UserShiftPlan :date-value="dateValue" :days-with-events="daysWithEvents" :projects="projects" :event-types="eventTypes"></UserShiftPlan>
+                            <div class="w-full py-4 pl-20 pr-4" v-if="currentTab === 1">
+                                <UserShiftPlan :date-value="dateValue" :days-with-events="daysWithEvents" :projects="projects" :event-types="eventTypes" :rooms="rooms" :vacations="vacations"></UserShiftPlan>
                             </div>
 
                             <div class="max-w-screen-3xl py-4 pl-20 pr-4" v-if="currentTab === 2">
@@ -469,7 +469,7 @@ export default defineComponent({
         CheckIcon,
         InformationCircleIcon, Switch, SwitchGroup, SwitchLabel
     },
-    props: ['shifts','user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles', 'calendarData','dateToShow','vacations','daysWithEvents','dateValue','projects','eventTypes'],
+    props: ['shifts','user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles', 'calendarData','dateToShow','vacations','daysWithEvents','dateValue','projects','eventTypes','rooms'],
     data() {
         return {
             showGlobalRoles: true,

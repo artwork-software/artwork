@@ -256,6 +256,9 @@ class CalendarController extends Controller
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
+
+        $daysWithEvents = [];
+
         foreach ($calendarPeriod as $date) {
             $events = $this->get_events_per_day($date, $startDate, $endDate);
             $daysWithEvents[$date->format('Y-m-d')] = [

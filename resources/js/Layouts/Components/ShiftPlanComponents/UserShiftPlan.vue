@@ -1,18 +1,33 @@
 <template>
-    <div>
+    <div class="w-full">
         <div>
-            <div>
+            <div class="mb-6 -ml-12">
                 <UserShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
-                                          @next-time-range="nextTimeRange" :dateValue="dateValue"></UserShiftPlanFunctionBar>
+                                          @next-time-range="nextTimeRange"
+                                          :dateValue="dateValue"></UserShiftPlanFunctionBar>
             </div>
-            <div class="grid-cols-7 grid">
-                <div class="col-span-1 h-48" v-for="day in daysWithEvents">
-                    <div>
-                        {{day.day_string}}.{{day.day}}
-                    </div>
-                    <div v-for="event in day.events">
-                        <SingleShiftPlanEvent :eventType="this.findEventTypeById(event.event_type_id)"
-                                              :project="this.findProjectById(event.projectId)" :event="event" ></SingleShiftPlanEvent>
+            <div class="overflow-x-auto flex">
+                <div class="flex flex-wrap w-full">
+                    <div class="w-1/7 h-48 mx-1" :style="{minWidth: 200 + 'px'}"
+                         v-for="day in daysWithVacationAndEvents">
+                        <div class="calendarRoomHeader">
+                            {{ day.day_string }} {{ day.day }}
+                            <span class="text-shiftText subpixel-antialiased">
+                                (<span
+                                :class="day.shiftDurationWarning? 'text-error': ''">{{ calculateShiftDuration(day.events) }}</span>  |
+                            <span :class="day.breakWarning">{{calculateTotalBreakDuration(day.events) }}</span>)</span>
+                        </div>
+                        <div v-if="day.in_vacation">
+                            <div class="bg-shiftText text-sm p-1 flex items-center text-secondaryHover h-10">
+                                nicht verfügbar
+                            </div>
+                        </div>
+                        <div v-for="event in day.events" class="flex">
+                            <SingleShiftPlanEvent :eventType="this.findEventTypeById(event.event_type_id)"
+                                                  :project="this.findProjectById(event.projectId)"
+                                                  :room="this.findRoomById(event.room_id)" :event="event"
+                                                  :showRoom="true" :show-duration-info="true"></SingleShiftPlanEvent>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -40,8 +55,35 @@ export default {
         ShiftPlanFunctionBar,
         UserShiftPlanFunctionBar
     },
-    props:['daysWithEvents','dateValue','projects','eventTypes'],
-    methods:{
+    computed: {
+        daysWithVacationAndEvents() {
+            const daysArray = Object.values(this.daysWithEvents);
+            return daysArray.map((day) => {
+                const dayDate = new Date(day.full_day.split(".").reverse().join("-"));
+                const inVacation = this.vacations.some((vacation) => {
+                    const vacationFrom = new Date(vacation.from);
+                    const vacationUntil = new Date(vacation.until);
+                    return dayDate >= vacationFrom && dayDate <= vacationUntil;
+                });
+
+                const shiftDuration = this.calculateShiftDuration(day.events);
+                const totalBreakDuration = this.calculateTotalBreakDuration(day.events);
+                const shiftDurationWarning = shiftDuration > '10:00';
+                const breakWarning = shiftDuration > '04:00' && totalBreakDuration < '00:30';
+
+                return {
+                    ...day,
+                    in_vacation: inVacation,
+                    shiftDuration,
+                    totalBreakDuration,
+                    shiftDurationWarning,
+                    breakWarning,
+                };
+            });
+        },
+    },
+    props: ['daysWithEvents', 'dateValue', 'projects', 'eventTypes', 'rooms', 'vacations'],
+    methods: {
         previousTimeRange() {
             const dayDifference = this.calculateDateDifference();
             this.dateValue[1] = this.getPreviousDay(this.dateValue[0]);
@@ -86,6 +128,9 @@ export default {
         findEventTypeById(eventTypeId) {
             return this.eventTypes.find(eventType => eventType.id === eventTypeId);
         },
+        findRoomById(roomId) {
+            return this.rooms.find(room => room.id === roomId);
+        },
         updateTimes() {
             Inertia.reload({
                 data: {
@@ -93,6 +138,39 @@ export default {
                     endDate: this.dateValue[1],
                 }
             })
+        },
+        calculateShiftDuration(events) {
+            const allShifts = events.flatMap(event => event.shifts);
+            if (allShifts.length === 0) {
+                return '00:00';
+            }
+            const startTimes = allShifts.map(shift => shift.start);
+            const endTimes = allShifts.map(shift => shift.end);
+
+            const earliestStartTime = Math.min(...startTimes.map(time => new Date(`2000-01-01 ${time}`)));
+            const latestEndTime = Math.max(...endTimes.map(time => new Date(`2000-01-01 ${time}`)));
+
+            console.log(earliestStartTime, latestEndTime)
+
+            const durationInMinutes = (latestEndTime - earliestStartTime) / 60000;
+
+            const hours = Math.floor(durationInMinutes / 60);
+            const minutes = durationInMinutes % 60;
+
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        },
+        calculateTotalBreakDuration(events) {
+            const allShifts = events.flatMap(event => event.shifts);
+            if (allShifts.length === 0) {
+                return '00:00';
+            }
+            const breakMinutes = allShifts.map(shift => shift.break_minutes);
+            const totalBreakMinutes = breakMinutes.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+
+            const hours = Math.floor(totalBreakMinutes / 60);
+            const minutes = totalBreakMinutes % 60;
+
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
         },
     }
 }

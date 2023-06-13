@@ -5,7 +5,7 @@ import {CheckIcon} from "@heroicons/vue/outline";
 export default defineComponent({
     name: "ShiftDropElement",
     components: {CheckIcon},
-    props: ['shift'],
+    props: ['shift','showRoom','event','room'],
     methods: {
         onDragOver(event) {
             event.preventDefault();
@@ -38,12 +38,17 @@ export default defineComponent({
 </script>
 
 <template>
-    <div class="flex" @dragover="onDragOver" @drop="onDrop">
-        <div class="flex">
+    <div class="flex xsLight text-shiftText subpixel-antialiased" @dragover="onDragOver" @drop="onDrop">
+        <div>
             {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
+        </div>
+        <div v-if="!showRoom && room">
             ({{ shift.employee_count }}/{{ shift.number_employees }}
             <span v-if="shift.number_masters > 0">| {{ shift.masters.length }}/{{ shift.number_masters }}</span>
             )
+        </div>
+        <div v-else class="truncate">
+            , {{room.name}}
         </div>
         <div v-if="shift.empty_employee_count === 0">
             <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>

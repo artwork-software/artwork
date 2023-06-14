@@ -108,7 +108,6 @@
                                     <ListboxOption as="template" v-for="type in notRelevantEventTypes" :key="type.id" :value="type" v-slot="{ active, selected }">
                                         <li @click="addRelevantEventType(type)" :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ type.name }}</span>
-
                                             <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                 <CheckIcon class="h-5 w-5" aria-hidden="true" />
                                             </span>
@@ -191,7 +190,7 @@ export default defineComponent({
         notRelevantEventTypes(){
             const types = [];
             this.eventTypes.forEach((type) => {
-                if(!type.relevant_for_shift){
+                if(!type.relevant_for_shift && type.id !== 1){
                     types.push(type)
                 }
             })

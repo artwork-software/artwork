@@ -3,7 +3,7 @@ import {defineComponent} from 'vue'
 
 export default defineComponent({
     name: "DropElement",
-    props: ['shiftId', 'master', 'users'],
+    props: ['shiftId', 'master', 'users', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount', 'userIds'],
     computed: {
         userIds(){
             return this.users.map(user => user.id);
@@ -18,23 +18,86 @@ export default defineComponent({
             let dropElement = event.dataTransfer.getData('application/json');
             dropElement = JSON.parse(dropElement)[0];
 
-            // prevent adding the same user twice
-            if(this.userIds.includes(dropElement.id)){
+            if(this.maxCount === this.currentCount){
                 return;
             }
 
-            if(dropElement.master && this.master){
+            if(dropElement.master && this.freeMasterCount === 0){
+                return;
+            }
+
+            if(!dropElement.master && this.freeEmployeeCount === 0){
+                return;
+            }
+
+            if(dropElement.type === 0){
+                if(this.userIds.userIds.includes(dropElement.id)){
+                    return;
+                }
+            }
+
+            if(dropElement.type === 1){
+                if(this.userIds.freelancerIds.includes(dropElement.id)){
+                    return;
+                }
+            }
+
+            if(dropElement.type === 2){
+                if(this.userIds.providerIds.includes(dropElement.id)){
+                    return;
+                }
+            }
+
+            console.log(dropElement);
+            if(dropElement.master && this.master && dropElement.type === 0){
                 this.$inertia.post(route('add.shift.master', this.shiftId), {
+                        user_id: dropElement.id,
+                    }, {
+                        preserveState: true,
+                        preserveScroll: true,
+                        only: ['shifts']
+                    }
+                )
+
+            } else if (dropElement.type === 0 && !dropElement.master) {
+                this.$inertia.post(route('add.shift.user', this.shiftId), {
                         user_id: dropElement.id
                     }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
                 )
+            }
 
-            } else {
-                this.$inertia.post(route('add.shift.user', this.shiftId), {
-                        user_id: dropElement.id
+            if(dropElement.type === 1 && !dropElement.master){
+                this.$inertia.post(route('add.shift.freelancer', this.shiftId), {
+                        freelancer_id: dropElement.id
+                    }, {
+                        preserveState: true,
+                        preserveScroll: true,
+                    }
+                )
+            } else if (dropElement.type === 1 && dropElement.master) {
+                this.$inertia.post(route('add.shift.freelancer.master', this.shiftId), {
+                        freelancer_id: dropElement.id
+                    }, {
+                        preserveState: true,
+                        preserveScroll: true,
+                    }
+                )
+            }
+
+            if(dropElement.type === 2 && dropElement.master){
+                this.$inertia.post(route('add.shift.provider.master', this.shiftId), {
+                        service_provider_id: dropElement.id
+                    }, {
+                        preserveState: true,
+                        preserveScroll: true,
+                    }
+                )
+            } else if (dropElement.type === 2 && !dropElement.master) {
+                this.$inertia.post(route('add.shift.provider', this.shiftId), {
+                        service_provider_id: dropElement.id
                     }, {
                         preserveState: true,
                         preserveScroll: true,

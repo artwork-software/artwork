@@ -207,7 +207,7 @@
                 </div>
 
                 <div v-if="isShiftTab" class="mx-5 mt-6 p-5  bg-lightBackgroundGray">
-                    <ShiftTab :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" :users="project.users"/>
+                    <ShiftTab :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" :drop-users="dropUsers" :users="project.users"/>
                 </div>
                 <!-- Comment Tab -->
                 <div v-if="isCommentTab"
@@ -611,7 +611,6 @@ export default {
         'project_users',
         'project',
         'openTab',
-        'users',
         'categories',
         'projectCategoryIds',
         'projectGenreIds',
@@ -704,6 +703,29 @@ export default {
     },
     mixins: [Permissions],
     computed: {
+        dropUsers(){
+            const users = [];
+            this.project.users.forEach((user) => {
+                users.push({
+                    element: user,
+                    type: 0
+                })
+            })
+            this.project.freelancers?.forEach((freelancer) => {
+                users.push({
+                    element: freelancer,
+                    type: 1
+                })
+            })
+            this.project.serviceProviders?.forEach((provider) => {
+                users.push({
+                    element: provider,
+                    type: 2
+                })
+            })
+
+            return users;
+        },
         write() {
             return write
         },

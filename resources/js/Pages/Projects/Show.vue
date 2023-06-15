@@ -529,6 +529,10 @@
             />
         </BaseSidenav>
 
+
+        <pre>
+            {{ project }}
+        </pre>
     </app-layout>
 </template>
 

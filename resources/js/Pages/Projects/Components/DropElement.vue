@@ -55,7 +55,6 @@ export default defineComponent({
                     }, {
                         preserveState: true,
                         preserveScroll: true,
-                        only: ['shifts']
                     }
                 )
 

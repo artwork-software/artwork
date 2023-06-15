@@ -1,136 +1,8 @@
 <template>
     <app-layout>
-        <div class="my-12 pl-10 pr-10">
-            <div class="flex flex-col" v-if="isProjectMember(project.id)">
-                <div v-if="currentGroup" class="bg-secondaryHover -mb-6 z-20 w-fit pr-6 pb-0.5">
-                    <div class="flex items-center">
-                        <span v-if="!project.is_group">
-                            <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
-                        </span>
-                        Gehört zu <a :href="'/projects/' + currentGroup.id" class="text-buttonBlue ml-1">
-                        {{ currentGroup?.name }}</a>
-                    </div>
-                </div>
-                <div class="flex z-10" v-if="this.project.key_visual_path !== null">
-                    <img :src="'/storage/keyVisual/header_' + this.project.key_visual_path" alt="Aktuelles Key-Visual"
-                         class="rounded-md w-full h-[200px]">
-                </div>
-                <div v-else class="w-full h-40 bg-gray-200 flex justify-center items-center">
-                    <img src="/Svgs/IconSvgs/placeholder.svg" alt="Aktuelles Key-Visual"
-                         class="rounded-md ">
-                </div>
-                <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center"
-                     v-if="project.project_history.length">
-                    <div>
-                        zuletzt geändert:
-                    </div>
-                    <img v-if="project.project_history[0]?.changes[0]?.changed_by"
-                         :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
-                         :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
-                         :alt="project.project_history[0].changes[0].changed_by?.first_name"
-                         class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                    <UserTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
-                                 :user="project.project_history[0].changes[0].changed_by"/>
-                    <span class="ml-2 subpixel-antialiased">
-                        {{ project.project_history[0]?.created_at }}
-                    </span>
-                    <button class="ml-4 subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
-                            @click="openProjectHistoryModal()">
-                        <ChevronRightIcon
-                            class="-mr-0.5 h-4 w-4  group-hover:text-white"
-                            aria-hidden="true"/>
-                        Verlauf ansehen
-                    </button>
-                </div>
-                <div class="flex justify-between items-center">
-                    <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl items-center">
-                        <span v-if="project.is_group">
-                            <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
-                        </span>
-                        {{ project?.name }}
-                        <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex"
-                              :class="this.states.find(state => state.id === projectState)?.color">
-                            {{ this.states.find(state => state.id === projectState)?.name }}
-                        </span>
-                    </h2>
-                    <Menu as="div" class="my-auto mt-3 relative"
-                          v-if="$can('write projects') || $role('artwork admin') || projectManagerIds.includes(this.$page.props.user.id) || projectCanWriteIds.includes(this.$page.props.user.id)">
-                        <div class="flex items-center -mt-1">
-                            <MenuButton
-                                class="flex bg-tagBg p-0.5 rounded-full">
-                                <DotsVerticalIcon
-                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                    aria-hidden="true"/>
-                            </MenuButton>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <div class="py-1">
-                                    <MenuItem
-                                        v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')"
-                                        v-slot="{ active }">
-                                        <a @click="openEditProjectModal"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <PencilAltIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            Basisdaten bearbeiten
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="duplicateProject(this.project)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <DuplicateIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            Duplizieren
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem
-                                        v-if="
-                                            projectDeletePermissionUsers.includes(this.$page.props.user.id) ||
-                                            $role('artwork admin')
-                                        "
-                                        v-slot="{ active }">
-                                        <a @click="openDeleteProjectModal(this.project)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <TrashIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            In den Papierkorb legen
-                                        </a>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
-                </div>
-                <div class="mt-3" v-if="projectGroups.length > 0">
-                    <TagComponent v-for="projectGroup in projectGroups" :method="deleteProjectFromGroup"
-                                  :displayed-text="projectGroup.name" :property="projectGroup"></TagComponent>
-                </div>
+        <ProjectShowHeaderComponent :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup" :states="states" :project-groups="projectGroups" :first-event-in-project="firstEventInProject" :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience">
 
-                <div class="w-full mt-5 text-secondary subpixel-antialiased">
-                    <div v-if="firstEventInProject && lastEventInProject">
-                        Zeitraum/Öffnungszeiten: {{ firstEventInProject?.start_time }} <span
-                        v-if="firstEventInProject?.start_time">Uhr -</span> {{ lastEventInProject?.end_time }} <span
-                        v-if="lastEventInProject?.end_time">Uhr</span>
-                    </div>
-                    <div v-if="RoomsWithAudience">
-                        Termine mit Publikum in: <span>{{ locationString }}</span>
-                    </div>
-                    <div v-if="!RoomsWithAudience && !(firstEventInProject && lastEventInProject)">
-                        Noch keine Termine innerhalb dieses Projektes
-                    </div>
-                </div>
-            </div>
-        </div>
+        </ProjectShowHeaderComponent>
         <!-- Div with Bg-Color -->
         <div class="w-full h-full mb-48">
             <div class="ml-10">
@@ -147,64 +19,8 @@
                 </div>
             </div>
             <div class="bg-lightBackgroundGray">
-                <!-- Calendar Tab -->
-                <div v-if="isScheduleTab" class="px-5 mt-6 max-w-screen-2xl bg-lightBackgroundGray">
-                    <div v-if="calendarType && calendarType === 'daily'">
-                        <CalendarComponent
-                            :selected-date="selectedDate"
-                            :dateValue="dateValue"
-                            :eventTypes=this.eventTypes initial-view="day"
-                            :events="this.events.events"
-                            :rooms="this.rooms"
-                            :events-without-room="eventsWithoutRoom"
-                            :filter-options="filterOptions"
-                            :personal-filters="personalFilters"
-                        />
-                    </div>
-
-                    <div v-else>
-                        <IndividualCalendarAtGlanceComponent
-                            :dateValue="dateValue"
-                            v-if="atAGlance"
-                            :project="project"
-                            @change-at-a-glance="changeAtAGlance"
-                            :atAGlance="this.atAGlance"
-                            :eventTypes=this.eventTypes
-                            :rooms="rooms"
-                            :eventsAtAGlance="eventsAtAGlance"
-                            :filter-options="filterOptions"
-                            :personal-filters="personalFilters"
-                        >
-                        </IndividualCalendarAtGlanceComponent>
-
-                        <IndividualCalendarComponent
-                            :events-without-room="eventsWithoutRoom"
-                            :project="project"
-                            :dateValue="dateValue"
-                            v-else
-                            @change-at-a-glance="changeAtAGlance"
-                            :atAGlance="this.atAGlance"
-                            :eventTypes=this.eventTypes
-                            :calendarData="calendar"
-                            :rooms="rooms"
-                            :days="days"
-                            :filter-options="filterOptions"
-                            :personal-filters="personalFilters"
-                        />
-                    </div>
-                </div>
                 <!-- Checklist Tab -->
-                <div v-if="isChecklistTab"
-                     class="grid grid-cols-3 ml-10 mt-6 p-5 max-w-screen-2xl bg-lightBackgroundGray ">
-                    <ChecklistComponent
-                        :project="project"
-                        :opened_checklists="opened_checklists"
-                        :project-can-write-ids="projectCanWriteIds"
-                        :project-manager-ids="projectManagerIds"
-                        :checklist_templates="checklist_templates"
-                    />
 
-                </div>
 
                 <div v-if="isShiftTab" class="mx-5 mt-6 p-5  bg-lightBackgroundGray">
                     <ShiftTab :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" :drop-users="dropUsers" :users="project.users"/>
@@ -259,149 +75,6 @@
                         </div>
                         <div v-else class="xsDark mt-6">
                             Noch keine Kommentare vorhanden
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Info Tab -->
-                <div v-if="isInfoTab" class="mx-5 mt-6 p-5  bg-lightBackgroundGray">
-                    <div class="grid grid-cols-6 mr-8">
-                        <div class="col-span-4">
-                            <!-- Description -->
-                            <div class="mt-4">
-                                <div> Kurzbeschreibung</div>
-                                <div v-if="descriptionClicked === false"
-                                     class="mt-2 subpixel-antialiased text-secondary"
-                                     @click="handleDescriptionClick()">
-                                    {{
-                                        project.description ? project.description : 'Hier klicken um Text hinzuzufügen'
-                                    }}
-                                </div>
-                                <textarea v-else v-model="project.description" type="text"
-                                          @focusout="updateDescription()"
-                                          :ref="`description-${this.project.id}`"
-                                          class="w-full border-gray-300 text-primary h-40"
-                                          :placeholder="project.description || 'Hier klicken um Text hinzuzufügen'"/>
-                            </div>
-                            <!-- Individual Projectinformation -->
-                            <div v-for="headline in project.project_headlines" class="mt-4">
-                                <div>{{ headline.name }}</div>
-                                <div v-if="!headline.clicked" class="mt-2 subpixel-antialiased text-secondary"
-                                     @click="handleTextClick(headline)">
-                                    {{ headline.text ? headline.text : 'Hier klicken um Text hinzuzufügen' }}
-                                </div>
-                                <textarea v-else v-model="headline.text" type="text" :ref="`text-${headline.id}`"
-                                          @focusout="changeHeadlineText(headline)"
-                                          class="w-full border-gray-300 text-primary h-40"
-                                          :placeholder="headline.text || 'Hier klicken um Text hinzuzufügen'"/>
-                            </div>
-                        </div>
-                        <div
-                            v-if="$can('write projects') || $role('artwork admin') || $can('admin projects') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
-                            class="col-span-2">
-                            <div class="ml-10 group">
-                                <label class="block my-4 sDark">
-                                    Key Visual </label>
-                                <div
-                                    class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
-                                    @dragover.prevent
-                                    @drop.stop.prevent="uploadDraggedKeyVisual($event)"
-                                    @click="selectNewKeyVisual"
-                                    v-if="this.project.key_visual_path === null">
-                                    <div class="space-y-1 text-center">
-                                        <div class="xsLight flex my-auto h-40 items-center"
-                                             v-if="this.project.key_visual_path === null">
-                                            Ziehe hier dein <br/> Key Visual hin
-                                            <input id="keyVisual-upload" ref="keyVisual"
-                                                   name="file-upload" type="file" class="sr-only"
-                                                   @change="updateKeyVisual"/>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div v-else class="flex items-center justify-center relative w-full">
-                                    <div
-                                        class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
-                                        <button @click="downloadKeyVisual" type="button"
-                                                class="mr-3 inline-flex rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                            <SvgCollection svg-name="ArrowDownTray" class="h-5 w-5" aria-hidden="true"/>
-                                        </button>
-                                        <button @click="selectNewKeyVisual" type="button"
-                                                class="mr-3 inline-flex rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                            <PencilAltIcon
-                                                class="h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                        </button>
-                                        <button @click="deleteKeyVisual" type="button"
-                                                class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                                            <XIcon class="h-5 w-5 text-primaryText group-hover:text-white"
-                                                   aria-hidden="true"/>
-                                        </button>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="cursor-pointer">
-                                            <img src="">
-                                            <img :src="'/storage/keyVisual/' + this.project.key_visual_path"
-                                                 alt="Aktuelles Key-Visual"
-                                                 class="rounded-md w-full h-48">
-                                            <input id="keyVisual-upload" ref="keyVisual"
-                                                   name="file-upload" type="file" class="sr-only"
-                                                   @change="updateKeyVisual"/>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex w-full items-center my-4">
-                                    <h3 class="sDark"> Dokumente </h3>
-                                </div>
-                                <div
-                                    v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id)">
-                                    <input
-                                        @change="uploadChosenDocuments"
-                                        class="hidden"
-                                        ref="project_files"
-                                        id="file"
-                                        type="file"
-                                        multiple
-                                    />
-                                    <div @click="selectNewFiles" @dragover.prevent
-                                         @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
-                        border-buttonBlue border-dotted border-2 h-40 bg-colorOfAction p-2 cursor-pointer">
-                                        <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher
-                                            ziehen
-                                            <br>oder ins Feld klicken
-                                        </p>
-                                    </div>
-                                    <jet-input-error :message="uploadDocumentFeedback"/>
-                                </div>
-                                <div>
-                                    <div class="space-y-1"
-                                         v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                                        <div v-for="project_file in project.project_files"
-                                             class="cursor-pointer group flex items-center">
-                                            <div :data-tooltip-target="project_file.name" class="flex truncate">
-                                                <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
-                                                <p @click="downloadFile(project_file)" class="ml-2 truncate">
-                                                    {{ project_file.name }}</p>
-
-                                                <XCircleIcon
-                                                    v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
-                                                    @click="openConfirmDeleteModal(project_file)"
-                                                    class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
-                                                    aria-hidden="true"/>
-                                            </div>
-                                            <div :id="project_file.name" role="tooltip"
-                                                 class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
-                                                <div class="flex flex-wrap">
-                                                    Um die Datei herunterzuladen, klicke auf den Dateinamen
-                                                </div>
-                                                <div class="tooltip-arrow" data-popper-arrow></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div v-else class="xsDark">
-                                        Keine Dateien vorhanden
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -528,11 +201,6 @@
                 :project-manager-ids="projectManagerIds"
             />
         </BaseSidenav>
-
-
-        <pre>
-            {{ project }}
-        </pre>
     </app-layout>
 </template>
 
@@ -599,8 +267,9 @@ import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendar
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import {isProjectMember} from "@/Helper/PermissionHelper";
 import Permissions from "@/mixins/Permissions.vue";
-import ShiftTab from "@/Pages/Projects/Components/ShiftTab.vue";
+import ShiftTab from "@/Pages/Projects/Components/TabComponents/ShiftTab.vue";
 import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
+import ProjectShowHeaderComponent from "@/Pages/Projects/Components/ProjectShowHeaderComponent.vue";
 
 export default {
     name: "ProjectShow",
@@ -647,6 +316,7 @@ export default {
         'crafts'
     ],
     components: {
+        ProjectShowHeaderComponent,
         ProjectShiftSidenav,
         ShiftTab,
         ProjectSecondSidenav,

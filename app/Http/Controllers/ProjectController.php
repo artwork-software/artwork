@@ -11,6 +11,7 @@ use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\CalendarEventCollectionResource;
 use App\Http\Resources\CalendarEventResource;
+use App\Http\Resources\ChecklistTemplateIndexResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
@@ -1596,6 +1597,319 @@ class ProjectController extends Controller
             'crafts' => Craft::all(),
         ]);
     }
+    public function projectInfoTab(Project $project, Request $request)
+    {
+
+        $project->load([
+            'categories',
+            'departments.users.departments',
+            'genres',
+            'managerUsers',
+            'writeUsers',
+            'project_files',
+            'copyright',
+            'cost_center',
+            'project_histories.user',
+            'sectors',
+            'users.departments',
+            'state',
+            'delete_permission_users'
+        ]);
+
+
+        if (!$project->is_group) {
+            $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
+            if (!empty($group)) {
+                $groupOutput = Project::find($group?->group_id);
+            } else {
+                $groupOutput = '';
+            }
+        } else {
+            $groupOutput = '';
+        }
+
+        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
+        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+
+        $events = $project->events()->get();
+        $RoomsWithAudience = null;
+
+        foreach ($events as $event){
+            if(!$event->audience){
+                continue;
+            }
+            $rooms = $event->room()->distinct()->get();
+            foreach ($rooms as $room){
+                $RoomsWithAudience[$room->id] = $room->name;
+            }
+        }
+
+        return inertia('Projects/SingleProjectInformation', [
+            // needed for the ProjectShowHeaderComponent
+            'project' => new ProjectShowResource($project),
+            'firstEventInProject' => $firstEventInProject,
+            'lastEventInProject' => $lastEventInProject,
+            'RoomsWithAudience' => $RoomsWithAudience,
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'currentGroup' => $groupOutput,
+            'states' => ProjectStates::all(),
+            'projectGroups' => $project->groups()->get(),
+            'groupProjects' => Project::where('is_group', 1)->get(),
+
+            // needed for ProjectSecondSidenav
+            'categories' => Category::all(),
+            'projectCategoryIds' => $project->categories()->pluck('category_id'),
+            'projectCategories' => $project->categories,
+            'genres' => Genre::all(),
+            'projectGenreIds' => $project->genres()->pluck('genre_id'),
+            'projectGenres' => $project->genres,
+            'sectors' => Sector::all(),
+            'projectSectorIds' => $project->sectors()->pluck('sector_id'),
+            'projectSectors' => $project->sectors,
+            'projectState' => $project->state,
+
+        ]);
+    }
+    public function projectCalendarTab(Project $project, Request $request)
+    {
+        $calendar = new CalendarController();
+        $showCalendar = $calendar->createCalendarData('', $project);
+
+        $project->load([
+            'access_budget',
+            'categories',
+            'comments.user',
+            'departments.users.departments',
+            'genres',
+            'managerUsers',
+            'writeUsers',
+            'project_files',
+            'contracts',
+            'project_histories.user',
+            'sectors',
+            'users.departments',
+            'state',
+            'delete_permission_users'
+        ]);
+
+        if (!$project->is_group) {
+            $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
+            if (!empty($group)) {
+                $groupOutput = Project::find($group?->group_id);
+            } else {
+                $groupOutput = '';
+            }
+        } else {
+            $groupOutput = '';
+        }
+
+        $eventsAtAGlance = [];
+
+        if(\request('atAGlance') === 'true'){
+
+            $eventsAtAGlance = CalendarEventResource::collection($project->events()
+                ->with(['room','project','creator'])
+                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
+        }
+        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
+        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+
+        $events = $project->events()->get();
+        $RoomsWithAudience = null;
+
+
+        foreach ($events as $event){
+            if(!$event->audience){
+                continue;
+            }
+            $rooms = $event->room()->distinct()->get();
+            foreach ($rooms as $room){
+                $RoomsWithAudience[$room->id] = $room->name;
+            }
+        }
+
+        if(\request('startDate') && \request('endDate')){
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        }else{
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
+
+        return inertia('Projects/SingleProjectCalendar', [
+            // needed for the ProjectShowHeaderComponent
+            'project' => new ProjectShowResource($project),
+            'firstEventInProject' => $firstEventInProject,
+            'lastEventInProject' => $lastEventInProject,
+            'RoomsWithAudience' => $RoomsWithAudience,
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'currentGroup' => $groupOutput,
+            'states' => ProjectStates::all(),
+            'projectGroups' => $project->groups()->get(),
+            'groupProjects' => Project::where('is_group', 1)->get(),
+
+            // needed for ProjectSecondSidenav
+            'categories' => Category::all(),
+            'projectCategoryIds' => $project->categories()->pluck('category_id'),
+            'projectCategories' => $project->categories,
+            'genres' => Genre::all(),
+            'projectGenreIds' => $project->genres()->pluck('genre_id'),
+            'projectGenres' => $project->genres,
+            'sectors' => Sector::all(),
+            'projectSectorIds' => $project->sectors()->pluck('sector_id'),
+            'projectSectors' => $project->sectors,
+            'projectState' => $project->state,
+
+            // needed for SingleProjectCalendar
+            'eventsAtAGlance' => $eventsAtAGlance,
+            'calendar' => $showCalendar['roomsWithEvents'],
+            'dateValue'=>$showCalendar['dateValue'],
+            'days' => $showCalendar['days'],
+            'selectedDate' => $showCalendar['selectedDate'],
+            'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
+            'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
+            'filterOptions' => $showCalendar["filterOptions"],
+            'personalFilters' => $showCalendar['personalFilters'],
+            'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
+        ]);
+    }
+    public function projectChecklistTab(Project $project, Request $request)
+    {
+
+        $project->load([
+            'categories',
+            'checklists.users',
+            'checklists.tasks.checklist.project',
+            'checklists.tasks.user_who_done',
+            'departments.users.departments',
+            'genres',
+            'managerUsers',
+            'writeUsers',
+            'project_histories.user',
+            'sectors',
+            'users.departments',
+            'state',
+            'delete_permission_users'
+        ]);
+
+        if (!$project->is_group) {
+            $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
+            if (!empty($group)) {
+                $groupOutput = Project::find($group?->group_id);
+            } else {
+                $groupOutput = '';
+            }
+        } else {
+            $groupOutput = '';
+        }
+
+        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
+        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+
+        $events = $project->events()->get();
+        $RoomsWithAudience = null;
+
+
+        foreach ($events as $event){
+            if(!$event->audience){
+                continue;
+            }
+            $rooms = $event->room()->distinct()->get();
+            foreach ($rooms as $room){
+                $RoomsWithAudience[$room->id] = $room->name;
+            }
+        }
+
+        return inertia('Projects/SingleProjectChecklists', [
+            'project' => new ProjectShowResource($project),
+            'firstEventInProject' => $firstEventInProject,
+            'lastEventInProject' => $lastEventInProject,
+            'RoomsWithAudience' => $RoomsWithAudience,
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'project_id' => $project->id,
+            'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
+            'states' => ProjectStates::all(),
+            'checklist_templates' => ChecklistTemplateIndexResource::collection(ChecklistTemplate::all())->resolve(),
+        ]);
+    }
+    public function projectShiftTab(Project $project, Request $request)
+    {
+
+        $project->load([
+            'departments.users.departments',
+            'managerUsers',
+            'writeUsers',
+            'project_files',
+            'project_histories.user',
+            'sectors',
+            'users.departments',
+            'state',
+            'delete_permission_users'
+        ]);
+
+        if (!$project->is_group) {
+            $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
+            if (!empty($group)) {
+                $groupOutput = Project::find($group?->group_id);
+            } else {
+                $groupOutput = '';
+            }
+        } else {
+            $groupOutput = '';
+        }
+        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
+        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+
+        $events = $project->events()->get();
+        $RoomsWithAudience = null;
+
+
+        $shiftRelevantEventTypes = $project->shiftRelevantEventTypes()->pluck('event_type_id');
+        $shiftRelevantEvents = $project->events()
+            ->whereIn('event_type_id', $shiftRelevantEventTypes)
+            ->with(['timeline', 'shifts', 'event_type', 'room'])
+            ->get();
+
+        $eventsWithRelevant = [];
+        foreach ($shiftRelevantEvents as $event) {
+            $eventsWithRelevant[$event->id] = [
+                'event' => $event,
+                'timeline' => $event->timeline,
+                'shifts' => $event->shifts,
+                'event_type' => $event->event_type,
+                'room' => $event->room,
+            ];
+        }
+
+
+        foreach ($events as $event){
+            if(!$event->audience){
+                continue;
+            }
+            $rooms = $event->room()->distinct()->get();
+            foreach ($rooms as $room){
+                $RoomsWithAudience[$room->id] = $room->name;
+            }
+        }
+
+        rsort($eventsWithRelevant);
+
+        return inertia('Projects/SingleProjectShifts', [
+            'project' => new ProjectShowResource($project),
+            'firstEventInProject' => $firstEventInProject,
+            'lastEventInProject' => $lastEventInProject,
+            'RoomsWithAudience' => $RoomsWithAudience,
+            'groupProjects' => Project::where('is_group', 1)->get(),
+            'projectGroups' => $project->groups()->get(),
+            'currentGroup' => $groupOutput,
+            'projectState' => $project->state,
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'states' => ProjectStates::all(),
+            'eventsWithRelevant' => $eventsWithRelevant,
+            'crafts' => Craft::all(),
+        ]);
+    }
+
 
     public function addTimeLineRow(Event $event){
         $event->timeline()->create();

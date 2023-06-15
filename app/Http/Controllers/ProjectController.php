@@ -1473,24 +1473,25 @@ class ProjectController extends Controller
 
         $events = $project->events()->get();
         $RoomsWithAudience = null;
+
+
+        $shiftRelevantEventTypes = $project->shiftRelevantEventTypes()->pluck('event_type_id');
+        $shiftRelevantEvents = $project->events()
+            ->whereIn('event_type_id', $shiftRelevantEventTypes)
+            ->with(['timeline', 'shifts', 'event_type', 'room'])
+            ->get();
+
         $eventsWithRelevant = [];
-
-
-        $shiftRelevantEventTypes = $project->shiftRelevantEventTypes()->get();
-
-        $shiftRelevantEvents = $project->events()->whereIn('event_type_id', $shiftRelevantEventTypes->pluck('id'))->get();
-
-        //dd($shiftRelevantEvents);
-
-        foreach ($shiftRelevantEvents as $event){
+        foreach ($shiftRelevantEvents as $event) {
             $eventsWithRelevant[$event->id] = [
                 'event' => $event,
-                'timeline' => $event->timeline()->get(),
-                'shifts' => $event->shifts()->get(),
-                'event_type' => $event->event_type()->first(),
-                'room' => $event->room()->first(),
+                'timeline' => $event->timeline,
+                'shifts' => $event->shifts,
+                'event_type' => $event->event_type,
+                'room' => $event->room,
             ];
         }
+
 
         foreach ($events as $event){
             if(!$event->audience){

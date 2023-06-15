@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Freelancer;
+use App\Models\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -62,7 +64,7 @@ class ProjectShowResource extends JsonResource
             'copyright' => new CopyrightResource($this->copyright),
             'moneySources' => $this->money_sources,
 
-            'users' => UserIndexResource::collection($this->users)->resolve(),
+            'users' => UserResourceWithoutShifts::collection($this->users)->resolve(),
             'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
 
@@ -84,6 +86,8 @@ class ProjectShowResource extends JsonResource
             ]),
             'shift_relevant_event_types' => $this->shiftRelevantEventTypes()->get(),
             'shift_contacts' => $this->shift_contact()->get(),
+            'freelancers' => Freelancer::all(),
+            'serviceProviders' => ServiceProvider::all(),
         ];
     }
 }

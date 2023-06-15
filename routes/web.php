@@ -521,9 +521,25 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/project/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
     Route::patch('/project/timelines/update', [ProjectController::class, 'updateTimeLines'])->name('update.timelines');
     Route::post('/project/{event}/shift/store', [\App\Http\Controllers\ShiftController::class, 'store'])->name('event.shift.store');
+
+    // Add User to Shift
     Route::post('/project/{shift}/add/user', [\App\Http\Controllers\ShiftController::class, 'addShiftUser'])->name('add.shift.user');
     Route::post('/project/{shift}/add/master', [\App\Http\Controllers\ShiftController::class, 'addShiftMaster'])->name('add.shift.master');
+
+    // add freelancer to shift
+    Route::post('/project/{shift}/add/freelancer', [\App\Http\Controllers\ShiftController::class, 'addShiftFreelancer'])->name('add.shift.freelancer');
+    Route::post('/project/{shift}/add/freelancer/master', [\App\Http\Controllers\ShiftController::class, 'addShiftFreelancerMaster'])->name('add.shift.freelancer.master');
+
+    // add provider to shift
+    Route::post('/project/{shift}/add/provider', [\App\Http\Controllers\ShiftController::class, 'addShiftProvider'])->name('add.shift.provider');
+    Route::post('/project/{shift}/add/provider/master', [\App\Http\Controllers\ShiftController::class, 'addShiftProviderMaster'])->name('add.shift.provider.master');
+
+    // remove User from Shift
     Route::delete('/project/{shift}/remove/user', [\App\Http\Controllers\ShiftController::class, 'removeUser'])->name('shifts.removeUser');
-    Route::delete('/project/{shift}/remove/master', [\App\Http\Controllers\ShiftController::class, 'removeMaster'])->name('shifts.removeMaster');
+
+    // remove freelancer from Shift
+    Route::delete('/project/{shift}/remove/freelancer', [\App\Http\Controllers\ShiftController::class, 'removeFreelancer'])->name('shifts.removeFreelancer');
+
+    Route::delete('/project/{shift}/remove/provider', [\App\Http\Controllers\ShiftController::class, 'removeProvider'])->name('shifts.removeProvider');
 });
 

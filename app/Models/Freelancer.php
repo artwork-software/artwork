@@ -32,17 +32,4 @@ class Freelancer extends Model
         return $this->first_name . ' ' . $this->last_name;
     }
 
-
-    /*
-     *  $table->string('position');
-            $table->string('profile_image');
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('email');
-            $table->string('phone_number');
-            $table->string('street');
-            $table->string('zip_code');
-            $table->string('location');
-            $table->string('note', 500);
-     */
 }

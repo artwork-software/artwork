@@ -13,20 +13,21 @@
         </div>
 
         <div class="flex justify-start mt-3 overflow-x-scroll gap-3 h-full">
-            <SingleShift :time-line="event.timeline" :shifts="event.shifts" :crafts="crafts" :event="event.event"/>
+            <TimeLineShiftsComponent :time-line="event.timeline" :shifts="event.shifts" :crafts="crafts" :event="event.event"/>
         </div>
     </div>
 </template>
 <script>
 import {defineComponent} from 'vue'
 import Timeline from "@/Pages/Projects/Components/Timeline.vue";
-import SingleShift from "@/Pages/Projects/Components/SingleShift.vue";
+import SingleShift from "@/Pages/Projects/Components/TimeLineShiftsComponent.vue";
 import {PlusCircleIcon} from "@heroicons/vue/outline";
+import TimeLineShiftsComponent from "@/Pages/Projects/Components/TimeLineShiftsComponent.vue";
 
 export default defineComponent({
-    name: "SingleShiftEvent",
+    name: "SingleRelevantEvent",
     props: ['event', 'crafts'],
-    components: {PlusCircleIcon, SingleShift, Timeline}
+    components: {TimeLineShiftsComponent, PlusCircleIcon, SingleShift, Timeline}
 })
 </script>
 

@@ -31,20 +31,68 @@
                 leave-active-class="transition ease-in duration-75"
                 leave-from-class="transform opacity-100 scale-100"
                 leave-to-class="transform opacity-0 scale-95">
-                <div class="z-40 origin-top-right absolute right-10 px-4 py-2 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none" v-show="userWindow"  ref="containerRef">
+                <div class="z-40 origin-top-right absolute right-10 px-4 py-2 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none" v-show="userWindow"  ref="containerRef">
 
                     <div class="flex items-center justify-between">
-                        <div>
-
+                        <div class="flex gap-4 items-center" @click="openFilter = !openFilter">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="21.496" height="19.496" viewBox="0 0 21.496 19.496">
+                                <path id="Icon_feather-filter" data-name="Icon feather-filter" d="M23,4.5H3l8,9.458V20.5l4,2V13.958Z" transform="translate(-2.25 -3.75)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>
+                            </svg>
+                            <span v-if="openFilter">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="9.177" height="6.003" viewBox="0 0 9.177 6.003">
+                                    <g id="headline" transform="translate(66.076 -18.911) rotate(180)">
+                                          <path id="Pfad_1076" data-name="Pfad 1076" d="M0,0,3.882,3.882,7.763,0" transform="translate(65.369 -19.618) rotate(180)" fill="none" stroke="#fcfcfb" stroke-width="2"/>
+                                    </g>
+                                </svg>
+                            </span>
+                            <span v-else>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="9.177" height="6.003" viewBox="0 0 9.177 6.003">
+                                    <g id="headline" transform="translate(-56.898 24.914)">
+                                        <path id="Pfad_1076" data-name="Pfad 1076" d="M0,0,3.882,3.882,7.763,0" transform="translate(65.369 -19.618) rotate(180)" fill="none" stroke="#fcfcfb" stroke-width="2"/>
+                                    </g>
+                                </svg>
+                            </span>
                         </div>
                         <div>
                             <XIcon class="h-6 w-6 text-white" @click="userWindow = !userWindow" />
                         </div>
                     </div>
 
-                    <div @mousedown="preventContainerDrag">
-                        <div v-for="user in users" >
-                            <DragElement :item="user" />
+                    <div class="" v-if="openFilter">
+                        <div class="my-5">
+                            <div class="flex w-full mb-3">
+                                <input v-model="showIntern"
+                                       type="checkbox"
+                                       class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
+                                <div :class="[showIntern ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                    Interne Mitarbeiter*innen
+                                </div>
+                            </div>
+                            <div class="flex w-full mb-3">
+                                <input v-model="showExtern"
+                                       type="checkbox"
+                                       class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
+                                <div :class="[showExtern ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                    Externe Mitarbeiter*innen
+                                </div>
+                            </div>
+                            <div class="flex w-full">
+                                <input v-model="showProvider"
+                                       type="checkbox"
+                                       class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
+                                <div :class="[showProvider ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                    Dienstleister
+                                </div>
+                            </div>
+                        </div>
+                        <div class="my-2 h-0.5 w-full bg-[#3A374D]">
+
+                        </div>
+                    </div>
+
+                    <div @mousedown="preventContainerDrag" class="max-h-72 overflow-x-scroll">
+                        <div v-for="user in filteredUsers" >
+                            <DragElement :item="user.element" :type="user.type" />
                         </div>
                     </div>
                 </div>
@@ -52,7 +100,7 @@
         </div>
     </div>
     <div class="mt-5">
-        <SingleShiftEvent v-for="event in eventsWithRelevant" :crafts="crafts" :event="event"/>
+        <SingleRelevantEvent v-for="event in eventsWithRelevant" :crafts="crafts" :event="event"/>
     </div>
 </template>
 <script>
@@ -60,22 +108,48 @@ import {defineComponent} from 'vue'
 import {Menu, MenuButton, MenuItem, MenuItems, Switch, SwitchGroup, SwitchLabel} from '@headlessui/vue'
 import {DuplicateIcon, PencilAltIcon} from "@heroicons/vue/outline";
 import {DotsVerticalIcon, TrashIcon, XIcon} from "@heroicons/vue/solid";
-import SingleShiftEvent from "@/Pages/Projects/Components/SingleShiftEvent.vue";
+import SingleShiftEvent from "@/Pages/Projects/Components/SingleRelevantEvent.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
+import SingleRelevantEvent from "@/Pages/Projects/Components/SingleRelevantEvent.vue";
+import Input from "@/Jetstream/Input.vue";
 export default defineComponent({
     name: "ShiftTab",
-    props: ['eventsWithRelevant', 'crafts', 'users'],
+    props: ['eventsWithRelevant', 'crafts', 'users', 'dropUsers'],
     components: {
+        Input,
+        SingleRelevantEvent,
         DragElement,
         SingleShiftEvent,
         PencilAltIcon, TrashIcon, DuplicateIcon, DotsVerticalIcon,
         Switch, SwitchGroup, SwitchLabel, Menu, MenuItems, MenuItem, MenuButton,
-        XIcon
+        XIcon,
     },
     data(){
         return {
             enabled: false,
             userWindow: false,
+            openFilter: false,
+            showIntern: false,
+            showExtern: false,
+            showProvider: false
+        }
+    },
+    computed: {
+        filteredUsers(){
+            if(!this.showExtern && !this.showIntern && !this.showProvider){
+                return this.dropUsers;
+            }
+            let users = [];
+            if (this.showIntern) {
+                users = users.concat(this.dropUsers.filter(user => user.type === 0));
+            }
+            if (this.showExtern) {
+                users = users.concat(this.dropUsers.filter(user => user.type === 1));
+            }
+            if (this.showProvider) {
+                users = users.concat(this.dropUsers.filter(user => user.type === 2));
+            }
+            return users
         }
     },
     mounted() {

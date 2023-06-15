@@ -23,8 +23,16 @@ class ServiceProvider extends Model
 
     protected $with = ['contacts'];
 
+    protected $appends = ['name'];
+
     public function contacts(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ServiceProviderContacts::class);
     }
+
+
+    public function getNameAttribute(){
+        return $this->provider_name;
+    }
+
 }

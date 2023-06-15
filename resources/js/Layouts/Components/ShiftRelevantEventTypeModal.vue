@@ -36,7 +36,7 @@
                     <MenuItems
                         class="absolute overflow-y-auto h-24 mt-2 w-[88%] origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                         <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
-                            <div class="flex w-full mb-4" v-for="eventType in eventTypes">
+                            <div class="flex w-full mb-4" v-for="eventType in accessibleEventTypes">
                                 <input v-model="shiftRelevantEventTypeIds"
                                        :id="eventType.id"
                                        :value="eventType.id"
@@ -96,6 +96,17 @@ export default {
         MenuButton,
         MenuItems,
         MenuItem
+    },
+    computed:{
+        accessibleEventTypes(){
+            const types = [];
+            this.eventTypes.forEach((type) => {
+                if(type.id !== 1){
+                    types.push(type)
+                }
+            })
+            return types;
+        }
     },
     emits: ['closeModal'],
     data() {

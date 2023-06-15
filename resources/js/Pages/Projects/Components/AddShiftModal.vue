@@ -98,6 +98,8 @@
                                                maxlength="3"
                                                required
                                                class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                        <span class="text-xs text-red-500" v-show="helpTexts.employeeText.length > 0">{{ helpTexts.employeeText }}</span>
+                                        <span class="text-xs text-red-500" v-show="helpTexts.masterText.length > 0">{{ helpTexts.masterText }}</span>
 
                                         <div class="mt-2 col-span-2">
                                             <textarea v-model="shift.description" placeholder="Gibt es wichtige Informationen zu dieser Schicht?" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
@@ -166,7 +168,9 @@ export default defineComponent({
                 breakText: '',
                 start: '',
                 end: '',
-                time: ''
+                time: '',
+                employeeText:'',
+                masterText:'',
             }
         }
     },
@@ -225,6 +229,18 @@ export default defineComponent({
                 return;
             } else {
                 this.helpTexts.time = '';
+            }
+            if (!this.shift.number_employees) {
+                this.helpTexts.employeeText = 'Bitte gib die Anzahl der Mitarbeiter*innen an.';
+                return;
+            } else {
+                this.helpTexts.employeeText = '';
+            }
+            if (!this.shift.number_masters) {
+                this.helpTexts.masterText = 'Bitte gib die Anzahl der Meister*innen an.';
+                return;
+            } else {
+                this.helpTexts.masterText = '';
             }
 
             // set the craft id

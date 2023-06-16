@@ -311,6 +311,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Shifts
     Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])->name('shifts.plan');
+    Route::post('/shifts/commit', [EventController::class, 'commit_shifts'])->name('shifts.commit');
 
     //EventTypes
     Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management');

@@ -20,11 +20,13 @@ class Shift extends Model
         'number_employees',
         'number_masters',
         'description',
+        'is_committed'
     ];
 
     protected $casts = [
         'start' => TimeWithoutSeconds::class,
         'end' => TimeWithoutSeconds::class,
+        'is_committed' => 'boolean'
     ];
 
     protected $with = ['craft'];

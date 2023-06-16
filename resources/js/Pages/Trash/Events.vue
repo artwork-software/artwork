@@ -15,7 +15,7 @@
                         <div v-if="event.project" class="mt-1.5 flex">
                             zugeordnet zu:
                             <a v-if="event.project?.id"
-                               :href="route('projects.show', {project: event.project.id, openTab: 'calendar'})"
+                               :href="route('projects.show.calendar', {project: event.project.id})"
                                class="ml-3 text-md flex font-bold font-lexend text-primary">
                                 {{ event.project.name}}
                             </a>

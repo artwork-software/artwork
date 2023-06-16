@@ -20,7 +20,7 @@
                     <div class="my-2 flex w-full">
                         <div class="w-1/2 flex items-center my-auto" v-if="this.project?.id">
                             Zugeordnet zu: <a
-                            :href="route('projects.show', {project: this.project.id, openTab: 'calendar'})"
+                            :href="route('projects.show.calendar', {project: this.project.id, openTab: 'calendar'})"
                             class="ml-3 mt-1 items-center flex linkText">
                             {{ this.project?.name }}
                         </a>

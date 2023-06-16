@@ -3,8 +3,8 @@
     <ProjectShowHeaderComponent :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
                                 :states="states" :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
-                                :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="calendar">
-        <CalendarTab :project="project" :selected-date="selectedDate" :date-value="dateValue" :events="events" :rooms="rooms" :events-without-room="eventsWithoutRoom" :filter-options="filterOptions" :personal-filters="personalFilters" :at-a-glance="atAGlance" :events-at-a-glance="eventsAtAGlance" :calendar="calendar" :days="days" :event-types="eventTypes"></CalendarTab>
+                                :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="comment">
+        <CommentTab :project="project" :is-member-of-a-department="isMemberOfADepartment"></CommentTab>
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSecondSidenav
@@ -35,17 +35,18 @@ import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue";
 import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
 import ProjectSidenav from "@/Layouts/Components/ProjectSidenav.vue";
-import CalendarTab from "@/Pages/Projects/Components/TabComponents/CalendarTab.vue";
+import CommentTab from "@/Pages/Projects/Components/TabComponents/CommentTab.vue";
 
 export default {
     components: {
-        CalendarTab,
+        CommentTab,
         ProjectSidenav,
         ProjectShiftSidenav,
         ProjectSecondSidenav,
         BaseSidenav,
         AppLayout,
-        ProjectShowHeaderComponent},
+        ProjectShowHeaderComponent
+    },
     props: [
         'project',
         'eventTypes',
@@ -55,6 +56,7 @@ export default {
         'firstEventInProject',
         'lastEventInProject',
         'RoomsWithAudience',
+        'isMemberOfADepartment',
         'groupProjects',
         'projectCategories',
         'projectGenres',
@@ -66,22 +68,12 @@ export default {
         'sectors',
         'genres',
         'projectState',
-        'eventsAtAGlance',
-        'selectedDate',
-        'calendar',
-        'dateValue',
-        'days',
-        'rooms',
-        'events',
-        'filterOptions',
-        'personalFilters',
-        'eventsWithoutRoom'
+        'isMemberOfADepartment'
 
     ],
     data() {
         return {
             show: false,
-            atAGlance: this.eventsAtAGlance.length > 0,
         }
     },
     mounted() {

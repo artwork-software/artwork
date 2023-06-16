@@ -536,7 +536,7 @@ export default {
                 case 'events':
                     return route('events')
                 case 'projects':
-                    return route('projects.show', { project: window.location.pathname.split('/')[2]})
+                    return route('projects.show.calendar', { project: window.location.pathname.split('/')[2]})
             }
         },
         reloadChanges() {

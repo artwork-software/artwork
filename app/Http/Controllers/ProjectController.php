@@ -484,7 +484,7 @@ class ProjectController extends Controller
             2 => [
                 'type' => 'link',
                 'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null,
+                'href' => $project ? route('projects.show.budget', $project->id) : null,
             ]
         ];
 
@@ -528,7 +528,7 @@ class ProjectController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show', $project->id) : null,
+                    'href' => $project ? route('projects.show.budget', $project->id) : null,
                 ]
             ];
             $this->notificationService->createNotification(User::find($verifiedRequest->requested), $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED, 'red', [], false, '', null, $broadcastMessage, null, null, $project->id, null, null, $budgetData);
@@ -561,7 +561,7 @@ class ProjectController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show', $project->id) : null,
+                    'href' => $project ? route('projects.show.budget', $project->id) : null,
                 ]
             ];
 
@@ -611,7 +611,7 @@ class ProjectController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show', $project->id) : null,
+                    'href' => $project ? route('projects.show.budget', $project->id) : null,
                 ]
             ];
 
@@ -642,7 +642,7 @@ class ProjectController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show', $project->id) : null,
+                    'href' => $project ? route('projects.show.budget', $project->id) : null,
                 ]
             ];
 
@@ -682,7 +682,7 @@ class ProjectController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show', $project->id) : null,
+                    'href' => $project ? route('projects.show.budget', $project->id) : null,
                 ]
             ];
 
@@ -709,7 +709,7 @@ class ProjectController extends Controller
             2 => [
                 'type' => 'link',
                 'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null,
+                'href' => $project ? route('projects.show.budget', $project->id) : null,
             ]
         ];
 
@@ -767,7 +767,7 @@ class ProjectController extends Controller
             2 => [
                 'type' => 'link',
                 'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null,
+                'href' => $project ? route('projects.show.budget', $project->id) : null,
             ]
         ];
         foreach ($project->access_budget()->get() as $user){
@@ -802,7 +802,7 @@ class ProjectController extends Controller
             2 => [
                 'type' => 'link',
                 'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null,
+                'href' => $project ? route('projects.show.budget', $project->id) : null,
             ]
         ];
         foreach ($project->access_budget()->get() as $user){
@@ -1706,7 +1706,6 @@ class ProjectController extends Controller
         $eventsAtAGlance = [];
 
         if(\request('atAGlance') === 'true'){
-
             $eventsAtAGlance = CalendarEventResource::collection($project->events()
                 ->with(['room','project','creator'])
                 ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
@@ -1761,6 +1760,7 @@ class ProjectController extends Controller
             'projectState' => $project->state,
 
             // needed for SingleProjectCalendar
+
             'eventsAtAGlance' => $eventsAtAGlance,
             'calendar' => $showCalendar['roomsWithEvents'],
             'dateValue'=>$showCalendar['dateValue'],
@@ -1829,6 +1829,9 @@ class ProjectController extends Controller
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
             'states' => ProjectStates::all(),
+            'groupProjects' => Project::where('is_group', 1)->get(),
+            'projectGroups' => $project->groups()->get(),
+            'currentGroup' => $groupOutput,
             'checklist_templates' => ChecklistTemplateIndexResource::collection(ChecklistTemplate::all())->resolve(),
         ]);
     }
@@ -1907,6 +1910,222 @@ class ProjectController extends Controller
             'states' => ProjectStates::all(),
             'eventsWithRelevant' => $eventsWithRelevant,
             'crafts' => Craft::all(),
+        ]);
+    }
+
+    public function projectBudgetTab(Project $project, Request $request)
+    {
+        $project->load([
+            'access_budget',
+            'departments.users.departments',
+            'managerUsers',
+            'writeUsers',
+            'project_files',
+            'contracts',
+            'copyright',
+            'cost_center',
+            'project_histories.user',
+            'users.departments',
+            'state',
+            'delete_permission_users'
+        ]);
+
+        $columns = $project->table()->first()->columns()->get();
+
+        $outputColumns = [];
+        foreach ($columns as $column) {
+            $columnOutput = new stdClass();
+            $columnOutput->id = $column->id;
+            $columnOutput->name = $column->name;
+            $columnOutput->subName = $column->subName;
+            $columnOutput->color = $column->color;
+            $columnOutput->is_locked = $column->is_locked;
+            if ($column->type === 'sum') {
+                $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
+                $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
+                $columnOutput->calculateName = $firstName . ' + ' . $secondName;
+            }
+            if ($column->type === 'difference') {
+                $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
+                $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
+                $columnOutput->calculateName = $firstName . ' - ' . $secondName;
+            }
+            $outputColumns[] = $columnOutput;
+        }
+
+        if (!$project->is_group) {
+            $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
+            if (!empty($group)) {
+                $groupOutput = Project::find($group?->group_id);
+            } else {
+                $groupOutput = '';
+            }
+        } else {
+            $groupOutput = '';
+        }
+
+        $selectedCell = request('selectedCell')
+            ? ColumnCell::find(request('selectedCell'))
+            : null;
+
+        $selectedRow = request('selectedRow')
+            ? SubPositionRow::find(request('selectedRow'))
+            : null;
+
+        $templates = null;
+
+        if(request('useTemplates')){
+            $templates = Table::where('is_template', true)->get();
+        }
+
+        $selectedSumDetail = null;
+
+        if(request('selectedSubPosition') && request('selectedColumn')) {
+            $selectedSumDetail = Collection::make(SubpositionSumDetail::with(['comments.user', 'sumMoneySource.moneySource'])
+                ->where('sub_position_id', request('selectedSubPosition'))
+                ->where('column_id', request('selectedColumn'))
+                ->first())
+                ->merge(['class' => SubpositionSumDetail::class]);
+        }
+
+        if(request('selectedMainPosition') && request('selectedColumn')) {
+            $selectedSumDetail =  Collection::make(MainPositionDetails::with(['comments.user', 'sumMoneySource.moneySource'])
+                ->where('main_position_id', request('selectedMainPosition'))
+                ->where('column_id', request('selectedColumn'))
+                ->first())
+                ->merge(['class' => MainPositionDetails::class]);
+        }
+
+        if(request('selectedBudgetType') && request('selectedColumn')) {
+            $selectedSumDetail = Collection::make(BudgetSumDetails::with(['comments.user', 'sumMoneySource.moneySource'])
+                ->where('type', request('selectedBudgetType'))
+                ->where('column_id', request('selectedColumn'))
+                ->first())
+                ->merge(['class' => BudgetSumDetails::class]);
+        }
+        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
+        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+
+        $events = $project->events()->get();
+        $RoomsWithAudience = null;
+
+        foreach ($events as $event){
+            if(!$event->audience){
+                continue;
+            }
+            $rooms = $event->room()->distinct()->get();
+            foreach ($rooms as $room){
+                $RoomsWithAudience[$room->id] = $room->name;
+            }
+        }
+
+        return inertia('Projects/SingleProjectBudget', [
+            'project' => new ProjectShowResource($project),
+            'firstEventInProject' => $firstEventInProject,
+            'lastEventInProject' => $lastEventInProject,
+            'RoomsWithAudience' => $RoomsWithAudience,
+            'moneySources' => MoneySource::all(),
+            'budget' => [
+                'columns' => $outputColumns,
+                'table' => $project->table()
+                    ->with([
+                        'columns',
+                        'mainPositions',
+                        'mainPositions.verified',
+                        'mainPositions.subPositions' => function ($query) {
+                            return $query->orderBy('position');
+                        },
+                        'mainPositions.subPositions.verified',
+                        'mainPositions.subPositions.subPositionRows' => function ($query) {
+                            return $query->orderBy('position');
+                        }, 'mainPositions.subPositions.subPositionRows.cells' => function($query){
+                            $query->withCount('comments')
+                                ->withCount('calculations');
+                        }, 'mainPositions.subPositions.subPositionRows.cells.column'
+                    ])
+                    ->first(),
+                'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments', 'column' => function ($query) {
+                    $query->orderBy('created_at', 'desc');
+                }]),
+                'selectedSumDetail' => $selectedSumDetail,
+                'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query) {
+                    $query->orderBy('created_at', 'desc');
+                }]),
+                'templates' => $templates,
+            ],
+            'projectGroups' => $project->groups()->get(),
+            'groupProjects' => Project::where('is_group', 1)->get(),
+            'currentGroup' => $groupOutput,
+            'projectState' => $project->state,
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'projectMoneySources' => $project->moneySources()->get(),
+            'states' => ProjectStates::all(),
+        ]);
+    }
+
+    public function projectCommentTab(Project $project, Request $request)
+    {
+        $project->load([
+            'categories',
+            'comments.user',
+            'departments.users.departments',
+            'genres',
+            'managerUsers',
+            'writeUsers',
+            'project_files',
+            'project_histories.user',
+            'sectors',
+            'users.departments',
+            'state',
+            'delete_permission_users'
+        ]);
+
+        if (!$project->is_group) {
+            $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
+            if (!empty($group)) {
+                $groupOutput = Project::find($group?->group_id);
+            } else {
+                $groupOutput = '';
+            }
+        } else {
+            $groupOutput = '';
+        }
+        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
+        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+
+        $events = $project->events()->get();
+        $RoomsWithAudience = null;
+
+        foreach ($events as $event){
+            if(!$event->audience){
+                continue;
+            }
+            $rooms = $event->room()->distinct()->get();
+            foreach ($rooms as $room){
+                $RoomsWithAudience[$room->id] = $room->name;
+            }
+        }
+
+        return inertia('Projects/SingleProjectComments', [
+            'project' => new ProjectShowResource($project),
+            'firstEventInProject' => $firstEventInProject,
+            'lastEventInProject' => $lastEventInProject,
+            'RoomsWithAudience' => $RoomsWithAudience,
+            'categories' => Category::all(),
+            'projectCategoryIds' => $project->categories()->pluck('category_id'),
+            'projectCategories' => $project->categories,
+            'groupProjects' => Project::where('is_group', 1)->get(),
+            'projectGroups' => $project->groups()->get(),
+            'currentGroup' => $groupOutput,
+            'genres' => Genre::all(),
+            'projectGenreIds' => $project->genres()->pluck('genre_id'),
+            'projectGenres' => $project->genres,
+            'sectors' => Sector::all(),
+            'projectSectorIds' => $project->sectors()->pluck('sector_id'),
+            'projectSectors' => $project->sectors,
+            'projectState' => $project->state,
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'states' => ProjectStates::all(),
         ]);
     }
 
@@ -2379,7 +2598,7 @@ class ProjectController extends Controller
 
         $historyService->updateHistory($project, config('history.project.duplicated'));
 
-        return Redirect::route('projects.show', $newProject->id)->with('success', 'Project created.');
+        return Redirect::route('projects.show.info', $newProject->id)->with('success', 'Project created.');
     }
 
     /**

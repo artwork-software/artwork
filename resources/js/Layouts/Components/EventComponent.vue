@@ -162,7 +162,7 @@
                 <div v-if="!canEdit" class="flex w-full">
                     <div class="w-1/2 flex items-center my-auto" v-if="this.selectedProject?.id">
                         Zugeordnet zu: <a
-                        :href="route('projects.show', {project: selectedProject.id, openTab: 'calendar'})"
+                        :href="route('projects.show.calendar', {project: selectedProject.id})"
                         class="ml-3 mt-1 text-sm items-center flex font-bold font-lexend text-primary">
                         {{ this.selectedProject?.name }}
                     </a>
@@ -210,7 +210,7 @@
                     <div class="xsLight flex" v-if="!this.creatingProject">
                         Aktuell zugeordnet zu:
                         <a v-if="this.selectedProject?.id"
-                           :href="route('projects.show', {project: selectedProject.id, openTab: 'calendar'})"
+                           :href="route('projects.show.calendar', {project: selectedProject.id})"
                            class="ml-3 flex xsDark">
                             {{ this.selectedProject?.name }}
                         </a>

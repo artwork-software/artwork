@@ -26,7 +26,7 @@
                 </div>
             </div>
             <Link v-if="this.event.project_id"
-                :href="route('projects.show',{project: this.event.project_id, openTab: 'calendar'})"
+                :href="route('projects.show.calendar',{project: this.event.project_id})"
                 class="text-buttonBlue text-xs cursor-pointer flex items-center">
                 <p class="mx-1 xxsLight">|</p>
                 {{ this.projects.find(project => project.id === this.event.project_id)?.name }}

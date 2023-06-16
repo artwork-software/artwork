@@ -238,7 +238,8 @@ export default {
         'firstEventInProject',
         'lastEventInProject',
         'RoomsWithAudience',
-        'groupProjects'
+        'groupProjects',
+        'openTab'
     ],
     data() {
         return {
@@ -272,6 +273,16 @@ export default {
                 }
             )
             return canDeleteArray;
+        },
+        tabs() {
+            return [
+                {name: 'Projektinformationen', href: '#', current: this.openTab === 'info', show: true},
+                {name: 'Ablaufplan', href: '#', current: this.openTab === 'calendar', show: true},
+                {name: 'Checklisten', href: '#', current: this.openTab === 'checklist', show: true},
+                {name: 'Schichten', href: '#', current: this.openTab === 'shift', show: true},
+                {name: 'Budget', href: '#', current: this.openTab === 'budget', show: this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)},
+                {name: 'Kommentare', href: '#', current: this.openTab === 'comment', show: true},
+            ]
         },
     },
     methods: {
@@ -319,17 +330,19 @@ export default {
         },
         changeTab(selectedTab) {
             if (selectedTab.name === 'Ablaufplan') {
-                this.isScheduleTab = true;
+                Inertia.get(route('projects.show.calendar', {project: this.project.id}));
             } else if (selectedTab.name === 'Checklisten') {
-                this.isChecklistTab = true;
+                Inertia.get(route('projects.show.checklist', {project: this.project.id}));
             } else if (selectedTab.name === 'Projektinformationen') {
-                // do nothing
+                Inertia.get(route('projects.show.info', {project: this.project.id}));
             } else if (selectedTab.name === 'Kommentare') {
-                this.isCommentTab = true;
+                Inertia.get(route('projects.show.comment', {project: this.project.id}));
             } else if (selectedTab.name === 'Schichten') {
-                this.isShiftTab = true;
-            } else {
-                this.isBudgetTab = true;
+                Inertia.get(route('projects.show.shift', {project: this.project.id}));
+            } else if(selectedTab.name === 'Budget') {
+                Inertia.get(route('projects.show.budget', {project: this.project.id}));
+            }else{
+                Inertia.get(route('projects.show.info', {project: this.project.id}));
             }
         },
     },

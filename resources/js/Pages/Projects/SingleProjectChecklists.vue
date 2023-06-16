@@ -3,7 +3,7 @@
     <ProjectShowHeaderComponent :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
                                 :states="states" :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
-                                :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects">
+                                :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="checklist">
         <ChecklistTab :project="project" :opened_checklists="opened_checklists" :checklist_templates="checklist_templates" :project-can-write-ids="projectCanWriteIds" :project-manager-ids="projectManagerIds"></ChecklistTab>
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">

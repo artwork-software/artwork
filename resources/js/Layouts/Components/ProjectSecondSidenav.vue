@@ -4,7 +4,7 @@
             <div class="flex items-center justify-between">
                 <h2 class="mb-3 xWhiteBold">Projektteam</h2>
                 <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                               @click="showTeamModal = true" v-if="projectMembersWriteAccess.includes($page.props.user.id) || $role('artwork admin')"/>
+                               @click="showTeamModal = true" v-if="projectMembersWriteAccess || $role('artwork admin')"/>
             </div>
             <div class="flex w-full mt-2 flex-wrap">
                 <span
@@ -39,7 +39,7 @@
             <div class="flex items-center justify-between">
                 <h2 class="mb-3 xWhiteBold">Projekteigenschaften</h2>
                 <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                               @click="openProjectAttributeEditModal" v-if="projectMembersWriteAccess.includes($page.props.user.id) || $role('artwork admin')"/>
+                               @click="openProjectAttributeEditModal" v-if="projectMembersWriteAccess || $role('artwork admin')"/>
             </div>
             <div class="flex mt-3">
                 <div>
@@ -58,7 +58,7 @@
         <div class="w-full flex items-center mb-4">
             <div class="xWhiteBold">Eintritt & Anmeldung</div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                           @click="openEntranceModal" v-if="projectMembersWriteAccess.includes($page.props.user.id) || hasAdminRole()"/>
+                           @click="openEntranceModal" v-if="projectMembersWriteAccess || hasAdminRole()"/>
         </div>
         <div>
             <div class="text-secondary text-sm mb-1">Gäste:
@@ -91,7 +91,7 @@
                                :categories="categories" :sectors="sectors" :genres="genres"/>
     <!-- Change Project Team Modal -->
     <ProjectEditTeamModal :show="showTeamModal" @closed="showTeamModal = false" :assigned-users="project.users"
-                          :project-manager-ids="projectManagerIds" :departments="project.departments"
+                          :userIsProjectManager="userIsProjectManager" :departments="project.departments"
                           :project-id="project.id"/>
 </template>
 
@@ -109,7 +109,7 @@ import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     mixins: [Permissions],
-    props: ['project', 'projectMembers', 'projectMembersWriteAccess', 'projectManagerIds', 'projectCategories', 'projectGenres', 'projectSectors', 'categories', 'sectors', 'genres', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds'],
+    props: ['project', 'projectMembers', 'projectCategories', 'projectGenres', 'projectSectors', 'categories', 'sectors', 'genres', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds'],
     components: {
         ProjectEditTeamModal,
         TeamTooltip,
@@ -140,7 +140,32 @@ export default {
         },
         closeEntranceModal() {
             this.show = false;
-        }
+        },
+        projectMembersWriteAccess: function () {
+            let canWriteArray = [];
+            this.project.write_auth.forEach(write => {
+                    canWriteArray.push(write.id)
+                }
+            )
+            return canWriteArray.includes(this.$page.props.user.id);
+        },
+        userIsProjectManager: function () {
+            let managerIdArray = [];
+            this.project.project_managers.forEach(manager => {
+                    managerIdArray.push(manager.id)
+                }
+            )
+            return managerIdArray.includes(this.$page.props.user.id);
+        },
+        userIsProjectMember: function () {
+
+            let projectMemberArray = [];
+            this.project.users.forEach(member => {
+                    projectMemberArray.push(member.id)
+                }
+            )
+            return projectMemberArray.includes(this.$page.props.user.id);
+        },
     }
 }
 

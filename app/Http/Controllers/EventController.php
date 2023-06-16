@@ -378,7 +378,7 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project->name,
-                'href' => route('projects.show', $project->id)
+                'href' => route('projects.show.calendar', $project->id)
             ],
             4 => [
                 'type' => 'string',
@@ -420,7 +420,7 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project->name,
-                'href' => route('projects.show', $project->id)
+                'href' => route('projects.show.calendar', $project->id)
             ],
             4 => [
                 'type' => 'string',
@@ -466,7 +466,7 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null
+                'href' => $project ? route('projects.show.calendar', $project->id) : null
             ],
             4 => [
                 'type' => 'string',
@@ -524,7 +524,7 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $event->project()->first()->name ?? '',
-                'href' => $event->project()->first() ? route('projects.show', $event->project()->first()->id) : null
+                'href' => $event->project()->first() ? route('projects.show.calendar', $event->project()->first()->id) : null
             ],
             4 => [
                 'type' => 'string',
@@ -595,7 +595,7 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show', $project->id) : null
+                    'href' => $project ? route('projects.show.calendar', $project->id) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -651,7 +651,7 @@ class EventController extends Controller
                     3 => [
                         'type' => 'link',
                         'title' => $project ? $project->name : '',
-                        'href' => $project ? route('projects.show', $project->id) : null
+                        'href' => $project ? route('projects.show.calendar', $project->id) : null
                     ],
                     4 => [
                         'type' => 'string',
@@ -700,7 +700,7 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show', $project->id) : null
+                    'href' => $project ? route('projects.show.calendar', $project->id) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -874,7 +874,7 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $event->project()->first()->name ?? '',
-                'href' => $event->project()->first() ? route('projects.show', $event->project()->first()->id) : null
+                'href' => $event->project()->first() ? route('projects.show.calendar', $event->project()->first()->id) : null
             ],
             4 => [
                 'type' => 'string',
@@ -954,7 +954,7 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null
+                'href' => $project ? route('projects.show.calendar', $project->id) : null
             ],
             4 => [
                 'type' => 'string',
@@ -1019,7 +1019,7 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show', $project->id) : null
+                    'href' => $project ? route('projects.show.calendar', $project->id) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -1068,7 +1068,7 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null
+                'href' => $project ? route('projects.show.calendar', $project->id) : null
             ],
             4 => [
                 'type' => 'string',
@@ -1237,7 +1237,7 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null
+                'href' => $project ? route('projects.show.calendar', $project->id) : null
             ],
             4 => [
                 'type' => 'string',

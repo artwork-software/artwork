@@ -30,7 +30,7 @@
                             </radio-group-option>
                         </div>
                     </radio-group>
-                    <div v-if="selectedType !== 'empty'" class="bg-backgroundGray -mx-12 pb-8">
+                    <div v-if="selectedType !== 'empty'" class="bg-backgroundGray -mx-10 pb-8">
                         <h2 v-if="selectedType === 'sum'" class="xsLight ml-12 mb-4 pt-4 mt-6">
                             Welche Summe möchtest du erhalten?
                         </h2>

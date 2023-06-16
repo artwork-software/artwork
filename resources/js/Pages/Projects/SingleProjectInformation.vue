@@ -3,14 +3,13 @@
     <ProjectShowHeaderComponent :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
                                 :states="states" :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
-                                :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects">
+                                :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="info">
         <InfoTab :project="project"></InfoTab>
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSecondSidenav
                 :project="project"
                 :project-members="projectMembers"
-                :project-members-write-access="projectCanWriteIds"
                 :project-categories="projectCategories"
                 :project-genres="projectGenres"
                 :project-sectors="projectSectors"

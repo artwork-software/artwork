@@ -1,5 +1,5 @@
 <template>
-    <div class="mx-5 mt-6 p-5  bg-lightBackgroundGray">
+    <div class="mt-6 p-5  bg-lightBackgroundGray">
         <div class="grid grid-cols-6 mr-8">
             <div class="col-span-4">
                 <!-- Description -->

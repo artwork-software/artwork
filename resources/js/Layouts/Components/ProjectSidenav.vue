@@ -177,7 +177,6 @@ export default {
         projectFiles: Array,
         contracts: Array,
         moneySources: Array,
-        traits: Object,
         budgetAccess: Object,
     },
     data() {

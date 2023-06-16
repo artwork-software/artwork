@@ -1,147 +1,58 @@
 <template>
-    <div class="mx-5 mt-6 p-5  bg-lightBackgroundGray">
-        <div class="grid grid-cols-6 mr-8">
-            <div class="col-span-4">
-                <!-- Description -->
-                <div class="mt-4">
-                    <div> Kurzbeschreibung</div>
-                    <div v-if="descriptionClicked === false"
-                         class="mt-2 subpixel-antialiased text-secondary"
-                         @click="handleDescriptionClick()">
-                        {{
-                            project.description ? project.description : 'Hier klicken um Text hinzuzufügen'
-                        }}
+    <div class="mt-6 p-5  bg-lightBackgroundGray">
+        <div
+            class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
+            <div
+                v-if="$role('artwork admin') || $can('write projects') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
+                class="relative border-2 hover:border-gray-400 w-full bg-white border-gray-300">
+                        <textarea
+                            placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
+                            v-model="commentForm.text" rows="4"
+                            class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary border-0  w-full"/>
+                <div class="absolute bottom-0 right-0 flex bg-white">
+                    <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                                <span
+                                    class="hind text-secondary tracking-tight ml-1 my-auto text-xl">Information veröffentlichen</span>
+                        <SvgCollection svgName="smallArrowRight" class="ml-2 mt-1"/>
                     </div>
-                    <textarea v-else v-model="project.description" type="text"
-                              @focusout="updateDescription()"
-                              :ref="`description-${this.project.id}`"
-                              class="w-full border-gray-300 text-primary h-40"
-                              :placeholder="project.description || 'Hier klicken um Text hinzuzufügen'"/>
-                </div>
-                <!-- Individual Projectinformation -->
-                <div v-for="headline in project.project_headlines" class="mt-4">
-                    <div>{{ headline.name }}</div>
-                    <div v-if="!headline.clicked" class="mt-2 subpixel-antialiased text-secondary"
-                         @click="handleTextClick(headline)">
-                        {{ headline.text ? headline.text : 'Hier klicken um Text hinzuzufügen' }}
-                    </div>
-                    <textarea v-else v-model="headline.text" type="text" :ref="`text-${headline.id}`"
-                              @focusout="changeHeadlineText(headline)"
-                              class="w-full border-gray-300 text-primary h-40"
-                              :placeholder="headline.text || 'Hier klicken um Text hinzuzufügen'"/>
+                    <button
+                        :class="[commentForm.text === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', ' mr-1 mb-1 rounded-full mt-2 ml-1 text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                        @click="addCommentToProject" :disabled="commentForm.text === ''">
+                        <CheckIcon class="h-4 w-4"></CheckIcon>
+                    </button>
                 </div>
             </div>
-            <div
-                v-if="$can('write projects') || $role('artwork admin') || $can('admin projects') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
-                class="col-span-2">
-                <div class="ml-10 group">
-                    <label class="block my-4 sDark">
-                        Key Visual </label>
-                    <div
-                        class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
-                        @dragover.prevent
-                        @drop.stop.prevent="uploadDraggedKeyVisual($event)"
-                        @click="selectNewKeyVisual"
-                        v-if="this.project.key_visual_path === null">
-                        <div class="space-y-1 text-center">
-                            <div class="xsLight flex my-auto h-40 items-center"
-                                 v-if="this.project.key_visual_path === null">
-                                Ziehe hier dein <br/> Key Visual hin
-                                <input id="keyVisual-upload" ref="keyVisual"
-                                       name="file-upload" type="file" class="sr-only"
-                                       @change="updateKeyVisual"/>
+            <div>
+                <div v-if="sortedComments?.length > 0" class="my-6" v-for="comment in sortedComments"
+                     @mouseover="commentHovered = comment.id"
+                     @mouseout="commentHovered = null">
+                    <div class="flex justify-between">
+                        <div class="flex items-center">
+                            <img v-if="comment.user" :data-tooltip-target="comment.user"
+                                 :src="comment.user.profile_photo_url" :alt="comment.user.name"
+                                 class="rounded-full h-7 w-7 object-cover"/>
+                            <UserTooltip v-if="comment.user" :user="comment.user"/>
+                            <div class="ml-2 text-secondary"
+                                 :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
+                                {{ comment.created_at }}
                             </div>
                         </div>
+                        <button v-show="commentHovered === comment.id" type="button"
+                                @click="deleteCommentFromProject(comment)">
+                            <span class="sr-only">Kommentar von Projekt entfernen</span>
+                            <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
+                        </button>
                     </div>
-                    <div v-else class="flex items-center justify-center relative w-full">
-                        <div
-                            class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
-                            <button @click="downloadKeyVisual" type="button"
-                                    class="mr-3 inline-flex rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                <SvgCollection svg-name="ArrowDownTray" class="h-5 w-5" aria-hidden="true"/>
-                            </button>
-                            <button @click="selectNewKeyVisual" type="button"
-                                    class="mr-3 inline-flex rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                <PencilAltIcon
-                                    class="h-5 w-5 text-primaryText group-hover:text-white"
-                                    aria-hidden="true"/>
-                            </button>
-                            <button @click="deleteKeyVisual" type="button"
-                                    class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                                <XIcon class="h-5 w-5 text-primaryText group-hover:text-white"
-                                       aria-hidden="true"/>
-                            </button>
-                        </div>
-                        <div class="text-center">
-                            <div class="cursor-pointer">
-                                <img src="">
-                                <img :src="'/storage/keyVisual/' + this.project.key_visual_path"
-                                     alt="Aktuelles Key-Visual"
-                                     class="rounded-md w-full h-48">
-                                <input id="keyVisual-upload" ref="keyVisual"
-                                       name="file-upload" type="file" class="sr-only"
-                                       @change="updateKeyVisual"/>
-                            </div>
-                        </div>
+                    <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
+                        {{ comment.text }}
                     </div>
-                    <div class="flex w-full items-center my-4">
-                        <h3 class="sDark"> Dokumente </h3>
-                    </div>
-                    <div
-                        v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id)">
-                        <input
-                            @change="uploadChosenDocuments"
-                            class="hidden"
-                            ref="project_files"
-                            id="file"
-                            type="file"
-                            multiple
-                        />
-                        <div @click="selectNewFiles" @dragover.prevent
-                             @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
-                        border-buttonBlue border-dotted border-2 h-40 bg-colorOfAction p-2 cursor-pointer">
-                            <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher
-                                ziehen
-                                <br>oder ins Feld klicken
-                            </p>
-                        </div>
-                        <jet-input-error :message="uploadDocumentFeedback"/>
-                    </div>
-                    <div>
-                        <div class="space-y-1"
-                             v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                            <div v-for="project_file in project.project_files"
-                                 class="cursor-pointer group flex items-center">
-                                <div :data-tooltip-target="project_file.name" class="flex truncate">
-                                    <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
-                                    <p @click="downloadFile(project_file)" class="ml-2 truncate">
-                                        {{ project_file.name }}</p>
-
-                                    <XCircleIcon
-                                        v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
-                                        @click="openConfirmDeleteModal(project_file)"
-                                        class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
-                                        aria-hidden="true"/>
-                                </div>
-                                <div :id="project_file.name" role="tooltip"
-                                     class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
-                                    <div class="flex flex-wrap">
-                                        Um die Datei herunterzuladen, klicke auf den Dateinamen
-                                    </div>
-                                    <div class="tooltip-arrow" data-popper-arrow></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-else class="xsDark">
-                            Keine Dateien vorhanden
-                        </div>
-                    </div>
+                </div>
+                <div v-else class="xsDark mt-6">
+                    Noch keine Kommentare vorhanden
                 </div>
             </div>
         </div>
     </div>
-
-
 </template>
 
 <script>
@@ -150,18 +61,77 @@
 import JetInputError from "@/Jetstream/InputError.vue";
 import {DocumentTextIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {XCircleIcon} from "@heroicons/vue/solid";
+import {CheckIcon, XCircleIcon} from "@heroicons/vue/solid";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import Permissions from "@/mixins/Permissions.vue";
+import {useForm} from "@inertiajs/inertia-vue3";
 
-export default{
-    components: {PencilAltIcon, XCircleIcon, DocumentTextIcon, SvgCollection, XIcon, JetInputError},
+export default {
+    components: {
+        CheckIcon,
+        UserTooltip,
+        PencilAltIcon, XCircleIcon, DocumentTextIcon, SvgCollection, XIcon, JetInputError
+    },
+    mixins: [Permissions],
     props: [
         'project',
+        'isMemberOfADepartment',
     ],
-    data() {
+    computed:{
+        sortedComments: function () {
+            let commentCopy = this.project.comments.slice();
 
+            function compare(a, b) {
+                if (b.created_at === null) {
+                    return -1;
+                }
+                if (a.created_at === null) {
+                    return 1;
+                }
+                if (a.created_at < b.created_at)
+                    return 1;
+                if (a.created_at > b.created_at)
+                    return -1;
+                return 0;
+            }
+
+            return commentCopy.sort(compare);
+        },
     },
-    methods:{
-
+    data() {
+        return{
+            commentForm: useForm({
+                text: "",
+                user_id: this.$page.props.user.id,
+                project_id: this.project.id
+            }),
+            commentHovered: null,
+        }
+    },
+    methods: {
+        projectManagerIds: function () {
+            let managerIdArray = [];
+            this.project.project_managers.forEach(manager => {
+                    managerIdArray.push(manager.id)
+                }
+            )
+            return managerIdArray;
+        },
+        projectCanWriteIds: function () {
+            let canWriteArray = [];
+            this.project.write_auth.forEach(write => {
+                    canWriteArray.push(write.id)
+                }
+            )
+            return canWriteArray;
+        },
+        addCommentToProject() {
+            this.commentForm.post(route('comments.store'), {preserveState: true, preserveScroll: true});
+            this.commentForm.text = "";
+        },
+        deleteCommentFromProject(comment) {
+            this.$inertia.delete(`/comments/${comment.id}`, {preserveState: true, preserveScroll: true});
+        },
     }
 }
 </script>

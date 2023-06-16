@@ -12,7 +12,6 @@
                 </div>
             </div>
 
-
             <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal"
                                  @increment-zoom-factor="incrementZoomFactor"
                                  @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor"

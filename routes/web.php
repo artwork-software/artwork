@@ -147,6 +147,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/project/{project}/download/keyVisual', [ProjectController::class, 'downloadKeyVisual'])->name('project.download.keyVisual');
     Route::delete('/project/{project}/delete/keyVisual', [ProjectController::class, 'deleteKeyVisual'])->name('project.delete.keyVisual');
 
+    //ProjectTabs
+    Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])->name('projects.show.info');
+    Route::get('/projects/{project}/calendar', [ProjectController::class, 'projectCalendarTab'])->name('projects.show.calendar');
+    Route::get('/projects/{project}/checklist', [ProjectController::class, 'projectChecklistTab'])->name('projects.show.checklist');
+    Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])->name('projects.show.shift');
+    Route::get('/projects/{project}/budget', [ProjectController::class, 'projectBudgetTab'])->name('projects.show.budget');
+    Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])->name('projects.show.comment');
+
     //Project Entrance & registration
     Route::patch('/projects/{project}/entrance', [ProjectController::class, 'updateEntranceData'])->name('projects.entrance.update');
 

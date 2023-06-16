@@ -19,7 +19,6 @@
                         <ChevronRightIcon class="h-5 w-5 text-primary"/>
                     </button>
                 </div>
-
             </div>
             <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
               <SwitchGroup v-if="!roomMode" as="div" class="flex items-center ml-2">

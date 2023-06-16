@@ -158,7 +158,7 @@ class ContractController extends Controller
             2 => [
                 'type' => 'link',
                 'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null,
+                'href' => $project ? route('projects.show.budget', $project->id) : null,
             ]
         ];
 
@@ -233,7 +233,7 @@ class ContractController extends Controller
             2 => [
                 'type' => 'link',
                 'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null,
+                'href' => $project ? route('projects.show.budget', $project->id) : null,
             ]
         ];
 
@@ -290,7 +290,7 @@ class ContractController extends Controller
             2 => [
                 'type' => 'link',
                 'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null,
+                'href' => $project ? route('projects.show.budget', $project->id) : null,
             ],
             3 => [
                 'type' => 'string',

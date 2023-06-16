@@ -183,7 +183,7 @@
                         <div class="xsLight flex" v-if="!this.creatingProject">
                             Aktuell zugeordnet zu:
                             <a v-if="this.selectedProject?.id"
-                               :href="route('projects.show', {project: selectedProject.id, openTab: 'calendar'})"
+                               :href="route('projects.show.calendar', {project: selectedProject.id})"
                                class="ml-3 flex xsDark">
                                 {{ this.selectedProject?.name }}
                             </a>

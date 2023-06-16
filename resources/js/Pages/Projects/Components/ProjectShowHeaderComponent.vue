@@ -130,20 +130,224 @@
             </div>
         </div>
     </div>
+    <div class="w-full h-full mb-48">
+        <div class="ml-10">
+            <div class="hidden sm:block">
+                <div class="border-gray-200">
+                    <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
+                        <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab?.name"
+                           :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
+                           :aria-current="tab.current ? 'page' : undefined" v-show="tab?.show">
+                            {{ tab?.name }}
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        <slot></slot>
+    </div>
+
+    <project-data-edit-modal
+        :show="editingProject"
+        :project-state="projectState"
+        @closed="closeEditProjectModal"
+        :project="this.project"
+        :group-projects="this.groupProjects"
+        :current-group="this.currentGroup"
+        :states="states"
+    />
+    <!-- Project History Modal -->
+    <project-history-component
+        @closed="closeProjectHistoryModal"
+        v-if="showProjectHistory"
+        :project_history="project.project_history"
+        :access_budget="project.access_budget"
+    ></project-history-component>
+
+    <!-- Delete Project Modal -->
+    <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
+        <template #content>
+            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+            <div class="mx-4">
+                <div class="font-black font-lexend text-primary text-3xl my-2">
+                    Projekt löschen
+                </div>
+                <XIcon @click="closeDeleteProjectModal"
+                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                       aria-hidden="true"/>
+                <div class="text-error subpixel-antialiased">
+                    Bist du sicher, dass du das Projekt {{ projectToDelete.name }} löschen willst?
+                </div>
+                <div class="flex justify-between mt-6">
+                    <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            @click="deleteProject">
+                        Löschen
+                    </button>
+                    <div class="flex my-auto">
+                            <span @click="closeDeleteProjectModal()"
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+    </jet-dialog-modal>
+
 </template>
 
 
 <script>
 
-import {defineComponent} from "vue";
 import {ChevronRightIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
-import {DuplicateIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
+import {DuplicateIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import {isProjectMember} from "@/Helper/PermissionHelper";
+import Permissions from "@/mixins/Permissions.vue";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
+import {Inertia} from "@inertiajs/inertia";
 
-export default defineComponent({
-    components: {TrashIcon, DuplicateIcon, UserTooltip, TagComponent, PencilAltIcon, ChevronRightIcon, DotsVerticalIcon}
-})
+export default {
+    components: {
+        ProjectHistoryComponent,
+        JetDialogModal,
+        XIcon,
+        ProjectDataEditModal,
+        TrashIcon,
+        DuplicateIcon,
+        UserTooltip,
+        TagComponent,
+        PencilAltIcon,
+        ChevronRightIcon,
+        DotsVerticalIcon,
+        Menu,
+        MenuButton,
+        MenuItem,
+        MenuItems
+    },
+    props: [
+        'project',
+        'currentGroup',
+        'states',
+        'projectState',
+        'projectGroups',
+        'firstEventInProject',
+        'lastEventInProject',
+        'RoomsWithAudience',
+        'groupProjects',
+        'openTab'
+    ],
+    data() {
+        return {
+            showProjectHistory: false,
+            editingProject: false,
+            deletingProject: false,
+            projectToDelete: null,
+        }
+    },
+    computed: {
+        projectManagerIds: function () {
+            let managerIdArray = [];
+            this.project.project_managers.forEach(manager => {
+                    managerIdArray.push(manager.id)
+                }
+            )
+            return managerIdArray;
+        },
+        projectCanWriteIds: function () {
+            let canWriteArray = [];
+            this.project.write_auth.forEach(write => {
+                    canWriteArray.push(write.id)
+                }
+            )
+            return canWriteArray;
+        },
+        projectDeletePermissionUsers() {
+            let canDeleteArray = [];
+            this.project.delete_permission_users.forEach(deletePermission => {
+                    canDeleteArray.push(deletePermission.id)
+                }
+            )
+            return canDeleteArray;
+        },
+        tabs() {
+            return [
+                {name: 'Projektinformationen', href: '#', current: this.openTab === 'info', show: true},
+                {name: 'Ablaufplan', href: '#', current: this.openTab === 'calendar', show: true},
+                {name: 'Checklisten', href: '#', current: this.openTab === 'checklist', show: true},
+                {name: 'Schichten', href: '#', current: this.openTab === 'shift', show: true},
+                {name: 'Budget', href: '#', current: this.openTab === 'budget', show: this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)},
+                {name: 'Kommentare', href: '#', current: this.openTab === 'comment', show: true},
+            ]
+        },
+    },
+    methods: {
+        isProjectMember,
+        openProjectHistoryModal() {
+            this.showProjectHistory = true;
+        },
+        closeProjectHistoryModal() {
+            this.showProjectHistory = false;
+        },
+        openEditProjectModal() {
+            this.editingProject = true;
+        },
+        closeEditProjectModal() {
+            this.editingProject = false;
+        },
+        duplicateProject(project) {
+            this.$inertia.post(`/projects/${project.id}/duplicate`);
+        },
+        openDeleteProjectModal(project) {
+            this.projectToDelete = project;
+            this.deletingProject = true;
+        },
+        closeDeleteProjectModal() {
+            this.deletingProject = false;
+            this.projectToDelete = null;
+        },
+        deleteProjectFromGroup(projectGroupId) {
+            axios.delete(route('projects.group.delete'), {
+                params: {
+                    projectIdToDelete: projectGroupId.id,
+                    groupId: this.project.id
+                }
+            }).finally(() => {
+                this.projectGroups.splice(this.projectGroups.findIndex(index => index.id === projectGroupId.id), 1)
+            })
+        },
+        deleteProject() {
+            this.nameOfDeletedProject = this.projectToDelete.name;
+            Inertia.delete(`/projects/${this.projectToDelete.id}`);
+            this.closeDeleteProjectModal();
+        },
+        locationString() {
+            return Object.values(this.RoomsWithAudience).join(", ");
+        },
+        changeTab(selectedTab) {
+            if (selectedTab.name === 'Ablaufplan') {
+                Inertia.get(route('projects.show.calendar', {project: this.project.id}));
+            } else if (selectedTab.name === 'Checklisten') {
+                Inertia.get(route('projects.show.checklist', {project: this.project.id}));
+            } else if (selectedTab.name === 'Projektinformationen') {
+                Inertia.get(route('projects.show.info', {project: this.project.id}));
+            } else if (selectedTab.name === 'Kommentare') {
+                Inertia.get(route('projects.show.comment', {project: this.project.id}));
+            } else if (selectedTab.name === 'Schichten') {
+                Inertia.get(route('projects.show.shift', {project: this.project.id}));
+            } else if(selectedTab.name === 'Budget') {
+                Inertia.get(route('projects.show.budget', {project: this.project.id}));
+            }else{
+                Inertia.get(route('projects.show.info', {project: this.project.id}));
+            }
+        },
+    },
+    mixins: [Permissions],
+}
 </script>
 
 <style scoped>

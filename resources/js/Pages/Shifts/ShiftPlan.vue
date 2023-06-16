@@ -41,9 +41,10 @@
 
 
         <pre>
-            {{ users }}
+            {{ dropUsers }}
         </pre>
-        <ShiftPlanUserOverview :users="users" @isOpen="showUserOverviewBar" :days="days"/>
+
+        <ShiftPlanUserOverview :users="dropUsers" @isOpen="showUserOverviewBar" :days="days"/>
 
 
     </app-layout>
@@ -85,8 +86,32 @@ export default {
         'personalFilters',
         'selectedDate',
         'eventTypes',
-        'users'
+        'users', 'freelancers', 'serviceProviders'
     ],
+    computed: {
+        dropUsers(){
+            const users = [];
+            this.users.forEach((user) => {
+                users.push({
+                    element: user,
+                    type: 0
+                })
+            })
+            this.freelancers?.forEach((freelancer) => {
+                users.push({
+                    element: freelancer,
+                    type: 1
+                })
+            })
+            this.serviceProviders?.forEach((provider) => {
+                users.push({
+                    element: provider,
+                    type: 2
+                })
+            })
+            return users;
+        },
+    },
     methods: {
         findProjectById(projectId) {
             return this.projects.find(project => project.id === projectId);

@@ -10,7 +10,7 @@
             <div class="bg-backgroundGray">
                 <div v-for="shift in event.shifts" class="flex justify-between px-1">
                     <!-- Drop Element --->
-                    <ShiftDropElement :users="shift.users" :shift="shift" :show-room="showRoom" :room="room" :event="event" />
+                    <ShiftDropElement :users="shift.users" :shift="shift" :show-room="showRoom" :room="room" :event="event"  :currentCount="shift.currentCount" :maxCount="shift.maxCount"  :free-employee-count="shift.empty_user_count" :free-master-count="shift.empty_master_count"/>
                 </div>
             </div>
         </div>
@@ -23,10 +23,12 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import Permissions from "@/mixins/Permissions.vue";
 import {CheckIcon} from "@heroicons/vue/outline";
 import ShiftDropElement from "@/Layouts/Components/ShiftPlanComponents/ShiftDropElement.vue";
+import DropElement from "@/Pages/Projects/Components/DropElement.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        DropElement,
         ShiftDropElement,
         CheckIcon,
     },
@@ -37,6 +39,9 @@ export default defineComponent({
         'showRoom',
         'room',
     ],
+    computed: {
+
+    },
     data() {
         return {}
     },

@@ -28,25 +28,7 @@
 
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3" v-for="time in timeLine">
-                                        <div>
-                                            <input type="time"
-                                                   placeholder="Start*"
-                                                   v-model="time.start"
-                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                                   required
-                                            />
-                                        </div>
-                                        <div>
-                                            <input type="time"
-                                                   placeholder="Ende*"
-                                                   v-model="time.end"
-                                                   maxlength="3"
-                                                   required
-                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                        </div>
-                                        <div class="mt-2 col-span-2">
-                                            <textarea v-model="time.description" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
-                                        </div>
+                                       <SingleTimeLine :time="time" :index="index" :key="index" @deleteTime="deleteTime"/>
                                     </div>
 
                                     <div class="group h-1">
@@ -76,11 +58,13 @@ import Permissions from "@/mixins/Permissions.vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import Input from "@/Jetstream/Input.vue";
 import {PlusCircleIcon} from "@heroicons/vue/outline";
+import SingleTimeLine from "@/Pages/Projects/Components/SingleTimeLine.vue";
 
 export default defineComponent({
     name: "AddTimeLineModal",
     mixins: [Permissions],
     components: {
+        SingleTimeLine,
         Input,
         AddButton,
         Dialog,
@@ -93,6 +77,7 @@ export default defineComponent({
     data(){
         return {
             open: true,
+            helpText: '',
         }
     },
     emits: ['closed'],
@@ -111,7 +96,11 @@ export default defineComponent({
         },
         addTime(){
             this.$inertia.post(route('add.timeline.row', this.event))
-        }
+        },
+        deleteTime(index){
+            this.$inertia.delete(route('delete.timeline.row', index))
+        },
+
     }
 })
 </script>

@@ -1485,7 +1485,7 @@ class ProjectController extends Controller
         foreach ($shiftRelevantEvents as $event) {
             $eventsWithRelevant[$event->id] = [
                 'event' => $event,
-                'timeline' => $event->timeline,
+                'timeline' => $event->timeline()->orderBy('start', 'ASC')->get(),
                 'shifts' => $event->shifts,
                 'event_type' => $event->event_type,
                 'room' => $event->room,

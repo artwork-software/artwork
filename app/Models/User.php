@@ -138,10 +138,9 @@ class User extends Authenticatable
     public function getShiftsAttribute(): Collection
     {
         return $this->shifts()
-            ->with(['event', 'event.room', 'event.project'])
-            ->without(['craft', 'users'])
-            ->without(['event.project.shiftRelevantEventTypes'])
+            ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
             ->get()
+            ->makeHidden(['allUsers'])
             ->groupBy(function ($shift) {
                 return $shift->event->days_of_event;
             });

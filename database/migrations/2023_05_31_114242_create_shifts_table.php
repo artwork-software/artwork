@@ -23,6 +23,7 @@ return new class extends Migration
             $table->integer('number_employees')->default(0);
             $table->integer('number_masters')->default(0);
             $table->string('description')->nullable();
+            $table->boolean('is_committed')->default(false);
             $table->timestamps();
         });
     }

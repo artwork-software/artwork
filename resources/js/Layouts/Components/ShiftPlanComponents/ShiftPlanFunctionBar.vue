@@ -13,7 +13,7 @@
                 </div>
             </div>
             <div class="flex items-center">
-                <!-- Hier Button "Alle Schichten festschreiben" -->
+                <AddButton text="Alle Schichten festsetzen" type="secondary" @click="commitAllShifts" />
             </div>
 
         </div>
@@ -49,12 +49,14 @@ import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
+import AddButton from "@/Layouts/Components/AddButton.vue";
 
 
 export default {
     name: "ShiftPlanFunctionBar",
     mixins: [Permissions],
     components: {
+        AddButton,
         BaseFilterTag,
         ShiftPlanFilter,
         Dropdown,
@@ -75,7 +77,8 @@ export default {
         'isFullscreen',
         'filterOptions',
         'allShiftsCommitted',
-        'personalFilters'
+        'personalFilters',
+        'rooms'
     ],
     emits: ['enterFullscreenMode','previousTimeRange','nextTimeRange','commitAllShifts'],
     data() {
@@ -96,8 +99,30 @@ export default {
         filtersChanged(activeFilters) {
             this.activeFilters = activeFilters
         },
-        commitAllShifts(){
-            this.$emit('commitAllShifts')
+        async commitAllShifts(){
+            let filteredEvents = [];
+
+            // Loop through each room in the shiftPlan array
+            this.rooms.forEach(room => {
+                // Loop through each day in the room object
+                Object.values(room).forEach(day => {
+                    // Check if day has an 'events' property, and it has a 'data' property
+                    if(day.events && day.events.data) {
+                        // Add the events to the allEvents array
+                        filteredEvents = filteredEvents.concat(day.events.data);
+                    }
+                });
+            });
+
+            console.log(filteredEvents);
+
+            await axios.post('/shifts/commit', { events: filteredEvents })
+                .then(() => {
+                    console.log("All shifts committed")
+                })
+                .catch(error => {
+                    console.log(error)
+                })
         },
     },
 }

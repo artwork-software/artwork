@@ -285,7 +285,7 @@ export default {
             this.showDeleteConfirmModal = false;
         },
         openProjectBudget(projectId) {
-            window.location.href = route('projects.show', projectId) + '?openTab=budget';
+            window.location.href = route('projects.show.budget', projectId);
         },
         checkNotificationKey(key){
             return key !== null || key !== '' || key.length > 0;

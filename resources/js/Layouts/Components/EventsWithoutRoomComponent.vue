@@ -207,7 +207,7 @@
                                 <div class="xsLight flex" v-if="!event.creatingProject">
                                     Aktuell zugeordnet zu:
                                     <a v-if="event.projectId"
-                                       :href="route('projects.show', {project: event.projectId, openTab: 'calendar'})"
+                                       :href="route('projects.show.calendar', {project: event.projectId})"
                                        class="ml-3 flex xsDark">
                                         {{ event.project?.name }}
                                     </a>
@@ -390,7 +390,7 @@
                             <div class="w-full flex">
                                 <div class="flex w-1/2 xxsDark items-center my-auto" v-if="event.projectId">
                                     Projekt:
-                                    <a :href="route('projects.show', {project: event.projectId, openTab: 'calendar'})"
+                                    <a :href="route('projects.show.calendar', {project: event.projectId})"
                                        class="ml-1 xxsDarkBold items-center flex">
                                         {{ event.projectName }}
                                     </a>

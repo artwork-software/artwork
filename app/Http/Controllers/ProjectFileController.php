@@ -97,7 +97,7 @@ class ProjectFileController extends Controller
             2 => [
                 'type' => 'link',
                 'title' =>  $project->name,
-                'href' => route('projects.show', $project->id),
+                'href' => route('projects.show.budget', $project->id),
             ]
         ];
 
@@ -176,7 +176,7 @@ class ProjectFileController extends Controller
             2 => [
                 'type' => 'link',
                 'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null,
+                'href' => $project ? route('projects.show.budget', $project->id) : null,
             ]
         ];
 
@@ -219,7 +219,7 @@ class ProjectFileController extends Controller
             2 => [
                 'type' => 'link',
                 'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show', $project->id) : null,
+                'href' => $project ? route('projects.show.budget', $project->id) : null,
             ]
         ];
 

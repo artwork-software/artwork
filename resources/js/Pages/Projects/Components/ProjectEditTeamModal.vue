@@ -178,7 +178,7 @@ export default {
         XCircleIcon,
         XIcon
     },
-    props: ['editingTeam', 'assignedUsers', 'projectManagerIds', 'departments', 'projectId'],
+    props: ['editingTeam', 'assignedUsers', 'userIsProjectManager', 'departments', 'projectId'],
     data(){
         return {
             department_and_user_query: "",
@@ -252,7 +252,7 @@ export default {
             this.closeModal(true);
         },
         checkUserAuth(user) {
-            if (this.projectManagerIds.includes(this.$page.props.user.id)) {
+            if (this.userIsProjectManager) {
                 return true;
             }
             if (this.$page.props.user.id === user.id && user.project_management) {

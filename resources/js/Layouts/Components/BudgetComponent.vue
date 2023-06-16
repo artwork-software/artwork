@@ -1089,7 +1089,7 @@ export default {
             });
         },
         openCellDetailModal(cell) {
-            Inertia.get(route('projects.show', {project: this.project.id}), {
+            Inertia.get(route('projects.show.budget', {project: this.project.id}), {
                 selectedCell: cell.id,
             }, {
                 preserveState: true,
@@ -1100,7 +1100,7 @@ export default {
             })
         },
         openBudgetSumDetailModal(type, column) {
-            Inertia.get(route('projects.show', {project: this.project.id}), {
+            Inertia.get(route('projects.show.budget', {project: this.project.id}), {
                 selectedBudgetType: type,
                 selectedColumn: column.id,
             }, {
@@ -1112,7 +1112,7 @@ export default {
             })
         },
         openSubPositionSumDetailModal(subPosition, column) {
-            Inertia.get(route('projects.show', {project: this.project.id}), {
+            Inertia.get(route('projects.show.budget', {project: this.project.id}), {
                 selectedSubPosition: subPosition.id,
                 selectedColumn: column.id,
             }, {
@@ -1124,7 +1124,7 @@ export default {
             })
         },
         openMainPositionSumDetailModal(mainPosition, column) {
-            Inertia.get(route('projects.show', {project: this.project.id}), {
+            Inertia.get(route('projects.show.budget', {project: this.project.id}), {
                 selectedMainPosition: mainPosition.id,
                 selectedColumn: column.id,
             }, {
@@ -1136,7 +1136,7 @@ export default {
             })
         },
         openRowDetailModal(row) {
-            Inertia.visit(route('projects.show', {
+            Inertia.visit(route('projects.show.budget', {
                 project: this.project.id,
                 selectedRow: row.id
             }), {

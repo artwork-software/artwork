@@ -12,9 +12,7 @@
                                     <input type="file" class="hidden"
                                         ref="photo"
                                         @change="updatePhotoPreview">
-
                                     <div class="mt-1 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-
                                         <div class="sm:col-span-3 flex items-end">
 
                                             <div @click="openChangePictureModal" class="mt-2">
@@ -300,8 +298,8 @@
                         </div>
                     </div>
                 </div>
-
             </template>
+
 
         </jet-dialog-modal>
     </app-layout>

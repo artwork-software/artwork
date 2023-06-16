@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Shift;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class ShiftController extends Controller
 {
@@ -74,11 +75,21 @@ class ShiftController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Shift  $shift
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, Shift $shift)
     {
+        $shift->update($request->only([
+            'start',
+            'end',
+            'break_minutes',
+            'craft_id',
+            'number_employees',
+            'number_masters',
+            'description',
+        ]));
 
+        return Redirect::route('shifts.plan')->with('success', 'Shift updated');
     }
 
     /**

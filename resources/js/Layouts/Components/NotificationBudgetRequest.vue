@@ -1,7 +1,7 @@
 <template>
 
     <div class="flex flex-row mt-2">
-        <span class="xxsLight">{{ budget.requested_position.name }}</span><span class="xxsLight ml-3"><a :href="route('projects.show', budget.project.id) + '?openTab=budget'" class="text-indigo-700">{{ budget.project.name }}</a></span>
+        <span class="xxsLight">{{ budget.requested_position.name }}</span><span class="xxsLight ml-3"><a :href="route('projects.show.budget', budget.project.id)" class="text-indigo-700">{{ budget.project.name }}</a></span>
     </div>
     <div class="mt-2 flex" v-if="budget.changeType === 'BUDGET_VERIFICATION_REQUEST'">
         <AddButton
@@ -28,7 +28,7 @@ export default {
     props: ['budget'],
     methods: {
         redirectToBudget(){
-            location.replace(route('projects.show', this.budget.requested_position.project_id) + '?openTab=budget')
+            location.replace(route('projects.show.budget', this.budget.requested_position.project_id))
         }
     }
 }

@@ -61,7 +61,7 @@
                                         <div class="ml-16 xsLight flex items-center">
                                             Zugeordnet zu
                                             <Link
-                                                :href="route('projects.show',{project: eventRequest.project.id, openTab:'calendar'})"
+                                                :href="route('projects.show.calendar',{project: eventRequest.project.id})"
                                                 class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                                 {{ eventRequest.project?.name }}
                                             </Link>

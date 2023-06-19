@@ -26,11 +26,19 @@ docker-compose build --no-cache
 docker-compose up -d
 ```
 
-
 4. Update the `.env` file and change the MeiliSearch IP address accordingly:
 
 ```shell
 MEILISEARCH_HOST=http://artwork_tools-meilisearch-1:7700
+```
+
+Database Connection:
+
+```shell    
+DB_CONNECTION=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=CONTAINER_NAME OR ID
 ```
 
 5. To migrate the database with fresh data, use the following command:
@@ -38,10 +46,27 @@ MEILISEARCH_HOST=http://artwork_tools-meilisearch-1:7700
 ```shell
 docker-compose run --rm artisan migrate:fresh --seed
 ```
+7. To run npm dev, use the following command:
+```shell
+docker-compose run --rm npm run dev 
+```
 
-6. Finally, visit the local development environment by opening your browser and navigating to [http://localhost](http://localhost).
+8. Finally, visit the local development environment by opening your browser and navigating to [http://localhost](http://localhost).
 
 ----------------
+
+If the page appears blank, please follow the error handling steps below:
+Run npm run dev to start the development version of the page:
+```shell
+   docker-compose run --rm npm run dev
+```
+If the issue persists, execute npm run build to compile the project and generate the production-ready version:
+```shell
+docker-compose run --rm npm run build
+```
+
+----------------
+
 
 To run various commands in the project, you can use the following instructions:
 

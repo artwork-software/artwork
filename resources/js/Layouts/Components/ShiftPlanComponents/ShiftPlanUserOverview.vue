@@ -17,7 +17,7 @@
                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                 <div>
                     <tr class="flex w-full">
-                        <th class="w-40"></th>
+                        <th class="w-64"></th>
                         <th v-for="day in days" class="flex w-64 h-16 items-center">
                             <div class="flex calendarRoomHeader font-semibold">
                                 {{ day.day_string }} {{ day.day }}
@@ -26,15 +26,14 @@
                     </tr>
                     <tbody class="w-full pt-3">
                     <tr v-for="(user,index) in users" class="w-full flex">
-                        <th class=" flex items-center text-right -mt-2 pr-1 w-40" :class="index % 2 === 0 ? '' : ''">
-                            <DragElement :item="user" />
+                        <th class=" flex items-center text-right -mt-2 pr-1 w-64" :class="index % 2 === 0 ? '' : ''">
+                            <DragElement  :item="user.element" :type="user.type" />
                         </th>
                         <td v-for="day in days">
-                            <div class="w-64 h-10 p-2 bg-gray-50/10 text-white text-xs rounded-lg overflow-x-scroll">
-                                <span v-for="shift in user.shifts[day.full_day]">
+                            <div class="w-64 h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg overflow-x-scroll">
+                                <span v-for="shift in user.element?.shifts[day.full_day]">
                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                 </span>
-
                             </div>
                         </td>
                     </tr>
@@ -68,7 +67,15 @@ export default defineComponent({
             this.showUserOverview = !this.showUserOverview
             this.$emit('isOpen', this.showUserOverview)
         },
-    }
+    },
+
+    computed: {
+        filteredUsers(){
+            if(!this.showExtern && !this.showIntern && !this.showProvider){
+                return this.users;
+            }
+        }
+    },
 
 })
 </script>

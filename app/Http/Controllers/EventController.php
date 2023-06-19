@@ -13,16 +13,20 @@ use App\Http\Resources\CalendarEventCollectionResource;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
+use App\Http\Resources\FreelancerShiftResource;
 use App\Http\Resources\ProjectIndexAdminResource;
+use App\Http\Resources\ServiceProviderShiftResource;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\UserIndexResource;
 use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\Freelancer;
 use App\Models\Project;
 use App\Models\Room;
 use App\Models\Scheduling;
 use App\Models\SeriesEvents;
+use App\Models\ServiceProvider;
 use App\Models\Shift;
 use App\Models\SubEvents;
 use App\Models\Task;
@@ -143,6 +147,8 @@ class EventController extends Controller
             'personalFilters' => $shiftFilters,
             'selectedDate' => $showCalendar['selectedDate'],
             'users' => UserIndexResource::collection(User::all())->resolve(),
+            'freelancers' => FreelancerShiftResource::collection(Freelancer::all())->resolve(),
+            'serviceProviders' => ServiceProviderShiftResource::collection(ServiceProvider::all())->resolve(),
         ]);
     }
 

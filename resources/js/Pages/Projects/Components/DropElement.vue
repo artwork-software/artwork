@@ -4,11 +4,6 @@ import {defineComponent} from 'vue'
 export default defineComponent({
     name: "DropElement",
     props: ['shiftId', 'master', 'users', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount', 'userIds'],
-    computed: {
-        userIds(){
-            return this.users.map(user => user.id);
-        }
-    },
     methods: {
         onDragOver(event) {
             event.preventDefault();

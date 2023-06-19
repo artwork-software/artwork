@@ -4,7 +4,7 @@
                                 :states="states" :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
                                 :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="calendar">
-        <CalendarTab :project="project" :selected-date="selectedDate" :date-value="dateValue" :events="events" :rooms="rooms" :events-without-room="eventsWithoutRoom" :filter-options="filterOptions" :personal-filters="personalFilters" :at-a-glance="atAGlance" :events-at-a-glance="eventsAtAGlance" :calendar="calendar" :days="days" :event-types="eventTypes"></CalendarTab>
+        <CalendarTab :project="project" :selected-date="selectedDate" :date-value="dateValue" :events="events" :rooms="rooms" :events-without-room="eventsWithoutRoom" :filter-options="filterOptions" :personal-filters="personalFilters" :at-a-glance="atAGlance" :events-at-a-glance="eventsAtAGlance" :calendar="calendar" :days="days" :event-types="eventTypes" @change-at-a-glance="changeAtAGlance"></CalendarTab>
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSecondSidenav
@@ -36,6 +36,7 @@ import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue"
 import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
 import ProjectSidenav from "@/Layouts/Components/ProjectSidenav.vue";
 import CalendarTab from "@/Pages/Projects/Components/TabComponents/CalendarTab.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     components: {
@@ -116,6 +117,17 @@ export default {
             )
             return canWriteArray;
         },
+        changeAtAGlance() {
+            this.atAGlance = !this.atAGlance;
+            if (this.atAGlance) {
+                Inertia.reload({
+                    data: {
+                        atAGlance: this.atAGlance,
+                    },
+                    only: ['calendar']
+                })
+            }
+        }
     }
 }
 </script>

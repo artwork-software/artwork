@@ -66,6 +66,7 @@ export default {
         IndividualCalendarAtGlanceComponent,
         PencilAltIcon, XCircleIcon, DocumentTextIcon, SvgCollection, XIcon, JetInputError
     },
+    emits: ['change-at-a-glance'],
     props: [
         'project',
         'calendarType',
@@ -87,15 +88,7 @@ export default {
     },
     methods: {
         changeAtAGlance() {
-            this.atAGlance = !this.atAGlance;
-            if (this.atAGlance) {
-                Inertia.reload({
-                    data: {
-                        atAGlance: this.atAGlance,
-                    },
-                    only: ['calendar']
-                })
-            }
+            this.$emit('change-at-a-glance');
         }
     }
 }

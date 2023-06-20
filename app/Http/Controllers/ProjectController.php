@@ -16,6 +16,12 @@ use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectIndexShowResource;
+use App\Http\Resources\ProjectResources\ProjectBudgetResource;
+use App\Http\Resources\ProjectResources\ProjectCalendarResource;
+use App\Http\Resources\ProjectResources\ProjectChecklistResource;
+use App\Http\Resources\ProjectResources\ProjectCommentResource;
+use App\Http\Resources\ProjectResources\ProjectInfoResource;
+use App\Http\Resources\ProjectResources\ProjectShiftResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Http\Resources\UserIndexResource;
 use App\Models\BudgetSumDetails;
@@ -1646,7 +1652,7 @@ class ProjectController extends Controller
 
         return inertia('Projects/SingleProjectInformation', [
             // needed for the ProjectShowHeaderComponent
-            'project' => new ProjectShowResource($project),
+            'project' => new ProjectInfoResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,
@@ -1737,7 +1743,7 @@ class ProjectController extends Controller
 
         return inertia('Projects/SingleProjectCalendar', [
             // needed for the ProjectShowHeaderComponent
-            'project' => new ProjectShowResource($project),
+            'project' => new ProjectCalendarResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,
@@ -1821,7 +1827,7 @@ class ProjectController extends Controller
         }
 
         return inertia('Projects/SingleProjectChecklists', [
-            'project' => new ProjectShowResource($project),
+            'project' => new ProjectChecklistResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,
@@ -1898,7 +1904,7 @@ class ProjectController extends Controller
         rsort($eventsWithRelevant);
 
         return inertia('Projects/SingleProjectShifts', [
-            'project' => new ProjectShowResource($project),
+            'project' => new ProjectShiftResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,
@@ -2020,7 +2026,7 @@ class ProjectController extends Controller
         }
 
         return inertia('Projects/SingleProjectBudget', [
-            'project' => new ProjectShowResource($project),
+            'project' => new ProjectBudgetResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,
@@ -2107,7 +2113,7 @@ class ProjectController extends Controller
         }
 
         return inertia('Projects/SingleProjectComments', [
-            'project' => new ProjectShowResource($project),
+            'project' => new ProjectCommentResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,

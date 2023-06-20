@@ -821,7 +821,7 @@
 
                     <div class="w-full items-center text-center">
                         <AddButton :class="[checklistForm.name.length === 0 && !selectedTemplate.id ?
-                                       'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                       'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                    class="mt-4 items-center px-20 py-3 border border-transparent
                             text-base font-bold shadow-sm text-secondaryHover"
                                    @click="addChecklist"

@@ -58,6 +58,7 @@ class ProjectShiftResource extends JsonResource
 
             //needed for ProjectShowHeaderComponent
             'project_history' => $historyArray,
+            'delete_permission_users' => $this->delete_permission_users,
         ];
     }
 }

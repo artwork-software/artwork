@@ -61,6 +61,7 @@ class ProjectBudgetResource extends JsonResource
 
             //needed for ProjectShowHeaderComponent
             'project_history' => $historyArray,
+            'delete_permission_users' => $this->delete_permission_users,
 
             'project_managers' => $this->managerUsers,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),

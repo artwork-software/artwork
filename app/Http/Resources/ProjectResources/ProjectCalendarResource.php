@@ -53,6 +53,7 @@ class ProjectCalendarResource extends JsonResource
 
             //needed for ProjectShowHeaderComponent
             'project_history' => $historyArray,
+            'delete_permission_users' => $this->delete_permission_users,
 
             //needed for project Second Sidenav
             'entry_fee' => $this->entry_fee,

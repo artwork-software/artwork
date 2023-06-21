@@ -347,7 +347,8 @@
                                                        :table="table"
                                                        :project="project"
                                                        :main-position="mainPosition"
-                                :project-managers="projectManager"></MainPositionComponent>
+                                :project-managers="projectManager"
+                                type="BUDGET_TYPE_COST"></MainPositionComponent>
                             </tr>
                             <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
                                 <td class="w-28"></td>
@@ -432,7 +433,9 @@
                                                        :table="table"
                                                        :project="project"
                                                        :main-position="mainPosition"
-                                                        :project-managers="projectManager"></MainPositionComponent>
+                                                        :project-managers="projectManager"
+                                                       type="BUDGET_TYPE_EARNING"
+                                ></MainPositionComponent>
                             </tr>
                             <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
                                 <td class="w-28"></td>
@@ -1169,8 +1172,10 @@ export default {
                 this.subPositionToDelete = position;
             } else {
                 this.rowToDelete = position;
+
             }
             this.showDeleteModal = true;
+            console.log(this.showDeleteModal + this.rowToDelete + this.confirmationTitle + this.confirmationDescription);
         },
         openDeleteSubPositionModal(subPosition) {
             this.confirmationTitle = 'Unterposition löschen';

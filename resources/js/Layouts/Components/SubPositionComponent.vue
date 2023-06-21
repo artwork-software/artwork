@@ -101,7 +101,7 @@
                               fill="#fcfcfb"/>
                     </svg>
                 </div>
-                <div class="flex flex-wrap w-8">
+                <div class="flex flex-wrap w-8 z-50">
                     <div class="flex">
                         <Menu as="div" class="my-auto relative"
                               v-show="showMenu === 'subPosition' + subPosition.id">

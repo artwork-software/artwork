@@ -202,7 +202,7 @@
                 </td>
             </tr>
             </thead>
-            <div @click="addMainPosition('BUDGET_TYPE_COST', mainPosition)"
+            <div @click="addMainPosition(mainPosition)"
                  class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                 <div
                     class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
@@ -257,7 +257,7 @@ export default {
         MenuButton,
         ConfirmationComponent
     },
-    props: ['mainPosition','table','project', 'projectManagers'],
+    props: ['mainPosition','table','project', 'projectManagers','type'],
     emits:['openDeleteModal','openErrorModal'],
     data(){
       return{
@@ -385,10 +385,10 @@ export default {
                 preserveState: true
             });
         },
-        addMainPosition(type, mainPosition) {
+        addMainPosition(mainPosition) {
             this.$inertia.post(route('project.budget.main-position.add'), {
                 table_id: this.table.id,
-                type: type,
+                type: this.type,
                 positionBefore: mainPosition.position
             }, {
                 preserveScroll: true,

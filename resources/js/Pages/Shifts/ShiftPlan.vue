@@ -39,12 +39,6 @@
                 </div>
             </table>
         </div>
-
-
-        <pre>
-            {{ dropUsers }}
-        </pre>
-
         <ShiftPlanUserOverview :users="dropUsers" @isOpen="showUserOverviewBar" :days="days"/>
 
 

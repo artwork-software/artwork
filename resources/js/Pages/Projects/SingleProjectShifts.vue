@@ -63,6 +63,29 @@ export default {
             this.show = false;
         }, 1000)
     },
+    dropUsers(){
+        const users = [];
+        this.project.users.forEach((user) => {
+            users.push({
+                element: user,
+                type: 0
+            })
+        })
+        this.project.freelancers?.forEach((freelancer) => {
+            users.push({
+                element: freelancer,
+                type: 1
+            })
+        })
+        this.project.serviceProviders?.forEach((provider) => {
+            users.push({
+                element: provider,
+                type: 2
+            })
+        })
+
+        return users;
+    },
     methods:{
         projectManagerIds: function () {
             let managerIdArray = [];

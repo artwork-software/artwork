@@ -283,13 +283,16 @@ class EventController extends Controller
                 $projectHistory = new NewHistoryService('App\Models\Project');
                 $projectHistory->createHistory($eventProject->id, 'Ablaufplan hinzugefügt');
             }
-            $projectRelevantEventTypes = $eventProject->shiftRelevantEventTypes()->get();
-            if($projectRelevantEventTypes->contains($firstEvent->event_type_id)){
-                $firstEvent->timeline()->create([
-                    'start' => Carbon::parse($firstEvent->start_time)->format('H:i:s'),
-                    'end' => Carbon::parse($firstEvent->end_time)->format('H:i:s'),
-                ]);
+            if($eventProject){
+                $projectRelevantEventTypes = $eventProject->shiftRelevantEventTypes()->get();
+                if($projectRelevantEventTypes->contains($firstEvent->event_type_id)){
+                    $firstEvent->timeline()->create([
+                        'start' => Carbon::parse($firstEvent->start_time)->format('H:i:s'),
+                        'end' => Carbon::parse($firstEvent->end_time)->format('H:i:s'),
+                    ]);
+                }
             }
+
 
         }
 

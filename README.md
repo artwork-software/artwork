@@ -65,6 +65,12 @@ If the issue persists, execute npm run build to compile the project and generate
 docker-compose run --rm npm run build
 ```
 
+If you get the error "Failed opening required '/var/www/html/vendor/autoload.php" when you are trying to run the container, you can try to solve it with this command:
+```shell
+docker-compose run --rm composer install
+```
+
+
 ----------------
 
 

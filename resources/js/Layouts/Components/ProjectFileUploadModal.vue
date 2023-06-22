@@ -54,7 +54,7 @@
                                 <div class="border-gray-200">
                                     <div v-for="(user, index) in user_search_results" :key="index"
                                          class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4" v-if="budgetAccess.includes(user.id)">
+                                        <div class="flex-1 text-sm py-4">
                                             <p @click="addUserToFileUserArray(user)"
                                                class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
                                                 {{ user.first_name }} {{ user.last_name }}
@@ -144,7 +144,7 @@ export default {
                     axios.get('/users/search', {
                         params: {query: this.user_query}
                     }).then(response => {
-                        this.user_search_results = response.data
+                        this.user_search_results = response.data.filter(user => this.budgetAccess.some(budgetAccess => budgetAccess.id === user.id))
                     })
                 }
             },

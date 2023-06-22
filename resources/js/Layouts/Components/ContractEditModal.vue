@@ -292,7 +292,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-backgroundGray -mx-12 pt-6 pb-12 mt-6">
+                <div class="bg-backgroundGray -mx-10 pt-6 pb-12 mt-6">
                     <div class="px-12 w-full">
                         <div class="xxsDarkBold flex items-center cursor-pointer"
                              @click="showExtraSettings = !showExtraSettings">

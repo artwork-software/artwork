@@ -9,7 +9,7 @@
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSecondSidenav
                 :project="project"
-                :project-members="projectMembers"
+                :project-members="this.project.users"
                 :project-members-write-access="projectCanWriteIds"
                 :project-categories="projectCategories"
                 :project-genres="projectGenres"
@@ -91,15 +91,6 @@ export default {
                 }
             )
             return managerIdArray;
-        },
-        projectMembers: function () {
-
-            let projectMemberArray = [];
-            this.project.users.forEach(member => {
-                    projectMemberArray.push(member.id)
-                }
-            )
-            return projectMemberArray;
         },
         projectCanWriteIds: function () {
             let canWriteArray = [];

@@ -53,6 +53,11 @@ export default defineComponent({
         'access_budget',
         'groupProjects'
     ],
+    data() {
+        return {
+            show: false,
+        }
+    },
 })
 </script>
 

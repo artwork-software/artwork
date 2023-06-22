@@ -16,7 +16,7 @@
                 </div>
             </div>
             <div class="flex w-full mt-2 flex-wrap">
-                <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">Projekteam</span>
+                <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">Projektteam</span>
                 <div class="flex w-full">
                     <div class="flex" v-if="this.project.departments !== []">
                         <div class="flex mt-2 -mr-3" v-for="department in this.project.departments">

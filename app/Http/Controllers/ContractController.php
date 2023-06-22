@@ -137,7 +137,7 @@ class ContractController extends Controller
         $this->store_contract_tasks_and_comment($request, $contract);
 
         $contract->accessing_users()->sync(collect($request->accessibleUsers));
-        if(!in_array(Auth::id(), $request->accessibleUsers)) {
+        if(!in_array(Auth::id(), $request->accessibleUsers??[])) {
             $contract->accessing_users()->save(Auth::user());
         }
 

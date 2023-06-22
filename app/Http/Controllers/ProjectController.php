@@ -2063,6 +2063,7 @@ class ProjectController extends Controller
             'groupProjects' => Project::where('is_group', 1)->get(),
             'currentGroup' => $groupOutput,
             'projectState' => $project->state,
+            'access_budget' => $project->access_budget,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projectMoneySources' => $project->moneySources()->get(),
             'states' => ProjectStates::all(),

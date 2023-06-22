@@ -259,7 +259,7 @@
                                     <div class="border-gray-200">
                                         <div v-for="(user, index) in user_search_results" :key="index"
                                              class="flex items-center cursor-pointer">
-                                            <div class="flex-1 text-sm py-4" v-if="budgetAccess.includes(user.id)">
+                                            <div class="flex-1 text-sm py-4">
                                                 <p @click="addUserToContractUserArray(user)"
                                                    class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
                                                     {{ user.first_name }} {{ user.last_name }}
@@ -291,7 +291,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-backgroundGray -mx-12 pt-6 pb-12 mt-6">
+                <div class="bg-backgroundGray -mx-10 pt-6 pb-12 mt-6">
                     <div class="px-12 w-full">
                         <div class="xxsDarkBold flex items-center cursor-pointer"
                              @click="showExtraSettings = !showExtraSettings">
@@ -313,7 +313,7 @@
                                 </div>
                             </div>
 
-                            <ContractTaskForm :show="creatingNewTask" :users="usersWithAccess" ref="task_form"
+                            <ContractTaskForm :show="creatingNewTask" :users="budgetAccess" ref="task_form"
                                               @add-task="addTask" @showError="showError"/>
                             <div class="flex justify-between">
                                 <button v-if="!creatingNewTask" type="button"
@@ -395,7 +395,7 @@ export default {
                     axios.get('/users/search', {
                         params: {query: this.user_query}
                     }).then(response => {
-                        this.user_search_results = response.data
+                        this.user_search_results = response.data.filter(user => this.budgetAccess.some(budgetAccess => budgetAccess.id === user.id))
                     })
                 }
             },

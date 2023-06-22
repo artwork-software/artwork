@@ -328,7 +328,7 @@ class ContentSeeder extends Seeder
             'occupancy_option' => null,
             'audience' => null,
             'is_loud' => null,
-            'event_type_id' => 1,
+            'event_type_id' => 2,
             'room_id' => 2,
             'project_id' => 1,
             'user_id' => 1

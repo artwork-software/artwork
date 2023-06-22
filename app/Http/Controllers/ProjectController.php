@@ -58,6 +58,7 @@ use App\Models\User;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -75,6 +76,7 @@ use Inertia\Response;
 use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
 use stdClass;
+use Symfony\Component\ErrorHandler\Debug;
 
 
 class ProjectController extends Controller
@@ -1440,12 +1442,15 @@ class ProjectController extends Controller
             $templates = Table::where('is_template', true)->get();
         }
 
-
         $eventsAtAGlance = [];
 
         if(\request('atAGlance') === 'true'){
 
-            $eventsAtAGlance = CalendarEventResource::collection($project->events()
+            $eventsQuery = $project->events();
+
+            $filteredEventsQuery = $calendar->filterEvents($eventsQuery, null, null, null, $project);
+
+            $eventsAtAGlance = CalendarEventResource::collection($filteredEventsQuery
                 ->with(['room','project','creator'])
                 ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
         }
@@ -1712,7 +1717,10 @@ class ProjectController extends Controller
         $eventsAtAGlance = [];
 
         if(\request('atAGlance') === 'true'){
-            $eventsAtAGlance = CalendarEventResource::collection($project->events()
+            $eventsQuery = $project->events();
+            $filteredEvents = $calendar->filterEvents($eventsQuery, null, null, null, $project);
+
+            $eventsAtAGlance = CalendarEventResource::collection($filteredEvents
                 ->with(['room','project','creator'])
                 ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
         }

@@ -86,14 +86,17 @@ class CalendarController extends Controller
         ];
     }
 
-    private function get_events_of_day($date_of_day, $room, $projectId = null): array
+    private function get_events_of_day($date_of_day, $room, $projectId = null, $hasShifts = false): array
     {
 
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
-        $room_query = Room::query()->where('id', $room->id)->with('events', function ($query) use ($room) {
-            $this->filterEvents($query, null, null, $room, null)->orderBy('start_time', 'ASC');
+        $room_query = Room::query()->where('id', $room->id)->with('events', function ($query) use ($room, $hasShifts) {
+            $query = $this->filterEvents($query, null, null, $room, null)->orderBy('start_time', 'ASC');
+            if ($hasShifts) {
+                $query->whereHas('shifts');
+            }
         })->first();
 
         foreach ($room_query->events as $event) {
@@ -124,9 +127,6 @@ class CalendarController extends Controller
             }])
             ->where('start_time', '>=', $minDate)
             ->where('end_time', '<=', $maxDate)
-            ->whereHas('shifts', function ($query) {
-                $query->whereNotNull('shifts.id');
-            })
             ->whereHas('shifts.users', function ($query) use ($userId) {
                 $query->where('user_id', $userId);
             })
@@ -208,6 +208,8 @@ class CalendarController extends Controller
                 $endDate = Carbon::now()->addWeeks()->endOfDay();
             }
 
+            Debugbar::info('getting project events');
+            Debugbar::info(request('eventTypeIds'));
 
             $better = $this->filterRooms($startDate, $endDate)
                 ->with(['events.room', 'events.project', 'events.creator', 'events' => function ($query) use ($project, $room) {
@@ -312,16 +314,14 @@ class CalendarController extends Controller
 
         $better = $this->filterRooms($startDate, $endDate)
             ->with(['events.room', 'events.project', 'events.creator', 'events' => function ($query) use ($project, $room) {
-                $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC')->whereHas('shifts', function ($query) {
-                    $query->whereNotNull('shifts.id');
-                });
+                $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC')->whereHas('shifts');
             }])
             ->get()
             ->map(fn($room) => collect($calendarPeriod)
                 ->mapWithKeys(fn($date) => [
                     $date->format('d.m.') => [
                         'roomName' => $room->name,
-                        'events' => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
+                        'events' => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id, true))
                     ]
                 ]));
 
@@ -356,7 +356,7 @@ class CalendarController extends Controller
         return CalendarEventResource::collection($eventsByRoom)->collection->groupBy('room.id');
     }
 
-    private function filterEvents($query, $startDate, $endDate, ?Room $room, ?Project $project)
+    public function filterEvents($query, $startDate, $endDate, ?Room $room, ?Project $project)
     {
         $isLoud = request('isLoud');
         $isNotLoud = request('isNotLoud');

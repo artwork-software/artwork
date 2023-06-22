@@ -83,6 +83,10 @@ export default {
         'eventTypes',
         'users', 'freelancers', 'serviceProviders'
     ],
+    mounted() {
+        console.log("shiftplan:")
+        console.log(this.shiftPlan)
+    },
     computed: {
         dropUsers(){
             const users = [];

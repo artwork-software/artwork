@@ -7,8 +7,7 @@
 
             </div>
             <div>
-                // menu
-
+                <DotsVerticalIcon class="text-white h-6 w-6" />
             </div>
         </div>
 
@@ -21,13 +20,13 @@
 import {defineComponent} from 'vue'
 import Timeline from "@/Pages/Projects/Components/Timeline.vue";
 import SingleShift from "@/Pages/Projects/Components/TimeLineShiftsComponent.vue";
-import {PlusCircleIcon} from "@heroicons/vue/outline";
+import {PlusCircleIcon, DotsVerticalIcon} from "@heroicons/vue/outline";
 import TimeLineShiftsComponent from "@/Pages/Projects/Components/TimeLineShiftsComponent.vue";
 
 export default defineComponent({
     name: "SingleRelevantEvent",
     props: ['event', 'crafts'],
-    components: {TimeLineShiftsComponent, PlusCircleIcon, SingleShift, Timeline}
+    components: {TimeLineShiftsComponent, PlusCircleIcon, SingleShift, Timeline, DotsVerticalIcon}
 })
 </script>
 

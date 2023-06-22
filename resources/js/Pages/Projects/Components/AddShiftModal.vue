@@ -157,8 +157,8 @@ export default defineComponent({
                 end: null,
                 break_minutes: null,
                 craft_id: null,
-                number_employees: null,
-                number_masters: null,
+                number_employees: 0,
+                number_masters: 0,
                 description: '',
                 event_id: this.event.id
             }),

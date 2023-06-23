@@ -328,11 +328,17 @@ class EventController extends Controller
     public function commit_shifts(Request $request)
     {
 
-        Debugbar::info($request->events);
-
         foreach ($request->events as $event) {
-            // Retrieve the shifts for the current event
-            $shifts = Shift::whereIn('id', $event['shifts'])->get();
+
+            // Prepare an array to hold shift IDs
+            $shiftIds = [];
+
+            // Loop through each shift and collect the IDs
+            foreach ($event['shifts'] as $shift) {
+                $shiftIds[] = $shift['id'];
+            }
+
+            $shifts = Shift::whereIn('id', $shiftIds)->get();
 
             // Loop over the shifts and set is_committed to true
             foreach ($shifts as $shift) {

@@ -35,6 +35,7 @@ use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\SectorController;
+use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\ShiftFilterController;
 use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\SumDetailsController;
@@ -532,7 +533,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/project/{event}/shift/store', [\App\Http\Controllers\ShiftController::class, 'store'])->name('event.shift.store');
 
     // Add User to Shift
-    Route::post('/project/{shift}/add/user', [\App\Http\Controllers\ShiftController::class, 'addShiftUser'])->name('add.shift.user');
+    Route::post('/project/{shift}/add/user/{user}', [ShiftController::class, 'addShiftUser'])->name('add.shift.user');
     Route::post('/project/{shift}/add/master', [\App\Http\Controllers\ShiftController::class, 'addShiftMaster'])->name('add.shift.master');
 
     // add freelancer to shift
@@ -544,7 +545,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/project/{shift}/add/provider/master', [\App\Http\Controllers\ShiftController::class, 'addShiftProviderMaster'])->name('add.shift.provider.master');
 
     // remove User from Shift
-    Route::delete('/project/{shift}/remove/user', [\App\Http\Controllers\ShiftController::class, 'removeUser'])->name('shifts.removeUser');
+    Route::delete('/project/{shift}/remove/user/{user}', [\App\Http\Controllers\ShiftController::class, 'removeUser'])->name('shifts.removeUser');
 
     // remove freelancer from Shift
     Route::delete('/project/{shift}/remove/freelancer', [\App\Http\Controllers\ShiftController::class, 'removeFreelancer'])->name('shifts.removeFreelancer');

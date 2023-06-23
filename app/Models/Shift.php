@@ -45,7 +45,11 @@ class Shift extends Model
 
     public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'shift_user', 'shift_id', 'user_id')->withPivot(['is_master'])->orderByPivot('is_master', 'desc')->withCasts(['is_master' => 'boolean'])->without(['calender_settings']);
+        return $this->belongsToMany(User::class, 'shift_user', 'shift_id', 'user_id')
+            ->withPivot(['is_master', 'shift_percentage'])
+            ->orderByPivot('is_master', 'desc')
+            ->withCasts(['is_master' => 'boolean'])
+            ->without(['calender_settings']);
     }
 
     public function freelancer(): \Illuminate\Database\Eloquent\Relations\BelongsToMany

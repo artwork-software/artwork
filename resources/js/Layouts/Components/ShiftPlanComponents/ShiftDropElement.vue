@@ -81,9 +81,7 @@ export default defineComponent({
                 )
 
             } else if (dropElement.type === 0 && !dropElement.master) {
-                this.$inertia.post(route('add.shift.user', this.shift.id), {
-                        user_id: dropElement.id
-                    }, {
+                this.$inertia.post(route('add.shift.user', {shift: this.shift.id, user: dropElement.id}), {}, {
                         preserveState: true,
                         preserveScroll: true,
                     }

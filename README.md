@@ -42,7 +42,7 @@ The images will start building. It is recommended to replace the ./vendor/bin/sa
 Consultant the [documentation](https://laravel.com/docs/10.x/sail#configuring-a-shell-alias) to achieve that.
 We will use the alias `sail` for the following commands.
 
-3. Once the images are created install the frontend dependencies and a secret project key by running:
+3. Once the images are created you may have to open a new terminal window and install the frontend dependencies with a secret project key by running:
 
 ```shell
 sail npm install

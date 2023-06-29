@@ -40,7 +40,7 @@ composer install
 
 The images will start building. It is recommended to replace the ./vendor/bin/sail command with a shell alias. 
 Consultant the [documentation](https://laravel.com/docs/10.x/sail#configuring-a-shell-alias) to achieve that.
-We will use the alias sail for the following commands.
+We will use the alias `sail` for the following commands.
 
 3. Once the images are created install the frontend dependencies and a secret project key by running:
 

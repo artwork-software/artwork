@@ -1,141 +1,84 @@
 version: '3'
-
-networks:
-    laravel:
-
-
 services:
-    app:
+    laravel.test:
         build:
-            context: ./dockerfiles
-            dockerfile: nginx.dockerfile
+            context: ./vendor/laravel/sail/runtimes/8.2
+            dockerfile: Dockerfile
             args:
-                - UID=${UID:-1000}
-                - GID=${GID:-1000}
+                WWWGROUP: '${WWWGROUP}'
+        image: sail-8.2/app
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
         ports:
-            - "80:80"
+            - '${APP_PORT:-80}:80'
+            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+            IGNITION_LOCAL_SITES_PATH: '${PWD}'
         volumes:
-            - .:/var/www/html
+            - '.:/var/www/html'
+        networks:
+            - sail
         depends_on:
-            - php
-            - redis
             - mysql
-            - mailhog
             - meilisearch
-        networks:
-            - laravel
-
+            - mailpit
     mysql:
-        image: mariadb:latest
-        restart: unless-stopped
-        tty: true
+        image: 'mysql/mysql-server:8.0'
         ports:
-            - "3306:3306"
+            - '${FORWARD_DB_PORT:-3306}:3306'
         environment:
-            MYSQL_DATABASE: artwork_tools
-            MYSQL_USER: root
-            MYSQL_PASSWORD: RootRoot
-            MYSQL_ROOT_PASSWORD: RootRoot
+            MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ROOT_HOST: '%'
+            MYSQL_DATABASE: '${DB_DATABASE}'
+            MYSQL_USER: '${DB_USERNAME}'
+            MYSQL_PASSWORD: '${DB_PASSWORD}'
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+        volumes:
+            - 'sail-mysql:/var/lib/mysql'
+            - './vendor/laravel/sail/database/mysql/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
         networks:
-            - laravel
-
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - mysqladmin
+                - ping
+                - '-p${DB_PASSWORD}'
+            retries: 3
+            timeout: 5s
     meilisearch:
-        image: getmeili/meilisearch:latest
-        volumes:
-            - ./data.ms:/data.ms
-        networks:
-            - laravel
+        image: 'getmeili/meilisearch:latest'
         ports:
-            - "0.0.0.0:7700:7700"
-        environment:
-            - --master-key=masterKey
-            - --http-addr 'localhost:7700'
-
-    php:
-        build:
-            context: ./dockerfiles
-            dockerfile: php.root.dockerfile
-            args:
-                - UID=${UID:-1000}
-                - GID=${GID:-1000}
+            - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
+        volumes:
+            - 'sail-meilisearch:/meili_data'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - wget
+                - '--no-verbose'
+                - '--spider'
+                - 'http://localhost:7700/health'
+            retries: 3
+            timeout: 5s
+    mailpit:
+        image: 'axllent/mailpit:latest'
         ports:
-            - "9000:9000"
-        volumes:
-            - .:/var/www/html
+            - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+            - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
         networks:
-            - laravel
-
-    websockets:
-        build:
-            context: ./dockerfiles/websockets
-            args:
-                - UID=${UID:-1000}
-                - GID=${GID:-1000}
-        restart: unless-stopped
-        volumes:
-            - .:/var/www/html
-        expose:
-            - "3341"
-        depends_on:
-            - app
-        networks:
-            - laravel
-
-    redis:
-        image: redis:alpine
-        restart: unless-stopped
-        ports:
-            - "6379:6379"
-        networks:
-            - laravel
-
-    composer:
-        build:
-            context: ./dockerfiles
-            dockerfile: php.root.dockerfile
-            args:
-                - UID=${UID:-1000}
-                - GID=${GID:-1000}
-        volumes:
-            - .:/var/www/html
-        depends_on:
-            - php
-        entrypoint: [ 'composer', '--ignore-platform-reqs' ]
-        networks:
-            - laravel
-
-    npm:
-        image: node:current-alpine
-        volumes:
-            - .:/var/www/html
-        ports:
-            - "3000:3000"
-            - "3001:3001"
-            - "5173:5173"
-        working_dir: /var/www/html
-        entrypoint: [ 'npm' ]
-        networks:
-            - laravel
-
-    artisan:
-        build:
-            context: ./dockerfiles
-            dockerfile: php.root.dockerfile
-            args:
-                - UID=${UID:-1000}
-                - GID=${GID:-1000}
-        volumes:
-            - .:/var/www/html
-        depends_on:
-            - mysql
-        entrypoint: [ 'php', '/var/www/html/artisan' ]
-        networks:
-            - laravel
-
-    mailhog:
-        image: mailhog/mailhog:latest
-        ports:
-            - "1025:1025"
-            - "8025:8025"
-        networks:
-            - laravel
+            - sail
+networks:
+    sail:
+        driver: bridge
+volumes:
+    sail-mysql:
+        driver: local
+    sail-meilisearch:
+        driver: local

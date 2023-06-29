@@ -24,7 +24,7 @@ It is recommended to not have any services running on the ports 80 and 3306.
 1. Clone the repository to your local machine:
 
 ```shell
-git clone <repository_url>
+git clone https://github.com/artwork-software/artwork.git
 ```
 2. Access the project in the terminal and copy the .env.example file and rename it to .env
 

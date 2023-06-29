@@ -35,6 +35,7 @@ use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\SectorController;
+use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\ShiftFilterController;
 use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\SumDetailsController;
@@ -308,6 +309,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
+    Route::delete('/events/{event}/shifts', [EventController::class, 'destroy_shifts'])->name('events.shifts.delete');
 
     Route::put('/event/requests/{event}',[EventController::class, 'acceptEvent'])->name('events.accept');
     Route::put('/event/requests/{event}',[EventController::class, 'declineEvent'])->name('events.decline');

@@ -1226,6 +1226,21 @@ class EventController extends Controller
     }
 
     /**
+     * Deletes all shifts of an event
+     * @param Event $event
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroy_shifts(Event $event): \Illuminate\Http\RedirectResponse
+    {
+        Debugbar::info("Deleting shifts of event $event->id");
+
+        $event->shifts()->delete();
+        $event->timeline()->delete();
+
+        return redirect()->back();
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param Event $event

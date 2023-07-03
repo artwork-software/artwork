@@ -74,7 +74,7 @@ sail npm run dev
 sail artisan storage:link
 ```
 
-The site should be running now under http://artwork-laravel.test 🚀
+The site should be running now under http://localhost 🚀
 
 You can also visit your:
 - Mails under http://localhost:8025

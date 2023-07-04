@@ -97,6 +97,12 @@ To run various commands in the project, you can use the following instructions:
 sail npm <command>
 ```
 
+- To see all your changes to the code directly you can also run this command besides the ones from above:
+
+```shell
+sail npm run hot
+```
+
 For example, to install dependencies, you can run:
 
 ```shell

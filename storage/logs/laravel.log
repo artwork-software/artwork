@@ -10586,7 +10586,7 @@ Did you mean one of these?
 #45 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(155): Illuminate\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #46 /Users/pauld/PhpstormProjects/artwork_tools/artisan(35): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #47 {main}
-"} 
+"}
 [2023-06-29 14:32:45] local.ERROR: SQLSTATE[HY000] [1049] Unknown database 'laravel' (SQL: SHOW FULL TABLES WHERE table_type = 'BASE TABLE') {"exception":"[object] (Illuminate\\Database\\QueryException(code: 1049): SQLSTATE[HY000] [1049] Unknown database 'laravel' (SQL: SHOW FULL TABLES WHERE table_type = 'BASE TABLE') at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Database/Connection.php:760)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Database/Connection.php(720): Illuminate\\Database\\Connection->runQueryCallback('SHOW FULL TABLE...', Array, Object(Closure))
@@ -10672,7 +10672,7 @@ Did you mean one of these?
 #42 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(155): Illuminate\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #43 /Users/pauld/PhpstormProjects/artwork_tools/artisan(35): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #44 {main}
-"} 
+"}
 [2023-06-29 14:33:18] local.ERROR: Could not resolve host: meilisearch for "http://meilisearch:7700/indexes/departments/documents?primaryKey=id". {"exception":"[object] (MeiliSearch\\Exceptions\\CommunicationException(code: 0): Could not resolve host: meilisearch for \"http://meilisearch:7700/indexes/departments/documents?primaryKey=id\". at /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php:163)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php(98): MeiliSearch\\Http\\Client->execute(Object(GuzzleHttp\\Psr7\\Request))
@@ -10962,7 +10962,7 @@ Did you mean one of these?
 #69 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(155): Illuminate\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #70 /Users/pauld/PhpstormProjects/artwork_tools/artisan(35): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #71 {main}
-"} 
+"}
 [2023-06-29 14:34:21] local.ERROR: Could not resolve host: meilisearch for "http://meilisearch:7700/indexes/departments/documents?primaryKey=id". {"exception":"[object] (MeiliSearch\\Exceptions\\CommunicationException(code: 0): Could not resolve host: meilisearch for \"http://meilisearch:7700/indexes/departments/documents?primaryKey=id\". at /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php:163)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php(98): MeiliSearch\\Http\\Client->execute(Object(GuzzleHttp\\Psr7\\Request))
@@ -11252,7 +11252,7 @@ Did you mean one of these?
 #69 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(155): Illuminate\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #70 /Users/pauld/PhpstormProjects/artwork_tools/artisan(35): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #71 {main}
-"} 
+"}
 [2023-06-29 14:36:43] local.ERROR: No application encryption key has been specified. {"exception":"[object] (Illuminate\\Encryption\\MissingAppKeyException(code: 0): No application encryption key has been specified. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Encryption/EncryptionServiceProvider.php:79)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Support/helpers.php(306): Illuminate\\Encryption\\EncryptionServiceProvider->Illuminate\\Encryption\\{closure}('')
@@ -11301,7 +11301,7 @@ Did you mean one of these?
 #43 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
 #44 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #45 {main}
-"} 
+"}
 [2023-06-29 14:36:43] local.ERROR: No application encryption key has been specified. {"exception":"[object] (Illuminate\\Encryption\\MissingAppKeyException(code: 0): No application encryption key has been specified. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Encryption/EncryptionServiceProvider.php:79)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Support/helpers.php(306): Illuminate\\Encryption\\EncryptionServiceProvider->Illuminate\\Encryption\\{closure}('')
@@ -11325,7 +11325,7 @@ Did you mean one of these?
 #18 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(55): Illuminate\\Foundation\\Http\\Kernel->terminate(Object(Illuminate\\Http\\Request), Object(Illuminate\\Http\\Response))
 #19 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #20 {main}
-"} 
+"}
 [2023-06-29 14:37:07] local.ERROR: No application encryption key has been specified. {"exception":"[object] (Illuminate\\Encryption\\MissingAppKeyException(code: 0): No application encryption key has been specified. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Encryption/EncryptionServiceProvider.php:79)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Support/helpers.php(306): Illuminate\\Encryption\\EncryptionServiceProvider->Illuminate\\Encryption\\{closure}('')
@@ -11374,7 +11374,7 @@ Did you mean one of these?
 #43 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
 #44 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #45 {main}
-"} 
+"}
 [2023-06-29 14:37:07] local.ERROR: No application encryption key has been specified. {"exception":"[object] (Illuminate\\Encryption\\MissingAppKeyException(code: 0): No application encryption key has been specified. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Encryption/EncryptionServiceProvider.php:79)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Support/helpers.php(306): Illuminate\\Encryption\\EncryptionServiceProvider->Illuminate\\Encryption\\{closure}('')
@@ -11398,7 +11398,7 @@ Did you mean one of these?
 #18 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(55): Illuminate\\Foundation\\Http\\Kernel->terminate(Object(Illuminate\\Http\\Request), Object(Illuminate\\Http\\Response))
 #19 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #20 {main}
-"} 
+"}
 [2023-06-29 15:51:02] local.ERROR: Could not resolve host: meilisearch for "http://meilisearch:7700/indexes/departments/documents?primaryKey=id". {"exception":"[object] (MeiliSearch\\Exceptions\\CommunicationException(code: 0): Could not resolve host: meilisearch for \"http://meilisearch:7700/indexes/departments/documents?primaryKey=id\". at /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php:163)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php(98): MeiliSearch\\Http\\Client->execute(Object(GuzzleHttp\\Psr7\\Request))
@@ -11688,7 +11688,7 @@ Did you mean one of these?
 #69 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(155): Illuminate\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #70 /Users/pauld/PhpstormProjects/artwork_tools/artisan(35): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #71 {main}
-"} 
+"}
 [2023-06-29 15:52:54] local.ERROR: Could not resolve host: meilisearch for "http://meilisearch:7700/indexes/departments/documents?primaryKey=id". {"exception":"[object] (MeiliSearch\\Exceptions\\CommunicationException(code: 0): Could not resolve host: meilisearch for \"http://meilisearch:7700/indexes/departments/documents?primaryKey=id\". at /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php:163)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php(98): MeiliSearch\\Http\\Client->execute(Object(GuzzleHttp\\Psr7\\Request))
@@ -11978,7 +11978,7 @@ Did you mean one of these?
 #69 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(155): Illuminate\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #70 /Users/pauld/PhpstormProjects/artwork_tools/artisan(35): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #71 {main}
-"} 
+"}
 [2023-06-29 15:56:55] local.ERROR: The provided API key is invalid. {"exception":"[object] (MeiliSearch\\Exceptions\\ApiException(code: 403): The provided API key is invalid. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php:192)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php(161): MeiliSearch\\Http\\Client->parseResponse(Object(GuzzleHttp\\Psr7\\Response))
@@ -12049,7 +12049,7 @@ Did you mean one of these?
 #65 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(155): Illuminate\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #66 /Users/pauld/PhpstormProjects/artwork_tools/artisan(35): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #67 {main}
-"} 
+"}
 [2023-06-29 15:57:38] local.ERROR: The Authorization header is missing. It must use the bearer authorization method. {"exception":"[object] (MeiliSearch\\Exceptions\\ApiException(code: 401): The Authorization header is missing. It must use the bearer authorization method. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php:192)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php(161): MeiliSearch\\Http\\Client->parseResponse(Object(GuzzleHttp\\Psr7\\Response))
@@ -12142,7 +12142,7 @@ Did you mean one of these?
 #87 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(155): Illuminate\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #88 /Users/pauld/PhpstormProjects/artwork_tools/artisan(35): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #89 {main}
-"} 
+"}
 [2023-06-29 16:02:19] local.ERROR: No application encryption key has been specified. {"exception":"[object] (Illuminate\\Encryption\\MissingAppKeyException(code: 0): No application encryption key has been specified. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Encryption/EncryptionServiceProvider.php:79)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Support/helpers.php(306): Illuminate\\Encryption\\EncryptionServiceProvider->Illuminate\\Encryption\\{closure}('')
@@ -12191,7 +12191,7 @@ Did you mean one of these?
 #43 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
 #44 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #45 {main}
-"} 
+"}
 [2023-06-29 16:02:20] local.ERROR: No application encryption key has been specified. {"exception":"[object] (Illuminate\\Encryption\\MissingAppKeyException(code: 0): No application encryption key has been specified. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Encryption/EncryptionServiceProvider.php:79)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Support/helpers.php(306): Illuminate\\Encryption\\EncryptionServiceProvider->Illuminate\\Encryption\\{closure}('')
@@ -12215,7 +12215,7 @@ Did you mean one of these?
 #18 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(55): Illuminate\\Foundation\\Http\\Kernel->terminate(Object(Illuminate\\Http\\Request), Object(Illuminate\\Http\\Response))
 #19 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #20 {main}
-"} 
+"}
 [2023-06-29 16:07:20] local.ERROR: No application encryption key has been specified. {"exception":"[object] (Illuminate\\Encryption\\MissingAppKeyException(code: 0): No application encryption key has been specified. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Encryption/EncryptionServiceProvider.php:79)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Support/helpers.php(306): Illuminate\\Encryption\\EncryptionServiceProvider->Illuminate\\Encryption\\{closure}('')
@@ -12264,7 +12264,7 @@ Did you mean one of these?
 #43 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
 #44 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #45 {main}
-"} 
+"}
 [2023-06-29 16:07:21] local.ERROR: No application encryption key has been specified. {"exception":"[object] (Illuminate\\Encryption\\MissingAppKeyException(code: 0): No application encryption key has been specified. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Encryption/EncryptionServiceProvider.php:79)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Support/helpers.php(306): Illuminate\\Encryption\\EncryptionServiceProvider->Illuminate\\Encryption\\{closure}('')
@@ -12288,7 +12288,7 @@ Did you mean one of these?
 #18 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(55): Illuminate\\Foundation\\Http\\Kernel->terminate(Object(Illuminate\\Http\\Request), Object(Illuminate\\Http\\Response))
 #19 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #20 {main}
-"} 
+"}
 [2023-06-29 16:08:31] local.ERROR: The provided API key is invalid. {"exception":"[object] (MeiliSearch\\Exceptions\\ApiException(code: 403): The provided API key is invalid. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php:192)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php(161): MeiliSearch\\Http\\Client->parseResponse(Object(GuzzleHttp\\Psr7\\Response))
@@ -12359,7 +12359,7 @@ Did you mean one of these?
 #65 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(155): Illuminate\\Console\\Application->run(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #66 /Users/pauld/PhpstormProjects/artwork_tools/artisan(35): Illuminate\\Foundation\\Console\\Kernel->handle(Object(Symfony\\Component\\Console\\Input\\ArgvInput), Object(Symfony\\Component\\Console\\Output\\ConsoleOutput))
 #67 {main}
-"} 
+"}
 [2023-06-29 16:08:58] local.ERROR: No application encryption key has been specified. {"exception":"[object] (Illuminate\\Encryption\\MissingAppKeyException(code: 0): No application encryption key has been specified. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Encryption/EncryptionServiceProvider.php:79)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Support/helpers.php(306): Illuminate\\Encryption\\EncryptionServiceProvider->Illuminate\\Encryption\\{closure}('')
@@ -12408,7 +12408,7 @@ Did you mean one of these?
 #43 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
 #44 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #45 {main}
-"} 
+"}
 [2023-06-29 16:08:58] local.ERROR: No application encryption key has been specified. {"exception":"[object] (Illuminate\\Encryption\\MissingAppKeyException(code: 0): No application encryption key has been specified. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Encryption/EncryptionServiceProvider.php:79)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Support/helpers.php(306): Illuminate\\Encryption\\EncryptionServiceProvider->Illuminate\\Encryption\\{closure}('')
@@ -12432,7 +12432,7 @@ Did you mean one of these?
 #18 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(55): Illuminate\\Foundation\\Http\\Kernel->terminate(Object(Illuminate\\Http\\Request), Object(Illuminate\\Http\\Response))
 #19 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #20 {main}
-"} 
+"}
 [2023-06-29 17:42:16] local.ERROR: Failed to connect to 127.0.0.1 port 7700 after 5 ms: Couldn't connect to server for "http://127.0.0.1:7700/indexes/projects/search". {"userId":1,"exception":"[object] (MeiliSearch\\Exceptions\\CommunicationException(code: 0): Failed to connect to 127.0.0.1 port 7700 after 5 ms: Couldn't connect to server for \"http://127.0.0.1:7700/indexes/projects/search\". at /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php:163)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php(98): MeiliSearch\\Http\\Client->execute(Object(GuzzleHttp\\Psr7\\Request))
@@ -12714,7 +12714,7 @@ Did you mean one of these?
 #67 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
 #68 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #69 {main}
-"} 
+"}
 [2023-06-29 17:42:17] local.ERROR: Failed to connect to 127.0.0.1 port 7700 after 0 ms: Couldn't connect to server for "http://127.0.0.1:7700/indexes/projects/search". {"userId":1,"exception":"[object] (MeiliSearch\\Exceptions\\CommunicationException(code: 0): Failed to connect to 127.0.0.1 port 7700 after 0 ms: Couldn't connect to server for \"http://127.0.0.1:7700/indexes/projects/search\". at /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php:163)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php(98): MeiliSearch\\Http\\Client->execute(Object(GuzzleHttp\\Psr7\\Request))
@@ -12996,7 +12996,7 @@ Did you mean one of these?
 #67 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
 #68 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #69 {main}
-"} 
+"}
 [2023-06-29 17:42:17] local.ERROR: Failed to connect to 127.0.0.1 port 7700 after 0 ms: Couldn't connect to server for "http://127.0.0.1:7700/indexes/projects/search". {"userId":1,"exception":"[object] (MeiliSearch\\Exceptions\\CommunicationException(code: 0): Failed to connect to 127.0.0.1 port 7700 after 0 ms: Couldn't connect to server for \"http://127.0.0.1:7700/indexes/projects/search\". at /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php:163)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/meilisearch/meilisearch-php/src/Http/Client.php(98): MeiliSearch\\Http\\Client->execute(Object(GuzzleHttp\\Psr7\\Request))
@@ -13278,7 +13278,7 @@ Did you mean one of these?
 #67 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
 #68 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #69 {main}
-"} 
+"}
 [2023-06-29 17:51:51] local.ERROR: Pusher error: cURL error 7: Failed to connect to 127.0.0.1 port 3341 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://127.0.0.1:3341/apps/app-id/events?auth_key=app-key&auth_timestamp=1688053911&auth_version=1.0&body_md5=5e5c87338f5042b324798fdcbd3c9ddc&auth_signature=fc4b04177540f83f6b157bebaef30245a5b1531fd9d5896c506a213dab880324. {"userId":1,"exception":"[object] (Illuminate\\Broadcasting\\BroadcastException(code: 0): Pusher error: cURL error 7: Failed to connect to 127.0.0.1 port 3341 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://127.0.0.1:3341/apps/app-id/events?auth_key=app-key&auth_timestamp=1688053911&auth_version=1.0&body_md5=5e5c87338f5042b324798fdcbd3c9ddc&auth_signature=fc4b04177540f83f6b157bebaef30245a5b1531fd9d5896c506a213dab880324. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Broadcasting/Broadcasters/PusherBroadcaster.php:164)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Broadcasting/BroadcastEvent.php(84): Illuminate\\Broadcasting\\Broadcasters\\PusherBroadcaster->broadcast(Object(Illuminate\\Support\\Collection), 'App\\\\Events\\\\Occu...', Array)
@@ -13362,7 +13362,7 @@ Did you mean one of these?
 #78 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
 #79 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #80 {main}
-"} 
+"}
 [2023-06-29 17:51:53] local.ERROR: Pusher error: cURL error 7: Failed to connect to 127.0.0.1 port 3341 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://127.0.0.1:3341/apps/app-id/events?auth_key=app-key&auth_timestamp=1688053913&auth_version=1.0&body_md5=7389fd3c11cd65bb7728950767fd5b70&auth_signature=48f83da0c736f9bd156d8febca24e4f89cf4b25572b799d1f034b54dad655240. {"userId":1,"exception":"[object] (Illuminate\\Broadcasting\\BroadcastException(code: 0): Pusher error: cURL error 7: Failed to connect to 127.0.0.1 port 3341 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://127.0.0.1:3341/apps/app-id/events?auth_key=app-key&auth_timestamp=1688053913&auth_version=1.0&body_md5=7389fd3c11cd65bb7728950767fd5b70&auth_signature=48f83da0c736f9bd156d8febca24e4f89cf4b25572b799d1f034b54dad655240. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Broadcasting/Broadcasters/PusherBroadcaster.php:164)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Broadcasting/BroadcastEvent.php(84): Illuminate\\Broadcasting\\Broadcasters\\PusherBroadcaster->broadcast(Object(Illuminate\\Support\\Collection), 'Illuminate\\\\Noti...', Array)
@@ -13456,7 +13456,7 @@ Did you mean one of these?
 #88 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
 #89 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #90 {main}
-"} 
+"}
 [2023-06-29 17:51:58] local.ERROR: Pusher error: cURL error 7: Failed to connect to 127.0.0.1 port 3341 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://127.0.0.1:3341/apps/app-id/events?auth_key=app-key&auth_timestamp=1688053918&auth_version=1.0&body_md5=5e5c87338f5042b324798fdcbd3c9ddc&auth_signature=f35946538bffa073364d419eddb6bf628a5e3dbed65c56c37e7ee100d227afa4. {"userId":1,"exception":"[object] (Illuminate\\Broadcasting\\BroadcastException(code: 0): Pusher error: cURL error 7: Failed to connect to 127.0.0.1 port 3341 after 0 ms: Couldn't connect to server (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for http://127.0.0.1:3341/apps/app-id/events?auth_key=app-key&auth_timestamp=1688053918&auth_version=1.0&body_md5=5e5c87338f5042b324798fdcbd3c9ddc&auth_signature=f35946538bffa073364d419eddb6bf628a5e3dbed65c56c37e7ee100d227afa4. at /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Broadcasting/Broadcasters/PusherBroadcaster.php:164)
 [stacktrace]
 #0 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Broadcasting/BroadcastEvent.php(84): Illuminate\\Broadcasting\\Broadcasters\\PusherBroadcaster->broadcast(Object(Illuminate\\Support\\Collection), 'App\\\\Events\\\\Occu...', Array)
@@ -13540,4 +13540,4 @@ Did you mean one of these?
 #78 /Users/pauld/PhpstormProjects/artwork_tools/public/index.php(51): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
 #79 /Users/pauld/PhpstormProjects/artwork_tools/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(16): require_once('/Users/pauld/Ph...')
 #80 {main}
-"} 
+"}

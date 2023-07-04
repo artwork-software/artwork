@@ -40,7 +40,7 @@
                                     <ListboxOptions
                                         class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
-                                                       v-for="eventType in eventTypes"
+                                                       v-for="eventType in filteredEventTypes"
                                                        :key="eventType.name"
                                                        :value="eventType"
                                                        v-slot="{ active, selected }">
@@ -210,7 +210,10 @@ export default {
             var utc = require('dayjs/plugin/utc')
             dayjs.extend(utc)
             return dayjs
-        }
+        },
+        filteredEventTypes() {
+            return this.eventTypes.filter(eventType => eventType.id !== 1)
+        },
     },
     components: {
         TagComponent,
@@ -226,7 +229,7 @@ export default {
             subEvent: useForm({
                 event_id: this.event.id,
                 eventName: this.subEventToEdit?.title ? this.subEventToEdit?.title : '',
-                selectedEventType: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType : this.eventTypes[0],
+                selectedEventType: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType : this.eventTypes[1],
                 start_time: this.subEventToEdit?.start ? this.subEventToEdit?.start : dayjs(this.event.start).format('YYYY-MM-DD HH:mm'),
                 end_time: this.subEventToEdit?.end ? this.subEventToEdit?.end : dayjs(this.event.end).format('YYYY-MM-DD HH:mm'),
                 is_loud: this.subEventToEdit?.is_loud ? this.subEventToEdit?.is_loud : false,

@@ -40,12 +40,14 @@
                                 </div>
                                 <div class="flex">
                                     <!-- hier User ansicht -->
+                                    <div class="mr-3 flex">
                                     <div class="flex -mr-3"
                                          v-for="(user, index) in checklist.users">
                                         <img class="h-10 w-10 mr-2 object-cover rounded-full border border-2 border-white"
                                              :class="index !== 0 ? '-ml-2' : ''"
                                              :src="user.profile_photo_url"
                                              alt=""/>
+                                    </div>
                                     </div>
                                     <Menu
                                         v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
@@ -144,7 +146,7 @@
                             <div class="flex w-full mt-6"
                                  v-if="this.opened_checklists.includes(checklist.id)">
                                 <div class="flex"
-                                     v-if="projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || $role('artwork admin')">
+                                     v-if="this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin')">
                                     <div>
                                         <AddButton @click="openAddTaskModal(checklist)"
                                                    text="Neue Aufgabe" mode="page"/>
@@ -201,13 +203,13 @@
                                                             class="rounded-full ml-2 my-auto h-7 w-7 object-cover"/>
                                                         <UserTooltip :user="element.done_by_user"/>
                                                     </span>
-                                                    <span class="ml-3 flex">
+                                                    <span class="mx-3 flex">
                                                         <span class="flex -mr-3" v-for="user in element.users">
                                                         <NewUserToolTip :id="user.id" :user="user" height="5" width="5"/>
                                                     </span>
                                                     </span>
                                                     <Menu
-                                                        v-if="projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || $role('artwork admin')"
+                                                        v-if="this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin')"
                                                         as="div" class="my-auto relative"
                                                         v-show="showMenu === element.id">
                                                         <div class="flex">
@@ -226,7 +228,7 @@
                                                             leave-from-class="transform opacity-100 scale-100"
                                                             leave-to-class="transform opacity-0 scale-95">
                                                             <MenuItems
-                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                class="origin-top-right z-30 absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                 <div class="py-1">
                                                                     <MenuItem v-slot="{ active }">
                                                                         <a @click="openEditTaskModal(element, false)"
@@ -281,8 +283,8 @@
                                             class="text-primary text-sm my-auto ml-1">Privat</p>
                                         </span>
                                 </div>
-                                <div class="flex items-center -mr-3">
-                                    <img class="h-9 w-9 rounded-full object-cover"
+                                <div class="flex items-center">
+                                    <img class="h-9 w-9 rounded-full object-cover mr-3"
                                          :src="$page.props.user.profile_photo_url"
                                          alt=""/>
                                     <Menu as="div" class="my-auto relative">
@@ -302,7 +304,7 @@
                                             leave-from-class="transform opacity-100 scale-100"
                                             leave-to-class="transform opacity-0 scale-95">
                                             <MenuItems
-                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                class="origin-top-right z-30 absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                 <div class="py-1">
                                                     <MenuItem v-slot="{ active }">
                                                         <a @click="openEditChecklistModal(checklist)"
@@ -417,7 +419,7 @@
                                                                         <UserTooltip :user="element.done_by_user"/>
                                                                         {{ element.done_at }}
                                                                     </span>
-                                                    <Menu as="div" class="my-auto relative"
+                                                    <Menu as="div" class="my-auto relative ml-3"
                                                           v-show="showMenu === element.id">
                                                         <div class="flex">
                                                             <MenuButton
@@ -530,8 +532,8 @@
                     </div>
                     <div class="w-full items-center text-center">
                         <AddButton
-                            :class="[this.taskForm.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover
+                            :class="[this.taskForm.name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
+                            class="mt-8 inline-flex items-center px-20 py-3 border
                             focus:outline-none border-transparent text-base font-bold text-lg tracking-wider shadow-sm
                             text-secondaryHover"
                             @click="addTask"
@@ -888,7 +890,7 @@ import Permissions from "@/mixins/Permissions.vue";
 export default {
     mixins: [Permissions],
     name: "ChecklistComponent",
-    props: ['project', 'opened_checklists', 'projectCanWriteIds', 'projectManagerIds', 'checklist_templates'],
+    props: ['project', 'opened_checklists', 'checklist_templates'],
     components: {
         NewUserToolTip,
         AddChecklistUserModal,

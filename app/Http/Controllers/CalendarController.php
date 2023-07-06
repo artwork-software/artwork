@@ -385,7 +385,12 @@ class CalendarController extends Controller
                             ->whereIn('room_categories.id', $roomCategoryIds)))
                 )
             )
-            ->unless(empty($eventTypeIds), fn(EventBuilder $builder) => $builder->whereIn('event_type_id', array_map('intval', $eventTypeIds)))
+            ->unless(empty($eventTypeIds), function($builder) use ($eventTypeIds) {
+                return $builder->whereIn('event_type_id', array_map('intval', $eventTypeIds))
+                    ->orWhereHas('subEvents', function($subEventBuilder) use ($eventTypeIds) {
+                        $subEventBuilder->whereIn('event_type_id', array_map('intval', $eventTypeIds));
+                    });
+            })
             ->unless(is_null($hasAudience), fn(EventBuilder $builder) => $builder->where('audience', true))
             ->unless(is_null($hasNoAudience), fn(EventBuilder $builder) => $builder->where('audience', null)->orWhere('audience', false))
             ->unless(is_null($isLoud), fn(EventBuilder $builder) => $builder->where('is_loud', true))

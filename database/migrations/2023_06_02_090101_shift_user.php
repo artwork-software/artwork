@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('shift_id');
             $table->unsignedBigInteger('user_id');
             $table->boolean('is_master')->default(false);
-            $table->decimal('shift_percentage')->default(1);
+            $table->unsignedBigInteger('shift_count');
             $table->timestamps();
         });
     }

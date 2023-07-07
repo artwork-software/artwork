@@ -46,7 +46,7 @@ class Shift extends Model
     public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'shift_user', 'shift_id', 'user_id')
-            ->withPivot(['is_master', 'shift_percentage'])
+            ->withPivot(['is_master', 'shift_count'])
             ->orderByPivot('is_master', 'desc')
             ->withCasts(['is_master' => 'boolean'])
             ->without(['calender_settings']);
@@ -54,12 +54,19 @@ class Shift extends Model
 
     public function freelancer(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(Freelancer::class, 'shifts_freelancers', 'shift_id', 'freelancer_id')->withPivot(['is_master'])->orderByPivot('is_master', 'desc')->withCasts(['is_master' => 'boolean']);
+        return $this->belongsToMany(Freelancer::class, 'shifts_freelancers', 'shift_id', 'freelancer_id')
+            ->withPivot(['is_master', 'shift_count'])
+            ->orderByPivot('is_master', 'desc')
+            ->withCasts(['is_master' => 'boolean']);
     }
 
     public function service_provider(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(ServiceProvider::class, 'shifts_service_providers', 'shift_id', 'service_provider_id')->withPivot(['is_master'])->orderByPivot('is_master', 'desc')->withCasts(['is_master' => 'boolean'])->without(['contacts']);
+        return $this->belongsToMany(ServiceProvider::class, 'shifts_service_providers', 'shift_id', 'service_provider_id')
+            ->withPivot(['is_master', 'shift_count'])
+            ->orderByPivot('is_master', 'desc')
+            ->withCasts(['is_master' => 'boolean'])
+            ->without(['contacts']);
     }
 
     public function getCurrentCountAttribute(): int

@@ -115,9 +115,7 @@ export default defineComponent({
                     }
                 )
             } else if (dropElement.type === 2 && !dropElement.master) {
-                this.$inertia.post(route('add.shift.provider', this.shift.id), {
-                        service_provider_id: dropElement.id
-                    }, {
+                this.$inertia.post(route('add.shift.provider', {shift: this.shift.id, provider: dropElement.id}),{}, {
                         preserveState: true,
                         preserveScroll: true,
                     }

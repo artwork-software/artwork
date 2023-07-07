@@ -29,11 +29,12 @@
         <p class="text-xs mb-3">{{ shift.description }}</p>
         <div v-for="user in shift.allUsers" class="">
             <div v-for="intern in user">
+
                 <div v-if="intern.full_name" class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">
                         <img :src="intern.profile_photo_url" class="h-4 w-4 rounded-full block bg-gray-500 object-cover">
                         <span class="text-xs">{{ intern.full_name }} </span>
-                        <span v-if="intern.pivot.shift_percentage < 1" class="text-xs"> {{ `${decimalToFraction(intern.pivot.shift_percentage).top}/${decimalToFraction(intern.pivot.shift_percentage).bottom}`}} </span>
+                        <span v-if="intern.pivot.shift_count > 1" class="text-xs"> {{ `1/${intern.pivot.shift_count}`}} </span>
                         <span v-if="intern.pivot.is_master">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13.2" height="10.8" viewBox="0 0 13.2 10.8">
                                   <path id="Icon_awesome-crown" data-name="Icon awesome-crown" d="M9.9,8.4H2.1a.3.3,0,0,0-.3.3v.6a.3.3,0,0,0,.3.3H9.9a.3.3,0,0,0,.3-.3V8.7A.3.3,0,0,0,9.9,8.4Zm1.2-6a.9.9,0,0,0-.9.9.882.882,0,0,0,.083.371l-1.358.814A.6.6,0,0,1,8.1,4.268L6.568,1.594a.9.9,0,1,0-1.136,0L3.9,4.267a.6.6,0,0,1-.829.218L1.719,3.671A.9.9,0,1,0,.9,4.2a.919.919,0,0,0,.144-.015L2.4,7.8H9.6l1.356-3.615A.919.919,0,0,0,11.1,4.2a.9.9,0,0,0,0-1.8Z" transform="translate(0.6 0.6)" fill="none" stroke="#82818a" stroke-width="1.2"/>
@@ -48,6 +49,8 @@
                     <div class="flex gap-2 items-center">
                         <img :src="intern.profile_image" class="h-4 w-4 rounded-full block bg-gray-500 object-cover">
                         <span class="text-xs">{{ intern.name }}</span>
+                        <span v-if="intern.pivot.shift_count > 1" class="text-xs"> {{ `1/${intern.pivot.shift_count}`}} </span>
+
                         <span v-if="intern.pivot.is_master">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="13.2" height="10.8" viewBox="0 0 13.2 10.8">
                                   <path id="Icon_awesome-crown" data-name="Icon awesome-crown" d="M9.9,8.4H2.1a.3.3,0,0,0-.3.3v.6a.3.3,0,0,0,.3.3H9.9a.3.3,0,0,0,.3-.3V8.7A.3.3,0,0,0,9.9,8.4Zm1.2-6a.9.9,0,0,0-.9.9.882.882,0,0,0,.083.371l-1.358.814A.6.6,0,0,1,8.1,4.268L6.568,1.594a.9.9,0,1,0-1.136,0L3.9,4.267a.6.6,0,0,1-.829.218L1.719,3.671A.9.9,0,1,0,.9,4.2a.919.919,0,0,0,.144-.015L2.4,7.8H9.6l1.356-3.615A.919.919,0,0,0,11.1,4.2a.9.9,0,0,0,0-1.8Z" transform="translate(0.6 0.6)" fill="none" stroke="#82818a" stroke-width="1.2"/>
@@ -114,46 +117,15 @@ export default defineComponent({
             });
         },
         removeProviderFromShift(provider_id, shift_id){
-            this.$inertia.delete(route('shifts.removeProvider', shift_id),{
-                data: {
-                    service_provider_id: provider_id
-                },
+            this.$inertia.delete(route('shifts.removeProvider', {shift: shift_id, serviceProvider: provider_id}), {
                 preserveScroll: true,
             });
         },
         removeFreelancerFormShift(freelancer_id, shift_id){
-            this.$inertia.delete(route('shifts.removeFreelancer', shift_id),{
-                data: {
-                    freelancer_id: freelancer_id
-                },
+            this.$inertia.delete(route('shifts.removeFreelancer', {shift: shift_id, freelancer: freelancer_id}), {
                 preserveScroll: true,
             });
         },
-        gcd(a, b) {
-            return (b) ? this.gcd(b, a % b) : a;
-        },
-        decimalToFraction(decimal) {
-
-            if (decimal === 1){
-                return {
-                    top		: 1,
-                    bottom	: 1,
-                    display	: 1 + ':' + 1
-                };
-            }  else {
-
-                let top		= decimal.toString().replace(/\d+[.]/, '');
-                let bottom	= Math.pow(10, top.length);
-                if (decimal > 1) {
-                    top	= +top + Math.floor(decimal) * bottom;
-                }
-                let x = this.gcd(top, bottom);
-                return {
-                    top		: (top / x),
-                    bottom	: (bottom / x),
-                };
-            }
-        }
     },
 })
 </script>

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\Freelancer;
+use App\Models\ServiceProvider;
 use App\Models\Shift;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -107,12 +109,9 @@ class ShiftController extends Controller
         //
     }
 
-    protected function calculateShiftCollision(User $user, Shift $shift): Collection
+    protected function calculateShiftCollision(Shift $shift, array $eventIds, int $user_id = null, int $freelancer_id = null, int $service_provider_id = null): Collection
     {
-        $user->load('shifts.event');
         $shift->load('event');
-
-        $eventIdsOfUserShifts = $user->shifts()->get()->pluck('event.id')->all();
 
         /** @var Event $event */
         $event = $shift->event;
@@ -120,21 +119,21 @@ class ShiftController extends Controller
         $endDate = $event->end_time;
 
        return Event::query()
-            ->whereIntegerInRaw('id', $eventIdsOfUserShifts)
+            ->whereIntegerInRaw('id', $eventIds)
             ->whereBetween('start_time', [$startDate, $endDate])
-            ->orWhere(function($query) use ($endDate, $startDate, $eventIdsOfUserShifts) {
+            ->orWhere(function($query) use ($endDate, $startDate, $eventIds) {
                 $query->whereBetween('end_time', [$startDate, $endDate])
-                    ->whereIntegerInRaw('id', $eventIdsOfUserShifts);
+                    ->whereIntegerInRaw('id', $eventIds);
             })
-            ->orWhere(function($query) use ($endDate, $startDate, $eventIdsOfUserShifts) {
+            ->orWhere(function($query) use ($endDate, $startDate, $eventIds) {
                 $query->where('start_time', '>=', $startDate)
                     ->where('end_time', '<=', $endDate)
-                    ->whereIntegerInRaw('id', $eventIdsOfUserShifts);
+                    ->whereIntegerInRaw('id', $eventIds);
             })
-            ->orWhere(function($query) use ($endDate, $startDate, $eventIdsOfUserShifts) {
+            ->orWhere(function($query) use ($endDate, $startDate, $eventIds) {
                 $query->where('start_time', '<=', $startDate)
                     ->where('end_time', '>=', $endDate)
-                    ->whereIntegerInRaw('id', $eventIdsOfUserShifts);
+                    ->whereIntegerInRaw('id', $eventIds);
             })
             ->with('shifts')
             ->get()
@@ -145,25 +144,27 @@ class ShiftController extends Controller
                     $currentShift->id === $shift->id // remove the shift I am attaching to
                     || $currentShift->start > $shift->end //remove shifts that start after the shift I am attaching to has ended
                     || $currentShift->end < $shift->start//remove shifts ended before the shift I am attaching to has started
-                    || $currentShift->users->doesntContain($user->id))
+                    || $user_id && $currentShift->users->doesntContain($user_id)
+                    || $freelancer_id && $currentShift->freelancer->doesntContain($freelancer_id)
+                    || $service_provider_id && $currentShift->service_provider->doesntContain($service_provider_id)
+            )
             ->pluck('id');
     }
 
     public function addShiftUser(Shift $shift, User $user): void
     {
-        $collidingShiftIds = $this->calculateShiftCollision($user, $shift);
+        $eventIdsOfUserShifts = $user->shifts()->get()->pluck('event.id')->all();
+        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, user_id: $user->id);
         $collideCount = $collidingShiftIds->count();
-
-        $percentage = 1 / ($collideCount + 1);
 
         if($collideCount > 0) {
             $user->shifts()->updateExistingPivot(
                 $collidingShiftIds,
-                ['shift_percentage' => $percentage]
+                ['shift_count' => $collideCount + 1]
             );
         }
 
-        $shift->users()->attach($user->id, ['shift_percentage' => $percentage]);
+        $shift->users()->attach($user->id, ['shift_count' => $collideCount + 1]);
     }
 
     public function addShiftMaster(Request $request, Shift $shift): void
@@ -172,9 +173,20 @@ class ShiftController extends Controller
     }
 
 
-    public function addShiftFreelancer(Request $request, Shift $shift): void
+    public function addShiftFreelancer(Shift $shift, Freelancer $freelancer): void
     {
-        $shift->freelancer()->attach($request->freelancer_id);
+        $eventIdsOfUserShifts = $freelancer->shifts()->get()->pluck('event.id')->all();
+        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, freelancer_id: $freelancer->id);
+        $collideCount = $collidingShiftIds->count();
+
+        if($collideCount > 0) {
+            $freelancer->shifts()->updateExistingPivot(
+                $collidingShiftIds,
+                ['shift_count' => $collideCount + 1]
+            );
+        }
+
+        $shift->freelancer()->attach($freelancer->id, ['shift_count' => $collideCount + 1]);
     }
 
     public function addShiftFreelancerMaster(Request $request, Shift $shift): void
@@ -182,10 +194,7 @@ class ShiftController extends Controller
         $shift->freelancer()->attach($request->freelancer_id, ['is_master' => true]);
     }
 
-    public function addShiftProvider(Request $request, Shift $shift): void
-    {
-        $shift->service_provider()->attach($request->service_provider_id);
-    }
+
 
     public function addShiftProviderMaster(Request $request, Shift $shift): void
     {
@@ -196,28 +205,67 @@ class ShiftController extends Controller
     {
         $shift->users()->detach($user->id);
 
-        $collidingShiftIds = $this->calculateShiftCollision($user, $shift);
+        $eventIdsOfUserShifts = $user->shifts()->get()->pluck('event.id')->all();
+
+        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, user_id: $user->id);
         $collideCount = $collidingShiftIds->count();
 
         $user->shifts()->updateExistingPivot(
             $collidingShiftIds,
             [
-                'shift_percentage' => 1 / (
-                    $collideCount > 0
-                        ? $collideCount
-                        : 1
-                    )
+                'shift_count' => $collideCount > 0 ? $collideCount : 1
             ]
         );
     }
 
-    public function removeFreelancer(Request $request, Shift $shift): void
+    public function removeFreelancer(Shift $shift, Freelancer $freelancer): void
     {
-        $shift->freelancer()->detach($request->freelancer_id);
+        $shift->freelancer()->detach($freelancer->id);
+
+        $eventIdsOfUserShifts = $freelancer->shifts()->get()->pluck('event.id')->all();
+
+        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, freelancer_id: $freelancer->id);
+        $collideCount = $collidingShiftIds->count();
+
+        $freelancer->shifts()->updateExistingPivot(
+            $collidingShiftIds,
+            [
+                'shift_count' => $collideCount > 0 ? $collideCount : 1
+            ]
+        );
     }
 
-    public function removeProvider(Request $request, Shift $shift): void
+    public function removeProvider(Shift $shift, ServiceProvider $serviceProvider): void
     {
-        $shift->service_provider()->detach($request->service_provider_id);
+        $shift->service_provider()->detach($serviceProvider->id);
+
+        $eventIdsOfUserShifts = $serviceProvider->shifts()->get()->pluck('event.id')->all();
+
+        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, service_provider_id: $serviceProvider->id);
+        $collideCount = $collidingShiftIds->count();
+
+        $serviceProvider->shifts()->updateExistingPivot(
+            $collidingShiftIds,
+            [
+                'shift_count' => $collideCount > 0 ? $collideCount : 1
+            ]
+        );
+    }
+
+    public function addShiftProvider(Shift $shift, ServiceProvider $serviceProvider): void
+    {
+
+        $eventIdsOfUserShifts = $serviceProvider->shifts()->get()->pluck('event.id')->all();
+        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, service_provider_id: $serviceProvider->id);
+        $collideCount = $collidingShiftIds->count();
+
+        if($collideCount > 0) {
+            $serviceProvider->shifts()->updateExistingPivot(
+                $collidingShiftIds,
+                ['shift_count' => $collideCount + 1]
+            );
+        }
+
+        $shift->service_provider()->attach($serviceProvider->id, ['shift_count' => $collideCount + 1]);
     }
 }

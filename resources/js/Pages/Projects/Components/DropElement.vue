@@ -62,9 +62,7 @@ export default defineComponent({
             }
 
             if(dropElement.type === 1 && !dropElement.master){
-                this.$inertia.post(route('add.shift.freelancer', this.shiftId), {
-                        freelancer_id: dropElement.id
-                    }, {
+                this.$inertia.post(route('add.shift.freelancer', {shift: this.shiftId, freelancer: dropElement.id}), {}, {
                         preserveState: true,
                         preserveScroll: true,
                     }
@@ -88,9 +86,7 @@ export default defineComponent({
                     }
                 )
             } else if (dropElement.type === 2 && !dropElement.master) {
-                this.$inertia.post(route('add.shift.provider', this.shiftId), {
-                        service_provider_id: dropElement.id
-                    }, {
+                this.$inertia.post(route('add.shift.provider', {shift: this.shiftId, serviceProvider: dropElement.id}), {}, {
                         preserveState: true,
                         preserveScroll: true,
                     }

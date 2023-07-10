@@ -90,13 +90,11 @@
                                                placeholder="Anzahl Mitarbeiter*innen"
                                                v-model="shift.number_employees"
                                                class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                               required
                                         />
                                         <input type="number"
                                                placeholder="Anzahl Meister*innen"
                                                v-model="shift.number_masters"
                                                maxlength="3"
-                                               required
                                                class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                         <span class="text-xs text-red-500" v-show="helpTexts.employeeText.length > 0">{{ helpTexts.employeeText }}</span>
                                         <span class="text-xs text-red-500" v-show="helpTexts.masterText.length > 0">{{ helpTexts.masterText }}</span>
@@ -157,8 +155,8 @@ export default defineComponent({
                 end: null,
                 break_minutes: null,
                 craft_id: null,
-                number_employees: 0,
-                number_masters: 0,
+                number_employees: null,
+                number_masters: null,
                 description: '',
                 event_id: this.event.id
             }),
@@ -230,7 +228,7 @@ export default defineComponent({
             } else {
                 this.helpTexts.time = '';
             }
-            if (!this.shift.number_employees) {
+            /*if (!this.shift.number_employees) {
                 this.helpTexts.employeeText = 'Bitte gib die Anzahl der Mitarbeiter*innen an.';
                 return;
             } else {
@@ -241,10 +239,18 @@ export default defineComponent({
                 return;
             } else {
                 this.helpTexts.masterText = '';
-            }
+            }*/
 
             // set the craft id
             this.shift.craft_id = this.selectedCraft.id;
+
+            if(this.shift.number_employees === '' || this.shift.number_employees === null){
+                this.shift.number_employees = 0;
+            }
+
+            if(this.shift.number_masters === '' || this.shift.number_masters === null){
+                this.shift.number_masters = 0;
+            }
 
             // send the request
             this.shift.post(route('event.shift.store', this.event.id), {

@@ -30,6 +30,9 @@ class UserResourceWithoutShifts extends JsonResource
             'phone_number' => $this->phone_number,
             'project_management' => $this->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
             'can_master' => $this->can_master,
+            'pivot_access_budget' => $this->pivot->access_budget,
+            'pivot_is_manager' => $this->pivot->is_manager,
+            'pivot_can_write' => $this->pivot->can_write,
         ];
     }
 }

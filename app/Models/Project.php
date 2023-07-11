@@ -91,7 +91,7 @@ class Project extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
-            ->withPivot('access_budget', 'is_manager', 'can_write');
+            ->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission');
     }
 
     public function headlines()

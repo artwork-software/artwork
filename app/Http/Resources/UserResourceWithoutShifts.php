@@ -17,8 +17,6 @@ class UserResourceWithoutShifts extends JsonResource
      */
     public function toArray($request)
     {
-
-        dd($this);
         return [
             'resource' => class_basename($this),
             'id' => $this->id,

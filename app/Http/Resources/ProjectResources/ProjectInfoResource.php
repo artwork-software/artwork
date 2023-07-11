@@ -54,6 +54,8 @@ class ProjectInfoResource extends JsonResource
             'write_auth' => $this->writeUsers,
             'users' => UserResourceWithoutShifts::collection($this->users)->resolve(),
 
+
+
             //needed for ProjectShowHeaderComponent
             'project_history' => $historyArray,
             'delete_permission_users' => $this->delete_permission_users,

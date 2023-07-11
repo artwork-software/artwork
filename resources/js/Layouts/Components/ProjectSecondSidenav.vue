@@ -27,7 +27,7 @@
                             <TeamTooltip :team="department"/>
                         </div>
                     </div>
-                    <div class="flex -mr-3 mt-2" v-for="user in projectMembers">
+                    <div class="flex -mr-3 mt-2" v-for="user in this.onlyTeamMember">
                         <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
                              class="rounded-full ring-white ring-2 h-11 w-11 object-cover"/>
                         <UserTooltip :user="user"/>
@@ -90,7 +90,7 @@
                                :projectSectorIdArray="projectSectorIds" :projectGenreIdArray="projectGenreIds"
                                :categories="categories" :sectors="sectors" :genres="genres"/>
     <!-- Change Project Team Modal -->
-    <ProjectEditTeamModal :show="showTeamModal" @closed="showTeamModal = false" :assigned-users="project.users"
+    <ProjectEditTeamModal :show="showTeamModal" @closed="showTeamModal = false" :assigned-users="this.project.users"
                           :userIsProjectManager="userIsProjectManager" :departments="project.departments"
                           :project-id="project.id"/>
 </template>
@@ -126,6 +126,11 @@ export default {
             show: false,
             showAttributeEditModal: false,
             showTeamModal: false,
+        }
+    },
+    computed: {
+        onlyTeamMember() {
+            return this.project.users.filter(user => user.pivot_is_manager === false);
         }
     },
     methods: {

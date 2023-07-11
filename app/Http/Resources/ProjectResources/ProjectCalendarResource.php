@@ -49,7 +49,9 @@ class ProjectCalendarResource extends JsonResource
             'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
             'key_visual_path' => $this->key_visual_path,
             'write_auth' => $this->writeUsers,
-            'users' => UserResourceWithoutShifts::collection($this->users)->resolve(),
+            'users' => UserResourceWithoutShifts::collection($this->users->filter(function($user) {
+                return $user->pivot->is_manager === false;
+            }))->resolve(),
 
             //needed for ProjectShowHeaderComponent
             'project_history' => $historyArray,

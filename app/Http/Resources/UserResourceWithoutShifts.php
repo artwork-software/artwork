@@ -17,8 +17,6 @@ class UserResourceWithoutShifts extends JsonResource
      */
     public function toArray($request)
     {
-
-        dd($this);
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
@@ -32,10 +30,10 @@ class UserResourceWithoutShifts extends JsonResource
             'phone_number' => $this->phone_number,
             'project_management' => $this->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
             'can_master' => $this->can_master,
-            'pivot_access_budget' => $this->pivot->access_budget,
-            'pivot_is_manager' => $this->pivot->is_manager,
-            'pivot_can_write' => $this->pivot->can_write,
-            'pivot_delete_permission_users' => $this->pivot->delete_permission,
+            'pivot_access_budget' => (bool)$this->pivot->access_budget,
+            'pivot_is_manager' => (bool)$this->pivot->is_manager,
+            'pivot_can_write' => (bool)$this->pivot->can_write,
+            'pivot_delete_permission' => (bool)$this->pivot->delete_permission,
         ];
     }
 }

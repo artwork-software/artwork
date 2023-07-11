@@ -87,10 +87,10 @@
                             <div class="flex justify-between items-center my-1.5 h-5 w-80">
                                 <div class="flex items-center justify-between" v-if="checkUserAuth(user)">
                                    <div class="flex">
-                                        <input v-model="user.can_write"
+                                        <input v-model="user.pivot_can_write"
                                                type="checkbox"
                                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                    <p :class="[user.can_write ? 'text-primary font-black' : 'text-secondary']"
+                                    <p :class="[user.pivot_can_write ? 'text-primary font-black' : 'text-secondary']"
                                        class="ml-4 my-auto text-sm">Schreibrecht</p>
                                    </div>
                                     <Dropdown :open="user.openedMenu" align="right" width="60" class="text-right">
@@ -106,21 +106,21 @@
                                         <template #content>
                                             <div class="w-44 p-4">
                                                 <div class="flex">
-                                                    <input v-model="user.access_budget"
+                                                    <input v-model="user.pivot_access_budget"
                                                            type="checkbox"
                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                 <p
                                                     class=" ml-4 my-auto text-sm text-secondary">Budgetzugriff</p>
                                                 </div>
                                                 <div class="flex mt-4">
-                                                    <input v-model="user.delete_permission"
+                                                    <input v-model="user.pivot_delete_permission"
                                                            type="checkbox"
                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                 <p
                                                     class=" ml-4 my-auto text-sm text-secondary">Löschrecht</p>
                                                 </div>
                                                 <div class="flex mt-4" v-if="user.project_management">
-                                                    <input v-model="user.is_manager"
+                                                    <input v-model="user.pivot_is_manager"
                                                            type="checkbox"
                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                 <p
@@ -238,10 +238,10 @@ export default {
             this.form.assigned_user_ids = {};
             this.users.forEach(user => {
                 this.form.assigned_user_ids[user.id] = {
-                    access_budget: user.access_budget,
-                    is_manager: user.is_manager,
-                    can_write: user.can_write,
-                    delete_permission: user.delete_permission
+                    access_budget: user.pivot_access_budget,
+                    is_manager: user.pivot_is_manager,
+                    can_write: user.pivot_can_write,
+                    delete_permission: user.pivot_delete_permission
                 };
             })
             this.form.assigned_departments = [];

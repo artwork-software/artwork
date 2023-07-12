@@ -30,7 +30,7 @@
                             <DragElement  :item="user.element" :type="user.type" />
                         </th>
                         <td v-for="day in days">
-                            <div class="w-64 h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg overflow-x-scroll">
+                            <div class="w-64 h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell">
                                 <span v-for="shift in user.element?.shifts[day.full_day]">
                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                 </span>
@@ -81,5 +81,27 @@ export default defineComponent({
 </script>
 
 <style scoped>
+
+.shiftUsers {
+    overflow: overlay;
+}
+::-webkit-scrollbar {
+    width: 16px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #A7A6B170;
+    border-radius: 16px;
+    border: 6px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #a8bbbf;
+}
 
 </style>

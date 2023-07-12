@@ -117,7 +117,7 @@
                             </div>
                         </div>
 
-                        <div @mousedown="preventContainerDrag" class="max-h-72 overflow-x-scroll">
+                        <div @mousedown="preventContainerDrag" class="max-h-72 shiftUserWindow">
                             <div v-for="user in filteredUsers">
                                 <DragElement :item="user.element" :type="user.type"/>
                             </div>
@@ -220,5 +220,27 @@ export default defineComponent({
 
 
 <style scoped>
+
+.shiftUserWindow {
+    overflow: overlay;
+}
+::-webkit-scrollbar {
+    width: 16px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #A7A6B170;
+    border-radius: 16px;
+    border: 6px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #a8bbbf;
+}
 
 </style>

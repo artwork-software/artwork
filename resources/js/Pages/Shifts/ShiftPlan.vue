@@ -23,7 +23,7 @@
                     <tbody class="w-full pt-3">
                     <tr v-for="(room,index) in shiftPlan" class="w-full flex">
                         <th class="xsDark flex items-center -mt-2 h-28 w-40"
-                            :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen ? 'stickyYAxisNoMarginLeft' : 'stickyYAxis']">
+                            :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxis']">
                             <Link class="flex font-semibold items-center ml-4">
                                 {{ room[days[0].day].roomName }}
                             </Link>

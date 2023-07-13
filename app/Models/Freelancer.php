@@ -27,7 +27,7 @@ class Freelancer extends Model
     ];
 
     protected $appends = [
-        'name'
+        'name', 'display_name', 'type'
     ];
 
     public function shifts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -37,6 +37,16 @@ class Freelancer extends Model
 
     public function getNameAttribute(){
         return $this->first_name . ' ' . $this->last_name;
+    }
+
+    public function getTypeAttribute(): string
+    {
+        return 'freelancer';
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->last_name . ', ' . $this->first_name;
     }
 
     public function getShiftsAttribute($start, $end): Collection

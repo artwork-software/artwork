@@ -34,6 +34,8 @@ class UserIndexResource extends JsonResource
             'project_management' => $this->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
             'can_master' => $this->can_master,
             'shifts' => $this->getShiftsAttribute(),
+            'display_name' => $this->getDisplayNameAttribute(),
+            'type' => $this->getTypeAttribute(),
         ];
     }
 }

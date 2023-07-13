@@ -22,6 +22,10 @@
                 :project-manager-ids="projectManagerIds"
             />
         </BaseSidenav>
+
+        <pre>
+            {{ project }}
+        </pre>
     </app-layout>
 </template>
 

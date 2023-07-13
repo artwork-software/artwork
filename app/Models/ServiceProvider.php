@@ -25,7 +25,7 @@ class ServiceProvider extends Model
 
     protected $with = ['contacts'];
 
-    protected $appends = ['name'];
+    protected $appends = ['name', 'type'];
 
     public function contacts(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
@@ -55,4 +55,9 @@ class ServiceProvider extends Model
             });
     }
 
+
+    public function getTypeAttribute(): string
+    {
+        return 'service_provider';
+    }
 }

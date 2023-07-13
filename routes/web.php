@@ -506,9 +506,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/freelancer/profile-image/{freelancer}', [\App\Http\Controllers\FreelancerController::class, 'updateProfileImage'])->name('freelancer.change.profile-image');
 
     // Service Provider
-    Route::get('/service-provider/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'show'])->name('service-provider.show');
-    Route::patch('/service-provider/update/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'update'])->name('service-provider.update');
-    Route::post('/service-provider/profile-image/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'updateProfileImage'])->name('service-provider.change.profile-image');
+    Route::get('/service-provider/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'show'])->name('service_provider.show');
+    Route::patch('/service-provider/update/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'update'])->name('service_provider.update');
+    Route::post('/service-provider/profile-image/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'updateProfileImage'])->name('service_provider.change.profile-image');
 
 
     Route::delete('/service-provider/contact/{serviceProviderContacts}/delete/', [\App\Http\Controllers\ServiceProviderContactsController::class, 'destroy'])->name('service-provider.contact.delete');

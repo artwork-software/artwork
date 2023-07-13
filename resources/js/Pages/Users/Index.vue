@@ -4,10 +4,41 @@
             <div class="max-w-screen-lg my-12 flex flex-row ml-12 mr-40">
                 <div class="flex flex-1 flex-wrap justify-between">
                     <div class="flex">
-                        <div class="w-full flex my-auto">
-                            <h2 class="headline1">Alle Nutzer*innen</h2>
-                            <AddButton v-if="hasAdminRole()" @click="openAddUserModal" text="Nutzer einladen"
-                                       mode="page" class="-mt-0.5"/>
+                        <div class="w-full flex my-auto items-center">
+                            <Listbox as="div" class="flex" v-model="selectedFilter">
+                                <ListboxButton
+                                    class="bg-white w-full relative py-2 ml-5 cursor-pointer focus:outline-none">
+                                    <div class="flex items-center my-auto">
+                                        <h2 class="headline1">
+                                            {{ selectedFilter.name }}</h2>
+                                        <span
+                                            class="inset-y-0 flex items-center pr-2 pointer-events-none">
+                                            <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
+                                         </span>
+                                    </div>
+                                </ListboxButton>
+                                <transition leave-active-class="transition ease-in duration-100"
+                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                    <ListboxOptions
+                                        class="absolute w-80 z-10 mt-12 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
+                                        <ListboxOption as="template" class="max-h-8"
+                                                       v-for="filter in displayFilters"
+                                                       :key="filter.name"
+                                                       :value="filter"
+                                                       v-slot="{ active, selected }">
+                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
+                                                        {{ filter.name }}
+                                                    </span>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </Listbox>
+                            <button type="button" class="rounded-full bg-gray-600 p-1 mr-1 text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
+                                <PlusIcon class="h-4 w-4" aria-hidden="true" />
+                            </button>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 <span class="hind ml-1 my-auto">Lade neue Nutzer*innen ein</span>
@@ -25,26 +56,27 @@
                         </div>
                     </div>
                     <ul role="list" class="mt-6 w-full">
-                        <li v-if="user_query.length < 1" v-for="(user,index) in users" :key="user.email"
-                            class="py-6 flex justify-between">
+                        <li v-if="user_query.length < 1" v-for="(user,index) in userObjectsToShow" :key="user.email" class="py-6 flex justify-between">
                             <div class="flex">
                                 <img class="h-14 w-14 rounded-full object-cover flex-shrink-0 flex justify-start"
-                                     :src="user.profile_photo_url"
+                                     :src="user.profile_photo_url ?? user.profile_image"
                                      alt=""/>
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
-                                        <Link :href="getEditHref(user)" v-if="$role('artwork admin')"
+                                        <Link :href="checkLink(user) " v-if="$role('artwork admin')"
                                               class="mr-3 sDark">
-                                            {{ user.last_name }}, {{ user.first_name }}
+                                            {{ user.display_name ?? user.provider_name }}
+                                            <span v-if="user.position || user.business">, </span>
                                         </Link>
-                                        <p class="ml-1 xxsDarkBold my-auto"> {{ user.business }},
-                                            {{ user.position }}</p>
+                                        <p class="ml-1 xxsDarkBold my-auto" >
+                                            <span v-if="user.business">{{ user.business }}, </span>
+                                            <span v-if="user.position">{{ user.position }}</span></p>
                                     </div>
                                 </div>
                             </div>
                             <div class="flex">
-                                <div class="flex mr-8 items-center">
-                                    <div class="-mr-3" v-for="department in user.departments.slice(0,2)">
+                                <div class="flex mr-8 items-center"  v-if="selectedFilter.type === 'users'">
+                                    <div class="-mr-3" v-for="department in user.departments?.slice(0,2)">
                                         <TeamIconCollection :data-tooltip-target="department.id"
                                                             class="h-10 w-10 rounded-full ring-2 ring-white"
                                                             :iconName="department.svg_name"/>
@@ -96,13 +128,13 @@
                                                     aria-hidden="true"/>
                                             </MenuButton>
                                             <div v-if="$page.props.can.show_hints && index === 0"
-                                                 class="absolute flex w-40 ml-6">
+                                                 class="absolute flex w-40 ml-9">
                                                 <div>
                                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
                                                 </div>
                                                 <div class="flex">
                                                     <span
-                                                        class="hind ml-2">Bearbeite einen Nutzer</span>
+                                                        class="hind ml-1">Bearbeite einen Nutzer</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -117,7 +149,7 @@
                                             class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
                                             <div class="py-1">
                                                 <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
-                                                    <a :href="getEditHref(user)"
+                                                    <a :href="checkLink(user)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <PencilAltIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -125,7 +157,7 @@
                                                         Profil bearbeiten
                                                     </a>
                                                 </MenuItem>
-                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
+                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole() && user.type === 'user'">
                                                     <a @click="openDeleteUserModal(user)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon
@@ -150,7 +182,7 @@
                                     <div class="flex my-auto">
                                         <Link :href="getEditHref(user)" v-if="hasAdminRole()"
                                               class="mr-3 sDark">
-                                            {{ user.last_name }}, {{ user.first_name }}
+                                            {{ user.name }}
                                         </Link>
                                         <p class="ml-1 xxsDarkBold my-auto"> {{ user.business }},
                                             {{ user.position }}</p>
@@ -312,13 +344,8 @@
 
             </template>
         </jet-dialog-modal>
-
         <pre>
-            {{ all_permissions }}
-
-        </pre>
-        <pre>
-            {{ freelancers }}
+            {{ userObjectsToShow }}
         </pre>
     </app-layout>
 
@@ -350,7 +377,6 @@ const roleCheckboxes = [
 ]
 
 import {defineComponent} from 'vue'
-import {ref} from 'vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import {
     Disclosure,
@@ -363,11 +389,12 @@ import {
     RadioGroup,
     RadioGroupDescription,
     RadioGroupLabel,
-    RadioGroupOption
+    RadioGroupOption,
+    Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
 } from "@headlessui/vue";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
-import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon, CheckIcon} from '@heroicons/vue/solid'
+import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon, CheckIcon, PlusIcon} from '@heroicons/vue/solid'
 import {SearchIcon} from "@heroicons/vue/outline";
 import JetButton from '@/Jetstream/Button.vue'
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
@@ -423,7 +450,7 @@ export default defineComponent({
         RadioGroupOption,
         Link,
         InputComponent,
-        InviteUsersModal
+        InviteUsersModal, Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions, PlusIcon
     },
     props: ['users', 'departments', 'all_permissions', 'roles', 'freelancers', 'serviceProviders'],
     data() {
@@ -436,9 +463,44 @@ export default defineComponent({
             showSearchbar: false,
             user_query: "",
             user_search_results: [],
+            displayFilters: [{
+                'name': 'Alle Nutzer*innen',
+                'type': 'users'
+            }, {'name': 'Alle Freelancer*innen', 'type': 'freelancer'}, {
+                'name': 'Alle Dienstleister*innen',
+                'type': 'service_provider'
+            }, {'name': 'Alle verfügbaren Nutzer*innen', 'type': 'all'}],
+            selectedFilter: {'name': 'Alle Nutzer*innen', 'type': 'users'},
         }
     },
+    computed: {
+        userObjectsToShow: function () {
+            if (this.selectedFilter.type === 'users') {
+                return this.users
+            } else if (this.selectedFilter.type === 'freelancer') {
+                return this.freelancers;
+            } else if (this.selectedFilter.type === 'service_provider') {
+                return this.serviceProviders;
+            } else if (this.selectedFilter.type === 'all') {
+                return this.users.concat(this.freelancers, this.serviceProviders)
+            }
+        },
+    },
     methods: {
+        checkLink(user){
+            if(user.type === 'freelancer'){
+                return route('freelancer.show', {freelancer: user.id});
+            }
+            if( user.type === 'service_provider'){
+                return route('service_provider.show', {serviceProvider: user.id});
+            }
+            if(user.user === 'user'){
+                return route('user.edit', {user: user.id});
+            }
+
+            return route('user.edit', {user: user.id});
+        },
+
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;
             this.user_query = ''

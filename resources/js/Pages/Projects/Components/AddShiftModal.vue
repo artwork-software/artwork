@@ -244,6 +244,13 @@ export default defineComponent({
             // set the craft id
             this.shift.craft_id = this.selectedCraft.id;
 
+            if(this.shift.number_employees === '' || this.shift.number_employees === undefined || this.shift.number_employees === 0 || this.shift.number_employees === null && this.shift.number_masters === '' || this.shift.number_masters === undefined || this.shift.number_masters === 0 || this.shift.number_masters === null){
+                this.helpTexts.masterText = 'Es muss mindestens eine Person eingeteilt werden.';
+                return;
+            } else {
+                this.helpTexts.masterText = '';
+            }
+
             if(this.shift.number_employees === '' || this.shift.number_employees === null){
                 this.shift.number_employees = 0;
             }
@@ -251,6 +258,8 @@ export default defineComponent({
             if(this.shift.number_masters === '' || this.shift.number_masters === null){
                 this.shift.number_masters = 0;
             }
+
+
 
             // send the request
             this.shift.post(route('event.shift.store', this.event.id), {

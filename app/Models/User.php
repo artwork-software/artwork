@@ -124,11 +124,17 @@ class User extends Authenticatable
      */
     protected $appends = [
         'profile_photo_url',
-        'full_name'
+        'full_name',
+        'type',
     ];
 
     protected $with = ['calendar_settings'];
 
+
+    public function getTypeAttribute(): string
+    {
+        return 'user';
+    }
 
     public function shifts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
@@ -148,6 +154,11 @@ class User extends Authenticatable
 
     public function getFullNameAttribute(){
         return $this->first_name . ' ' . $this->last_name;
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->last_name . ', ' . $this->first_name;
     }
 
     public function calendar_settings(): \Illuminate\Database\Eloquent\Relations\HasOne

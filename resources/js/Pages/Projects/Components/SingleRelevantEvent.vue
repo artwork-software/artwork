@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="mb-3">
         <!-- Event Header -->
         <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm"
              :class="event.event_type.svg_name">

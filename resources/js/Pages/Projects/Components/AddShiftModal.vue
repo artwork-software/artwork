@@ -25,7 +25,6 @@
                                 <p class="xsLight subpixel-antialiased">
                                     Lege fest wie lange deine Schicht dauert und wie viele Personen in deiner Schicht arbeiten sollen.
                                 </p>
-
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                                        <div>
@@ -106,7 +105,7 @@
                                 </div>
                             </div>
                             <div class="flex justify-between mt-5">
-                                <AddButton mode="modal" text="Speichern" @click="saveShift"/>
+                                <AddButton mode="modal" text="Speichern" @click="checkSeriesEvent"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -114,6 +113,8 @@
             </div>
         </Dialog>
     </TransitionRoot>
+
+    <ChangeAllSubmitModal v-if="showChangeAllModal" @closed="showChangeAllModal = false" @all="saveAllEvents" @single="saveShift" />
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -132,11 +133,15 @@ import {
 import Input from "@/Jetstream/Input.vue";
 import {ChevronDownIcon, PlusCircleIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/inertia-vue3";
+import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
+import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 
 export default defineComponent({
     name: "AddShiftModal",
     mixins: [Permissions],
     components: {
+        ChangeAllSubmitModal,
+        ConfirmationModal,
         CheckIcon, ChevronDownIcon,
         Input,
         AddButton,
@@ -158,7 +163,9 @@ export default defineComponent({
                 number_employees: null,
                 number_masters: null,
                 description: '',
-                event_id: this.event.id
+                event_id: this.event.id,
+                changeAll: false,
+                seriesId: null,
             }),
             selectedCraft: null,
             helpTexts: {
@@ -169,13 +176,26 @@ export default defineComponent({
                 time: '',
                 employeeText:'',
                 masterText:'',
-            }
+            },
+            showChangeAllModal: false
         }
     },
     emits: ['closed'],
     methods: {
         closeModal(bool){
             this.$emit('closed', bool);
+        },
+        saveAllEvents(){
+            this.shift.changeAll = true;
+            this.shift.seriesId = this.event.series_id;
+            this.saveShift();
+        },
+        checkSeriesEvent(){
+            if(this.event.is_series){
+                this.showChangeAllModal = true;
+            } else {
+                this.saveShift();
+            }
         },
         saveShift(){
             this.shift.craft_id = this.selectedCraft?.id;
@@ -228,28 +248,16 @@ export default defineComponent({
             } else {
                 this.helpTexts.time = '';
             }
-            /*if (!this.shift.number_employees) {
-                this.helpTexts.employeeText = 'Bitte gib die Anzahl der Mitarbeiter*innen an.';
-                return;
-            } else {
-                this.helpTexts.employeeText = '';
-            }
-            if (!this.shift.number_masters) {
-                this.helpTexts.masterText = 'Bitte gib die Anzahl der Meister*innen an.';
-                return;
-            } else {
-                this.helpTexts.masterText = '';
-            }*/
 
             // set the craft id
             this.shift.craft_id = this.selectedCraft.id;
 
-            if(this.shift.number_employees === '' || this.shift.number_employees === undefined || this.shift.number_employees === 0 || this.shift.number_employees === null && this.shift.number_masters === '' || this.shift.number_masters === undefined || this.shift.number_masters === 0 || this.shift.number_masters === null){
+            /*if(this.shift.number_employees === '' || this.shift.number_employees === undefined || this.shift.number_employees === null && this.shift.number_masters === '' || this.shift.number_masters === undefined || this.shift.number_masters === null){
                 this.helpTexts.masterText = 'Es muss mindestens eine Person eingeteilt werden.';
                 return;
             } else {
                 this.helpTexts.masterText = '';
-            }
+            }*/
 
             if(this.shift.number_employees === '' || this.shift.number_employees === null){
                 this.shift.number_employees = 0;
@@ -259,13 +267,20 @@ export default defineComponent({
                 this.shift.number_masters = 0;
             }
 
-
-
             // send the request
             this.shift.post(route('event.shift.store', this.event.id), {
                 preserveScroll: true,   // preserve scroll position
                 preserveState: true,    // preserve the state of the form
                 onSuccess: () => {
+                    this.shift.start = null;
+                    this.shift.end = null;
+                    this.shift.break_minutes = null;
+                    this.shift.craft_id = null;
+                    this.shift.number_employees = null;
+                    this.shift.number_masters = null;
+                    this.shift.description = '';
+                    this.shift.changeAll = false;
+                    this.shift.seriesId = null;
                     this.closeModal(true);  // close the modal
                 }
             })

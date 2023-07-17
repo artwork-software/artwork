@@ -9,7 +9,7 @@
             <PlusCircleIcon class="h-4 w-4 rounded-full bg-backgroundBlue" />
         </div>
     </div>
-    <AddShiftModal :crafts="crafts" :event="event" v-if="showAddShiftModal" @closed="showAddShiftModal = false"/>
+    <AddShiftModal :crafts="crafts" :event="event" v-if="showAddShiftModal" @closed="showAddShiftModal = false" />
 </template>
 <script>
 import {defineComponent} from 'vue'

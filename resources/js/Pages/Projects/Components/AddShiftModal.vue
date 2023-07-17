@@ -25,6 +25,7 @@
                                 <p class="xsLight subpixel-antialiased">
                                     Lege fest wie lange deine Schicht dauert und wie viele Personen in deiner Schicht arbeiten sollen.
                                 </p>
+
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                                        <div>
@@ -88,11 +89,13 @@
                                         <input type="number"
                                                placeholder="Anzahl Mitarbeiter*innen"
                                                v-model="shiftForm.number_employees"
+                                               @change="checkUserCount"
                                                class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                         />
                                         <input type="number"
                                                placeholder="Anzahl Meister*innen"
                                                v-model="shiftForm.number_masters"
+                                               @change="checkMasterCount"
                                                maxlength="3"
                                                class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                         <span class="text-xs text-red-500" v-show="helpTexts.employeeText.length > 0">{{ helpTexts.employeeText }}</span>
@@ -151,7 +154,7 @@ export default defineComponent({
         TransitionRoot,
         XIcon, DialogPanel, PlusCircleIcon, ListboxButton, ListboxOption, ListboxOptions, Listbox
     },
-    props: ['event', 'crafts', 'shift'],
+    props: ['event', 'crafts', 'shift', 'edit'],
     data(){
         return {
             open: true,
@@ -187,15 +190,35 @@ export default defineComponent({
             this.$emit('closed', bool);
         },
         saveAllEvents(){
-            this.shift.changeAll = true;
-            this.shift.seriesId = this.event.series_id;
+            this.shiftForm.changeAll = true;
+            this.shiftForm.seriesId = this.event.series_id;
             this.saveShift();
         },
         checkSeriesEvent(){
-            if(this.event.is_series){
-                this.showChangeAllModal = true;
+            if(this.edit === true){
+                this.saveShift()
             } else {
-                this.saveShift();
+                if(this.event.is_series){
+                    this.showChangeAllModal = true;
+                } else {
+                    this.saveShift();
+                }
+            }
+        },
+        checkUserCount(){
+            if(this.shift.user_count > 0){
+                this.helpTexts.employeeText = 'Es sind bereits Mitarbeiter*innen eingetragen. Die Anzahl kann nicht verändert werden. Bitte entferne erst alle Mitarbeiter*innen.';
+                this.shiftForm.number_employees = this.shift.number_employees;
+            } else {
+                this.helpTexts.employeeText = '';
+            }
+        },
+        checkMasterCount(){
+            if(this.shift.master_count > 0){
+                this.helpTexts.masterText = 'Es sind bereits Meister*innen eingetragen. Die Anzahl kann nicht verändert werden. Bitte entferne erst alle Meister*innen.';
+                this.shiftForm.number_masters = this.shift.number_masters;
+            } else {
+                this.helpTexts.masterText = '';
             }
         },
         saveShift(){

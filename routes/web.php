@@ -552,5 +552,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/project/{shift}/remove/freelancer/{freelancer}', [\App\Http\Controllers\ShiftController::class, 'removeFreelancer'])->name('shifts.removeFreelancer');
 
     Route::delete('/project/{shift}/remove/provider/{serviceProvider}', [\App\Http\Controllers\ShiftController::class, 'removeProvider'])->name('shifts.removeProvider');
+
+
+    Route::delete('/project/{shift}/remove/employees/master', [\App\Http\Controllers\ShiftController::class, 'clearEmployeesAndMaster'])->name('shifts.clearEmployeesAndMaster');
+    Route::delete('/project/{shift}/destroy', [\App\Http\Controllers\ShiftController::class, 'destroy'])->name('shifts.destroy');
+    Route::patch('/project/{shift}/update', [\App\Http\Controllers\ShiftController::class, 'updateShift'])->name('event.shift.update');
 });
 

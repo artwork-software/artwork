@@ -19,6 +19,58 @@
                     </g>
                 </svg>
             </div>
+            <div>
+                <Menu as="div" class="relative">
+                    <div class="flex p-0.5 rounded-full">
+                        <MenuButton
+                            class="flex p-0.5 rounded-full">
+                            <DotsVerticalIcon
+                                class=" flex-shrink-0 h-4 w-4 my-auto"
+                                aria-hidden="true"/>
+                        </MenuButton>
+
+                    </div>
+                    <transition enter-active-class="transition ease-out duration-100"
+                                enter-from-class="transform opacity-0 scale-95"
+                                enter-to-class="transform opacity-100 scale-100"
+                                leave-active-class="transition ease-in duration-75"
+                                leave-from-class="transform opacity-100 scale-100"
+                                leave-to-class="transform opacity-0 scale-95">
+                        <MenuItems
+                            class="origin-top-right z-100 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                            <div class="py-1">
+                                <MenuItem v-slot="{ active }">
+                                    <a href="#" @click="editShift"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <DuplicateIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Bearbeiten
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a href="#" @click="clearEmployeesAndMaster(shift.id)"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Leeren
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a href="#" @click="deleteShift(shift.id)"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Löschen
+                                    </a>
+                                </MenuItem>
+                            </div>
+                        </MenuItems>
+                    </transition>
+                </Menu>
+            </div>
         </div>
     </div>
     <div class="mt-1 h-[calc(100%-2.7rem)] bg-gray-200 p-1 max-h-96 overflow-x-scroll">
@@ -76,17 +128,32 @@
             <DropElement :users="shift.allUsers" :shift-id="shift.id" :currentCount="shift.currentCount" :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count" :free-master-count="shift.empty_master_count" :userIds="shiftUserIds"  :master="false"/>
         </div>
     </div>
+
+    <AddShiftModal :shift="shift" :event="event" :crafts="crafts" v-if="openEditShiftModal" @closed="openEditShiftModal = false"  />
 </template>
 <script>
 import {defineComponent} from 'vue'
 import {XIcon} from "@heroicons/vue/solid";
 import DropElement from "@/Pages/Projects/Components/DropElement.vue";
 import dayjs from "dayjs";
+import {DotsVerticalIcon, DuplicateIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 
 export default defineComponent({
     name: "SingleShift",
-    components: {DropElement, XIcon},
-    props: ['shift'],
+    components: {
+        AddShiftModal,
+        DotsVerticalIcon, SvgCollection, TrashIcon, DuplicateIcon, PencilAltIcon, DropElement, XIcon,
+        Menu, MenuButton, MenuItem, MenuItems
+    },
+    props: ['shift', 'crafts', 'event'],
+    data() {
+        return {
+            openEditShiftModal: false,
+        }
+    },
     computed: {
         shiftUserIds(){
             const ids = {
@@ -125,6 +192,21 @@ export default defineComponent({
             this.$inertia.delete(route('shifts.removeFreelancer', {shift: shift_id, freelancer: freelancer_id}), {
                 preserveScroll: true,
             });
+        },
+        clearEmployeesAndMaster(shift_id){
+            this.$inertia.delete(route('shifts.clearEmployeesAndMaster', {shift: shift_id}), {
+                preserveScroll: true,
+                preserveState: true,
+            });
+        },
+        deleteShift(shift_id){
+            this.$inertia.delete(route('shifts.destroy', {shift: shift_id}), {
+                preserveScroll: true,
+                preserveState: true,
+            });
+        },
+        editShift(){
+            this.openEditShiftModal = true;
         },
     },
 })

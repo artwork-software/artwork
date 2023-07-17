@@ -30,7 +30,7 @@
                                        <div>
                                            <input type="time"
                                                   placeholder="Schicht Start"
-                                                  v-model="shift.start"
+                                                  v-model="shiftForm.start"
                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                                   required
                                            />
@@ -40,7 +40,7 @@
                                         <div>
                                             <input type="time"
                                                    placeholder="Schicht Ende"
-                                                   v-model="shift.end"
+                                                   v-model="shiftForm.end"
                                                    maxlength="3"
                                                    required
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
@@ -51,7 +51,7 @@
                                        <div>
                                            <input type="number"
                                                   placeholder="Pausenlänge in Minuten*"
-                                                  v-model="shift.break_minutes"
+                                                  v-model="shiftForm.break_minutes"
                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                                   required
                                            />
@@ -87,19 +87,19 @@
                                         </div>
                                         <input type="number"
                                                placeholder="Anzahl Mitarbeiter*innen"
-                                               v-model="shift.number_employees"
+                                               v-model="shiftForm.number_employees"
                                                class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                         />
                                         <input type="number"
                                                placeholder="Anzahl Meister*innen"
-                                               v-model="shift.number_masters"
+                                               v-model="shiftForm.number_masters"
                                                maxlength="3"
                                                class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                         <span class="text-xs text-red-500" v-show="helpTexts.employeeText.length > 0">{{ helpTexts.employeeText }}</span>
                                         <span class="text-xs text-red-500" v-show="helpTexts.masterText.length > 0">{{ helpTexts.masterText }}</span>
 
                                         <div class="mt-2 col-span-2">
-                                            <textarea v-model="shift.description" placeholder="Gibt es wichtige Informationen zu dieser Schicht?" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
+                                            <textarea v-model="shiftForm.description" placeholder="Gibt es wichtige Informationen zu dieser Schicht?" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
                                         </div>
                                     </div>
                                 </div>
@@ -151,23 +151,24 @@ export default defineComponent({
         TransitionRoot,
         XIcon, DialogPanel, PlusCircleIcon, ListboxButton, ListboxOption, ListboxOptions, Listbox
     },
-    props: ['event', 'crafts'],
+    props: ['event', 'crafts', 'shift'],
     data(){
         return {
             open: true,
-            shift: useForm({
-                start: null,
-                end: null,
-                break_minutes: null,
-                craft_id: null,
-                number_employees: null,
-                number_masters: null,
-                description: '',
-                event_id: this.event.id,
+            shiftForm: useForm({
+                id: this.shift ? this.shift.id : null,
+                start: this.shift ? this.shift.start : null,
+                end: this.shift ? this.shift.end : null,
+                break_minutes: this.shift ? this.shift.break_minutes : null,
+                craft_id: this.shift ? this.shift.craft.id : null,
+                number_employees: this.shift ? this.shift.number_employees : null,
+                number_masters: this.shift ? this.shift.number_masters : null,
+                description: this.shift ? this.shift.description : '',
+                event_id: this.event.id
                 changeAll: false,
                 seriesId: null,
             }),
-            selectedCraft: null,
+            selectedCraft: this.shift ? this.shift.craft : null,
             helpTexts: {
                 craftText: '',
                 breakText: '',
@@ -198,30 +199,30 @@ export default defineComponent({
             }
         },
         saveShift(){
-            this.shift.craft_id = this.selectedCraft?.id;
+            this.shiftForm.craft_id = this.selectedCraft?.id;
 
-            if(this.event.start > this.shift.start){
+            if(this.shiftForm.start > this.shiftForm.start){
                 this.helpTexts.time = 'Die Schicht kann nicht vor dem Termin starten.';
                 return;
             } else {
                 this.helpTexts.time = '';
             }
 
-            if(this.event.end < this.shift.end){
+            if(this.event.end < this.shiftForm.end){
                 this.helpTexts.time = 'Die Schicht kann nicht nach dem Termin enden.';
                 return;
             } else {
                 this.helpTexts.time = '';
             }
 
-            if ( this.shift.start === null ){
+            if ( this.shiftForm.start === null ){
                 this.helpTexts.start = 'Bitte gib einen Startzeitpunkt an.';
                 return;
             } else {
                 this.helpTexts.start = '';
             }
 
-            if ( this.shift.end === null ){
+            if ( this.shiftForm.end === null ){
                 this.helpTexts.end = 'Bitte gib einen Endzeitpunkt an.';
                 return;
             } else {
@@ -235,14 +236,14 @@ export default defineComponent({
                 this.helpTexts.craftText = '';
             }
 
-            if ( this.shift.break_minutes === null ){
+            if ( this.shiftForm.break_minutes === null ){
                 this.helpTexts.breakText = 'Bitte gib eine Pausenzeit an.';
                 return;
             } else {
                 this.helpTexts.breakText = '';
             }
 
-            if(this.shift.start >= this.shift.end ){
+            if(this.shiftForm.start >= this.shiftForm.end ){
                 this.helpTexts.time = 'Der Endzeitpunkt muss nach dem Startzeitpunkt liegen.';
                 return;
             } else {
@@ -250,40 +251,53 @@ export default defineComponent({
             }
 
             // set the craft id
-            this.shift.craft_id = this.selectedCraft.id;
+            this.shiftForm.craft_id = this.selectedCraft.id;
 
-            /*if(this.shift.number_employees === '' || this.shift.number_employees === undefined || this.shift.number_employees === null && this.shift.number_masters === '' || this.shift.number_masters === undefined || this.shift.number_masters === null){
-                this.helpTexts.masterText = 'Es muss mindestens eine Person eingeteilt werden.';
-                return;
+
+            if(this.shiftForm.number_employees === '' || this.shiftForm.number_employees === null){
+                this.shiftForm.number_employees = 0;
+            }
+
+            if(this.shiftForm.number_masters === '' || this.shiftForm.number_masters === null){
+                this.shiftForm.number_masters = 0;
+            }
+
+
+            if(this.shiftForm.id !== null && this.shiftForm.id !== undefined){
+                this.shiftForm.patch(route('event.shift.update', this.shift.id), {
+                    preserveScroll: true,   // preserve scroll position
+                    preserveState: true,    // preserve the state of the form
+                    onSuccess: () => {
+                        this.shift.start = null;
+                        this.shift.end = null;
+                        this.shift.break_minutes = null;
+                        this.shift.craft_id = null;
+                        this.shift.number_employees = null;
+                        this.shift.number_masters = null;
+                        this.shift.description = '';
+                        this.shift.changeAll = false;
+                        this.shift.seriesId = null;
+                        this.closeModal(true);  // close the modal
+                    }
+                })
             } else {
-                this.helpTexts.masterText = '';
-            }*/
-
-            if(this.shift.number_employees === '' || this.shift.number_employees === null){
-                this.shift.number_employees = 0;
+                this.shiftForm.post(route('event.shift.store', this.event.id), {
+                    preserveScroll: true,   // preserve scroll position
+                    preserveState: true,    // preserve the state of the form
+                    onSuccess: () => {
+                        this.shift.start = null;
+                        this.shift.end = null;
+                        this.shift.break_minutes = null;
+                        this.shift.craft_id = null;
+                        this.shift.number_employees = null;
+                        this.shift.number_masters = null;
+                        this.shift.description = '';
+                        this.shift.changeAll = false;
+                        this.shift.seriesId = null;
+                        this.closeModal(true);  // close the modal
+                    }
+                })
             }
-
-            if(this.shift.number_masters === '' || this.shift.number_masters === null){
-                this.shift.number_masters = 0;
-            }
-
-            // send the request
-            this.shift.post(route('event.shift.store', this.event.id), {
-                preserveScroll: true,   // preserve scroll position
-                preserveState: true,    // preserve the state of the form
-                onSuccess: () => {
-                    this.shift.start = null;
-                    this.shift.end = null;
-                    this.shift.break_minutes = null;
-                    this.shift.craft_id = null;
-                    this.shift.number_employees = null;
-                    this.shift.number_masters = null;
-                    this.shift.description = '';
-                    this.shift.changeAll = false;
-                    this.shift.seriesId = null;
-                    this.closeModal(true);  // close the modal
-                }
-            })
         }
     }
 })

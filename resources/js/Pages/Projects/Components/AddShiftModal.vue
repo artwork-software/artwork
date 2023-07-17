@@ -105,7 +105,7 @@
                                 </div>
                             </div>
                             <div class="flex justify-between mt-5">
-                                <AddButton mode="modal" text="Speichern" @click="saveShift"/>
+                                <AddButton mode="modal" text="Speichern" @click="checkSeriesEvent"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -113,6 +113,8 @@
             </div>
         </Dialog>
     </TransitionRoot>
+
+    <ChangeAllSubmitModal v-if="showChangeAllModal" @closed="showChangeAllModal = false" @all="saveAllEvents" @single="saveShift" />
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -131,11 +133,15 @@ import {
 import Input from "@/Jetstream/Input.vue";
 import {ChevronDownIcon, PlusCircleIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/inertia-vue3";
+import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
+import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 
 export default defineComponent({
     name: "AddShiftModal",
     mixins: [Permissions],
     components: {
+        ChangeAllSubmitModal,
+        ConfirmationModal,
         CheckIcon, ChevronDownIcon,
         Input,
         AddButton,
@@ -159,6 +165,8 @@ export default defineComponent({
                 number_masters: this.shift ? this.shift.number_masters : null,
                 description: this.shift ? this.shift.description : '',
                 event_id: this.event.id
+                changeAll: false,
+                seriesId: null,
             }),
             selectedCraft: this.shift ? this.shift.craft : null,
             helpTexts: {
@@ -169,13 +177,26 @@ export default defineComponent({
                 time: '',
                 employeeText:'',
                 masterText:'',
-            }
+            },
+            showChangeAllModal: false
         }
     },
     emits: ['closed'],
     methods: {
         closeModal(bool){
             this.$emit('closed', bool);
+        },
+        saveAllEvents(){
+            this.shift.changeAll = true;
+            this.shift.seriesId = this.event.series_id;
+            this.saveShift();
+        },
+        checkSeriesEvent(){
+            if(this.event.is_series){
+                this.showChangeAllModal = true;
+            } else {
+                this.saveShift();
+            }
         },
         saveShift(){
             this.shiftForm.craft_id = this.selectedCraft?.id;
@@ -228,28 +249,10 @@ export default defineComponent({
             } else {
                 this.helpTexts.time = '';
             }
-            /*if (!this.shift.number_employees) {
-                this.helpTexts.employeeText = 'Bitte gib die Anzahl der Mitarbeiter*innen an.';
-                return;
-            } else {
-                this.helpTexts.employeeText = '';
-            }
-            if (!this.shift.number_masters) {
-                this.helpTexts.masterText = 'Bitte gib die Anzahl der Meister*innen an.';
-                return;
-            } else {
-                this.helpTexts.masterText = '';
-            }*/
 
             // set the craft id
             this.shiftForm.craft_id = this.selectedCraft.id;
 
-            if(this.shiftForm.number_employees === '' || this.shiftForm.number_employees === undefined || this.shiftForm.number_employees === 0 || this.shiftForm.number_employees === null && this.shiftForm.number_masters === '' || this.shiftForm.number_masters === undefined || this.shiftForm.number_masters === 0 || this.shiftForm.number_masters === null){
-                this.helpTexts.masterText = 'Es muss mindestens eine Person eingeteilt werden.';
-                return;
-            } else {
-                this.helpTexts.masterText = '';
-            }
 
             if(this.shiftForm.number_employees === '' || this.shiftForm.number_employees === null){
                 this.shiftForm.number_employees = 0;
@@ -265,6 +268,15 @@ export default defineComponent({
                     preserveScroll: true,   // preserve scroll position
                     preserveState: true,    // preserve the state of the form
                     onSuccess: () => {
+                        this.shift.start = null;
+                        this.shift.end = null;
+                        this.shift.break_minutes = null;
+                        this.shift.craft_id = null;
+                        this.shift.number_employees = null;
+                        this.shift.number_masters = null;
+                        this.shift.description = '';
+                        this.shift.changeAll = false;
+                        this.shift.seriesId = null;
                         this.closeModal(true);  // close the modal
                     }
                 })
@@ -273,6 +285,15 @@ export default defineComponent({
                     preserveScroll: true,   // preserve scroll position
                     preserveState: true,    // preserve the state of the form
                     onSuccess: () => {
+                        this.shift.start = null;
+                        this.shift.end = null;
+                        this.shift.break_minutes = null;
+                        this.shift.craft_id = null;
+                        this.shift.number_employees = null;
+                        this.shift.number_masters = null;
+                        this.shift.description = '';
+                        this.shift.changeAll = false;
+                        this.shift.seriesId = null;
                         this.closeModal(true);  // close the modal
                     }
                 })

@@ -52,6 +52,24 @@ class ShiftController extends Controller
             'number_masters',
             'description',
         ]));
+
+        if($request->changeAll){
+            $seriesEvents = Event::where('series_id', $event->series_id)->get();
+
+            foreach ($seriesEvents as $seriesEvent){
+                if($seriesEvent->id != $event->id){
+                    $seriesEvent->shifts()->create($request->only([
+                        'start',
+                        'end',
+                        'break_minutes',
+                        'craft_id',
+                        'number_employees',
+                        'number_masters',
+                        'description',
+                    ]));
+                }
+            }
+        }
     }
 
     /**

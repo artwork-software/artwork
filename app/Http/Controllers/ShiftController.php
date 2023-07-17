@@ -98,6 +98,21 @@ class ShiftController extends Controller
         return Redirect::route('shifts.plan')->with('success', 'Shift updated');
     }
 
+    public function updateShift(Request $request, Shift $shift)
+    {
+        $shift->update($request->only([
+            'start',
+            'end',
+            'break_minutes',
+            'craft_id',
+            'number_employees',
+            'number_masters',
+            'description',
+        ]));
+
+        return back();
+    }
+
     /**
      * Remove the specified resource from storage.
      *
@@ -106,7 +121,7 @@ class ShiftController extends Controller
      */
     public function destroy(Shift $shift)
     {
-        //
+        $shift->delete();
     }
 
     protected function calculateShiftCollision(Shift $shift, array $eventIds, int $user_id = null, int $freelancer_id = null, int $service_provider_id = null): Collection
@@ -267,5 +282,12 @@ class ShiftController extends Controller
         }
 
         $shift->service_provider()->attach($serviceProvider->id, ['shift_count' => $collideCount + 1]);
+    }
+
+    public function clearEmployeesAndMaster(Shift $shift): void
+    {
+        $shift->users()->detach();
+        $shift->freelancer()->detach();
+        $shift->service_provider()->detach();
     }
 }

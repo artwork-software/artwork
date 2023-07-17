@@ -187,8 +187,8 @@ export default defineComponent({
             this.$emit('closed', bool);
         },
         saveAllEvents(){
-            this.shift.changeAll = true;
-            this.shift.seriesId = this.event.series_id;
+            this.shiftForm.changeAll = true;
+            this.shiftForm.seriesId = this.event.series_id;
             this.saveShift();
         },
         checkSeriesEvent(){

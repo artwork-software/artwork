@@ -164,7 +164,7 @@ export default defineComponent({
                 number_employees: this.shift ? this.shift.number_employees : null,
                 number_masters: this.shift ? this.shift.number_masters : null,
                 description: this.shift ? this.shift.description : '',
-                event_id: this.event.id
+                event_id: this.event.id,
                 changeAll: false,
                 seriesId: null,
             }),

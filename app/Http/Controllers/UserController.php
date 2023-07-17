@@ -279,9 +279,10 @@ class UserController extends Controller
         ]));
     }
 
-    public function updateCanMaster(User $user, Request $request){
+    public function updateUserConditions(User $user, Request $request){
         $user->update($request->only([
-            'can_master'
+            'can_master',
+            'weekly_working_hours',
         ]));
 
     }

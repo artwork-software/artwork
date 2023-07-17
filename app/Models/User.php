@@ -86,7 +86,8 @@ class User extends Authenticatable
         'temporary',
         'employStart',
         'employEnd',
-        'can_master'
+        'can_master',
+        'weekly_working_hours'
     ];
 
 

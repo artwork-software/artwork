@@ -56,7 +56,11 @@
                                     Lege fest ob die Mitarbeiterin / der Mitarbeiter als Meister eingesetzt werden kann. Du kannst hierfür eigene Stundensätze festlegen.
                                 </p>
 
-                                <AddButton @click="updateCanMaster"
+                                Wochenarbeitszeit
+                                <input type="number" v-model="userForm.weekly_working_hours" placeholder="Wochenarbeitszeit"
+                                       class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
+
+                                <AddButton @click="updateUserConditions"
                                            class=" inline-flex items-center px-12 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                                            text="Einstellungen ändern" mode="modal"/>
                             </div>
@@ -489,6 +493,7 @@ export default defineComponent({
                 permissions: this.user_to_edit.permissions,
                 roles: this.user_to_edit.roles,
                 can_master: this.user_to_edit.can_master,
+                weekly_working_hours: this.user_to_edit.weekly_working_hours,
             }),
             resetPasswordForm: this.$inertia.form({
                 email: this.user_to_edit.email
@@ -571,9 +576,10 @@ export default defineComponent({
             this.userForm.patch(route('user.update', this.user_to_edit.id));
             this.openSuccessModal();
         },
-        updateCanMaster(){
+        updateUserConditions(){
             this.userForm.patch(route('user.update.can.master', this.user_to_edit.id), {
                 can_master: this.user_to_edit.can_master,
+                weekly_working_hours:this.user_to_edit.weekly_working_hours,
                 preserveScroll: true,
                 onFinish: () => {
                     this.openSuccessModal();

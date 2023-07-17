@@ -34,6 +34,7 @@ return new class extends Migration
             $table->date('employStart')->nullable();
             $table->date('employEnd')->nullable();
             $table->boolean('can_master')->default(false);
+            $table->integer('weekly_working_hours')->default(40);
             $table->timestamps();
         });
     }

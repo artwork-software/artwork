@@ -164,7 +164,7 @@ export default defineComponent({
                 number_employees: this.shift ? this.shift.number_employees : null,
                 number_masters: this.shift ? this.shift.number_masters : null,
                 description: this.shift ? this.shift.description : '',
-                event_id: this.event.id
+                event_id: this.event.id,
                 changeAll: false,
                 seriesId: null,
             }),
@@ -268,15 +268,15 @@ export default defineComponent({
                     preserveScroll: true,   // preserve scroll position
                     preserveState: true,    // preserve the state of the form
                     onSuccess: () => {
-                        this.shift.start = null;
-                        this.shift.end = null;
-                        this.shift.break_minutes = null;
-                        this.shift.craft_id = null;
-                        this.shift.number_employees = null;
-                        this.shift.number_masters = null;
-                        this.shift.description = '';
-                        this.shift.changeAll = false;
-                        this.shift.seriesId = null;
+                        this.shiftForm.start = null;
+                        this.shiftForm.end = null;
+                        this.shiftForm.break_minutes = null;
+                        this.shiftForm.craft_id = null;
+                        this.shiftForm.number_employees = null;
+                        this.shiftForm.number_masters = null;
+                        this.shiftForm.description = '';
+                        this.shiftForm.changeAll = false;
+                        this.shiftForm.seriesId = null;
                         this.closeModal(true);  // close the modal
                     }
                 })
@@ -285,15 +285,15 @@ export default defineComponent({
                     preserveScroll: true,   // preserve scroll position
                     preserveState: true,    // preserve the state of the form
                     onSuccess: () => {
-                        this.shift.start = null;
-                        this.shift.end = null;
-                        this.shift.break_minutes = null;
-                        this.shift.craft_id = null;
-                        this.shift.number_employees = null;
-                        this.shift.number_masters = null;
-                        this.shift.description = '';
-                        this.shift.changeAll = false;
-                        this.shift.seriesId = null;
+                        this.shiftForm.start = null;
+                        this.shiftForm.end = null;
+                        this.shiftForm.break_minutes = null;
+                        this.shiftForm.craft_id = null;
+                        this.shiftForm.number_employees = null;
+                        this.shiftForm.number_masters = null;
+                        this.shiftForm.description = '';
+                        this.shiftForm.changeAll = false;
+                        this.shiftForm.seriesId = null;
                         this.closeModal(true);  // close the modal
                     }
                 })

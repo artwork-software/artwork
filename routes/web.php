@@ -107,7 +107,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/users/{user}/areas', [UserController::class, 'update_area_status'])->name('user.areas.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
     Route::patch('/users/{user}', [UserController::class, 'temporaryUserUpdate'])->name('update.user.temporary');
-    Route::patch('/users/{user}/master', [UserController::class, 'updateUserConditions'])->name('user.update.conditions');
+    Route::patch('/users/{user}/conditions', [UserController::class, 'updateUserConditions'])->name('user.update.conditions');
 
     Route::post('/users/reset-password', [UserController::class, 'reset_user_password'])->name('user.reset.password');
 

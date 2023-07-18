@@ -87,7 +87,9 @@ class User extends Authenticatable
         'employStart',
         'employEnd',
         'can_master',
-        'weekly_working_hours'
+        'weekly_working_hours',
+        'salary_per_hour',
+        'salary_description',
     ];
 
 

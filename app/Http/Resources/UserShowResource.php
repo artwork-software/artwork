@@ -36,6 +36,9 @@ class UserShowResource extends JsonResource
             'employStart' => $this->employStart,
             'employEnd' => $this->employEnd,
             'can_master' => $this->can_master,
+            'weekly_working_hours' => $this->weekly_working_hours,
+            'salary_per_hour' => $this->salary_per_hour,
+            'salary_description' => $this->salary_description,
         ];
     }
 }

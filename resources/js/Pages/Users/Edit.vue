@@ -23,7 +23,10 @@
                                 <div class="hidden sm:block">
                                     <div class="">
                                         <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
-                                            <div v-for="tab in tabs" :key="tab.name" @click="changeTab(tab.id)" :class="[tab.current ? 'border-indigo-500 text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']" :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}</div>
+                                            <div v-for="tab in tabs" :key="tab.name" @click="changeTab(tab.id)"
+                                                 :class="[tab.current ? 'border-indigo-500 text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']"
+                                                 :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}
+                                            </div>
                                         </nav>
                                     </div>
                                 </div>
@@ -32,19 +35,24 @@
 
                         <div class="">
                             <div class="w-full py-4 pl-20 pr-4" v-if="currentTab === 1">
-                                <UserShiftPlan :date-value="dateValue" :days-with-events="daysWithEvents" :projects="projects" :event-types="eventTypes" :rooms="rooms" :vacations="vacations"></UserShiftPlan>
+                                <UserShiftPlan :weeklyWorkingHours="this.user_to_edit.weekly_working_hours" :date-value="dateValue" :days-with-events="daysWithEvents"
+                                               :projects="projects" :event-types="eventTypes" :rooms="rooms"
+                                               :vacations="vacations"></UserShiftPlan>
                             </div>
 
                             <div class="max-w-screen-3xl py-4 pl-20 pr-4" v-if="currentTab === 2">
-                                <Availability :calendar-data="calendarData" :date-to-show="dateToShow" :user="user_to_edit" :vacations="vacations" />
+                                <Availability :calendar-data="calendarData" :date-to-show="dateToShow"
+                                              :user="user_to_edit" :vacations="vacations"/>
                             </div>
 
                             <div class="max-w-screen-lg py-4 pl-20 pr-4" v-if="currentTab === 3">
                                 // Can Master
                                 <div>
                                     <SwitchGroup as="div" class="flex items-center">
-                                        <Switch v-model="userForm.can_master" :class="[userForm.can_master ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
-                                            <span aria-hidden="true" :class="[userForm.can_master ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                                        <Switch v-model="userForm.can_master"
+                                                :class="[userForm.can_master ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                                            <span aria-hidden="true"
+                                                  :class="[userForm.can_master ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                                         </Switch>
                                         <SwitchLabel as="span" class="ml-3 text-sm">
                                             <span class="text-gray-900">Als Meister einsetzbar</span>
@@ -53,16 +61,42 @@
                                 </div>
 
                                 <p>
-                                    Lege fest ob die Mitarbeiterin / der Mitarbeiter als Meister eingesetzt werden kann. Du kannst hierfür eigene Stundensätze festlegen.
+                                    Lege fest ob die Mitarbeiterin / der Mitarbeiter als Meister eingesetzt werden kann.
+                                    Du kannst hierfür eigene Stundensätze festlegen.
                                 </p>
 
-                                Wochenarbeitszeit
-                                <input type="number" v-model="userForm.weekly_working_hours" placeholder="Wochenarbeitszeit"
-                                       class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
+                                <div>
+                                    <div class="headline3 py-4">
+                                        Stunden & Vergütung
+                                    </div>
+
+                                    <div class="flex">
+                                        <input type="number" v-model="userForm.weekly_working_hours" placeholder="h"
+                                               class="w-28 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block"/>
+                                        <div class="ml-4 h-10 flex items-center">
+                                            h/Woche lt. Vertrag
+                                        </div>
+                                    </div>
+                                    <div class="flex">
+                                        <input type="number" v-model="userForm.salary_per_hour" placeholder="€"
+                                               class="w-28 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block"/>
+                                        <div class="ml-4 h-10 flex items-center">
+                                            €/h
+                                        </div>
+                                    </div>
+                                    <div class="py-1">
+                            <textarea placeholder="Weitere Informationen (variable Vergütung, Zuschläge, etc.)"
+                                      id="salary_description"
+                                      v-model="userForm.salary_description"
+                                      rows="4"
+                                      class="border-gray-300 border-2 resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                    </div>
+                                </div>
+
 
                                 <AddButton @click="updateUserConditions"
                                            class=" inline-flex items-center px-12 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                                           text="Einstellungen ändern" mode="modal"/>
+                                           text="Änderungen speichern" mode="modal"/>
                             </div>
 
                             <div class="max-w-screen-lg pl-20 pr-4" v-if="currentTab === 4">
@@ -109,7 +143,8 @@
                                         <div class="sm:col-span-6 mt-4 flex inline-flex">
                                         <span v-if="userForm.departments.length === 0"
                                               class="text-secondary subpixel-antialiased my-auto mr-4">In keinem Team</span>
-                                            <span v-else class="flex -mr-3" v-for="(team,index) in userForm.departments">
+                                            <span v-else class="flex -mr-3"
+                                                  v-for="(team,index) in userForm.departments">
                                             <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white"
                                                                 :iconName="team.svg_name"/>
                                         </span>
@@ -183,14 +218,19 @@
 
                                 <div class="bg-userBg py-10">
                                     <div class="max-w-screen-lg py-4 pl-20 pr-4">
-                                        <div class="uppercase mb-3 text-xs columnSubName flex items-center cursor-pointer" @click="showGlobalRoles = !showGlobalRoles">
+                                        <div
+                                            class="uppercase mb-3 text-xs columnSubName flex items-center cursor-pointer"
+                                            @click="showGlobalRoles = !showGlobalRoles">
                                             globale Rollen
                                             <div class="flex items-center ml-2">
-                                                <SvgCollection svg-name="arrowUp" v-if="showGlobalRoles"></SvgCollection>
-                                                <SvgCollection svg-name="arrowDown" v-if="!showGlobalRoles"></SvgCollection>
+                                                <SvgCollection svg-name="arrowUp"
+                                                               v-if="showGlobalRoles"></SvgCollection>
+                                                <SvgCollection svg-name="arrowDown"
+                                                               v-if="!showGlobalRoles"></SvgCollection>
                                             </div>
                                         </div>
-                                        <div class="relative justify-between flex items-center" v-if="showGlobalRoles" v-for="(role, index) in available_roles" :key=index>
+                                        <div class="relative justify-between flex items-center" v-if="showGlobalRoles"
+                                             v-for="(role, index) in available_roles" :key=index>
                                             <div class="flex items-center h-7">
                                                 <input
                                                     v-model="userForm.roles"
@@ -210,9 +250,11 @@
                                                     <InformationCircleIcon class="h-7 w-7 flex text-gray-400"
                                                                            aria-hidden="true"/>
                                                 </div>
-                                                <div :id="role.name" role="tooltip" v-if="role.name_de === 'Adminrechte'"
+                                                <div :id="role.name" role="tooltip"
+                                                     v-if="role.name_de === 'Adminrechte'"
                                                      class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
-                                                    Administratoren haben im gesamten System Lese- und Schreibrechte - weitere Einstellungen entfallen
+                                                    Administratoren haben im gesamten System Lese- und Schreibrechte -
+                                                    weitere Einstellungen entfallen
                                                     <div class="tooltip-arrow" data-popper-arrow></div>
                                                 </div>
                                                 <div :id="role.name" role="tooltip" v-else
@@ -227,14 +269,20 @@
                                 <div class="max-w-screen-lg py-4 pl-20 pr-4">
                                     <div v-if="showUserPermissions" class="flex flex-col w-full ">
                                         <div class="w-full mb-3" v-for="(permissions, group) in all_permissions">
-                                            <div class="uppercase my-3 text-xs columnSubName flex items-center cursor-pointer" @click="permissions.show = !permissions.show">
+                                            <div
+                                                class="uppercase my-3 text-xs columnSubName flex items-center cursor-pointer"
+                                                @click="permissions.show = !permissions.show">
                                                 {{ group }}
                                                 <div class="flex items-center ml-2">
-                                                    <SvgCollection svg-name="arrowUp" v-if="!permissions.show"></SvgCollection>
-                                                    <SvgCollection svg-name="arrowDown" v-if="permissions.show"></SvgCollection>
+                                                    <SvgCollection svg-name="arrowUp"
+                                                                   v-if="!permissions.show"></SvgCollection>
+                                                    <SvgCollection svg-name="arrowDown"
+                                                                   v-if="permissions.show"></SvgCollection>
                                                 </div>
                                             </div>
-                                            <div v-if="!permissions.show" class="relative justify-between flex items-center w-full" v-for="(permission, index) in permissions"
+                                            <div v-if="!permissions.show"
+                                                 class="relative justify-between flex items-center w-full"
+                                                 v-for="(permission, index) in permissions"
                                                  :key=index>
                                                 <div class="flex items-center h-7">
                                                     <input
@@ -282,8 +330,6 @@
 
 
                     <jet-validation-errors class="mb-4"/>
-
-
 
 
                 </div>
@@ -429,7 +475,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
-import { Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue'
+import {Switch, SwitchGroup, SwitchLabel} from '@headlessui/vue'
 import UserShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 
@@ -473,7 +519,7 @@ export default defineComponent({
         CheckIcon,
         InformationCircleIcon, Switch, SwitchGroup, SwitchLabel
     },
-    props: ['shifts','user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles', 'calendarData','dateToShow','vacations','daysWithEvents','dateValue','projects','eventTypes','rooms'],
+    props: ['shifts', 'user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles', 'calendarData', 'dateToShow', 'vacations', 'daysWithEvents', 'dateValue', 'projects', 'eventTypes', 'rooms'],
     data() {
         return {
             showGlobalRoles: true,
@@ -494,22 +540,24 @@ export default defineComponent({
                 roles: this.user_to_edit.roles,
                 can_master: this.user_to_edit.can_master,
                 weekly_working_hours: this.user_to_edit.weekly_working_hours,
+                salary_per_hour: this.user_to_edit.salary_per_hour,
+                salary_description: this.user_to_edit.salary_description,
             }),
             resetPasswordForm: this.$inertia.form({
                 email: this.user_to_edit.email
             }),
             tabs: [
-                { id: 1, name: 'Einsatzplan', href: '#', current: true },
-                { id: 2, name: 'Verfügbarkeit', href: '#', current: false },
-                { id: 3, name: 'Konditionen', href: '#', current: false },
-                { id: 4, name: 'Persönliche Daten', href: '#', current: false },
-                { id: 5, name: 'Nutzerrechte', href: '#', current: false },
+                {id: 1, name: 'Einsatzplan', href: '#', current: true},
+                {id: 2, name: 'Verfügbarkeit', href: '#', current: false},
+                {id: 3, name: 'Konditionen', href: '#', current: false},
+                {id: 4, name: 'Persönliche Daten', href: '#', current: false},
+                {id: 5, name: 'Nutzerrechte', href: '#', current: false},
             ],
             currentTab: 1,
         }
     },
     methods: {
-        changeTab(tabId){
+        changeTab(tabId) {
             this.tabs.forEach((tab) => {
                 tab.current = tab.id === tabId;
                 this.currentTab = tabId;
@@ -576,10 +624,12 @@ export default defineComponent({
             this.userForm.patch(route('user.update', this.user_to_edit.id));
             this.openSuccessModal();
         },
-        updateUserConditions(){
-            this.userForm.patch(route('user.update.can.master', this.user_to_edit.id), {
+        updateUserConditions() {
+            this.userForm.patch(route('user.update.conditions', this.user_to_edit.id), {
                 can_master: this.user_to_edit.can_master,
-                weekly_working_hours:this.user_to_edit.weekly_working_hours,
+                weekly_working_hours: this.user_to_edit.weekly_working_hours,
+                salary_per_hour: this.user_to_edit.salary_per_hour,
+                salary_description: this.user_to_edit.salary_description,
                 preserveScroll: true,
                 onFinish: () => {
                     this.openSuccessModal();

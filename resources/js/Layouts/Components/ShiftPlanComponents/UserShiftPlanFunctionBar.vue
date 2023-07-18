@@ -4,7 +4,7 @@
             <date-picker-component v-if="dateValue" :dateValueArray="dateValue"></date-picker-component>
             <div>
                 <div>
-                    <button  class="ml-2 -mt-2 text-black" @click="previousTimeRange">
+                    <button class="ml-2 -mt-2 text-black" @click="previousTimeRange">
                         <ChevronLeftIcon class="h-5 w-5 text-primary"/>
                     </button>
                     <button class="ml-2 -mt-2 text-black" @click="nextTimeRange">
@@ -13,15 +13,16 @@
                 </div>
             </div>
         </div>
+        <div>
+            {{ totalHoursExpectedWork }}
+        </div>
     </div>
 </template>
 
 <script>
 import Button from "@/Jetstream/Button";
-import {PlusCircleIcon, CalendarIcon} from '@heroicons/vue/outline'
-import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
+import {CalendarIcon} from '@heroicons/vue/outline'
 import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue/solid";
-import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/mixins/Permissions.vue";
@@ -45,19 +46,38 @@ export default {
     },
     props: [
         'dateValue',
+        'weeklyWorkingHours'
     ],
-    emits: ['previousTimeRange','nextTimeRange'],
+    emits: ['previousTimeRange', 'nextTimeRange'],
     data() {
         return {
             activeFilters: []
         }
     },
+    computed: {
+        totalHoursExpectedWork() {
+            const startDate = new Date(this.dateValue[0]);
+            const endDate = new Date(this.dateValue[1]);
+
+            // Calculate the time difference in milliseconds between the two dates
+            const timeDifference = endDate - startDate;
+
+            // Calculate the total number of days in the date range (add 1 to include both start and end dates)
+            const totalDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)) + 1;
+
+            // Calculate the average number of hours worked per day
+            const hoursPerDay = this.weeklyWorkingHours / 7;
+
+            // Calculate the total number of hours that need to be worked
+            return totalDays * hoursPerDay;
+        },
+    },
     methods: {
 
-        previousTimeRange(){
+        previousTimeRange() {
             this.$emit('previousTimeRange')
         },
-        nextTimeRange(){
+        nextTimeRange() {
             this.$emit('nextTimeRange')
         },
     },

@@ -283,6 +283,8 @@ class UserController extends Controller
         $user->update($request->only([
             'can_master',
             'weekly_working_hours',
+            'salary_per_hour',
+            'salary_description',
         ]));
 
     }

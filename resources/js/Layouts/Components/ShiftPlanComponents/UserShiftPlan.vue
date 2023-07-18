@@ -2,7 +2,7 @@
     <div class="w-full">
         <div>
             <div class="mb-6 -ml-12">
-                <UserShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
+                <UserShiftPlanFunctionBar :weeklyWorkingHours="weeklyWorkingHours" @previousTimeRange="previousTimeRange"
                                           @next-time-range="nextTimeRange"
                                           :dateValue="dateValue"></UserShiftPlanFunctionBar>
             </div>
@@ -82,7 +82,7 @@ export default {
             });
         },
     },
-    props: ['daysWithEvents', 'dateValue', 'projects', 'eventTypes', 'rooms', 'vacations'],
+    props: ['daysWithEvents', 'dateValue', 'projects', 'eventTypes', 'rooms', 'vacations','weeklyWorkingHours'],
     methods: {
         previousTimeRange() {
             const dayDifference = this.calculateDateDifference();

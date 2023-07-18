@@ -35,6 +35,8 @@ return new class extends Migration
             $table->date('employEnd')->nullable();
             $table->boolean('can_master')->default(false);
             $table->integer('weekly_working_hours')->default(40);
+            $table->integer('salary_per_hour')->nullable();
+            $table->longText('salary_description')->nullable();
             $table->timestamps();
         });
     }

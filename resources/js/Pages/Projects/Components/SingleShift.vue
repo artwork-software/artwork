@@ -129,7 +129,7 @@
         </div>
     </div>
 
-    <AddShiftModal :shift="shift" :event="event" :crafts="crafts" v-if="openEditShiftModal" @closed="openEditShiftModal = false"  />
+    <AddShiftModal :shift="shift" :event="event" :crafts="crafts" v-if="openEditShiftModal" @closed="openEditShiftModal = false" :edit="true" />
 </template>
 <script>
 import {defineComponent} from 'vue'

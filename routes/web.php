@@ -530,6 +530,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // timeline
     Route::post('/project/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
+    Route::delete('/project/timeline/delete/{timeLine}', [ProjectController::class, 'deleteTimeLineRow'])->name('delete.timeline.row');
     Route::patch('/project/timelines/update', [ProjectController::class, 'updateTimeLines'])->name('update.timelines');
     Route::post('/project/{event}/shift/store', [\App\Http\Controllers\ShiftController::class, 'store'])->name('event.shift.store');
 

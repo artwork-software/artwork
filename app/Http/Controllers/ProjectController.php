@@ -1849,6 +1849,8 @@ class ProjectController extends Controller
             'checklist_templates' => ChecklistTemplateIndexResource::collection(ChecklistTemplate::all())->resolve(),
         ]);
     }
+
+
     public function projectShiftTab(Project $project, Request $request)
     {
 
@@ -1889,15 +1891,27 @@ class ProjectController extends Controller
 
         $eventsWithRelevant = [];
         foreach ($shiftRelevantEvents as $event) {
+            $timeline = $event->timeline()->get()->toArray();
+            usort($timeline, function ($a, $b) {
+                if ($a['start'] === null && $b['start'] === null) {
+                    return 0;
+                } elseif ($a['start'] === null) {
+                    return 1; // $a should come later in the array
+                } elseif ($b['start'] === null) {
+                    return -1; // $b should come later in the array
+                }
+
+                // Compare the 'start' values for ascending order
+                return strtotime($a['start']) - strtotime($b['start']);
+            });
             $eventsWithRelevant[$event->id] = [
                 'event' => $event,
-                'timeline' => $event->timeline,
+                'timeline' => $timeline,
                 'shifts' => $event->shifts,
                 'event_type' => $event->event_type,
                 'room' => $event->room,
             ];
         }
-
 
         foreach ($events as $event){
             if(!$event->audience){
@@ -1910,6 +1924,7 @@ class ProjectController extends Controller
         }
 
         rsort($eventsWithRelevant);
+
 
         return inertia('Projects/SingleProjectShifts', [
             'project' => new ProjectShiftResource($project),
@@ -1926,6 +1941,7 @@ class ProjectController extends Controller
             'crafts' => Craft::all(),
         ]);
     }
+
 
     public function projectBudgetTab(Project $project, Request $request)
     {
@@ -2146,7 +2162,11 @@ class ProjectController extends Controller
 
 
     public function addTimeLineRow(Event $event){
-        $event->timeline()->create();
+        $event->timeline()->create([
+            'start' => null,
+            'end' => null,
+            'description' => ''
+        ]);
     }
 
     public function updateTimeLines(Request $request){
@@ -2809,4 +2829,8 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
+
+    public function deleteTimeLineRow(TimeLine $timeLine){
+        $timeLine->delete();
+    }
 }

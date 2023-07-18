@@ -27,7 +27,7 @@
                                 </p>
 
                                 <div class="mt-10">
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3" v-for="time in timeLine">
+                                    <div class="mb-4" v-for="time in timeLine">
                                        <SingleTimeLine :time="time" :index="index" :key="index" @deleteTime="deleteTime"/>
                                     </div>
 

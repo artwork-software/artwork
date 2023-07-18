@@ -34,6 +34,7 @@
         "dayjs": "^1.11.7",
         "laravel-permission-to-vuejs": "^3.0.1",
         "vue-cal": "^4.8.0",
+        "vue-mathjax-next": "^0.0.4",
         "vue-tailwind-datepicker": "^1.4.3",
         "vuedraggable": "^4.1.0",
         "ziggy": "^2.4.0"

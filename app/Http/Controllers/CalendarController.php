@@ -304,9 +304,9 @@ class CalendarController extends Controller
                 'full_day' => $period->format('d.m.Y')
             ];
         }
-        if (\request('startDate') && \request('endDate')) {
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        if (request('startDate') && request('endDate')) {
+            $startDate = Carbon::create(request('startDate'))->startOfDay();
+            $endDate = Carbon::create(request('endDate'))->endOfDay();
         } else {
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();

@@ -1,11 +1,12 @@
 <script>
 import {defineComponent} from 'vue'
 import {CheckIcon} from "@heroicons/vue/outline";
+import VueMathjax from "vue-mathjax-next";
 
 export default defineComponent({
     name: "ShiftDropElement",
-    components: {CheckIcon},
-    props: ['shift', 'users','showRoom','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount', 'userIds'],
+    components: {CheckIcon, VueMathjax},
+    props: ['shift', 'users','showRoom','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount'],
     computed: {
         userIds(){
             return this.users.map(user => user.id)
@@ -32,6 +33,52 @@ export default defineComponent({
         }
     },
     methods: {
+        gcd(a, b) {
+            return (b) ? this.gcd(b, a % b) : a;
+        },
+        decimalToFraction(decimal) {
+
+            let wholePart = Math.floor(decimal);
+            decimal = decimal - wholePart;
+
+            if (decimal === parseInt(decimal)) {
+
+                if(decimal < 1) {
+                    return `${wholePart}`;
+                }
+
+                return `${parseInt(decimal)}/1`
+            }
+            else {
+                let top = decimal.toString().includes(".") ? decimal.toString().replace(/\d+[.]/, '') : 0;
+                let bottom = Math.pow(10, top.toString().replace('-','').length);
+                if (decimal >= 1) {
+                    top = +top + (Math.floor(decimal) * bottom);
+                }
+                else if (decimal <= -1) {
+                    top = +top + (Math.ceil(decimal) * bottom);
+                }
+
+                let x = Math.abs(this.gcd(top, bottom));
+
+                return `${wholePart} ${top / x}/${bottom / x}`
+            }
+        },
+        convertToMathJax(fraction) {
+            const parts = fraction.split(' ');
+
+            if (parts.length === 1) {
+                return `${parts[0]}`;
+            } else {
+                const wholePart = parts[0] > 0
+                    ? parts[0]
+                    : "";
+                const fractionParts = parts[1].split('/');
+                const numerator = fractionParts[0];
+                const denominator = fractionParts[1];
+                return `${wholePart}$\\frac{${numerator}}{${denominator}}$`;
+            }
+        },
         onDragOver(event) {
             event.preventDefault();
         },
@@ -127,14 +174,14 @@ export default defineComponent({
 </script>
 
 <template>
-    <div class="flex xsLight text-shiftText subpixel-antialiased" @dragover="onDragOver" @drop="onDrop">
+    <div class="flex items-center xsLight text-shiftText subpixel-antialiased" @dragover="onDragOver" @drop="onDrop">
         <div>
             {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
         </div>
-        <div v-if="!showRoom" class="ml-0.5">
-             ({{ shift.user_count ? shift.user_count : 0 }}/{{ shift.number_employees }}
-            <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>
-            )
+
+        <div v-if="!showRoom" class="ml-0.5 text-xs">
+             (<VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))" />/{{ shift.number_employees }}
+            <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)
         </div>
         <div v-else-if="room" class="truncate">
             , {{room?.name}}

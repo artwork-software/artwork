@@ -1,13 +1,13 @@
 <template>
-    <div class=" flex items-center justify-between px-4 text-white text-xs relative" :class="shift.user_count === shift.number_employees && shift.master_count === shift.number_masters ? 'bg-green-500' : 'bg-gray-500'">
+    <div class=" flex items-center justify-between px-4 text-white text-xs relative" :class="shift.user_count === shift.number_employees && Math.floor(shift.master_count) === shift.number_masters ? 'bg-green-500' : 'bg-gray-500'">
         <div class="h-9 flex items-center">
             {{shift.craft.abbreviation}} ({{ shift.user_count }} / {{ shift.number_employees}})
             <span v-if="shift.number_masters > 0">
-                ({{ shift.master_count }} / {{ shift.number_masters }})
+                ({{ Math.floor(shift.master_count) }} / {{ shift.number_masters }})
             </span>
         </div>
         <div class="absolute flex items-center right-0">
-            <div v-if="shift.user_count === shift.number_employees && shift.master_count === shift.number_masters" class="h-9 flex items-center w-fit right-0 p-3">
+            <div v-if="shift.user_count === shift.number_employees && Math.floor(shift.master_count) === shift.number_masters" class="h-9 flex items-center w-fit right-0 p-3">
                 <svg xmlns="http://www.w3.org/2000/svg" width="10.414" height="8.032" viewBox="0 0 10.414 8.032">
                     <path id="Pfad_1498" data-name="Pfad 1498" d="M-1151.25,4789.2l3.089,3.088,5.911-5.911" transform="translate(1151.957 -4785.674)" fill="none" stroke="#fcfcfb" stroke-width="2"/>
                 </svg>
@@ -121,10 +121,10 @@
                 </div>
             </div>
         </div>
-        <div v-for="user in shift.empty_master_count">
+        <div v-for="user in Math.floor(shift.empty_master_count)">
             <DropElement :users="shift.users"  :shift-id="shift.id" :currentCount="shift.currentCount" :maxCount="shift.maxCount"  :free-employee-count="shift.empty_user_count" :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="true"/>
         </div>
-        <div v-for="user in shift.empty_user_count ? shift.empty_user_count : 0">
+        <div v-for="user in Math.floor(shift.empty_user_count) ? Math.floor(shift.empty_user_count) : 0">
             <DropElement :users="shift.allUsers" :shift-id="shift.id" :currentCount="shift.currentCount" :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count" :free-master-count="shift.empty_master_count" :userIds="shiftUserIds"  :master="false"/>
         </div>
     </div>

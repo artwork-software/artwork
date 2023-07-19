@@ -6,6 +6,7 @@ import { InertiaProgress } from '@inertiajs/progress';
 import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import Permissions from './mixins/Permissions';
+import VueMathjax from 'vue-mathjax-next';
 
 const svgColors = {
     eventType0:'#A7A6B1',
@@ -31,6 +32,7 @@ createInertiaApp({
             .mixin({ methods: { route } })
         app.config.globalProperties.$svgColors = svgColors;
         app.use(VueTailwindDatepicker);
+        app.use(VueMathjax)
         app.mount(el);
     },
 });

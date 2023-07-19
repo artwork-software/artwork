@@ -79,40 +79,47 @@ class Shift extends Model
         return $this->number_employees + $this->number_masters;
     }
 
-    public function getMasterCountAttribute(): int
+    public function getMasterCountAttribute(): float
     {
-        $freelancerCount = $this->freelancer()->wherePivot('is_master', true)->count();
-        $serviceProviderCount = $this->service_provider()->wherePivot('is_master', true)->count();
-        $userCount = $this->users()->wherePivot('is_master', true)->count();
-        return $freelancerCount + $serviceProviderCount + $userCount;
+        return $this->getWorkerCount(true);
     }
 
-    public function getEmptyMasterCountAttribute(): int
+    public function getEmptyMasterCountAttribute(): float
     {
-        $masterCount = $this->users()->wherePivot('is_master', true)->count();
-        $masterFreelancerCount = $this->freelancer()->wherePivot('is_master', true)->count();
-        $masterServiceProviderCount = $this->service_provider()->wherePivot('is_master', true)->count();
-
-        $sumCount = $masterCount + $masterFreelancerCount + $masterServiceProviderCount;
-        return $this->number_masters - $sumCount;
+        return $this->number_masters - $this->getWorkerCount(true);
     }
 
-    public function getEmptyUserCountAttribute(): int
+    public function getEmptyUserCountAttribute(): float
     {
-        $employeeCount = $this->users()->wherePivot('is_master', false)->count();
-        $serviceProviderCount = $this->service_provider()->wherePivot('is_master', false)->count();
-        $freelancerCount = $this->freelancer()->wherePivot('is_master', false)->count();
-        $sumCount = $employeeCount + $serviceProviderCount + $freelancerCount;
-        return $this->number_employees - $sumCount;
+        return $this->number_employees - $this->getWorkerCount();
     }
 
-    public function getUserCountAttribute(): int
+    protected function getWorkerCount($is_master = false): float {
+
+        $employeeCount = $this->users()
+            ->wherePivot('is_master', $is_master)
+            ->get()
+            ->map( fn(User $user) => 1 / $user->pivot->shift_count )
+            ->sum();
+
+        $serviceProviderCount = $this->service_provider()
+            ->wherePivot('is_master', $is_master)
+            ->get()
+            ->map( fn(ServiceProvider $serviceProvider) => 1 / $serviceProvider->pivot->shift_count )
+            ->sum();
+
+        $freelancerCount = $this->freelancer()
+            ->wherePivot('is_master', $is_master)
+            ->get()
+            ->map( fn(Freelancer $freelancer) => 1 / $freelancer->pivot->shift_count )
+            ->sum();
+
+        return $employeeCount + $serviceProviderCount + $freelancerCount;
+    }
+
+    public function getUserCountAttribute(): float
     {
-        $freelancerCount = $this->freelancer()->wherePivot('is_master', false)->count();
-        $serviceProviderCount = $this->service_provider()->wherePivot('is_master', false)->count();
-        $userCount = $this->users()->wherePivot('is_master', false)->count();
-        $count = $freelancerCount + $serviceProviderCount + $userCount;
-        return $count;
+        return $this->getWorkerCount();
     }
 
     public function getMastersAttribute(): \Illuminate\Database\Eloquent\Collection

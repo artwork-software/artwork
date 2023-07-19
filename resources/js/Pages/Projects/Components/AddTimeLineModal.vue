@@ -40,7 +40,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex justify-between mt-5">
+                            <div class="flex justify-center mt-5">
                                 <AddButton mode="modal" text="Speichern" @click="updateTimes"/>
                             </div>
                         </DialogPanel>

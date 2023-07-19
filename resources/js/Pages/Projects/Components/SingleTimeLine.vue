@@ -65,7 +65,7 @@ export default defineComponent({
            </div>
        </div>
        <div class="hidden group-hover:block ml-3">
-           <XCircleIcon @click="deleteTime" class="h-5 w-5"/>
+           <XCircleIcon @click="deleteTime" class="mt-2 h-5 w-5 text-buttonBlue hover:text-error cursor-pointer"/>
        </div>
    </div>
 </template>

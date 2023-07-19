@@ -206,7 +206,7 @@ export default defineComponent({
             }
         },
         checkUserCount(){
-            if(this.shift.user_count > 0){
+            if(this.shift?.user_count > 0){
                 this.helpTexts.employeeText = 'Es sind bereits Mitarbeiter*innen eingetragen. Die Anzahl kann nicht verändert werden. Bitte entferne erst alle Mitarbeiter*innen. Eingabe wurde zurückgesetzt!';
                 this.shiftForm.number_employees = this.shift.number_employees;
             } else {
@@ -214,7 +214,7 @@ export default defineComponent({
             }
         },
         checkMasterCount(){
-            if(this.shift.master_count > 0){
+            if(this.shift?.master_count > 0){
                 this.helpTexts.masterText = 'Es sind bereits Meister*innen eingetragen. Die Anzahl kann nicht verändert werden. Bitte entferne erst alle Meister*innen. Eingabe wurde zurückgesetzt!';
                 this.shiftForm.number_masters = this.shift.number_masters;
             } else {

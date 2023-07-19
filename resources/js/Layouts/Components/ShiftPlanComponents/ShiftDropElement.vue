@@ -37,32 +37,30 @@ export default defineComponent({
             return (b) ? this.gcd(b, a % b) : a;
         },
         decimalToFraction(decimal) {
-
             let wholePart = Math.floor(decimal);
             decimal = decimal - wholePart;
 
             if (decimal === parseInt(decimal)) {
-
-                if(decimal < 1) {
+                if (decimal < 1) {
                     return `${wholePart}`;
                 }
+                return `${parseInt(decimal)}/1`;
+            } else {
+                console.log(decimal);
+                let precision = this.getFirstDigitAfterDecimal(decimal) === 3 ? 3 : 1000; // The desired precision for the fraction
+                let top = Math.round(decimal * precision);
+                let bottom = precision;
 
-                return `${parseInt(decimal)}/1`
+                let x = this.gcd(top, bottom);
+                return `${wholePart} ${top / x}/${bottom / x}`;
             }
-            else {
-                let top = decimal.toString().includes(".") ? decimal.toString().replace(/\d+[.]/, '') : 0;
-                let bottom = Math.pow(10, top.toString().replace('-','').length);
-                if (decimal >= 1) {
-                    top = +top + (Math.floor(decimal) * bottom);
-                }
-                else if (decimal <= -1) {
-                    top = +top + (Math.ceil(decimal) * bottom);
-                }
-
-                let x = Math.abs(this.gcd(top, bottom));
-
-                return `${wholePart} ${top / x}/${bottom / x}`
+        },
+        getFirstDigitAfterDecimal(number) {
+            const decimalPart = number.toString().split('.')[1];
+            if (decimalPart && decimalPart.length > 0) {
+                return parseInt(decimalPart[0]);
             }
+            return null; // Return null if there is no decimal part
         },
         convertToMathJax(fraction) {
             const parts = fraction.split(' ');

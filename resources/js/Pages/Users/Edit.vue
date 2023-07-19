@@ -46,7 +46,6 @@
                             </div>
 
                             <div class="max-w-screen-lg py-4 pl-20 pr-4" v-if="currentTab === 3">
-                                // Can Master
                                 <div>
                                     <SwitchGroup as="div" class="flex items-center">
                                         <Switch v-model="userForm.can_master"

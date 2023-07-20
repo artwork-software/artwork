@@ -101,7 +101,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/users', [UserController::class, 'index'])->name('users');
     Route::get('/users/search', [UserController::class, 'search'])->name('users.search');
     Route::get('/users/money_source_search', [UserController::class, 'money_source_search'])->name('users.money_source_search');
-    Route::get('/users/{user}', [UserController::class, 'edit'])->name('user.edit');
     Route::get('/users/{user}/info', [UserController::class, 'editUserInfo'])->name('user.edit.info');
     Route::get('/users/{user}/shiftplan', [UserController::class, 'editUserShiftplan'])->name('user.edit.shiftplan');
     Route::get('/users/{user}/terms', [UserController::class, 'editUserTerms'])->name('user.edit.terms');

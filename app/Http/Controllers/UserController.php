@@ -96,58 +96,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param User $user
-     * @return Response|ResponseFactory
-     */
-    public function edit(User $user): Response|ResponseFactory
-    {
-
-        $shiftPlan = new CalendarController();
-        $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
-        $availabilityData = $this->getAvailabilityData($user, request('month'));
-
-        if(\request('startDate') && \request('endDate')){
-
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
-
-        }else{
-
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
-
-        }
-
-        $events = Event::with(['shifts','event_type'])
-            ->whereHas('shifts', function ($query) {
-                $query->whereNotNull('shifts.id');
-            })
-            ->get();
-
-
-        return inertia('Users/Edit', [
-            'user_to_edit' => new UserShowResource($user),
-            "departments" => Department::all(),
-            "password_reset_status" => session('status'),
-            'available_roles' => Role::all(),
-            "all_permissions" => Permission::all()->groupBy('group'),
-            //needed for availability calendar
-            'calendarData' => $availabilityData['calendarData'],
-            'dateToShow' => $availabilityData['dateToShow'],
-            'vacations' => $user->vacations()->orderBy('from', 'ASC')->get(),
-            //needed for UserShiftPlan
-            'dateValue'=> $showCalendar['dateValue'],
-            'daysWithEvents' => $showCalendar['daysWithEvents'],
-            'rooms' => Room::all(),
-            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-            'projects' => Project::all(),
-            'shifts' => $user->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),
-        ]);
-    }
-
     public function editUserInfo(User $user): Response|ResponseFactory
     {
         return inertia('Users/UserInfoPage', [

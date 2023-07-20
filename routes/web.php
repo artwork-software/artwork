@@ -102,12 +102,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/users/search', [UserController::class, 'search'])->name('users.search');
     Route::get('/users/money_source_search', [UserController::class, 'money_source_search'])->name('users.money_source_search');
     Route::get('/users/{user}', [UserController::class, 'edit'])->name('user.edit');
+    Route::get('/users/{user}/info', [UserController::class, 'editUserInfo'])->name('user.edit.info');
+    Route::get('/users/{user}/shiftplan', [UserController::class, 'editUserShiftplan'])->name('user.edit.shiftplan');
+    Route::get('/users/{user}/terms', [UserController::class, 'editUserTerms'])->name('user.edit.terms');
+    Route::get('/users/{user}/permissions', [UserController::class, 'editUserPermissions'])->name('user.edit.permissions');
     Route::patch('/users/{user}/edit', [UserController::class, 'update'])->name('user.update');
     Route::patch('/users/{user}/checklists', [UserController::class, 'update_checklist_status'])->name('user.checklists.update');
     Route::patch('/users/{user}/areas', [UserController::class, 'update_area_status'])->name('user.areas.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
     Route::patch('/users/{user}', [UserController::class, 'temporaryUserUpdate'])->name('update.user.temporary');
-    Route::patch('/users/{user}/conditions', [UserController::class, 'updateUserConditions'])->name('user.update.conditions');
+    Route::patch('/users/{user}/conditions', [UserController::class, 'updateUserTerms'])->name('user.update.terms');
 
     Route::post('/users/reset-password', [UserController::class, 'reset_user_password'])->name('user.reset.password');
 

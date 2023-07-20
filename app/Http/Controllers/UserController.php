@@ -134,10 +134,10 @@ class UserController extends Controller
             "password_reset_status" => session('status'),
             'available_roles' => Role::all(),
             "all_permissions" => Permission::all()->groupBy('group'),
-            'vacations' => $user->vacations()->orderBy('from', 'ASC')->get(),
             //needed for availability calendar
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
+            'vacations' => $user->vacations()->orderBy('from', 'ASC')->get(),
             //needed for UserShiftPlan
             'dateValue'=> $showCalendar['dateValue'],
             'daysWithEvents' => $showCalendar['daysWithEvents'],
@@ -145,6 +145,82 @@ class UserController extends Controller
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => Project::all(),
             'shifts' => $user->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),
+        ]);
+    }
+
+    public function editUserInfo(User $user): Response|ResponseFactory
+    {
+        return inertia('Users/UserInfoPage', [
+            //needed for UserEditHeader
+            'user_to_edit' => new UserShowResource($user),
+            'currentTab' => 'info',
+
+            "departments" => Department::all(),
+            "password_reset_status" => session('status'),
+
+        ]);
+    }
+
+    public function editUserShiftplan(User $user): Response|ResponseFactory
+    {
+
+        $shiftPlan = new CalendarController();
+        $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
+        $availabilityData = $this->getAvailabilityData($user, request('month'));
+
+        if(\request('startDate') && \request('endDate')){
+
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+
+        }else{
+
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+
+        }
+
+        $events = Event::with(['shifts','event_type'])
+            ->whereHas('shifts', function ($query) {
+                $query->whereNotNull('shifts.id');
+            })
+            ->get();
+
+        return inertia('Users/UserShiftPlanPage', [
+            //needed for UserEditHeader
+            'user_to_edit' => new UserShowResource($user),
+            'currentTab' => 'shiftplan',
+            //needed for availability calendar
+            'calendarData' => $availabilityData['calendarData'],
+            'dateToShow' => $availabilityData['dateToShow'],
+            'vacations' => $user->vacations()->orderBy('from', 'ASC')->get(),
+            //needed for UserShiftPlan
+            'dateValue'=> $showCalendar['dateValue'],
+            'daysWithEvents' => $showCalendar['daysWithEvents'],
+            'rooms' => Room::all(),
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'projects' => Project::all(),
+            'shifts' => $user->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),
+
+
+        ]);
+    }
+
+    public function editUserTerms(User $user): Response|ResponseFactory
+    {
+        return inertia('Users/UserTermsPage', [
+            'user_to_edit' => new UserShowResource($user),
+            'currentTab' => 'terms',
+        ]);
+    }
+
+    public function editUserPermissions(User $user): Response|ResponseFactory
+    {
+        return inertia('Users/UserPermissionsPage', [
+            'user_to_edit' => new UserShowResource($user),
+            'available_roles' => Role::all(),
+            "all_permissions" => Permission::all()->groupBy('group'),
+            'currentTab' => 'permissions',
         ]);
     }
 
@@ -216,7 +292,7 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user): RedirectResponse
     {
-        $user->update($request->only('first_name','last_name', 'phone_number', 'position', 'business', 'description'));
+        $user->update($request->only('first_name','last_name', 'phone_number', 'position', 'business', 'description','email'));
 
         $user->departments()->sync(
             collect($request->departments)
@@ -231,7 +307,7 @@ class UserController extends Controller
         $user->syncPermissions($request->permissions);
         $user->syncRoles($request->roles);
 
-        return Redirect::route('user.edit',$user)->with('success', 'Benutzer aktualisiert');
+        return Redirect::back()->with('success', 'Benutzer aktualisiert');
     }
 
     public function update_checklist_status(Request $request): RedirectResponse
@@ -279,7 +355,7 @@ class UserController extends Controller
         ]));
     }
 
-    public function updateUserConditions(User $user, Request $request){
+    public function updateUserTerms(User $user, Request $request){
         $user->update($request->only([
             'can_master',
             'weekly_working_hours',

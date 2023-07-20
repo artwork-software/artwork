@@ -21,8 +21,8 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('phone_number')->nullable();
             $table->string('password');
-            $table->string('position');
-            $table->string('business');
+            $table->string('position')->nullable();;
+            $table->string('business')->nullable();;
             $table->longText('description')->nullable();
             $table->boolean('toggle_hints')->default(true);
             $table->json('opened_checklists');
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->date('employStart')->nullable();
             $table->date('employEnd')->nullable();
             $table->boolean('can_master')->default(false);
-            $table->integer('weekly_working_hours')->default(40);
+            $table->integer('weekly_working_hours')->nullable()->default(40);
             $table->integer('salary_per_hour')->nullable();
             $table->longText('salary_description')->nullable();
             $table->timestamps();

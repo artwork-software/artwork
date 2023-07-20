@@ -15,7 +15,7 @@
         <div class="col-span-4 mt-12">
         </div>
     </div>
-    <div class="grid grid-cols-12 w-full">
+    <div class="grid grid-cols-12 w-full mb-20">
         <div class="col-span-7">
             <UserAvailabilityCalendar :calendar-data="calendarData" :date-to-show="dateToShow" />
         </div>

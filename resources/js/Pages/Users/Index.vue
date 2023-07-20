@@ -495,10 +495,10 @@ export default defineComponent({
                 return route('service_provider.show', {serviceProvider: user.id});
             }
             if(user.user === 'user'){
-                return route('user.edit', {user: user.id});
+                return route('user.edit.shiftplan', {user: user.id});
             }
 
-            return route('user.edit', {user: user.id});
+            return route('user.edit.shiftplan', {user: user.id});
         },
 
         closeSearchbar() {
@@ -534,7 +534,7 @@ export default defineComponent({
             }
         },
         getEditHref(user) {
-            return route('user.edit', {user: user.id});
+            return route('user.edit.shiftplan', {user: user.id});
         }
     },
     watch: {

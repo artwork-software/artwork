@@ -46,7 +46,6 @@ export default defineComponent({
                 }
                 return `${parseInt(decimal)}/1`;
             } else {
-                console.log(decimal);
                 let precision = this.getFirstDigitAfterDecimal(decimal) === 3 ? 3 : 1000; // The desired precision for the fraction
                 let top = Math.round(decimal * precision);
                 let bottom = precision;

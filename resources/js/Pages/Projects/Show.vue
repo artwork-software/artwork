@@ -206,7 +206,6 @@ import {nextTick} from "vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
-import {isProjectMember} from "@/Helper/PermissionHelper";
 import Permissions from "@/mixins/Permissions.vue";
 import ShiftTab from "@/Pages/Projects/Components/TabComponents/ShiftTab.vue";
 import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
@@ -485,7 +484,6 @@ export default {
     },
 
     methods: {
-        isProjectMember,
         downloadKeyVisual() {
             let link = document.createElement('a');
             link.href = route('project.download.keyVisual', this.project.id);

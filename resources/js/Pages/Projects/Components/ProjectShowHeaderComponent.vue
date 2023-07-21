@@ -1,6 +1,6 @@
 <template>
     <div class="my-12 pl-10 pr-10">
-        <div class="flex flex-col" v-if="isProjectMember(project.id)">
+        <div class="flex flex-col">
             <div v-if="currentGroup" class="bg-secondaryHover -mb-6 z-20 w-fit pr-6 pb-0.5">
                 <div class="flex items-center">
                         <span v-if="!project.is_group">
@@ -203,7 +203,6 @@ import {ChevronRightIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
 import {DuplicateIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import {isProjectMember} from "@/Helper/PermissionHelper";
 import Permissions from "@/mixins/Permissions.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
@@ -286,7 +285,6 @@ export default {
         },
     },
     methods: {
-        isProjectMember,
         openProjectHistoryModal() {
             this.showProjectHistory = true;
         },

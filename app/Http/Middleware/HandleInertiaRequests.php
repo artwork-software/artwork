@@ -113,6 +113,10 @@ class HandleInertiaRequests extends Middleware
                 'edit_checklist_settings' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value),
                 'global_nofitication' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::SYSTEM_NOTIFICATION->value),
 
+                // Shifts
+                'shift_planner' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::SHIFT_PLANNER->value),
+                'ma_manager' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::MA_MANAGER->value),
+
 
             ],
             'is_admin' => Auth::guest() ? false : Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value),

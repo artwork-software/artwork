@@ -1,8 +1,4 @@
 
-export function isProjectMember(projectMembers, userId){
-
-    return true
-}
 export function isAdmin(){
     return is('artwork admin');
 }

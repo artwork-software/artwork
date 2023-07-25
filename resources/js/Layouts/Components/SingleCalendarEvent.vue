@@ -214,9 +214,9 @@
         </div>
         <div v-if="$page.props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs">
             <div v-for="shift in event.shifts">
-                <span>{{ shift.craft.abbreviation }}</span> (
-                <VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>/{{ shift.number_employees }}
-                <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span> )
+                <span>{{ shift.craft.abbreviation }}</span>
+                (<VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>/{{ shift.number_employees }}
+                <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)
             </div>
         </div>
     </div>

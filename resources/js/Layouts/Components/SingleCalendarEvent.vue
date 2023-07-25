@@ -1,6 +1,6 @@
 <template>
     <div :class="[event.class, textStyle]" :style="{ width: width + 'px', height: totalHeight * zoomFactor + 'px' }"
-         class="px-1 py-0.5 rounded-lg relative group">
+         class="px-1 py-0.5 rounded-lg relative group overflow-y-auto">
         <div v-if="zoomFactor > 0.4"
              class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-indigo-500/50'">
@@ -313,6 +313,23 @@
                             </span>
                         </span>
                     </div>
+                    <div v-if="subEvent.option_string && $page.props.user.calendar_settings.options" class="flex items-center">
+                        <div
+                            v-if="!atAGlance && new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString()"
+                            class="flex eventTime font-medium subpixel-antialiased" :style="textStyle">
+                            , {{ subEvent.option_string }}
+                        </div>
+                        <div class="flex eventTime font-medium subpixel-antialiased ml-0.5" v-else>
+                            ({{ subEvent.option_string.charAt(7) }})
+                        </div>
+                    </div>
+                    <div v-if="$page.props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs">
+                        <div v-for="shift in subEvent.shifts">
+                            <span>{{ shift.craft.abbreviation }}</span>
+                            (<VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>/{{ shift.number_employees }}
+                            <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -435,6 +452,9 @@ export default {
         }
     },
     methods: {
+        gcd(a, b) {
+            return (b) ? this.gcd(b, a % b) : a;
+        },
         decimalToFraction(decimal) {
             let wholePart = Math.floor(decimal);
             decimal = decimal - wholePart;
@@ -452,6 +472,13 @@ export default {
                 let x = this.gcd(top, bottom);
                 return `${wholePart} ${top / x}/${bottom / x}`;
             }
+        },
+        getFirstDigitAfterDecimal(number) {
+            const decimalPart = number.toString().split('.')[1];
+            if (decimalPart && decimalPart.length > 0) {
+                return parseInt(decimalPart[0]);
+            }
+            return null; // Return null if there is no decimal part
         },
         convertToMathJax(fraction) {
             const parts = fraction.split(' ');

@@ -13,7 +13,8 @@
                               d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
                     </svg>
                 </button>
-                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" @click="openAddSubEventModal" v-show="event.eventTypeId === 1" type="button"
+                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" @click="openAddSubEventModal"
+                        v-show="event.eventTypeId === 1" type="button"
                         class="rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="w-6 h-6">
@@ -21,14 +22,16 @@
                               d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </button>
-                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" type="button" @click="showDeclineEventModal = true"
+                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" type="button"
+                        @click="showDeclineEventModal = true"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
-                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" @click="openConfirmModal(event.id, 'main')" type="button"
+                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()"
+                        @click="openConfirmModal(event.id, 'main')" type="button"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="w-4 h-4">
@@ -40,7 +43,8 @@
             <div v-else class="flex justify-center items-center h-full gap-2">
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
-                        <input v-model="event.clicked" @click="$emit('checkEvent', event)" id="candidates" aria-describedby="candidates-description"
+                        <input v-model="event.clicked" @click="$emit('checkEvent', event)" id="candidates"
+                               aria-describedby="candidates-description"
                                name="candidates" type="checkbox"
                                class="h-5 w-5 border-gray-300 text-green-400 focus:ring-green-600"/>
                     </div>
@@ -208,6 +212,13 @@
                 </div>
             </div>
         </div>
+        <div v-if="$page.props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs">
+            <div v-for="shift in event.shifts">
+                <span>{{ shift.craft.abbreviation }}</span> (
+                <VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>/{{ shift.number_employees }}
+                <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span> )
+            </div>
+        </div>
     </div>
     <div v-show="event.subEvents.length > 0">
         <div v-for="subEvent in event.subEvents" class="mb-1">
@@ -230,7 +241,8 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
-                        <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" @click="openConfirmModal(subEvent.id, 'sub')" type="button"
+                        <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()"
+                                @click="openConfirmModal(subEvent.id, 'sub')" type="button"
                                 class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                  stroke="currentColor" class="w-4 h-4">
@@ -346,12 +358,14 @@ import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import VueMathjax from "vue-mathjax-next";
 
 
 export default {
     mixins: [Permissions],
     name: "SingleCalendarEvent",
     components: {
+        VueMathjax,
         DeclineEventModal,
         AddButton,
         EventComponent,
@@ -397,10 +411,10 @@ export default {
         isRoomAdmin() {
             return this.rooms?.find(room => room.id === this.event.roomId)?.admins.some(admin => admin.id === this.$page.props.user.id) || false;
         },
-        isCreator(){
+        isCreator() {
             return this.event?.created_by.id === this.$page.props.user.id
         },
-        roomCanBeBookedByEveryone(){
+        roomCanBeBookedByEveryone() {
             return this.rooms?.find(room => room.id === this.event.roomId).everyone_can_book
         }
 
@@ -421,6 +435,39 @@ export default {
         }
     },
     methods: {
+        decimalToFraction(decimal) {
+            let wholePart = Math.floor(decimal);
+            decimal = decimal - wholePart;
+
+            if (decimal === parseInt(decimal)) {
+                if (decimal < 1) {
+                    return `${wholePart}`;
+                }
+                return `${parseInt(decimal)}/1`;
+            } else {
+                let precision = this.getFirstDigitAfterDecimal(decimal) === 3 ? 3 : 1000; // The desired precision for the fraction
+                let top = Math.round(decimal * precision);
+                let bottom = precision;
+
+                let x = this.gcd(top, bottom);
+                return `${wholePart} ${top / x}/${bottom / x}`;
+            }
+        },
+        convertToMathJax(fraction) {
+            const parts = fraction.split(' ');
+
+            if (parts.length === 1) {
+                return `${parts[0]}`;
+            } else {
+                const wholePart = parts[0] > 0
+                    ? parts[0]
+                    : "";
+                const fractionParts = parts[1].split('/');
+                const numerator = fractionParts[0];
+                const denominator = fractionParts[1];
+                return `${wholePart}$\\frac{${numerator}}{${denominator}}$`;
+            }
+        },
         openEditEventModal(event) {
             this.$emit('openEditEventModal', event);
         },

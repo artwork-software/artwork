@@ -4,7 +4,7 @@
                             :available_roles="available_roles"></UserPermissionsTab>
     </UserEditHeader>
     <BaseSidenav :show="show" @toggle="this.show =! this.show">
-        // Here User Sidenav
+        <UserSidebar />
     </BaseSidenav>
 </template>
 
@@ -15,9 +15,11 @@ import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import UserEditHeader from "@/Pages/Users/Components/UserEditHeader.vue";
 import UserInfoTab from "@/Pages/Users/Tabs/UserInfoTab.vue";
 import UserPermissionsTab from "@/Pages/Users/Tabs/UserPermissionsTab.vue";
+import UserSidebar from "@/Pages/Users/Components/UserSidebar.vue";
 
 export default {
     components: {
+        UserSidebar,
         UserPermissionsTab,
         UserEditHeader,
         BaseSidenav,

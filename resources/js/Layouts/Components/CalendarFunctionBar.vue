@@ -119,7 +119,7 @@
                                 <p :class="$page.props.user.calendar_settings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                    class=" ml-4 my-auto text-secondary">Wiederholungstermin</p>
                             </div>
-                            <div class="flex py-1">
+                            <div class="flex py-1" v-if="$page.props.can.ma_manager || $page.props.can.shift_planner">
                                 <input @click="toggle_calendarSettingsWorkShifts"
                                        v-model="$page.props.user.calendar_settings.work_shifts"
                                        type="checkbox"

@@ -8,7 +8,7 @@
                       :user="user_to_edit" :vacations="vacations"/>
     </UserEditHeader>
     <BaseSidenav :show="show" @toggle="this.show =! this.show">
-        // Here User Sidenav
+        <UserSidebar />
     </BaseSidenav>
 </template>
 
@@ -21,9 +21,11 @@ import UserInfoTab from "@/Pages/Users/Tabs/UserInfoTab.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 import UserAvailabilityCalendar from "@/Pages/Users/Components/UserAvailabilityCalendar.vue";
+import UserSidebar from "@/Pages/Users/Components/UserSidebar.vue";
 
 export default {
     components: {
+        UserSidebar,
         UserAvailabilityCalendar,
         UserShiftPlan,
         Availability,

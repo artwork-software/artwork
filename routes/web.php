@@ -113,6 +113,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/users/{user}/conditions', [UserController::class, 'updateUserTerms'])->name('user.update.terms');
 
     Route::post('/users/reset-password', [UserController::class, 'reset_user_password'])->name('user.reset.password');
+    Route::post('/users/{user}/masters', [UserController::class, 'update_user_can_master'])->name('user.update.can_master');
 
     //Departments
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');

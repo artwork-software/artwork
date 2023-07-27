@@ -130,7 +130,7 @@
             <div class="xsDark" v-if="eventsWithRelevant.length === 0">
                 Bisher gibt es für dieses Projekt keine schichtrelevanten Termine.
             </div>
-            <SingleRelevantEvent v-for="event in eventsWithRelevant" :crafts="crafts" :event="event"/>
+            <SingleRelevantEvent v-for="event in eventsWithRelevant" :crafts="crafts" :event="event" :event-types="eventTypes"/>
         </div>
     </div>
 </template>
@@ -146,7 +146,7 @@ import Input from "@/Jetstream/Input.vue";
 
 export default defineComponent({
     name: "ShiftTab",
-    props: ['eventsWithRelevant', 'crafts', 'users', 'dropUsers'],
+    props: ['eventsWithRelevant', 'crafts', 'users', 'dropUsers', 'eventTypes'],
     components: {
         Input,
         SingleRelevantEvent,

@@ -4,7 +4,7 @@
                                 :states="states" :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
                                 :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="shift">
-        <ShiftTab :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" :drop-users="dropUsers" :users="project.users"></ShiftTab>
+        <ShiftTab :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" :drop-users="dropUsers" :users="project.users" :event-types="eventTypes" />
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectShiftSidenav

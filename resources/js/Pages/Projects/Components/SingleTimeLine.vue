@@ -8,7 +8,7 @@ export default defineComponent({
         Input,
         XCircleIcon
     },
-    props: ['time'],
+    props: ['time', 'preset'],
     data(){
         return {
             helpText: ''
@@ -29,10 +29,14 @@ export default defineComponent({
             }
         },
         deleteTime(){
-            this.$inertia.delete(route('delete.timeline.row', this.time), {
-                preserveState: true,
-                preserveScroll: true
-            })
+            if(this.preset === true){
+                this.$inertia.delete(route('preset.delete.timeline.row', this.time))
+            } else {
+                this.$inertia.delete(route('delete.timeline.row', this.time), {
+                    preserveState: true,
+                    preserveScroll: true
+                })
+            }
         }
     }
 })

@@ -324,6 +324,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Shifts
     Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])->name('shifts.plan');
+    Route::get('/shifts/presets', [\App\Http\Controllers\ShiftPresetController::class, 'index'])->name('shifts.presets');
+    Route::post('/shift/{shiftPreset}/preset/store', [\App\Http\Controllers\ShiftPresetController::class, 'addNewShift'])->name('shift.preset.store');
+
     Route::post('/shifts/commit', [EventController::class, 'commit_shifts'])->name('shifts.commit');
 
     //EventTypes
@@ -539,15 +542,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // Add User to Shift
     Route::post('/project/{shift}/add/user/{user}', [ShiftController::class, 'addShiftUser'])->name('add.shift.user');
-    Route::post('/project/{shift}/add/master', [\App\Http\Controllers\ShiftController::class, 'addShiftMaster'])->name('add.shift.master');
+    Route::post('/project/{shift}/add/{user}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftMaster'])->name('add.shift.master');
 
     // add freelancer to shift
     Route::post('/project/{shift}/add/freelancer/{freelancer}', [\App\Http\Controllers\ShiftController::class, 'addShiftFreelancer'])->name('add.shift.freelancer');
-    Route::post('/project/{shift}/add/freelancer/master', [\App\Http\Controllers\ShiftController::class, 'addShiftFreelancerMaster'])->name('add.shift.freelancer.master');
+    Route::post('/project/{shift}/add/freelancer/{freelancer}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftFreelancerMaster'])->name('add.shift.freelancer.master');
 
     // add provider to shift
     Route::post('/project/{shift}/add/provider/{serviceProvider}', [\App\Http\Controllers\ShiftController::class, 'addShiftProvider'])->name('add.shift.provider');
-    Route::post('/project/{shift}/add/provider/master', [\App\Http\Controllers\ShiftController::class, 'addShiftProviderMaster'])->name('add.shift.provider.master');
+    Route::post('/project/{shift}/add/provider/{serviceProvider}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftProviderMaster'])->name('add.shift.provider.master');
 
     // remove User from Shift
     Route::delete('/project/{shift}/remove/user/{user}', [\App\Http\Controllers\ShiftController::class, 'removeUser'])->name('shifts.removeUser');
@@ -561,5 +564,23 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/project/{shift}/remove/employees/master', [\App\Http\Controllers\ShiftController::class, 'clearEmployeesAndMaster'])->name('shifts.clearEmployeesAndMaster');
     Route::delete('/project/{shift}/destroy', [\App\Http\Controllers\ShiftController::class, 'destroy'])->name('shifts.destroy');
     Route::patch('/project/{shift}/update', [\App\Http\Controllers\ShiftController::class, 'updateShift'])->name('event.shift.update');
+
+    Route::post('/project/{event}/shift/preset/store', [\App\Http\Controllers\ShiftPresetController::class, 'store'])->name('shift-presets.store');
+
+    Route::post('/empty/preset/store', [\App\Http\Controllers\ShiftPresetController::class, 'storeEmpty'])->name('empty.presets.store');
+    Route::delete('/preset/{presetShift}/shift/delete', [\App\Http\Controllers\PresetShiftController::class, 'destroy'])->name('preset.shift.destroy');
+    Route::patch('/preset/{presetShift}/shift/update', [\App\Http\Controllers\PresetShiftController::class, 'update'])->name('shift.preset.update');
+
+    Route::delete('/shift/preset/{shiftPreset}/destroy', [\App\Http\Controllers\ShiftPresetController::class, 'destroy'])->name('destroy.shift.preset');
+    Route::post('/shift/preset/{shiftPreset}/duplicate', [\App\Http\Controllers\ShiftPresetController::class, 'duplicate'])->name('duplicate.shift.preset');
+    Route::patch('/shift/preset/{shiftPreset}/update', [\App\Http\Controllers\ShiftPresetController::class, 'update'])->name('update.shift.preset');
+
+    Route::get('/shift/template/search', [\App\Http\Controllers\ShiftPresetController::class, 'search'])->name('shift.template.search');
+
+    Route::post('/shift/{event}/{shiftPreset}/import/preset/', [\App\Http\Controllers\ShiftPresetController::class, 'import'])->name('shift.preset.import');
+
+    Route::patch('/preset/timeline/update', [\App\Http\Controllers\PresetTimeLineController::class, 'update'])->name('preset.timeline.update');
+    Route::delete('/preset/timeline/{presetTimeLine}/delete', [\App\Http\Controllers\PresetTimeLineController::class, 'destroy'])->name('preset.delete.timeline.row');
+    Route::post('/preset/{shiftPreset}/add', [\App\Http\Controllers\PresetTimeLineController::class, 'store'])->name('preset.add.timeline.row');
 });
 

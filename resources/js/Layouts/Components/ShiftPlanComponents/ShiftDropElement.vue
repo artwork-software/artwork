@@ -116,9 +116,7 @@ export default defineComponent({
 
             console.log(dropElement);
             if(dropElement.master && dropElement.type === 0){
-                this.$inertia.post(route('add.shift.master', this.shift.id), {
-                        user_id: dropElement.id,
-                    }, {
+                this.$inertia.post(route('add.shift.master', {shift: this.shift.id, user: dropElement.id}) , {
                         preserveState: true,
                         preserveScroll: true,
                     }
@@ -133,17 +131,13 @@ export default defineComponent({
             }
 
             if(dropElement.type === 1 && !dropElement.master){
-                this.$inertia.post(route('add.shift.freelancer', this.shift.id), {
-                        freelancer_id: dropElement.id
-                    }, {
+                this.$inertia.post(route('add.shift.freelancer', {shift: this.shift.id, freelancer: dropElement.id}), {
                         preserveState: true,
                         preserveScroll: true,
                     }
                 )
             } else if (dropElement.type === 1 && dropElement.master) {
-                this.$inertia.post(route('add.shift.freelancer.master', this.shift.id), {
-                        freelancer_id: dropElement.id
-                    }, {
+                this.$inertia.post(route('add.shift.freelancer.master', {shift: this.shift.id, freelancer: dropElement.id}), {
                         preserveState: true,
                         preserveScroll: true,
                     }
@@ -151,15 +145,13 @@ export default defineComponent({
             }
 
             if(dropElement.type === 2 && dropElement.master){
-                this.$inertia.post(route('add.shift.provider.master', this.shift.id), {
-                        service_provider_id: dropElement.id
-                    }, {
+                this.$inertia.post(route('add.shift.provider.master', {shift: this.shift.id, serviceProvider: dropElement.id}),{
                         preserveState: true,
                         preserveScroll: true,
                     }
                 )
             } else if (dropElement.type === 2 && !dropElement.master) {
-                this.$inertia.post(route('add.shift.provider', {shift: this.shift.id, provider: dropElement.id}),{}, {
+                this.$inertia.post(route('add.shift.provider', {shift: this.shift.id, serviceProvider: dropElement.id}), {
                         preserveState: true,
                         preserveScroll: true,
                     }

@@ -1,17 +1,16 @@
 <template>
+
     <div class="mb-3">
         <!-- Event Header -->
-        <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm"
-             :class="event.event_type.svg_name">
-            <div class="flex items-center">
-                {{ event.event?.start_time }} | {{ event.event_type.abbreviation }} | {{ event.room.name }}
-
+        <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm" :class="preset.event_type.svg_name">
+            <div class="flex items-center uppercase">
+                {{ preset.event_type.abbreviation }} | {{ preset.name }}
                 <div class="ml-4 cursor-pointer" @click="showShift = !showShift">
                     <ChevronDownIcon class="h-4 w-4" v-if="!showShift"/>
                     <ChevronUpIcon class="h-4 w-4" v-else/>
                 </div>
             </div>
-            <div class="mt-1">
+            <div>
                 <Menu as="div" class="relative">
                     <div class="flex p-0.5 rounded-full">
                         <MenuButton
@@ -29,27 +28,27 @@
                                 leave-from-class="transform opacity-100 scale-100"
                                 leave-to-class="transform opacity-0 scale-95">
                         <MenuItems
-                            class="origin-top-right z-100 absolute right-0 mr-4 mt-2 w-80 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                            class="origin-top-right z-100 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                             <div class="py-1">
                                 <MenuItem v-slot="{ active }">
-                                    <a href="#" @click="openDeletConfirmModal"
+                                    <a href="#" @click="showEditShiftModal = true"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
-                                        Schichtplanung löschen
+                                        Vorlage umdefinieren
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                    <a href="#" @click="saveShiftAsPreset"
+                                    <a href="#" @click="duplicatePreset"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
-                                        Schichtplanung als Vorlage speichern
+                                        Vorlage duplizieren
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                    <a href="#" @click="showImportShiftTemplateModal = true"
+                                    <a href="#" @click="showConfirmDeleteModal = true"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
-                                        Schichtplanung aus Vorlage einlesen
+                                        Vorlage löschen
                                     </a>
                                 </MenuItem>
                             </div>
@@ -59,93 +58,83 @@
             </div>
         </div>
 
-        <ConfirmDeleteModal
-            v-if="showConfirmDeleteModal"
-            title="Schichtplanung löschen"
-            description="Möchten sie die Schichtplanung löschen?"
-            @closed="closeConfirmDeleteModal"
-            @delete="deleteShift"
-        />
-
-        <AddShiftPresetModal
-            v-if="showAddShiftPresetModal"
-            @closed="showAddShiftPresetModal = false"
-            :event_types="eventTypes"
-            :event-id="event.event.id"
-        />
-
-        <ImportShiftTemplate
-            v-if="showImportShiftTemplateModal"
-            @closed="showImportShiftTemplateModal = false"
-            :event_type="event.event_type"
-            :eventId="event.event.id"
-        />
-
         <div class="flex justify-start mt-3 overflow-x-scroll gap-3 h-full" v-if="showShift">
-            <TimeLineShiftsComponent :time-line="event.timeline" :shifts="event.shifts" :crafts="crafts"
-                                     :event="event.event"/>
+
+            <PresetTimeLine :time-line="preset.time_line" :preset-id="preset.id" />
+            <div class="w-[175px]" v-for="shift in preset.shifts">
+                <SinglePresetShift :shift="shift"/>
+            </div>
+            <!-- Empty -->
+            <div class="w-[175px] flex items-center justify-center border-2 border-dashed" @click="showAddShiftPresetModal = true">
+                <PlusCircleIcon class="h-4 w-4 rounded-full bg-backgroundBlue"/>
+            </div>
         </div>
     </div>
-</template>
 
+    <AddEditShiftPresetModal :crafts="crafts" :preset-id="preset.id" v-if="showAddShiftPresetModal" @closed="showAddShiftPresetModal = false" />
+    <AddShiftPresetModal :event_types="event_types" v-if="showEditShiftModal" @closed="showEditShiftModal = false" :preset="preset" />
+    <ConfirmDeleteModal v-if="showConfirmDeleteModal" title="Schichtvorlage löschen" description="Möchten sie die Schichtvorlage löschen?" @closed="showConfirmDeleteModal = false" @delete="deletePreset" />
+</template>
 <script>
 import {defineComponent} from 'vue'
-import Timeline from "@/Pages/Projects/Components/Timeline.vue";
-import SingleShift from "@/Pages/Projects/Components/TimeLineShiftsComponent.vue";
-import {PlusCircleIcon, DotsVerticalIcon, XIcon} from "@heroicons/vue/outline";
 import TimeLineShiftsComponent from "@/Pages/Projects/Components/TimeLineShiftsComponent.vue";
-import {Menu, MenuButton, MenuItems, MenuItem} from '@headlessui/vue'
+import {
+    ChevronDownIcon,
+    ChevronUpIcon,
+    DotsVerticalIcon,
+    DuplicateIcon,
+    PlusCircleIcon, TrashIcon,
+    XIcon
+} from "@heroicons/vue/outline";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import AddShiftPresetModal from "@/Pages/Projects/Components/AddShiftPresetModal.vue";
-import {ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/outline";
-import ImportShiftTemplate from "@/Pages/Projects/Components/ImportShiftTemplate.vue";
+import PresetTimeLine from "@/Pages/Shifts/Components/PresetTimeLine.vue";
+import SingleShift from "@/Pages/Projects/Components/SingleShift.vue";
+import SinglePresetShift from "@/Pages/Shifts/Components/SinglePresetShift.vue";
+import AddEditShiftPresetModal from "@/Pages/Shifts/Components/AddEditShiftPresetModal.vue";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 
 export default defineComponent({
-    name: "SingleRelevantEvent",
-    props: ['event', 'crafts', 'eventTypes'],
+    name: "SingleShiftPreset",
     components: {
-        ImportShiftTemplate,
+        SvgCollection,
+        TrashIcon, DuplicateIcon,
+        AddEditShiftPresetModal,
+        SinglePresetShift,
+        PlusCircleIcon, SingleShift,
+        PresetTimeLine,
+        ChevronDownIcon,
         AddShiftPresetModal,
         ConfirmDeleteModal,
-        XIcon,
-        TimeLineShiftsComponent,
-        PlusCircleIcon,
-        SingleShift,
-        Timeline,
-        DotsVerticalIcon,
-        Menu,
-        MenuItem,
-        MenuButton,
-        MenuItems,
         ChevronUpIcon,
-        ChevronDownIcon
+        XIcon,
+        DotsVerticalIcon,
+        TimeLineShiftsComponent, Menu, MenuItems, MenuItem, MenuButton
     },
+    props: ['preset', 'crafts', 'event_types'],
     data() {
         return {
+            showShift: false,
             showConfirmDeleteModal: false,
             showAddShiftPresetModal: false,
-            showShift: false,
-            showImportShiftTemplateModal: false
+            showEditShiftModal: false
         }
     },
     methods: {
-        openDeletConfirmModal() {
-            this.showConfirmDeleteModal = true
+        deletePreset(){
+            this.$inertia.delete(route('destroy.shift.preset', {shiftPreset: this.preset.id}), {
+                preserveScroll: true
+            })
         },
-        closeConfirmDeleteModal() {
-            this.showConfirmDeleteModal = false
+        duplicatePreset(){
+            this.$inertia.post(route('duplicate.shift.preset', {shiftPreset: this.preset.id}), {
+                preserveScroll: true
+            })
         },
-        deleteShift() {
-            this.$inertia.delete(`/events/${this.event.event.id}/shifts`)
-            this.showConfirmDeleteModal = false
-        },
-        saveShiftAsPreset(){
-            this.showAddShiftPresetModal = true
-        }
     }
 })
 </script>
-
 
 <style scoped>
 

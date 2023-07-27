@@ -1,5 +1,5 @@
 <template>
-    <app-layout>
+    <ShiftHeader>
         <div id="shiftPlan" class="bg-white w-[98%]" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? 'h-[50vh] overflow-x-scroll mt-8' : ' mt-24']">
             <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
                                   @next-time-range="nextTimeRange"
@@ -42,7 +42,7 @@
         <ShiftPlanUserOverview :users="dropUsers" @isOpen="showUserOverviewBar" :days="days"/>
 
 
-    </app-layout>
+    </ShiftHeader>
 
 </template>
 <script>
@@ -58,11 +58,15 @@ import {Link} from "@inertiajs/inertia-vue3";
 import ShiftPlanUserOverview from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanUserOverview.vue";
 import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
 import {Inertia} from "@inertiajs/inertia";
+import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
+import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        ShiftHeader,
+        ShiftTabs,
         ShiftPlanUserOverview,
         Link, CalendarFunctionBar, SingleCalendarEvent, ExclamationIcon, EventComponent,
         SingleShiftPlanEvent,

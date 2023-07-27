@@ -200,9 +200,9 @@ class ShiftController extends Controller
         $shift->users()->attach($user->id, ['shift_count' => $collideCount + 1]);
     }
 
-    public function addShiftMaster(Request $request, Shift $shift): void
+    public function addShiftMaster(Request $request, Shift $shift, User $user): void
     {
-        $shift->users()->attach($request->user_id, ['is_master' => true]);
+        $shift->users()->attach($user->id, ['is_master' => true]);
     }
 
 
@@ -222,16 +222,16 @@ class ShiftController extends Controller
         $shift->freelancer()->attach($freelancer->id, ['shift_count' => $collideCount + 1]);
     }
 
-    public function addShiftFreelancerMaster(Request $request, Shift $shift): void
+    public function addShiftFreelancerMaster(Request $request, Shift $shift, Freelancer $freelancer): void
     {
-        $shift->freelancer()->attach($request->freelancer_id, ['is_master' => true]);
+        $shift->freelancer()->attach($freelancer->id, ['is_master' => true]);
     }
 
 
 
-    public function addShiftProviderMaster(Request $request, Shift $shift): void
+    public function addShiftProviderMaster(Request $request, Shift $shift, ServiceProvider $serviceProvider): void
     {
-        $shift->service_provider()->attach($request->service_provider_id, ['is_master' => true]);
+        $shift->service_provider()->attach($serviceProvider->id, ['is_master' => true]);
     }
 
     public function removeUser(Shift $shift, User $user): void

@@ -34,12 +34,14 @@ class FreelancerController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): \Symfony\Component\HttpFoundation\Response
     {
-        //
+        $freelancer = Freelancer::create(['profile_image' => 'https://ui-avatars.com/api/?name=NEU&color=7F9CF5&background=EBF4FF']);
+
+        return Inertia::location(route('freelancer.show', $freelancer->id));
     }
 
     /**

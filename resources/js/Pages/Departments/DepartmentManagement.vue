@@ -1,7 +1,7 @@
 <template>
-    <app-layout>
-        <div class="py-4">
-            <div class="max-w-screen-lg mb-40 my-12 flex flex-row ml-14 mr-40">
+    <UserHeader>
+        <div class="">
+            <div class="max-w-screen-xl mb-40 my-12 flex flex-row">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
@@ -473,7 +473,7 @@
 
             </template>
         </jet-dialog-modal>
-    </app-layout>
+    </UserHeader>
 </template>
 
 <script>
@@ -518,6 +518,7 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import Permissions from "@/mixins/Permissions.vue";
+import UserHeader from "@/Pages/Users/UserHeader.vue";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -553,6 +554,7 @@ const iconMenuItems = [
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        UserHeader,
         AddButton,
         TeamIconCollection,
         UserTooltip,

@@ -239,6 +239,14 @@ const navigation = [
         svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg',
         has_permission: 'is_money_source_admin'
     },
+    {
+        name: 'Finanzierungsquellen',
+        href: route('users'),
+        route: ['/users'],
+        svgSrc: '/Svgs/Sidebar/icon_users_teams.svg',
+        svgSrc_active: '/Svgs/Sidebar/icon_users_teams_active.svg',
+        has_permission: 'is_money_source_admin'
+    },
 
     {
         name: 'Verträge',
@@ -284,24 +292,24 @@ export default {
                     href: route('tool.settings'),
                     route: ['/tool/settings']
                 },
-                {
+                /*{
                     has_permission: this.$can('usermanagement') || this.hasAdminRole(),
                     name: 'Nutzer*innen',
                     href: route('users'),
                     route: ['/users']
-                },
+                },*/
                 {
                     has_permission: this.hasAdminRole(),
                     name: 'Schichteinstellungen',
                     href: route('shift.settings'),
                     route: ['/settings/shift']
                 },
-                {
+                /*{
                     name: 'Teams',
                     has_permission: this.$canAny(['teammanagement', 'update departments']) || this.hasAdminRole(),
                     href: route('departments'),
                     route: ['/departments']
-                },
+                },*/
                 {
                     name: 'Räume',
                     has_permission: this.$can('admin rooms') || this.hasAdminRole() ,

@@ -1,13 +1,13 @@
 <template>
-    <app-layout>
-        <div class="py-4">
-            <div class="max-w-screen-lg my-12 flex flex-row ml-12 mr-40">
+    <UserHeader>
+        <div class="">
+            <div class="max-w-screen-xl my-12 flex flex-row">
                 <div class="flex flex-1 flex-wrap justify-between">
                     <div class="flex">
                         <div class="w-full flex my-auto items-center">
                             <Listbox as="div" class="flex" v-model="selectedFilter">
                                 <ListboxButton
-                                    class="bg-white w-full relative py-2 ml-5 cursor-pointer focus:outline-none">
+                                    class="bg-white w-full relative py-2 cursor-pointer focus:outline-none">
                                     <div class="flex items-center my-auto">
                                         <h2 class="headline1">
                                             {{ selectedFilter.name }}</h2>
@@ -36,7 +36,7 @@
                                     </ListboxOptions>
                                 </transition>
                             </Listbox>
-                            <button type="button" class="rounded-full bg-gray-600 p-1 mr-1 text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
+                            <button @click="openSelectAddUsersModal = true" type="button" class="rounded-full bg-gray-600 p-1 mr-1 text-white shadow-sm hover:bg-gray-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
                                 <PlusIcon class="h-4 w-4" aria-hidden="true" />
                             </button>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
@@ -344,10 +344,7 @@
 
             </template>
         </jet-dialog-modal>
-        <pre>
-            {{ userObjectsToShow }}
-        </pre>
-    </app-layout>
+    </UserHeader>
 
     <!-- Nutzer*innen einladen Modal -->
     <invite-users-modal
@@ -357,6 +354,8 @@
         :departments="departments"
         :roles="roles"
     />
+
+    <AddUsersModal v-if="openSelectAddUsersModal" @closeModal="openSelectAddUsersModal = false" @openUserModal="addingUser = true" />
 </template>
 
 <script>
@@ -392,7 +391,6 @@ import {
     RadioGroupOption,
     Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
 } from "@headlessui/vue";
-import AppLayout from '@/Layouts/AppLayout.vue'
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
 import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon, CheckIcon, PlusIcon} from '@heroicons/vue/solid'
 import {SearchIcon} from "@heroicons/vue/outline";
@@ -411,13 +409,16 @@ import FlowbiteModal from "@/Flowbite/FlowbiteModal";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import InviteUsersModal from "@/Layouts/Components/InviteUsersModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import UserHeader from "@/Pages/Users/UserHeader.vue";
+import AddUsersModal from "@/Pages/Users/Components/AddUsersModal.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        AddUsersModal,
         AddButton,
         FlowbiteModal,
-        AppLayout,
+        UserHeader,
         DotsVerticalIcon,
         PlusSmIcon,
         SearchIcon,
@@ -471,6 +472,7 @@ export default defineComponent({
                 'type': 'service_provider'
             }, {'name': 'Alle verfügbaren Nutzer*innen', 'type': 'all'}],
             selectedFilter: {'name': 'Alle Nutzer*innen', 'type': 'users'},
+            openSelectAddUsersModal: false
         }
     },
     computed: {

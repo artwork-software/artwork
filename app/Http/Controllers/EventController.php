@@ -286,10 +286,10 @@ class EventController extends Controller
             if($eventProject){
                 $projectRelevantEventTypes = $eventProject->shiftRelevantEventTypes()->get();
                 if($projectRelevantEventTypes->contains($firstEvent->event_type_id)){
-                    $firstEvent->timeline()->create([
+                    /*$firstEvent->timeline()->create([
                         'start' => Carbon::parse($firstEvent->start_time)->format('H:i:s'),
                         'end' => Carbon::parse($firstEvent->end_time)->format('H:i:s'),
-                    ]);
+                    ]);*/
                 }
             }
 

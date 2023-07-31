@@ -18,9 +18,27 @@ class ShiftPresetController extends Controller
      */
     public function index()
     {
-        $shiftPresets = ShiftPreset::with(['event_type', 'shifts', 'timeLine' => function ($query) {
-            $query->orderBy('start', 'asc');
-        }])->has('timeLine')->get();
+        $shiftPresets = ShiftPreset::with(['event_type', 'shifts', 'timeLine'])->get();
+
+        foreach ($shiftPresets as $shiftPreset) {
+            $timeline = $shiftPreset->timeLine()->get()->toArray();
+
+            usort($timeline, function ($a, $b) {
+                if ($a['start'] === null && $b['start'] === null) {
+                    return 0;
+                } elseif ($a['start'] === null) {
+                    return 1; // $a should come later in the array
+                } elseif ($b['start'] === null) {
+                    return -1; // $b should come later in the array
+                }
+
+                // Compare the 'start' values for ascending order
+                return strtotime($a['start']) - strtotime($b['start']);
+            });
+
+            $shiftPreset->setRelation('timeLine', collect($timeline));
+        }
+
 
         return Inertia::render('Shifts/ShiftPresets', [
             'shiftPresets' => $shiftPresets,

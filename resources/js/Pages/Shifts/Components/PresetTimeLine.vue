@@ -8,7 +8,7 @@
 
 
         <div class="mt-1">
-            <div v-if="timeLine?.length === 0" class="text-xs bg-gray-900 p-2 text-white my-1 cursor-pointer" @click="showAddTimeLineModal = true">
+            <div v-if="timeLine?.length === 0 || timeLine === null" class="text-xs bg-gray-900 p-2 text-white my-1 cursor-pointer" @click="showAddTimeLineModal = true">
                 <p class="text-xs">
                     Hier klicken um eine Timeline hinzuzufügen
                 </p>

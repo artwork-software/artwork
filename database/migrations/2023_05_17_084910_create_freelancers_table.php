@@ -15,16 +15,16 @@ return new class extends Migration
     {
         Schema::create('freelancers', function (Blueprint $table) {
             $table->id();
-            $table->string('position');
-            $table->string('profile_image');
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('email');
-            $table->string('phone_number');
-            $table->string('street');
-            $table->string('zip_code');
-            $table->string('location');
-            $table->string('note', 500);
+            $table->string('position')->nullable();
+            $table->string('profile_image')->nullable();
+            $table->string('first_name')->default('Neuer');
+            $table->string('last_name')->default('Freelancer');
+            $table->string('email')->nullable();
+            $table->string('phone_number')->nullable();
+            $table->string('street')->nullable();
+            $table->string('zip_code')->nullable();
+            $table->string('location')->nullable();
+            $table->string('note', 500)->nullable();
             $table->timestamps();
         });
     }

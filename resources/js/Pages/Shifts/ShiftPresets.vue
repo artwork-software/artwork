@@ -38,7 +38,7 @@
                 </button>
                 <div v-if="$page.props.can.show_hints" class="flex mt-1">
                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                    <span class="hind ml-1 my-auto">Erstelle eine neue Schichtvorlagen</span>
+                    <span class="hind ml-1 my-auto">Erstelle eine neue Schichtvorlage</span>
                 </div>
             </div>
             <div>

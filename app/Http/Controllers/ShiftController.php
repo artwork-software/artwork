@@ -135,10 +135,10 @@ class ShiftController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Shift  $shift
-     * @return \Illuminate\Http\Response
      */
     public function destroy(Shift $shift)
     {
+        $this->clearEmployeesAndMaster($shift);
         $shift->delete();
     }
 
@@ -304,8 +304,17 @@ class ShiftController extends Controller
 
     public function clearEmployeesAndMaster(Shift $shift): void
     {
-        $shift->users()->detach();
-        $shift->freelancer()->detach();
-        $shift->service_provider()->detach();
+        $users = $shift->users()->get();
+        foreach ($users as $user) {
+            $this->removeUser($shift, $user);
+        }
+        $freelancers = $shift->freelancer()->get();
+        foreach($freelancers as $freelancer) {
+            $this->removeFreelancer($shift, $freelancer);
+        }
+        $serviceProviders = $shift->service_provider()->get();
+        foreach($serviceProviders as $serviceProvider) {
+            $this->removeProvider($shift, $serviceProvider);
+        }
     }
 }

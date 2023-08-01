@@ -72,7 +72,7 @@
 
                 </div>
                 <div v-if="currentTab === 2">
-
+                    <UserTermsTab :user_to_edit="serviceProvider"></UserTermsTab>aa
                 </div>
                 <!-- Persönliche Daten -->
                 <div v-if="currentTab === 3">
@@ -185,11 +185,13 @@ import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
 import SingleContact from "@/Pages/ServiceProvider/Components/SingleContact.vue";
+import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
 
 export default defineComponent({
     name: "Show",
     mixins: [Permissions],
     components: {
+        UserTermsTab,
         SingleContact,
         AddButton,
         PencilAltIcon, DotsVerticalIcon, TrashIcon,
@@ -202,7 +204,7 @@ export default defineComponent({
             tabs: [
                 { id: 1, name: 'Einsatzplan', href: '#', current: false },
                 { id: 2, name: 'Konditionen', href: '#', current: false },
-                { id: 3, name: 'unternehmensdaten', href: '#', current: true },
+                { id: 3, name: 'Unternehmensdaten', href: '#', current: true },
             ],
             currentTab: 3,
             providerData: useForm({

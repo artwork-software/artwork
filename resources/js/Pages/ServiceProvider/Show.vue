@@ -69,10 +69,13 @@
 
             <div class="mt-10">
                 <div v-if="currentTab === 1">
-
+                    <UserShiftPlan type="service_provider" :date-value="dateValue"
+                                   :days-with-events="daysWithEvents"
+                                   :projects="projects" :event-types="eventTypes" :rooms="rooms"
+                                   :vacations="vacations"></UserShiftPlan>
                 </div>
                 <div v-if="currentTab === 2">
-                    <UserTermsTab :user_to_edit="serviceProvider"></UserTermsTab>aa
+                    <UserTermsTab user_type="service_provider" :user_to_edit="serviceProvider"></UserTermsTab>
                 </div>
                 <!-- Persönliche Daten -->
                 <div v-if="currentTab === 3">
@@ -186,11 +189,13 @@ import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
 import SingleContact from "@/Pages/ServiceProvider/Components/SingleContact.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
+import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 
 export default defineComponent({
     name: "Show",
     mixins: [Permissions],
     components: {
+        UserShiftPlan,
         UserTermsTab,
         SingleContact,
         AddButton,
@@ -198,7 +203,16 @@ export default defineComponent({
         AppLayout, Menu, MenuButton, MenuItems, MenuItem,
         PlusCircleIcon
     },
-    props: ['serviceProvider'],
+    props: [
+        'serviceProvider',
+        'shifts',
+        'dateValue',
+        'daysWithEvents',
+        'rooms',
+        'eventTypes',
+        'projects'
+
+    ],
     data(){
         return {
             tabs: [

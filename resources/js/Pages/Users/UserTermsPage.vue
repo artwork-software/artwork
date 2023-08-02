@@ -1,6 +1,6 @@
 <template>
     <UserEditHeader :current-tab="currentTab" :user_to_edit="user_to_edit">
-        <UserTermsTab :user_to_edit="user_to_edit"></UserTermsTab>
+        <UserTermsTab user_type="user" :user_to_edit="user_to_edit"></UserTermsTab>
     </UserEditHeader>
     <BaseSidenav :show="show" @toggle="this.show =! this.show">
         <UserSidebar />

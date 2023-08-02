@@ -13,7 +13,7 @@
                 </div>
             </div>
         </div>
-        <div>
+        <div v-if="type !== 'freelancer' && type !== 'service_provider'">
             {{ totalHoursExpectedWork }}
         </div>
     </div>
@@ -46,7 +46,8 @@ export default {
     },
     props: [
         'dateValue',
-        'weeklyWorkingHours'
+        'weeklyWorkingHours',
+        'type'
     ],
     emits: ['previousTimeRange', 'nextTimeRange'],
     data() {

@@ -1,29 +1,11 @@
 <template>
     <div>
         <div>
-            <SwitchGroup as="div" class="flex items-center">
-                <Switch v-model="userForm.can_master"
-                        :class="[userForm.can_master ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
-                                            <span aria-hidden="true"
-                                                  :class="[userForm.can_master ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
-                </Switch>
-                <SwitchLabel as="span" class="ml-3 text-sm">
-                    <span class="text-gray-900">Als Meister einsetzbar</span>
-                </SwitchLabel>
-            </SwitchGroup>
-        </div>
-
-        <p>
-            Lege fest ob die Mitarbeiterin / der Mitarbeiter als Meister eingesetzt werden kann.
-            Du kannst hierfür eigene Stundensätze festlegen.
-        </p>
-
-        <div>
             <div class="headline3 py-4">
                 Stunden & Vergütung
             </div>
 
-            <div class="flex">
+            <div v-if="user_type !== 'service_provider' && user_type !== 'freelancer'" class="flex">
                 <input type="number" v-model="userForm.weekly_working_hours" placeholder="h"
                        class="w-28 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block"/>
                 <div class="ml-4 h-10 flex items-center">
@@ -117,6 +99,7 @@ export default {
     },
     props: [
         'user_to_edit',
+        'user_type'
     ],
     data() {
         return {
@@ -141,16 +124,41 @@ export default {
     },
     methods: {
         updateUserTerms() {
-            this.userForm.patch(route('user.update.terms', this.user_to_edit.id), {
-                can_master: this.user_to_edit.can_master,
-                weekly_working_hours: this.user_to_edit.weekly_working_hours,
-                salary_per_hour: this.user_to_edit.salary_per_hour,
-                salary_description: this.user_to_edit.salary_description,
-                preserveScroll: true,
-                onFinish: () => {
-                    this.openSuccessModal();
-                },
-            });
+            if(this.user_type === 'service_provider'){
+                this.userForm.patch(route('service_provider.update', this.user_to_edit.id), {
+                    can_master: this.user_to_edit.can_master,
+                    weekly_working_hours: this.user_to_edit.weekly_working_hours,
+                    salary_per_hour: this.user_to_edit.salary_per_hour,
+                    salary_description: this.user_to_edit.salary_description,
+                    preserveScroll: true,
+                    onFinish: () => {
+                        this.openSuccessModal();
+                    },
+                });
+            }else if(this.user_type === 'freelancer'){
+                this.userForm.patch(route('freelancer.update', this.user_to_edit.id), {
+                    can_master: this.user_to_edit.can_master,
+                    weekly_working_hours: this.user_to_edit.weekly_working_hours,
+                    salary_per_hour: this.user_to_edit.salary_per_hour,
+                    salary_description: this.user_to_edit.salary_description,
+                    preserveScroll: true,
+                    onFinish: () => {
+                        this.openSuccessModal();
+                    },
+                });
+            }else{
+                this.userForm.patch(route('user.update.terms', this.user_to_edit.id), {
+                    can_master: this.user_to_edit.can_master,
+                    weekly_working_hours: this.user_to_edit.weekly_working_hours,
+                    salary_per_hour: this.user_to_edit.salary_per_hour,
+                    salary_description: this.user_to_edit.salary_description,
+                    preserveScroll: true,
+                    onFinish: () => {
+                        this.openSuccessModal();
+                    },
+                });
+            }
+
         },
         openSuccessModal() {
             this.showSuccessModal = true;

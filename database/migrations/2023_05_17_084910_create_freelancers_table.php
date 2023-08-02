@@ -25,6 +25,9 @@ return new class extends Migration
             $table->string('zip_code')->nullable();
             $table->string('location')->nullable();
             $table->string('note', 500)->nullable();
+            $table->integer('salary_per_hour')->nullable();
+            $table->longText('salary_description')->nullable();
+            $table->boolean('can_master')->default(false);
             $table->timestamps();
         });
     }

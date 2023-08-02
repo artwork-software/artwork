@@ -40,7 +40,7 @@ export default defineComponent({
     name: "SingleUserVacation",
     mixins: [Permissions],
     components: {ConfirmDeleteModal, AddEditVacationsModal, Button},
-    props: ['vacation', 'user'],
+    props: ['vacation', 'user','type'],
     data(){
         return {
             showEditVacationModal: false,
@@ -50,11 +50,20 @@ export default defineComponent({
     methods: {
         dayjs,
         deleteVacation(){
-            Inertia.delete(route('user.vacation.delete', this.vacation.id), {
-                onFinish: () => {
-                    this.showDeleteConfirmModal = false
-                }
-            })
+            if(this.type === 'freelancer'){
+                Inertia.delete(route('freelancer.vacation.delete', this.vacation.id), {
+                    onFinish: () => {
+                        this.showDeleteConfirmModal = false
+                    }
+                })
+            }else{
+                Inertia.delete(route('user.vacation.delete', this.vacation.id), {
+                    onFinish: () => {
+                        this.showDeleteConfirmModal = false
+                    }
+                })
+            }
+
         }
     },
 })

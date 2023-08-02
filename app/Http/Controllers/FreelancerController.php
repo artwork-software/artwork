@@ -2,7 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\EventTypeResource;
+use App\Models\EventType;
 use App\Models\Freelancer;
+use App\Models\Project;
+use App\Models\Room;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -44,6 +50,65 @@ class FreelancerController extends Controller
         return Inertia::location(route('freelancer.show', $freelancer->id));
     }
 
+    function getAvailabilityData(Freelancer $freelancer, $month = null): array
+    {
+        $vacationDays = $freelancer->vacations()->orderBy('from', 'ASC')->get();
+
+        $currentMonth = Carbon::now()->startOfMonth();
+
+        if ($month) {
+            $currentMonth = Carbon::parse($month)->startOfMonth();
+        }
+
+        $startDate = $currentMonth->copy()->startOfWeek();
+        $endDate = $currentMonth->copy()->endOfMonth()->endOfWeek();
+
+        $calendarData = [];
+        $currentDate = $startDate->copy();
+
+        while ($currentDate <= $endDate) {
+            $onVacation = false;
+            $weekNumber = $currentDate->weekOfYear;
+            $day = $currentDate->day;
+            foreach ($vacationDays as $vacationDay){
+                $vacationStart = Carbon::parse($vacationDay->from);
+                $vacationEnd = Carbon::parse($vacationDay->until);
+                // TODO: Check Performance
+                /*if($currentDate < $vacationStart){
+                    $onVacation = false;
+                    continue;
+                }*/
+                if($vacationStart <= $currentDate && $vacationEnd >= $currentDate){
+                    $onVacation = true;
+                }
+            }
+
+            if (!isset($calendarData[$weekNumber])) {
+                $calendarData[$weekNumber] = ['weekNumber' => $weekNumber, 'days' => []];
+            }
+
+            $notInMonth = !$currentDate->isSameMonth($currentMonth);
+
+            $calendarData[$weekNumber]['days'][] = [
+                'day' => $day,
+                'notInMonth' => $notInMonth,
+                'onVacation' => $onVacation
+            ];
+
+            $currentDate->addDay();
+        }
+
+        $dateToShow = [
+            $currentMonth->locale('de')->isoFormat('MMMM YYYY'),
+            $currentMonth->copy()->startOfMonth()->toDate()
+        ];
+
+        return [
+            'calendarData' => array_values($calendarData),
+            'dateToShow' => $dateToShow
+        ];
+    }
+
     /**
      * Display the specified resource.
      *
@@ -52,8 +117,24 @@ class FreelancerController extends Controller
      */
     public function show(Freelancer $freelancer): Response
     {
+
+        $shiftPlan = new CalendarController();
+        $showCalendar = $shiftPlan->createCalendarDataForFreelancerShiftPlan($freelancer);
+        $availabilityData = $this->getAvailabilityData($freelancer, request('month'));
+
         return Inertia::render('Freelancer/Show', [
-            'freelancer' => $freelancer
+            'freelancer' => $freelancer,
+            //needed for availability calendar
+            'calendarData' => $availabilityData['calendarData'],
+            'dateToShow' => $availabilityData['dateToShow'],
+            'vacations' => $freelancer->vacations()->orderBy('from', 'ASC')->get(),
+            //needed for UserShiftPlan
+            'dateValue'=> $showCalendar['dateValue'],
+            'daysWithEvents' => $showCalendar['daysWithEvents'],
+            'rooms' => Room::all(),
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'projects' => Project::all(),
+            'shifts' => $freelancer->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),
         ]);
     }
 
@@ -85,7 +166,10 @@ class FreelancerController extends Controller
                 'street',
                 'zip_code',
                 'location',
-                'note'
+                'note',
+                'salary_per_hour',
+                'salary_description',
+                'can_master'
             ])
         );
     }

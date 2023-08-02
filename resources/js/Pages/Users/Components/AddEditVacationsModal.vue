@@ -81,7 +81,7 @@ export default defineComponent({
         }
     },
     emits: ['closed'],
-    props: ['editVacation', 'user'],
+    props: ['editVacation', 'user','type'],
     methods: {
         closeModal(bool){
             this.$emit('closed', bool)
@@ -98,17 +98,35 @@ export default defineComponent({
                 this.helpText = '';
             }
             if(this.vacation.id === null){
-                this.vacation.post(route('user.vacation.add', this.user.id), {
-                    preserveScroll: true, preserveState: true, onFinish: () => {
-                        this.closeModal(true)
-                    }
-                })
+                if(this.type === 'freelancer'){
+                    this.vacation.post(route('freelancer.vacation.add', this.user.id), {
+                        preserveScroll: true, preserveState: true, onFinish: () => {
+                            this.closeModal(true)
+                        }
+                    })
+                }else{
+                    this.vacation.post(route('user.vacation.add', this.user.id), {
+                        preserveScroll: true, preserveState: true, onFinish: () => {
+                            this.closeModal(true)
+                        }
+                    })
+                }
+
             } else {
-                this.vacation.patch(route('user.vacation.update', this.vacation.id), {
-                    preserveScroll: true, preserveState: true, onFinish: () => {
-                        this.closeModal(true)
-                    }
-                })
+                if(this.type === 'freelancer'){
+                    this.vacation.patch(route('freelancer.vacation.update', this.vacation.id), {
+                        preserveScroll: true, preserveState: true, onFinish: () => {
+                            this.closeModal(true)
+                        }
+                    })
+                }else{
+                    this.vacation.patch(route('user.vacation.update', this.vacation.id), {
+                        preserveScroll: true, preserveState: true, onFinish: () => {
+                            this.closeModal(true)
+                        }
+                    })
+                }
+
             }
         },
     }

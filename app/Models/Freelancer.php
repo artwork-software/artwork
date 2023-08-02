@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use function Termwind\render;
 
 class Freelancer extends Model
@@ -23,7 +24,10 @@ class Freelancer extends Model
         'street',
         'zip_code',
         'location',
+        'can_master',
         'note',
+        'salary_per_hour',
+        'salary_description',
     ];
 
     protected $appends = [
@@ -47,6 +51,11 @@ class Freelancer extends Model
     public function getDisplayNameAttribute(): string
     {
         return $this->last_name . ', ' . $this->first_name;
+    }
+
+    public function vacations(): HasMany
+    {
+        return $this->hasMany(FreelancerVacation::class);
     }
 
     public function getShiftsAttribute($start, $end): Collection

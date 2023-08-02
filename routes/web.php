@@ -512,6 +512,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/freelancer/update/{freelancer}', [\App\Http\Controllers\FreelancerController::class, 'update'])->name('freelancer.update');
     Route::post('/freelancer/profile-image/{freelancer}', [\App\Http\Controllers\FreelancerController::class, 'updateProfileImage'])->name('freelancer.change.profile-image');
     Route::post('freelancer/add', [\App\Http\Controllers\FreelancerController::class, 'store'])->name('freelancer.add');
+    // Vacation
+    Route::post('/freelancer/vacation/{freelancer}/add', [\App\Http\Controllers\FreelancerVacationController::class, 'store'])->name('freelancer.vacation.add');
+    Route::patch('/freelancer/vacation/{freelancerVacation}/update', [\App\Http\Controllers\FreelancerVacationController::class, 'update'])->name('freelancer.vacation.update');
+    Route::delete('/freelancer/vacation/{freelancerVacation}/delete', [\App\Http\Controllers\FreelancerVacationController::class, 'destroy'])->name('freelancer.vacation.delete');
 
     // Service Provider
     Route::get('/service-provider/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'show'])->name('service_provider.show');

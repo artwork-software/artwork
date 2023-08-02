@@ -2,7 +2,8 @@
     <div class="w-full">
         <div>
             <div class="mb-6 -ml-12">
-                <UserShiftPlanFunctionBar :weeklyWorkingHours="weeklyWorkingHours" @previousTimeRange="previousTimeRange"
+                <UserShiftPlanFunctionBar :type="type" :weeklyWorkingHours="weeklyWorkingHours"
+                                          @previousTimeRange="previousTimeRange"
                                           @next-time-range="nextTimeRange"
                                           :dateValue="dateValue"></UserShiftPlanFunctionBar>
             </div>
@@ -14,8 +15,10 @@
                             {{ day.day_string }} {{ day.day }}
                             <span class="text-shiftText subpixel-antialiased">
                                 (<span
-                                :class="day.shiftDurationWarning? 'text-error': ''">{{ calculateShiftDuration(day.events) }}</span>  |
-                            <span :class="day.breakWarning">{{calculateTotalBreakDuration(day.events) }}</span>)</span>
+                                :class="day.shiftDurationWarning? 'text-error': ''">{{
+                                    calculateShiftDuration(day.events)
+                                }}</span>  |
+                            <span :class="day.breakWarning">{{ calculateTotalBreakDuration(day.events) }}</span>)</span>
                         </div>
                         <div v-if="day.in_vacation">
                             <div class="bg-shiftText text-sm p-1 flex items-center text-secondaryHover h-10">
@@ -57,10 +60,11 @@ export default {
     },
     computed: {
         daysWithVacationAndEvents() {
+            console.log(this.daysWithEvents);
             const daysArray = Object.values(this.daysWithEvents);
             return daysArray.map((day) => {
                 const dayDate = new Date(day.full_day.split(".").reverse().join("-"));
-                const inVacation = this.vacations.some((vacation) => {
+                const inVacation = this.vacations?.some((vacation) => {
                     const vacationFrom = new Date(vacation.from);
                     const vacationUntil = new Date(vacation.until);
                     return dayDate >= vacationFrom && dayDate <= vacationUntil;
@@ -82,7 +86,7 @@ export default {
             });
         },
     },
-    props: ['daysWithEvents', 'dateValue', 'projects', 'eventTypes', 'rooms', 'vacations','weeklyWorkingHours'],
+    props: ['daysWithEvents', 'dateValue', 'projects', 'eventTypes', 'rooms', 'vacations', 'weeklyWorkingHours', 'type'],
     methods: {
         previousTimeRange() {
             const dayDifference = this.calculateDateDifference();
@@ -149,8 +153,6 @@ export default {
 
             const earliestStartTime = Math.min(...startTimes.map(time => new Date(`2000-01-01 ${time}`)));
             const latestEndTime = Math.max(...endTimes.map(time => new Date(`2000-01-01 ${time}`)));
-
-            console.log(earliestStartTime, latestEndTime)
 
             const durationInMinutes = (latestEndTime - earliestStartTime) / 60000;
 

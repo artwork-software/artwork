@@ -19,7 +19,10 @@ class ServiceProvider extends Model
         'street',
         'zip_code',
         'location',
+        'can_master',
         'note',
+        'salary_per_hour',
+        'salary_description',
     ];
 
 

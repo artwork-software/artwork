@@ -1,10 +1,10 @@
 <template>
     <UserEditHeader :current-tab="currentTab" :user_to_edit="user_to_edit">
-        <UserShiftPlan :weeklyWorkingHours="this.user_to_edit.weekly_working_hours" :date-value="dateValue"
+        <UserShiftPlan type="user" :weeklyWorkingHours="this.user_to_edit.weekly_working_hours" :date-value="dateValue"
                        :days-with-events="daysWithEvents"
                        :projects="projects" :event-types="eventTypes" :rooms="rooms"
                        :vacations="vacations"></UserShiftPlan>
-        <Availability :calendar-data="calendarData" :date-to-show="dateToShow"
+        <Availability type="user" :calendar-data="calendarData" :date-to-show="dateToShow"
                       :user="user_to_edit" :vacations="vacations"/>
     </UserEditHeader>
     <BaseSidenav :show="show" @toggle="this.show =! this.show">

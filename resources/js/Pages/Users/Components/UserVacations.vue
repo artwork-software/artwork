@@ -3,7 +3,7 @@
 
     <div class="my-5">
         <div v-for="vacation in vacations">
-            <SingleUserVacation :vacation="vacation" :user="user" />
+            <SingleUserVacation :type="type" :vacation="vacation" :user="user" />
         </div>
     </div>
 
@@ -12,7 +12,7 @@
     </div>
 
 
-    <AddEditVacationsModal v-if="showAddEditVacationsModal" @closed="showAddEditVacationsModal = false" :user="user" />
+    <AddEditVacationsModal :type="type" v-if="showAddEditVacationsModal" @closed="showAddEditVacationsModal = false" :user="user" />
 </template>
 
 <script>
@@ -30,7 +30,7 @@ export default defineComponent({
         AddEditVacationsModal,
         PlusCircleIcon
     },
-    props: ['user', 'vacations'],
+    props: ['user', 'vacations','type'],
     data(){
         return {
             showAddEditVacationsModal: false

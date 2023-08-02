@@ -68,17 +68,17 @@
             </div>
 
             <div class="mt-10">
+                <!-- Einsatzplan -->
                 <div v-if="currentTab === 1">
-
-                </div>
-                <div v-if="currentTab === 2">
-
-                </div>
-                <div v-if="currentTab === 3">
-
+                    <UserShiftPlan type="freelancer" :date-value="dateValue"
+                                   :days-with-events="daysWithEvents"
+                                   :projects="projects" :event-types="eventTypes" :rooms="rooms"
+                                   :vacations="vacations"></UserShiftPlan>
+                    <Availability type="freelancer" :calendar-data="calendarData" :date-to-show="dateToShow"
+                                  :user="freelancer" :vacations="vacations"/>
                 </div>
                 <!-- Persönliche Daten -->
-                <div v-if="currentTab === 4">
+                <div v-if="currentTab === 2">
                     <!-- Profilbild, Name, Nachname -->
                     <div class="grid grid-cols-1 sm:grid-cols-8 gap-4 flex items-center">
                         <div class="col-span-1">
@@ -147,6 +147,9 @@
 
                     <AddButton class="mt-5 !ml-0" text="Änderung Speichern" :disabled="checkCanEdit" :readonly="checkCanEdit" type="secondary" @click="saveFreelancer" />
                 </div>
+                <div v-if="currentTab === 3">
+                    <UserTermsTab user_type="freelancer" :user_to_edit="freelancer"></UserTermsTab>
+                </div>
 
             </div>
         </div>
@@ -165,23 +168,39 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
+import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
+import Availability from "@/Pages/Users/Components/Availability.vue";
+import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 
 export default defineComponent({
     name: "Show",
     mixins: [Permissions],
     components: {
+        UserShiftPlan, Availability,
+        UserTermsTab,
         AddButton,
         PencilAltIcon, DotsVerticalIcon, TrashIcon,
         AppLayout, Menu, MenuButton, MenuItems, MenuItem
     },
-    props: ['freelancer'],
+    props: [
+        'freelancer',
+        'shifts',
+        'calendarData',
+        'dateToShow',
+        'vacations',
+        'dateValue',
+        'daysWithEvents',
+        'rooms',
+        'eventTypes',
+        'projects'
+    ],
     data(){
         return {
             tabs: [
                 { id: 1, name: 'Einsatzplan', href: '#', current: false },
-                { id: 2, name: 'Verfügbarkeit', href: '#', current: false },
+                { id: 2, name: 'Persönliche Daten', href: '#', current: true },
                 { id: 3, name: 'Konditionen', href: '#', current: false },
-                { id: 4, name: 'Persönliche Daten', href: '#', current: true },
+
             ],
             currentTab: 4,
             freelancerData: useForm({

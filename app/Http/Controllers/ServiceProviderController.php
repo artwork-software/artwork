@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\EventTypeResource;
+use App\Models\EventType;
 use App\Models\Freelancer;
+use App\Models\Project;
+use App\Models\Room;
 use App\Models\ServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -53,8 +57,18 @@ class ServiceProviderController extends Controller
      */
     public function show(ServiceProvider $serviceProvider): \Inertia\Response
     {
+        $shiftPlan = new CalendarController();
+        $showCalendar = $shiftPlan->createCalendarDataForServiceProviderShiftPlan($serviceProvider);
+
         return Inertia::render('ServiceProvider/Show', [
-            'serviceProvider' => $serviceProvider
+            'serviceProvider' => $serviceProvider,
+            //needed for UserShiftPlan
+            'dateValue'=> $showCalendar['dateValue'],
+            'daysWithEvents' => $showCalendar['daysWithEvents'],
+            'rooms' => Room::all(),
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'projects' => Project::all(),
+            'shifts' => $serviceProvider->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),
         ]);
     }
 
@@ -85,7 +99,10 @@ class ServiceProviderController extends Controller
             'street',
             'zip_code',
             'location',
-            'note'
+            'note',
+            'salary_per_hour',
+            'salary_description',
+            'can_master'
         ]));
     }
 

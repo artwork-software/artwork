@@ -33,6 +33,7 @@
         "@vuepic/vue-datepicker": "^3.2.2",
         "dayjs": "^1.11.7",
         "laravel-permission-to-vuejs": "^3.0.1",
+        "mathjax": "^2.7.2",
         "vue-cal": "^4.8.0",
         "vue-mathjax-next": "^0.0.4",
         "vue-tailwind-datepicker": "^1.4.3",

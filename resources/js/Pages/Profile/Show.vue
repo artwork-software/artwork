@@ -42,6 +42,7 @@
                                         </div>
 
                                     </div>
+                                    <div v-if="hasNameError" class="text-error mt-1">{{ nameError }}</div>
 
                                 </div>
 
@@ -383,7 +384,9 @@ export default defineComponent({
             pw_feedback: 0,
             email_validation: {
                 email: true
-            }
+            },
+            nameError: '',
+            hasNameError: false,
         }
     },
     computed: {
@@ -430,6 +433,11 @@ export default defineComponent({
             this.closeDeleteUserModal()
         },
         updateProfileInformation() {
+            if (!this.userForm.first_name || !this.userForm.last_name) {
+                this.nameError = 'Vorname und Nachname sind notwendig';
+                this.hasNameError = true;
+                return; // Exit the function without making the API call
+            }
             if (this.$refs.photo) {
                 this.userForm.photo = this.$refs.photo.files[0]
             }

@@ -18,6 +18,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Barryvdh\Debugbar\Facades\Debugbar;
+use DateTime;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -321,20 +322,59 @@ class CalendarController extends Controller
         }
 
         $daysWithEvents = [];
+        $totalPlannedWorkingHours = 0;
 
         foreach ($calendarPeriod as $date) {
             $events = $this->get_events_per_day($date, $startDate, $endDate, $user->id);
+
+            // Calculate planned working hours for this day
+            $plannedWorkingHours = 0;
+            $earliestStart = null;
+            $latestEnd = null;
+            $totalBreakMinutes = 0;
+
+            foreach ($events as $event) {
+                $shifts = $event['shifts'];
+
+                foreach ($shifts as $shift) {
+                    $start = Carbon::parse($shift['start']);
+                    $end = Carbon::parse($shift['end']);
+                    $breakMinutes = $shift['break_minutes'];
+
+                    // Update earliest start and latest end
+                    if ($earliestStart === null || $start->lt($earliestStart)) {
+                        $earliestStart = $start;
+                    }
+                    if ($latestEnd === null || $end->gt($latestEnd)) {
+                        $latestEnd = $end;
+                    }
+
+                    // Sum up break minutes
+                    $totalBreakMinutes += $breakMinutes;
+                }
+            }
+
+            // Calculate working hours for the day
+            if ($earliestStart !== null && $latestEnd !== null) {
+                $totalWorkingMinutes = $earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes;
+                $plannedWorkingHours = max($totalWorkingMinutes / 60, 0);
+            }
+
             $daysWithEvents[$date->format('Y-m-d')] = [
                 'day' => $date->format('d.m.'),
                 'day_string' => $date->shortDayName,
                 'full_day' => $date->format('d.m.Y'),
-                'events' => $events
+                'events' => $events,
+                'plannedWorkingHours' => $plannedWorkingHours,
             ];
+            // Calculate total planned working hours for all days
+            $totalPlannedWorkingHours += $plannedWorkingHours;
         }
 
         return [
             'dateValue' => [$this->startDate->format('Y-m-d'), $this->endDate->format('Y-m-d')],
             'daysWithEvents' => $daysWithEvents,
+            'totalPlannedWorkingHours' => $totalPlannedWorkingHours,
         ];
     }
 

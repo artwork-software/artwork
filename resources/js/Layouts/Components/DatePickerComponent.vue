@@ -15,6 +15,7 @@
                    id="endDate"
                    type="date"
                    class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+
         </div>
         <vue-tailwind-datepicker class="absolute z-50" v-if="this.showDateRangePicker && dateValuePicker" no-input
                                  :shortcuts="customShortcuts"
@@ -25,6 +26,7 @@
     <div class="font-medium text-gray-900" v-else>
         Projektzeitraum: {{new Date(dateValueArray[0]).format("DD.MM.YYYY")}} - {{new Date(dateValueArray[1]).format("DD.MM.YYYY")}}
     </div>
+    <div v-if="hasError" class="text-error mt-1 mx-2">{{ errorMessage }}</div>
 </template>
 
 <script>
@@ -135,6 +137,8 @@ export default {
             showDateRangePicker: false,
             refreshPage: false,
             customShortcuts: customShortcuts,
+            errorMessage: '',
+            hasError: false,
         }
     },
     watch: {
@@ -152,12 +156,24 @@ export default {
     },
     methods: {
         updateTimes() {
-            Inertia.reload({
-                data: {
-                    startDate: this.dateValueArray[0],
-                    endDate: this.dateValueArray[1],
-                }
-            })
+            const startDate = new Date(this.dateValueArray[0]);
+            const endDate = new Date(this.dateValueArray[1]);
+
+            if (endDate < startDate) {
+                this.errorMessage = 'Das Enddatum muss nach dem Startdatum liegen.';
+                this.hasError = true;
+            } else {
+                this.errorMessage = '';
+                this.hasError = false;
+
+                // Perform the reload or other actions here
+                Inertia.reload({
+                    data: {
+                        startDate: this.dateValueArray[0],
+                        endDate: this.dateValueArray[1],
+                    }
+                });
+            }
         },
     }
 }

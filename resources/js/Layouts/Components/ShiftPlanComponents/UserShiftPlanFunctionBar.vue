@@ -14,7 +14,7 @@
             </div>
         </div>
         <div v-if="type !== 'freelancer' && type !== 'service_provider'">
-            {{ totalHoursExpectedWork }}
+            {{totalPlannedWorkingHours.toFixed(1)}} / {{ totalHoursExpectedWork }}
         </div>
     </div>
 </template>
@@ -47,7 +47,8 @@ export default {
     props: [
         'dateValue',
         'weeklyWorkingHours',
-        'type'
+        'type',
+        'totalPlannedWorkingHours'
     ],
     emits: ['previousTimeRange', 'nextTimeRange'],
     data() {
@@ -70,7 +71,7 @@ export default {
             const hoursPerDay = this.weeklyWorkingHours / 7;
 
             // Calculate the total number of hours that need to be worked
-            return totalDays * hoursPerDay;
+            return (totalDays * hoursPerDay).toFixed(1);
         },
     },
     methods: {

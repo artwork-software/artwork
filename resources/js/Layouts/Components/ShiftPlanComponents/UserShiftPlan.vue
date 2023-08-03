@@ -2,7 +2,7 @@
     <div class="w-full">
         <div>
             <div class="mb-6 -ml-12">
-                <UserShiftPlanFunctionBar :type="type" :weeklyWorkingHours="weeklyWorkingHours"
+                <UserShiftPlanFunctionBar :type="type" :totalPlannedWorkingHours="totalPlannedWorkingHours" :weeklyWorkingHours="weeklyWorkingHours"
                                           @previousTimeRange="previousTimeRange"
                                           @next-time-range="nextTimeRange"
                                           :dateValue="dateValue"></UserShiftPlanFunctionBar>
@@ -60,7 +60,6 @@ export default {
     },
     computed: {
         daysWithVacationAndEvents() {
-            console.log(this.daysWithEvents);
             const daysArray = Object.values(this.daysWithEvents);
             return daysArray.map((day) => {
                 const dayDate = new Date(day.full_day.split(".").reverse().join("-"));
@@ -86,7 +85,7 @@ export default {
             });
         },
     },
-    props: ['daysWithEvents', 'dateValue', 'projects', 'eventTypes', 'rooms', 'vacations', 'weeklyWorkingHours', 'type'],
+    props: ['daysWithEvents', 'dateValue', 'projects', 'eventTypes', 'rooms', 'vacations', 'weeklyWorkingHours', 'type','totalPlannedWorkingHours'],
     methods: {
         previousTimeRange() {
             const dayDifference = this.calculateDateDifference();

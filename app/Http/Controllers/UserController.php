@@ -145,6 +145,7 @@ class UserController extends Controller
             //needed for UserShiftPlan
             'dateValue'=> $showCalendar['dateValue'],
             'daysWithEvents' => $showCalendar['daysWithEvents'],
+            'totalPlannedWorkingHours' => $showCalendar['totalPlannedWorkingHours'],
             'rooms' => Room::all(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => Project::all(),

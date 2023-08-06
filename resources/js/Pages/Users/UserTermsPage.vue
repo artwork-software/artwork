@@ -3,7 +3,7 @@
         <UserTermsTab user_type="user" :user_to_edit="user_to_edit"></UserTermsTab>
     </UserEditHeader>
     <BaseSidenav :show="show" @toggle="this.show =! this.show">
-        <UserSidebar />
+        <UserSidebar :user="user_to_edit" type="user" />
     </BaseSidenav>
 </template>
 

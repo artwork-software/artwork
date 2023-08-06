@@ -8,7 +8,7 @@
                       :user="user_to_edit" :vacations="vacations"/>
     </UserEditHeader>
     <BaseSidenav :show="show" @toggle="this.show =! this.show">
-        <UserSidebar />
+        <UserSidebar :user="user_to_edit" type="user" />
     </BaseSidenav>
 </template>
 

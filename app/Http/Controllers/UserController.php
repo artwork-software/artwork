@@ -281,11 +281,20 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'Area status updated');
     }
 
-    public function update_user_can_master(Request $request): RedirectResponse
+    public function update_user_can_master(User $user, Request $request): RedirectResponse
     {
-        $user = Auth::user();
         $user->update([
             'can_master' => $request->can_master
+        ]);
+
+        return Redirect::back()->with('success', 'User updated');
+    }
+
+    public function update_work_data(User $user, Request $request): RedirectResponse
+    {
+        $user->update([
+            'work_name' => $request->work_name,
+            'work_description' => $request->work_description
         ]);
 
         return Redirect::back()->with('success', 'User updated');

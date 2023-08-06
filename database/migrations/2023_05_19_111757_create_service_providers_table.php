@@ -17,6 +17,8 @@ return new class extends Migration
             $table->id();
             $table->string('profile_image')->nullable();
             $table->string('provider_name')->default('Neuer Dienstleister');
+            $table->string('work_name')->nullable();
+            $table->string('work_description')->nullable();
             $table->string('email')->nullable();
             $table->string('phone_number')->nullable();
             $table->string('street')->nullable();

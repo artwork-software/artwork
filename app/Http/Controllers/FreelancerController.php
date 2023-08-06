@@ -7,9 +7,12 @@ use App\Models\EventType;
 use App\Models\Freelancer;
 use App\Models\Project;
 use App\Models\Room;
+use App\Models\ServiceProvider;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -172,6 +175,25 @@ class FreelancerController extends Controller
                 'can_master'
             ])
         );
+    }
+
+    public function update_freelancer_can_master(Freelancer $freelancer, Request $request): RedirectResponse
+    {
+        $freelancer->update([
+            'can_master' => $request->can_master
+        ]);
+
+        return Redirect::back()->with('success', 'Freelancer updated');
+    }
+
+    public function update_work_data(Freelancer $freelancer, Request $request): RedirectResponse
+    {
+        $freelancer->update([
+            'work_name' => $request->work_name,
+            'work_description' => $request->work_description
+        ]);
+
+        return Redirect::back()->with('success', 'Freelancer updated');
     }
 
     public function updateProfileImage(Request $request, Freelancer $freelancer): void

@@ -23,6 +23,8 @@ class ServiceProvider extends Model
         'note',
         'salary_per_hour',
         'salary_description',
+        'work_name',
+        'work_description',
     ];
 
 

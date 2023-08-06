@@ -172,6 +172,9 @@
                     </div>
                 </div>
             </div>
+            <BaseSidenav :show="showSidebar" @toggle="this.showSidebar =! this.showSidebar" >
+                <UserSidebar :user="serviceProvider" type="serviceProvider"  />
+            </BaseSidenav>
         </div>
 
     </AppLayout>
@@ -190,11 +193,15 @@ import Permissions from "@/mixins/Permissions.vue";
 import SingleContact from "@/Pages/ServiceProvider/Components/SingleContact.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
+import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
+import UserSidebar from "@/Pages/Users/Components/UserSidebar.vue";
 
 export default defineComponent({
     name: "Show",
     mixins: [Permissions],
     components: {
+        UserSidebar,
+        BaseSidenav,
         UserShiftPlan,
         UserTermsTab,
         SingleContact,
@@ -213,6 +220,12 @@ export default defineComponent({
         'projects'
 
     ],
+    mounted() {
+        this.showSidebar = true;
+        setTimeout(() => {
+            this.showSidebar = false;
+        }, 1000)
+    },
     data(){
         return {
             tabs: [
@@ -231,6 +244,7 @@ export default defineComponent({
                 note: this.serviceProvider.note,
             }),
             photoPreview: null,
+            showSidebar: false,
         }
     },
     computed: {

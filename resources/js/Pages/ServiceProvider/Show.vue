@@ -69,7 +69,7 @@
 
             <div class="mt-10">
                 <div v-if="currentTab === 1">
-                    <UserShiftPlan type="service_provider" :date-value="dateValue"
+                    <UserShiftPlan :total-planned-working-hours="totalPlannedWorkingHours" type="service_provider" :date-value="dateValue"
                                    :days-with-events="daysWithEvents"
                                    :projects="projects" :event-types="eventTypes" :rooms="rooms"
                                    :vacations="vacations"></UserShiftPlan>
@@ -217,7 +217,8 @@ export default defineComponent({
         'daysWithEvents',
         'rooms',
         'eventTypes',
-        'projects'
+        'projects',
+        'totalPlannedWorkingHours',
 
     ],
     mounted() {

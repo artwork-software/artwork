@@ -70,7 +70,7 @@
             <div class="mt-10">
                 <!-- Einsatzplan -->
                 <div v-if="currentTab === 1">
-                    <UserShiftPlan type="freelancer" :date-value="dateValue"
+                    <UserShiftPlan :total-planned-working-hours="totalPlannedWorkingHours" type="freelancer" :date-value="dateValue"
                                    :days-with-events="daysWithEvents"
                                    :projects="projects" :event-types="eventTypes" :rooms="rooms"
                                    :vacations="vacations"></UserShiftPlan>
@@ -198,7 +198,8 @@ export default defineComponent({
         'daysWithEvents',
         'rooms',
         'eventTypes',
-        'projects'
+        'projects',
+        'totalPlannedWorkingHours'
     ],
     mounted() {
         this.showSidebar = true;
@@ -214,7 +215,7 @@ export default defineComponent({
                 { id: 3, name: 'Konditionen', href: '#', current: false },
 
             ],
-            currentTab: 4,
+            currentTab: 2,
             freelancerData: useForm({
                 first_name: this.freelancer.first_name,
                 last_name: this.freelancer.last_name,

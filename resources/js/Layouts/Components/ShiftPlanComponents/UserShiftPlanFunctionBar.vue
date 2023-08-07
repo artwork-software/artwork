@@ -14,7 +14,10 @@
             </div>
         </div>
         <div v-if="type !== 'freelancer' && type !== 'service_provider'">
-            {{totalPlannedWorkingHours.toFixed(1)}} / {{ totalHoursExpectedWork }}
+            Geplant/Soll: {{ totalPlannedWorkingHours.toFixed(1) }} / {{ totalHoursExpectedWork }}
+        </div>
+        <div v-if="type === 'freelancer' || type === 'service_provider'">
+            Geplant: {{ totalPlannedWorkingHours?.toFixed(1) }}
         </div>
     </div>
 </template>

@@ -57,16 +57,16 @@ const updateWorkData = () => {
             <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Work Daten bearbeiten
+                    Arbeits-Profil bearbeiten
                 </div>
                 <XIcon @click="$emit('closed')"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-secondary text-sm my-6">
-                    Bearbeite die Work Daten des Nutzers hier.
+                    Bearbeite das Arbeits-Profil der Nutzer*in hier.
                 </div>
                 <input type="text"
-                       placeholder="Arbeitsname"
+                       placeholder="Arbeitsbezeichnung"
                        v-model="userForm.work_name"
                        class="h-10 mb-4 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                        required

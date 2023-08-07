@@ -53,8 +53,8 @@ watch(() => userForm.can_master, (value) => {
                     <PencilAltIcon class="h-4 w-4 text-white cursor-pointer"/>
                 </div>
             </div>
-            <div class="text-secondary mt-4">{{ props.user.work_name || "Noch kein work name" }}</div>
-            <div class="text-secondary mt-2">{{ props.user.work_description || "Noch keine work description." }}</div>
+            <div class="text-secondary mt-4">{{ props.user.work_name || "Noch keine Bezeichnung angegeben" }}</div>
+            <div class="text-secondary mt-2">{{ props.user.work_description || "Noch keine Beschreibung angegeben." }}</div>
             <div class="mt-8 text-secondary">GEWERKE</div>
             <SwitchGroup as="div" class="flex items-center mt-2">
                 <Switch v-model="userForm.can_master"

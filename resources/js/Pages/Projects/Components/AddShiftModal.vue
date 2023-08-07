@@ -55,6 +55,7 @@
                                            <input type="number"
                                                   placeholder="Pausenlänge in Minuten*"
                                                   v-model="shiftForm.break_minutes"
+                                                  @change="checkInfringement"
                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                                   required
                                            />
@@ -191,17 +192,31 @@ export default defineComponent({
         closeModal(bool){
             this.$emit('closed', bool);
         },
-        checkInfringement(){
-            //check if the time difference between start and end is more than 10 hours
-            let start = new Date(this.shiftForm.start);
-            let end = new Date(this.shiftForm.end);
+        checkInfringement() {
+            if(this.shiftForm.start && this.shiftForm.end){
+                // Get the time strings from the input fields
+                let startTime = this.shiftForm.start?.split(':');
+                let endTime = this.shiftForm.end?.split(':');
 
-            let diff = (end - start) / (1000 * 60 * 60);
+                // Parse hours and minutes
+                let startHours = parseInt(startTime[0], 10);
+                let startMinutes = parseInt(startTime[1], 10);
+                let endHours = parseInt(endTime[0], 10);
+                let endMinutes = parseInt(endTime[1], 10);
 
-            if (diff > 10) {
-                this.helpTexts.time = 'Die Schicht darf max. 10h lang sein!';
-            } else {
-                this.helpTexts.time = '';
+                // Calculate time difference in minutes
+                let diffMinutes = (endHours - startHours) * 60 + (endMinutes - startMinutes);
+
+                if (diffMinutes > 600) { // 10 hours = 600 minutes
+                    this.helpTexts.time = 'Die Schicht ist über 10h lang!';
+                } else {
+                    this.helpTexts.time = '';
+                }
+                if (diffMinutes > 360 && this.shiftForm.break_minutes < 30) { // 6 hours = 360 minutes
+                    this.helpTexts.breakText = 'Die Pause ist kürzer als das Arbeitsrecht vorschreibt!';
+                }else{
+                    this.helpTexts.breakText = '';
+                }
             }
         },
         saveAllEvents(){

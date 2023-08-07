@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('profile_image')->nullable();
             $table->string('first_name')->default('Neuer');
             $table->string('last_name')->default('Freelancer');
+            $table->string('work_name')->nullable();
+            $table->string('work_description')->nullable();
             $table->string('email')->nullable();
             $table->string('phone_number')->nullable();
             $table->string('street')->nullable();

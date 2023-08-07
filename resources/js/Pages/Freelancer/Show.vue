@@ -152,6 +152,9 @@
                 </div>
 
             </div>
+            <BaseSidenav :show="showSidebar" @toggle="this.showSidebar =! this.showSidebar" >
+                <UserSidebar :user="freelancer" type="freelancer"  />
+            </BaseSidenav>
         </div>
 
 
@@ -171,11 +174,14 @@ import Permissions from "@/mixins/Permissions.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
+import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
+import UserSidebar from "@/Pages/Users/Components/UserSidebar.vue";
 
 export default defineComponent({
     name: "Show",
     mixins: [Permissions],
     components: {
+        UserSidebar, BaseSidenav,
         UserShiftPlan, Availability,
         UserTermsTab,
         AddButton,
@@ -194,6 +200,12 @@ export default defineComponent({
         'eventTypes',
         'projects'
     ],
+    mounted() {
+        this.showSidebar = true;
+        setTimeout(() => {
+            this.showSidebar = false;
+        }, 1000)
+    },
     data(){
         return {
             tabs: [
@@ -215,6 +227,7 @@ export default defineComponent({
                 note: this.freelancer.note,
             }),
             photoPreview: null,
+            showSidebar: false
         }
     },
     computed: {

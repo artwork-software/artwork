@@ -4,7 +4,7 @@
                             :available_roles="available_roles"></UserPermissionsTab>
     </UserEditHeader>
     <BaseSidenav :show="show" @toggle="this.show =! this.show">
-        <UserSidebar />
+        <UserSidebar :user="user_to_edit" type="user" />
     </BaseSidenav>
 </template>
 

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('first_name');
             $table->string('last_name');
+            $table->string('work_name')->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('phone_number')->nullable();
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->string('position')->nullable();;
             $table->string('business')->nullable();;
             $table->longText('description')->nullable();
+            $table->longText('work_description')->nullable();
             $table->boolean('toggle_hints')->default(true);
             $table->json('opened_checklists');
             $table->json('opened_areas');

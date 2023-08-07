@@ -8,7 +8,10 @@ use App\Models\Freelancer;
 use App\Models\Project;
 use App\Models\Room;
 use App\Models\ServiceProvider;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -104,6 +107,25 @@ class ServiceProviderController extends Controller
             'salary_description',
             'can_master'
         ]));
+    }
+
+    public function update_provider_can_master(ServiceProvider $serviceProvider, Request $request): RedirectResponse
+    {
+        $serviceProvider->update([
+            'can_master' => $request->can_master
+        ]);
+
+        return Redirect::back()->with('success', 'Service provider updated');
+    }
+
+    public function update_work_data(ServiceProvider $serviceProvider, Request $request): RedirectResponse
+    {
+        $serviceProvider->update([
+            'work_name' => $request->work_name,
+            'work_description' => $request->work_description
+        ]);
+
+        return Redirect::back()->with('success', 'Service provider updated');
     }
 
     /**

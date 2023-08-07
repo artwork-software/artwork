@@ -29,21 +29,23 @@
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                                        <div>
-                                           <input type="time"
+                                           <input type="text" onfocus="(this.type='time')"
                                                   placeholder="Schicht Start"
                                                   v-model="shiftForm.start"
                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                                   required
+                                                  @change="checkInfringement"
                                            />
                                             <span class="text-xs text-red-500" v-show="helpTexts.start.length > 0">{{ helpTexts.start }}</span>
 
                                        </div>
                                         <div>
-                                            <input type="time"
+                                            <input type="text" onfocus="(this.type='time')"
                                                    placeholder="Schicht Ende"
                                                    v-model="shiftForm.end"
                                                    maxlength="3"
                                                    required
+                                                   @change="checkInfringement"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                             <span class="text-xs text-red-500" v-show="helpTexts.end.length > 0">{{ helpTexts.end }}</span>
                                             <span class="text-xs text-red-500" v-show="helpTexts.time.length > 0">{{ helpTexts.time }}</span>
@@ -188,6 +190,19 @@ export default defineComponent({
     methods: {
         closeModal(bool){
             this.$emit('closed', bool);
+        },
+        checkInfringement(){
+            //check if the time difference between start and end is more than 10 hours
+            let start = new Date(this.shiftForm.start);
+            let end = new Date(this.shiftForm.end);
+
+            let diff = (end - start) / (1000 * 60 * 60);
+
+            if (diff > 10) {
+                this.helpTexts.time = 'Die Schicht darf max. 10h lang sein!';
+            } else {
+                this.helpTexts.time = '';
+            }
         },
         saveAllEvents(){
             this.shiftForm.changeAll = true;

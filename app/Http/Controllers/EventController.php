@@ -113,7 +113,6 @@ class EventController extends Controller
     {
         $shiftPlan = new CalendarController();
         $showCalendar = $shiftPlan->createCalendarDataForShiftPlan();
-
         $shiftFilterController = new ShiftFilterController();
         $shiftFilters = $shiftFilterController->index();
 
@@ -132,8 +131,9 @@ class EventController extends Controller
         $events = Event::with(['shifts','event_type'])
             ->whereHas('shifts', function ($query) {
                 $query->whereNotNull('shifts.id');
-            })
+            })->whereBetween('start_time', [$startDate, $endDate])
             ->get();
+
 
         return inertia('Shifts/ShiftPlan', [
             'events' => $events,
@@ -149,6 +149,11 @@ class EventController extends Controller
             'users' => UserIndexResource::collection(User::all())->resolve(),
             'freelancers' => FreelancerShiftResource::collection(Freelancer::all())->resolve(),
             'serviceProviders' => ServiceProviderShiftResource::collection(ServiceProvider::all())->resolve(),
+            'history' => $events->flatMap(function ($event) {
+                return $event->shifts->map(function ($shift) {
+                    return $shift->historyChanges();
+                });
+            })->all(),
         ]);
     }
 
@@ -347,7 +352,7 @@ class EventController extends Controller
             }
         }
 
-        return Redirect::route('shifts.plan')->with('success', 'Shifts committed successfully');
+        //return Redirect::route('shifts.plan')->with('success', 'Shifts committed successfully');
     }
 
     /**

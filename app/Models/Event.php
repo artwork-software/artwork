@@ -48,7 +48,7 @@ class Event extends Model
     use HasChangesHistory;
     use HasFactory, SoftDeletes;
 
-    protected $with = ['series'];
+    protected $with = ['series', 'event_type'];
 
     protected $fillable = [
         'name',

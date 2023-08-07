@@ -30,7 +30,7 @@
                             <DragElement  :item="user.element" :type="user.type" />
                         </th>
                         <td v-for="day in days">
-                            <div class="w-64 h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell">
+                            <div class="w-64 h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer" @click="openShowUserShiftModal(user.element, day)">
                                 <span v-for="shift in user.element?.shifts[day.full_day]">
                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                 </span>
@@ -43,6 +43,7 @@
         </div>
     </div>
 
+    <show-user-shifts-modal v-if="showUserShifts" @closed="showUserShifts = false" :user="userToShow" :day="dayToShow" :projects="projects"/>
 
 </template>
 
@@ -51,14 +52,18 @@ import {defineComponent} from 'vue'
 import {Link} from "@inertiajs/inertia-vue3";
 import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
+import ShowUserShiftsModal from "@/Pages/Shifts/Components/showUserShiftsModal.vue";
 
 export default defineComponent({
     name: "ShiftPlanUserOverview",
-    components: {DragElement, SingleShiftPlanEvent, Link},
-    props: ['users', 'days'],
+    components: {ShowUserShiftsModal, DragElement, SingleShiftPlanEvent, Link},
+    props: ['users', 'days', 'projects'],
     data(){
         return {
-            showUserOverview: false
+            showUserOverview: false,
+            showUserShifts: false,
+            userToShow: null,
+            dayToShow: null,
         }
     },
     emits: ['isOpen'],
@@ -67,6 +72,11 @@ export default defineComponent({
             this.showUserOverview = !this.showUserOverview
             this.$emit('isOpen', this.showUserOverview)
         },
+        openShowUserShiftModal(user, day){
+            this.userToShow = user
+            this.dayToShow = day
+            this.showUserShifts = true
+        }
     },
 
     computed: {

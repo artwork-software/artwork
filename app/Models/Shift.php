@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Casts\TimeWithoutSeconds;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Shift extends Model
 {
-    use HasFactory;
+    use HasFactory, HasChangesHistory;
 
     protected $fillable = [
         'event_id',
@@ -31,7 +32,7 @@ class Shift extends Model
 
     protected $with = ['craft'];
 
-    protected $appends = ['break_formatted', 'user_count', 'empty_user_count', 'empty_master_count', 'master_count', 'allUsers', 'currentCount', 'maxCount'];
+    protected $appends = ['break_formatted', 'user_count', 'empty_user_count', 'empty_master_count', 'master_count', 'allUsers', 'currentCount', 'maxCount', 'infringement'];
 
     public function event(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -122,6 +123,11 @@ class Shift extends Model
         return $this->getWorkerCount();
     }
 
+    public function getHistoryAttribute(): \Illuminate\Support\Collection
+    {
+        return $this->historyChanges();
+    }
+
     public function getMastersAttribute(): \Illuminate\Database\Eloquent\Collection
     {
         return $this->users()->wherePivot('is_master', true)->get()->merge($this->freelancer()->wherePivot('is_master', true)->get())->merge($this->service_provider()->wherePivot('is_master', true)->get());
@@ -136,6 +142,21 @@ class Shift extends Model
     {
         $hours = intdiv($this->break_minutes, 60) . ':' . ($this->break_minutes % 60);
         return Carbon::parse($hours)->format('H:i');
+    }
+
+    public function getInfringementAttribute(): bool
+    {
+        $start = Carbon::parse($this->start);
+        $end = Carbon::parse($this->end);
+        $diff = $start->diffInRealMinutes($end);
+        $break = $this->break_minutes;
+
+        if (($diff > 360 && $diff < 540 && $break < 30) || ($diff > 540 && $break < 45)) {
+            return true;
+        }
+
+        return false;
+
     }
 
     public function getAllUsersAttribute(): array

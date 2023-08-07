@@ -33,12 +33,17 @@ class Freelancer extends Model
     ];
 
     protected $appends = [
-        'name', 'display_name', 'type'
+        'name', 'display_name', 'type', 'profile_photo_url'
     ];
 
     public function shifts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Shift::class, 'shifts_freelancers', 'freelancer_id', 'shift_id')->withPivot(['is_master'])->orderByPivot('is_master', 'desc')->withCasts(['is_master' => 'boolean']);
+    }
+
+    public function getProfilePhotoUrlAttribute(): string
+    {
+        return $this->profile_image ? $this->profile_image : 'https://ui-avatars.com/api/?name=' . $this->name . '&color=7F9CF5&background=EBF4FF';
     }
 
     public function getNameAttribute(){

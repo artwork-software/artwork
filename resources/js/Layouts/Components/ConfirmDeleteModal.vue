@@ -25,7 +25,7 @@
                             <div class="flex justify-between mt-5">
                                 <AddButton mode="modal" @click="deleteElement(true)"
                                            class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none"
-                                           text="Löschen"/>
+                                           :text="buttonText"/>
                                 <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">Nein, doch nicht</p>
                             </div>
                         </DialogPanel>
@@ -55,10 +55,11 @@ export default {
     },
     data(){
         return {
-            open: true
+            open: true,
+            buttonText: this.button ? this.button : 'Löschen'
         }
     },
-    props: ['title', 'description'],
+    props: ['title', 'description', 'button'],
     emits: ['closed', 'delete'],
     methods: {
         closeModal(bool){

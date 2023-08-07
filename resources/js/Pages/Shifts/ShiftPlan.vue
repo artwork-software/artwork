@@ -8,7 +8,9 @@
                                   :filter-options="filterOptions"
                                   :personal-filters="personalFilters"
                                   :rooms="shiftPlan"
-                                  @enterFullscreenMode="openFullscreen"></ShiftPlanFunctionBar>
+                                  @enterFullscreenMode="openFullscreen"
+                                  @openHistoryModal="openHistoryModal"
+            ></ShiftPlanFunctionBar>
             <table class="w-full bg-white relative">
                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                 <div>
@@ -39,9 +41,9 @@
                 </div>
             </table>
         </div>
-        <ShiftPlanUserOverview :users="dropUsers" @isOpen="showUserOverviewBar" :days="days"/>
+        <ShiftPlanUserOverview :users="dropUsers" @isOpen="showUserOverviewBar" :days="days" :projects="projects"/>
 
-
+        <ShiftHistoryModal :history="history[0]" v-if="showHistoryModal" @closed="showHistoryModal = false" />
     </ShiftHeader>
 
 </template>
@@ -60,11 +62,13 @@ import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/Shift
 import {Inertia} from "@inertiajs/inertia";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
+import ShiftHistoryModal from "@/Pages/Shifts/Components/ShiftHistoryModal.vue";
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        ShiftHistoryModal,
         ShiftHeader,
         ShiftTabs,
         ShiftPlanUserOverview,
@@ -85,7 +89,7 @@ export default {
         'personalFilters',
         'selectedDate',
         'eventTypes',
-        'users', 'freelancers', 'serviceProviders'
+        'users', 'freelancers', 'serviceProviders', 'history'
     ],
     mounted() {
         console.log("shiftplan:")
@@ -182,11 +186,15 @@ export default {
                 }
             })
         },
+        openHistoryModal() {
+            this.showHistoryModal = true;
+        },
     },
     data() {
         return {
             showUserOverview: false,
             isFullscreen: false,
+            showHistoryModal: false
         }
     },
 }

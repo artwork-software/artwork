@@ -3,6 +3,7 @@
 namespace App\Support\Services;
 
 use Antonrom\ModelChangesHistory\Models\Change;
+use App\Models\Shift;
 use Illuminate\Support\Facades\Auth;
 
 class NewHistoryService
@@ -25,6 +26,15 @@ class NewHistoryService
             'description' => $user->description
         ];
         $array[] = ['type' => $type, 'message' => $historyText, 'changed_by' => $userObj];
+        if($type === 'shift'){
+            $shift = Shift::find($modelId);
+            $array[] = [
+                'event_title' => $shift->event->eventName,
+                'event_id' => $shift->event->id,
+                'shift_id' => $shift->id,
+                'shift_description' => $shift->description,
+            ];
+        }
         Change::create([
             'model_id' => $modelId,
             'model_type' => $this->modelObject,

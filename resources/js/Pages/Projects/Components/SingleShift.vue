@@ -16,7 +16,7 @@
                           transform="translate(1151.957 -4785.674)" fill="none" stroke="#fcfcfb" stroke-width="2"/>
                 </svg>
             </div>
-            <div v-if="!shift.break_minutes" class="h-9 bg-red-500 flex items-center w-fit right-0 p-3">
+            <div v-if="shift.infringement" class="h-9 bg-red-500 flex items-center w-fit right-0 p-3">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12.21" height="12.2" viewBox="0 0 12.21 12.2">
                     <g id="Gruppe_1639" data-name="Gruppe 1639" transform="translate(-523.895 -44.9)" opacity="0.9">
                         <path id="Icon_metro-warning" data-name="Icon metro-warning"
@@ -157,6 +157,7 @@
 
     <AddShiftModal :shift="shift" :event="event" :crafts="crafts" v-if="openEditShiftModal"
                    @closed="openEditShiftModal = false" :edit="true"/>
+
 </template>
 <script>
 import {defineComponent} from 'vue'

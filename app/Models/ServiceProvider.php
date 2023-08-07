@@ -30,7 +30,7 @@ class ServiceProvider extends Model
 
     protected $with = ['contacts'];
 
-    protected $appends = ['name', 'type'];
+    protected $appends = ['name', 'type', 'profile_photo_url'];
 
     public function contacts(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
@@ -64,5 +64,10 @@ class ServiceProvider extends Model
     public function getTypeAttribute(): string
     {
         return 'service_provider';
+    }
+
+    public function getProfilePhotoUrlAttribute(): string
+    {
+        return $this->profile_image ? $this->profile_image : 'https://ui-avatars.com/api/?name=' . $this->provider_name[0] . '&color=7F9CF5&background=EBF4FF';
     }
 }

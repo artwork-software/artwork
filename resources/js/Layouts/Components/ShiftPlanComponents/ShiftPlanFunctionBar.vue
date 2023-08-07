@@ -13,7 +13,17 @@
                 </div>
             </div>
             <div class="flex items-center">
-                <AddButton text="Alle Schichten festsetzen" type="secondary" @click="commitAllShifts" />
+                <AddButton text="Alle Schichten festsetzen" type="secondary" @click="showConfirmCommitModal = true" />
+            </div>
+
+            <div class="ml-5 flex items-center" >
+                <button class="subpixel-antialiased flex items-center linkText cursor-pointer"
+                        @click="openHistoryModal()">
+                    <ChevronRightIcon
+                        class="-mr-0.5 h-4 w-4  group-hover:text-white"
+                        aria-hidden="true"/>
+                    Verlauf ansehen
+                </button>
             </div>
 
         </div>
@@ -36,6 +46,15 @@
     <div class="mb-1 ml-4 flex items-center w-full">
         <BaseFilterTag type="calendar" v-for="activeFilter in activeFilters" :filter="activeFilter.name" />
     </div>
+
+    <ConfirmDeleteModal
+        v-if="showConfirmCommitModal"
+        @closed="showConfirmCommitModal = false"
+        @delete="commitAllShifts"
+        title="Dienstplan festschreiben"
+        description="Bist du sicher, dass du den Dienstplan festschreiben möchtest?"
+        button="Festschreiben"
+    />
 </template>
 
 <script>
@@ -50,12 +69,15 @@ import Permissions from "@/mixins/Permissions.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 
 export default {
     name: "ShiftPlanFunctionBar",
     mixins: [Permissions],
     components: {
+        ConfirmDeleteModal,
         AddButton,
         BaseFilterTag,
         ShiftPlanFilter,
@@ -80,10 +102,11 @@ export default {
         'personalFilters',
         'rooms'
     ],
-    emits: ['enterFullscreenMode','previousTimeRange','nextTimeRange','commitAllShifts'],
+    emits: ['enterFullscreenMode','previousTimeRange','nextTimeRange', 'openHistoryModal'],
     data() {
         return {
-            activeFilters: []
+            activeFilters: [],
+            showConfirmCommitModal: false,
         }
     },
     methods: {
@@ -99,7 +122,10 @@ export default {
         filtersChanged(activeFilters) {
             this.activeFilters = activeFilters
         },
-        async commitAllShifts(){
+        openHistoryModal() {
+            this.$emit('openHistoryModal')
+        },
+        commitAllShifts(){
             let filteredEvents = [];
 
             // Loop through each room in the shiftPlan array
@@ -114,15 +140,23 @@ export default {
                 });
             });
 
-            console.log(filteredEvents);
+            Inertia.post('/shifts/commit', { events: filteredEvents }, {
+                onSuccess: () => {
+                    console.log("All shifts committed");
+                    this.showConfirmCommitModal = false;
+                },
+                preserveScroll: true,
+                preserveState: true,
+            })
 
-            await axios.post('/shifts/commit', { events: filteredEvents })
+            /*axios.post('/shifts/commit', { events: filteredEvents })
                 .then(() => {
-                    console.log("All shifts committed")
+                    console.log("All shifts committed");
+                    this.showConfirmCommitModal = false;
                 })
                 .catch(error => {
                     console.log(error)
-                })
+                })*/
         },
     },
 }

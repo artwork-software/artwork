@@ -141,6 +141,11 @@ class User extends Authenticatable
         return 'user';
     }
 
+    public function crafts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Craft::class, 'craft_users');
+    }
+
     public function shifts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Shift::class);

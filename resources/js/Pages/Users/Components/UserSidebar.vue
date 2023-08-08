@@ -4,6 +4,7 @@ import {useForm, usePage} from "@inertiajs/inertia-vue3";
 import {ref, watch} from "vue";
 import {PencilAltIcon} from "@heroicons/vue/outline";
 import UserSidebarEditModal from "@/Pages/Users/Components/UserSidebarEditModal.vue";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
 
 const props = defineProps({
     user: Object,
@@ -56,6 +57,9 @@ watch(() => userForm.can_master, (value) => {
             <div class="text-secondary mt-4">{{ props.user.work_name || "Noch keine Bezeichnung angegeben" }}</div>
             <div class="text-secondary mt-2">{{ props.user.work_description || "Noch keine Beschreibung angegeben." }}</div>
             <div class="mt-8 text-secondary">GEWERKE</div>
+            <span class="flex">
+                <TagComponent v-for="craft in props.user.crafts" :tag="craft" :key="craft.id" type="gray" :displayed-text="craft.name" hide-x="true"/>
+            </span>
             <SwitchGroup as="div" class="flex items-center mt-2">
                 <Switch v-model="userForm.can_master"
                         :class="[userForm.can_master ? 'bg-indigo-600' : 'bg-secondary', 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">

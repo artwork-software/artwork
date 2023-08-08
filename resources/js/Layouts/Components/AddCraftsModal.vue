@@ -168,7 +168,7 @@ export default defineComponent({
                 this.craft.assignable_by_all = true;
                 this.craft.users = [];
             }
-            if(this.craftToEdit.id){
+            if(this.craftToEdit){
                 this.craft.patch(route('craft.update', this.craftToEdit.id), {
                     preserveState: true,
                     preserveScroll: true,

@@ -154,9 +154,7 @@ class Shift extends Model
         if (($diff > 360 && $diff < 540 && $break < 30) || ($diff > 540 && $break < 45)) {
             return true;
         }
-
         return false;
-
     }
 
     public function getAllUsersAttribute(): array

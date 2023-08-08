@@ -41,7 +41,7 @@
                 </div>
             </table>
         </div>
-        <ShiftPlanUserOverview :users="dropUsers" @isOpen="showUserOverviewBar" :days="days" :projects="projects"/>
+        <ShiftPlanUserOverview class="" :users="dropUsers" @isOpen="showUserOverviewBar" :days="days" :projects="projects"/>
 
         <ShiftHistoryModal :history="history[0]" v-if="showHistoryModal" @closed="showHistoryModal = false" />
     </ShiftHeader>

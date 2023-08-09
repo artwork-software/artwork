@@ -128,7 +128,7 @@ class EventController extends Controller
 
         }
 
-        $events = Event::with(['shifts','event_type'])
+        $events = Event::with(['shifts','event_type', 'room'])
             ->whereHas('shifts', function ($query) {
                 $query->whereNotNull('shifts.id');
             })->whereBetween('start_time', [$startDate, $endDate])

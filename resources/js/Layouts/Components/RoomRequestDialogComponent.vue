@@ -440,7 +440,6 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
-import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
 import Permissions from "@/mixins/Permissions.vue";
@@ -450,7 +449,6 @@ export default {
     mixins: [Permissions],
     components: {
         NewUserToolTip,
-        ChangeAllSubmitModal,
         ListboxLabel,
         SwitchLabel,
         Switch,

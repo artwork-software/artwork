@@ -6,10 +6,15 @@
             <div class="flex items-center">
                 {{ event.event?.start_time }} | {{ event.event_type.abbreviation }} | {{ event.room.name }}
 
+                <span v-if="event.event.is_series" class="ml-3">
+                    <SvgCollection svg-name="iconRepeat"/>
+                </span>
                 <div class="ml-4 cursor-pointer" @click="showShift = !showShift">
                     <ChevronDownIcon class="h-4 w-4" v-if="!showShift"/>
                     <ChevronUpIcon class="h-4 w-4" v-else/>
                 </div>
+
+
             </div>
             <div class="mt-1">
                 <Menu as="div" class="relative">
@@ -86,6 +91,7 @@
                                      :event="event.event"/>
         </div>
     </div>
+
 </template>
 
 <script>
@@ -99,11 +105,13 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import AddShiftPresetModal from "@/Pages/Projects/Components/AddShiftPresetModal.vue";
 import {ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/outline";
 import ImportShiftTemplate from "@/Pages/Projects/Components/ImportShiftTemplate.vue";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 
 export default defineComponent({
     name: "SingleRelevantEvent",
     props: ['event', 'crafts', 'eventTypes'],
     components: {
+        SvgCollection,
         ImportShiftTemplate,
         AddShiftPresetModal,
         ConfirmDeleteModal,
@@ -150,68 +158,57 @@ export default defineComponent({
 <style scoped>
 
 .eventType0 {
-    background-color: #A7A6B115;
+    background-color: rgba(167, 166, 177, 0.09);
     stroke: #7F7E88;
-    color: #7F7E88
 }
 
 .eventType1 {
-    background-color: #641a5415;
+    background-color: rgba(100, 26, 84, 0.53);
     stroke: #631D53;
-    color: #631D53
 }
 
 .eventType2 {
-    background-color: #da3f8715;
+    background-color: rgba(218, 63, 135, 0.39);
     stroke: #D84387;
-    color: #D84387
 }
 
 .eventType3 {
-    background-color: #eb7a3d15;
+    background-color: rgba(235, 122, 61, 0.41);
     stroke: #E97A45;
-    color: #E97A45
 }
 
 .eventType4 {
-    background-color: #f1b64015;
+    background-color: rgba(241, 182, 64, 0.62);
     stroke: #CB8913;
-    color: #CB8913
 }
 
 .eventType5 {
-    background-color: #86c55415;
+    background-color: rgba(134, 197, 84, 0.39);
     stroke: #648928;
-    color: #648928
 }
 
 .eventType6 {
-    background-color: #2eaa6315;
+    background-color: rgba(46, 170, 99, 0.56);
     stroke: #35A965;
-    color: #35A965
 }
 
 .eventType7 {
-    background-color: #3dc3cb15;
+    background-color: rgba(61, 195, 203, 0.4);
     stroke: #35ACB2;
-    color: #35ACB2
 }
 
 .eventType8 {
-    background-color: #168fc315;
+    background-color: rgba(22, 143, 195, 0.37);
     stroke: #2290C1;
-    color: #2290C1
 }
 
 .eventType9 {
-    background-color: #4d908e15;
+    background-color: rgba(77, 144, 142, 0.4);
     stroke: #50908E;
-    color: #50908E
 }
 
 .eventType10 {
-    background-color: #21485C15;
+    background-color: rgba(33, 72, 92, 0.45);
     stroke: #23485B;
-    color: #23485B
 }
 </style>

@@ -43,7 +43,7 @@
                                 <div v-for="shift in user.shifts[day.full_day]">
                                     <div class="flex items-center justify-between group" :id="'shift-' + shift.id">
                                         <div class="flex text-sm mb-2">
-                                            {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }} | {{ shift.event.room.name }} | {{ shift.event.event_type.abbreviation }}: {{ findProjectById(shift.event.project_id).name }}
+                                            {{ shift.craft?.abbreviation }} {{ shift.start }} - {{ shift.end }} | {{ shift.event.room?.name }} | {{ shift.event.event_type?.abbreviation }}: {{ findProjectById(shift.event.project_id)?.name }}
                                         </div>
                                         <div class="hidden group-hover:block cursor-pointer">
                                             <button type="button" class="bg-buttonBlue rounded-full p-1" @click="removeUserFromShift(shift.id)">
@@ -51,6 +51,14 @@
                                             </button>
                                         </div>
                                     </div>
+                                </div>
+
+                                <div class="flex mt-10">
+                                    <input v-model="checked"
+                                           type="checkbox"
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <p :class="[checked ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Verfügbar</p>
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
@@ -87,6 +95,7 @@ export default defineComponent({
     data(){
         return {
             open: true,
+            checked: this.user.shifts[this.day.full_day]?.length > 0
         }
     },
     props: ['user', 'day', 'projects'],

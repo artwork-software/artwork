@@ -70,7 +70,7 @@ export default defineComponent({
     methods: {
         showCloseUserOverview(){
             this.showUserOverview = !this.showUserOverview
-            this.$emit('isOpen', this.showUserOverview)
+            //this.$emit('isOpen', this.showUserOverview)
         },
         openShowUserShiftModal(user, day){
             this.userToShow = user

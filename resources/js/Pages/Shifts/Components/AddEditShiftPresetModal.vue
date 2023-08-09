@@ -133,13 +133,11 @@ import Input from "@/Jetstream/Input.vue";
 import {ChevronDownIcon, PlusCircleIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
-import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 
 export default defineComponent({
     name: "AddEditShiftPresetModal",
     mixins: [Permissions],
     components: {
-        ChangeAllSubmitModal,
         ConfirmationModal,
         CheckIcon, ChevronDownIcon,
         Input,

@@ -155,6 +155,7 @@ class User extends Authenticatable
     {
         return $this->shifts()
             ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
+            ->with(['event.room'])
             ->get()
             ->makeHidden(['allUsers'])
             ->groupBy(function ($shift) {

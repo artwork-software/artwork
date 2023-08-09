@@ -54,7 +54,6 @@ import {CheckIcon, XIcon} from "@heroicons/vue/solid";
 import Input from "@/Jetstream/Input.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {ChevronDownIcon, PlusCircleIcon} from "@heroicons/vue/outline";
-import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import {
     Dialog,
@@ -69,7 +68,6 @@ import {
 export default defineComponent({
     name: "AddUsersModal",
     components: {
-        ChangeAllSubmitModal,
         ConfirmationModal,
         CheckIcon, ChevronDownIcon,
         Input,

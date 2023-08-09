@@ -541,8 +541,6 @@ export default {
         },
         reloadChanges() {
             const pageRoute = this.getRoute(window.location.pathname.split('/')[1])
-            console.log("reloading in filter")
-            console.log(this.atAGlance)
             Inertia.reload( {
                 data: {
                     isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),

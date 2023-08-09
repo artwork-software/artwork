@@ -243,7 +243,7 @@ class CalendarController extends Controller
                 'day' => $period->format('d.m.'),
                 'day_string' => $period->shortDayName,
                 'is_weekend' => $period->isWeekend(),
-                'full_day' => $period->format('d.m.Y')
+                'full_day' => $period->format('d.m.Y'),
             ];
         }
 
@@ -297,9 +297,12 @@ class CalendarController extends Controller
 
     public function createCalendarDataForUserShiftPlan(?User $user = null)
     {
-        $this->startDate = Carbon::now()->startOfDay();
+        $currentDate = Carbon::now();
+        // Calculate the start of the Monday of the recent calendar week
+        $this->startDate = $currentDate->copy()->startOfWeek()->startOfDay();
 
-        $this->endDate = Carbon::now()->addWeeks()->endOfDay();
+        // Calculate the end of the Sunday of the recent calendar week
+        $this->endDate = $currentDate->copy()->endOfWeek()->endOfDay();
         $this->setDefaultDates();
 
         $calendarPeriod = CarbonPeriod::create($this->startDate, $this->endDate);
@@ -317,8 +320,12 @@ class CalendarController extends Controller
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
         } else {
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
+            $currentDate = Carbon::now();
+            // Calculate the start of the Monday of the recent calendar week
+            $startDate = $currentDate->copy()->startOfWeek()->startOfDay();
+
+            // Calculate the end of the Sunday of the recent calendar week
+            $endDate = $currentDate->copy()->endOfWeek()->endOfDay();
         }
 
         $daysWithEvents = [];
@@ -380,9 +387,12 @@ class CalendarController extends Controller
 
     public function createCalendarDataForFreelancerShiftPlan(?Freelancer $freelancer = null)
     {
-        $this->startDate = Carbon::now()->startOfDay();
+        $currentDate = Carbon::now();
+        // Calculate the start of the Monday of the recent calendar week
+        $this->startDate = $currentDate->copy()->startOfWeek()->startOfDay();
 
-        $this->endDate = Carbon::now()->addWeeks()->endOfDay();
+        // Calculate the end of the Sunday of the recent calendar week
+        $this->endDate = $currentDate->copy()->endOfWeek()->endOfDay();
         $this->setDefaultDates();
 
         $calendarPeriod = CarbonPeriod::create($this->startDate, $this->endDate);
@@ -400,8 +410,12 @@ class CalendarController extends Controller
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
         } else {
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
+            $currentDate = Carbon::now();
+            // Calculate the start of the Monday of the recent calendar week
+            $startDate = $currentDate->copy()->startOfWeek()->startOfDay();
+
+            // Calculate the end of the Sunday of the recent calendar week
+            $endDate = $currentDate->copy()->endOfWeek()->endOfDay();
         }
 
         $daysWithEvents = [];
@@ -463,9 +477,12 @@ class CalendarController extends Controller
 
     public function createCalendarDataForServiceProviderShiftPlan(?ServiceProvider $serviceProvider = null)
     {
-        $this->startDate = Carbon::now()->startOfDay();
+        $currentDate = Carbon::now();
+        // Calculate the start of the Monday of the recent calendar week
+        $this->startDate = $currentDate->copy()->startOfWeek()->startOfDay();
 
-        $this->endDate = Carbon::now()->addWeeks()->endOfDay();
+        // Calculate the end of the Sunday of the recent calendar week
+        $this->endDate = $currentDate->copy()->endOfWeek()->endOfDay();
         $this->setDefaultDates();
 
         $calendarPeriod = CarbonPeriod::create($this->startDate, $this->endDate);
@@ -483,8 +500,12 @@ class CalendarController extends Controller
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
         } else {
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
+            $currentDate = Carbon::now();
+            // Calculate the start of the Monday of the recent calendar week
+            $startDate = $currentDate->copy()->startOfWeek()->startOfDay();
+
+            // Calculate the end of the Sunday of the recent calendar week
+            $endDate = $currentDate->copy()->endOfWeek()->endOfDay();
         }
 
         $daysWithEvents = [];
@@ -494,41 +515,24 @@ class CalendarController extends Controller
             $events = $this->get_events_per_day_for_service_provider($date, $startDate, $endDate, $serviceProvider->id);
             // Calculate planned working hours for this day
             $plannedWorkingHours = 0;
-            $earliestStart = null;
-            $latestEnd = null;
-            $totalBreakMinutes = 0;
 
             foreach ($events as $event) {
                 $shifts = $event['shifts'];
-
                 foreach ($shifts as $shift) {
                     $start = Carbon::parse($shift['start']);
                     $end = Carbon::parse($shift['end']);
-                    $breakMinutes = $shift['break_minutes'];
 
-                    // Update earliest start and latest end
-                    if ($earliestStart === null || $start->lt($earliestStart)) {
-                        $earliestStart = $start;
-                    }
-                    if ($latestEnd === null || $end->gt($latestEnd)) {
-                        $latestEnd = $end;
-                    }
-
-                    // Sum up break minutes
-                    $totalBreakMinutes += $breakMinutes;
+                    $totalWorkingMinutes = 0;
+                    $totalWorkingMinutes += $start->diffInMinutes($end);
+                    $plannedWorkingHours += max($totalWorkingMinutes / 60, 0);
                 }
-            }
-
-            // Calculate working hours for the day
-            if ($earliestStart !== null && $latestEnd !== null) {
-                $totalWorkingMinutes = $earliestStart->diffInMinutes($latestEnd) - $totalBreakMinutes;
-                $plannedWorkingHours = max($totalWorkingMinutes / 60, 0);
             }
             $daysWithEvents[$date->format('Y-m-d')] = [
                 'day' => $date->format('d.m.'),
                 'day_string' => $date->shortDayName,
                 'full_day' => $date->format('d.m.Y'),
-                'events' => $events
+                'events' => $events,
+                'plannedWorkingHours' => $plannedWorkingHours,
             ];
             // Calculate total planned working hours for all days
             $totalPlannedWorkingHours += $plannedWorkingHours;
@@ -544,10 +548,14 @@ class CalendarController extends Controller
     public function createCalendarDataForShiftPlan(?Project $project = null, ?Room $room = null)
     {
         $selectedDate = null;
-        $this->startDate = Carbon::now()->startOfDay();
+        $currentDate = Carbon::now();
+        // Calculate the start of the Monday of the recent calendar week
+        $this->startDate = $currentDate->copy()->startOfWeek()->startOfDay();
+
+        // Calculate the end of the Sunday of the recent calendar week
+        $this->endDate = $currentDate->copy()->endOfWeek()->endOfDay();
 
         $filterController = new FilterController();
-        $this->endDate = Carbon::now()->addWeeks()->endOfDay();
         $this->setDefaultDates();
 
         $calendarPeriod = CarbonPeriod::create($this->startDate, $this->endDate);
@@ -565,8 +573,12 @@ class CalendarController extends Controller
             $startDate = Carbon::create(request('startDate'))->startOfDay();
             $endDate = Carbon::create(request('endDate'))->endOfDay();
         } else {
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
+            $currentDate = Carbon::now();
+            // Calculate the start of the Monday of the recent calendar week
+            $startDate = $currentDate->copy()->startOfWeek()->startOfDay();
+
+            // Calculate the end of the Sunday of the recent calendar week
+            $endDate = $currentDate->copy()->endOfWeek()->endOfDay();
         }
 
         $better = $this->filterRooms($startDate, $endDate)

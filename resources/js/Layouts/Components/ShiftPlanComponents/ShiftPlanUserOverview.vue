@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full fixed bottom-0 -ml-14">
+    <div class="w-full fixed bottom-0 -ml-14 z-30">
         <div class="flex justify-center " @click="showCloseUserOverview">
             <div class="block h-5 w-8 bg-primary flex justify-center items-center cursor-pointer">
                 <div :class="showUserOverview ? 'rotate-180' : ''">

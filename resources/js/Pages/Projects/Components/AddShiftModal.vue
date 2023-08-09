@@ -220,10 +220,9 @@ export default defineComponent({
             }
         },
         saveAllEvents(){
-            console.log('hi from save all events');
-            /*this.shiftForm.changeAll = true;
+            this.shiftForm.changeAll = true;
             this.shiftForm.seriesId = this.event.series_id;
-            this.saveShift();*/
+            this.saveShift();
         },
         checkSeriesEvent(){
             if(this.edit === true){
@@ -315,11 +314,8 @@ export default defineComponent({
             if(this.shiftForm.number_masters === '' || this.shiftForm.number_masters === null){
                 this.shiftForm.number_masters = 0;
             }
-
-            console.log('hi')
             if(this.shiftForm.id !== null && this.shiftForm.id !== undefined){
-                console.log('update')
-                /*this.shiftForm.patch(route('event.shift.update', this.shift.id), {
+                this.shiftForm.patch(route('event.shift.update', this.shift.id), {
                     preserveScroll: true,   // preserve scroll position
                     preserveState: true,    // preserve the state of the form
                     onSuccess: () => {
@@ -334,10 +330,9 @@ export default defineComponent({
                         this.shiftForm.seriesId = null;
                         this.closeModal(true);  // close the modal
                     }
-                })*/
+                })
             } else {
-                console.log('store')
-                /*this.shiftForm.post(route('event.shift.store', this.event.id), {
+                this.shiftForm.post(route('event.shift.store', this.event.id), {
                     preserveScroll: true,   // preserve scroll position
                     preserveState: true,    // preserve the state of the form
                     onSuccess: () => {
@@ -352,7 +347,7 @@ export default defineComponent({
                         this.shiftForm.seriesId = null;
                         this.closeModal(true);  // close the modal
                     }
-                })*/
+                })
             }
         }
     }

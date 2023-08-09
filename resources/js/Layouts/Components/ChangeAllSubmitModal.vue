@@ -68,11 +68,10 @@ export default {
             this.$emit('single')
         },
         allElement(){
-            //console.log('all');
             this.$emit('allEvents')
-            /*setTimeout(() => {
+            setTimeout(() => {
                 this.clickedAll = true
-            }, 5000)*/
+            }, 5000)
         },
     }
 }

@@ -113,8 +113,6 @@ export default defineComponent({
                     return;
                 }
             }
-
-            console.log(dropElement);
             if(dropElement.master && dropElement.type === 0){
                 this.$inertia.post(route('add.shift.master', {shift: this.shift.id, user: dropElement.id}) , {
                         preserveState: true,

@@ -142,7 +142,6 @@ export default {
 
             Inertia.post('/shifts/commit', { events: filteredEvents }, {
                 onSuccess: () => {
-                    console.log("All shifts committed");
                     this.showConfirmCommitModal = false;
                 },
                 preserveScroll: true,

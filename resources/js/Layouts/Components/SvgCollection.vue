@@ -226,7 +226,14 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
     </svg>
 
-
+    <svg v-if="svgName === 'iconRepeat'" xmlns="http://www.w3.org/2000/svg" width="8.664" height="10.839" viewBox="0 0 8.664 10.839">
+        <g id="Icon_feather-repeat" data-name="Icon feather-repeat" transform="translate(-3.85 -0.581)">
+            <path id="Pfad_1366" data-name="Pfad 1366" d="M25.5,1.5l1.829,1.829L25.5,5.158" transform="translate(-15.465 0)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3"/>
+            <path id="Pfad_1367" data-name="Pfad 1367" d="M4.5,10.243V9.329A1.741,1.741,0,0,1,6.136,7.5h5.727" transform="translate(0 -4.436)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3"/>
+            <path id="Pfad_1368" data-name="Pfad 1368" d="M6.329,26.158,4.5,24.329,6.329,22.5" transform="translate(0 -15.658)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3"/>
+            <path id="Pfad_1369" data-name="Pfad 1369" d="M11.864,19.5v.914a1.741,1.741,0,0,1-1.636,1.829H4.5" transform="translate(0 -13.307)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3"/>
+        </g>
+    </svg>
 
 </template>
 

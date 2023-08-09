@@ -79,8 +79,8 @@
                                                                     <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ craft.name }} ({{ craft.abbreviation }})</span>
 
                                                                     <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                                            </span>
+                                                                        <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                                                                    </span>
                                                                 </li>
                                                             </ListboxOption>
                                                         </ListboxOptions>
@@ -105,7 +105,7 @@
                                         <span class="text-xs text-red-500" v-show="helpTexts.masterText.length > 0">{{ helpTexts.masterText }}</span>
 
                                         <div class="mt-2 col-span-2">
-                                            <textarea v-model="shiftForm.description" placeholder="Gibt es wichtige Informationen zu dieser Schicht?" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
+                                            <textarea v-model="shiftForm.description" placeholder="Gibt es wichtige Informationen zu dieser Schicht?" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300" />
                                         </div>
                                     </div>
                                 </div>
@@ -120,7 +120,7 @@
         </Dialog>
     </TransitionRoot>
 
-    <ChangeAllSubmitModal v-if="showChangeAllModal" @closed="showChangeAllModal = false" @all="saveAllEvents" @single="saveShift" />
+    <ChangeAllSubmitModal v-if="showChangeAllModal" @close-modal="showChangeAllModal = false" @allEvents="saveAllEvents"  @single="saveShift" />
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -220,9 +220,10 @@ export default defineComponent({
             }
         },
         saveAllEvents(){
-            this.shiftForm.changeAll = true;
+            console.log('hi from save all events');
+            /*this.shiftForm.changeAll = true;
             this.shiftForm.seriesId = this.event.series_id;
-            this.saveShift();
+            this.saveShift();*/
         },
         checkSeriesEvent(){
             if(this.edit === true){
@@ -315,9 +316,10 @@ export default defineComponent({
                 this.shiftForm.number_masters = 0;
             }
 
-
+            console.log('hi')
             if(this.shiftForm.id !== null && this.shiftForm.id !== undefined){
-                this.shiftForm.patch(route('event.shift.update', this.shift.id), {
+                console.log('update')
+                /*this.shiftForm.patch(route('event.shift.update', this.shift.id), {
                     preserveScroll: true,   // preserve scroll position
                     preserveState: true,    // preserve the state of the form
                     onSuccess: () => {
@@ -332,9 +334,10 @@ export default defineComponent({
                         this.shiftForm.seriesId = null;
                         this.closeModal(true);  // close the modal
                     }
-                })
+                })*/
             } else {
-                this.shiftForm.post(route('event.shift.store', this.event.id), {
+                console.log('store')
+                /*this.shiftForm.post(route('event.shift.store', this.event.id), {
                     preserveScroll: true,   // preserve scroll position
                     preserveState: true,    // preserve the state of the form
                     onSuccess: () => {
@@ -349,7 +352,7 @@ export default defineComponent({
                         this.shiftForm.seriesId = null;
                         this.closeModal(true);  // close the modal
                     }
-                })
+                })*/
             }
         }
     }

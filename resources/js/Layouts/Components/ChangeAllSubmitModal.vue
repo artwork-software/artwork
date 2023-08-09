@@ -1,6 +1,6 @@
 <template>
     <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-50" @close="closeModal">
+        <Dialog as="div" class="relative z-50" @close="closed">
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
             </TransitionChild>
@@ -11,7 +11,7 @@
                         <DialogPanel class="relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
                             <img src="/Svgs/Overlays/illu_budget_access.svg" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
+                                <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closed">
                                     <span class="sr-only">Close</span>
                                     <XIcon class="h-6 w-6" aria-hidden="true" />
                                 </button>
@@ -25,8 +25,8 @@
                                 </p>
                             </div>
                             <div class="flex justify-center mt-5 gap-4">
-                                <button @click="allElement(true)" type="button" class=" hover:bg-indigo-600 py-2 px-8 rounded-full text-white" :class="clickedAll ? 'bg-success-500' : 'bg-buttonBlue'">Auf alle anwenden</button>
-                                <button @click="singleElement(true)" type="button" class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white">Nur auf diesen Termin anwenden</button>
+                                <button @click="allElement()" type="button" class=" hover:bg-indigo-600 py-2 px-8 rounded-full text-white" :class="clickedAll ? 'bg-success-500' : 'bg-buttonBlue'">Auf alle anwenden</button>
+                                <button @click="singleElement()" type="button" class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white">Nur auf diesen Termin anwenden</button>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -59,19 +59,20 @@ export default {
             clickedSingle: false,
         }
     },
-    emits: ['closed', 'single', 'all'],
+    emits: ['close-modal', 'single', 'allEvents'],
     methods: {
-        closeModal(bool){
-            this.$emit('closed', bool)
+        closed(){
+            this.$emit('close-modal')
         },
-        singleElement(bool){
-            this.$emit('single', bool)
+        singleElement(){
+            this.$emit('single')
         },
-        allElement(bool){
-            this.$emit('all', bool)
-            setTimeout(() => {
+        allElement(){
+            //console.log('all');
+            this.$emit('allEvents')
+            /*setTimeout(() => {
                 this.clickedAll = true
-            }, 5000)
+            }, 5000)*/
         },
     }
 }

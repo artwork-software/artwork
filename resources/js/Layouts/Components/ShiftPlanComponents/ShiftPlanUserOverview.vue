@@ -1,8 +1,8 @@
 <template>
-    <div class="w-full fixed bottom-0 -ml-14 z-30">
+    <div class="w-full -ml-14 z-30">
         <div class="flex justify-center " @click="showCloseUserOverview">
-            <div class="block h-5 w-8 bg-primary flex justify-center items-center cursor-pointer">
-                <div :class="showUserOverview ? 'rotate-180' : ''">
+            <div :class="showUserOverview ? '' : 'fixed bottom-0'" class="block h-5 w-8 bg-primary flex justify-center items-center cursor-pointer">
+                <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519" viewBox="0 0 14.123 6.519">
                         <g id="Gruppe_1608" data-name="Gruppe 1608" transform="translate(-275.125 870.166) rotate(-90)">
                             <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0" transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1" stroke-width="1"/>
@@ -12,8 +12,8 @@
                 </div>
             </div>
         </div>
-        <div class="w-full h-[40vh] bg-primary overflow-x-scroll overflow-y-scroll" v-if="showUserOverview">
-            <table class="w-full text-white relative">
+        <div class="w-full h-[40vh] bg-primary overflow-y-scroll" v-if="showUserOverview">
+            <table class="w-full text-white">
                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                 <div>
                     <tr class="flex w-full">

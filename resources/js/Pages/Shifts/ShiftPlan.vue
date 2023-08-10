@@ -1,6 +1,7 @@
 <template>
+    <div ref="shiftPlan" class="overflow-x-scroll h-full w-full">
     <ShiftHeader>
-        <div id="shiftPlan" class="bg-white w-[98%]" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? 'h-[50vh] overflow-x-scroll mt-8' : ' mt-24']">
+        <div id="shiftPlan" class="bg-white" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? 'h-[50vh] mt-8' : ' mt-24','']">
             <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
                                   @next-time-range="nextTimeRange"
                                   :date-value="dateValue"
@@ -11,7 +12,7 @@
                                   @enterFullscreenMode="openFullscreen"
                                   @openHistoryModal="openHistoryModal"
             ></ShiftPlanFunctionBar>
-            <table class="w-full bg-white relative">
+            <table  class="w-full bg-white">
                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                 <div>
                     <tr class="flex w-full bg-secondaryHover stickyHeader">
@@ -40,12 +41,54 @@
                     </tbody>
                 </div>
             </table>
+            <div id="userOverview"  class="w-full fixed overflow-x-scroll -ml-14 pr-14">
+                <div class="flex justify-center " @click="showCloseUserOverview">
+                    <div :class="showUserOverview ? '' : 'fixed bottom-0'" class="block h-5 w-8 bg-primary flex justify-center items-center cursor-pointer">
+                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519" viewBox="0 0 14.123 6.519">
+                                <g id="Gruppe_1608" data-name="Gruppe 1608" transform="translate(-275.125 870.166) rotate(-90)">
+                                    <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0" transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1" stroke-width="1"/>
+                                    <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0" transform="translate(864.081 286.591) rotate(-90)" fill="none" stroke="#a7a6b1" stroke-width="1"/>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div ref="userOverview" class="w-full h-[40vh] bg-primary overflow-y-scroll" v-show="showUserOverview">
+                    <table class="w-full text-white">
+                        <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
+                        <div>
+                            <tr class="flex w-full">
+                                <th class="w-56"></th>
+                                <th v-for="day in days" class="flex w-[12.5rem] p-5 h-16 items-center">
+                                    <div class="flex calendarRoomHeader font-semibold">
+                                        {{ day.day_string }} {{ day.day }}
+                                    </div>
+                                </th>
+                            </tr>
+                            <tbody class="w-full pt-3">
+                            <tr v-for="(user,index) in dropUsers" class="w-full flex">
+                                <th class=" flex items-center text-right -mt-2 pr-1 w-56" :class="index % 2 === 0 ? '' : ''">
+                                    <DragElement  :item="user.element" :type="user.type" />
+                                </th>
+                                <td v-for="day in days">
+                                    <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer" @click="openShowUserShiftModal(user.element, day)">
+                                <span v-for="shift in user.element?.shifts[day.full_day]">
+                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                </span>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </div>
+                    </table>
+                </div>
+            </div>
         </div>
-        <ShiftPlanUserOverview class="" :users="dropUsers" @isOpen="showUserOverviewBar" :days="days" :projects="projects"/>
-
+        <show-user-shifts-modal v-if="showUserShifts" @closed="showUserShifts = false" :user="userToShow" :day="dayToShow" :projects="projects"/>
         <ShiftHistoryModal :history="history[0]" v-if="showHistoryModal" @closed="showHistoryModal = false" />
     </ShiftHeader>
-
+    </div>
 </template>
 <script>
 
@@ -63,11 +106,14 @@ import {Inertia} from "@inertiajs/inertia";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import ShiftHistoryModal from "@/Pages/Shifts/Components/ShiftHistoryModal.vue";
+import ShowUserShiftsModal from "@/Pages/Shifts/Components/showUserShiftsModal.vue";
+import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        DragElement, ShowUserShiftsModal,
         ShiftHistoryModal,
         ShiftHeader,
         ShiftTabs,
@@ -92,8 +138,9 @@ export default {
         'users', 'freelancers', 'serviceProviders', 'history'
     ],
     mounted() {
-        console.log("shiftplan:")
-        console.log(this.shiftPlan)
+        // Listen for scroll events on both sections
+        this.$refs.shiftPlan.addEventListener('scroll', this.syncScrollShiftPlan);
+        this.$refs.userOverview.addEventListener('scroll', this.syncScrollUserOverview);
     },
     computed: {
         dropUsers(){
@@ -189,13 +236,44 @@ export default {
         openHistoryModal() {
             this.showHistoryModal = true;
         },
+        showCloseUserOverview(){
+            this.showUserOverview = !this.showUserOverview
+            //this.$emit('isOpen', this.showUserOverview)
+        },
+        syncScrollShiftPlan(event) {
+            console.log('shiftPlan' + event.target.scrollLeft);
+            if(this.$refs.userOverview){
+                // Synchronize horizontal scrolling from shiftPlan to userOverview
+                this.$refs.userOverview.scrollLeft = event.target.scrollLeft;
+            }
+        },
+        syncScrollUserOverview(event) {
+            console.log('userOverview' + event.target.scrollLeft)
+            if(this.$refs.shiftPlan){
+                // Synchronize horizontal scrolling from userOverview to shiftPlan
+                this.$refs.shiftPlan.scrollLeft = event.target.scrollLeft;
+            }
+        },
+        openShowUserShiftModal(user, day){
+            this.userToShow = user
+            this.dayToShow = day
+            this.showUserShifts = true
+        }
     },
     data() {
         return {
-            showUserOverview: false,
+            showUserOverview: true,
             isFullscreen: false,
-            showHistoryModal: false
+            showHistoryModal: false,
+            showUserShifts: false,
+            userToShow: null,
+            dayToShow: null,
         }
+    },
+    beforeDestroy() {
+        // Remove event listeners when component is destroyed
+        this.$refs.shiftPlan.removeEventListener('scroll', this.syncScrollShiftPlan);
+        this.$refs.userOverview.removeEventListener('scroll', this.syncScrollUserOverview);
     },
 }
 
@@ -207,6 +285,7 @@ export default {
 .cell {
     overflow: overlay;
 }
+
 
 ::-webkit-scrollbar {
     width: 16px;

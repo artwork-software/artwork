@@ -1,7 +1,7 @@
 <template>
-    <div ref="shiftPlan" class="overflow-x-scroll h-full w-full">
+    <div  class=" h-full w-full flex flex-col">
     <ShiftHeader>
-        <div id="shiftPlan" class="bg-white" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? 'h-[50vh] mt-8' : ' mt-24','']">
+        <div ref="shiftPlan" id="shiftPlan" class="bg-white" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' mt-8 max-h-[40rem]' : ' mt-24','overflow-x-scroll ']">
             <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
                                   @next-time-range="nextTimeRange"
                                   :date-value="dateValue"
@@ -16,8 +16,8 @@
                 <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                 <div>
                     <tr class="flex w-full bg-secondaryHover stickyHeader">
-                        <th :style="{minWidth: 164 + 'px'}"></th>
-                        <th v-for="day in days" :style="{minWidth: 200 + 'px'}" class="h-16 py-3 border-r-4 border-secondaryHover truncate">
+                        <th class="z-0" :style="{minWidth: 164 + 'px'}"></th>
+                        <th v-for="day in days" :style="{minWidth: 200 + 'px'}" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
                             <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
                                 {{ day.day_string }} {{ day.day }}
                             </div>
@@ -26,7 +26,7 @@
                     <tbody class="w-full pt-3">
                     <tr v-for="(room,index) in shiftPlan" class="w-full flex">
                         <th class="xsDark flex items-center -mt-2 h-28 w-40"
-                            :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxis']">
+                            :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
                             <Link class="flex font-semibold items-center ml-4">
                                 {{ room[days[0].day].roomName }}
                             </Link>
@@ -41,48 +41,49 @@
                     </tbody>
                 </div>
             </table>
-            <div id="userOverview"  class="w-full fixed overflow-x-scroll -ml-14 pr-14">
-                <div class="flex justify-center " @click="showCloseUserOverview">
-                    <div :class="showUserOverview ? '' : 'fixed bottom-0'" class="block h-5 w-8 bg-primary flex justify-center items-center cursor-pointer">
-                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519" viewBox="0 0 14.123 6.519">
-                                <g id="Gruppe_1608" data-name="Gruppe 1608" transform="translate(-275.125 870.166) rotate(-90)">
-                                    <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0" transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1" stroke-width="1"/>
-                                    <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0" transform="translate(864.081 286.591) rotate(-90)" fill="none" stroke="#a7a6b1" stroke-width="1"/>
-                                </g>
-                            </svg>
-                        </div>
+
+        </div>
+        <div id="userOverview"  class="w-[102.5%]  overflow-x-scroll max-h-[29.5rem] -ml-14 mt-auto">
+            <div class="flex justify-center " >
+                <div @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0'" class="block h-5 w-8 bg-primary flex justify-center items-center cursor-pointer">
+                    <div  :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519" viewBox="0 0 14.123 6.519">
+                            <g id="Gruppe_1608" data-name="Gruppe 1608" transform="translate(-275.125 870.166) rotate(-90)">
+                                <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0" transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1" stroke-width="1"/>
+                                <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0" transform="translate(864.081 286.591) rotate(-90)" fill="none" stroke="#a7a6b1" stroke-width="1"/>
+                            </g>
+                        </svg>
                     </div>
                 </div>
-                <div ref="userOverview" class="w-full h-[40vh] bg-primary overflow-y-scroll" v-show="showUserOverview">
-                    <table class="w-full text-white">
-                        <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
-                        <div>
-                            <tr class="flex w-full">
-                                <th class="w-56"></th>
-                                <th v-for="day in days" class="flex w-[12.5rem] p-5 h-16 items-center">
-                                    <div class="flex calendarRoomHeader font-semibold">
-                                        {{ day.day_string }} {{ day.day }}
-                                    </div>
-                                </th>
-                            </tr>
-                            <tbody class="w-full pt-3">
-                            <tr v-for="(user,index) in dropUsers" class="w-full flex">
-                                <th class=" flex items-center text-right -mt-2 pr-1 w-56" :class="index % 2 === 0 ? '' : ''">
-                                    <DragElement  :item="user.element" :type="user.type" />
-                                </th>
-                                <td v-for="day in days">
-                                    <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer" @click="openShowUserShiftModal(user.element, day)">
+            </div>
+            <div ref="userOverview" class="w-full bg-primary overflow-x-scroll min-h-[40rem]" v-show="showUserOverview">
+                <table class="w-full text-white overflow-y-scroll">
+                    <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
+                    <div>
+                        <tr class="flex w-full">
+                            <th class="w-56"></th>
+                            <th v-for="day in days" class="flex w-[12.5rem] p-5 h-16 items-center">
+                                <div class="flex calendarRoomHeader font-semibold">
+                                    {{ day.day_string }} {{ day.day }}
+                                </div>
+                            </th>
+                        </tr>
+                        <tbody class="w-full pt-3">
+                        <tr v-for="(user,index) in dropUsers" class="w-full flex">
+                            <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1 w-56" :class="index % 2 === 0 ? '' : ''">
+                                <DragElement  :item="user.element" :type="user.type" />
+                            </th>
+                            <td v-for="day in days">
+                                <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer" @click="openShowUserShiftModal(user.element, day)">
                                 <span v-for="shift in user.element?.shifts[day.full_day]">
                                     {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                 </span>
-                                    </div>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </div>
-                    </table>
-                </div>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </div>
+                </table>
             </div>
         </div>
         <show-user-shifts-modal v-if="showUserShifts" @closed="showUserShifts = false" :user="userToShow" :day="dayToShow" :projects="projects"/>
@@ -241,14 +242,12 @@ export default {
             //this.$emit('isOpen', this.showUserOverview)
         },
         syncScrollShiftPlan(event) {
-            console.log('shiftPlan' + event.target.scrollLeft);
             if(this.$refs.userOverview){
                 // Synchronize horizontal scrolling from shiftPlan to userOverview
                 this.$refs.userOverview.scrollLeft = event.target.scrollLeft;
             }
         },
         syncScrollUserOverview(event) {
-            console.log('userOverview' + event.target.scrollLeft)
             if(this.$refs.shiftPlan){
                 // Synchronize horizontal scrolling from userOverview to shiftPlan
                 this.$refs.shiftPlan.scrollLeft = event.target.scrollLeft;
@@ -310,8 +309,7 @@ export default {
     align-self: flex-start;
     position: -webkit-sticky;
     display: block;
-    top: 60px;
-    z-index: 23;
+    top: 0px;
 }
 .stickyYAxis {
     position: sticky;

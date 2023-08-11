@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div class="my-12 ml-14 mr-10">
+        <div class="ml-14">
             <h2 class="headline1">Dienstpläne & Schichtvorlagen</h2>
 
             <ShiftTabs />

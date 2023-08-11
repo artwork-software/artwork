@@ -8,6 +8,37 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
+/**
+ * App\Models\Shift
+ * @property int $id
+ * @property int $event_id
+ * @property string $start
+ * @property string $end
+ * @property int $break_minutes
+ * @property int $craft_id
+ * @property int $number_employees
+ * @property int $number_masters
+ * @property string|null $description
+ * @property bool $is_committed
+ * @property int|null $event_series_id
+ * @property string|null $event_start_day
+ * @property string|null $event_end_day
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property-read \App\Models\Craft $craft
+ * @property-read \App\Models\Event $event
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Freelancer[] $freelancer
+ * @property-read int|null $freelancer_count
+ * @property-read int $currentCount
+ * @property-read int $empty_master_count
+ * @property-read int $empty_user_count
+ * @property-read int $maxCount
+ * @property-read float $master_count
+ * @property-read int $user_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $users
+ * @property-read int|null $users_count
+ */
 class Shift extends Model
 {
     use HasFactory, HasChangesHistory;
@@ -21,7 +52,10 @@ class Shift extends Model
         'number_employees',
         'number_masters',
         'description',
-        'is_committed'
+        'is_committed',
+        'event_series_id',
+        'event_start_day',
+        'event_end_day'
     ];
 
     protected $casts = [

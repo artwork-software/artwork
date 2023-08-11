@@ -41,13 +41,13 @@
                                     </div>
                                 </div>
                                 <div v-for="shift in user.shifts[day.full_day]">
-                                    <div class="flex items-center justify-between group" :id="'shift-' + shift.id">
-                                        <div class="flex text-sm mb-2">
+                                    <div class="flex items-center justify-between group mb-2" :id="'shift-' + shift.id">
+                                        <div class="flex text-sm">
                                             {{ shift.craft?.abbreviation }} {{ shift.start }} - {{ shift.end }} | {{ shift.event.room?.name }} | {{ shift.event.event_type?.abbreviation }}: {{ findProjectById(shift.event.project_id)?.name }}
                                         </div>
                                         <div class="hidden group-hover:block cursor-pointer">
-                                            <button type="button" class="bg-buttonBlue rounded-full p-1" @click="removeUserFromShift(shift.id)">
-                                                <XIcon class="h-3 w-3 text-white"/>
+                                            <button type="button" @click="removeUserFromShift(shift.id)">
+                                                <SvgCollection svg-name="xMarkIcon" />
                                             </button>
                                         </div>
                                     </div>
@@ -80,10 +80,12 @@ import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from 
 import {XIcon} from "@heroicons/vue/solid";
 import Button from "@/Jetstream/Button.vue";
 import {Inertia} from "@inertiajs/inertia";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 
 export default defineComponent({
     name: "showUserShiftsModal",
     components: {
+        SvgCollection,
         Button,
         AddButton,
         Dialog,

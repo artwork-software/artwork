@@ -1,17 +1,40 @@
 <script>
 import {defineComponent} from 'vue'
+import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesShift.vue";
 
 export default defineComponent({
     name: "DropElement",
-    props: ['shiftId', 'master', 'users', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount', 'userIds'],
+    components: {ChooseUserSeriesShift},
+    props: ['shiftId', 'master', 'users', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount', 'userIds', 'is_series'],
+    data(){
+        return {
+            showChooseUserSeriesShiftModal: false,
+            buffer: {
+                onlyThisDay: false,
+                start: null,
+                end: null,
+                dayOfWeek: null
+            },
+            selectedUser: null
+        }
+    },
     methods: {
         onDragOver(event) {
             event.preventDefault();
         },
         onDrop(event) {
-
             event.preventDefault();
-            let dropElement = event.dataTransfer.getData('application/json');
+            this.selectedUser = event.dataTransfer.getData('application/json');
+            this.showChooseUserSeriesShiftModal = true
+        },
+        changeBuffer(buffer){
+            this.buffer = buffer
+            this.showChooseUserSeriesShiftModal = false
+            this.saveUser();
+        },
+        saveUser(){
+            console.log(this.selectedUser);
+            let dropElement = this.selectedUser;
             dropElement = JSON.parse(dropElement)[0];
 
             if(this.maxCount === this.currentCount){
@@ -47,6 +70,7 @@ export default defineComponent({
             if(dropElement.master && this.master && dropElement.type === 0){
                 this.$inertia.post(route('add.shift.master', this.shiftId), {
                         user_id: dropElement.id,
+                        chooseData: this.buffer
                     }, {
                         preserveState: true,
                         preserveScroll: true,
@@ -54,7 +78,9 @@ export default defineComponent({
                 )
 
             } else if (dropElement.type === 0 && !dropElement.master) {
-                this.$inertia.post(route('add.shift.user', {shift: this.shiftId, user: dropElement.id}), {}, {
+                this.$inertia.post(route('add.shift.user', {shift: this.shiftId, user: dropElement.id}), {
+                        chooseData: this.buffer
+                    }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
@@ -62,14 +88,17 @@ export default defineComponent({
             }
 
             if(dropElement.type === 1 && !dropElement.master){
-                this.$inertia.post(route('add.shift.freelancer', {shift: this.shiftId, freelancer: dropElement.id}), {}, {
+                this.$inertia.post(route('add.shift.freelancer', {shift: this.shiftId, freelancer: dropElement.id}), {
+                        chooseData: this.buffer
+                    }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
                 )
             } else if (dropElement.type === 1 && dropElement.master) {
                 this.$inertia.post(route('add.shift.freelancer.master', this.shiftId), {
-                        freelancer_id: dropElement.id
+                        freelancer_id: dropElement.id,
+                        chooseData: this.buffer
                     }, {
                         preserveState: true,
                         preserveScroll: true,
@@ -79,14 +108,17 @@ export default defineComponent({
 
             if(dropElement.type === 2 && dropElement.master){
                 this.$inertia.post(route('add.shift.provider.master', this.shiftId), {
-                        service_provider_id: dropElement.id
+                        service_provider_id: dropElement.id,
+                        chooseData: this.buffer
                     }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
                 )
             } else if (dropElement.type === 2 && !dropElement.master) {
-                this.$inertia.post(route('add.shift.provider', {shift: this.shiftId, serviceProvider: dropElement.id}), {}, {
+                this.$inertia.post(route('add.shift.provider', {shift: this.shiftId, serviceProvider: dropElement.id}), {
+                        chooseData: this.buffer
+                    }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
@@ -108,6 +140,8 @@ export default defineComponent({
             </svg>
         </span>
     </div>
+
+    <ChooseUserSeriesShift v-if="showChooseUserSeriesShiftModal" @close-modal="showChooseUserSeriesShiftModal = false" @returnBuffer="changeBuffer" />
 </template>
 
 <style scoped>

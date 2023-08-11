@@ -358,6 +358,7 @@ class ProjectController extends Controller
             'name' => $project->name . ' Budgettabelle'
         ]);
 
+
         $columns = $table->columns()->createMany([
             ['name' => 'KTO', 'subName' => '', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
             ['name' => 'A', 'subName' => '', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
@@ -1853,6 +1854,8 @@ class ProjectController extends Controller
 
     public function projectShiftTab(Project $project, Request $request)
     {
+
+
 
         $project->load([
             'departments.users.departments',

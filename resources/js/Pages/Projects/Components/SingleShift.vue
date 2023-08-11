@@ -105,9 +105,9 @@
                                 </svg>
                             </span>
                     </div>
-                    <div class="hidden group-hover:block bg-buttonBlue rounded-full p-0.5"
+                    <div class="hidden group-hover:block"
                          @click="removeUserFromShift(intern.id, shift.id)">
-                        <XIcon class="h-3 w-3 text-white"/>
+                        <SvgCollection svg-name="xMarkIcon"/>
                     </div>
                 </div>
                 <div v-else
@@ -127,18 +127,18 @@
                                 </svg>
                             </span>
                     </div>
-                    <div v-if="intern.full_name" class="hidden group-hover:block bg-buttonBlue rounded-full p-0.5"
-                         @click="removeUserFromShift(intern.id, shift.id)">
-                        <XIcon class="h-3 w-3 text-white"/>
+                    <div v-if="intern.full_name" class="hidden group-hover:block"
+                         @click="openDeleteUserModal(intern.id, shift.id, 'user')">
+                        <SvgCollection svg-name="xMarkIcon"/>
                     </div>
-                    <div v-if="intern.provider_name" class="hidden group-hover:block bg-buttonBlue rounded-full p-0.5"
-                         @click="removeProviderFromShift(intern.id, shift.id)">
-                        <XIcon class="h-3 w-3 text-white"/>
+                    <div v-if="intern.provider_name" class="hidden group-hover:block"
+                         @click="openDeleteUserModal(intern.id, shift.id, 'service_provider')">
+                        <SvgCollection svg-name="xMarkIcon"/>
                     </div>
                     <div v-if="intern.name && !intern.provider_name"
-                         class="hidden group-hover:block bg-buttonBlue rounded-full p-0.5"
-                         @click="removeFreelancerFormShift(intern.id, shift.id)">
-                        <XIcon class="h-3 w-3 text-white"/>
+                         class="hidden group-hover:block"
+                         @click="openDeleteUserModal(intern.id, shift.id, 'freelancer')">
+                        <SvgCollection svg-name="xMarkIcon"/>
                     </div>
                 </div>
             </div>
@@ -146,18 +146,22 @@
         <div v-for="user in Math.floor(shift.empty_master_count)">
             <DropElement :users="shift.users" :shift-id="shift.id" :currentCount="shift.currentCount"
                          :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count"
-                         :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="true"/>
+                         :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="true"
+                         :is_series="event.is_series"/>
         </div>
         <div v-for="user in Math.floor(shift.empty_user_count) ? Math.floor(shift.empty_user_count) : 0">
             <DropElement :users="shift.allUsers" :shift-id="shift.id" :currentCount="shift.currentCount"
                          :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count"
-                         :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="false"/>
+                         :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="false"
+                         :is_series="event.is_series"/>
         </div>
     </div>
 
     <AddShiftModal :shift="shift" :event="event" :crafts="crafts" v-if="openEditShiftModal"
                    @closed="openEditShiftModal = false" :edit="true"/>
 
+    <ChooseDeleteUserShiftModal :buffer="buffer" :event="event" v-if="showDeleteUserModal"
+                                @close-modal="showDeleteUserModal = false" @returnBuffer="deleteUser"/>
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -168,10 +172,12 @@ import {DotsVerticalIcon, DuplicateIcon, PencilAltIcon, TrashIcon} from "@heroic
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
+import ChooseDeleteUserShiftModal from "@/Pages/Projects/Components/ChooseDeleteUserShiftModal.vue";
 
 export default defineComponent({
     name: "SingleShift",
     components: {
+        ChooseDeleteUserShiftModal,
         AddShiftModal,
         DotsVerticalIcon, SvgCollection, TrashIcon, DuplicateIcon, PencilAltIcon, DropElement, XIcon,
         Menu, MenuButton, MenuItem, MenuItems
@@ -180,6 +186,15 @@ export default defineComponent({
     data() {
         return {
             openEditShiftModal: false,
+            showDeleteUserModal: false,
+            buffer: {
+                onlyThisDay: false,
+            },
+            userToDelete: {
+                user_id : null,
+                shift_id: null,
+                type: null
+            }
         }
     },
     computed: {
@@ -220,16 +235,25 @@ export default defineComponent({
         },
         removeProviderFromShift(provider_id, shift_id) {
             this.$inertia.delete(route('shifts.removeProvider', {shift: shift_id, serviceProvider: provider_id}), {
+                data: {
+                    chooseData: this.buffer
+                },
                 preserveScroll: true,
             });
         },
         removeFreelancerFormShift(freelancer_id, shift_id) {
             this.$inertia.delete(route('shifts.removeFreelancer', {shift: shift_id, freelancer: freelancer_id}), {
+                data: {
+                    chooseData: this.buffer
+                },
                 preserveScroll: true,
             });
         },
         clearEmployeesAndMaster(shift_id) {
             this.$inertia.delete(route('shifts.clearEmployeesAndMaster', {shift: shift_id}), {
+                data: {
+                    chooseData: this.buffer
+                },
                 preserveScroll: true,
                 preserveState: true,
             });
@@ -243,6 +267,23 @@ export default defineComponent({
         editShift() {
             this.openEditShiftModal = true;
         },
+        openDeleteUserModal(user_id, shift_id, type) {
+            this.showDeleteUserModal = true
+            this.userToDelete.user_id = user_id
+            this.userToDelete.shift_id = shift_id
+            this.userToDelete.type = type
+        },
+        deleteUser(buffer){
+            this.showDeleteUserModal = false
+            this.buffer = buffer;
+            if(this.userToDelete.type === 'user'){
+                this.removeUserFromShift(this.userToDelete.user_id, this.userToDelete.shift_id)
+            } else if(this.userToDelete.type === 'service_provider'){
+                this.removeProviderFromShift(this.userToDelete.user_id, this.userToDelete.shift_id)
+            } else if(this.userToDelete.type === 'freelancer'){
+                this.removeFreelancerFormShift(this.userToDelete.user_id, this.userToDelete.shift_id)
+            }
+        }
     },
 })
 </script>

@@ -156,59 +156,58 @@ export default defineComponent({
 
 
 <style scoped>
-
 .eventType0 {
-    background-color: rgba(167, 166, 177, 0.09);
+    background-color: #A7A6B1;
     stroke: #7F7E88;
 }
 
 .eventType1 {
-    background-color: rgba(100, 26, 84, 0.53);
+    background-color: #641A54;
     stroke: #631D53;
 }
 
 .eventType2 {
-    background-color: rgba(218, 63, 135, 0.39);
+    background-color: #DA3F87;
     stroke: #D84387;
 }
 
 .eventType3 {
-    background-color: rgba(235, 122, 61, 0.41);
+    background-color: #EB7A3D;
     stroke: #E97A45;
 }
 
 .eventType4 {
-    background-color: rgba(241, 182, 64, 0.62);
+    background-color: #F1B640;
     stroke: #CB8913;
 }
 
 .eventType5 {
-    background-color: rgba(134, 197, 84, 0.39);
+    background-color: #86C554;
     stroke: #648928;
 }
 
 .eventType6 {
-    background-color: rgba(46, 170, 99, 0.56);
+    background-color: #2EAA63;
     stroke: #35A965;
 }
 
 .eventType7 {
-    background-color: rgba(61, 195, 203, 0.4);
+    background-color: #3DC3CB;
     stroke: #35ACB2;
 }
 
 .eventType8 {
-    background-color: rgba(22, 143, 195, 0.37);
+    background-color: #168FC3;
     stroke: #2290C1;
 }
 
 .eventType9 {
-    background-color: rgba(77, 144, 142, 0.4);
+    background-color: #4D908E;
     stroke: #50908E;
 }
 
 .eventType10 {
-    background-color: rgba(33, 72, 92, 0.45);
+    background-color: #21485C;
     stroke: #23485B;
 }
 </style>

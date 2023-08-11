@@ -6,10 +6,44 @@ use Antonrom\ModelChangesHistory\Models\Change;
 use App\Models\Shift;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Class NewHistoryService
+ * @package App\Support\Services
+ * @property string $modelObject
+ * @property string $modelId
+ * @property string $historyText
+ * @property string $type
+ * @property string $user
+ * @property string $userObj
+ * @property string $array
+ * @property string $shift
+ * @property string $event
+ * @property string $eventTitle
+ * @property string $shiftId
+ * @property string $shiftDescription
+ * @property string $change
+ * @property string $changerType
+ * @property string $changerId
+ * @property string $stackTrace
+ * @property string $created_at
+ * @property string $updated_at
+ */
 class NewHistoryService
 {
+    /**
+     * NewHistoryService constructor.
+     * @param string $modelObject
+     */
     public function __construct(protected string $modelObject){}
 
+
+    /**
+     * function to create history
+     * @param int $modelId
+     * @param string $historyText
+     * @param string $type
+     * @return void
+     */
     public function createHistory(int $modelId, string $historyText, string $type = 'project'): void
     {
         $user = Auth::user();

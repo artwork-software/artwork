@@ -24,6 +24,9 @@ return new class extends Migration
             $table->integer('number_masters')->default(0);
             $table->string('description')->nullable();
             $table->boolean('is_committed')->default(false);
+            $table->unsignedBigInteger('event_series_id')->nullable();
+            $table->date('event_start_day')->nullable();
+            $table->date('event_end_day')->nullable();
             $table->timestamps();
         });
     }

@@ -111,7 +111,7 @@
                                 </div>
                             </div>
                             <div class="flex justify-between mt-5">
-                                <AddButton mode="modal" text="Speichern" @click="checkSeriesEvent"/>
+                                <AddButton mode="modal" text="Speichern" @click="saveShift"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -119,8 +119,6 @@
             </div>
         </Dialog>
     </TransitionRoot>
-
-    <ChangeAllSubmitModal v-if="showChangeAllModal" @close-modal="showChangeAllModal = false" @allEvents="saveAllEvents"  @single="saveShift" />
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -157,7 +155,7 @@ export default defineComponent({
         TransitionRoot,
         XIcon, DialogPanel, PlusCircleIcon, ListboxButton, ListboxOption, ListboxOptions, Listbox
     },
-    props: ['event', 'crafts', 'shift', 'edit'],
+    props: ['event', 'crafts', 'shift', 'edit', 'buffer'],
     data(){
         return {
             open: true,
@@ -173,6 +171,8 @@ export default defineComponent({
                 event_id: this.event.id,
                 changeAll: false,
                 seriesId: null,
+                changes_start: null,
+                changes_end: null,
             }),
             selectedCraft: this.shift ? this.shift.craft : null,
             helpTexts: {
@@ -219,7 +219,7 @@ export default defineComponent({
                 }
             }
         },
-        saveAllEvents(){
+        /*saveAllEvents(){
             this.shiftForm.changeAll = true;
             this.shiftForm.seriesId = this.event.series_id;
             this.saveShift();
@@ -234,7 +234,7 @@ export default defineComponent({
                     this.saveShift();
                 }
             }
-        },
+        },*/
         checkUserCount(){
             if(this.shift?.user_count > 0){
                 this.helpTexts.employeeText = 'Es sind bereits Mitarbeiter*innen eingetragen. Die Anzahl kann nicht verändert werden. Bitte entferne erst alle Mitarbeiter*innen. Eingabe wurde zurückgesetzt!';
@@ -252,6 +252,15 @@ export default defineComponent({
             }
         },
         saveShift(){
+
+            if(!this.buffer.onlyThisDay){
+                this.shiftForm.changeAll = true;
+                this.shiftForm.seriesId = this.event.series_id;
+                this.shiftForm.changes_start = this.buffer.start;
+                this.shiftForm.changes_end = this.buffer.end;
+            }
+
+
             this.shiftForm.craft_id = this.selectedCraft?.id;
 
             if(this.shiftForm.start > this.shiftForm.start){
@@ -328,6 +337,8 @@ export default defineComponent({
                         this.shiftForm.description = '';
                         this.shiftForm.changeAll = false;
                         this.shiftForm.seriesId = null;
+                        this.shiftForm.changes_start = null;
+                        this.shiftForm.changes_end = null;
                         this.closeModal(true);  // close the modal
                     }
                 })
@@ -345,6 +356,8 @@ export default defineComponent({
                         this.shiftForm.description = '';
                         this.shiftForm.changeAll = false;
                         this.shiftForm.seriesId = null;
+                        this.shiftForm.changes_start = null;
+                        this.shiftForm.changes_end = null;
                         this.closeModal(true);  // close the modal
                     }
                 })

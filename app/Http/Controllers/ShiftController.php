@@ -8,8 +8,10 @@ use App\Models\ServiceProvider;
 use App\Models\Shift;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Redirect;
 use function React\Promise\reject;
@@ -19,6 +21,9 @@ class ShiftController extends Controller
 
     protected ?NewHistoryService $history = null;
 
+    /**
+     * ShiftController constructor.
+     */
     public function __construct()
     {
         $this->history = new NewHistoryService('App\Models\Shift');
@@ -27,7 +32,7 @@ class ShiftController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function index()
     {
@@ -37,7 +42,7 @@ class ShiftController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function create()
     {
@@ -47,11 +52,12 @@ class ShiftController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return Response
      */
     public function store(Request $request, Event $event)
     {
+
         $shift = $event->shifts()->create($request->only([
             'start',
             'end',
@@ -62,12 +68,25 @@ class ShiftController extends Controller
             'description',
         ]));
 
+        $shift->update([
+            'event_start_day' => Carbon::parse($event->start_time)->format('Y-m-d'),
+            'event_end_day' => Carbon::parse($event->end_time)->format('Y-m-d'),
+        ]);
+
         if($request->changeAll){
-            $seriesEvents = Event::where('series_id', $event->series_id)->get();
+            $start = Carbon::parse($request->changes_start)->startOfDay();
+            $end = Carbon::parse($request->changes_end)->endOfDay();
+            $seriesEvents = Event::where('series_id', $event->series_id)
+                ->where(function ($query) use ($start, $end) {
+                    $query->whereBetween('start_time', [$start, $end])
+                        ->orWhereBetween('end_time', [$start, $end]);
+                })
+                ->get();
+
 
             foreach ($seriesEvents as $seriesEvent){
                 if($seriesEvent->id != $event->id){
-                    $seriesEvent->shifts()->create($request->only([
+                    $newShift = $seriesEvent->shifts()->create($request->only([
                         'start',
                         'end',
                         'break_minutes',
@@ -76,8 +95,19 @@ class ShiftController extends Controller
                         'number_masters',
                         'description',
                     ]));
+                    $newShift->update([
+                        'event_series_id' => $event->series_id,
+                        'event_start_day' => Carbon::parse($seriesEvent->start_time)->format('Y-m-d'),
+                        'event_end_day' => Carbon::parse($seriesEvent->end_time)->format('Y-m-d'),
+                    ]);
                 }
             }
+        }
+
+        if($event->is_series){
+            $shift->update([
+                'event_series_id' => $event->series_id,
+            ]);
         }
 
         $this->history->createHistory($shift->id, 'Schicht von Event '. $event->eventName .' wurde erstellt', 'shift');
@@ -86,8 +116,8 @@ class ShiftController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Shift  $shift
-     * @return \Illuminate\Http\Response
+     * @param Shift $shift
+     * @return Response
      */
     public function show(Shift $shift)
     {
@@ -97,8 +127,8 @@ class ShiftController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Shift  $shift
-     * @return \Illuminate\Http\Response
+     * @param Shift $shift
+     * @return Response
      */
     public function edit(Shift $shift)
     {
@@ -108,9 +138,9 @@ class ShiftController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Shift  $shift
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request
+     * @param Shift $shift
+     * @return RedirectResponse
      */
     public function update(Request $request, Shift $shift)
     {
@@ -131,6 +161,13 @@ class ShiftController extends Controller
         return Redirect::route('shifts.plan')->with('success', 'Shift updated');
     }
 
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param Request $request
+     * @param Shift $shift
+     * @return RedirectResponse
+     */
     public function updateShift(Request $request, Shift $shift)
     {
         if($shift->is_committed) {
@@ -153,9 +190,10 @@ class ShiftController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Shift  $shift
+     * @param Shift $shift
+     * @return void
      */
-    public function destroy(Shift $shift)
+    public function destroy(Shift $shift): void
     {
         if($shift->is_committed) {
             $event = $shift->event;
@@ -164,6 +202,15 @@ class ShiftController extends Controller
         $shift->delete();
     }
 
+
+    /**
+     * @param Shift $shift
+     * @param array $eventIds
+     * @param int|null $user_id
+     * @param int|null $freelancer_id
+     * @param int|null $service_provider_id
+     * @return Collection
+     */
     protected function calculateShiftCollision(Shift $shift, array $eventIds, int $user_id = null, int $freelancer_id = null, int $service_provider_id = null): Collection
     {
         $shift->load('event');
@@ -206,7 +253,13 @@ class ShiftController extends Controller
             ->pluck('id');
     }
 
-    public function addShiftUser(Shift $shift, User $user): void
+    /**
+     * @param Shift $shift
+     * @param User $user
+     * @param Request $request
+     * @return void
+     */
+    public function addShiftUser(Shift $shift, User $user, Request $request): void
     {
         if($shift->is_committed) {
             $event = $shift->event;
@@ -223,22 +276,73 @@ class ShiftController extends Controller
             );
         }
 
+        if($request->chooseData['onlyThisDay'] === false) {
+            $start = Carbon::parse($request->chooseData['start'])->startOfDay();
+            $end = Carbon::parse($request->chooseData['end'])->endOfDay();
+            $allShifts = Shift::where('event_series_id', $shift->series_id)
+                ->where(function ($query) use ($start, $end) {
+                    $query->whereBetween('event_start_day', [$start, $end])
+                        ->orWhereBetween('event_end_day', [$start, $end]);
+                })
+                ->get();
+            foreach ($allShifts as $allShift) {
+                if(Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']){
+                    continue;
+                }
+                if($allShift->id !== $shift->id){
+                    $allShift->users()->attach($user->id, ['shift_count' => $collideCount + 1]);
+                }
+            }
+        }
+
         $shift->users()->attach($user->id, ['shift_count' => $collideCount + 1]);
     }
 
+    /**
+     * @param Request $request
+     * @param Shift $shift
+     * @param User $user
+     * @return void
+     */
     public function addShiftMaster(Request $request, Shift $shift, User $user): void
     {
         if($shift->is_committed) {
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde  zur Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') als Meister hinzugefügt', 'shift');
         }
+
+        if($request->chooseData['onlyThisDay'] === false) {
+            $start = Carbon::parse($request->chooseData['start'])->startOfDay();
+            $end = Carbon::parse($request->chooseData['end'])->endOfDay();
+            $allShifts = Shift::where('event_series_id', $shift->series_id)
+                ->where(function ($query) use ($start, $end) {
+                    $query->whereBetween('event_start_day', [$start, $end])
+                        ->orWhereBetween('event_end_day', [$start, $end]);
+                })
+                ->get();
+            foreach ($allShifts as $allShift) {
+                if(Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']){
+                    continue;
+                }
+                if($allShift->id !== $shift->id){
+                    $allShift->users()->attach($user->id, ['is_master' => true]);
+                }
+            }
+        }
+
         $shift->users()->attach($user->id, ['is_master' => true]);
     }
 
 
-    public function addShiftFreelancer(Shift $shift, Freelancer $freelancer): void
+    /**
+     * add freelancer to shift
+     * @param Shift $shift
+     * @param Freelancer $freelancer
+     * @param Request $request
+     * @return void
+     */
+    public function addShiftFreelancer(Shift $shift, Freelancer $freelancer, Request $request): void
     {
-
         if($shift->is_committed) {
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Freelancer ' . $freelancer->getNameAttribute() . ' wurde zur Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') hinzugefügt', 'shift');
@@ -254,30 +358,102 @@ class ShiftController extends Controller
             );
         }
 
+        if ($request->chooseData['onlyThisDay'] === false) {
+            $start = Carbon::parse($request->chooseData['start'])->startOfDay();
+            $end = Carbon::parse($request->chooseData['end'])->endOfDay();
+            $allShifts = Shift::where('event_series_id', $shift->event_series_id)
+                ->where(function ($query) use ($start, $end) {
+                    $query->whereBetween('event_start_day', [$start, $end])
+                        ->orWhereBetween('event_end_day', [$start, $end]);
+                })
+                ->where('id', '<>', $shift->id) // Exclude the current shift
+                ->get();
+            foreach ($allShifts as $allShift) {
+                if(Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']){
+                    continue;
+                }
+                $allShift->freelancer()->attach($freelancer->id, ['shift_count' => $collideCount + 1]);
+            }
+        }
+
         $shift->freelancer()->attach($freelancer->id, ['shift_count' => $collideCount + 1]);
     }
 
+    /**
+     * @param Request $request
+     * @param Shift $shift
+     * @param Freelancer $freelancer
+     * @return void
+     */
     public function addShiftFreelancerMaster(Request $request, Shift $shift, Freelancer $freelancer): void
     {
         if($shift->is_committed) {
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Freelancer ' . $freelancer->getNameAttribute() . ' wurde zur Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') als Meister hinzugefügt', 'shift');
         }
+
+        if($request->chooseData['onlyThisDay'] === false) {
+            $start = Carbon::parse($request->chooseData['start'])->startOfDay();
+            $end = Carbon::parse($request->chooseData['end'])->endOfDay();
+            $allShifts = Shift::where('event_series_id', $shift->series_id)
+                ->where(function ($query) use ($start, $end) {
+                    $query->whereBetween('event_start_day', [$start, $end])
+                        ->orWhereBetween('event_end_day', [$start, $end]);
+                })
+                ->get();
+            foreach ($allShifts as $allShift) {
+                if(Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']){
+                    continue;
+                }
+                if($allShift->id !== $shift->id){
+                    $allShift->freelancer()->attach($freelancer->id, ['is_master' => true]);
+                }
+            }
+        }
         $shift->freelancer()->attach($freelancer->id, ['is_master' => true]);
     }
 
 
-
+    /**
+     * @param Request $request
+     * @param Shift $shift
+     * @param ServiceProvider $serviceProvider
+     * @return void
+     */
     public function addShiftProviderMaster(Request $request, Shift $shift, ServiceProvider $serviceProvider): void
     {
         if($shift->is_committed) {
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Dienstleister ' . $serviceProvider->getNameAttribute() . ' wurde zur Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') als Meister hinzugefügt', 'shift');
         }
+
+        if($request->chooseData['onlyThisDay'] === false) {
+            $start = Carbon::parse($request->chooseData['start'])->startOfDay();
+            $end = Carbon::parse($request->chooseData['end'])->endOfDay();
+            $allShifts = Shift::where('event_series_id', $shift->series_id)
+                ->where(function ($query) use ($start, $end) {
+                    $query->whereBetween('event_start_day', [$start, $end])
+                        ->orWhereBetween('event_end_day', [$start, $end]);
+                })
+                ->get();
+            foreach ($allShifts as $allShift) {
+                if(Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']){
+                    continue;
+                }
+                if($allShift->id !== $shift->id){
+                    $allShift->service_provider()->attach($serviceProvider->id, ['is_master' => true]);
+                }
+            }
+        }
         $shift->service_provider()->attach($serviceProvider->id, ['is_master' => true]);
     }
 
-    public function removeUser(Shift $shift, User $user): void
+    /**
+     * @param Shift $shift
+     * @param User $user
+     * @return void
+     */
+    public function removeUser(Shift $shift, User $user, Request $request): void
     {
         if($shift->is_committed) {
             $event = $shift->event;
@@ -290,6 +466,18 @@ class ShiftController extends Controller
         $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, user_id: $user->id);
         $collideCount = $collidingShiftIds->count();
 
+
+        if ($request->chooseData['onlyThisDay'] === false) {
+            $allShifts = Shift::where('event_series_id', $shift->event_series_id)
+                ->where('id', '<>', $shift->id) // Exclude the current shift
+                ->get();
+
+
+            foreach ($allShifts as $allShift) {
+                $allShift->users()->detact($user->id);
+            }
+        }
+
         $user->shifts()->updateExistingPivot(
             $collidingShiftIds,
             [
@@ -298,13 +486,29 @@ class ShiftController extends Controller
         );
     }
 
-    public function removeFreelancer(Shift $shift, Freelancer $freelancer): void
+    /**
+     * @param Shift $shift
+     * @param Freelancer $freelancer
+     * @return void
+     */
+    public function removeFreelancer(Shift $shift, Freelancer $freelancer, Request $request): void
     {
         if($shift->is_committed) {
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Freelancer ' . $freelancer->getNameAttribute() . ' wurde von Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') entfernt', 'shift');
         }
         $shift->freelancer()->detach($freelancer->id);
+
+        if ($request->chooseData['onlyThisDay'] === false) {
+            $allShifts = Shift::where('event_series_id', $shift->event_series_id)
+                ->where('id', '<>', $shift->id) // Exclude the current shift
+                ->get();
+
+
+            foreach ($allShifts as $allShift) {
+                $allShift->freelancer()->detach($freelancer->id);
+            }
+        }
 
         $eventIdsOfUserShifts = $freelancer->shifts()->get()->pluck('event.id')->all();
 
@@ -319,13 +523,30 @@ class ShiftController extends Controller
         );
     }
 
-    public function removeProvider(Shift $shift, ServiceProvider $serviceProvider): void
+    /**
+     * @param Shift $shift
+     * @param ServiceProvider $serviceProvider
+     * @return void
+     */
+    public function removeProvider(Shift $shift, ServiceProvider $serviceProvider, Request $request): void
     {
         if($shift->is_committed) {
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Dienstleister ' . $serviceProvider->getNameAttribute() . ' wurde von Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') entfernt', 'shift');
         }
         $shift->service_provider()->detach($serviceProvider->id);
+
+
+        if ($request->chooseData['onlyThisDay'] === false) {
+            $allShifts = Shift::where('event_series_id', $shift->event_series_id)
+                ->where('id', '<>', $shift->id) // Exclude the current shift
+                ->get();
+
+
+            foreach ($allShifts as $allShift) {
+                $allShift->service_provider()->detach($serviceProvider->id);
+            }
+        }
 
         $eventIdsOfUserShifts = $serviceProvider->shifts()->get()->pluck('event.id')->all();
 
@@ -340,7 +561,13 @@ class ShiftController extends Controller
         );
     }
 
-    public function addShiftProvider(Shift $shift, ServiceProvider $serviceProvider): void
+    /**
+     * @param Shift $shift
+     * @param ServiceProvider $serviceProvider
+     * @param Request $request
+     * @return void
+     */
+    public function addShiftProvider(Shift $shift, ServiceProvider $serviceProvider, Request $request): void
     {
         if($shift->is_committed) {
             $event = $shift->event;
@@ -357,22 +584,45 @@ class ShiftController extends Controller
             );
         }
 
+        if($request->chooseData['onlyThisDay'] === false) {
+            $start = Carbon::parse($request->chooseData['start'])->startOfDay();
+            $end = Carbon::parse($request->chooseData['end'])->endOfDay();
+            $allShifts = Shift::where('event_series_id', $shift->series_id)
+                ->where(function ($query) use ($start, $end) {
+                    $query->whereBetween('event_start_day', [$start, $end])
+                        ->orWhereBetween('event_end_day', [$start, $end]);
+                })
+                ->get();
+            foreach ($allShifts as $allShift) {
+                if(Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']){
+                    continue;
+                }
+                if($allShift->id !== $shift->id){
+                    $allShift->service_provider()->attach($serviceProvider->id, ['shift_count' => $collideCount + 1]);
+                }
+            }
+        }
+
         $shift->service_provider()->attach($serviceProvider->id, ['shift_count' => $collideCount + 1]);
     }
 
-    public function clearEmployeesAndMaster(Shift $shift): void
+    /**
+     * @param Shift $shift
+     * @return void
+     */
+    public function clearEmployeesAndMaster(Shift $shift, Request $request): void
     {
         $users = $shift->users()->get();
         foreach ($users as $user) {
-            $this->removeUser($shift, $user);
+            $this->removeUser($shift, $user, $request);
         }
         $freelancers = $shift->freelancer()->get();
         foreach($freelancers as $freelancer) {
-            $this->removeFreelancer($shift, $freelancer);
+            $this->removeFreelancer($shift, $freelancer, $request);
         }
         $serviceProviders = $shift->service_provider()->get();
         foreach($serviceProviders as $serviceProvider) {
-            $this->removeProvider($shift, $serviceProvider);
+            $this->removeProvider($shift, $serviceProvider, $request);
         }
         if($shift->is_committed) {
             $event = $shift->event;

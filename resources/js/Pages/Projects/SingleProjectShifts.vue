@@ -37,6 +37,7 @@ export default {
         ProjectShowHeaderComponent},
     props: [
         'project',
+        'usersForShifts',
         'eventTypes',
         'currentGroup',
         'states',
@@ -64,10 +65,12 @@ export default {
     computed: {
         dropUsers(){
             const users = [];
-            this.project.users.forEach((user) => {
+            console.log(this.usersForShifts);
+            this.usersForShifts.forEach((user) => {
                 users.push({
-                    element: user,
-                    type: 0
+                    element: user.user,
+                    type: 0,
+                    plannedWorkingHours: user.plannedWorkingHours,
                 })
             })
             this.project.freelancers?.forEach((freelancer) => {

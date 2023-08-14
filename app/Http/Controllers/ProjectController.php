@@ -24,6 +24,7 @@ use App\Http\Resources\ProjectResources\ProjectInfoResource;
 use App\Http\Resources\ProjectResources\ProjectShiftResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Http\Resources\UserIndexResource;
+use App\Http\Resources\UserShowResource;
 use App\Models\BudgetSumDetails;
 use App\Models\Category;
 use App\Models\CellCalculations;
@@ -1882,6 +1883,18 @@ class ProjectController extends Controller
         $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
         $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
 
+        if($firstEventInProject && $lastEventInProject){
+            //get the start of day of the firstEventInProject
+            $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
+            //get the end of day of the lastEventInProject
+            $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
+
+        }else{
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
+
+
         $events = $project->events()->get();
         $RoomsWithAudience = null;
 
@@ -1926,11 +1939,23 @@ class ProjectController extends Controller
             }
         }
 
+        $users = User::all()->where('can_work_shifts', true);
+
+        foreach ($users as $user) {
+            $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
+
+            $usersWithPlannedWorkingHours[] = [
+                'user' => UserShowResource::make($user),
+                'plannedWorkingHours' => $plannedWorkingHours,
+            ];
+        }
+
         rsort($eventsWithRelevant);
 
 
         return inertia('Projects/SingleProjectShifts', [
             'project' => new ProjectShiftResource($project),
+            'usersForShifts' => $usersWithPlannedWorkingHours,
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,

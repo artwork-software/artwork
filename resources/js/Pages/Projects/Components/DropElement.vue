@@ -33,7 +33,6 @@ export default defineComponent({
             this.saveUser();
         },
         saveUser(){
-            console.log(this.selectedUser);
             let dropElement = this.selectedUser;
             dropElement = JSON.parse(dropElement)[0];
 
@@ -68,7 +67,7 @@ export default defineComponent({
             }
 
             if(dropElement.master && this.master && dropElement.type === 0){
-                this.$inertia.post(route('add.shift.master', this.shiftId), {
+                this.$inertia.post(route('add.shift.master', {shift: this.shiftId, user: dropElement.id}), {
                         user_id: dropElement.id,
                         chooseData: this.buffer
                     }, {
@@ -96,7 +95,7 @@ export default defineComponent({
                     }
                 )
             } else if (dropElement.type === 1 && dropElement.master) {
-                this.$inertia.post(route('add.shift.freelancer.master', this.shiftId), {
+                this.$inertia.post(route('add.shift.freelancer.master', {shift: this.shiftId, freelancer: dropElement.id}), {
                         freelancer_id: dropElement.id,
                         chooseData: this.buffer
                     }, {
@@ -107,7 +106,7 @@ export default defineComponent({
             }
 
             if(dropElement.type === 2 && dropElement.master){
-                this.$inertia.post(route('add.shift.provider.master', this.shiftId), {
+                this.$inertia.post(route('add.shift.provider.master', {shift: this.shiftId, serviceProvider: dropElement.id}), {
                         service_provider_id: dropElement.id,
                         chooseData: this.buffer
                     }, {

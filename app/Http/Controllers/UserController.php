@@ -290,6 +290,15 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'User updated');
     }
 
+    public function update_user_can_work_shifts(User $user, Request $request): RedirectResponse
+    {
+        $user->update([
+            'can_work_shifts' => $request->can_work_shifts
+        ]);
+
+        return Redirect::back()->with('success', 'User updated');
+    }
+
     public function update_work_data(User $user, Request $request): RedirectResponse
     {
         $user->update([

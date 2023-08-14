@@ -115,6 +115,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     Route::post('/users/reset-password', [UserController::class, 'reset_user_password'])->name('user.reset.password');
     Route::post('/users/{user}/masters', [UserController::class, 'update_user_can_master'])->name('user.update.can_master');
+    Route::post('/users/{user}/canWorkShifts', [UserController::class, 'update_user_can_work_shifts'])->name('user.update.can_work_shifts');
     Route::post('/users/{user}/workings', [UserController::class, 'update_work_data'])->name('user.update.work_data');
 
     //Departments

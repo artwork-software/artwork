@@ -40,6 +40,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property boolean $project_management
+ * @property boolean $can_master
+ * @property boolean $can_work_shifts
  *
  * @property Collection<\App\Models\Department> departments
  * @property Collection<\App\Models\Project> projects
@@ -87,6 +89,7 @@ class User extends Authenticatable
         'employStart',
         'employEnd',
         'can_master',
+        'can_work_shifts',
         'work_name',
         'work_description',
         'weekly_working_hours',
@@ -108,6 +111,7 @@ class User extends Authenticatable
         'toggle_hints' => 'boolean',
         'temporary' => 'boolean',
         'can_master' => 'boolean',
+        'can_work_shifts' => 'boolean',
     ];
 
     /**
@@ -297,5 +301,24 @@ class User extends Authenticatable
             'first_name' => $this->first_name,
             'last_name' => $this->last_name
         ];
+    }
+    public function plannedWorkingHours($startDate, $endDate): float|int
+    {
+        $shiftsInDateRange = $this->shifts()
+            ->whereBetween('event_start_day', [$startDate, $endDate])
+            ->get();
+
+        $plannedWorkingHours = 0;
+
+        foreach ($shiftsInDateRange as $shift) {
+            $shiftStart = Carbon::parse($shift->start); // Parse the start time
+            $shiftEnd = Carbon::parse($shift->end);     // Parse the end time
+            $breakMinutes = $shift->break_minutes;
+
+            $shiftDuration = ($shiftEnd->diffInMinutes($shiftStart) - $breakMinutes) / 60;
+            $plannedWorkingHours += $shiftDuration;
+        }
+
+        return $plannedWorkingHours;
     }
 }

@@ -276,6 +276,13 @@ class ShiftController extends Controller
             );
         }
 
+        //add user to the project team of the project of the event of the shift, if the user is not already in the project team
+        $event = $shift->event;
+        $project = $event->project;
+        if(!$project->users->contains($user->id)){
+            $project->users()->attach($user->id);
+        }
+
         if($request->chooseData['onlyThisDay'] === false) {
             $start = Carbon::parse($request->chooseData['start'])->startOfDay();
             $end = Carbon::parse($request->chooseData['end'])->endOfDay();
@@ -309,6 +316,13 @@ class ShiftController extends Controller
         if($shift->is_committed) {
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde  zur Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') als Meister hinzugefügt', 'shift');
+        }
+
+        //add user to the project team of the project of the event of the shift, if the user is not already in the project team
+        $event = $shift->event;
+        $project = $event->project;
+        if(!$project->users->contains($user->id)){
+            $project->users()->attach($user->id);
         }
 
         if($request->chooseData['onlyThisDay'] === false) {

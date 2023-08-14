@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $number_masters
  * @property string|null $description
  * @property bool $is_committed
- * @property int|null $event_series_id
+ * @property string|null $shift_uuid
  * @property string|null $event_start_day
  * @property string|null $event_end_day
  * @property Carbon $created_at
@@ -53,7 +53,7 @@ class Shift extends Model
         'number_masters',
         'description',
         'is_committed',
-        'event_series_id',
+        'shift_uuid',
         'event_start_day',
         'event_end_day'
     ];

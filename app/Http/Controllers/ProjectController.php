@@ -1941,6 +1941,8 @@ class ProjectController extends Controller
 
         $users = User::all()->where('can_work_shifts', true);
 
+        $usersWithPlannedWorkingHours = [];
+
         foreach ($users as $user) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
 

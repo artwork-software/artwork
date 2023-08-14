@@ -18,10 +18,10 @@
                             </div>
                             <div class="relative z-40">
                                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    Schichtwiederholung
+                                    Zeitraum Schichtbesetzung
                                 </div>
                                 <p class="xsLight">
-                                    Du hast einem Wiederholungstermin eine Schicht zugewiesen. Lege fest in welchem Zeitraum die Schicht wiederholt werden soll.
+                                    Du hast eine Wiederholungsschicht besetzt. Lege fest für welchen Zeitraum du den/die Mitarbeiter*in besetzen möchtest.
                                 </p>
 
                                 <SwitchGroup as="div" class="flex items-center mt-4">
@@ -138,6 +138,7 @@ export default {
                 dayOfWeek: null
             },
             weekdays: [
+                {name: 'Jeden Tag', id: 'all'},
                 {name: 'Jeden Montag', id: 1},
                 {name: 'Jeden Dienstag', id: 2},
                 {name: 'Jeden Mittwoch', id: 3},
@@ -146,7 +147,7 @@ export default {
                 {name: 'Jeden Samstag', id: 6},
                 {name: 'Jeden Sonntag', id: 0},
             ],
-            selectedDay: {name: 'Jeden Montag', id: 1}
+            selectedDay: {name: 'Jeden Tag', id: 'all'}
         }
     },
     props: ['event', 'buffer'],

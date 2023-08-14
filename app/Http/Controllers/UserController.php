@@ -241,7 +241,7 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user): RedirectResponse
     {
-        $user->update($request->only('first_name','last_name', 'phone_number', 'position', 'business', 'description','email'));
+        $user->update($request->only('first_name','last_name', 'phone_number', 'position', 'description','email'));
 
         $user->departments()->sync(
             collect($request->departments)

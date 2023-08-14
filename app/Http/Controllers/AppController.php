@@ -10,6 +10,7 @@ use App\Http\Requests\UserCreateRequest;
 use App\Models\GeneralSettings;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -169,6 +170,10 @@ class AppController extends Controller
     {
         if (! Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             throw new MethodNotAllowedHttpException(['update'], 'Nur Admins können Email Einstellungen ändern');
+        }
+
+        if ($request->businessName != $settings->business_name) {
+            $settings->business_name = $request->businessName;
         }
 
         if ($request->impressumLink != $settings->impressum_link) {

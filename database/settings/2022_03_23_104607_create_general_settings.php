@@ -16,6 +16,7 @@ class CreateGeneralSettings extends SettingsMigration
         $this->migrator->add('general.small_logo_path', "/logo/artwork_logo_small.svg");
         $this->migrator->add('general.banner_path', "/banner/default_banner.svg");
         $this->migrator->add('general.impressum_link', "");
+        $this->migrator->add('general.business_name', "Unsere Organisation");
         $this->migrator->add('general.privacy_link', "");
         $this->migrator->add('general.email_footer', "");
     }

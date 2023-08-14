@@ -51,8 +51,9 @@
                                 <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
-                                            <input type="text" v-model="userForm.business" placeholder="Unternehmen"
-                                                class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border-gray-300 "/>
+                                            <div class="text-darkGray font-semibold px-3 py-2 border-2 w-full border-gray-300">
+                                                {{ $page.props.businessName }}
+                                            </div>
                                         </div>
                                     </div>
 

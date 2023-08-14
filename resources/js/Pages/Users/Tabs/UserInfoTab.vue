@@ -4,8 +4,9 @@
             <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3">
                     <div class="mt-1">
-                        <input type="text" v-model="userForm.business" placeholder="Unternehmen"
-                               class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
+                        <div class="text-darkGray font-semibold px-3 py-2 border-2 w-full border-gray-300 shadow-sm" >
+                            {{ $page.props.businessName }}
+                        </div>
                     </div>
                 </div>
 
@@ -218,7 +219,6 @@ export default {
             userForm: useForm({
                 first_name: this.user_to_edit.first_name,
                 last_name: this.user_to_edit.last_name,
-                business: this.user_to_edit.business,
                 email: this.user_to_edit.email,
                 position: this.user_to_edit.position,
                 departments: this.user_to_edit.departments,

@@ -139,6 +139,16 @@
                         Impressum- und Datenschutzseite deines Unternehmens an.
                     </div>
                     <div class="mt-8">
+                        <div class="mt-4 col-span-9 grid grid-cols-9">
+                            <div class="sm:col-span-3">
+                                <div class="mt-1">
+                                    <input type="text"
+                                           :placeholder="$page.props.businessName"
+                                           v-model="mailForm.businessName"
+                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                </div>
+                            </div>
+                        </div>
                         <div class="col-span-9 grid grid-cols-9">
                             <div class="sm:col-span-3">
                                 <div class="mt-1">
@@ -327,6 +337,7 @@ export default defineComponent({
             }),
             mailForm: this.$inertia.form({
                 _method: 'PUT',
+                businessName: this.$page.props.businessName,
                 impressumLink: this.$page.props.impressumLink,
                 privacyLink: this.$page.props.privacyLink,
                 emailFooter: this.$page.props.emailFooter,
@@ -432,6 +443,7 @@ export default defineComponent({
             this.form.post(route('tool.update'))
         },
         changeEmailData() {
+            console.log(this.mailForm)
             this.mailForm.post(route('tool.updateMail'))
         },
         createGlobalNotification(){

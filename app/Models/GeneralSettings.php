@@ -18,6 +18,8 @@ class GeneralSettings extends Settings
 
     public string $impressum_link;
 
+    public string $business_name;
+
     public string $privacy_link;
 
     public string $email_footer;

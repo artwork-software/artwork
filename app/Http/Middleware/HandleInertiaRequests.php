@@ -128,6 +128,7 @@ class HandleInertiaRequests extends Middleware
             'small_logo' => $this->small_logo(),
             'big_logo' => $this->big_logo(),
             'banner' => $this->banner(),
+            'businessName' => app(GeneralSettings::class)->business_name,
             'impressumLink' => app(GeneralSettings::class)->impressum_link,
             'privacyLink' => app(GeneralSettings::class)->privacy_link,
             'emailFooter' => app(GeneralSettings::class)->email_footer,

@@ -47,12 +47,9 @@
                 </div>
                 <div class="sm:col-span-3 mt-1">
                     <label for="business" class="text-sm font-bold text-secondary">Unternehmen</label>
-                    <input
-                        v-model="form.business"
-                        id="business"
-                        type="text"
-                        required
-                        class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
+                    <div class="text-darkGray font-semibold px-3 py-2 border-2 w-full border-gray-300">
+                        {{ $page.props.businessName }}
+                    </div>
                 </div>
 
                 <div class="sm:col-span-3 mt-1">
@@ -165,7 +162,6 @@ export default defineComponent({
                 first_name: '',
                 last_name: '',
                 email: this.email,
-                business: '',
                 position: '',
                 phone_number: '',
                 password: '',

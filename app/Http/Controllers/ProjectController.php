@@ -40,6 +40,7 @@ use App\Models\Currency;
 use App\Models\Department;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\Freelancer;
 use App\Models\Genre;
 use App\Models\MainPosition;
 use App\Models\MainPositionDetails;
@@ -49,6 +50,7 @@ use App\Models\ProjectGroups;
 use App\Models\ProjectStates;
 use App\Models\Room;
 use App\Models\Sector;
+use App\Models\ServiceProvider;
 use App\Models\SubPosition;
 use App\Models\SubPositionRow;
 use App\Models\SubpositionSumDetail;
@@ -1943,14 +1945,48 @@ class ProjectController extends Controller
 
         $usersWithPlannedWorkingHours = [];
 
+        //get the diff of startDate and endDate in days
+        $diffInDays = $startDate->diffInDays($endDate);
+
         foreach ($users as $user) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
+
+            $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
 
             $usersWithPlannedWorkingHours[] = [
                 'user' => UserShowResource::make($user),
                 'plannedWorkingHours' => $plannedWorkingHours,
+                'expectedWorkingHours' => $expectedWorkingHours,
             ];
         }
+
+        $freelancersWithPlannedWorkingHours = [];
+
+        $freelancers = Freelancer::all();
+
+        foreach ($freelancers as $freelancer) {
+            $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
+
+            $freelancersWithPlannedWorkingHours[] = [
+                'freelancer' => $freelancer,
+                'plannedWorkingHours' => $plannedWorkingHours,
+            ];
+        }
+
+        $service_providers = ServiceProvider::all();
+
+        $serviceProvidersWithPlannedWorkingHours = [];
+
+        foreach ($service_providers as $service_provider) {
+            $plannedWorkingHours = $service_provider->plannedWorkingHours($startDate, $endDate);
+
+            $serviceProvidersWithPlannedWorkingHours[] = [
+                'service_provider' => $service_provider,
+                'plannedWorkingHours' => $plannedWorkingHours,
+            ];
+        }
+
+
 
         rsort($eventsWithRelevant);
 
@@ -1958,6 +1994,8 @@ class ProjectController extends Controller
         return inertia('Projects/SingleProjectShifts', [
             'project' => new ProjectShiftResource($project),
             'usersForShifts' => $usersWithPlannedWorkingHours,
+            'freelancersForShifts' => $freelancersWithPlannedWorkingHours,
+            'serviceProvidersForShifts' => $serviceProvidersWithPlannedWorkingHours,
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,

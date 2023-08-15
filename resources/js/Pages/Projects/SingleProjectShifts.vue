@@ -38,6 +38,8 @@ export default {
     props: [
         'project',
         'usersForShifts',
+        'freelancersForShifts',
+        'serviceProvidersForShifts',
         'eventTypes',
         'currentGroup',
         'states',
@@ -65,24 +67,26 @@ export default {
     computed: {
         dropUsers(){
             const users = [];
-            console.log(this.usersForShifts);
             this.usersForShifts.forEach((user) => {
                 users.push({
                     element: user.user,
                     type: 0,
                     plannedWorkingHours: user.plannedWorkingHours,
+                    expectedWorkingHours: user.expectedWorkingHours,
                 })
             })
-            this.project.freelancers?.forEach((freelancer) => {
+            this.freelancersForShifts.forEach((freelancer) => {
                 users.push({
-                    element: freelancer,
-                    type: 1
+                    element: freelancer.freelancer,
+                    type: 1,
+                    plannedWorkingHours: freelancer.plannedWorkingHours,
                 })
             })
-            this.project.serviceProviders?.forEach((provider) => {
+            this.serviceProvidersForShifts.forEach((service_provider) => {
                 users.push({
-                    element: provider,
-                    type: 2
+                    element: service_provider.service_provider,
+                    type: 2,
+                    plannedWorkingHours: service_provider.plannedWorkingHours,
                 })
             })
 

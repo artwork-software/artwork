@@ -7,15 +7,15 @@
         <div class="text-left">
             <div v-if="type === 0">
                 {{ item.first_name }} {{ item.last_name }} (Intern)
-                <div class="text-xs w-full"> {{plannedHours.toFixed(1)}} | 168</div>
+                <div class="text-xs w-full"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>
             </div>
             <div v-else-if="type === 1">
                 {{ item.first_name }} {{ item.last_name }} (Extern)
-                <div class="text-xs w-full">0 | 0</div>
+                <div class="text-xs w-full">{{plannedHours.toFixed(1)}}</div>
             </div>
             <div v-else>
                 {{ item.provider_name }} (Dienstleister)
-                <div class="text-xs w-full">0 | 0</div>
+                <div class="text-xs w-full">{{plannedHours.toFixed(1)}}</div>
             </div>
         </div>
     </div>
@@ -25,7 +25,7 @@ import {defineComponent} from 'vue'
 
 export default defineComponent({
     name: "DragElement",
-    props: ['item', 'type','plannedHours'],
+    props: ['item', 'type','plannedHours','expectedHours'],
     methods: {
         onDragStart(event) {
             event.dataTransfer.setData('application/json', JSON.stringify([{id: this.item.id, master: this.item.can_master, type: this.type }])); // only pass the id

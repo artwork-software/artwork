@@ -106,4 +106,24 @@ class Freelancer extends Model
             });
     }
 
+    public function plannedWorkingHours($startDate, $endDate): float|int
+    {
+        $shiftsInDateRange = $this->shifts()
+            ->whereBetween('event_start_day', [$startDate, $endDate])
+            ->get();
+
+        $plannedWorkingHours = 0;
+
+        foreach ($shiftsInDateRange as $shift) {
+            $shiftStart = Carbon::parse($shift->start); // Parse the start time
+            $shiftEnd = Carbon::parse($shift->end);     // Parse the end time
+            $breakMinutes = $shift->break_minutes;
+
+            $shiftDuration = ($shiftEnd->diffInMinutes($shiftStart) - $breakMinutes) / 60;
+            $plannedWorkingHours += $shiftDuration;
+        }
+
+        return $plannedWorkingHours;
+    }
+
 }

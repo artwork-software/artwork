@@ -119,7 +119,7 @@
 
                         <div @mousedown="preventContainerDrag" class="max-h-72 shiftUserWindow">
                             <div v-for="user in filteredUsers">
-                                <DragElement :item="user.element" :plannedHours="user.plannedWorkingHours" :type="user.type"/>
+                                <DragElement :item="user.element" :plannedHours="user.plannedWorkingHours" :expected-hours="user.expectedWorkingHours" :type="user.type"/>
                             </div>
                         </div>
                     </div>

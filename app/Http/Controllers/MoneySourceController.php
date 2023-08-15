@@ -556,7 +556,7 @@ class MoneySourceController extends Controller
             if (!in_array($oldUserId, $newUserIds)) {
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
-                    'type' => 'danger',
+                    'type' => 'error',
                     'message' => 'Dein Zugriff auf ' . $moneySource->name . ' wurde gelöscht'
                 ];
                 $this->notificationService->createNotification(User::where('id', $newUser->id)->first(), 'Dein Zugriff auf ' . $moneySource->name . ' wurde gelöscht', [], NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED, 'red', [], false, '', null, $broadcastMessage);

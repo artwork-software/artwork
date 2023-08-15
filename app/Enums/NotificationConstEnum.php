@@ -37,6 +37,15 @@ enum NotificationConstEnum: string
     case NOTIFICATION_TEAM = 'NOTIFICATION_TEAM';
 
 
+    case NOTIFICATION_SHIFT_CHANGED = 'NOTIFICATION_SHIFT_CHANGED';
+    case NOTIFICATION_SHIFT_OWN_INFRINGEMENT = 'NOTIFICATION_SHIFT_OWN_INFRINGEMENT';
+    case NOTIFICATION_SHIFT_INFRINGEMENT = 'NOTIFICATION_SHIFT_INFRINGEMENT';
+    case NOTIFICATION_SHIFT_LOCKED = 'NOTIFICATION_SHIFT_LOCKED';
+    case NOTIFICATION_SHIFT_AVAILABLE = 'NOTIFICATION_SHIFT_AVAILABLE';
+    case NOTIFICATION_SHIFT_CONFLICT = 'NOTICATION_SHIFT_CONFLICT';
+
+
+
 
     public function groupType(): string
     {
@@ -63,6 +72,13 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_PROJECT,
             self::NOTIFICATION_PUBLIC_RELEVANT,
             self::NOTIFICATION_TEAM => "PROJECTS",
+
+            self::NOTIFICATION_SHIFT_CHANGED,
+            self::NOTIFICATION_SHIFT_OWN_INFRINGEMENT,
+            self::NOTIFICATION_SHIFT_INFRINGEMENT,
+            self::NOTIFICATION_SHIFT_LOCKED,
+            self::NOTIFICATION_SHIFT_AVAILABLE,
+            self::NOTIFICATION_SHIFT_CONFLICT => "SHIFTS",
         };
     }
 
@@ -115,6 +131,13 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_PROJECT => "Änderungen in Projekten & Projektgruppen",
             self::NOTIFICATION_PUBLIC_RELEVANT => 'Öffentlichkeitsarbeitsrelevante Änderungen',
             self::NOTIFICATION_TEAM => "Teamzugehörigkeit",
+
+            self::NOTIFICATION_SHIFT_CHANGED => "Änderung an meinen Schichten",
+            self::NOTIFICATION_SHIFT_OWN_INFRINGEMENT => "Warnung gesetzl. Regelungen (deine Schichten)",
+            self::NOTIFICATION_SHIFT_INFRINGEMENT => "Warnung gesetzl. Regelungen (Schichtplanung)",
+            self::NOTIFICATION_SHIFT_LOCKED => "Dienstplan-Festschreibung",
+            self::NOTIFICATION_SHIFT_AVAILABLE => "Verfügbarkeiten",
+            self::NOTIFICATION_SHIFT_CONFLICT => "Verfügbarkeiten & Konflikte",
         };
     }
 
@@ -143,6 +166,13 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_PROJECT => "Erfahre ob es Änderungen in deinen Projekten oder -gruppen gibt und welche Rolle du im Projektteam hast.",
             self::NOTIFICATION_PUBLIC_RELEVANT => 'Werde benachrichtigt, sobald es Änderungen an deinen Projekten gibt, die sich auf die Öffentlichkeitsarbeit auswirken können.',
             self::NOTIFICATION_TEAM => "Werde benachrichtigt, sobald sich deine Teamzugehörigkeit ändert.",
+
+            self::NOTIFICATION_SHIFT_CHANGED => "Erfahre ob deine Schichten geändert wurden, du neu zugewiesen oder von einer Schicht gelöscht wurdest.",
+            self::NOTIFICATION_SHIFT_OWN_INFRINGEMENT => "Erfahre ob deine Schichtplanung mit gesetzl. Regelungen kollidiert, du zB. zu lange am Stück oder zu wenig Pause eingeplant wurdest.",
+            self::NOTIFICATION_SHIFT_INFRINGEMENT => "Erfahre ob Schichtplanungen mit gesetzl. Regelungen kollidieren, zB. Mitarbeiter*innen mit zu wenig Pause eingeplant wurden.",
+            self::NOTIFICATION_SHIFT_LOCKED => "Erfahre ob Schichtplanungen mit gesetzl. Regelungen kollidieren, zB. Mitarbeiter*innen mit zu wenig Pause eingeplant wurden.",
+            self::NOTIFICATION_SHIFT_AVAILABLE => "Erfahre ob jemand Änderungen an deiner Verfügbarkeit vorgenommen hat.",
+            self::NOTIFICATION_SHIFT_CONFLICT => "Erfahre ob ein*e Mitarbeiter*in eine neue Verfügbarkeit hat oder du jemanden neu besetzen musst.",
         };
     }
 }

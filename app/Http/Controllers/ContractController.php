@@ -146,7 +146,7 @@ class ContractController extends Controller
         $notificationTitle = 'Ein Vertrag wurde für dich freigegeben';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
-            'type' => 'danger',
+            'type' => 'error',
             'message' => $notificationTitle
         ];
         $notificationDescription = [
@@ -221,7 +221,7 @@ class ContractController extends Controller
         $notificationTitle = 'Ein Vertrag wurde geändert';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
-            'type' => 'danger',
+            'type' => 'error',
             'message' => $notificationTitle
         ];
         $notificationDescription = [
@@ -278,7 +278,7 @@ class ContractController extends Controller
         $notificationTitle = 'Ein Vertrag wurde gelöscht';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
-            'type' => 'danger',
+            'type' => 'error',
             'message' => $notificationTitle
         ];
         $notificationDescription = [

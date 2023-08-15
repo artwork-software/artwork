@@ -1941,7 +1941,7 @@ class ProjectController extends Controller
             }
         }
 
-        $users = User::all()->where('can_work_shifts', true);
+        $users = User::where('can_work_shifts', true)->get();
 
         $usersWithPlannedWorkingHours = [];
 

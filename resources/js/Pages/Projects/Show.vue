@@ -352,7 +352,7 @@ export default {
                 {name: 'Ablaufplan', href: '#', current: this.isScheduleTab, show: true},
                 {name: 'Checklisten', href: '#', current: this.isChecklistTab, show: true},
                 {name: 'Schichten', href: '#', current: this.isShiftTab, show: true},
-                {name: 'Budget', href: '#', current: this.isBudgetTab, show: this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)},
+                {name: 'Budget', href: '#', current: this.isBudgetTab, show: this.$page.props.is_admin || this.access_budget?.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)},
                 {name: 'Kommentare', href: '#', current: this.isCommentTab, show: true},
             ]
         },
@@ -417,7 +417,7 @@ export default {
         },
         projectManagerIds: function () {
             let managerIdArray = [];
-            this.project.project_managers.forEach(manager => {
+            this.project?.project_managers?.forEach(manager => {
                     managerIdArray.push(manager.id)
                 }
             )

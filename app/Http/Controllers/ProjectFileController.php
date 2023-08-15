@@ -207,7 +207,7 @@ class ProjectFileController extends Controller
         $notificationTitle = 'Ein Dokument wurde gelöscht';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
-            'type' => 'danger',
+            'type' => 'error',
             'message' => $notificationTitle
         ];
         $notificationDescription = [

@@ -84,6 +84,15 @@
                                                       :wanted-split="wantedSplit"
                                                       :project="project"
                                                       :room-collisions="roomCollisions"/>
+                        <NotificationSectionComponent :readNotifications="readNotifications['SHIFTS']"
+                                                      name="Schichtplanung" :rooms="rooms" :projects="projects"
+                                                      :event-types="eventTypes"
+                                                      :notifications="notifications['SHIFTS']"
+                                                      :history-objects="historyObjects"
+                                                      :event="event"
+                                                      :wanted-split="wantedSplit"
+                                                      :project="project"
+                                                      :room-collisions="roomCollisions"/>
                     </div>
                     <div v-if="this.$page.props.globalNotification.image_url || this.$page.props.globalNotification.title" class="col-span-4 pr-4">
                         <div class="bg-backgroundGray">

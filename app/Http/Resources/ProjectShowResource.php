@@ -64,7 +64,7 @@ class ProjectShowResource extends JsonResource
             'copyright' => new CopyrightResource($this->copyright),
             'moneySources' => $this->money_sources,
 
-            'users' => UserResourceWithoutShifts::collection($this->users()->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission'))->resolve(),
+            //'users' => UserResourceWithoutShifts::collection($this->users()->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission'))->resolve(),
             'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
 

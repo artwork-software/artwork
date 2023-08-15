@@ -25,7 +25,12 @@ export default defineComponent({
         onDrop(event) {
             event.preventDefault();
             this.selectedUser = event.dataTransfer.getData('application/json');
-            this.showChooseUserSeriesShiftModal = true
+            if(this.is_series){
+                this.showChooseUserSeriesShiftModal = true
+            } else {
+                this.saveUser();
+            }
+
         },
         changeBuffer(buffer){
             this.buffer = buffer

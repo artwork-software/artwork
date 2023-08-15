@@ -17,6 +17,7 @@ use App\Notifications\MoneySourceNotification;
 use App\Notifications\ProjectNotification;
 use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
+use App\Notifications\ShiftNotification;
 use App\Notifications\TaskNotification;
 use App\Notifications\TeamNotification;
 use Illuminate\Http\Response;
@@ -29,7 +30,7 @@ class NotificationService
 {
 
     protected array $description = [];
-  
+
     protected string $notificationKey = '';
 
     /**
@@ -366,6 +367,13 @@ class NotificationService
             case NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED:
                 Notification::send($notificationTo, new BudgetVerified($body, $broadcastMessage));
                 break;
+            case NotificationConstEnum::NOTIFICATION_SHIFT_LOCKED:
+            case NotificationConstEnum::NOTIFICATION_SHIFT_AVAILABLE:
+            case NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED:
+            case NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT:
+            case NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT:
+            case NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT:
+                Notification::send($notificationTo, new ShiftNotification($body, $broadcastMessage));
                 /*
             case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:
                 throw new \Exception('To be implemented');

@@ -71,7 +71,7 @@
                         <tbody class="w-full pt-3">
                         <tr v-for="(user,index) in dropUsers" class="w-full flex">
                             <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1 w-56" :class="index % 2 === 0 ? '' : ''">
-                                <DragElement  :item="user.element" :type="user.type" />
+                                <DragElement  :item="user.element" :expected-hours="user.expectedWorkingHours" :planned-hours="user.plannedWorkingHours" :type="user.type" />
                             </th>
                             <td v-for="day in days">
                                 <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer" @click="openShowUserShiftModal(user.element, day)">
@@ -136,7 +136,10 @@ export default {
         'personalFilters',
         'selectedDate',
         'eventTypes',
-        'users', 'freelancers', 'serviceProviders', 'history'
+        'history',
+        'usersForShifts',
+        'freelancersForShifts',
+        'serviceProvidersForShifts',
     ],
     mounted() {
         // Listen for scroll events on both sections
@@ -146,22 +149,26 @@ export default {
     computed: {
         dropUsers(){
             const users = [];
-            this.users.forEach((user) => {
+            this.usersForShifts.forEach((user) => {
                 users.push({
-                    element: user,
-                    type: 0
+                    element: user.user,
+                    type: 0,
+                    plannedWorkingHours: user.plannedWorkingHours,
+                    expectedWorkingHours: user.expectedWorkingHours,
                 })
             })
-            this.freelancers?.forEach((freelancer) => {
+            this.freelancersForShifts.forEach((freelancer) => {
                 users.push({
-                    element: freelancer,
-                    type: 1
+                    element: freelancer.freelancer,
+                    type: 1,
+                    plannedWorkingHours: freelancer.plannedWorkingHours,
                 })
             })
-            this.serviceProviders?.forEach((provider) => {
+            this.serviceProvidersForShifts.forEach((service_provider) => {
                 users.push({
-                    element: provider,
-                    type: 2
+                    element: service_provider.service_provider,
+                    type: 2,
+                    plannedWorkingHours: service_provider.plannedWorkingHours,
                 })
             })
             return users;

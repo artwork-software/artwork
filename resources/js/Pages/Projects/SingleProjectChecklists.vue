@@ -1,16 +1,16 @@
 <template>
     <app-layout>
-    <ProjectShowHeaderComponent :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
+    <ProjectShowHeaderComponent :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
                                 :states="states" :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
                                 :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="checklist">
-        <ChecklistTab :project="project" :opened_checklists="opened_checklists" :checklist_templates="checklist_templates" :project-can-write-ids="projectCanWriteIds" :project-manager-ids="projectManagerIds"></ChecklistTab>
+        <ChecklistTab :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :opened_checklists="opened_checklists" :checklist_templates="checklist_templates"></ChecklistTab>
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSecondSidenav
                 :project="project"
                 :project-members="this.project.users"
-                :project-members-write-access="projectCanWriteIds"
+                :project-members-write-access="projectWriteIds"
                 :project-categories="projectCategories"
                 :project-genres="projectGenres"
                 :project-sectors="projectSectors"
@@ -36,9 +36,11 @@ import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue"
 import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
 import ProjectSidenav from "@/Layouts/Components/ProjectSidenav.vue";
 import ChecklistTab from "@/Pages/Projects/Components/TabComponents/ChecklistTab.vue";
+import InfoTab from "@/Pages/Projects/Components/TabComponents/InfoTab.vue";
 
 export default {
     components: {
+        InfoTab,
         ChecklistTab,
         ProjectSidenav,
         ProjectShiftSidenav,
@@ -70,6 +72,8 @@ export default {
         'projectState',
         'opened_checklists',
         'checklist_templates',
+        'projectManagerIds',
+        'projectWriteIds'
 
     ],
     data() {
@@ -83,24 +87,6 @@ export default {
             this.show = false;
         }, 1000)
     },
-    methods:{
-        projectManagerIds: function () {
-            let managerIdArray = [];
-            this.project.project_managers.forEach(manager => {
-                    managerIdArray.push(manager.id)
-                }
-            )
-            return managerIdArray;
-        },
-        projectCanWriteIds: function () {
-            let canWriteArray = [];
-            this.project.write_auth.forEach(write => {
-                    canWriteArray.push(write.id)
-                }
-            )
-            return canWriteArray;
-        },
-    }
 }
 </script>
 

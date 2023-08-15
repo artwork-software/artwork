@@ -4,7 +4,7 @@
             <BudgetComponent :table="budget.table" :project="project" :selectedCell="budget.selectedCell"
                              :selectedRow="budget.selectedRow" :templates="budget.templates"
                              :selected-sum-detail="budget.selectedSumDetail"
-                             :money-sources="moneySources" :budget-access="access_budget"
+                             :money-sources="moneySources" :budget-access="projectWriteIds"
                              :project-manager="projectManagerIds"></BudgetComponent>
         </div>
     </div>
@@ -26,28 +26,12 @@ export default{
         'project',
         'budget',
         'moneySources',
+        'projectWriteIds',
+        'projectManagerIds',
     ],
     data() {
 
     },
-    methods:{
-        access_budget: function () {
-            let access_budget = [];
-            this.project.access_budget.forEach(admin => {
-                    access_budget.push(admin.id)
-                }
-            )
-            return access_budget;
-        },
-        projectManagerIds: function () {
-            let managerIdArray = [];
-            this.project.project_managers.forEach(manager => {
-                    managerIdArray.push(manager.id)
-                }
-            )
-            return managerIdArray;
-        },
-    }
 }
 </script>
 

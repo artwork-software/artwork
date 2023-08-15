@@ -4,7 +4,7 @@
             <ChecklistComponent
                 :project="project"
                 :opened_checklists="opened_checklists"
-                :project-can-write-ids="projectCanWriteIds"
+                :project-can-write-ids="projectWriteIds"
                 :project-manager-ids="projectManagerIds"
                 :checklist_templates="checklist_templates"
             />
@@ -27,7 +27,7 @@ export default{
     props: [
         'project',
         'opened_checklists',
-        'projectCanWriteIds',
+        'projectWriteIds',
         'projectManagerIds',
         'checklist_templates'
     ],

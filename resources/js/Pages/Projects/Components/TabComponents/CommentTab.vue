@@ -3,7 +3,7 @@
         <div
             class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
             <div
-                v-if="$role('artwork admin') || $can('write projects') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
+                v-if="$role('artwork admin') || $can('write projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
                 class="relative border-2 hover:border-gray-400 w-full bg-white border-gray-300">
                         <textarea
                             placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
@@ -76,6 +76,8 @@ export default {
     props: [
         'project',
         'isMemberOfADepartment',
+        'projectWriteIds',
+        'projectManagerIds',
     ],
     computed:{
         sortedComments: function () {
@@ -109,22 +111,6 @@ export default {
         }
     },
     methods: {
-        projectManagerIds: function () {
-            let managerIdArray = [];
-            this.project.project_managers.forEach(manager => {
-                    managerIdArray.push(manager.id)
-                }
-            )
-            return managerIdArray;
-        },
-        projectCanWriteIds: function () {
-            let canWriteArray = [];
-            this.project.write_auth.forEach(write => {
-                    canWriteArray.push(write.id)
-                }
-            )
-            return canWriteArray;
-        },
         addCommentToProject() {
             this.commentForm.post(route('comments.store'), {preserveState: true, preserveScroll: true});
             this.commentForm.text = "";

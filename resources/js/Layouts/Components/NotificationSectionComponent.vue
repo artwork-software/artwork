@@ -139,6 +139,7 @@ import NotificationPublicChangesInfo from "@/Layouts/Components/NotificationPubl
 import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 import Permissions from "@/mixins/Permissions.vue";
 
+
 export default  {
     name: 'NotificationSectionComponent',
     mixins: [Permissions],

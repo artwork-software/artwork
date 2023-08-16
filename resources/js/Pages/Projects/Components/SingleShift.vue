@@ -271,10 +271,20 @@ export default defineComponent({
             this.openEditShiftModal = true;
         },
         openDeleteUserModal(user_id, shift_id, type) {
-            this.showDeleteUserModal = true
-            this.userToDelete.user_id = user_id
-            this.userToDelete.shift_id = shift_id
-            this.userToDelete.type = type
+            if(this.event.is_series){
+                this.showDeleteUserModal = true
+                this.userToDelete.user_id = user_id
+                this.userToDelete.shift_id = shift_id
+                this.userToDelete.type = type
+            } else {
+                if(type === 'user'){
+                    this.removeUserFromShift(user_id, shift_id)
+                } else if(type === 'service_provider'){
+                    this.removeProviderFromShift(user_id, shift_id)
+                } else if(type === 'freelancer'){
+                    this.removeFreelancerFormShift(user_id, shift_id)
+                }
+            }
         },
         deleteUser(buffer){
             this.showDeleteUserModal = false

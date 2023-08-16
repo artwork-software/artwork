@@ -4,17 +4,31 @@
         <div>
             <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover">
         </div>
-        <div class="text-left">
-            <div v-if="type === 0">
-                {{ item.first_name }} {{ item.last_name }} (Intern)
-                <div class="text-xs w-full"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>
+        <div class="text-left h-8 cursor-pointer">
+            <div v-if="type === 0" class="text-ellipsis w-40">
+                <div class="flex">
+                <div class="truncate">
+                    {{ item.first_name }} {{ item.last_name }}
+                </div>
+                <div class="ml-1">(i)</div>
+                </div>
+                <div class="text-xs w-full flex"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>
             </div>
-            <div v-else-if="type === 1">
-                {{ item.first_name }} {{ item.last_name }} (Extern)
+            <div v-else-if="type === 1" class="text-ellipsis w-40">
+                <div class="flex">
+                    <div class="truncate">
+                        {{ item.first_name }} {{ item.last_name }}
+                    </div>
+                    <div class="ml-1"> (e) </div>
+                </div>
                 <div class="text-xs w-full">{{plannedHours.toFixed(1)}}</div>
             </div>
-            <div v-else>
-                {{ item.provider_name }} (Dienstleister)
+            <div v-else class="text-ellipsis w-40">
+                <div class="flex">
+                    <div class="truncate">
+                {{ item.provider_name }}</div>
+                    <div class="ml-1"> (DL) </div>
+                </div>
                 <div class="text-xs w-full">{{plannedHours.toFixed(1)}}</div>
             </div>
         </div>
@@ -34,5 +48,9 @@ export default defineComponent({
 })
 </script>
 <style scoped>
-
+.truncate {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
 </style>

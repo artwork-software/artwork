@@ -106,7 +106,7 @@
                             </span>
                     </div>
                     <div class="hidden group-hover:block"
-                         @click="removeUserFromShift(intern.id, shift.id)">
+                         @click="openDeleteUserModal(intern.id, shift.id, 'user')">
                         <SvgCollection svg-name="xMarkIcon"/>
                     </div>
                 </div>
@@ -230,6 +230,9 @@ export default defineComponent({
         },
         removeUserFromShift(user_id, shift_id) {
             this.$inertia.delete(route('shifts.removeUser', {shift: shift_id, user: user_id}), {
+                data: {
+                    chooseData: this.buffer
+                },
                 preserveScroll: true,
             });
         },

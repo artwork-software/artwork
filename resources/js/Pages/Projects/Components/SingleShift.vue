@@ -79,7 +79,7 @@
             </div>
         </div>
     </div>
-    <div class="mt-1 h-[calc(100%-2.7rem)] bg-gray-200 p-1 max-h-96 overflow-x-scroll">
+    <div class="mt-1 h-[calc(100%-2.7rem)] bg-gray-200 p-1 max-h-96">
         <p class="text-xs mb-1">
             {{ shift.start }} - {{ shift.end }}
             <span v-if="shift.break_minutes">| {{ shift.break_formatted }}</span>

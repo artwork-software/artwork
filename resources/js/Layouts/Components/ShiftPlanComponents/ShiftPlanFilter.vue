@@ -65,19 +65,6 @@
                         class="h-4 w-4 mt-0.5 text-white"
                     />
                 </DisclosureButton>
-                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                    <hr class="border-gray-500 mt-2 mb-2">
-                    <Disclosure v-slot="{ open }">
-                        <DisclosureButton
-                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                        >
-                                    <span
-                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Räume</span>
-                            <ChevronDownIcon
-                                :class="open ? 'rotate-180 transform' : ''"
-                                class="h-4 w-4 mt-0.5 text-white"
-                            />
-                        </DisclosureButton>
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                             <div v-if="filterArray.rooms.length > 0" v-for="room in filterArray.rooms"
                                  class="flex w-full mb-2">
@@ -90,8 +77,6 @@
                             <div v-else class="text-secondary">Noch keine Räume angelegt</div>
                         </DisclosurePanel>
                     </Disclosure>
-                </DisclosurePanel>
-            </Disclosure>
 
             <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
 

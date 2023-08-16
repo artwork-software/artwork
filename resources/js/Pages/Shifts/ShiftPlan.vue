@@ -1,83 +1,44 @@
 <template>
-    <div  class=" h-full w-full flex flex-col">
-    <ShiftHeader>
-        <div ref="shiftPlan" id="shiftPlan" class="bg-white" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' mt-8 max-h-[40rem]' : ' mt-24','overflow-x-scroll ']">
-            <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
-                                  @next-time-range="nextTimeRange"
-                                  :date-value="dateValue"
-                                  :all-shifts-committed="true"
-                                  :filter-options="filterOptions"
-                                  :personal-filters="personalFilters"
-                                  :rooms="shiftPlan"
-                                  @enterFullscreenMode="openFullscreen"
-                                  @openHistoryModal="openHistoryModal"
-            ></ShiftPlanFunctionBar>
-            <table  class="w-full bg-white">
-                <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
-                <div>
-                    <tr class="flex w-full bg-secondaryHover stickyHeader">
-                        <th class="z-0" :style="{minWidth: 164 + 'px'}"></th>
-                        <th v-for="day in days" :style="{minWidth: 200 + 'px'}" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
-                            <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
-                                {{ day.day_string }} {{ day.day }}
-                            </div>
-                        </th>
-                    </tr>
-                    <tbody class="w-full pt-3">
-                    <tr v-for="(room,index) in shiftPlan" class="w-full flex">
-                        <th class="xsDark flex items-center -mt-2 h-28 w-40"
-                            :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
-                            <Link class="flex font-semibold items-center ml-4">
-                                {{ room[days[0].day].roomName }}
-                            </Link>
-                        </th>
-                        <td v-for="day in days" :style="{minWidth: 200 + 'px'}" class="max-h-28 overflow-y-auto cell">
-                            <div v-for="event in room[day.day].events.data" class="mb-1">
-                                <SingleShiftPlanEvent :eventType="this.findEventTypeById(event.eventTypeId)"
-                                                      :project="this.findProjectById(event.projectId)" :event="event"/>
-                            </div>
-                        </td>
-                    </tr>
-                    </tbody>
-                </div>
-            </table>
-
-        </div>
-        <div id="userOverview"  class="w-[102.5%]  overflow-x-scroll max-h-[29.5rem] -ml-14 mt-auto">
-            <div class="flex justify-center " >
-                <div @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0'" class="block h-5 w-8 bg-primary flex justify-center items-center cursor-pointer">
-                    <div  :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519" viewBox="0 0 14.123 6.519">
-                            <g id="Gruppe_1608" data-name="Gruppe 1608" transform="translate(-275.125 870.166) rotate(-90)">
-                                <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0" transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1" stroke-width="1"/>
-                                <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0" transform="translate(864.081 286.591) rotate(-90)" fill="none" stroke="#a7a6b1" stroke-width="1"/>
-                            </g>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-            <div ref="userOverview" class="w-full bg-primary overflow-x-scroll min-h-[40rem]" v-show="showUserOverview">
-                <table class="w-full text-white overflow-y-scroll">
+    <div class=" h-full w-full flex flex-col">
+        <ShiftHeader>
+            <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
+                 :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' mt-8 max-h-[38rem]' : ' mt-24','overflow-x-scroll ']">
+                <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
+                                      @next-time-range="nextTimeRange"
+                                      :date-value="dateValue"
+                                      :all-shifts-committed="true"
+                                      :filter-options="filterOptions"
+                                      :personal-filters="personalFilters"
+                                      :rooms="shiftPlan"
+                                      @enterFullscreenMode="openFullscreen"
+                                      @openHistoryModal="openHistoryModal"
+                ></ShiftPlanFunctionBar>
+                <table class="w-full bg-white">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                     <div>
-                        <tr class="flex w-full">
-                            <th class="w-56"></th>
-                            <th v-for="day in days" class="flex w-[12.5rem] p-5 h-16 items-center">
-                                <div class="flex calendarRoomHeader font-semibold">
+                        <tr class="flex w-full bg-secondaryHover stickyHeader">
+                            <th class="z-0" :style="{minWidth: 164 + 'px'}"></th>
+                            <th v-for="day in days" :style="{minWidth: 200 + 'px'}"
+                                class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
+                                <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
                                     {{ day.day_string }} {{ day.day }}
                                 </div>
                             </th>
                         </tr>
                         <tbody class="w-full pt-3">
-                        <tr v-for="(user,index) in dropUsers" class="w-full flex">
-                            <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1 w-56" :class="index % 2 === 0 ? '' : ''">
-                                <DragElement  :item="user.element" :expected-hours="user.expectedWorkingHours" :planned-hours="user.plannedWorkingHours" :type="user.type" />
+                        <tr v-for="(room,index) in shiftPlan" class="w-full flex">
+                            <th class="xsDark flex items-center -mt-2 h-28 w-40"
+                                :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
+                                <Link class="flex font-semibold items-center ml-4">
+                                    {{ room[days[0].day].roomName }}
+                                </Link>
                             </th>
-                            <td v-for="day in days">
-                                <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer" @click="openShowUserShiftModal(user.element, day)">
-                                <span v-for="shift in user.element?.shifts[day.full_day]">
-                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
-                                </span>
+                            <td v-for="day in days" :style="{minWidth: 200 + 'px'}"
+                                class="max-h-28 overflow-y-auto cell">
+                                <div v-for="event in room[day.day].events.data" class="mb-1">
+                                    <SingleShiftPlanEvent :eventType="this.findEventTypeById(event.eventTypeId)"
+                                                          :project="this.findProjectById(event.projectId)"
+                                                          :event="event"/>
                                 </div>
                             </td>
                         </tr>
@@ -85,10 +46,65 @@
                     </div>
                 </table>
             </div>
-        </div>
-        <show-user-shifts-modal v-if="showUserShifts" @closed="showUserShifts = false" :user="userToShow" :day="dayToShow" :projects="projects"/>
-        <ShiftHistoryModal :history="history[0]" v-if="showHistoryModal" @closed="showHistoryModal = false" />
-    </ShiftHeader>
+            <div id="userOverview" :style="{ 'max-height': computedUserOverviewMaxHeight }" class="w-[102.5%]  overflow-x-scroll -ml-14">
+                <div class="flex justify-center overflow-y-scroll ">
+                    <div @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
+                         class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">
+                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
+                                 viewBox="0 0 14.123 6.519">
+                                <g id="Gruppe_1608" data-name="Gruppe 1608"
+                                   transform="translate(-275.125 870.166) rotate(-90)">
+                                    <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0"
+                                          transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1"
+                                          stroke-width="1"/>
+                                    <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0"
+                                          transform="translate(864.081 286.591) rotate(-90)" fill="none"
+                                          stroke="#a7a6b1" stroke-width="1"/>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div ref="userOverview" class="w-full bg-primary overflow-x-scroll min-h-[40rem]"
+                     v-show="showUserOverview">
+                    <table class="w-full text-white overflow-y-scroll">
+                        <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
+                        <div>
+                            <tr class="flex w-full">
+                                <th class="w-56"></th>
+                                <th v-for="day in days" class="flex w-[12.5rem] p-5 h-16 items-center">
+                                    <div class="flex calendarRoomHeader font-semibold">
+                                        {{ day.day_string }} {{ day.day }}
+                                    </div>
+                                </th>
+                            </tr>
+                            <tbody class="w-full pt-3">
+                            <tr v-for="(user,index) in dropUsers" class="w-full flex">
+                                <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1 w-56"
+                                    :class="index % 2 === 0 ? '' : ''">
+                                    <DragElement :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                                 :planned-hours="user.plannedWorkingHours" :type="user.type"/>
+                                </th>
+                                <td v-for="day in days">
+                                    <div
+                                        class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
+                                        @click="openShowUserShiftModal(user.element, day)">
+                                <span v-for="shift in user.element?.shifts[day.full_day]">
+                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                </span>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </div>
+                    </table>
+                </div>
+            </div>
+            <show-user-shifts-modal v-if="showUserShifts" @closed="showUserShifts = false" :user="userToShow"
+                                    :day="dayToShow" :projects="projects"/>
+            <ShiftHistoryModal :history="history[0]" v-if="showHistoryModal" @closed="showHistoryModal = false"/>
+        </ShiftHeader>
     </div>
 </template>
 <script>
@@ -147,7 +163,7 @@ export default {
         this.$refs.userOverview.addEventListener('scroll', this.syncScrollUserOverview);
     },
     computed: {
-        dropUsers(){
+        dropUsers() {
             const users = [];
             this.usersForShifts.forEach((user) => {
                 users.push({
@@ -172,6 +188,23 @@ export default {
                 })
             })
             return users;
+        },
+        computedUserOverviewMaxHeight() {
+            const minHeight = 33; // Minimum max height in rem
+            const baseHeight = 52; // Base max height when there's 1 room
+
+            // Calculate the adjusted max height based on the number of rooms
+            // Adjust this value as needed based on your requirements
+            const adjustmentPerRoom = 6.8; // Adjust this value as needed
+
+            const totalRooms = this.rooms.length;
+            let calculatedHeight = baseHeight - (adjustmentPerRoom * (totalRooms - 1));
+
+            // Ensure the calculated height is not less than the minimum height
+            calculatedHeight = Math.max(minHeight, calculatedHeight);
+
+            // Return the max height as a string with "rem" unit
+            return `${calculatedHeight}rem`;
         },
     },
     methods: {
@@ -244,23 +277,23 @@ export default {
         openHistoryModal() {
             this.showHistoryModal = true;
         },
-        showCloseUserOverview(){
+        showCloseUserOverview() {
             this.showUserOverview = !this.showUserOverview
             //this.$emit('isOpen', this.showUserOverview)
         },
         syncScrollShiftPlan(event) {
-            if(this.$refs.userOverview){
+            if (this.$refs.userOverview) {
                 // Synchronize horizontal scrolling from shiftPlan to userOverview
                 this.$refs.userOverview.scrollLeft = event.target.scrollLeft;
             }
         },
         syncScrollUserOverview(event) {
-            if(this.$refs.shiftPlan){
+            if (this.$refs.shiftPlan) {
                 // Synchronize horizontal scrolling from userOverview to shiftPlan
                 this.$refs.shiftPlan.scrollLeft = event.target.scrollLeft;
             }
         },
-        openShowUserShiftModal(user, day){
+        openShowUserShiftModal(user, day) {
             this.userToShow = user
             this.dayToShow = day
             this.showUserShifts = true
@@ -281,6 +314,7 @@ export default {
         this.$refs.shiftPlan.removeEventListener('scroll', this.syncScrollShiftPlan);
         this.$refs.userOverview.removeEventListener('scroll', this.syncScrollUserOverview);
     },
+
 }
 
 </script>
@@ -311,6 +345,7 @@ export default {
 ::-webkit-scrollbar-thumb:hover {
     background-color: #a8bbbf;
 }
+
 .stickyHeader {
     position: sticky;
     align-self: flex-start;
@@ -318,6 +353,7 @@ export default {
     display: block;
     top: 0px;
 }
+
 .stickyYAxis {
     position: sticky;
     align-self: flex-start;

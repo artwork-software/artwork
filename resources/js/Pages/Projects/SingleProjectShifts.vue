@@ -1,10 +1,10 @@
 <template>
     <app-layout>
-    <ProjectShowHeaderComponent :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
+    <ProjectShowHeaderComponent :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
                                 :states="states" :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
                                 :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="shift">
-        <ShiftTab :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" :drop-users="dropUsers" :users="project.users" :event-types="eventTypes" />
+        <ShiftTab :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" :drop-users="dropUsers" :users="project.users" :event-types="eventTypes" />
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectShiftSidenav
@@ -25,9 +25,11 @@ import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue"
 import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
 import ProjectSidenav from "@/Layouts/Components/ProjectSidenav.vue";
 import ShiftTab from "@/Pages/Projects/Components/TabComponents/ShiftTab.vue";
+import InfoTab from "@/Pages/Projects/Components/TabComponents/InfoTab.vue";
 
 export default {
     components: {
+        InfoTab,
         ShiftTab,
         ProjectSidenav,
         ProjectShiftSidenav,
@@ -52,6 +54,8 @@ export default {
         'projectState',
         'eventsWithRelevant',
         'crafts',
+        'projectWriteIds',
+        'projectManagerIds',
     ],
     data() {
         return {
@@ -94,14 +98,6 @@ export default {
         },
     },
     methods:{
-        projectManagerIds: function () {
-            let managerIdArray = [];
-            this.project.project_managers.forEach(manager => {
-                    managerIdArray.push(manager.id)
-                }
-            )
-            return managerIdArray;
-        },
         projectMembers: function () {
 
             let projectMemberArray = [];
@@ -110,14 +106,6 @@ export default {
                 }
             )
             return projectMemberArray;
-        },
-        projectCanWriteIds: function () {
-            let canWriteArray = [];
-            this.project.write_auth.forEach(write => {
-                    canWriteArray.push(write.id)
-                }
-            )
-            return canWriteArray;
         },
     }
 }

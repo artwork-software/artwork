@@ -1658,6 +1658,15 @@ class ProjectController extends Controller
                 $RoomsWithAudience[$room->id] = $room->name;
             }
         }
+        $managerIds = [];
+        //get the ids of all managerUsers of the Project
+        $managerIds = $project->managerUsers()->pluck('user_id');
+
+        $writeIds = [];
+        //get the ids of all writeUsers of the Project
+        $writeIds = $project->writeUsers()->pluck('user_id');
+
+
 
         return inertia('Projects/SingleProjectInformation', [
             // needed for the ProjectShowHeaderComponent
@@ -1665,6 +1674,8 @@ class ProjectController extends Controller
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,
+            'projectManagerIds' => $managerIds,
+            'projectWriteIds' => $writeIds,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'currentGroup' => $groupOutput,
             'states' => ProjectStates::all(),
@@ -1753,12 +1764,22 @@ class ProjectController extends Controller
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
 
+        $managerIds = [];
+        //get the ids of all managerUsers of the Project
+        $managerIds = $project->managerUsers()->pluck('user_id');
+
+        $writeIds = [];
+        //get the ids of all writeUsers of the Project
+        $writeIds = $project->writeUsers()->pluck('user_id');
+
         return inertia('Projects/SingleProjectCalendar', [
             // needed for the ProjectShowHeaderComponent
             'project' => new ProjectCalendarResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,
+            'projectManagerIds' => $managerIds,
+            'projectWriteIds' => $writeIds,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'currentGroup' => $groupOutput,
             'states' => ProjectStates::all(),
@@ -1838,11 +1859,21 @@ class ProjectController extends Controller
             }
         }
 
+        $managerIds = [];
+        //get the ids of all managerUsers of the Project
+        $managerIds = $project->managerUsers()->pluck('user_id');
+
+        $writeIds = [];
+        //get the ids of all writeUsers of the Project
+        $writeIds = $project->writeUsers()->pluck('user_id');
+
         return inertia('Projects/SingleProjectChecklists', [
             'project' => new ProjectChecklistResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,
+            'projectManagerIds' => $managerIds,
+            'projectWriteIds' => $writeIds,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
@@ -1986,6 +2017,13 @@ class ProjectController extends Controller
             ];
         }
 
+        $managerIds = [];
+        //get the ids of all managerUsers of the Project
+        $managerIds = $project->managerUsers()->pluck('user_id');
+
+        $writeIds = [];
+        //get the ids of all writeUsers of the Project
+        $writeIds = $project->writeUsers()->pluck('user_id');
 
 
         rsort($eventsWithRelevant);
@@ -1999,6 +2037,8 @@ class ProjectController extends Controller
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,
+            'projectManagerIds' => $managerIds,
+            'projectWriteIds' => $writeIds,
             'groupProjects' => Project::where('is_group', 1)->get(),
             'projectGroups' => $project->groups()->get(),
             'currentGroup' => $groupOutput,
@@ -2117,11 +2157,21 @@ class ProjectController extends Controller
             }
         }
 
+        $managerIds = [];
+        //get the ids of all managerUsers of the Project
+        $managerIds = $project->managerUsers()->pluck('user_id');
+
+        $writeIds = [];
+        //get the ids of all writeUsers of the Project
+        $writeIds = $project->writeUsers()->pluck('user_id');
+
         return inertia('Projects/SingleProjectBudget', [
             'project' => new ProjectBudgetResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,
+            'projectManagerIds' => $managerIds,
+            'projectWriteIds' => $writeIds,
             'moneySources' => MoneySource::all(),
             'budget' => [
                 'columns' => $outputColumns,
@@ -2205,11 +2255,21 @@ class ProjectController extends Controller
             }
         }
 
+        $managerIds = [];
+        //get the ids of all managerUsers of the Project
+        $managerIds = $project->managerUsers()->pluck('user_id');
+
+        $writeIds = [];
+        //get the ids of all writeUsers of the Project
+        $writeIds = $project->writeUsers()->pluck('user_id');
+
         return inertia('Projects/SingleProjectComments', [
             'project' => new ProjectCommentResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,
+            'projectManagerIds' => $managerIds,
+            'projectWriteIds' => $writeIds,
             'categories' => Category::all(),
             'projectCategoryIds' => $project->categories()->pluck('category_id'),
             'projectCategories' => $project->categories,

@@ -79,7 +79,7 @@
             </div>
         </div>
     </div>
-    <div class="mt-1 h-[calc(100%-2.7rem)] bg-gray-200 p-1 max-h-96 overflow-x-scroll">
+    <div class="mt-1 h-[calc(100%-2.7rem)] bg-gray-200 p-1 max-h-96">
         <p class="text-xs mb-1">
             {{ shift.start }} - {{ shift.end }}
             <span v-if="shift.break_minutes">| {{ shift.break_formatted }}</span>
@@ -106,7 +106,7 @@
                             </span>
                     </div>
                     <div class="hidden group-hover:block"
-                         @click="removeUserFromShift(intern.id, shift.id)">
+                         @click="openDeleteUserModal(intern.id, shift.id, 'user')">
                         <SvgCollection svg-name="xMarkIcon"/>
                     </div>
                 </div>
@@ -230,6 +230,9 @@ export default defineComponent({
         },
         removeUserFromShift(user_id, shift_id) {
             this.$inertia.delete(route('shifts.removeUser', {shift: shift_id, user: user_id}), {
+                data: {
+                    chooseData: this.buffer
+                },
                 preserveScroll: true,
             });
         },
@@ -268,10 +271,20 @@ export default defineComponent({
             this.openEditShiftModal = true;
         },
         openDeleteUserModal(user_id, shift_id, type) {
-            this.showDeleteUserModal = true
-            this.userToDelete.user_id = user_id
-            this.userToDelete.shift_id = shift_id
-            this.userToDelete.type = type
+            if(this.event.is_series){
+                this.showDeleteUserModal = true
+                this.userToDelete.user_id = user_id
+                this.userToDelete.shift_id = shift_id
+                this.userToDelete.type = type
+            } else {
+                if(type === 'user'){
+                    this.removeUserFromShift(user_id, shift_id)
+                } else if(type === 'service_provider'){
+                    this.removeProviderFromShift(user_id, shift_id)
+                } else if(type === 'freelancer'){
+                    this.removeFreelancerFormShift(user_id, shift_id)
+                }
+            }
         },
         deleteUser(buffer){
             this.showDeleteUserModal = false

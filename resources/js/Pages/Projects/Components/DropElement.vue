@@ -30,7 +30,6 @@ export default defineComponent({
             } else {
                 this.saveUser();
             }
-
         },
         changeBuffer(buffer){
             this.buffer = buffer
@@ -45,7 +44,7 @@ export default defineComponent({
                 return;
             }
 
-            if(dropElement.master && this.freeMasterCount === 0){
+            if(dropElement.master && this.freeMasterCount === 0 && this.freeEmployeeCount === 0){
                 return;
             }
 
@@ -71,7 +70,7 @@ export default defineComponent({
                 }
             }
 
-            if(dropElement.master && this.master && dropElement.type === 0){
+            if(dropElement.master && dropElement.type === 0 && this.freeMasterCount > 0){
                 this.$inertia.post(route('add.shift.master', {shift: this.shiftId, user: dropElement.id}), {
                         user_id: dropElement.id,
                         chooseData: this.buffer
@@ -81,7 +80,7 @@ export default defineComponent({
                     }
                 )
 
-            } else if (dropElement.type === 0 && !dropElement.master) {
+            } else if (dropElement.type === 0 && !dropElement.master || this.freeMasterCount === 0 && dropElement.master ) {
                 this.$inertia.post(route('add.shift.user', {shift: this.shiftId, user: dropElement.id}), {
                         chooseData: this.buffer
                     }, {

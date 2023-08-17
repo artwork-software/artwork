@@ -1,11 +1,11 @@
 <template>
     <app-layout>
-        <ProjectShowHeaderComponent :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
+        <ProjectShowHeaderComponent :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
                                     :states="states" :project-groups="projectGroups"
                                     :first-event-in-project="firstEventInProject"
                                     :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience"
                                     :group-projects="groupProjects" open-tab="budget">
-            <BudgetTab :project="project" :budget="budget" :money-sources="moneySources"></BudgetTab>
+            <BudgetTab :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :budget="budget" :money-sources="moneySources"></BudgetTab>
         </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSidenav
@@ -32,9 +32,11 @@ import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import BudgetTab from "@/Pages/Projects/Components/TabComponents/BudgetTab.vue";
 import ProjectSidenav from "@/Layouts/Components/ProjectSidenav.vue";
+import InfoTab from "@/Pages/Projects/Components/TabComponents/InfoTab.vue";
 
 export default defineComponent({
     components: {
+        InfoTab,
         ProjectSidenav,
         BudgetTab, AppLayout, ProjectShiftSidenav, ShiftTab, BaseSidenav, ProjectShowHeaderComponent
     },
@@ -51,7 +53,9 @@ export default defineComponent({
         'moneySources',
         'projectMoneySources',
         'access_budget',
-        'groupProjects'
+        'groupProjects',
+        'projectWriteIds',
+        'projectManagerIds',
     ],
     data() {
         return {

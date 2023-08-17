@@ -2,10 +2,11 @@
 import {defineComponent} from 'vue'
 import {CheckIcon} from "@heroicons/vue/outline";
 import VueMathjax from "vue-mathjax-next";
+import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesShift.vue";
 
 export default defineComponent({
     name: "ShiftDropElement",
-    components: {CheckIcon, VueMathjax},
+    components: {ChooseUserSeriesShift, CheckIcon, VueMathjax},
     props: ['shift', 'users','showRoom','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount'],
     computed: {
         userIds(){
@@ -30,6 +31,18 @@ export default defineComponent({
             })
 
             return ids;
+        }
+    },
+    data(){
+        return {
+            showChooseUserSeriesShiftModal: false,
+            buffer: {
+                onlyThisDay: false,
+                start: null,
+                end: null,
+                dayOfWeek: null
+            },
+            selectedUser: null
         }
     },
     methods: {
@@ -81,14 +94,27 @@ export default defineComponent({
         },
         onDrop(event) {
             event.preventDefault();
-            let dropElement = event.dataTransfer.getData('application/json');
+            this.selectedUser = event.dataTransfer.getData('application/json');
+            if(this.event.is_series){
+                this.showChooseUserSeriesShiftModal = true
+            } else {
+                this.saveUser();
+            }
+        },
+        changeBuffer(buffer){
+            this.buffer = buffer
+            this.showChooseUserSeriesShiftModal = false
+            this.saveUser();
+        },
+        saveUser(){
+            let dropElement = this.selectedUser;
             dropElement = JSON.parse(dropElement)[0];
 
             if(this.maxCount === this.currentCount){
                 return;
             }
 
-            if(dropElement.master && this.freeMasterCount === 0){
+            if(dropElement.master && this.freeMasterCount === 0 && this.freeEmployeeCount === 0){
                 return;
             }
 
@@ -113,15 +139,21 @@ export default defineComponent({
                     return;
                 }
             }
-            if(dropElement.master && dropElement.type === 0){
-                this.$inertia.post(route('add.shift.master', {shift: this.shift.id, user: dropElement.id}) , {
+
+            if(dropElement.master && dropElement.type === 0 && this.freeMasterCount > 0){
+                this.$inertia.post(route('add.shift.master', {shift: this.shift.id, user: dropElement.id}), {
+                        user_id: dropElement.id,
+                        chooseData: this.buffer
+                    }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
                 )
 
-            } else if (dropElement.type === 0 && !dropElement.master) {
-                this.$inertia.post(route('add.shift.user', {shift: this.shift.id, user: dropElement.id}), {}, {
+            } else if (dropElement.type === 0 && !dropElement.master || this.freeMasterCount === 0 && dropElement.master ) {
+                this.$inertia.post(route('add.shift.user', {shift: this.shift.id, user: dropElement.id}), {
+                        chooseData: this.buffer
+                    }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
@@ -130,12 +162,17 @@ export default defineComponent({
 
             if(dropElement.type === 1 && !dropElement.master){
                 this.$inertia.post(route('add.shift.freelancer', {shift: this.shift.id, freelancer: dropElement.id}), {
+                        chooseData: this.buffer
+                    }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
                 )
             } else if (dropElement.type === 1 && dropElement.master) {
                 this.$inertia.post(route('add.shift.freelancer.master', {shift: this.shift.id, freelancer: dropElement.id}), {
+                        freelancer_id: dropElement.id,
+                        chooseData: this.buffer
+                    }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
@@ -143,13 +180,18 @@ export default defineComponent({
             }
 
             if(dropElement.type === 2 && dropElement.master){
-                this.$inertia.post(route('add.shift.provider.master', {shift: this.shift.id, serviceProvider: dropElement.id}),{
+                this.$inertia.post(route('add.shift.provider.master', {shift: this.shift.id, serviceProvider: dropElement.id}), {
+                        service_provider_id: dropElement.id,
+                        chooseData: this.buffer
+                    }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
                 )
             } else if (dropElement.type === 2 && !dropElement.master) {
                 this.$inertia.post(route('add.shift.provider', {shift: this.shift.id, serviceProvider: dropElement.id}), {
+                        chooseData: this.buffer
+                    }, {
                         preserveState: true,
                         preserveScroll: true,
                     }
@@ -177,6 +219,9 @@ export default defineComponent({
             <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
         </div>
     </div>
+
+
+    <ChooseUserSeriesShift v-if="showChooseUserSeriesShiftModal" @close-modal="showChooseUserSeriesShiftModal = false" @returnBuffer="changeBuffer" />
 
 </template>
 

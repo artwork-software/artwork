@@ -253,11 +253,14 @@ export default defineComponent({
         },
         saveShift(){
 
-            if(!this.buffer?.onlyThisDay){
-                this.shiftForm.changeAll = true;
-                this.shiftForm.seriesId = this.event.series_id;
-                this.shiftForm.changes_start = this.buffer?.start;
-                this.shiftForm.changes_end = this.buffer?.end;
+
+            if(this.event.is_series){
+                if(!this.buffer?.onlyThisDay){
+                    this.shiftForm.changeAll = true;
+                    this.shiftForm.seriesId = this.event.series_id;
+                    this.shiftForm.changes_start = this.buffer?.start;
+                    this.shiftForm.changes_end = this.buffer?.end;
+                }
             }
 
 

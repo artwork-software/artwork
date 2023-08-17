@@ -53,7 +53,7 @@
                         </span>
                 </h2>
                 <Menu as="div" class="my-auto mt-3 relative"
-                      v-if="$can('write projects') || $role('artwork admin') || projectManagerIds.includes(this.$page.props.user.id) || projectCanWriteIds.includes(this.$page.props.user.id)">
+                      v-if="$can('write projects') || $role('artwork admin') || projectManagerIds.includes(this.$page.props.user.id) || projectWriteIds.includes(this.$page.props.user.id)">
                     <div class="flex items-center -mt-1">
                         <MenuButton
                             class="flex bg-tagBg p-0.5 rounded-full">
@@ -72,7 +72,7 @@
                             class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                             <div class="py-1">
                                 <MenuItem
-                                    v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')"
+                                    v-if="$role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')"
                                     v-slot="{ active }">
                                     <a @click="openEditProjectModal"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -238,7 +238,9 @@ export default {
         'lastEventInProject',
         'RoomsWithAudience',
         'groupProjects',
-        'openTab'
+        'openTab',
+        'projectManagerIds',
+        'projectWriteIds'
     ],
     data() {
         return {
@@ -249,42 +251,31 @@ export default {
         }
     },
     computed: {
-        projectManagerIds: function () {
-            let managerIdArray = [];
-            this.project.project_managers.forEach(manager => {
-                    managerIdArray.push(manager.id)
-                }
-            )
-            return managerIdArray;
-        },
-        projectCanWriteIds: function () {
-            let canWriteArray = [];
-            this.project.write_auth.forEach(write => {
-                    canWriteArray.push(write.id)
-                }
-            )
-            return canWriteArray;
-        },
-        projectDeletePermissionUsers() {
-            let canDeleteArray = [];
-            this.project.delete_permission_users.forEach(deletePermission => {
-                    canDeleteArray.push(deletePermission.id)
-                }
-            )
-            return canDeleteArray;
-        },
+
         tabs() {
             return [
                 {name: 'Projektinformationen', href: '#', current: this.openTab === 'info', show: true},
                 {name: 'Ablaufplan', href: '#', current: this.openTab === 'calendar', show: true},
                 {name: 'Checklisten', href: '#', current: this.openTab === 'checklist', show: true},
                 {name: 'Schichten', href: '#', current: this.openTab === 'shift', show: true},
-                {name: 'Budget', href: '#', current: this.openTab === 'budget', show: this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)},
+                {name: 'Budget', href: '#', current: this.openTab === 'budget', show: this.$page.props.is_admin || this.access_budget?.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)},
                 {name: 'Kommentare', href: '#', current: this.openTab === 'comment', show: true},
             ]
         },
     },
     methods: {
+        projectDeletePermissionUsers() {
+            let canDeleteArray = [];
+            if(this.project.delete_permission_users === null) {
+                return canDeleteArray;
+            }else {
+                this.project.delete_permission_users.forEach(deletePermission => {
+                        canDeleteArray.push(deletePermission.id)
+                    }
+                )
+                return canDeleteArray;
+            }
+        },
         openProjectHistoryModal() {
             this.showProjectHistory = true;
         },

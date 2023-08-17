@@ -81,7 +81,9 @@ export default {
         'eventsAtAGlance',
         'calendar',
         'days',
-        'eventTypes'
+        'eventTypes',
+        'projectWriteIds',
+        'projectManagerIds',
     ],
     data() {
 

@@ -1,16 +1,16 @@
 <template>
     <app-layout>
-    <ProjectShowHeaderComponent :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
+    <ProjectShowHeaderComponent :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
                                 :states="states" :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
                                 :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="calendar">
-        <CalendarTab :project="project" :selected-date="selectedDate" :date-value="dateValue" :events="events" :rooms="rooms" :events-without-room="eventsWithoutRoom" :filter-options="filterOptions" :personal-filters="personalFilters" :at-a-glance="atAGlance" :events-at-a-glance="eventsAtAGlance" :calendar="calendar" :days="days" :event-types="eventTypes" @change-at-a-glance="changeAtAGlance"></CalendarTab>
+        <CalendarTab :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :selected-date="selectedDate" :date-value="dateValue" :events="events" :rooms="rooms" :events-without-room="eventsWithoutRoom" :filter-options="filterOptions" :personal-filters="personalFilters" :at-a-glance="atAGlance" :events-at-a-glance="eventsAtAGlance" :calendar="calendar" :days="days" :event-types="eventTypes" @change-at-a-glance="changeAtAGlance"></CalendarTab>
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSecondSidenav
                 :project="project"
                 :project-members="this.project.users"
-                :project-members-write-access="projectCanWriteIds"
+                :project-members-write-access="projectWriteIds"
                 :project-categories="projectCategories"
                 :project-genres="projectGenres"
                 :project-sectors="projectSectors"
@@ -37,9 +37,11 @@ import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
 import ProjectSidenav from "@/Layouts/Components/ProjectSidenav.vue";
 import CalendarTab from "@/Pages/Projects/Components/TabComponents/CalendarTab.vue";
 import {Inertia} from "@inertiajs/inertia";
+import InfoTab from "@/Pages/Projects/Components/TabComponents/InfoTab.vue";
 
 export default {
     components: {
+        InfoTab,
         CalendarTab,
         ProjectSidenav,
         ProjectShiftSidenav,
@@ -76,7 +78,9 @@ export default {
         'events',
         'filterOptions',
         'personalFilters',
-        'eventsWithoutRoom'
+        'eventsWithoutRoom',
+        'projectManagerIds',
+        'projectWriteIds'
 
     ],
     data() {
@@ -92,22 +96,6 @@ export default {
         }, 1000)
     },
     methods:{
-        projectManagerIds: function () {
-            let managerIdArray = [];
-            this.project.project_managers.forEach(manager => {
-                    managerIdArray.push(manager.id)
-                }
-            )
-            return managerIdArray;
-        },
-        projectCanWriteIds: function () {
-            let canWriteArray = [];
-            this.project.write_auth.forEach(write => {
-                    canWriteArray.push(write.id)
-                }
-            )
-            return canWriteArray;
-        },
         changeAtAGlance() {
             this.atAGlance = !this.atAGlance;
             if (this.atAGlance) {

@@ -3,7 +3,7 @@
         <div class="flex w-full items-center mb-8 ">
             <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
             <div class="flex items-center"
-                 v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                 v-if="$role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                 <AddButton @click="openAddChecklistModal" text="Neue Checkliste" mode="page"/>
                 <div v-if="$page.props.can.show_hints" class="flex ml-2">
                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -50,7 +50,7 @@
                                     </div>
                                     </div>
                                     <Menu
-                                        v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="$role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                         as="div" class="my-auto relative">
                                         <div class="flex">
                                             <MenuButton
@@ -890,7 +890,7 @@ import Permissions from "@/mixins/Permissions.vue";
 export default {
     mixins: [Permissions],
     name: "ChecklistComponent",
-    props: ['project', 'opened_checklists', 'checklist_templates'],
+    props: ['project', 'opened_checklists', 'checklist_templates','projectManagerIds'],
     components: {
         NewUserToolTip,
         AddChecklistUserModal,
@@ -937,6 +937,16 @@ export default {
         Disclosure,
         DisclosurePanel,
         DisclosureButton
+    },
+    computed:{
+        projectCanWriteIds: function () {
+            let canWriteArray = [];
+            this.project.write_auth?.forEach(write => {
+                    canWriteArray.push(write.id)
+                }
+            )
+            return canWriteArray;
+        },
     },
     data(){
         return {

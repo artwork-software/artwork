@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <ProjectShowHeaderComponent :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup" :states="states" :project-groups="projectGroups" :first-event-in-project="firstEventInProject" :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience">
+        <ProjectShowHeaderComponent :projectManagerIds="projectManagerIds" :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup" :states="states" :project-groups="projectGroups" :first-event-in-project="firstEventInProject" :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience">
 
         </ProjectShowHeaderComponent>
         <!-- Div with Bg-Color -->
@@ -352,12 +352,12 @@ export default {
                 {name: 'Ablaufplan', href: '#', current: this.isScheduleTab, show: true},
                 {name: 'Checklisten', href: '#', current: this.isChecklistTab, show: true},
                 {name: 'Schichten', href: '#', current: this.isShiftTab, show: true},
-                {name: 'Budget', href: '#', current: this.isBudgetTab, show: this.$page.props.is_admin || this.access_budget?.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)},
+                {name: 'Budget', href: '#', current: this.isBudgetTab, show: this.$page.props.is_admin || this.access_budget?.includes(this.$page.props.user.id) || this.projectManagerIds?.includes(this.$page.props.user.id)},
                 {name: 'Kommentare', href: '#', current: this.isCommentTab, show: true},
             ]
         },
         historyTabs() {
-            if (this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id)) {
+            if (this.$page.props.is_admin || this.access_budget?.includes(this.$page.props.user.id)) {
                 return [
                     {name: 'Projekt', href: '#', current: this.showProjectHistoryTab},
                     {name: 'Budget', href: '#', current: this.showBudgetHistoryTab},

@@ -1,10 +1,10 @@
 <template>
     <app-layout>
-    <ProjectShowHeaderComponent :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
+    <ProjectShowHeaderComponent :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
                                 :states="states" :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
                                 :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="info">
-        <InfoTab :project="project"></InfoTab>
+        <InfoTab :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project"></InfoTab>
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSecondSidenav
@@ -63,7 +63,9 @@ export default {
         'categories',
         'sectors',
         'genres',
-        'projectState'
+        'projectState',
+        'projectManagerIds',
+        'projectWriteIds'
 
     ],
     data() {
@@ -77,24 +79,6 @@ export default {
             this.show = false;
         }, 1000)
     },
-    methods:{
-        projectManagerIds: function () {
-            let managerIdArray = [];
-            this.project.project_managers.forEach(manager => {
-                    managerIdArray.push(manager.id)
-                }
-            )
-            return managerIdArray;
-        },
-        projectCanWriteIds: function () {
-            let canWriteArray = [];
-            this.project.write_auth.forEach(write => {
-                    canWriteArray.push(write.id)
-                }
-            )
-            return canWriteArray;
-        },
-    }
 }
 </script>
 

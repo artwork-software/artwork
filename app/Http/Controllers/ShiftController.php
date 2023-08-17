@@ -404,7 +404,11 @@ class ShiftController extends Controller
                             continue;
                         }
                     }
-                    $allShift->users()->attach($user->id, ['shift_count' => $collideCount + 1]);
+                    if($allShift->getEmptyUserCountAttribute() > 0){
+                        if(!$allShift->users->contains($user->id)) {
+                            $allShift->users()->attach($user->id, ['shift_count' => $collideCount + 1]);
+                        }
+                    }
                 }
             }
         }
@@ -465,7 +469,11 @@ class ShiftController extends Controller
                             continue;
                         }
                     }
-                    $allShift->users()->attach($user->id, ['is_master' => true]);
+                    if($allShift->getEmptyMasterCountAttribute() > 0){
+                        if(!$allShift->users->contains($user->id)) {
+                            $allShift->users()->attach($user->id, ['is_master' => true]);
+                        }
+                    }
                 }
             }
         }
@@ -533,7 +541,11 @@ class ShiftController extends Controller
                     }
                 }
                 if ($allShift->id !== $shift->id) {
-                    $allShift->freelancer()->attach($freelancer->id, ['shift_count' => $collideCount + 1]);
+                    if($allShift->getEmptyUserCountAttribute() > 0){
+                        if(!$allShift->freelancer->contains($freelancer->id)) {
+                            $allShift->freelancer()->attach($freelancer->id, ['shift_count' => $collideCount + 1]);
+                        }
+                    }
                 }
             }
         }
@@ -570,7 +582,11 @@ class ShiftController extends Controller
                             continue;
                         }
                     }
-                    $allShift->freelancer()->attach($freelancer->id, ['is_master' => true]);
+                    if($allShift->getEmptyMasterCountAttribute() > 0) {
+                        if(!$allShift->freelancer->contains($freelancer->id)) {
+                            $allShift->freelancer()->attach($freelancer->id, ['is_master' => true]);
+                        }
+                    }
                 }
             }
         }
@@ -607,7 +623,11 @@ class ShiftController extends Controller
                             continue;
                         }
                     }
-                    $allShift->service_provider()->attach($serviceProvider->id, ['is_master' => true]);
+                    if($allShift->getEmptyMasterCountAttribute() > 0){
+                        if(!$allShift->service_provider->contains($serviceProvider->id)) {
+                            $allShift->service_provider()->attach($serviceProvider->id, ['is_master' => true]);
+                        }
+                    }
                 }
             }
         }
@@ -633,14 +653,16 @@ class ShiftController extends Controller
         $collideCount = $collidingShiftIds->count();
 
 
-        if ($request->chooseData['onlyThisDay'] === false) {
-            $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
-                ->get();
+        if($request->chooseData !== null){
+            if ($request->chooseData['onlyThisDay'] === false) {
+                $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
+                    ->get();
 
 
-            foreach ($allShifts as $allShift) {
-                if($allShift->id !== $shift->id){
-                    $allShift->users()->detach($user->id);
+                foreach ($allShifts as $allShift) {
+                    if($allShift->id !== $shift->id){
+                        $allShift->users()->detach($user->id);
+                    }
                 }
             }
         }
@@ -785,7 +807,11 @@ class ShiftController extends Controller
                             continue;
                         }
                     }
-                    $allShift->service_provider()->attach($serviceProvider->id, ['shift_count' => $collideCount + 1]);
+                    if($allShift->getEmptyUserCountAttribute() > 0){
+                        if(!$allShift->service_provider->contains($serviceProvider->id)) {
+                            $allShift->service_provider()->attach($serviceProvider->id, ['is_master' => true]);
+                        }
+                    }
                 }
             }
         }

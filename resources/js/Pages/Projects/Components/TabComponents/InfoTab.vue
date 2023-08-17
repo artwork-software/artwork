@@ -32,7 +32,7 @@
                 </div>
             </div>
             <div
-                v-if="$can('write projects') || $role('artwork admin') || $can('admin projects') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || project.isMemberOfADepartment"
+                v-if="$can('write projects') || $role('artwork admin') || $can('admin projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || project.isMemberOfADepartment"
                 class="col-span-2">
                 <div class="ml-10 group">
                     <label class="block my-4 sDark">
@@ -88,7 +88,7 @@
                         <h3 class="sDark"> Dokumente </h3>
                     </div>
                     <div
-                        v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id)">
+                        v-if="$role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id)">
                         <input
                             @change="uploadChosenDocuments"
                             class="hidden"
@@ -109,7 +109,7 @@
                     </div>
                     <div>
                         <div class="space-y-1"
-                             v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                             v-if="$role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                             <div v-for="project_file in project.project_files"
                                  class="cursor-pointer group flex items-center">
                                 <div :data-tooltip-target="project_file.name" class="flex truncate">
@@ -118,7 +118,7 @@
                                         {{ project_file.name }}</p>
 
                                     <XCircleIcon
-                                        v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="$role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                         @click="openConfirmDeleteModal(project_file)"
                                         class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                                         aria-hidden="true"/>
@@ -159,6 +159,8 @@ export default{
     components: {PencilAltIcon, XCircleIcon, DocumentTextIcon, SvgCollection, XIcon, JetInputError},
     props: [
         'project',
+        'projectWriteIds',
+        'projectManagerIds',
     ],
     mixins: [Permissions],
     data() {
@@ -208,22 +210,6 @@ export default{
                 preserveState: true
             });
             this.descriptionClicked = false;
-        },
-        projectManagerIds: function () {
-            let managerIdArray = [];
-            this.project.project_managers.forEach(manager => {
-                    managerIdArray.push(manager.id)
-                }
-            )
-            return managerIdArray;
-        },
-        projectCanWriteIds: function () {
-            let canWriteArray = [];
-            this.project.write_auth.forEach(write => {
-                    canWriteArray.push(write.id)
-                }
-            )
-            return canWriteArray;
         },
         selectNewKeyVisual() {
             this.$refs.keyVisual.click();

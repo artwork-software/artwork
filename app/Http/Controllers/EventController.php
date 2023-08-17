@@ -18,6 +18,7 @@ use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\ServiceProviderShiftResource;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\UserIndexResource;
+use App\Http\Resources\UserShowResource;
 use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
@@ -134,6 +135,51 @@ class EventController extends Controller
             })->whereBetween('start_time', [$startDate, $endDate])
             ->get();
 
+        $users = User::all()->where('can_work_shifts', true);
+
+        $usersWithPlannedWorkingHours = [];
+
+        //get the diff of startDate and endDate in days
+        $diffInDays = $startDate->diffInDays($endDate);
+
+        foreach ($users as $user) {
+            $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
+
+            $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
+
+            $usersWithPlannedWorkingHours[] = [
+                'user' => UserIndexResource::make($user),
+                'plannedWorkingHours' => $plannedWorkingHours,
+                'expectedWorkingHours' => $expectedWorkingHours,
+            ];
+        }
+
+        $freelancersWithPlannedWorkingHours = [];
+
+        $freelancers = Freelancer::all();
+
+        foreach ($freelancers as $freelancer) {
+            $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
+
+            $freelancersWithPlannedWorkingHours[] = [
+                'freelancer' => FreelancerShiftResource::make($freelancer),
+                'plannedWorkingHours' => $plannedWorkingHours,
+            ];
+        }
+
+        $service_providers = ServiceProvider::all();
+
+        $serviceProvidersWithPlannedWorkingHours = [];
+
+        foreach ($service_providers as $service_provider) {
+            $plannedWorkingHours = $service_provider->plannedWorkingHours($startDate, $endDate);
+
+            $serviceProvidersWithPlannedWorkingHours[] = [
+                'service_provider' => ServiceProviderShiftResource::make($service_provider),
+                'plannedWorkingHours' => $plannedWorkingHours,
+            ];
+        }
+
 
         return inertia('Shifts/ShiftPlan', [
             'events' => $events,
@@ -146,9 +192,9 @@ class EventController extends Controller
             'dateValue'=> $showCalendar['dateValue'],
             'personalFilters' => $shiftFilters,
             'selectedDate' => $showCalendar['selectedDate'],
-            'users' => UserIndexResource::collection(User::all())->resolve(),
-            'freelancers' => FreelancerShiftResource::collection(Freelancer::all())->resolve(),
-            'serviceProviders' => ServiceProviderShiftResource::collection(ServiceProvider::all())->resolve(),
+            'usersForShifts' => $usersWithPlannedWorkingHours,
+            'freelancersForShifts' => $freelancersWithPlannedWorkingHours,
+            'serviceProvidersForShifts' => $serviceProvidersWithPlannedWorkingHours,
             'history' => $events->flatMap(function ($event) {
                 return $event->shifts->map(function ($shift) {
                     return $shift->historyChanges();

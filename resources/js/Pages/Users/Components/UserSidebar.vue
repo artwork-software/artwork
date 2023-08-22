@@ -75,9 +75,9 @@ watch(() => userForm.can_work_shifts, (value) => {
             </span>
             <SwitchGroup v-if="props.type === 'user'" as="div" class="flex items-center mt-2">
                 <Switch v-model="userForm.can_work_shifts"
-                        :class="[userForm.can_work_shifts ? 'bg-indigo-600' : 'bg-secondary', 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                        :class="[userForm.can_work_shifts ? 'bg-indigo-600' : 'bg-secondary', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
                                             <span aria-hidden="true"
-                                                  :class="[userForm.can_work_shifts ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                                                  :class="[userForm.can_work_shifts ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                 </Switch>
                 <SwitchLabel as="span" class="ml-3 text-sm">
                     <span class="text-secondary">Darf zu Schichten eingeteilt werden</span>
@@ -85,9 +85,9 @@ watch(() => userForm.can_work_shifts, (value) => {
             </SwitchGroup>
             <SwitchGroup as="div" class="flex items-center mt-2">
                 <Switch v-model="userForm.can_master"
-                        :class="[userForm.can_master ? 'bg-indigo-600' : 'bg-secondary', 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                        :class="[userForm.can_master ? 'bg-indigo-600' : 'bg-secondary', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
                                             <span aria-hidden="true"
-                                                  :class="[userForm.can_master ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                                                  :class="[userForm.can_master ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                 </Switch>
                 <SwitchLabel as="span" class="ml-3 text-sm">
                     <span class="text-secondary">Als Meister einsetzbar</span>

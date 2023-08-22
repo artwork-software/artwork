@@ -26,6 +26,7 @@ class ChecklistIndexResource extends JsonResource
             'resource' => class_basename($this),
             'id' => $this->id,
             'name' => $this->name,
+            'private' => $this->user_id !== null,
             //determines if the checklist is already opened by default
             'showContent' => true,
             'tasks' => TaskIndexResource::collection($this->tasks->sortBy('order'))->resolve(),

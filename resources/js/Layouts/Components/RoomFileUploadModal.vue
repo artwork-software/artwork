@@ -68,7 +68,7 @@ const selectNewFiles = () => {
 }
 
 const uploadDraggedDocuments = (event) => {
-    this.validateType([...event.dataTransfer.files])
+    validateType([...event.dataTransfer.files])
 }
 
 const upload = (event) => {

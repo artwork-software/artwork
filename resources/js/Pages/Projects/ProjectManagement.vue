@@ -136,7 +136,8 @@
                                                 $can('write projects') ||
                                                 $role('artwork admin') ||
                                                 $role('budget admin') ||
-                                                checkPermission(project, 'edit')"
+                                                checkPermission(project, 'edit') ||
+                                                checkPermission(project, 'view')"
                                             :href="getEditHref(project)"
                                             class="flex w-full my-auto">
                                             <p class="headline2 flex items-center">
@@ -271,7 +272,7 @@
                             <div class="flex w-1/2">
                                 <div class="mr-6">
                                     <Link
-                                        v-if="$role('artwork admin') || $can('write projects') || checkPermission(project, 'edit') || $can('view projects')"
+                                        v-if="$role('artwork admin') || $can('write projects') || checkPermission(project, 'edit') || $can('view projects') || checkPermission(project, 'view')"
                                         :href="getEditHref(project)"
                                         class="flex w-full my-auto">
                                         <p class="headline2 flex items-center">
@@ -1274,6 +1275,13 @@ export default defineComponent({
             const writeAuth = [];
             const managerAuth = [];
             const deleteAuth = [];
+            const viewAuth = [];
+
+            console.log(project)
+
+            project.users.forEach((user) => {
+                viewAuth.push(user.id);
+            });
 
             project.project_managers.forEach((user) => {
                 managerAuth.push(user.id);
@@ -1286,6 +1294,10 @@ export default defineComponent({
             project.delete_permission_users.forEach((user) => {
                 deleteAuth.push(user.id);
             });
+
+            if(viewAuth.includes(this.$page.props.user.id) && type === 'view') {
+                return true;
+            }
 
             if (writeAuth.includes(this.$page.props.user.id) && type === 'edit') {
                 return true;

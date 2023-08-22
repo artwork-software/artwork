@@ -80,6 +80,7 @@ class TaskController extends Controller
         $created = false;
         $user = User::where('id', Auth::id())->first();
 
+
         if (Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)
             || $user->projects()->find($checklist->project->id)->pivot->is_manager == 1
         ) {
@@ -140,6 +141,12 @@ class TaskController extends Controller
             'order' => Task::max('order') + 1,
             'checklist_id' => $request->checklist_id
         ]);
+
+        if(!$request->private){
+            if(!empty($request->users)){
+                $task->task_users()->sync(collect($request->users));
+            }
+        }
 
         $Checklist = Checklist::find($request->checklist_id);
         $checklistUsers = $Checklist->users()->get();

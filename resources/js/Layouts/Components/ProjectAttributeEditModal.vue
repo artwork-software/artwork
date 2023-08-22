@@ -42,7 +42,7 @@
                                         <input type="checkbox"
                                                v-model="projectCategoryIds"
                                                :value="category.id"
-                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                               class="checkBoxOnDark"/>
                                         <p :class="[projectCategoryIds.includes(category.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -64,7 +64,7 @@
                                         <input type="checkbox"
                                                v-model="projectGenreIds"
                                                :value="genre.id"
-                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                               class="checkBoxOnDark"/>
                                         <p :class="[projectGenreIds.includes(genre.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -86,7 +86,7 @@
                                         <input type="checkbox"
                                                v-model="projectSectorIds"
                                                :value="sector.id"
-                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                               class="checkBoxOnDark"/>
                                         <p :class="[projectSectorIds.includes(sector.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">

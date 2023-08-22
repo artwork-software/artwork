@@ -42,7 +42,7 @@
                                             <input type="checkbox"
                                                    v-model="currentCategories"
                                                    :value="category"
-                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                   class="checkBoxOnDark"/>
                                             <p :class="[toIdsArray(currentCategories).includes(category.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -64,7 +64,7 @@
                                             <input type="checkbox"
                                                    v-model="currentAdjoiningRooms"
                                                    :value="room"
-                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                   class="checkBoxOnDark"/>
                                             <p :class="[toIdsArray(currentAdjoiningRooms).includes(room.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -86,7 +86,7 @@
                                             <input type="checkbox"
                                                    v-model="currentAttributes"
                                                    :value="attribute"
-                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                   class="checkBoxOnDark"/>
                                             <p :class="[toIdsArray(currentAttributes).includes(attribute.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">

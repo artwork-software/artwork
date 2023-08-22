@@ -36,8 +36,8 @@
                                         <SwitchLabel as="span" class="mr-3 text-sm">
                                             <span :class="presetForm.all === false ? 'font-bold text-gray-900' : 'font-normal text-gray-500'">Nur für diesen Termin</span>
                                         </SwitchLabel>
-                                        <Switch v-model="presetForm.all" :class="[presetForm.all ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
-                                            <span aria-hidden="true" :class="[presetForm.all ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                                        <Switch v-model="presetForm.all" :class="[presetForm.all ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                                            <span aria-hidden="true" :class="[presetForm.all ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                         </Switch>
                                         <SwitchLabel as="span" class="ml-3 text-sm">
                                             <span :class="presetForm.all === true ? 'font-bold text-gray-900' : 'font-normal text-gray-500'">Auf alle ({{ event_type.abbreviation }}) anwenden</span>

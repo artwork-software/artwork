@@ -91,7 +91,7 @@
                                 <input @click="toggle_calendarSettingsProjectStatus"
                                        v-model="$page.props.user.calendar_settings.project_status"
                                        type="checkbox"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                       class="checkBoxOnDark"/>
                                 <p :class="$page.props.user.calendar_settings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                    class=" ml-4 my-auto text-secondary">Projektstatus</p>
                             </div>
@@ -99,7 +99,7 @@
                                 <input @click="toggle_calendarSettingsOptions"
                                        v-model="$page.props.user.calendar_settings.options"
                                        type="checkbox"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                       class="checkBoxOnDark"/>
                                 <p :class="$page.props.user.calendar_settings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                    class=" ml-4 my-auto text-secondary">Optionspriorisierung</p>
                             </div>
@@ -107,7 +107,7 @@
                                 <input @click="toggle_calendarSettingsProjectManagement"
                                        v-model="$page.props.user.calendar_settings.project_management"
                                        type="checkbox"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                       class="checkBoxOnDark"/>
                                 <p :class="$page.props.user.calendar_settings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                    class=" ml-4 my-auto text-secondary">Projektleitungen</p>
                             </div>
@@ -115,7 +115,7 @@
                                 <input @click="toggle_calendarSettingsRepeatingEvents"
                                        v-model="$page.props.user.calendar_settings.repeating_events"
                                        type="checkbox"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                       class="checkBoxOnDark"/>
                                 <p :class="$page.props.user.calendar_settings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                    class=" ml-4 my-auto text-secondary">Wiederholungstermin</p>
                             </div>
@@ -123,7 +123,7 @@
                                 <input @click="toggle_calendarSettingsWorkShifts"
                                        v-model="$page.props.user.calendar_settings.work_shifts"
                                        type="checkbox"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                       class="checkBoxOnDark"/>
                                 <p :class="$page.props.user.calendar_settings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                    class=" ml-4 my-auto text-secondary">Schichten</p>
                             </div>

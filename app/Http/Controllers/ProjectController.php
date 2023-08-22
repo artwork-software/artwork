@@ -107,7 +107,9 @@ class ProjectController extends Controller
         $returnUser = [];
         foreach ($users as $user){
             $projectUser = $project->users()->where('user_id', $user->id)->first();
-            $returnUser[] = $projectUser;
+            if($projectUser !== null){
+                $returnUser[] = $projectUser;
+            }
         }
         return $returnUser;
     }

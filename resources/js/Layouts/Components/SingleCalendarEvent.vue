@@ -224,7 +224,7 @@
         <div v-for="subEvent in event.subEvents" class="mb-1">
             <div class="w-full relative group rounded-lg border-l-[6px] border-[#A7A6B115]">
                 <div
-                    class="absolute w-full h-full rounded-lg bg-indigo-500/50 hidden group-hover:block flex justify-center align-middle items-center">
+                    class="bg-indigo-500/50 hidden absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center">
                     <div class="flex justify-center items-center h-full gap-2">
                         <button @click="editSubEvent(subEvent)" type="button"
                                 class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
@@ -232,13 +232,6 @@
                                  stroke="currentColor" class="w-4 h-4">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                       d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
-                            </svg>
-                        </button>
-                        <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" type="button"
-                                class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                 stroke="currentColor" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
                         <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()"
@@ -252,11 +245,20 @@
                         </button>
                     </div>
                 </div>
-                <div :class="[subEvent.class]" class="px-1 py-0.5 rounded-r-lg">
+                <div :class="[subEvent.class]" :style="{ width: width + 'px', height: totalHeight * zoomFactor + 'px' }"
+                     class="px-1 py-0.5 rounded-lg overflow-y-auto">
                     <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
                          class="flex justify-between">
+                        <div class="flex" v-if="subEvent.title?.length > 0">
+                        <div v-if="subEvent.eventTypeAbbreviation" class="mr-1">
+                            {{ subEvent.eventTypeAbbreviation }}:
+                        </div>
                         <div class="flex items-center">
                             {{ subEvent.title }}
+                        </div>
+                        </div>
+                        <div v-else class="flex items-center">
+                            {{subEvent.eventTypeName}}
                         </div>
                         <!-- Icons -->
                         <div v-if="subEvent.audience"

@@ -41,7 +41,7 @@
                                        :id="eventType.id"
                                        :value="eventType.id"
                                        type="checkbox"
-                                       class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
+                                       class="checkBoxOnDark"/>
                                 <div :class="[shiftRelevantEventTypeIds.includes(eventType.id) ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
                                     {{eventType.name}}
                                 </div>

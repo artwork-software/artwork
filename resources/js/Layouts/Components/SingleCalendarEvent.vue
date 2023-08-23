@@ -70,7 +70,15 @@
                     </div>
                 </div>
                 <div v-else>
-                    <div :style="{ width: width - (55 * zoomFactor) + 'px'}" class=" truncate">
+                    <div class="flex items-center" v-if="event.title !== event.eventTypeName">
+                        <div v-if="event.eventTypeAbbreviation" class="mr-1">
+                            {{ event.eventTypeAbbreviation }}:
+                        </div>
+                        <div :style="{ width: width - (64 * zoomFactor) + 'px'}" class=" truncate">
+                            {{ event.alwaysEventName }}
+                        </div>
+                    </div>
+                    <div v-else :style="{ width: width - (55 * zoomFactor) + 'px'}" class=" truncate">
                         {{ event.eventTypeName }}
                     </div>
                 </div>
@@ -111,7 +119,6 @@
                     </svg>
                 </div>
             </div>
-            {{ room }}
             <div class="flex">
                 <!-- Time -->
                 <div class="flex" :style="textStyle"

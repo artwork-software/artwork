@@ -204,7 +204,7 @@
                             </div>
                             <div class="project">
                                 <div class="text-gray-400"><a
-                                    :href="'/projects/' + position.project.id + '?openTab=budget'"
+                                    :href="getProjectHref(position.project)"
                                     class="text-buttonBlue ">{{ position.project.name }}</a> |<span
                                     class="ml-2 text-gray-400 text-sm">{{ position.created_at }}</span></div>
                                 <div class="text-gray-400 text-sm mt-2 flex">{{ position.mainPositionName }} <div class="flex px-1" v-if="position.subPositionName?.length > 0">|</div>
@@ -367,6 +367,9 @@ export default {
         }
     },
     methods: {
+        getProjectHref(project) {
+            return route('projects.show.budget', {project: project.id});
+        },
         currencyFormat(number) {
             const formatter = new Intl.NumberFormat('de-DE', {
                 style: 'currency',

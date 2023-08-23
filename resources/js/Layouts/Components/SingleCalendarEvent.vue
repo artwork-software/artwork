@@ -1,6 +1,6 @@
 <template>
-    <div :class="[event.class, textStyle]" :style="{ width: width + 'px', height: totalHeight * zoomFactor + 'px' }"
-         class="px-1 py-0.5 rounded-lg relative group overflow-y-auto">
+    <div :class="[event.class, textStyle]" :style="{ width: width + 'px', height: totalHeight - heightSubtraction(event) * zoomFactor + 'px' }"
+         class="px-1 py-0.5 rounded-lg relative group">
         <div v-if="zoomFactor > 0.4"
              class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-indigo-500/50'">
@@ -252,7 +252,7 @@
                         </button>
                     </div>
                 </div>
-                <div :class="[subEvent.class]" :style="{ width: width + 'px', height: totalHeight * zoomFactor + 'px' }"
+                <div :class="[subEvent.class]" :style="{ width: width + 'px', height: (totalHeight - heightSubtraction(subEvent)) * zoomFactor + 'px' }"
                      class="px-1 py-0.5 rounded-lg overflow-y-auto">
                     <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
                          class="flex justify-between">
@@ -463,6 +463,22 @@ export default {
     methods: {
         gcd(a, b) {
             return (b) ? this.gcd(b, a % b) : a;
+        },
+        // calculates if there is unneeded height for each event
+        heightSubtraction(event){
+            let heightSubtraction = 0;
+            console.log(event);
+            if (this.$page.props.user.calendar_settings.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)){
+                heightSubtraction += 17;
+            }
+            if (this.$page.props.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)){
+                console.log("event");
+                heightSubtraction += 20;
+            }
+            if (this.$page.props.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)){
+                heightSubtraction += 18;
+            }
+            return heightSubtraction;
         },
         decimalToFraction(decimal) {
             let wholePart = Math.floor(decimal);

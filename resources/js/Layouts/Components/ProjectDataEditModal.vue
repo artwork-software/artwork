@@ -12,12 +12,11 @@
                 <input :placeholder="name"
                        id="title"
                        v-model="name"
-                       class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                       class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
                 <div class="flex mt-2 w-full">
                     <Listbox as="div" class="flex w-full" v-model="selectedState">
                         <ListboxButton class="w-full text-left">
                             <button class="w-full h-12 flex justify-between xsDark items-center text-left border border-2 border-gray-300 bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                                    :class="this.states.find(state => state.id === selectedState)?.color"
                                     @click="openColor = !openColor">
                                         <span class="w-full" v-if="!selectedState">
                                             Wähle Projekt Status
@@ -37,10 +36,10 @@
                                                v-for="state in states"
                                                :key="state.id"
                                                :value="state.id" v-slot="{ active, selected }">
-                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']"
+                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 text-sm subpixel-antialiased']"
                                         @click="updateProjectState(state)">
                                         <div class="flex">
-                                                    <span class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-3 mr-1 mb-1 h-8 inline-flex" :class="state.color">
+                                                    <span class="rounded-full items-center font-medium px-2 mt-2 text-sm ml-2 mr-1 mb-1 inline-flex">
                                                         {{ state.name }}
                                                     </span>
                                         </div>
@@ -151,11 +150,11 @@ export default {
     },
     data() {
         return {
-            name: this.project.name,
-            description: this.project.description,
+            name: this.project?.name,
+            description: this.project?.description,
             hasGroup: !!this.currentGroup,
             selectedGroup: this.currentGroup,
-            selectedState: this.projectState,
+            selectedState: this.project?.state.id,
             openColor: false
         }
     },
@@ -200,6 +199,9 @@ export default {
         updateProjectState(state) {
             this.$inertia.patch(route('update.project.state', this.project.id), {
                 state_id: state.id
+            }, {
+                preserveState: true,
+                preserveScroll: true
             })
         },
     }

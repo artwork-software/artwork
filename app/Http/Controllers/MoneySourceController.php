@@ -420,7 +420,7 @@ class MoneySourceController extends Controller
 
         $oldName = $moneySource->name;
         $oldDescription = $moneySource->description;
-
+        $oldAmount = $moneySource->amount;
 
         if (!empty($request->amount)) {
             $amount = str_replace(',', '.', $request->amount);
@@ -448,6 +448,7 @@ class MoneySourceController extends Controller
 
         $newName = $moneySource->name;
         $newDescription = $moneySource->description;
+        $newAmount = $moneySource->amount;
 
         if ($oldName !== $newName) {
             $this->history->createHistory($moneySource->id, 'Finanzierungsquellenname geändert');
@@ -462,6 +463,10 @@ class MoneySourceController extends Controller
         }
         if (!empty($oldDescription) && empty($newDescription)) {
             $this->history->createHistory($moneySource->id, 'Beschreibung gelöscht');
+        }
+
+        if($oldAmount !== $newAmount){
+            $this->history->createHistory($moneySource->id, 'Ursprungsvolumen geändert');
         }
 
         if ($request->is_group) {

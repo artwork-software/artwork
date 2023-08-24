@@ -10,6 +10,7 @@ use App\Http\Resources\ProjectFileResource;
 use App\Http\Resources\ProjectHeadlineResource;
 use App\Http\Resources\UserResourceWithoutShifts;
 use App\Models\Freelancer;
+use App\Models\ProjectStates;
 use App\Models\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -65,7 +66,7 @@ class ProjectCommentResource extends JsonResource
             'num_of_guests' => $this->num_of_guests,
             'project_managers' => $this->managerUsers,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
-
+            'state' => ProjectStates::find($this->state),
             'comments' => $this->comments->map(fn ($comment) => [
                 'id' => $comment->id,
                 'text' => $comment->text,

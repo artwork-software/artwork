@@ -29,7 +29,7 @@ class NotificationService
 {
 
     protected array $description = [];
-  
+
     protected string $notificationKey = '';
 
     /**
@@ -332,39 +332,59 @@ class NotificationService
             case NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
             case NotificationConstEnum::NOTIFICATION_ROOM_REQUEST:
             case NotificationConstEnum::NOTIFICATION_ROOM_ANSWER:
-                Notification::send($notificationTo, new RoomRequestNotification($body, $broadcastMessage));
+                if($notificationTo->id !== Auth::id()){
+                    Notification::send($notificationTo, new RoomRequestNotification($body, $broadcastMessage));
+                }
                 break;
             case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:
-                Notification::send($notificationTo, new EventNotification($body, $broadcastMessage));
+                if($notificationTo->id !== Auth::id()) {
+                    Notification::send($notificationTo, new EventNotification($body, $broadcastMessage));
+                }
                 break;
             case NotificationConstEnum::NOTIFICATION_NEW_TASK:
             case NotificationConstEnum::NOTIFICATION_TASK_CHANGED:
-                Notification::send($notificationTo, new TaskNotification($body, $broadcastMessage));
+                if($notificationTo->id !== Auth::id()) {
+                    Notification::send($notificationTo, new TaskNotification($body, $broadcastMessage));
+                }
                 break;
             case NotificationConstEnum::NOTIFICATION_PROJECT:
             case NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT:
-                Notification::send($notificationTo, new ProjectNotification($body, $broadcastMessage));
+                if($notificationTo->id !== Auth::id()) {
+                    Notification::send($notificationTo, new ProjectNotification($body, $broadcastMessage));
+                }
                 break;
             case NotificationConstEnum::NOTIFICATION_TEAM:
-                Notification::send($notificationTo, new TeamNotification($body, $broadcastMessage));
+                if($notificationTo->id !== Auth::id()) {
+                    Notification::send($notificationTo, new TeamNotification($body, $broadcastMessage));
+                }
                 break;
             case NotificationConstEnum::NOTIFICATION_ROOM_CHANGED:
-                Notification::send($notificationTo, new RoomNotification($body, $broadcastMessage));
+                if($notificationTo->id !== Auth::id()) {
+                    Notification::send($notificationTo, new RoomNotification($body, $broadcastMessage));
+                }
                 break;
             case NotificationConstEnum::NOTIFICATION_CONFLICT:
             case NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT:
-                Notification::send($notificationTo, new ConflictNotification($body, $broadcastMessage));
+                if($notificationTo->id !== Auth::id()) {
+                    Notification::send($notificationTo, new ConflictNotification($body, $broadcastMessage));
+                }
                 break;
             case NotificationConstEnum::NOTIFICATION_TASK_REMINDER:
-                Notification::send($notificationTo, new DeadlineNotification($body, $broadcastMessage));
+                if($notificationTo->id !== Auth::id()) {
+                    Notification::send($notificationTo, new DeadlineNotification($body, $broadcastMessage));
+                }
                 break;
             case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
             case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:
-                Notification::send($notificationTo, new MoneySourceNotification($body, $broadcastMessage));
+                if($notificationTo->id !== Auth::id()) {
+                    Notification::send($notificationTo, new MoneySourceNotification($body, $broadcastMessage));
+                }
                 break;
             case NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
             case NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED:
-                Notification::send($notificationTo, new BudgetVerified($body, $broadcastMessage));
+                if($notificationTo->id !== Auth::id()) {
+                    Notification::send($notificationTo, new BudgetVerified($body, $broadcastMessage));
+                }
                 break;
                 /*
             case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:

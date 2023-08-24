@@ -18,4 +18,10 @@ class ProjectHeadline extends Model
     {
         return $this->belongsToMany(Project::class, 'project_project_headlines')->withPivot('text');
     }
+
+
+
+
+
+
 }

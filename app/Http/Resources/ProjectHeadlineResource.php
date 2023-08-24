@@ -18,7 +18,8 @@ class ProjectHeadlineResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'order' => $this->order,
-            'text' => $this->pivot->text
+            'text' => $this->pivot->text,
+            'text_without_html' => strip_tags($this->pivot->text),
         ];
     }
 }

@@ -66,7 +66,8 @@ class Project extends Model
         'closed_society' => 'boolean'
     ];
 
-    protected $with = ['shiftRelevantEventTypes'];
+    protected $with = ['shiftRelevantEventTypes', 'state'];
+
 
     public function cost_center()
     {
@@ -199,7 +200,7 @@ class Project extends Model
     }
 
     public function state(){
-        return $this->belongsTo(ProjectStates::class, 'state_id');
+        return $this->belongsTo(ProjectStates::class);
     }
 
     public function toSearchableArray(): array

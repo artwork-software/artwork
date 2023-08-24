@@ -10,6 +10,7 @@ use App\Http\Resources\ProjectFileResource;
 use App\Http\Resources\ProjectHeadlineResource;
 use App\Http\Resources\UserResourceWithoutShifts;
 use App\Models\Freelancer;
+use App\Models\ProjectStates;
 use App\Models\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -48,7 +49,7 @@ class ProjectShiftResource extends JsonResource
             'description' => $this->description,
             'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
             'key_visual_path' => $this->key_visual_path,
-
+            'state' => ProjectStates::find($this->state),
             'write_auth' => $this->writeUsers,
             'users' => UserResourceWithoutShifts::collection($this->users)->resolve(),
 

@@ -58,9 +58,9 @@ class ProjectHeadlineController extends Controller
     public function updateText(Request $request, ProjectHeadline $projectHeadline, Project $project)
     {
         $oldHeadLine = $project->headlines()->where('project_headline_id', $projectHeadline->id)->first();
-        $projectHeadline->projects()->updateExistingPivot($project, array('text' => $request->text), false);
+        $projectHeadline->projects()->updateExistingPivot($project, array('text' => nl2br($request->text)), false);
         $newHeadLine = $project->headlines()->where('project_headline_id', $projectHeadline->id)->first();
-        //dd($oldHeadLine->pivot->text);
+
         if($oldHeadLine->pivot->text === null && $newHeadLine->pivot->text !== null){
             $this->history->createHistory($project->id, $projectHeadline->name . ' wurde hinzugefügt', 'public_changes');
         }

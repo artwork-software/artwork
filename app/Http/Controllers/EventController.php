@@ -472,8 +472,14 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
-        $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT, 'red', [], false, '', null, $broadcastMessage, null, $conflict->id);
-        //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('red');
+        $this->notificationService->setEventId($conflict->id);
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setNotificationTo($user);
+        $this->notificationService->createNotification();
     }
 
     /**
@@ -514,8 +520,14 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
-        $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT, 'red', [], false, '', null, $broadcastMessage, null, $conflict->id);
-        //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('red');
+        $this->notificationService->setEventId($conflict->id);
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setNotificationTo($user);
+        $this->notificationService->createNotification();
     }
 
     /**
@@ -560,8 +572,18 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('red');
+        $this->notificationService->setEventId($collision['event']->id);
+        $this->notificationService->setProjectId($collision['event']->project_id);
+        $this->notificationService->setRoomId($collision['event']->room_id);
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONFLICT);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+
         if(!empty($collision['created_by'])){
-            $this->notificationService->createNotification($collision['created_by'], $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_CONFLICT, 'red', [], false, '', null, $broadcastMessage, $collision['event']->room_id, $collision['event']->id, $collision['event']->project_id);
+            $this->notificationService->setNotificationTo($collision['created_by']);
+            $this->notificationService->createNotification();
         }
     }
 
@@ -618,15 +640,23 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setEventId($event->id);
+        $this->notificationService->setRoomId($room->id);
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_REQUEST);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setButtons(['accept', 'decline']);
         if(!empty($admins)){
             foreach ($admins as $admin){
-                $this->notificationService->createNotification($admin, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_REQUEST, 'green', ['accept', 'decline'], false, '', null, $broadcastMessage, $room->id, $event->id);
-                //$this->notificationService->create($admin, $this->notificationData, $broadcastMessage);
+                $this->notificationService->setNotificationTo($admin);
+                $this->notificationService->createNotification();
             }
         } else {
             $user = User::find($room->user_id);
-            $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_REQUEST, 'green', ['accept', 'decline'], false, '', null, $broadcastMessage, $room->id, $event->id);
-            //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+            $this->notificationService->setNotificationTo($user);
+            $this->notificationService->createNotification();
         }
     }
 
@@ -694,13 +724,20 @@ class EventController extends Controller
                     'href' => null
                 ]
             ];
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('green');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
             foreach ($projectManagers as $projectManager){
                 if($projectManager->id === $event->creator){
                     continue;
                 }
-                $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage);
+                $this->notificationService->setNotificationTo($projectManager);
+                $this->notificationService->createNotification();
             }
-            $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage);
+            $this->notificationService->setNotificationTo($event->creator);
+            $this->notificationService->createNotification();
 
         } else {
             if (!empty($request->adminComment)) {
@@ -750,15 +787,25 @@ class EventController extends Controller
                         'href' => null
                     ]
                 ];
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('green');
+                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->setRoomId($room->id);
+                $this->notificationService->setEventId($event->id);
+                $this->notificationService->setButtons(['answerDialog']);
                 foreach ($projectManagers as $projectManager) {
                     if ($projectManager->id === $event->creator) {
                         continue;
                     }
                     $this->notificationService->setNotificationKey($this->notificationKey);
-                    $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answerDialog'], false, '', null, $broadcastMessage, $event->room_id, $event->id);
+                    $this->notificationService->setNotificationTo($projectManager);
+                    $this->notificationService->createNotification();
                 }
                 $this->notificationService->setNotificationKey($this->notificationKey);
-                $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answerDialog'], false, '', null, $broadcastMessage, $event->room_id, $event->id);
+                $this->notificationService->setNotificationTo($event->creator);
+                $this->notificationService->createNotification();
             }
         }
         }
@@ -801,13 +848,24 @@ class EventController extends Controller
             ];
 
 
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('green');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setRoomId($event->room_id);
+            $this->notificationService->setEventId($event->id);
+
+
             foreach ($projectManagers as $projectManager){
                 if($projectManager->id === $event->creator){
                     continue;
                 }
-                $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'green', [], false, '', null, $broadcastMessage,$event->room_id, $event->id);
+                $this->notificationService->setNotificationTo($projectManager);
+                $this->notificationService->createNotification();
             }
-            $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'green', [], false, '', null, $broadcastMessage,$event->room_id, $event->id);
+            $this->notificationService->setNotificationTo($event->creator);
+            $this->notificationService->createNotification();
         }
 
         $this->authorize('update', $event);
@@ -973,15 +1031,24 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
+
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_REQUEST);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setRoomId($event->room_id);
+        $this->notificationService->setEventId($event->id);
+        $this->notificationService->setButtons(['accept', 'decline']);
         if(!empty($admins)){
             foreach ($admins as $admin){
-                $this->notificationService->createNotification($admin, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_REQUEST, 'green', ['accept', 'decline'], false, '', null, $broadcastMessage, $room->id, $event->id);
-                //$this->notificationService->create($admin, $this->notificationData, $broadcastMessage);
+                $this->notificationService->setNotificationTo($admin);
+                $this->notificationService->createNotification();
             }
         } else {
             $user = User::find($room->user_id);
-            $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_REQUEST, 'green', ['accept', 'decline'], false, '', null, $broadcastMessage, $room->id, $event->id);
-            //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+            $this->notificationService->setNotificationTo($user);
+            $this->notificationService->createNotification();
         }
     }
 
@@ -1053,13 +1120,23 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setRoomId($event->room_id);
+        $this->notificationService->setEventId($event->id);
+        $this->notificationService->setProjectId($event->project_id);
         foreach ($projectManagers as $projectManager){
             if($projectManager->id === $event->creator){
                 continue;
             }
-            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage,$event->room_id, $event->id, $project->id);
+            $this->notificationService->setNotificationTo($projectManager);
+            $this->notificationService->createNotification();
         }
-        $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage, $room->id, $event->id, $project->id);
+        $this->notificationService->setNotificationTo($event->creator);
+        $this->notificationService->createNotification();
 
         return Redirect::back();
     }
@@ -1118,15 +1195,26 @@ class EventController extends Controller
                     'href' => null
                 ]
             ];
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('green');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setRoomId($event->room_id);
+            $this->notificationService->setEventId($event->id);
+            $this->notificationService->setProjectId($event->project_id);
+            $this->notificationService->setButtons(['answer']);
             foreach ($projectManagers as $projectManager){
                 if($projectManager->id === $event->creator){
                     continue;
                 }
                 $this->notificationService->setNotificationKey($this->notificationKey);
-                $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $project->id);
+                $this->notificationService->setNotificationTo($projectManager);
+                $this->notificationService->createNotification();
             }
             $this->notificationService->setNotificationKey($this->notificationKey);
-            $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage, null, $event->id);
+            $this->notificationService->setNotificationTo($event->creator);
+            $this->notificationService->createNotification();
 
         }
 
@@ -1167,15 +1255,26 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setRoomId($event->room_id);
+        $this->notificationService->setEventId($event->id);
+        $this->notificationService->setProjectId($event->project_id);
+        $this->notificationService->setButtons(['change_request', 'event_delete']);
         foreach ($projectManagers as $projectManager){
             if($projectManager->id === $event->creator){
                 continue;
             }
             $this->notificationService->setNotificationKey($this->notificationKey);
-            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', ['change_request', 'event_delete'], false, '', null, $broadcastMessage, @$room->id, @$event->id, @$project->id);
+            $this->notificationService->setNotificationTo($projectManager);
+            $this->notificationService->createNotification();
         }
         $this->notificationService->setNotificationKey($this->notificationKey);
-        $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'red', ['change_request', 'event_delete'], false, '', null, $broadcastMessage, @$room->id, @$event->id, @$project->id);
+        $this->notificationService->setNotificationTo($event->creator);
+        $this->notificationService->createNotification();
 
     }
 
@@ -1346,14 +1445,24 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setRoomId($event->room_id);
+        $this->notificationService->setEventId($event->id);
+        $this->notificationService->setProjectId($event->project_id);
+        $this->notificationService->setButtons(['answer']);
         foreach ($projectManagers as $projectManager){
             if($projectManager->id === $event->creator){
                 continue;
             }
-            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $project->id);
+            $this->notificationService->setNotificationTo($projectManager);
+            $this->notificationService->createNotification();
         }
-        $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_EVENT_CHANGED, 'red', [], false, '', null, $broadcastMessage, null, $event->id);
-        //$this->notificationService->create($event->creator()->get(), $this->notificationData, $broadcastMessage);
+        $this->notificationService->setNotificationTo($event->creator);
+        $this->notificationService->createNotification();
     }
 
     /**

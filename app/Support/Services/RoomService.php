@@ -182,13 +182,19 @@ class RoomService
             $roomAdminIdsAfter[] = $roomAdminAfter->id;
             // if added a new room admin, send notification to this user
             if(!in_array($roomAdminAfter->id, $roomAdminIdsBefore)){
+                $notificationTitle = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
                 $user = User::find($roomAdminAfter->id);
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
-                    'message' => 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt'
+                    'message' => $notificationTitle
                 ];
-                $this->notificationService->createNotification($user, 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt', [], NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'green', [], false, '', null, $broadcastMessage);
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('green');
+                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->createNotification();
                 $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin hinzugefügt');
             }
         }
@@ -197,12 +203,18 @@ class RoomService
         foreach ($roomAdminIdsBefore as $roomAdminBefore){
             if(!in_array($roomAdminBefore, $roomAdminIdsAfter)){
                 $user = User::find($roomAdminBefore);
+                $notificationTitle = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'error',
-                    'message' => 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht'
+                    'message' => $notificationTitle
                 ];
-                $this->notificationService->createNotification($user, 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht', [],NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'red', [], false, '', null, $broadcastMessage);
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->createNotification();
                 $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin entfernt');
             }
         }

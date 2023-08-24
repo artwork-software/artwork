@@ -194,8 +194,15 @@ class ShiftController extends Controller
                 ],
             ];
 
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
             foreach ($shift->users()->get() as $user){
-                $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED, 'red', [], false, '', null, $broadcastMessage);
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->createNotification();
             }
         } else {
             $notificationTitle = 'Schichtänderung ' . $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
@@ -212,8 +219,15 @@ class ShiftController extends Controller
                 ],
             ];
 
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('green');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+
             foreach ($shift->users()->get() as $user){
-                $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED, 'green', [], false, '', null, $broadcastMessage);
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->createNotification();
             }
 
         }
@@ -258,9 +272,16 @@ class ShiftController extends Controller
                 ],
             ];
 
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('green');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+
             foreach ($shift->users()->get() as $user){
                 if(Auth::id() !== $user->id){
-                    $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED, 'red', [], false, '', null, $broadcastMessage);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
                 }
             }
 
@@ -268,7 +289,8 @@ class ShiftController extends Controller
 
             foreach ($craft->users()->get() as $craftUser){
                 if(Auth::id() !== $craftUser->id){
-                    $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED, 'green', [], false, '', null, $broadcastMessage);
+                    $this->notificationService->setNotificationTo($craftUser);
+                    $this->notificationService->createNotification();
                 }
             }
         } else {
@@ -286,9 +308,16 @@ class ShiftController extends Controller
                 ],
             ];
 
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+
             foreach ($shift->users()->get() as $user){
                 if(Auth::id() !== $user->id){
-                    $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED, 'green', [], false, '', null, $broadcastMessage);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
                 }
             }
 
@@ -296,7 +325,8 @@ class ShiftController extends Controller
 
             foreach ($craft->users()->get() as $craftUser){
                 if(Auth::id() !== $craftUser->id){
-                    $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED, 'green', [], false, '', null, $broadcastMessage);
+                    $this->notificationService->setNotificationTo($craftUser);
+                    $this->notificationService->createNotification();
                 }
             }
         }
@@ -427,7 +457,13 @@ class ShiftController extends Controller
             ],
         ];
 
-        $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED, 'green', [], false, '', null, $broadcastMessage);
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setNotificationTo($user);
+        $this->notificationService->createNotification();
 
 
         $shift->users()->attach($user->id, ['shift_count' => $collideCount + 1]);
@@ -492,7 +528,14 @@ class ShiftController extends Controller
             ],
         ];
 
-        $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED, 'green', [], false, '', null, $broadcastMessage);
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setNotificationTo($user);
+        $this->notificationService->createNotification();
+
 
 
 
@@ -688,7 +731,14 @@ class ShiftController extends Controller
             ],
         ];
 
-        $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED, 'red', [], false, '', null, $broadcastMessage);
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('red');
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setNotificationTo($user);
+        $this->notificationService->createNotification();
+
     }
 
     /**

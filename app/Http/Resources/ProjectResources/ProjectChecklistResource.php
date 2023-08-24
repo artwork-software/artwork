@@ -10,6 +10,7 @@ use App\Http\Resources\ProjectFileResource;
 use App\Http\Resources\ProjectHeadlineResource;
 use App\Http\Resources\UserResourceWithoutShifts;
 use App\Models\Freelancer;
+use App\Models\ProjectStates;
 use App\Models\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -58,7 +59,7 @@ class ProjectChecklistResource extends JsonResource
             //needed for ProjectShowHeaderComponent
             'project_history' => $historyArray,
             'delete_permission_users' => $this->delete_permission_users,
-
+            'state' => ProjectStates::find($this->state),
             //needed for project Second Sidenav
             'entry_fee' => $this->entry_fee,
             'registration_required' => $this->registration_required,

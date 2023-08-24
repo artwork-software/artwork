@@ -48,8 +48,8 @@
                         </span>
                     {{ project?.name }}
                     <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex"
-                          :class="this.states.find(state => state.id === projectState)?.color">
-                            {{ this.states.find(state => state.id === projectState)?.name }}
+                          :class="project?.state?.color">
+                            {{ project?.state?.name }}
                         </span>
                 </h2>
                 <Menu as="div" class="my-auto mt-3 relative"
@@ -92,10 +92,7 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem
-                                    v-if="
-                                            projectDeletePermissionUsers.includes(this.$page.props.user.id) ||
-                                            $role('artwork admin')
-                                        "
+                                    v-if="projectDeletePermissionUsers.includes(this.$page.props.user.id) ||$role('artwork admin')"
                                     v-slot="{ active }">
                                     <a @click="openDeleteProjectModal(this.project)"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -262,8 +259,6 @@ export default {
                 {name: 'Kommentare', href: '#', current: this.openTab === 'comment', show: true},
             ]
         },
-    },
-    methods: {
         projectDeletePermissionUsers() {
             let canDeleteArray = [];
             if(this.project.delete_permission_users === null) {
@@ -276,6 +271,9 @@ export default {
                 return canDeleteArray;
             }
         },
+    },
+    methods: {
+
         openProjectHistoryModal() {
             this.showProjectHistory = true;
         },

@@ -97,7 +97,12 @@
                                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                             </div>
                             <div v-else class="flex items-center w-full w-64 mr-2">
-                                <inputComponent v-model="project_search" placeholder="Suche nach Projekten"/>
+                                <div>
+                                    <input type="text"
+                                           placeholder="Suche nach Projekten"
+                                           v-model="project_search"
+                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                </div>
                                 <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                             </div>
                         </div>
@@ -882,6 +887,7 @@
             :project_history="projectHistoryToDisplay"
             :access_budget="projectBudgetAccess"
         ></project-history-component>
+
     </app-layout>
 </template>
 
@@ -935,6 +941,7 @@ import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponen
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import Input from "@/Layouts/Components/InputComponent.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -946,6 +953,7 @@ const number_of_participants = [
 
 export default defineComponent({
     components: {
+        Input,
         BaseFilter,
         Dropdown,
         Switch,
@@ -999,88 +1007,7 @@ export default defineComponent({
     },
     props: ['projects', 'states', 'users', 'categories', 'genres', 'sectors', 'can', 'projectGroups'],
     mixins: [Permissions],
-    computed: {
-        tabs() {
-            return [
-                {name: 'Projekt', href: '#', current: this.isSingleTab},
-                {name: 'Projektgruppe', href: '#', current: this.isGroupTab},
-            ]
-        },
-        historyTabs() {
-            return [
-                {name: 'Projekt', href: '#', current: this.showProjectHistoryTab},
-                {name: 'Budget', href: '#', current: this.showBudgetHistoryTab},
-            ]
-        },
-        filteredProjects() {
-            return this.projects.filter(project => {
-                if (!this.enabled) {
-                    if (this.showProjectGroups) {
-                        if (project.is_group) {
-                            if (this.projectStateFilter.length > 0) {
-                                if (this.projectStateFilter.includes(project?.state?.id)) {
-                                    return project.name.toLowerCase().includes(this.project_search.toLowerCase());
-                                }
-                            } else {
-                                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
-                            }
-                        }
-                    } else {
-                        if (this.projectStateFilter.length > 0) {
-                            if (this.projectStateFilter.includes(project?.state?.id)) {
-                                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
-                            }
-                        } else {
-                            return project.name.toLowerCase().includes(this.project_search.toLowerCase());
-                        }
-                    }
-                    if (this.showProjects) {
-                        if (this.projectStateFilter.length > 0) {
-                            if (this.projectStateFilter.includes(project?.state?.id)) {
-                                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
-                            }
-                        } else {
-                            return project.name.toLowerCase().includes(this.project_search.toLowerCase());
-                        }
-                    }
-                } else {
-                    if (project.curr_user_is_related === true) {
-                        if (this.showProjectGroups) {
-                            if (project.is_group) {
-                                if (this.projectStateFilter.length > 0) {
-                                    if (this.projectStateFilter.includes(project?.state?.id)) {
-                                        return project.name.toLowerCase().includes(this.project_search.toLowerCase());
-                                    }
-                                } else {
-                                    return project.name.toLowerCase().includes(this.project_search.toLowerCase());
-                                }
-                            }
-                        } else {
-                            if (this.projectStateFilter.length > 0) {
-                                if (this.projectStateFilter.includes(project?.state?.id)) {
-                                    return project.name.toLowerCase().includes(this.project_search.toLowerCase());
-                                }
-                            } else {
-                                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
-                            }
-                        }
-                        if (this.showProjects) {
-                            if (this.projectStateFilter.length > 0) {
-                                if (this.projectStateFilter.includes(project?.state?.id)) {
-                                    return project.name.toLowerCase().includes(this.project_search.toLowerCase());
-                                }
-                            } else {
-                                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
-                            }
-                        }
-                    }
-                }
 
-            });
-        }
-
-
-    },
     data() {
         return {
             project_search: '',
@@ -1127,6 +1054,43 @@ export default defineComponent({
                 selectedGroup: null
             }),
         }
+    },
+    computed: {
+        tabs() {
+            return [
+                {name: 'Projekt', href: '#', current: this.isSingleTab},
+                {name: 'Projektgruppe', href: '#', current: this.isGroupTab},
+            ]
+        },
+        historyTabs() {
+            return [
+                {name: 'Projekt', href: '#', current: this.showProjectHistoryTab},
+                {name: 'Budget', href: '#', current: this.showBudgetHistoryTab},
+            ]
+        },
+        filteredProjects() {
+            return this.projects.filter(project => {
+                // Check if the project should be included based on user-related status
+                if (this.enabled && !project.curr_user_is_related) {
+                    return false;
+                }
+
+                // Check if the project should be included based on project type
+                if (this.showProjectGroups && !project.is_group) {
+                    return false;
+                }
+
+                // Check if the project should be included based on state filter
+                if (this.projectStateFilter.length > 0 && !this.projectStateFilter.includes(project?.state?.id)) {
+                    return false;
+                }
+
+                // Check if the project name contains the search term
+                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+            });
+        }
+
+
     },
     methods: {
         openCloseMenu() {

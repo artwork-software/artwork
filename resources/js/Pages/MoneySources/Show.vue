@@ -2,10 +2,10 @@
     <app-layout>
         <div class="max-w-screen-2xl my-12 pl-20 pr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
-                <div class="flex ">
+                <div class="flex items-center">
                     <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
                         {{ moneySource.name }}</h2>
-                    <Menu as="div" class="my-auto mt-3 relative"
+                    <Menu as="div" class="my-auto ml-4 relative"
                           v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')">
                         <div class="flex items-center -mt-1">
                             <MenuButton

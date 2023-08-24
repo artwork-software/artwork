@@ -154,7 +154,7 @@ export default {
             description: this.project?.description,
             hasGroup: !!this.currentGroup,
             selectedGroup: this.currentGroup,
-            selectedState: this.project?.state.id,
+            selectedState: this.project?.state?.id,
             openColor: false
         }
     },

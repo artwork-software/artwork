@@ -48,8 +48,8 @@
                         </span>
                     {{ project?.name }}
                     <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex"
-                          :class="project.state.color">
-                            {{ project.state.name }}
+                          :class="project?.state?.color">
+                            {{ project?.state?.name }}
                         </span>
                 </h2>
                 <Menu as="div" class="my-auto mt-3 relative"

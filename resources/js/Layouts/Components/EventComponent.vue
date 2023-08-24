@@ -501,7 +501,7 @@
                                     <input v-model="seriesEndDate"
                                            id="endDate"
                                            :type="seriesEndDate ? 'date' : 'text'"
-                                           placeholder="Enddatum"
+                                           placeholder="Enddatum Wiederholungstermin"
                                            required
                                            @focus="input => input.target.type = 'date'"
                                            class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>

@@ -1,6 +1,7 @@
 <template>
+    <div class="h-full" :class="highlight">
     <div class=" flex items-center justify-between px-4 text-white text-xs relative"
-         :class="shift.user_count === shift.number_employees && Math.floor(shift.master_count) === shift.number_masters ? 'bg-green-500' : 'bg-gray-500'">
+         :class="[shift.user_count === shift.number_employees && Math.floor(shift.master_count) === shift.number_masters ? 'bg-green-500' : 'bg-gray-500']">
         <div class="h-9 flex items-center">
             {{ shift.craft.abbreviation }} ({{ truncateDecimal(shift.user_count) }}/{{ shift.number_employees }})
             <span class="ml-1" v-if="shift.number_masters > 0">
@@ -156,6 +157,7 @@
                          :is_series="event.is_series"/>
         </div>
     </div>
+    </div>
 
     <AddShiftModal :shift="shift" :event="event" :crafts="crafts" v-if="openEditShiftModal"
                    @closed="openEditShiftModal = false" :edit="true"/>
@@ -194,8 +196,18 @@ export default defineComponent({
                 user_id : null,
                 shift_id: null,
                 type: null
-            }
+            },
+            highlight: null
         }
+    },
+    mounted() {
+        if(parseInt(this.$page.props?.urlParameters?.shiftId) === this.shift.id){
+           this.highlight = 'border-2 border-orange-300 rounded-md p-1';
+        }
+
+        setTimeout(() => {
+            this.highlight = null;
+        }, 5000);
     },
     computed: {
         shiftUserIds() {

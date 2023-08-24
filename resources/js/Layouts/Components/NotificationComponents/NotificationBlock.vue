@@ -49,6 +49,8 @@
                                      @deleteEvent="showDeleteConfirmModal = true"
                                      @openProjectCalculation="openProjectBudget(notification.data?.projectId)"
                                      @open-event-without-room-modal="loadEventDataForEventWithoutRoom"
+                                     @deleteNotification="setOnRead"
+                                     @openProject="openProjectShift(notification.data?.projectId, notification.data?.eventId, notification.data?.shiftId)"
                 />
             </div>
         </div>
@@ -290,6 +292,9 @@ export default {
         checkNotificationKey(key){
             return key !== null || key !== '' || key.length > 0;
 
+        },
+        openProjectShift(projectId, eventId, shiftId){
+            window.location.href = route('projects.show.shift', projectId) + '?eventId=' + eventId + '&shiftId=' + shiftId;
         }
     }
 }

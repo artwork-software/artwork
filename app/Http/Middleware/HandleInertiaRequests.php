@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 use Spatie\Permission\Models\Role;
+use Tightenco\Ziggy\Ziggy;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -133,8 +134,8 @@ class HandleInertiaRequests extends Middleware
             'privacyLink' => app(GeneralSettings::class)->privacy_link,
             'emailFooter' => app(GeneralSettings::class)->email_footer,
             'globalNotification' => $globalNotification,
-            'myMoneySources' => Auth::guest() ? false : Auth::user()->accessMoneySources()->get(['money_source_id'])
-
+            'myMoneySources' => Auth::guest() ? false : Auth::user()->accessMoneySources()->get(['money_source_id']),
+            'urlParameters' => $request->query()
         ]);
     }
 }

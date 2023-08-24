@@ -36,7 +36,9 @@ class UserVacationsController extends Controller
      */
     public function store(Request $request, User $user): void
     {
-        $user->vacations()->create($request->only(['from', 'until']));
+        $vacation = $user->vacations()->create($request->only(['from', 'until']));
+        $schedule = new SchedulingController();
+        $schedule->create($user->id, 'VACATION_CHANGES', 'USER_VACATIONS', $user->id);
     }
 
     /**
@@ -71,6 +73,9 @@ class UserVacationsController extends Controller
     public function update(Request $request, UserVacations $userVacations)
     {
         $userVacations->update($request->only(['from', 'until']));
+
+        $schedule = new SchedulingController();
+        $schedule->create($userVacations->user()->first()->id, 'VACATION_CHANGES', 'USER_VACATIONS', $userVacations->user()->first()->id);
     }
 
     /**

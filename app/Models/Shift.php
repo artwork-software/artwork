@@ -38,6 +38,16 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read int $user_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $users
  * @property-read int|null $users_count
+ * @property-read \Illuminate\Support\Collection $history
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ServiceProvider[] $service_provider
+ * @property-read int|null $service_provider_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $masters
+ * @property-read int|null $masters_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $employees
+ * @property-read int|null $employees_count
+ * @property-read array $allUsers
+ * @property-read bool $infringement
+ * @property-read string $break_formatted
  */
 class Shift extends Model
 {

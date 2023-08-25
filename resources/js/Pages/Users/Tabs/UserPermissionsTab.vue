@@ -224,12 +224,6 @@ export default {
             }),
         }
     },
-    mounted() {
-        this.show = true;
-        setTimeout(() => {
-            this.show = false;
-        }, 1000)
-    },
     methods: {
         editUser() {
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));

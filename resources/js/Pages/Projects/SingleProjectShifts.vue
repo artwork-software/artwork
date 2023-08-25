@@ -63,12 +63,6 @@ export default {
             show: false,
         }
     },
-    mounted() {
-        this.show = true;
-        setTimeout(() => {
-            this.show = false;
-        }, 1000)
-    },
     computed: {
         dropUsers(){
             const users = [];

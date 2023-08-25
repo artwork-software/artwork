@@ -236,12 +236,6 @@ export default {
             }),
         }
     },
-    mounted() {
-        this.show = true;
-        setTimeout(() => {
-            this.show = false;
-        }, 1000)
-    },
     methods: {
         openChangeTeamsModal() {
             this.departments.forEach((team) => {

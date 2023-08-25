@@ -106,7 +106,7 @@
                                     </p>
                                     <span  class="-mt-4"
                                           v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
-                                        <Listbox as="div" class="flex mr-2" v-model="column.color">
+                                        <Listbox as="div" class="flex ml-2" v-model="column.color">
                                                 <ListboxButton>
                                                    <button class="w-4 h-4 flex justify-center items-center rounded-full"
                                                            :class="column.color === 'whiteColumn' ? 'whiteColumn border border-1' : column.color"
@@ -824,10 +824,15 @@ export default {
             },
             colors: {
                 whiteColumn: 'whiteColumn',
+                darkBlueColumn: 'darkBlueColumn',
+                darkGreenColumn: 'darkGreenColumn',
+                darkLightBlueColumn: 'darkLightBlueColumn',
+                lightBlueNew: 'lightBlueNew',
                 greenColumn: 'greenColumn',
-                yellowColumn: 'yellowColumn',
+                lightGreenColumn: 'lightGreenColumn',
+                orangeColumn: 'orangeColumn',
                 redColumn: 'redColumn',
-                lightGreenColumn: 'lightGreenColumn'
+                pinkColumn: 'pinkColumn'
             },
             verifiedTexts: {
                 title: 'Verifizierung',
@@ -1345,30 +1350,50 @@ export default {
 </script>
 
 <style scoped>
-/*
- greenColumn: '#50908E',
-                yellowColumn: '#F0B54C',
-                redColumn: '#D84387',
-                lightGreenColumn: '#35A965'
- */
 .whiteColumn {
     background-color: #FCFCFBFF;
 }
 
+.darkBlueColumn {
+    background-color: #21485C;
+}
+
+.darkGreenColumn {
+    background-color: #4D908E;
+}
+
+.darkLightBlueColumn {
+    background-color: #168FC3;
+}
+
+.lightBlueNew {
+    background-color: #3DC3CB;
+}
+
 .greenColumn {
-    background-color: #50908E;
-    border: 2px solid #1FC687;
-}
-
-.yellowColumn {
-    background-color: #F0B54C;
-}
-
-.redColumn {
-    background-color: #D84387;
+    background-color: #2EAA63;
 }
 
 .lightGreenColumn {
-    background-color: #35A965;
+    background-color: #86C554;
 }
+
+.yellowColumn {
+    background-color: #F1B640;
+}
+
+.orangeColumn {
+    background-color: #EB7A3D;
+}
+
+.redColumn {
+    background-color: #DA3F87;
+}
+
+.pinkColumn {
+    background-color: #641A54;
+}
+
+
+
 </style>

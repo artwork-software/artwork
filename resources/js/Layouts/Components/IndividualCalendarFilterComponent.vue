@@ -82,7 +82,7 @@
                                     Nebenräume anzeigen
                                 </SwitchLabel>
                             </div>
-                        </SwitchGroup> -->
+                        </SwitchGroup>
                         <SwitchGroup class="mb-1">
                             <div class="flex items-center mt-2">
                                 <Switch v-model="filterArray.roomFilters.allDayFree"
@@ -98,6 +98,7 @@
                                 </SwitchLabel>
                             </div>
                         </SwitchGroup>
+                        -->
                         <SwitchGroup class="mb-1">
                             <div class="flex items-center">
                                 <Switch v-model="filterArray.eventAttributes.adjoiningNotLoud.checked"

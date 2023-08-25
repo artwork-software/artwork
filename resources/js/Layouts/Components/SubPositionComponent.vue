@@ -310,10 +310,15 @@ export default {
             }),
             colors: {
                 whiteColumn: 'whiteColumn',
+                darkBlueColumn: 'darkBlueColumn',
+                darkGreenColumn: 'darkGreenColumn',
+                darkLightBlueColumn: 'darkLightBlueColumn',
+                lightBlueNew: 'lightBlueNew',
                 greenColumn: 'greenColumn',
-                yellowColumn: 'yellowColumn',
+                lightGreenColumn: 'lightGreenColumn',
+                orangeColumn: 'orangeColumn',
                 redColumn: 'redColumn',
-                lightGreenColumn: 'lightGreenColumn'
+                pinkColumn: 'pinkColumn'
             },
             updateCellForm: useForm({
                 column_id: null,
@@ -531,32 +536,50 @@ export default {
 
 <style scoped>
 
-/*
- greenColumn: '#50908E',
-                yellowColumn: '#F0B54C',
-                redColumn: '#D84387',
-                lightGreenColumn: '#35A965'
- */
 .whiteColumn {
     background-color: #FCFCFBFF;
 }
 
+.darkBlueColumn {
+    background-color: #D3DADE;
+}
+
+.darkGreenColumn {
+    background-color: #DBE9E8;
+}
+
+.darkLightBlueColumn {
+    background-color: #D2E9F3;
+}
+
+.lightBlueNew {
+    background-color: #DAF3F6;
+}
+
 .greenColumn {
-    background-color: #D9E6E4;
-    border: 2px solid #1FC687;
-}
-
-.yellowColumn {
-    background-color: #F9EDD4;
-}
-
-.redColumn {
-    background-color: #F6D5E3;
+    background-color: #D7EEE0;
 }
 
 .lightGreenColumn {
-    background-color: #EAEAEB;
+    background-color: #E7F3DE;
 }
+
+.yellowColumn {
+    background-color: #FCF0DB;
+}
+
+.orangeColumn {
+    background-color: #FBE4DA;
+}
+
+.redColumn {
+    background-color: #F7D9E7;
+}
+
+.pinkColumn {
+    background-color: #E1D1DC;
+}
+
 @layer base {
     input[type=number].appearance-none::-webkit-inner-spin-button,
     input[type=number].appearance-none::-webkit-outer-spin-button {

@@ -196,7 +196,7 @@
                 </div>
                 <div class="w-full ml-20 py-12">
                     <div>
-                        <div class="flex border-b border-gray-300 pb-5 pt-5"
+                        <div class="flex border-b border-gray-300 w-full pb-5 pt-5"
                              v-for="position in filteredPositions">
                             <div class="sum w-72 text-2xl" :class="position.type === 'COST' ? 'text-red-500' : ''">
                                 <span v-if="position.type === 'EARNING'">+</span><span v-else>-</span>

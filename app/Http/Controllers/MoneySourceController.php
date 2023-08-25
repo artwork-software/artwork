@@ -162,7 +162,8 @@ class MoneySourceController extends Controller
         ]);
         $amount = $moneySource->amount;
         $subMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
-        $columns = ColumnCell::where('linked_money_source_id', $moneySource->id)->get();
+        $columns = ColumnCell::where('linked_money_source_id', $moneySource->id)->latest('column_id')->get()->unique('sub_position_row_id');
+
 
         $subPositionSumDetails = SubpositionSumDetail::with('subPosition.mainPosition.table.project', 'sumMoneySource')
             ->whereRelation('sumMoneySource', 'money_source_id', $moneySource->id)
@@ -182,7 +183,7 @@ class MoneySourceController extends Controller
         $usersWithAccess = [];
         if ($moneySource->is_group) {
             foreach ($subMoneySources as $subMoneySource) {
-                $columns = ColumnCell::where('linked_money_source_id', $subMoneySource->id)->get();
+                $columns = ColumnCell::where('linked_money_source_id', $subMoneySource->id)->latest('column_id')->get()->unique('sub_position_row_id');
                 foreach ($columns as $column) {
                     $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
                     $subPosition = SubPosition::find($subPositionRow->sub_position_id);
@@ -333,9 +334,6 @@ class MoneySourceController extends Controller
                     $amount = (int)$amount - (int)$column->value;
                 }
             }
-
-
-
         }
 
         $historyArray = [];

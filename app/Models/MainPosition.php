@@ -36,7 +36,7 @@ class MainPosition extends Model
         'is_fixed' => 'boolean',
     ];
 
-    protected $appends = ['columnSums'];
+    protected $appends = ['columnSums', 'columnVerifiedChanges'];
 
     public function table(): BelongsTo
     {
@@ -74,6 +74,18 @@ class MainPosition extends Model
                 ]
             );
     }
+
+    public function getColumnVerifiedChangesAttribute(){
+        $subPositionRowIds = SubPositionRow::whereIn('sub_position_id', $this->subPositions()->pluck('id'))
+            ->pluck('id');
+
+        $changes = ColumnCell::whereIn('sub_position_row_id', $subPositionRowIds)
+            ->whereColumn('verified_value', '!=', 'value')
+            ->exists();
+
+        return $changes;
+    }
+
 
     public function verified(): HasOne
     {

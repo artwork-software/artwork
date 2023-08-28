@@ -319,7 +319,7 @@
                             <div class="flex justify-between">
                                 <button v-if="!creatingNewTask" type="button"
                                         @click="[creatingNewTask = !creatingNewTask]"
-                                        class="flex py-3 px-8 mt-1 items-center border border-2 mt-6 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
+                                        class="flex py-3 px-3 mt-1 items-center border border-2 mt-6 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
                                     <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
                                     <p class="text-sm">{{ tasks.length === 0 ? 'Neue Aufgabe' : 'Weitere Aufgabe' }}</p>
                                 </button>

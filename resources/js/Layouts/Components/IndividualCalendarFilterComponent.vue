@@ -99,6 +99,7 @@
                             </div>
                         </SwitchGroup>
                         -->
+                        <div v-if="type !== 'project'">
                         <SwitchGroup class="mb-1">
                             <div class="flex items-center">
                                 <Switch v-model="filterArray.eventAttributes.adjoiningNotLoud.checked"
@@ -162,9 +163,11 @@
                                 </MenuItems>
                             </transition>
                         </Menu> -->
+                            <hr class="border-gray-500 mt-2 mb-2">
                     </div>
 
-                    <hr class="border-gray-500 mt-2 mb-2">
+
+                    </div>
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
@@ -372,6 +375,7 @@ export default {
         'filterOptions',
         'personalFilters',
         'atAGlance',
+        'type'
     ],
     mounted() {
             this.filterArray.rooms = this.filterOptions.rooms

@@ -66,6 +66,7 @@
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :at-a-glance="atAGlance"
+                    :type="project ? 'project' : 'individual'"
                     @filters-changed="filtersChanged"
                 />
 
@@ -132,7 +133,7 @@
                 </Dropdown>
             </div>
             <button @click="openEventComponent()" type="button" :class="'bg-buttonBlue hover:bg-buttonHover'"
-                    class="flex p-2 px-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton  focus:outline-none">
+                    class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton  focus:outline-none">
                 <PlusCircleIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
                 <p class="text-sm">Neue Belegung</p>
             </button>

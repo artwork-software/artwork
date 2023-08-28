@@ -710,7 +710,7 @@
                     Bist du sicher, dass du die Checkliste {{ checklistToDelete.name }} löschen willst?
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                    <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-14 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="deleteChecklistFromProject()">
                         Löschen
@@ -737,7 +737,7 @@
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-secondary tracking-tight leading-6 sub">
-                    Bearbeite deine Checkliste.
+                    Bearbeite deine Checkliste
                 </div>
                 <div class="mt-4">
                     <div class="flex mt-8">
@@ -771,7 +771,7 @@
                     <div class="w-full items-center text-center">
 
                         <AddButton :class="[editChecklistForm.name.length === 0 ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                    'bg-secondary': 'focus:outline-none']"
                                    class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold shadow-sm text-secondaryHover"
                                    @click="editChecklist" :disabled="editChecklistForm.name.length === 0"

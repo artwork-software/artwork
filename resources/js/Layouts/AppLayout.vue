@@ -32,7 +32,7 @@
                             >
                                 <div
                                     class="w-full cursor-pointer p-1 -mt-2">
-                                    <img class="h-16 w-16" src="/Svgs/IconSvgs/icon_system_settings_idle.svg"
+                                    <img class="h-16 w-16" :src="isCurrent(this.managementRoutes) ? '/Svgs/IconSvgs/icon_system_settings_active.svg' : '/Svgs/IconSvgs/icon_system_settings_idle.svg'"
                                          alt="Systemeinstellungen"
                                          aria-hidden="true"/>
                                 </div>
@@ -45,11 +45,11 @@
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
                             <MenuItems
-                                class="z-50 max-h-60 overflow-y-auto opacity-100 relative origin-top-left ml-14 -mt-12 w-36 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
+                                class="z-50 managementMenu max-h-40 overflow-y-auto opacity-100 relative origin-top-left ml-14 -mt-12 w-36 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
                                 <div class="z-50" v-for="item in managementNavigation" :key="item.name">
                                     <MenuItem v-if="item.has_permission" v-slot="{ active }">
                                         <Link :href="item.href"
-                                              :class="[isCurrent(item.route) ? 'text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full p-3 rounded-md flex flex-col items-center ']">
+                                              :class="[isCurrent(item.route) ? 'text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full px-2 py-3 rounded-md flex flex-col items-center ']">
                                             {{ item.name }}
                                         </Link>
                                     </MenuItem>
@@ -263,6 +263,18 @@ const userNavigation = [
     {name: 'Settings', href: '#'},
 ]
 
+const managementRoutes = [
+    '/tool/settings',
+    '/settings/shift',
+    '/departments',
+    '/areas',
+    '/events/requests',
+    '/settings/projects',
+    '/event_types',
+    '/checklist_templates',
+    '/templates/index'
+]
+
 export default {
     mixins: [Permissions],
     components: {
@@ -339,12 +351,6 @@ export default {
                     has_permission: this.$can('admin checklistTemplates') || this.hasAdminRole(),
                     href: route('checklist_templates.management'),
                     route: ['/checklist_templates']
-                },
-                {
-                    name: 'Verträge',
-                    has_permission: !!this.hasAdminRole(),
-                    href: route('contracts.view.index'),
-                    route: ['/contracts/view']
                 },
                 {
                     name: 'Budget Vorlagen',
@@ -435,7 +441,34 @@ export default {
             navigation,
             userNavigation,
             sidebarOpen,
+            managementRoutes
         }
     },
 }
+
 </script>
+
+<style scoped>
+.managementMenu {
+    overflow: overlay;
+}
+
+::-webkit-scrollbar {
+    width: 16px;
+}
+
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #A7A6B170;
+    border-radius: 16px;
+    border: 6px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #a8bbbf;
+}
+</style>

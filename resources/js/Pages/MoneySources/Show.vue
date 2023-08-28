@@ -2,10 +2,10 @@
     <app-layout>
         <div class="max-w-screen-2xl my-12 pl-20 pr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
-                <div class="flex ">
+                <div class="flex items-center">
                     <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
                         {{ moneySource.name }}</h2>
-                    <Menu as="div" class="my-auto mt-3 relative"
+                    <Menu as="div" class="my-auto ml-4 relative"
                           v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')">
                         <div class="flex items-center -mt-1">
                             <MenuButton
@@ -196,7 +196,7 @@
                 </div>
                 <div class="w-full ml-20 py-12">
                     <div>
-                        <div class="flex border-b border-gray-300 pb-5 pt-5"
+                        <div class="flex border-b border-gray-300 w-full pb-5 pt-5"
                              v-for="position in filteredPositions">
                             <div class="sum w-72 text-2xl" :class="position.type === 'COST' ? 'text-red-500' : ''">
                                 <span v-if="position.type === 'EARNING'">+</span><span v-else>-</span>
@@ -204,7 +204,7 @@
                             </div>
                             <div class="project">
                                 <div class="text-gray-400"><a
-                                    :href="'/projects/' + position.project.id + '?openTab=budget'"
+                                    :href="getProjectHref(position.project)"
                                     class="text-buttonBlue ">{{ position.project.name }}</a> |<span
                                     class="ml-2 text-gray-400 text-sm">{{ position.created_at }}</span></div>
                                 <div class="text-gray-400 text-sm mt-2 flex">{{ position.mainPositionName }} <div class="flex px-1" v-if="position.subPositionName?.length > 0">|</div>
@@ -367,6 +367,9 @@ export default {
         }
     },
     methods: {
+        getProjectHref(project) {
+            return route('projects.show.budget', {project: project.id});
+        },
         currencyFormat(number) {
             const formatter = new Intl.NumberFormat('de-DE', {
                 style: 'currency',

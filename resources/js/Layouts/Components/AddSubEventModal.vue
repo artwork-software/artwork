@@ -66,7 +66,7 @@
                         <div class="w-1/2">
                             <input type="text"
                                    v-model="subEvent.eventName"
-                                   @keyup="subEvent.eventName.length > 0 ? submit = true : submit = false"
+                                   @keyup="subEvent.eventName.length > 0 ? submit = true : subEvent.selectedEventType?.individual_name ? submit = false : submit = true"
                                    id="eventTitle"
                                    :placeholder="subEvent.selectedEventType?.individual_name ? 'Terminname*' : 'Terminname'"
                                    class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
@@ -103,7 +103,7 @@
                                     <div class="flex w-full mb-4">
                                         <input v-model="subEvent.audience"
                                                type="checkbox"
-                                               class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
+                                               class="checkBoxOnDark"/>
                                         <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
 
                                         <div :class="[subEvent.audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
@@ -113,7 +113,7 @@
                                     <div class="flex w-full mb-2">
                                         <input v-model="subEvent.is_loud"
                                                type="checkbox"
-                                               class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
+                                               class="checkBoxOnDark"/>
                                         <div :class="[subEvent.is_loud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">Es
                                             wird laut
                                         </div>
@@ -214,6 +214,7 @@ export default {
         filteredEventTypes() {
             return this.eventTypes.filter(eventType => eventType.id !== 1)
         },
+
     },
     components: {
         TagComponent,
@@ -244,7 +245,7 @@ export default {
             helpTextEnd: '',
             helpTextLength: '',
             show: true,
-            submit: false
+            submit: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType.individual_name ?  this.subEventToEdit?.title.length > 0 : true : true,
         }
     },
     props: ['event', 'eventTypes', 'subEventToEdit'],
@@ -309,6 +310,13 @@ export default {
             date.setMinutes(date.getMinutes() + minutes);
             return date;
         },
+        checkSubmitStatus() {
+            if (this.subEvent.selectedEventType?.individual_name) {
+                this.submit = this.subEvent.eventName.length > 0;
+            } else {
+                this.submit = true;
+            }
+        },
         updateOrCreateEvent(){
             this.subEvent.event_type_id = this.subEvent?.selectedEventType?.id;
             if(this.edit){
@@ -330,8 +338,13 @@ export default {
         }
     },
     watch: {
-
-    }
+        'subEvent.selectedEventType': {
+            handler(newVal, oldVal) {
+                this.checkSubmitStatus();
+            },
+            deep: true,
+        },
+    },
 }
 </script>
 

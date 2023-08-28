@@ -77,12 +77,6 @@ export default {
             currentTab: 1,
         }
     },
-    mounted() {
-        this.show = true;
-        setTimeout(() => {
-            this.show = false;
-        }, 1000)
-    },
     methods: {
         changeTab(selectedTab) {
             if (selectedTab === 1) {

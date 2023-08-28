@@ -10,7 +10,9 @@ use App\Models\ServiceProvider;
 use App\Models\Shift;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
+
 use App\Support\Services\NotificationService;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -273,9 +275,22 @@ class ShiftController extends Controller
             'description',
         ]));
 
+        return Redirect::route('projects.show.shift')->with('success', 'Shift updated');
+    }
 
+    public function updateCommitments(Request $request)
+    {
+        $projectId = $request->input('project_id');
+        $shiftIds = $request->input('shifts');
+        $updateData = $request->only([
+            'is_committed',
+        ]);
 
-        return back();
+        Debugbar::info($shiftIds);
+
+        Shift::whereIn('id', $shiftIds)->update($updateData);
+        return Redirect::route('projects.show.shift', $projectId)->with('success', 'Shift updated');
+
     }
 
     /**

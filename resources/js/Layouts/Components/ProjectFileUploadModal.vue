@@ -30,6 +30,9 @@
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
+                <div class="mb-6">
+                    <div v-for="file of files">{{ file.name }}</div>
+                </div>
                 <div>
                 <textarea placeholder="Kommentar / Notiz"
                           id="description"
@@ -85,9 +88,7 @@
                                         </span>
                     </div>
                 </div>
-                <div class="mb-6">
-                    <div v-for="file of files">{{ file.name }}</div>
-                </div>
+
                 <div class="justify-center flex w-full my-6">
                     <AddButton text="Dokument hochladen" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
                                @click="storeFiles"/>

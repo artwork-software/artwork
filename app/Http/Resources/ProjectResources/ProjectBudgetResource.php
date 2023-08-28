@@ -10,6 +10,7 @@ use App\Http\Resources\ProjectFileResource;
 use App\Http\Resources\ProjectHeadlineResource;
 use App\Http\Resources\UserResourceWithoutShifts;
 use App\Models\Freelancer;
+use App\Models\ProjectStates;
 use App\Models\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -55,7 +56,7 @@ class ProjectBudgetResource extends JsonResource
             'project_files' => ProjectFileResource::collection($this->project_files),
             'contracts' => ContractResource::collection($this->contracts),
             'access_budget' => $this->access_budget,
-
+            'state' => ProjectStates::find($this->state),
             'write_auth' => $this->writeUsers,
             'users' => UserResourceWithoutShifts::collection($this->users)->resolve(),
 

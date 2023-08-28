@@ -29,6 +29,7 @@ class SubEventResource extends JsonResource
             'eventTypeName' => $this->type->name,
             'eventTypeId' => $this->type->id,
             'eventType' => $this->type,
+            'eventTypeAbbreviation' =>$this->type->abbreviation,
         ];
     }
 }

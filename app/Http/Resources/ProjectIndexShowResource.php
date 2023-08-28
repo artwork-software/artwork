@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\ProjectStates;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
@@ -52,10 +53,9 @@ class ProjectIndexShowResource extends JsonResource
             'users' => UserIndexResource::collection($this->users)->resolve(),
             'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
-
+            'state' => ProjectStates::find($this->state),
             'project_files' => ProjectFileResource::collection($this->project_files),
             'contracts' => ContractResource::collection($this->contracts),
-            'state' => $this->state()->first(),
             'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
 
             'comments' => $this->comments->map(fn ($comment) => [

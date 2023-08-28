@@ -146,8 +146,7 @@
                                     <div class="flex w-full mb-4">
                                         <input v-model="event.audience"
                                                type="checkbox"
-                                               class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
-                                        <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
+                                               class="checkBoxOnDark"
                                              alt="audienceIcon"/>
 
                                         <div
@@ -158,7 +157,7 @@
                                     <div class="flex w-full mb-2">
                                         <input v-model="event.is_loud"
                                                type="checkbox"
-                                               class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
+                                               class="checkBoxOnDark"/>
                                         <div
                                             :class="[event.is_loud ? 'text-white' : 'text-secondary', 'subpixel-antialiased mx-2']">
                                             Es

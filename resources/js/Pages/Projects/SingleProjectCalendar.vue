@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-    <ProjectShowHeaderComponent :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
+    <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds" :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
                                 :states="states" :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
                                 :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="calendar">
@@ -80,7 +80,8 @@ export default {
         'personalFilters',
         'eventsWithoutRoom',
         'projectManagerIds',
-        'projectWriteIds'
+        'projectWriteIds',
+        'projectDeleteIds',
 
     ],
     data() {
@@ -88,12 +89,6 @@ export default {
             show: false,
             atAGlance: this.eventsAtAGlance.length > 0,
         }
-    },
-    mounted() {
-        this.show = true;
-        setTimeout(() => {
-            this.show = false;
-        }, 1000)
     },
     methods:{
         changeAtAGlance() {

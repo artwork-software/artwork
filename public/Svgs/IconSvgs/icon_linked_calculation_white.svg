@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: rgba(48,23,173,0.1);
+        stroke: #FCFCFB;
+      }
+
+      .cls-2 {
+        fill: #FCFCFB;
+      }
+
+      .cls-3 {
+        stroke: none;
+      }
+
+      .cls-4 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <g id="Gruppe_951" data-name="Gruppe 951" transform="translate(-105.81 -4086)">
+    <g id="tag" transform="translate(105.81 4086)">
+      <g id="Rechteck_394" data-name="Rechteck 394" class="cls-1">
+        <rect class="cls-3" width="14" height="14" rx="3"/>
+        <rect class="cls-4" x="0.5" y="0.5" width="13" height="13" rx="2.5"/>
+      </g>
+      <path id="Icon_material-tune" data-name="Icon material-tune" class="cls-2" d="M4.5,10.823v.9H7.21v-.9Zm0-5.42v.9H9.017V5.4ZM9.017,12.63v-.9H12.63v-.9H9.017v-.9h-.9v2.71ZM6.307,7.21v.9H4.5v.9H6.307v.9h.9V7.21ZM12.63,9.017v-.9H8.113v.9ZM9.92,7.21h.9v-.9H12.63V5.4H10.823V4.5h-.9Z" transform="translate(-1.565 -1.565)"/>
+    </g>
+  </g>
+</svg>

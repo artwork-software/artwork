@@ -33,7 +33,7 @@
                 </ul>
             </div>
             <div class="">
-                <div class="grid grid-cols-12 mt-12" v-if="openTab === 'notifications'">
+                <div class="grid grid-cols-12 mt-12 gap-12" v-if="openTab === 'notifications'">
                     <div class="col-span-8">
                         <!-- Raumbelegungen und Termine Notifications -->
                         <NotificationSectionComponent :readNotifications="readNotifications['EVENTS']"
@@ -94,21 +94,26 @@
                                                       :project="project"
                                                       :room-collisions="roomCollisions"/>
                     </div>
-                    <div v-if="this.$page.props.globalNotification.image_url || this.$page.props.globalNotification.title" class="col-span-4 pr-4">
-                        <div class="bg-backgroundGray">
-                            <img v-if="this.$page.props.globalNotification.image_url" alt="Benachrichtigungs Bild" class="max-h-96"
-                                 :src="this.$page.props.globalNotification.image_url"/>
-                            <div class="px-4 py-4">
-                                <div class="headline2 mt-2 mb-2">
-                                    {{ this.$page.props.globalNotification.title }}
-                                </div>
-                                <div class="xsLight">
-                                    {{ this.$page.props.globalNotification.description }}
+                    <div  class="col-span-4 pr-8">
+                        <div v-if="this.$page.props.globalNotification.image_url || this.$page.props.globalNotification.title">
+                            <div class="bg-backgroundGray">
+                                <img v-if="this.$page.props.globalNotification.image_url" alt="Benachrichtigungs Bild" class="max-h-96"
+                                     :src="this.$page.props.globalNotification.image_url"/>
+                                <div class="px-4 py-4">
+                                    <div class="headline2 mt-2 mb-2">
+                                        {{ this.$page.props.globalNotification.title }}
+                                    </div>
+                                    <div class="xsLight">
+                                        {{ this.$page.props.globalNotification.description }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
+                       <div class="mt-4" v-if="hasAdminRole() || $canAny(['change system notification'])">
+                           <AddButton text="Benachrichtigung an alle ändern" mode="modal" type="secondary" class="col-span-12 !ml-0" @click="showGlobalNotificationModal = true"/>
+                       </div>
+                    </div>
                 </div>
                 <div v-if="openTab === 'mailSettings'">
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-20">
@@ -135,6 +140,8 @@
             :projects="this.projects"
             :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
         />
+
+        <GlobalNotificationModal v-if="showGlobalNotificationModal" @closed="showGlobalNotificationModal = false"/>
     </app-layout>
 </template>
 
@@ -186,11 +193,13 @@ import NotificationSectionComponent from "@/Layouts/Components/NotificationSecti
 import NotificationPushSettings from "@/Layouts/Components/NotificationPushSettings";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent";
 import Permissions from "@/mixins/Permissions.vue";
+import GlobalNotificationModal from "@/Pages/Notifications/Components/GlobalNotificationModal.vue";
 
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        GlobalNotificationModal,
         NotificationPushSettings,
         NotificationSectionComponent,
         NotificationFrequencySettings,
@@ -277,6 +286,7 @@ export default defineComponent({
             answerRequestForm: useForm({
                 accepted: false,
             }),
+            showGlobalNotificationModal: false
         }
     },
     setup() {

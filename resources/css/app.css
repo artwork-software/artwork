@@ -260,6 +260,21 @@
         color: #21485C;
     }
 
+    .checkBoxOnDark {
+        --tw-ring-offset-shadow: 0 0 transparent;
+        --tw-ring-offset-width: 0px;
+        --tw-ring-offset-color: #fff;
+        box-shadow: var(--tw-ring-offset-shadow, 0 0 transparent), 0 0 0 var(--tw-ring-offset-width, 0px) var(--tw-ring-offset-color, rgba(59, 130, 246, 0.5));
+        cursor: pointer;
+        --tw-ring-inset: var(--tw-empty, /*!*/ /*!*/);
+        outline: var(--tw-ring-inset) var(--tw-ring-offset-width, 0px) var(--tw-ring-color, rgba(59, 130, 246, 0.5)), 0 0 0 var(--tw-ring-offset-width, 0px) var(--tw-ring-color, rgba(59, 130, 246, 0.5));
+        height: 1.5rem;
+        width: 1.5rem;
+        color: #1FC687;
+        border-width: 2px;
+        border-color: #d2d6dc;
+    }
+
 
 
 }

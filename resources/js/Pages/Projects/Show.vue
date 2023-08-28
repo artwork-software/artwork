@@ -476,12 +476,6 @@ export default {
             atAGlance: this.eventsAtAGlance.length > 0,
         }
     },
-    mounted() {
-        this.show = true;
-        setTimeout(() => {
-            this.show = false;
-        }, 1000)
-    },
 
     methods: {
         downloadKeyVisual() {

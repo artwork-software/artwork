@@ -48,8 +48,8 @@
                         </span>
                     {{ project?.name }}
                     <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex"
-                          :class="this.states.find(state => state.id === projectState)?.color">
-                            {{ this.states.find(state => state.id === projectState)?.name }}
+                          :class="project?.state?.color">
+                            {{ project?.state?.name }}
                         </span>
                 </h2>
                 <Menu as="div" class="my-auto mt-3 relative"
@@ -75,7 +75,7 @@
                                     v-if="$role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')"
                                     v-slot="{ active }">
                                     <a @click="openEditProjectModal"
-                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                         <PencilAltIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
@@ -84,7 +84,7 @@
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="duplicateProject(this.project)"
-                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                         <DuplicateIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
@@ -92,13 +92,10 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem
-                                    v-if="
-                                            projectDeletePermissionUsers.includes(this.$page.props.user.id) ||
-                                            $role('artwork admin')
-                                        "
+                                    v-if="projectDeleteIds.includes(this.$page.props.user.id) ||$role('artwork admin')"
                                     v-slot="{ active }">
                                     <a @click="openDeleteProjectModal(this.project)"
-                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
@@ -240,7 +237,8 @@ export default {
         'groupProjects',
         'openTab',
         'projectManagerIds',
-        'projectWriteIds'
+        'projectWriteIds',
+        'projectDeleteIds',
     ],
     data() {
         return {
@@ -264,18 +262,7 @@ export default {
         },
     },
     methods: {
-        projectDeletePermissionUsers() {
-            let canDeleteArray = [];
-            if(this.project.delete_permission_users === null) {
-                return canDeleteArray;
-            }else {
-                this.project.delete_permission_users.forEach(deletePermission => {
-                        canDeleteArray.push(deletePermission.id)
-                    }
-                )
-                return canDeleteArray;
-            }
-        },
+
         openProjectHistoryModal() {
             this.showProjectHistory = true;
         },

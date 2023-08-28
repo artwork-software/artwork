@@ -167,7 +167,7 @@
                                                 <input v-model="event.audience"
                                                        :disabled="!event.canEdit"
                                                        type="checkbox"
-                                                       class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
+                                                       class="checkBoxOnDark"/>
                                                 <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
                                                      alt="audienceIcon"/>
 
@@ -180,7 +180,7 @@
                                                 <input v-model="event.isLoud"
                                                        :disabled="!event.canEdit"
                                                        type="checkbox"
-                                                       class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
+                                                       class="checkBoxOnDark"/>
                                                 <div
                                                     :class="[event.isLoud ? 'text-white' : 'text-secondary', 'subpixel-antialiased mx-2']">
                                                     Es

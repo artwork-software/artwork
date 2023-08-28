@@ -554,6 +554,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/project/timelines/update', [ProjectController::class, 'updateTimeLines'])->name('update.timelines');
     Route::post('/project/{event}/shift/store', [\App\Http\Controllers\ShiftController::class, 'store'])->name('event.shift.store');
 
+    // update shifts commitment
+    Route::patch('/project/shifts/commit', [\App\Http\Controllers\ShiftController::class, 'updateCommitments'])->name('update.shift.commitment');
+
     // Add User to Shift
     Route::post('/project/{shift}/add/user/{user}', [ShiftController::class, 'addShiftUser'])->name('add.shift.user');
     Route::post('/project/{shift}/add/{user}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftMaster'])->name('add.shift.master');

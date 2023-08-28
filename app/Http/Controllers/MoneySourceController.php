@@ -167,7 +167,8 @@ class MoneySourceController extends Controller
         ]);
         $amount = $moneySource->amount;
         $subMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
-        $columns = ColumnCell::where('linked_money_source_id', $moneySource->id)->get();
+        $columns = ColumnCell::where('linked_money_source_id', $moneySource->id)->latest('column_id')->get()->unique('sub_position_row_id');
+
 
         $subPositionSumDetails = SubpositionSumDetail::with('subPosition.mainPosition.table.project', 'sumMoneySource')
             ->whereRelation('sumMoneySource', 'money_source_id', $moneySource->id)
@@ -187,7 +188,7 @@ class MoneySourceController extends Controller
         $usersWithAccess = [];
         if ($moneySource->is_group) {
             foreach ($subMoneySources as $subMoneySource) {
-                $columns = ColumnCell::where('linked_money_source_id', $subMoneySource->id)->get();
+                $columns = ColumnCell::where('linked_money_source_id', $subMoneySource->id)->latest('column_id')->get()->unique('sub_position_row_id');
                 foreach ($columns as $column) {
                     $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
                     $subPosition = SubPosition::find($subPositionRow->sub_position_id);
@@ -338,9 +339,6 @@ class MoneySourceController extends Controller
                     $amount = (int)$amount - (int)$column->value;
                 }
             }
-
-
-
         }
 
         $historyArray = [];
@@ -425,7 +423,10 @@ class MoneySourceController extends Controller
 
         $oldName = $moneySource->name;
         $oldDescription = $moneySource->description;
+
         $oldUsers = $moneySource->users()->get();
+        $oldAmount = $moneySource->amount;
+
 
         if (!empty($request->amount)) {
             $amount = str_replace(',', '.', $request->amount);
@@ -453,8 +454,12 @@ class MoneySourceController extends Controller
 
         $newName = $moneySource->name;
         $newDescription = $moneySource->description;
+
         $newUsers = $moneySource->users()->get();
         $this->checkUserChanges($moneySource, $oldUsers, $newUsers);
+
+        $newAmount = $moneySource->amount;
+
 
         if ($oldName !== $newName) {
             $this->history->createHistory($moneySource->id, 'Finanzierungsquellenname geändert');
@@ -469,6 +474,10 @@ class MoneySourceController extends Controller
         }
         if (!empty($oldDescription) && empty($newDescription)) {
             $this->history->createHistory($moneySource->id, 'Beschreibung gelöscht');
+        }
+
+        if($oldAmount !== $newAmount){
+            $this->history->createHistory($moneySource->id, 'Ursprungsvolumen geändert');
         }
 
         if ($request->is_group) {

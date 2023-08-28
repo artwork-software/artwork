@@ -23,9 +23,10 @@
                     <div>{{ headline.name }}</div>
                     <div v-if="!headline.clicked" class="mt-2 subpixel-antialiased text-secondary"
                          @click="handleTextClick(headline)">
-                        {{ headline.text ? headline.text : 'Hier klicken um Text hinzuzufügen' }}
+                        <p v-if="headline.text" v-html="headline.text"></p>
+                        <p v-else>Hier klicken um Text hinzuzufügen</p>
                     </div>
-                    <textarea v-else v-model="headline.text" type="text" :ref="`text-${headline.id}`"
+                    <textarea v-else v-model="headline.text_without_html" type="text" :ref="`text-${headline.id}`"
                               @focusout="changeHeadlineText(headline)"
                               class="w-full border-gray-300 text-primary h-40"
                               :placeholder="headline.text || 'Hier klicken um Text hinzuzufügen'"/>
@@ -200,7 +201,10 @@ export default{
             this.$inertia.patch(route('project_headlines.update.text', {
                 project_headline: headline.id,
                 project: this.project.id
-            }), {text: headline.text})
+            }), {text: headline.text_without_html}, {
+                preserveScroll: true,
+                preserveState: true
+            })
         },
         updateDescription() {
             this.$inertia.patch(route('projects.update_description', this.project.id), {

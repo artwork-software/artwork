@@ -107,7 +107,9 @@ class ProjectController extends Controller
         $returnUser = [];
         foreach ($users as $user){
             $projectUser = $project->users()->where('user_id', $user->id)->first();
-            $returnUser[] = $projectUser;
+            if($projectUser !== null){
+                $returnUser[] = $projectUser;
+            }
         }
         return $returnUser;
     }
@@ -1733,6 +1735,10 @@ class ProjectController extends Controller
         //get the ids of all writeUsers of the Project
         $writeIds = $project->writeUsers()->pluck('user_id');
 
+        $deleteIds = [];
+        //get the ids of all deleteUsers of the Project
+        $deleteIds = $project->delete_permission_users()->pluck('user_id');
+
 
 
         return inertia('Projects/SingleProjectInformation', [
@@ -1743,6 +1749,7 @@ class ProjectController extends Controller
             'RoomsWithAudience' => $RoomsWithAudience,
             'projectManagerIds' => $managerIds,
             'projectWriteIds' => $writeIds,
+            'projectDeleteIds' => $deleteIds,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'currentGroup' => $groupOutput,
             'states' => ProjectStates::all(),
@@ -1839,6 +1846,10 @@ class ProjectController extends Controller
         //get the ids of all writeUsers of the Project
         $writeIds = $project->writeUsers()->pluck('user_id');
 
+        $deleteIds = [];
+        //get the ids of all deleteUsers of the Project
+        $deleteIds = $project->delete_permission_users()->pluck('user_id');
+
         return inertia('Projects/SingleProjectCalendar', [
             // needed for the ProjectShowHeaderComponent
             'project' => new ProjectCalendarResource($project),
@@ -1847,6 +1858,7 @@ class ProjectController extends Controller
             'RoomsWithAudience' => $RoomsWithAudience,
             'projectManagerIds' => $managerIds,
             'projectWriteIds' => $writeIds,
+            'projectDeleteIds' => $deleteIds,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'currentGroup' => $groupOutput,
             'states' => ProjectStates::all(),
@@ -1934,6 +1946,10 @@ class ProjectController extends Controller
         //get the ids of all writeUsers of the Project
         $writeIds = $project->writeUsers()->pluck('user_id');
 
+        $deleteIds = [];
+        //get the ids of all deleteUsers of the Project
+        $deleteIds = $project->delete_permission_users()->pluck('user_id');
+
         return inertia('Projects/SingleProjectChecklists', [
             'project' => new ProjectChecklistResource($project),
             'firstEventInProject' => $firstEventInProject,
@@ -1941,6 +1957,7 @@ class ProjectController extends Controller
             'RoomsWithAudience' => $RoomsWithAudience,
             'projectManagerIds' => $managerIds,
             'projectWriteIds' => $writeIds,
+            'projectDeleteIds' => $deleteIds,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
@@ -2092,6 +2109,10 @@ class ProjectController extends Controller
         //get the ids of all writeUsers of the Project
         $writeIds = $project->writeUsers()->pluck('user_id');
 
+        $deleteIds = [];
+        //get the ids of all deleteUsers of the Project
+        $deleteIds = $project->delete_permission_users()->pluck('user_id');
+
 
         rsort($eventsWithRelevant);
 
@@ -2106,6 +2127,7 @@ class ProjectController extends Controller
             'RoomsWithAudience' => $RoomsWithAudience,
             'projectManagerIds' => $managerIds,
             'projectWriteIds' => $writeIds,
+            'projectDeleteIds' => $deleteIds,
             'groupProjects' => Project::where('is_group', 1)->get(),
             'projectGroups' => $project->groups()->get(),
             'currentGroup' => $groupOutput,
@@ -2232,6 +2254,10 @@ class ProjectController extends Controller
         //get the ids of all writeUsers of the Project
         $writeIds = $project->writeUsers()->pluck('user_id');
 
+        $deleteIds = [];
+        //get the ids of all deleteUsers of the Project
+        $deleteIds = $project->delete_permission_users()->pluck('user_id');
+
         return inertia('Projects/SingleProjectBudget', [
             'project' => new ProjectBudgetResource($project),
             'firstEventInProject' => $firstEventInProject,
@@ -2239,6 +2265,7 @@ class ProjectController extends Controller
             'RoomsWithAudience' => $RoomsWithAudience,
             'projectManagerIds' => $managerIds,
             'projectWriteIds' => $writeIds,
+            'projectDeleteIds' => $deleteIds,
             'moneySources' => MoneySource::all(),
             'budget' => [
                 'columns' => $outputColumns,
@@ -2330,6 +2357,10 @@ class ProjectController extends Controller
         //get the ids of all writeUsers of the Project
         $writeIds = $project->writeUsers()->pluck('user_id');
 
+        $deleteIds = [];
+        //get the ids of all deleteUsers of the Project
+        $deleteIds = $project->delete_permission_users()->pluck('user_id');
+
         return inertia('Projects/SingleProjectComments', [
             'project' => new ProjectCommentResource($project),
             'firstEventInProject' => $firstEventInProject,
@@ -2337,6 +2368,7 @@ class ProjectController extends Controller
             'RoomsWithAudience' => $RoomsWithAudience,
             'projectManagerIds' => $managerIds,
             'projectWriteIds' => $writeIds,
+            'projectDeleteIds' => $deleteIds,
             'categories' => Category::all(),
             'projectCategoryIds' => $project->categories()->pluck('category_id'),
             'projectCategories' => $project->categories,

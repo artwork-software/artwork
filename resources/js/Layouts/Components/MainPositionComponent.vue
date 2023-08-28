@@ -185,13 +185,13 @@
                     <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="mainPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
 
                         <img v-if="mainPosition.columnSums[column.id]?.hasComments && mainPosition.columnSums[column.id]?.hasMoneySource"
-                             src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
+                             src="/Svgs/IconSvgs/icon_linked_and_adjustments_white.svg"
                              class="h-6 w-6 mr-1"/>
                         <img v-else-if="mainPosition.columnSums[column.id]?.hasComments"
-                             src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
+                             src="/Svgs/IconSvgs/icon_linked_adjustments_white.svg"
                              class="h-5 w-5 mr-1"/>
                         <img v-else-if="mainPosition.columnSums[column.id]?.hasMoneySource"
-                             src="/Svgs/IconSvgs/icon_linked_money_source.svg"
+                             src="/Svgs/IconSvgs/icon_linked_money_source_white.svg"
                              class="h-6 w-6 mr-1"/>
                         <span>{{mainPosition.columnSums[column.id]?.sum.toLocaleString() }}</span>
 

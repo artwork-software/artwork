@@ -131,7 +131,7 @@
                                     <input v-model="audience"
                                            :disabled="!canEdit"
                                            type="checkbox"
-                                           class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
+                                           class="checkBoxOnDark"/>
                                     <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
 
                                     <div :class="[audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
@@ -142,7 +142,7 @@
                                     <input v-model="isLoud"
                                            :disabled="!canEdit"
                                            type="checkbox"
-                                           class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
+                                           class="checkBoxOnDark"/>
                                     <div :class="[isLoud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">Es
                                         wird laut
                                     </div>

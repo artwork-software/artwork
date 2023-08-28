@@ -116,12 +116,6 @@ export default {
             }),
         }
     },
-    mounted() {
-        this.show = true;
-        setTimeout(() => {
-            this.show = false;
-        }, 1000)
-    },
     methods: {
         updateUserTerms() {
             if(this.user_type === 'service_provider'){

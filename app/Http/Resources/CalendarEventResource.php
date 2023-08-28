@@ -35,6 +35,7 @@ class CalendarEventResource extends JsonResource
             'startTime' => $this->start_time,
             'end' => $this->end_time->utc()->toIso8601String(),
             'title' => $this->project?->name ?: $this->eventName? : $this->event_type->name,
+            'alwaysEventName' => $this->eventName,
             'eventName' => $this->eventName,
             'description' => $this->description,
             'audience' => $this->audience,

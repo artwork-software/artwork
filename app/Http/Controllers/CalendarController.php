@@ -686,19 +686,24 @@ class CalendarController extends Controller
                 fn(Builder $builder) => $builder->whereHas('categories', function ($query) {
                     $query->whereIn('room_categories.id', request('roomCategoryIds'));
                 }))
-            ->unless(is_null(request('adjoiningNoAudience')) && is_null(request('adjoiningNotLoud')),
-                fn(Builder $builder) => $builder
-                    ->whereRelation('adjoining_rooms', function ($adjoining_room_query) use ($startDate, $endDate) {
-                        $adjoining_room_query->whereRelation('events', function ($event_query) use ($startDate, $endDate) {
-                            $event_query
-                                ->when($startDate, fn(EventBuilder $builder) => $builder->whereBetween('start_time', [$startDate, $endDate]))
-                                ->when($endDate, fn(EventBuilder $builder) => $builder->whereBetween('end_time', [$startDate, $endDate]))
-                                ->unless(is_null(request('adjoiningNotLoud')), fn(Builder $builder) => $builder->where('events.is_loud', false))
-                                ->unless(is_null(request('adjoiningNoAudience')), fn(Builder $builder) => $builder->where('events.audience', false));
-                        });
-                    })
-                    ->orWhereDoesntHave('adjoining_rooms')
-            );
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->where(function ($subQuery) use ($startDate, $endDate) {
+                    $subQuery->unless(
+                        is_null(request('adjoiningNoAudience')) && is_null(request('adjoiningNotLoud')),
+                        fn(Builder $builder) => $builder
+                            ->whereRelation('adjoining_rooms', function ($adjoining_room_query) use ($startDate, $endDate) {
+                                $adjoining_room_query->whereRelation('events', function ($event_query) use ($startDate, $endDate) {
+                                    $event_query
+                                        ->when($startDate, fn(Builder $builder) => $builder->whereBetween('start_time', [$startDate, $endDate]))
+                                        ->when($endDate, fn(Builder $builder) => $builder->whereBetween('end_time', [$startDate, $endDate]))
+                                        ->unless(is_null(request('adjoiningNotLoud')), fn(Builder $builder) => $builder->where('events.is_loud', false))
+                                        ->unless(is_null(request('adjoiningNoAudience')), fn(Builder $builder) => $builder->where('events.audience', false));
+                                });
+                            })
+                    );
+                })
+                    ->orWhereDoesntHave('adjoining_rooms');
+            });
     }
 
     private function checkIfDayWithoutEventsExists($startDate, $endDate)

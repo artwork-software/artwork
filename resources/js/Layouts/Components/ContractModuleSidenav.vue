@@ -14,7 +14,7 @@
             <div v-else>
                 {{ contractModule.name }}
             </div>
-            <XCircleIcon class="w-4 h-4 ml-auto" @click="openDeleteModal(contractModule)" v-if="$canAny(['view edit upload contracts']) || hasAdminRole()"/>
+            <XCircleIcon class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openDeleteModal(contractModule)" v-if="$canAny(['view edit upload contracts']) || hasAdminRole()"/>
         </div>
         <ContractModuleDeleteModal
             :show="showDeleteModal"

@@ -4,7 +4,7 @@
             <div class="col-span-4">
                 <!-- Description -->
                 <div class="mt-4">
-                    <div> Kurzbeschreibung</div>
+                    <div class="sDark"> Kurzbeschreibung</div>
                     <div v-if="descriptionClicked === false"
                          class="mt-2 subpixel-antialiased text-secondary"
                          @click="handleDescriptionClick()">
@@ -19,8 +19,8 @@
                               :placeholder="project.description || 'Hier klicken um Text hinzuzufügen'"/>
                 </div>
                 <!-- Individual Projectinformation -->
-                <div v-for="headline in project.project_headlines" class="mt-4">
-                    <div>{{ headline.name }}</div>
+                <div v-for="headline in project.project_headlines" class="mt-7">
+                    <div class="sDark" >{{ headline.name }}</div>
                     <div v-if="!headline.clicked" class="mt-2 subpixel-antialiased text-secondary"
                          @click="handleTextClick(headline)">
                         <p v-if="headline.text" v-html="headline.text"></p>

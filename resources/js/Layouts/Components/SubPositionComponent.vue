@@ -32,8 +32,8 @@
             <div class="flex items-center justify-end">
                 <div class="flex flex-wrap w-8 z-50">
                     <div class="flex">
-                        <Menu as="div" class="my-auto relative"
-                              v-show="showMenu === 'subPosition' + subPosition.id">
+                        <Menu as="div" class="my-auto relative" >
+                             <!-- v-show="showMenu === 'subPosition' + subPosition.id"-->
                             <div class="flex">
                                 <MenuButton
                                     class="flex bg-tagBg p-0.5 rounded-full">

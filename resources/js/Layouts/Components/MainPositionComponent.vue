@@ -78,13 +78,13 @@
                 </div>
                 <div class="flex flex-wrap w-8">
                     <div class="flex w-full">
-                        <Menu as="div" class="my-auto relative"
-                              v-show="showMenu === 'MainPosition' + mainPosition.id">
+                        <Menu as="div" class="my-auto relative">
+                              <!-- v-show="showMenu === 'MainPosition' + mainPosition.id" -->
                             <div class="flex">
                                 <MenuButton
                                     class="flex bg-tagBg p-0.5 rounded-full">
                                     <DotsVerticalIcon
-                                        class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                        class=" flex-shrink-0 h-6 w-6 text-secondaryHover my-auto"
                                         aria-hidden="true"/>
                                 </MenuButton>
                             </div>

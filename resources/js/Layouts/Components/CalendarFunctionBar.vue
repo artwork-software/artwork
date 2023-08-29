@@ -88,7 +88,7 @@
 
                     <template #content>
                         <div class="w-44 p-6">
-                            <div class="flex py-1">
+                            <div class="flex py-1" v-if="!project">
                                 <input @click="toggle_calendarSettingsProjectStatus"
                                        v-model="$page.props.user.calendar_settings.project_status"
                                        type="checkbox"
@@ -104,7 +104,7 @@
                                 <p :class="$page.props.user.calendar_settings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                    class=" ml-4 my-auto text-secondary">Optionspriorisierung</p>
                             </div>
-                            <div class="flex py-1">
+                            <div class="flex py-1" v-if="!project">
                                 <input @click="toggle_calendarSettingsProjectManagement"
                                        v-model="$page.props.user.calendar_settings.project_management"
                                        type="checkbox"

@@ -18,7 +18,7 @@
                 <img src="/Svgs/IconSvgs/placeholder.svg" alt="Aktuelles Key-Visual"
                      class="rounded-md ">
             </div>
-            <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center"
+            <div class="mt-5 subpixel-antialiased text-secondary text-xs flex items-center"
                  v-if="project.project_history.length">
                 <div>
                     zuletzt geändert:
@@ -27,7 +27,7 @@
                      :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
                      :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
                      :alt="project.project_history[0].changes[0].changed_by?.first_name"
-                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                     class="ml-2 ring-white ring-2 rounded-full h-4 w-4 object-cover"/>
                 <UserTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
                              :user="project.project_history[0].changes[0].changed_by"/>
                 <span class="ml-2 subpixel-antialiased">

@@ -198,19 +198,18 @@
 
                                                     <span v-if="element.done && element.done_by_user"
                                                           class="ml-2 flex my-auto items-center text-sm text-secondary">
-                                                        {{ element.done_at }}
-                                                        <img
-                                                            :data-tooltip-target="element.done_by_user.id"
-                                                            v-if="element.done_by_user"
-                                                            :src="element.done_by_user.profile_photo_url"
-                                                            :alt="element.done_by_user.name"
-                                                            class="rounded-full ml-2 my-auto h-7 w-7 object-cover"/>
-                                                        <UserTooltip :user="element.done_by_user"/>
-                                                    </span>
-                                                    <span class="mx-3 flex">
+
+                                                                        {{ element.done_at }}
+                                                        <span class="ml-2">
+                                                            <NewUserToolTip :height="7" :width="7" v-if="element.done_by_user"
+                                                                            :user="element.done_by_user" :id="element.id"/>
+                                                        </span>
+
+                                                                    </span>
+                                                    <span class="mx-3 flex" v-else>
                                                         <span class="flex -mr-3" v-for="user in element.users">
-                                                        <NewUserToolTip :id="user.id" :user="user" height="5"
-                                                                        width="5"/>
+                                                        <NewUserToolTip :id="element.id + 'user' + user.id" :user="user" height="7"
+                                                                        width="7"/>
                                                     </span>
                                                     </span>
                                                     <Menu
@@ -416,14 +415,13 @@
 
                                                     <span v-if="element.done && element.done_by_user"
                                                           class="ml-2 flex my-auto items-center text-sm text-secondary">
-                                                                        <img
-                                                                            :data-tooltip-target="element.done_by_user.id"
-                                                                            v-if="element.done_by_user"
-                                                                            :src="element.done_by_user.profile_photo_url"
-                                                                            :alt="element.done_by_user.name"
-                                                                            class="rounded-full mr-2 my-auto h-7 w-7 object-cover"/>
-                                                                        <UserTooltip :user="element.done_by_user"/>
+
                                                                         {{ element.done_at }}
+                                                        <span class="ml-2">
+                                                            <NewUserToolTip :height="7" :width="7" v-if="element.done_by_user"
+                                                                            :user="element.done_by_user" :id="element.id"/>
+                                                        </span>
+
                                                                     </span>
                                                     <Menu as="div" class="my-auto relative ml-3"
                                                           v-show="showMenu === element.id">

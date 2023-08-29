@@ -30,11 +30,16 @@ class Column extends Model
         'linked_first_column',
         'linked_second_column',
         'color',
-        'is_locked'
+        'is_locked',
+        'locked_by',
     ];
 
     protected $casts = [
         'is_locked' => 'boolean',
+    ];
+
+    protected $with = [
+        'locked_by'
     ];
 
     public function subPositionRows(): BelongsToMany
@@ -65,5 +70,10 @@ class Column extends Model
     function budgetSumDetails(): HasMany
     {
         return $this->hasMany(BudgetSumDetails::class);
+    }
+
+    public function locked_by(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'locked_by', 'id');
     }
 }

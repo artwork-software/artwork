@@ -1314,7 +1314,7 @@ class ProjectController extends Controller
     public function lockColumn(Request $request)
     {
         $column = Column::find($request->columnId);
-        $column->update(['is_locked' => true]);
+        $column->update(['is_locked' => true, 'locked_by' => Auth::id()]);
         return back()->with('success');
     }
 
@@ -1326,7 +1326,7 @@ class ProjectController extends Controller
     public function unlockColumn(Request $request)
     {
         $column = Column::find($request->columnId);
-        $column->update(['is_locked' => false]);
+        $column->update(['is_locked' => false, 'locked_by' => null]);
         return back()->with('success');
     }
 

@@ -19,14 +19,13 @@
                     </div>
                 </div>
                 <div class="xxsLight mt-2 flex gap-1 items-center" v-if="notification.data?.description">
-                    <div v-for="(description, index) in notification.data?.description">
+                    <div v-for="(description, index) in notification.data?.description" class="divide-x">
                         <p v-if="description.type !== 'comment'">
                             <span
                                 v-if="notification.data.type === 'NOTIFICATION_CONFLICT' && index === '1'">Betrifft: </span>
                             <a :href="description.href" v-if="description.type === 'link'"
                                class="text-indigo-800">{{ description.title }}</a>
                             <span v-else>{{ description.title }}</span>
-                            <span v-if="description.title && index < 4"> |</span>
                         </p>
                     </div>
                 </div>
@@ -69,6 +68,12 @@
         :project_history="historyObjects"
         @closed="showProjectHistory = false"
     />
+
+    <UserVacationHistoryModal
+        v-if="showUserVacationHistory"
+        :project_history="historyObjects"
+        @closed="showUserVacationHistory = false" />
+
 
     <DeclineEventModal
         :request-to-decline="event"
@@ -138,10 +143,12 @@ import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent.vue";
 import RoomRequestDialogComponent from "@/Layouts/Components/RoomRequestDialogComponent.vue";
+import UserVacationHistoryModal from "@/Pages/Notifications/Components/UserVacationHistoryModal.vue";
 
 export default {
     name: "NotificationBlock",
     components: {
+        UserVacationHistoryModal,
         EventWithoutRoomNewRequestComponent,
         ConfirmDeleteModal,
         EventComponent,
@@ -164,6 +171,7 @@ export default {
             showDeleteConfirmModal: false,
             showEventWithoutRoomComponent: false,
             showRoomRequestDialogComponent: false,
+            showUserVacationHistory: false,
         }
     },
     computed: {},
@@ -179,8 +187,12 @@ export default {
                     modelId: this.notification.data?.modelId,
                 },
                 onFinish: () => {
+                    console.log(this.notification.data?.historyType);
                     if (this.notification.data?.historyType === 'project') {
                         this.showProjectHistory = true;
+                    }
+                    if (this.notification.data?.historyType === 'vacations') {
+                        this.showUserVacationHistory = true;
                     }
                 }
             })

@@ -352,7 +352,7 @@ class SchedulingController extends Controller
                 case 'VACATION_CHANGES':
                     // Verfügbarkeit geändert {Vorname Name}
                     $user = User::find($schedule->model_id);
-                    $notificationTitle = 'Verfügbarkeit geändert ' . $user->last_name . ' ' . $user->first_name;
+                    $notificationTitle = 'Verfügbarkeit geändert';
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -362,12 +362,21 @@ class SchedulingController extends Controller
                     $this->notificationService->setIcon('green');
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_AVAILABLE);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
-                    $this->notificationService->setProjectId($project->id);
                     $this->notificationService->setShowHistory(true);
                     $this->notificationService->setHistoryType('vacations');
                     $this->notificationService->setModelId($user->id);
                     $this->notificationService->setNotificationTo($user);
                     $this->notificationService->createNotification();
+                    $crafts = $user->crafts()->get();
+                    foreach ($crafts as $craft){
+                        foreach ($craft->users()->get() as $craftUser){
+                            if($craftUser->id === $user->id){
+                                continue;
+                            }
+                            $this->notificationService->setNotificationTo($craftUser);
+                            $this->notificationService->createNotification();
+                        }
+                    }
                     break;
             }
             //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);

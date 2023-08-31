@@ -314,7 +314,7 @@ class User extends Authenticatable
             $shiftEnd = Carbon::parse($shift->end);     // Parse the end time
             $breakMinutes = $shift->break_minutes;
 
-            $shiftDuration = ($shiftEnd->diffInMinutes($shiftStart) - $breakMinutes) / 60;
+            $shiftDuration = ($shiftEnd->diffInRealMinutes($shiftStart) - $breakMinutes) / 60;
             $plannedWorkingHours += $shiftDuration;
         }
 

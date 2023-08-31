@@ -485,8 +485,10 @@ class NotificationService
             case NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
             case NotificationConstEnum::NOTIFICATION_ROOM_REQUEST:
             case NotificationConstEnum::NOTIFICATION_ROOM_ANSWER:
-                Notification::send($this->getNotificationTo(), new RoomRequestNotification($body, $this->getBroadcastMessage()));
-                break;
+                if($this->getNotificationTo()->id !== Auth::id()) {
+                    Notification::send($this->getNotificationTo(), new RoomRequestNotification($body, $this->getBroadcastMessage()));
+                    break;
+                }
             case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:
                 if($this->getNotificationTo() !== Auth::id()) {
                     Notification::send($this->getNotificationTo(), new EventNotification($body, $this->getBroadcastMessage()));
@@ -543,7 +545,10 @@ class NotificationService
             case NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT:
             case NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT:
             case NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT:
-                Notification::send($this->getNotificationTo(), new ShiftNotification($body, $this->getBroadcastMessage()));
+                if($this->getNotificationTo()->id !== Auth::id()) {
+                    Notification::send($this->getNotificationTo(), new ShiftNotification($body, $this->getBroadcastMessage()));
+                }
+                break;
                 /*
             case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:
                 throw new \Exception('To be implemented');
@@ -565,64 +570,47 @@ class NotificationService
 
     public function checkIfUserInMoreThanTeenShifts(User $user, Shift $shift): \stdClass
     {
-        $currentDate = Carbon::parse($shift->event_start_day);
-        $startDate = $currentDate->subDays(10)->startOfDay();
-        $endDate = $currentDate->addDays(20)->endOfDay();
+        $shifts = $user->shifts()
+            ->whereBetween('event_start_day', [Carbon::parse($shift->event_start_day)->subDays(10), Carbon::parse($shift->event_start_day)->addDays(10)])
+            ->get()->groupBy('event_start_day');
 
-        $userShifts = $user->shifts()
-            ->whereBetween('event_start_day', [$startDate, $endDate])
-            ->get();
-
-        $firstUserShift = $user->shifts()
-            ->whereBetween('event_start_day', [$startDate, $endDate])
-            ->first(); // Erste Schicht
-
-        $latestUserShift = $user->shifts()
-            ->whereBetween('event_start_day', [$startDate, $endDate])
-            ->latest()
-            ->first(); // Letzte Schicht
-
-        dd($firstUserShift, $latestUserShift);
 
         $notificationObj = new \stdClass();
-        $notificationObj->moreThanTenShifts = $userShifts->count() > 10;
+        $notificationObj->moreThanTenShifts = false;
 
-        if($firstUserShift && $latestUserShift){
-            $notificationObj->start = $firstUserShift->event_start_day;
-            $notificationObj->end = $latestUserShift->event_end_day;
+        if($shifts->count() > 10){
+            $notificationObj->moreThanTenShifts = true;
+            $notificationObj->firstShift = $shifts->first();
+            $notificationObj->lastShift = $shifts->last();
         }
 
         return $notificationObj;
+
     }
 
     public function checkIfShortBreakBetweenTwoShifts(User $user, Shift $shift){
-        // get shift before and after this shift and check if there is a break shorter than 11 hours
-        $shiftEnd = $shift->end;
-        $shiftDay = $shift->event_start_day;
+        $minDurationHours = 12;
+        $formattedEndTime = Carbon::parse($shift->event_end_day . ' ' . $shift->end);
 
-        // get shift before this shift and check if between the end of the shift and the start of this shift is a break shorter than 11 hours
-        $shiftBefore = Shift::where('user_id', $user->id)
-            ->where('event_start_day', $shiftDay)
-            ->where('end', '<', $shiftEnd)
-            ->latest()
-            ->first();
-
+        $shifts = $user->shifts()
+            ->whereBetween('event_start_day', [Carbon::parse($shift->event_start_day)->subDay(), Carbon::parse($shift->event_start_day)->addDay()])
+            ->without(['craft'])
+            ->get();
 
 
         $notificationObj = new \stdClass();
+        $notificationObj->moreThanTenShifts = false;
 
-        if($shiftBefore){
-            $shiftBeforeEnd = $shiftBefore->end;
-            $shiftBeforeStart = $shiftBefore->start;
-            $shiftBeforeDay = $shiftBefore->event_start_day;
-
-            $diff = $shiftBeforeEnd->diffInHours($shiftBeforeStart);
-
-            if($diff < 11){
+        foreach ($shifts as $shift) {
+            $formattedStartTime = Carbon::parse($shift->event_start_day . ' ' . $shift->start);
+            $diffInHours = $formattedStartTime->diffInRealHours($formattedEndTime);
+            if($diffInHours < $minDurationHours){
                 $notificationObj->shortBreak = true;
-                $notificationObj->shiftBefore = $shiftBefore;
+                $notificationObj->firstShift = $shifts->first();
+                $notificationObj->lastShift = $shifts->last();
             }
         }
 
+        return $notificationObj;
     }
 }

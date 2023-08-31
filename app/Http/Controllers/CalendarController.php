@@ -263,11 +263,21 @@ class CalendarController extends Controller
                 $endDate = Carbon::now()->addWeeks()->endOfDay();
             }
 
-            Debugbar::info('getting project events');
-            Debugbar::info(request('eventTypeIds'));
-
             $better = $this->filterRooms($startDate, $endDate)
-                ->with(['events.room', 'events.project', 'events.creator', 'events' => function ($query) use ($project, $room) {
+                ->with([
+                    'events.event_type',
+                    'events.comments',
+                    'events.shifts',
+                    'events.room',
+                    'events.subEvents',
+                    'events.series',
+                    'events.subEvents.type',
+                    'events.project',
+                    'events.project.departments',
+                    'events.project.users',
+                    'events.project.managerUsers',
+                    'events.creator',
+                    'events' => function ($query) use ($project, $room) {
                     $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC');
                 }])
                 ->get()
@@ -670,9 +680,6 @@ class CalendarController extends Controller
 
     public function filterRooms($startDate, $endDate)
     {
-
-        Debugbar::info($this->checkIfDayWithoutEventsExists($startDate, $endDate));
-
         return Room::query()
             ->unless(is_null(request('roomIds')),
                 fn(Builder $builder) => $builder->whereIn('id', request('roomIds')))

@@ -3,9 +3,12 @@
         <div class="py-4">
             <div class="max-w-screen mb-40 my-12 flex flex-row ml-14 mr-14">
                 <div class="flex flex-1 flex-wrap">
+                    <div>
+                        <p class="items-center flex mr-2 headline1 mb-11">Projekte</p>
+                    </div>
                     <div class="w-full flex items-center justify-between">
-                        <div>
-                            <p class="items-center flex mr-2 headline1 mb-3">Projekte</p>
+
+                        <div class="w-full flex">
                             <div class="w-48">
                                 <BaseFilter :left="true">
                                     <div class="w-full">
@@ -56,56 +59,23 @@
                                     </div>
                                 </BaseFilter>
                             </div>
-
-                            <div id="selectedFilter" class="mt-3">
-                                <span v-if="enabled"
-                                      class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                    Meine Projekte
-                                    <button type="button" @click="enabled = !enabled">
-                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                    </button>
-                                </span>
-                                <span v-if="showProjectGroups"
-                                      class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                    Projektgruppen
-                                    <button type="button" @click="showProjectGroups = !showProjectGroups">
-                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                    </button>
-                                </span>
-                                <span v-if="showProjects"
-                                      class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                    Projekte
-                                    <button type="button" @click="showProjects = !showProjects">
-                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                    </button>
-                                </span>
-                                <span v-for="state in states">
-                                    <span v-if="state.clicked"
-                                          class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                    {{ state.name }}
-                                    <button type="button"
-                                            @click="this.projectStateFilter.splice(this.projectStateFilter.indexOf(state),1); state.clicked = false">
-                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                    </button>
-                                </span>
-                                </span>
-                            </div>
-                        </div>
-                        <div class="flex items-center">
-                            <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
-                                 class="cursor-pointer inset-y-0 mr-3">
-                                <SearchIcon class="h-5 w-5" aria-hidden="true"/>
-                            </div>
-                            <div v-else class="flex items-center w-full w-64 mr-2">
-                                <div>
-                                    <input type="text"
-                                           placeholder="Suche nach Projekten"
-                                           v-model="project_search"
-                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                            <div class="flex items-center ml-8">
+                                <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+                                     class="cursor-pointer inset-y-0 mr-3">
+                                    <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                                 </div>
-                                <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
+                                <div v-else class="flex items-center w-full w-64 mr-2">
+                                    <div>
+                                        <input type="text"
+                                               placeholder="Suche nach Projekten"
+                                               v-model="project_search"
+                                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                    </div>
+                                    <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
+                                </div>
                             </div>
                         </div>
+
                         <!-- PERMISSION: Create Project -->
                         <div class="flex relative" v-if="$can('create and edit own project') || $role('artwork admin')">
                             <div v-if="$page.props.can.show_hints" class="flex mt-1 absolute w-40 right-32">
@@ -115,9 +85,42 @@
                             <AddButton @click="openAddProjectModal" text="Neu" mode="page"/>
                         </div>
                     </div>
+                    <div id="selectedFilter" class="mt-3">
+                                <span v-if="enabled"
+                                      class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                    Meine Projekte
+                                    <button type="button" @click="enabled = !enabled">
+                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                    </button>
+                                </span>
+                        <span v-if="showProjectGroups"
+                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                    Projektgruppen
+                                    <button type="button" @click="showProjectGroups = !showProjectGroups">
+                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                    </button>
+                                </span>
+                        <span v-if="showProjects"
+                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                    Projekte
+                                    <button type="button" @click="showProjects = !showProjects">
+                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                    </button>
+                                </span>
+                        <span v-for="state in states">
+                                    <span v-if="state.clicked"
+                                          class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                    {{ state.name }}
+                                    <button type="button"
+                                            @click="this.projectStateFilter.splice(this.projectStateFilter.indexOf(state),1); state.clicked = false">
+                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                    </button>
+                                </span>
+                                </span>
+                    </div>
                     <div v-for="(project,index) in filteredProjects" :key="project.id"
                          class="mt-5 border-b-2 border-gray-200 w-full">
-                        <div class="flex mb-3">
+                        <div class="flex mb-5">
                             <div class="w-48 flex justify-center">
                                 <div
                                     class="flex justify-center items-center relative bg-gray-200 rounded-full h-12 w-12">
@@ -145,12 +148,12 @@
                                                 checkPermission(project, 'view')"
                                             :href="getEditHref(project)"
                                             class="flex w-full my-auto">
-                                            <p class="headline2 flex items-center">
+                                            <p class="xsDark flex items-center">
                                                 {{ truncate(project.name, 30, '...') }}
                                             </p>
                                         </Link>
                                         <div v-else class="flex w-full my-auto">
-                                            <p class="headline2 flex items-center">
+                                            <p class="xsDark flex items-center">
                                             <span v-if="project.is_group">
                                                 <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2"
                                                      aria-hidden="true"/>
@@ -170,7 +173,7 @@
                                                  :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
                                                  :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
                                                  :alt="project.project_history[0].changes[0].changed_by?.first_name"
-                                                 class="ml-2 ring-white ring-2 rounded-full h-6 w-6 object-cover"/>
+                                                 class="ml-2 ring-white ring-2 rounded-full h-4 w-4 object-cover"/>
                                             <UserTooltip v-if="project.project_history[0].changes[0].changed_by"
                                                          :user="project.project_history[0].changes[0].changed_by"/>
                                             <span class="ml-2 xxsLight subpixel-antialiased">
@@ -190,7 +193,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="xsLight w-11/12">
+                                <div class="xxsLight w-11/12">
                                     {{ truncate(project.description, 300, '...') }}
                                 </div>
                             </div>
@@ -200,7 +203,7 @@
                                         class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep"
                                         :class="project.state?.color">{{ project.state?.name }}</span>
                                 </div>
-                                <div class="flex items-top mx-4">
+                                <div class="flex items-top shrink-0 px-4">
                                     <div class="-mr-3 " v-for="(user) in project.project_managers">
                                         <NewUserToolTip :user="user" :id="user.id" height="8" width="8"/>
                                     </div>

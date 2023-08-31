@@ -81,7 +81,7 @@
                     <div class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white" >
                         <DownloadIcon class="w-4 h-4 mr-2" @click="downloadRoomFile(roomFile)"/>
                         <div>{{ roomFile.name }}</div>
-                        <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal(roomFile)"/>
+                        <XCircleIcon class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openFileDeleteModal(roomFile)"/>
                     </div>
                 </div>
                 <FileDeleteModal

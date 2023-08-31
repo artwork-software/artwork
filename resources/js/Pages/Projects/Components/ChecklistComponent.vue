@@ -198,19 +198,18 @@
 
                                                     <span v-if="element.done && element.done_by_user"
                                                           class="ml-2 flex my-auto items-center text-sm text-secondary">
-                                                        {{ element.done_at }}
-                                                        <img
-                                                            :data-tooltip-target="element.done_by_user.id"
-                                                            v-if="element.done_by_user"
-                                                            :src="element.done_by_user.profile_photo_url"
-                                                            :alt="element.done_by_user.name"
-                                                            class="rounded-full ml-2 my-auto h-7 w-7 object-cover"/>
-                                                        <UserTooltip :user="element.done_by_user"/>
-                                                    </span>
-                                                    <span class="mx-3 flex">
+
+                                                                        {{ element.done_at }}
+                                                        <span class="ml-2">
+                                                            <NewUserToolTip :height="7" :width="7" v-if="element.done_by_user"
+                                                                            :user="element.done_by_user" :id="element.id"/>
+                                                        </span>
+
+                                                                    </span>
+                                                    <span class="mx-3 flex" v-else>
                                                         <span class="flex -mr-3" v-for="user in element.users">
-                                                        <NewUserToolTip :id="user.id" :user="user" height="5"
-                                                                        width="5"/>
+                                                        <NewUserToolTip :id="element.id + 'user' + user.id" :user="user" height="7"
+                                                                        width="7"/>
                                                     </span>
                                                     </span>
                                                     <Menu
@@ -416,14 +415,13 @@
 
                                                     <span v-if="element.done && element.done_by_user"
                                                           class="ml-2 flex my-auto items-center text-sm text-secondary">
-                                                                        <img
-                                                                            :data-tooltip-target="element.done_by_user.id"
-                                                                            v-if="element.done_by_user"
-                                                                            :src="element.done_by_user.profile_photo_url"
-                                                                            :alt="element.done_by_user.name"
-                                                                            class="rounded-full mr-2 my-auto h-7 w-7 object-cover"/>
-                                                                        <UserTooltip :user="element.done_by_user"/>
+
                                                                         {{ element.done_at }}
+                                                        <span class="ml-2">
+                                                            <NewUserToolTip :height="7" :width="7" v-if="element.done_by_user"
+                                                                            :user="element.done_by_user" :id="element.id"/>
+                                                        </span>
+
                                                                     </span>
                                                     <Menu as="div" class="my-auto relative ml-3"
                                                           v-show="showMenu === element.id">
@@ -710,7 +708,7 @@
                     Bist du sicher, dass du die Checkliste {{ checklistToDelete.name }} löschen willst?
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                    <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-14 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="deleteChecklistFromProject()">
                         Löschen
@@ -737,7 +735,7 @@
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-secondary tracking-tight leading-6 sub">
-                    Bearbeite deine Checkliste.
+                    Bearbeite deine Checkliste
                 </div>
                 <div class="mt-4">
                     <div class="flex mt-8">
@@ -771,7 +769,7 @@
                     <div class="w-full items-center text-center">
 
                         <AddButton :class="[editChecklistForm.name.length === 0 ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                    'bg-secondary': 'focus:outline-none']"
                                    class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold shadow-sm text-secondaryHover"
                                    @click="editChecklist" :disabled="editChecklistForm.name.length === 0"

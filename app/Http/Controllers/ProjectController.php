@@ -1381,7 +1381,7 @@ class ProjectController extends Controller
     public function lockColumn(Request $request)
     {
         $column = Column::find($request->columnId);
-        $column->update(['is_locked' => true]);
+        $column->update(['is_locked' => true, 'locked_by' => Auth::id()]);
         return back()->with('success');
     }
 
@@ -1393,7 +1393,7 @@ class ProjectController extends Controller
     public function unlockColumn(Request $request)
     {
         $column = Column::find($request->columnId);
-        $column->update(['is_locked' => false]);
+        $column->update(['is_locked' => false, 'locked_by' => null]);
         return back()->with('success');
     }
 
@@ -2737,7 +2737,7 @@ class ProjectController extends Controller
             $managerIdsAfter[$managerAfter->id] = $managerAfter->id;
             // if added a new project manager, send notification to this user
             if (!in_array($managerAfter->id, $managerIdsBefore)) {
-                $notificationTitle = 'Du wurdest zum Projektmanager von ' . $project->name . ' ernannt';
+                $notificationTitle = 'Du wurdest zur Projektleitung von ' . $project->name . ' ernannt';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -2782,7 +2782,7 @@ class ProjectController extends Controller
         foreach ($managerIdsBefore as $managerBefore) {
             if (!in_array($managerBefore, $managerIdsAfter)) {
                 $user = User::find($managerBefore);
-                $notificationTitle = 'Du wurdest als Projektmanager von ' . $project->name . ' gelöscht';
+                $notificationTitle = 'Du wurdest als Projektleitung von ' . $project->name . ' gelöscht';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'error',

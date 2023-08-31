@@ -89,7 +89,7 @@
                     <div class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white" v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)">
                         <DownloadIcon class="w-4 h-4 mr-2" @click="downloadMoneySourceFile(moneySourceFile)"/>
                         <div @click="openFileEditModal(moneySourceFile)">{{ moneySourceFile.name }}</div>
-                        <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal(moneySourceFile)"/>
+                        <XCircleIcon class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openFileDeleteModal(moneySourceFile)"/>
                     </div>
                     <div v-else class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white">
                         {{ moneySourceFile.name }}

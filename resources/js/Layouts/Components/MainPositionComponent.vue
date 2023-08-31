@@ -57,7 +57,7 @@
                     </svg>
                 </div>
                 <div class="text-white w-44 flex items-center text-center justify-end mr-2"
-                     v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'">
+                     v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && !mainPosition.columnVerifiedChanges">
                     <p class="xsWhiteBold mr-1">verifiziert</p>
                     <svg xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686"
                          class="ml-1" viewBox="0 0 11.975 13.686">
@@ -66,15 +66,25 @@
                               fill="#fcfcfb"/>
                     </svg>
                 </div>
+                <div class="text-white w-44 flex items-center text-center justify-end mr-2"
+                     v-if="mainPosition.columnVerifiedChanges">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14.996" height="16.309" viewBox="0 0 14.996 16.309">
+                        <g id="broken_lock" transform="translate(-1218 -672.034)">
+                            <path id="Icon_awesome-lock" data-name="Icon awesome-lock" d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z" transform="translate(1218 674.657)" fill="#fcfcfb"/>
+                            <path id="Icon_metro-warning" data-name="Icon metro-warning" d="M11.85,14.748a.921.921,0,1,1-.921-.921A.921.921,0,0,1,11.85,14.748Zm-.921-1.842a.921.921,0,0,1-.921-.921V9.224a.921.921,0,0,1,1.842,0v2.762A.921.921,0,0,1,10.929,12.907Z" transform="translate(1221.046 663.831)" fill="#fcfcfb" stroke="#fcfcfb" stroke-width="0.2"/>
+                        </g>
+                    </svg>
+
+                </div>
                 <div class="flex flex-wrap w-8">
                     <div class="flex w-full">
-                        <Menu as="div" class="my-auto relative"
-                              v-show="showMenu === 'MainPosition' + mainPosition.id">
+                        <Menu as="div" class="my-auto relative">
+                              <!-- v-show="showMenu === 'MainPosition' + mainPosition.id" -->
                             <div class="flex">
                                 <MenuButton
                                     class="flex bg-tagBg p-0.5 rounded-full">
                                     <DotsVerticalIcon
-                                        class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                        class=" flex-shrink-0 h-6 w-6 text-secondaryHover my-auto"
                                         aria-hidden="true"/>
                                 </MenuButton>
                             </div>

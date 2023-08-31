@@ -5,7 +5,7 @@
                 <div class="text-primary text-sm">{{ contract.partner }}</div>
                 <hr class="border-l border-l-primary h-5 mx-2">
                 <div class="text-buttonBlue text-sm"><a
-                    :href="'/projects/' + contract.project.id">{{ contract.project?.name }}</a></div>
+                    :href="getEditHref(contract.project)">{{ contract.project?.name }}</a></div>
                 <hr class="border-l border-l-primary h-5 mx-2">
                 <div class="text-primary text-sm">{{ contract.amount }}€</div>
             </div>
@@ -53,7 +53,10 @@ export default {
             link.href = route('contracts.download', {contract: this.contract});
             link.target = '_blank';
             link.click();
-        }
+        },
+        getEditHref(project) {
+            return route('projects.show.info', {project: project.id});
+        },
     }
 }
 </script>

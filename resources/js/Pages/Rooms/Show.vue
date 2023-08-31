@@ -72,7 +72,7 @@
                          :data-tooltip-target="room.room_history[0].changes[0].changed_by?.id"
                          :src="room.room_history[0].changes[0].changed_by?.profile_photo_url"
                          :alt="room.room_history[0].changes[0].changed_by?.first_name"
-                         class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                         class="ml-2 ring-white ring-2 rounded-full h-4 w-4 object-cover"/>
                     <UserTooltip v-if="room.room_history[0].changes[0].changed_by"
                                  :user="room.room_history[0].changes[0].changed_by"/>
                     <span class="ml-2 subpixel-antialiased">

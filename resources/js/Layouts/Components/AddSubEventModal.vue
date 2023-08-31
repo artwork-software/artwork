@@ -25,11 +25,13 @@
                                 <ListboxButton
                                     class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                     <div class="flex items-center my-auto">
-                                        <EventTypeIconCollection :height="20" :width="20" :iconName="subEvent.selectedEventType?.svg_name"/>
+                                        <EventTypeIconCollection :height="20" :width="20"
+                                                                 :iconName="subEvent.selectedEventType?.svg_name"/>
                                         <span class="block truncate items-center ml-3 flex">
                                             <span>{{ subEvent.selectedEventType?.name }}</span>
                                         </span>
-                                        <span class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                        <span
+                                            class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
                                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                         </span>
                                     </div>
@@ -46,9 +48,12 @@
                                                        v-slot="{ active, selected }">
                                             <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex">
-                                                    <EventTypeIconCollection :height="12" :width="12" :iconName="eventType?.svg_name"/>
+                                                    <EventTypeIconCollection :height="12" :width="12"
+                                                                             :iconName="eventType?.svg_name"/>
                                                     <span
-                                                        :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">{{ eventType.name }}
+                                                        :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">{{
+                                                            eventType.name
+                                                        }}
                                                     </span>
                                                 </div>
                                                 <span
@@ -80,9 +85,10 @@
                                 class="h-12 inputMain w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
                             >
 
-                            <span class="float-left flex xsLight subpixel-antialiased"><img src="/Svgs/IconSvgs/icon_adjustments.svg"
-                                                                                            class="mr-2"
-                                                                                            alt="attributeIcon"/>Termineigenschaften wählen</span>
+                            <span class="float-left flex xsLight subpixel-antialiased"><img
+                                src="/Svgs/IconSvgs/icon_adjustments.svg"
+                                class="mr-2"
+                                alt="attributeIcon"/>Termineigenschaften wählen</span>
                                 <ChevronDownIcon
                                     class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                     aria-hidden="true"
@@ -104,7 +110,8 @@
                                         <input v-model="subEvent.audience"
                                                type="checkbox"
                                                class="checkBoxOnDark"/>
-                                        <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
+                                        <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
+                                             alt="audienceIcon"/>
 
                                         <div :class="[subEvent.audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
                                             Mit Publikum
@@ -126,58 +133,81 @@
                     <!--    Properties    -->
                     <div class="flex py-2">
                         <div v-if="subEvent.audience">
-                            <TagComponent icon="audience" displayed-text="Mit Publikum" hideX="true" />
+                            <TagComponent icon="audience" displayed-text="Mit Publikum" hideX="true"/>
                         </div>
                         <div v-if="subEvent.is_loud">
-                            <TagComponent displayed-text="es wird laut" hideX="true" />
+                            <TagComponent displayed-text="es wird laut" hideX="true"/>
                         </div>
                     </div>
                     <div class="flex pb-1 flex-col sm:flex-row align-baseline gap-1">
                         <div class="sm:w-1/2">
                             <label for="startDate" class="xxsLight">Start</label>
                             <div class="w-full flex">
-                                <input v-model="subEvent.start_time"
+                                <input v-model="startDate"
                                        id="startDate"
                                        @change="checkTimes()"
-                                       type="datetime-local"
+                                       type="date"
                                        required
                                        class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                                <input v-model="startTime"
+                                       id="changeStartTime"
+                                       @change="checkTimes()"
+                                       type="time"
+                                       required
+                                       class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
                             </div>
                         </div>
                         <div class="sm:w-1/2">
                             <label for="endDate" class="xxsLight">Ende</label>
                             <div class="w-full flex">
-                                <input v-model="subEvent.end_time"
+                                <input v-model="endDate"
                                        id="endDate"
                                        @change="checkTimes()"
-                                       type="datetime-local"
+                                       type="date"
                                        required
                                        class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
+                                <input v-model="endTime"
+                                       id="changeEndTime"
+                                       @change="checkTimes()"
+                                       type="time"
+                                       required
+                                       class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
                             </div>
                         </div>
                     </div>
-                   <div>
-                       <div class="text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</div>
-                       <div class="text-red-500 text-xs" v-show="helpTextStart.length > 0">{{ helpTextStart }}</div>
-                       <div class="text-red-500 text-xs" v-show="helpTextEnd.length > 0">{{ helpTextEnd }}</div>
-                       <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">{{ helpTextLength }}</div>
-                   </div>
+                        <div>
+                            <div class="text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</div>
+                            <div class="text-red-500 text-xs" v-show="helpTextStart.length > 0">{{
+                                    helpTextStart
+                                }}
+                            </div>
+                            <div class="text-red-500 text-xs" v-show="helpTextEnd.length > 0">{{
+                                    helpTextEnd
+                                }}
+                            </div>
+                            <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">{{
+                                    helpTextLength
+                                }}
+                            </div>
+                        </div>
 
-                    <div class="py-2">
+
+                        <div class="py-2">
                     <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                               id="description"
                               v-model="subEvent.description"
                               rows="4"
                               class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="flex justify-center w-full py-4">
-                <button :disabled="!submit" :class="!submit ? 'bg-secondary hover:bg-secondary' : ''" class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
-                        @click="updateOrCreateEvent()">
-                    Belegen
-                </button>
-            </div>
+                <div class="flex justify-center w-full py-4">
+                    <button :disabled="!submit" :class="!submit ? 'bg-secondary hover:bg-secondary' : ''"
+                            class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
+                            @click="updateOrCreateEvent()">
+                        Belegen
+                    </button>
+                </div>
         </template>
     </jet-dialog-modal>
 </template>
@@ -201,6 +231,7 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import dayjs from "dayjs";
 import Permissions from "@/mixins/Permissions.vue";
+import Input from "@/Jetstream/Input.vue";
 
 export default {
     name: "AddSubEventModal",
@@ -217,6 +248,7 @@ export default {
 
     },
     components: {
+        Input,
         TagComponent,
         JetDialogModal,
         XIcon,
@@ -225,7 +257,7 @@ export default {
         Listbox, ListboxLabel, ListboxButton, ListboxOption, ListboxOptions,
         Menu, MenuItem, MenuItems, MenuButton, CheckIcon
     },
-    data(){
+    data() {
         return {
             subEvent: useForm({
                 event_id: this.event.id,
@@ -244,61 +276,64 @@ export default {
             helpTextStart: '',
             helpTextEnd: '',
             helpTextLength: '',
+            startTime: this.subEventToEdit?.start ? dayjs(this.subEventToEdit?.start).format('HH:mm') : dayjs(this.event.start).format('HH:mm'),
+            endTime: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('HH:mm') : dayjs(this.event.end).format('HH:mm'),
+            startDate: this.subEventToEdit?.start ? dayjs(this.subEventToEdit?.start).format('YYYY-MM-DD') : dayjs(this.event.start).format('YYYY-MM-DD'),
+            endDate: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('YYYY-MM-DD') : dayjs(this.event.end).format('YYYY-MM-DD'),
             show: true,
-            submit: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType.individual_name ?  this.subEventToEdit?.title.length > 0 : true : true,
+            submit: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType.individual_name ? this.subEventToEdit?.title.length > 0 : true : true,
         }
     },
     props: ['event', 'eventTypes', 'subEventToEdit'],
     emits: ['close'],
     methods: {
-        closeModal(bool){
+        closeModal(bool) {
             this.$emit('close', bool)
         },
         formatDate(date, time) {
             if (date === null || time === null) return null;
             return (new Date(date + ' ' + time)).toISOString()
         },
-        checkTimes(){
-            if(this.subEvent.start_time > this.subEvent.end_time && this.subEvent.end_time && this.subEvent.start_time){
+        checkTimes() {
+            this.submit = true;
+            this.subEvent.start_time = this.formatDate(this.startDate, this.startTime);
+            this.subEvent.end_time = this.formatDate(this.endDate, this.endTime);
+            if (this.subEvent.start_time > this.subEvent.end_time && this.subEvent.end_time && this.subEvent.start_time) {
                 this.helpText = 'Endzeit kann nicht vor der Startzeit liegen!';
                 this.submit = false;
             } else {
                 this.helpText = '';
-                this.submit = true;
             }
 
-            const timezoneOffset = new Date(this.event.start).getTimezoneOffset()* 60000
+            const timezoneOffset = new Date(this.event.start).getTimezoneOffset() * 60000
             const start = dayjs(this.event.start);
             const end = dayjs(this.event.end);
 
-            if(this.subEvent.start_time){
+            if (this.subEvent.start_time) {
                 const subEventStart = dayjs(this.subEvent.start_time);
-                if(start > subEventStart || end < subEventStart){
+                if (start > subEventStart || end < subEventStart) {
                     this.helpTextStart = 'Startzeit muss innerhalb Termingruppenzeitraum liegen';
                     this.submit = false;
                 } else {
                     this.helpTextStart = '';
-                    this.submit = true;
                 }
             }
-            if(this.subEvent.end_time){
+            if (this.subEvent.end_time) {
                 const subEventEnd = Date.parse(this.subEvent.end_time);
-                if(end < subEventEnd || start > subEventEnd){
+                if (end < subEventEnd || start > subEventEnd) {
                     this.helpTextEnd = 'Endzeit muss innerhalb Termingruppenzeitraum liegen';
                     this.submit = false;
                 } else {
                     this.helpTextEnd = '';
-                    this.submit = true;
                 }
             }
 
             // check if event min 30min
-            if(this.subEvent.start_time && this.subEvent.end_time){
+            if (this.subEvent.start_time && this.subEvent.end_time) {
                 const date = new Date(this.subEvent.start_time);
                 const minimumEnd = this.addMinutes(date, 30);
-                if(minimumEnd <= new Date(this.subEvent.end_time)){
+                if (minimumEnd <= new Date(this.subEvent.end_time)) {
                     this.helpTextLength = '';
-                    this.submit = true;
                 } else {
                     this.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
                     this.submit = false;
@@ -317,9 +352,9 @@ export default {
                 this.submit = true;
             }
         },
-        updateOrCreateEvent(){
+        updateOrCreateEvent() {
             this.subEvent.event_type_id = this.subEvent?.selectedEventType?.id;
-            if(this.edit){
+            if (this.edit) {
                 this.subEvent.patch(route('subEvent.update', this.subEventToEdit.id), {
                     preserveScroll: true,
                     onSuccess: () => {

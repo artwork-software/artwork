@@ -41,7 +41,7 @@
                     >
                         <DownloadIcon class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>
                         <div @click="openFileEditModal(projectFile)">{{ projectFile.name }}</div>
-                        <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal(projectFile)"/>
+                        <XCircleIcon class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openFileDeleteModal(projectFile)"/>
                     </div>
                 </div>
 
@@ -92,7 +92,7 @@
                                                  :close-modal="closeContractDeleteModal" :contract="contract"/>
                             <ContractEditModal :show="showContractEditModal === contract?.id"
                                                :close-modal="closeContractEditModal" :contract="contract"/>
-                            <XCircleIcon class="w-4 h-4 ml-auto" @click="openContractDeleteModal(contract)"/>
+                            <XCircleIcon class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openContractDeleteModal(contract)"/>
                         </div>
                     </div>
                 </div>

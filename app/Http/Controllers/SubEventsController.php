@@ -62,6 +62,8 @@ class SubEventsController extends Controller
             'is_loud',
         ]));
 
+
+
         // Send Notification to Room Admins
         $event = Event::find($request->event_id);
         $room = $event->room()->first();

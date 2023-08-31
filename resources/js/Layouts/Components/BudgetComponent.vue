@@ -98,12 +98,28 @@
                              @mouseout="showMenu = null">
                             <div>
                                 <div :class="index <= 2 ? '' : 'justify-end'" class="flex items-center  pr-2">
-                                    <p v-if="column.subName" class="columnSubName -mt-4 xsLight">
-                                        {{ column.subName }}
+
+                                    <div v-if="column.subName" class="flex items-center">
+                                        <div class="flex items-center mr-2" v-if="column.is_locked">
+                                            <div>
+                                                <svg  xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686" class="" viewBox="0 0 11.975 13.686">
+                                                <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
+                                                      d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
+                                                      fill="#27233C"/>
+                                                 </svg>
+                                            </div>
+                                            <div class="-ml-0.5 ">
+                                                <img :src="column?.locked_by?.profile_photo_url" alt="" class="object-cover w-6 h-6 border-2 border-white rounded-full">
+                                            </div>
+                                        </div>
+                                        <div class="columnSubName xsLight ">
+                                            {{ column.subName }}
+                                        </div>
+
                                         <span v-if="column.calculateName" class="ml-1 truncate">
                                             ({{ column.calculateName }})
                                         </span>
-                                    </p>
+                                    </div>
                                     <span  class="-mt-4"
                                           v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
                                         <Listbox as="div" class="flex ml-2" v-model="column.color">
@@ -155,12 +171,6 @@
                                 <div @click="column.clicked = !column.clicked"
                                      :class="index <= 1 ? 'w-16 justify-start' : index === 2 ? 'w-64 justify-start' : index === 3 ? 'w-48 justify-end' : 'w-40 px-3 justify-end'" class="h-5 pr-1 mr-1 xsDark flex "
                                      v-if="!column.clicked">
-                                    <svg v-if="column.is_locked" xmlns="http://www.w3.org/2000/svg" width="11.975"
-                                         height="13.686" class="mr-2 flex items-center mt-0.5" viewBox="0 0 11.975 13.686">
-                                        <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
-                                              d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
-                                              fill="#27233C"/>
-                                    </svg>
                                     {{ column.name }}
 
                                 </div>

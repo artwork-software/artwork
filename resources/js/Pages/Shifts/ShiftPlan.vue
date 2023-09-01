@@ -89,11 +89,16 @@
                                 <td v-for="day in days">
                                     <div
                                         class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
-                                        @click="openShowUserShiftModal(user.element, day)">
-                                <span v-for="shift in user.element?.shifts[day.full_day]">
-                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
-                                </span>
+                                        @click="openShowUserShiftModal(user, day)">
+                                        <span v-for="shift in user.element?.shifts[day.full_day]" v-if="!user.vacations?.includes(day.without_format)">
+                                            {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                        </span>
+                                        <span v-else class="h-full flex justify-center items-center">
+                                            nicht verfügbar
+                                        </span>
+
                                     </div>
+
                                 </td>
                             </tr>
                             </tbody>
@@ -102,8 +107,9 @@
                 </div>
             </div>
             <show-user-shifts-modal v-if="showUserShifts" @closed="showUserShifts = false" :user="userToShow"
-                                    :day="dayToShow" :projects="projects"/>
+                                    :day="dayToShow" :projects="projects" />
             <ShiftHistoryModal :history="history[0]" v-if="showHistoryModal" @closed="showHistoryModal = false"/>
+
         </ShiftHeader>
     </div>
 </template>
@@ -171,6 +177,7 @@ export default {
                     type: 0,
                     plannedWorkingHours: user.plannedWorkingHours,
                     expectedWorkingHours: user.expectedWorkingHours,
+                    vacations: user.vacations,
                 })
             })
             this.freelancersForShifts.forEach((freelancer) => {

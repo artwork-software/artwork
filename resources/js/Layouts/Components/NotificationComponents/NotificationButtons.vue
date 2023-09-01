@@ -10,6 +10,21 @@
                 <XIcon class="h-5 w-5" aria-hidden="true" />
             </button>
         </div>
+        <div v-if="buttons?.includes('change_shift')">
+            <button @click="$emit('openProject')" type="button" class="rounded-full bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                Schicht ändern
+            </button>
+        </div>
+        <div v-if="buttons?.includes('change_shift')">
+            <button @click="$emit('openProject')" type="button" class="rounded-full bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                Ansehen
+            </button>
+        </div>
+        <div v-if="buttons?.includes('change_shift_conflict')">
+            <button @click="$emit('openProject')" type="button" class="rounded-full bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                Schicht neu besetzen
+            </button>
+        </div>
         <div v-if="buttons?.includes('change_room')">
             <button type="button" class="rounded-full bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                 Raum ändern
@@ -45,6 +60,11 @@
                 Anfrage löschen
             </button>
         </div>
+        <div v-if="buttons?.includes('delete_shift_notification')">
+            <button @click="$emit('deleteNotification', true)" type="button" class="rounded-full bg-transparent px-3.5 py-1.5 text-sm font-semibold text-indigo-600 hover:text-white ring-2 ring-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                Ignorieren
+            </button>
+        </div>
     </div>
 
 </template>
@@ -60,7 +80,7 @@ export default {
 
     },
     props: ['buttons'],
-    emits: ['openDeclineModal', 'openEventEditAccept', 'deleteEvent', 'openProjectCalculation', 'deleteVerificationRequest','openEventWithoutRoomModal','openDialogModal'],
+    emits: ['openDeclineModal', 'openEventEditAccept', 'deleteEvent', 'openProjectCalculation', 'deleteVerificationRequest','openEventWithoutRoomModal','openDialogModal', 'deleteNotification', 'openProject'],
     components: {
         DeclineEventModal,
         PencilAltIcon, XIcon

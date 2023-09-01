@@ -134,6 +134,7 @@
             <SingleRelevantEvent v-for="event in eventsWithRelevant" :crafts="crafts" :event="event" :event-types="eventTypes"/>
         </div>
     </div>
+
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -144,6 +145,7 @@ import SingleShiftEvent from "@/Pages/Projects/Components/SingleRelevantEvent.vu
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import SingleRelevantEvent from "@/Pages/Projects/Components/SingleRelevantEvent.vue";
 import Input from "@/Jetstream/Input.vue";
+import {usePage} from "@inertiajs/inertia-vue3";
 
 export default defineComponent({
     name: "ShiftTab",
@@ -193,6 +195,7 @@ export default defineComponent({
         this.makeContainerDraggable();
     },
     methods: {
+        usePage,
         updateCommitmentOfShifts() {
             this.$inertia.patch(route('update.shift.commitment'), {
                 project_id: this.$page.props.project.id,

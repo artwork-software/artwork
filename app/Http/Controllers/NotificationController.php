@@ -19,6 +19,7 @@ use App\Models\NotificationSetting;
 use App\Models\Project;
 use App\Models\Room;
 use App\Models\User;
+use App\Models\UserVacations;
 use App\Notifications\BudgetVerified;
 use App\Notifications\ConflictNotification;
 use App\Notifications\DeadlineNotification;
@@ -62,6 +63,35 @@ class NotificationController extends Controller
                             : $history->created_at->format('d.m.Y, H:i'),
                     ];
                 }
+            }
+
+            if(request('historyType') === 'vacations'){
+                $userVacations = UserVacations::where('user_id', request('modelId'))->get();
+
+                //dd($userVacations);
+
+                foreach ($userVacations as $userVacation){
+                    $historyComplete = $userVacation->historyChanges()->all();
+                    foreach ($historyComplete as $history){
+                        $historyObjects[] = [
+                            'changes' => json_decode($history->changes),
+                            'created_at' => $history->created_at->diffInHours() < 24
+                                ? $history->created_at->diffForHumans()
+                                : $history->created_at->format('d.m.Y, H:i'),
+                        ];
+                    }
+                }
+
+
+                /*$historyComplete = $userVacations->historyChanges()->all();
+                foreach ($historyComplete as $history){
+                    $historyObjects[] = [
+                        'changes' => json_decode($history->changes),
+                        'created_at' => $history->created_at->diffInHours() < 24
+                            ? $history->created_at->diffForHumans()
+                            : $history->created_at->format('d.m.Y, H:i'),
+                    ];
+                }*/
             }
         }
 

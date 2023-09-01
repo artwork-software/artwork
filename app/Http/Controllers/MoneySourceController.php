@@ -105,16 +105,21 @@ class MoneySourceController extends Controller
     public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         foreach ($request->users as $requestUser) {
+            $notificationTitle = 'Du hast Zugriff auf "' . $request->name . '" erhalten';
             $user = User::find($requestUser['user_id']);
             // create user Notification
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
-                'message' => 'Du hast Zugriff auf "' . $request->name . '" erhalten'
+                'message' => $notificationTitle
             ];
 
-            $this->notificationService->createNotification($user, 'Du hast Zugriff auf "' . $request->name . '" erhalten', [], NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED, 'green', [], false, '', null, $broadcastMessage);
-            //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('green');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setNotificationTo($user);
+            $this->notificationService->createNotification();
         }
 
 
@@ -418,7 +423,10 @@ class MoneySourceController extends Controller
 
         $oldName = $moneySource->name;
         $oldDescription = $moneySource->description;
+
+        $oldUsers = $moneySource->users()->get();
         $oldAmount = $moneySource->amount;
+
 
         if (!empty($request->amount)) {
             $amount = str_replace(',', '.', $request->amount);
@@ -446,7 +454,12 @@ class MoneySourceController extends Controller
 
         $newName = $moneySource->name;
         $newDescription = $moneySource->description;
+
+        $newUsers = $moneySource->users()->get();
+        $this->checkUserChanges($moneySource, $oldUsers, $newUsers);
+
         $newAmount = $moneySource->amount;
+
 
         if ($oldName !== $newName) {
             $this->history->createHistory($moneySource->id, 'Finanzierungsquellenname geändert');
@@ -497,16 +510,21 @@ class MoneySourceController extends Controller
         foreach ($beforeSubMoneySources as $beforeSubMoneySource) {
             $beforeSubMoneySource->update(['group_id' => null]);
         }
-        $users = json_decode($moneySource->users);
+        $users = $moneySource->users()->get();
         if ($users) {
             foreach ($users as $user) {
+                $notificationTitle = 'Finanzierungsquelle/gruppe ' . $moneySource->name . ' wurde gelöscht';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
-                    'message' => 'Finanzierungsquelle/gruppe ' . $moneySource->name . ' wurde gelöscht'
+                    'message' => $notificationTitle
                 ];
-                $this->notificationService->createNotification(User::find($user->id), 'Finanzierungsquelle/gruppe ' . $moneySource->name . ' wurde gelöscht', [], NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED, 'red', [], false, '', null, $broadcastMessage);
-                //$this->notificationService->create(User::find($user->id), $this->notificationData, $broadcastMessage);
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setNotificationTo(User::find($user->id));
+                $this->notificationService->createNotification();
             }
         }
         $moneySource->delete();
@@ -544,26 +562,36 @@ class MoneySourceController extends Controller
         foreach ($newUsers as $newUser) {
             $newUserIds[] = $newUser->id;
             if (!in_array($newUser->id, $oldUserIds)) {
+                $notificationTitle = 'Du hast Zugriff auf ' . $moneySource->name . ' erhalten';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
-                    'message' => 'Du hast Zugriff auf ' . $moneySource->name . ' erhalten'
+                    'message' => $notificationTitle
                 ];
-                $this->notificationService->createNotification(User::where('id', $newUser->id)->first(), 'Du hast Zugriff auf ' . $moneySource->name . ' erhalten', [], NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED, 'green', [], false, '', null, $broadcastMessage);
-                //$this->notificationService->create(User::where('id', $newUser->id)->first(), $this->notificationData, $broadcastMessage);
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('green');
+                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setNotificationTo(User::find($newUser->id));
+                $this->notificationService->createNotification();
                 $this->history->createHistory($moneySource->id, 'Nutzerzugriff zu Finanzierungsquelle hinzugefügt');
             }
         }
 
         foreach ($oldUserIds as $oldUserId) {
             if (!in_array($oldUserId, $newUserIds)) {
+                $notificationTitle = 'Dein Zugriff auf ' . $moneySource->name . ' wurde gelöscht';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
-                    'type' => 'danger',
-                    'message' => 'Dein Zugriff auf ' . $moneySource->name . ' wurde gelöscht'
+                    'type' => 'error',
+                    'message' => $notificationTitle
                 ];
-                $this->notificationService->createNotification(User::where('id', $newUser->id)->first(), 'Dein Zugriff auf ' . $moneySource->name . ' wurde gelöscht', [], NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED, 'red', [], false, '', null, $broadcastMessage);
-                //$this->notificationService->create(User::where('id', $oldUserId)->first(), $this->notificationData, $broadcastMessage);
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setNotificationTo(User::find($newUser->id));
+                $this->notificationService->createNotification();
                 $this->history->createHistory($moneySource->id, 'Nutzerzugriff zu Finanzierungsquelle entfernt');
             }
 

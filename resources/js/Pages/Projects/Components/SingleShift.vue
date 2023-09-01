@@ -1,6 +1,7 @@
 <template>
+    <div class="h-full" :class="highlight">
     <div class=" flex items-center justify-between px-4 text-white text-xs relative"
-         :class="shift.user_count === shift.number_employees && Math.floor(shift.master_count) === shift.number_masters ? 'bg-green-500' : 'bg-gray-500'">
+         :class="[shift.user_count === shift.number_employees && Math.floor(shift.master_count) === shift.number_masters ? 'bg-green-500' : 'bg-gray-500', anyoneHasVacation ? '!bg-red-500' : '']">
         <div class="h-9 flex items-center">
             {{ shift.craft.abbreviation }} ({{ truncateDecimal(shift.user_count) }}/{{ shift.number_employees }})
             <span class="ml-1" v-if="shift.number_masters > 0">
@@ -16,7 +17,7 @@
                           transform="translate(1151.957 -4785.674)" fill="none" stroke="#fcfcfb" stroke-width="2"/>
                 </svg>
             </div>
-            <div v-if="shift.infringement" class="h-9 bg-red-500 flex items-center w-fit right-0 p-3">
+            <div v-if="shift.infringement || anyoneHasVacation" class="h-9 bg-red-500 flex items-center w-fit right-0 p-3">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12.21" height="12.2" viewBox="0 0 12.21 12.2">
                     <g id="Gruppe_1639" data-name="Gruppe 1639" transform="translate(-523.895 -44.9)" opacity="0.9">
                         <path id="Icon_metro-warning" data-name="Icon metro-warning"
@@ -87,13 +88,12 @@
         <p class="text-xs mb-3">{{ shift.description }}</p>
         <div v-for="user in shift.allUsers" class="">
             <div v-for="intern in user">
-
                 <div v-if="intern.full_name"
                      class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">
                         <img :src="intern.profile_photo_url"
-                             class="h-4 w-4 rounded-full block bg-gray-500 object-cover">
-                        <span class="text-xs">{{ intern.full_name }} </span>
+                             class="h-4 w-4 rounded-full block bg-gray-500 object-cover" :class="intern.has_vacation_days?.includes(this.shift.event_start_day) ? 'ring-2 ring-red-500' : ''">
+                        <span class="text-xs" :class="intern.has_vacation_days?.includes(this.shift.event_start_day) ? '!text-red-500' : ''">{{ intern.full_name }} </span>
                         <span v-if="intern.pivot.shift_count > 1"
                               class="text-xs"> {{ `1/${intern.pivot.shift_count}` }} </span>
                         <span v-if="intern.pivot.is_master">
@@ -156,6 +156,7 @@
                          :is_series="event.is_series"/>
         </div>
     </div>
+    </div>
 
     <AddShiftModal :shift="shift" :event="event" :crafts="crafts" v-if="openEditShiftModal"
                    @closed="openEditShiftModal = false" :edit="true"/>
@@ -194,17 +195,33 @@ export default defineComponent({
                 user_id : null,
                 shift_id: null,
                 type: null
-            }
+            },
+            highlight: null,
+            anyoneHasVacation: false
         }
+    },
+    mounted() {
+        if(parseInt(this.$page.props?.urlParameters?.shiftId) === this.shift.id){
+           this.highlight = 'border-2 border-orange-300 rounded-md p-1';
+        }
+
+        setTimeout(() => {
+            this.highlight = null;
+        }, 5000);
     },
     computed: {
         shiftUserIds() {
+            // reset has vacation state
+            this.anyoneHasVacation = false;
             const ids = {
                 userIds: [],
                 freelancerIds: [],
                 providerIds: []
             }
             this.shift.users.forEach(user => {
+                if(user.has_vacation_days?.includes(this.shift.event_start_day)){
+                    this.anyoneHasVacation = true;
+                }
                 ids.userIds.push(user.id)
             })
 

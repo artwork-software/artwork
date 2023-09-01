@@ -576,7 +576,8 @@ class CalendarController extends Controller
                 'day' => $period->format('d.m.'),
                 'day_string' => $period->shortDayName,
                 'is_weekend' => $period->isWeekend(),
-                'full_day' => $period->format('d.m.Y')
+                'full_day' => $period->format('d.m.Y'),
+                'without_format' => $period->format('Y-m-d')
             ];
         }
         if (request('startDate') && request('endDate')) {
@@ -592,9 +593,22 @@ class CalendarController extends Controller
         }
 
         $better = $this->filterRooms($startDate, $endDate)
-            ->with(['events.room', 'events.project', 'events.creator', 'events' => function ($query) use ($project, $room) {
-                $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC')->whereHas('shifts');
-            }])
+            ->with([
+                'events.event_type',
+                'events.comments',
+                'events.shifts',
+                'events.room',
+                'events.subEvents',
+                'events.series',
+                'events.subEvents.type',
+                'events.project',
+                'events.project.departments',
+                'events.project.users',
+                'events.project.managerUsers',
+                'events.creator',
+                'events' => function ($query) use ($project, $room) {
+                    $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC');
+                }])
             ->get()
             ->map(fn($room) => collect($calendarPeriod)
                 ->mapWithKeys(fn($date) => [

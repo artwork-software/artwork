@@ -4,10 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserVacations;
+use App\Support\Services\NewHistoryService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class UserVacationsController extends Controller
 {
+
+    protected ?NewHistoryService $history = null;
+    public function __construct()
+    {
+        $this->history = new NewHistoryService('App\Models\UserVacations');
+    }
     /**
      * Display a listing of the resource.
      *
@@ -36,7 +44,13 @@ class UserVacationsController extends Controller
      */
     public function store(Request $request, User $user): void
     {
-        $user->vacations()->create($request->only(['from', 'until']));
+        $vacation = $user->vacations()->create($request->only(['from', 'until']));
+        $schedule = new SchedulingController();
+        $schedule->create($user->id, 'VACATION_CHANGES', 'USER_VACATIONS', $user->id);
+        $this->history->setHistoryText('Verfügbarkeit hinzugefügt');
+        $this->history->setModelId($vacation->id);
+        $this->history->setType('vacation');
+        $this->history->create();
     }
 
     /**
@@ -61,6 +75,31 @@ class UserVacationsController extends Controller
         //
     }
 
+    public function checkVacation(Request $request, User $user) {
+
+        if($request->checked){
+            $vacations = $user->vacations()->where('from', '<=', $request->day)->where('until', '>=', $request->day)->get();
+            foreach ($vacations as $vacation){
+                $vacation->delete();
+            }
+        } else {
+            $vacations = $user->vacations()->where('from', '<=', Carbon::parse($request->day)->format('Y-m-d'))->where('until', '>=',Carbon::parse($request->day)->format('Y-m-d'))->get();
+            if($vacations->count() === 0){
+                $user->vacations()->create([
+                    'from' => Carbon::parse($request->day)->format('Y-m-d'),
+                    'until' => Carbon::parse($request->day)->format('Y-m-d')
+                ]);
+            }
+
+            $shifts = $user->shifts()->where('event_start_day', Carbon::parse($request->day)->format('Y-m-d'))->get();
+            foreach ($shifts as $shift){
+                $shift->users()->detach($user->id);
+            }
+            //dd('hier');
+        }
+        //dd($user, $request);
+    }
+
     /**
      * Update the specified resource in storage.
      *
@@ -70,7 +109,31 @@ class UserVacationsController extends Controller
      */
     public function update(Request $request, UserVacations $userVacations)
     {
+        $oldFrom = $userVacations->from;
+        $oldUntil = $userVacations->until;
         $userVacations->update($request->only(['from', 'until']));
+
+        $newFrom = $userVacations->from;
+        $newUntil = $userVacations->until;
+        if($oldFrom !== $newFrom){
+            $this->history->setHistoryText('Verfügbarkeit geändert von ' . Carbon::parse($oldFrom)->format('d.m.Y') . ' zu ' . Carbon::parse($newFrom)->format('d.m.Y'));
+            $this->history->setModelId($userVacations->id);
+            $this->history->setType('vacation');
+            $this->history->create();
+            //$this->history->createHistory($userVacations->id, 'User changed vacation from ' . $oldFrom . ' to ' . $newFrom, 'vacation');
+        }
+
+        if($oldUntil !== $newUntil){
+            $this->history->setHistoryText('Verfügbarkeit geändert bis: ' . Carbon::parse($oldUntil)->format('d.m.Y') . ' zu ' . Carbon::parse($newUntil)->format('d.m.Y'));
+            $this->history->setModelId($userVacations->id);
+            $this->history->setType('vacation');
+            $this->history->create();
+            //$this->history->createHistory($userVacations->id, 'User changed vacation from ' . $oldUntil . ' to ' . $newUntil, 'vacation');
+        }
+        //$this->history->createHistory($userVacations->id, 'User changed vacation from ' . $oldFrom . ' to ' . $newFrom, 'vacation');
+        $schedule = new SchedulingController();
+        $schedule->create($userVacations->user()->first()->id, 'VACATION_CHANGES', 'USER_VACATIONS', $userVacations->user()->first()->id);
+
     }
 
     /**

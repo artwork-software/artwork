@@ -92,6 +92,7 @@
         </div>
     </div>
 
+
 </template>
 
 <script>
@@ -106,6 +107,7 @@ import AddShiftPresetModal from "@/Pages/Projects/Components/AddShiftPresetModal
 import {ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/outline";
 import ImportShiftTemplate from "@/Pages/Projects/Components/ImportShiftTemplate.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+
 
 export default defineComponent({
     name: "SingleRelevantEvent",
@@ -132,7 +134,7 @@ export default defineComponent({
         return {
             showConfirmDeleteModal: false,
             showAddShiftPresetModal: false,
-            showShift: false,
+            showShift: parseInt(this.$page.props?.urlParameters?.eventId) === parseInt(this.event.event.id) ? true : false,
             showImportShiftTemplateModal: false
         }
     },

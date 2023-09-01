@@ -146,7 +146,7 @@ class ContractController extends Controller
         $notificationTitle = 'Ein Vertrag wurde für dich freigegeben';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
-            'type' => 'danger',
+            'type' => 'error',
             'message' => $notificationTitle
         ];
         $notificationDescription = [
@@ -162,8 +162,16 @@ class ContractController extends Controller
             ]
         ];
 
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setProjectId($project->id);
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+
         foreach ($contractUsers as $contractUser){
-            $this->notificationService->createNotification($contractUser, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED, 'green', [], false, '', null, $broadcastMessage, null, null, $project->id, null, null, null);
+            $this->notificationService->setNotificationTo($contractUser);
+            $this->notificationService->createNotification();
         }
 
         $contract->save();
@@ -221,7 +229,7 @@ class ContractController extends Controller
         $notificationTitle = 'Ein Vertrag wurde geändert';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
-            'type' => 'danger',
+            'type' => 'error',
             'message' => $notificationTitle
         ];
         $notificationDescription = [
@@ -237,8 +245,16 @@ class ContractController extends Controller
             ]
         ];
 
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setProjectId($project->id);
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+
         foreach ($contractUsers as $contractUser){
-            $this->notificationService->createNotification($contractUser, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED, 'green', [], false, '', null, $broadcastMessage, null, null, $project->id, null, null, null);
+            $this->notificationService->setNotificationTo($contractUser);
+            $this->notificationService->createNotification();
         }
         return Redirect::back();
 
@@ -278,7 +294,7 @@ class ContractController extends Controller
         $notificationTitle = 'Ein Vertrag wurde gelöscht';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
-            'type' => 'danger',
+            'type' => 'error',
             'message' => $notificationTitle
         ];
         $notificationDescription = [
@@ -299,8 +315,16 @@ class ContractController extends Controller
             ],
         ];
 
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('red');
+        $this->notificationService->setProjectId($project->id);
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+
         foreach ($contractUsers as $contractUser){
-            $this->notificationService->createNotification($contractUser, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED, 'red', [], false, '', null, $broadcastMessage, null, null, $project->id, null, null, null);
+            $this->notificationService->setNotificationTo($contractUser);
+            $this->notificationService->createNotification();
         }
         $contract->delete();
         Redirect::back();

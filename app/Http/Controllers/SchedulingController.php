@@ -148,8 +148,13 @@ class SchedulingController extends Controller
                             'type' => 'error',
                             'message' => $notificationTitle
                         ];
-                        $this->notificationService->createNotification($user, $notificationTitle, [], NotificationConstEnum::NOTIFICATION_TASK_REMINDER, 'red', [], false, '', null, $broadcastMessage, null, null, null, null, $privateChecklistTask->id);
-                        //$$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+                        $this->notificationService->setTitle($notificationTitle);
+                        $this->notificationService->setIcon('red');
+                        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
+                        $this->notificationService->setBroadcastMessage($broadcastMessage);
+                        $this->notificationService->setTaskId($privateChecklistTask->id);
+                        $this->notificationService->setNotificationTo($user);
+                        $this->notificationService->createNotification();
                     }
                     if ($deadline <= now()) {
                         $notificationTitle = $privateChecklistTask->name . ' hat ihre Deadline überschritten';
@@ -158,8 +163,13 @@ class SchedulingController extends Controller
                             'type' => 'error',
                             'message' => $notificationTitle
                         ];
-                        $this->notificationService->createNotification($user, $notificationTitle, [], NotificationConstEnum::NOTIFICATION_TASK_REMINDER, 'red', [], false, '', null, $broadcastMessage, null, null, null, null, $privateChecklistTask->id);
-                        //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+                        $this->notificationService->setTitle($notificationTitle);
+                        $this->notificationService->setIcon('red');
+                        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
+                        $this->notificationService->setBroadcastMessage($broadcastMessage);
+                        $this->notificationService->setTaskId($privateChecklistTask->id);
+                        $this->notificationService->setNotificationTo($user);
+                        $this->notificationService->createNotification();
                     }
                 }
                 continue;
@@ -204,8 +214,13 @@ class SchedulingController extends Controller
                         'type' => 'error',
                         'message' => $notificationTitle
                     ];
-                    $this->notificationService->createNotification($user, $notificationTitle, [],NotificationConstEnum::NOTIFICATION_TASK_REMINDER, 'red', [], false, '', null, $broadcastMessage, null, null, null, null, $task->id);
-                    //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setIcon('red');
+                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setTaskId($task->id);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
                 }
                 if ($taskDeadline['type'] === 'DEADLINE_NOT_REACHED') {
                     $notificationTitle = 'Deadline von ' . $task->name . ' ist morgen erreicht';
@@ -214,8 +229,13 @@ class SchedulingController extends Controller
                         'type' => 'error',
                         'message' => $this->notificationData->title
                     ];
-                    $this->notificationService->createNotification($user, $notificationTitle, [], NotificationConstEnum::NOTIFICATION_TASK_REMINDER, 'red', [], false, '', null, $broadcastMessage, null, null, null, null, $task->id);
-                    //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setIcon('red');
+                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setTaskId($task->id);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
                 }
             }
         }
@@ -235,7 +255,12 @@ class SchedulingController extends Controller
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
-                    $this->notificationService->createNotification($user, $notificationTitle, [], NotificationConstEnum::NOTIFICATION_NEW_TASK, 'green', [], false, '', null, $broadcastMessage);
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setIcon('green');
+                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_NEW_TASK);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
                     break;
                 case 'PROJECT_CHANGES':
                     $project = Project::find($schedule->model_id);
@@ -245,7 +270,16 @@ class SchedulingController extends Controller
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
-                    $this->notificationService->createNotification($user, $notificationTitle, [],NotificationConstEnum::NOTIFICATION_PROJECT, 'green', [], true, 'project', $project->id, $broadcastMessage, null, null, $project->id);
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setIcon('green');
+                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PROJECT);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setShowHistory(true);
+                    $this->notificationService->setHistoryType('project');
+                    $this->notificationService->setModelId($project->id);
+                    $this->notificationService->setProjectId($project->id);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
                     break;
                 case 'TASK_CHANGES':
                     $task = Task::find($schedule->model_id);
@@ -255,7 +289,14 @@ class SchedulingController extends Controller
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
-                    $this->notificationService->createNotification($user, $notificationTitle,  [],NotificationConstEnum::NOTIFICATION_TASK_CHANGED, 'green', ['showInTasks'], false, '', null, $broadcastMessage, null, null, null, null, $task->id);
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setIcon('green');
+                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_CHANGED);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setTaskId($task->id);
+                    $this->notificationService->setButtons(['showInTasks']);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
                     break;
                 case 'ROOM_CHANGES':
                     $room = Room::find($schedule->model_id);
@@ -265,7 +306,13 @@ class SchedulingController extends Controller
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
-                    $this->notificationService->createNotification($user, $notificationTitle, [], NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'green', [], true, 'room', $room->id, $broadcastMessage, $room->id);
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setIcon('green');
+                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setRoomId($room->id);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
                     break;
                 case 'EVENT_CHANGES':
                     $event = Event::find($schedule->model_id);
@@ -275,8 +322,13 @@ class SchedulingController extends Controller
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
-                    //$eventNotificationDescription = '<a href=""> </a> ';
-                    $this->notificationService->createNotification($user, $notificationTitle, [], NotificationConstEnum::NOTIFICATION_EVENT_CHANGED, 'green', [], false, '', null, $broadcastMessage, null, $event->id);
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setIcon('green');
+                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_EVENT_CHANGED);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setEventId($room->id);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
                     break;
                 case 'PUBLIC_CHANGES':
                     $project = Project::find($schedule->model_id);
@@ -286,7 +338,45 @@ class SchedulingController extends Controller
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
-                    $this->notificationService->createNotification($user, $notificationTitle, [], NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT, 'green', [], true, 'project', $project->id, $broadcastMessage, null, null, $project->id);
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setIcon('green');
+                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setProjectId($project->id);
+                    $this->notificationService->setShowHistory(true);
+                    $this->notificationService->setHistoryType('project');
+                    $this->notificationService->setModelId($project->id);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
+                    break;
+                case 'VACATION_CHANGES':
+                    // Verfügbarkeit geändert {Vorname Name}
+                    $user = User::find($schedule->model_id);
+                    $notificationTitle = 'Verfügbarkeit geändert';
+                    $broadcastMessage = [
+                        'id' => rand(1, 1000000),
+                        'type' => 'success',
+                        'message' => $notificationTitle
+                    ];
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setIcon('green');
+                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_AVAILABLE);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setShowHistory(true);
+                    $this->notificationService->setHistoryType('vacations');
+                    $this->notificationService->setModelId($user->id);
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
+                    $crafts = $user->crafts()->get();
+                    foreach ($crafts as $craft){
+                        foreach ($craft->users()->get() as $craftUser){
+                            if($craftUser->id === $user->id){
+                                continue;
+                            }
+                            $this->notificationService->setNotificationTo($craftUser);
+                            $this->notificationService->createNotification();
+                        }
+                    }
                     break;
             }
             //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);

@@ -253,6 +253,7 @@ export default defineComponent({
         },
         saveShift(){
 
+
             if(this.event.is_series){
                 if(!this.buffer?.onlyThisDay){
                     this.shiftForm.changeAll = true;

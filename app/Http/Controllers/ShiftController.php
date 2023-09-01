@@ -2,18 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\NotificationConstEnum;
+use App\Enums\RoleNameEnum;
 use App\Models\Event;
 use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use App\Models\Shift;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
+
+use App\Support\Services\NotificationService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use function React\Promise\reject;
@@ -22,13 +27,14 @@ class ShiftController extends Controller
 {
 
     protected ?NewHistoryService $history = null;
-
+    protected ?NotificationService $notificationService = null;
     /**
      * ShiftController constructor.
      */
     public function __construct()
     {
         $this->history = new NewHistoryService('App\Models\Shift');
+        $this->notificationService = new NotificationService();
     }
 
     /**
@@ -114,6 +120,37 @@ class ShiftController extends Controller
             ]);
         }
 
+
+        if($shift->infringement){
+            $notificationTitle = 'Schicht mit zu kurzer Pausenzeit angelegt ';
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => 'Betrifft: ' . $shift->event()->first()->project()->first()->name . ' , ' .$shift->craft()->first()->abbreviation . ' ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setButtons(['change_shift', 'delete_shift_notification']);
+            $this->notificationService->setProjectId($shift->event()->first()->project()->first()->id);
+            $this->notificationService->setEventId($shift->event()->first()->id);
+            $this->notificationService->setShiftId($shift->id);
+            foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $authUser){
+                $this->notificationService->setNotificationTo($authUser);
+                $this->notificationService->createNotification();
+            }
+        }
+
         $this->history->createHistory($shift->id, 'Schicht von Event '. $event->eventName .' wurde erstellt', 'shift');
     }
 
@@ -172,11 +209,83 @@ class ShiftController extends Controller
      * @param Shift $shift
      * @return RedirectResponse
      */
-    public function updateShift(Request $request, Shift $shift)
+    public function updateShift(Request $request, Shift $shift): RedirectResponse
     {
         if($shift->is_committed) {
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Schicht von Event '. $event->eventName .' wurde bearbeitet', 'shift');
+            $notificationTitle = 'Schichtänderung trotz Festschreibung ' . $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    'href' => null
+                ],
+            ];
+
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            foreach ($shift->users()->get() as $user){
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->createNotification();
+            }
+
+            $craft = $shift->craft()->first();
+
+            foreach ($craft->users()->get() as $craftUser){
+                if(Auth::id() !== $craftUser->id){
+                    $this->notificationService->setNotificationTo($craftUser);
+                    $this->notificationService->createNotification();
+                }
+            }
+
+
+        } else {
+            $notificationTitle = 'Schichtänderung ' . $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('green');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+
+            foreach ($shift->users()->get() as $user){
+                $this->notificationService->setNotificationTo($user);
+                $this->notificationService->createNotification();
+            }
+
+
+            $craft = $shift->craft()->first();
+
+            foreach ($craft->users()->get() as $craftUser){
+                if(Auth::id() !== $craftUser->id){
+                    $this->notificationService->setNotificationTo($craftUser);
+                    $this->notificationService->createNotification();
+                }
+            }
+
+
         }
         $shift->update($request->only([
             'start',
@@ -203,6 +312,7 @@ class ShiftController extends Controller
 
         Shift::whereIn('id', $shiftIds)->update($updateData);
         return Redirect::route('projects.show.shift', $projectId)->with('success', 'Shift updated');
+
     }
 
     /**
@@ -216,7 +326,80 @@ class ShiftController extends Controller
         if($shift->is_committed) {
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Schicht von Event '. $event->eventName .' wurde gelöscht', 'shift');
+
+            $notificationTitle = 'Schicht gelöscht trotz Festschreibung ' . $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('green');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+
+            foreach ($shift->users()->get() as $user){
+                if(Auth::id() !== $user->id){
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
+                }
+            }
+
+            $craft = $shift->craft()->first();
+
+            foreach ($craft->users()->get() as $craftUser){
+                if(Auth::id() !== $craftUser->id){
+                    $this->notificationService->setNotificationTo($craftUser);
+                    $this->notificationService->createNotification();
+                }
+            }
+        } else {
+            $notificationTitle = 'Schicht gelöscht  ' . $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+
+            foreach ($shift->users()->get() as $user){
+                if(Auth::id() !== $user->id){
+                    $this->notificationService->setNotificationTo($user);
+                    $this->notificationService->createNotification();
+                }
+            }
+
+            $craft = $shift->craft()->first();
+
+            foreach ($craft->users()->get() as $craftUser){
+                if(Auth::id() !== $craftUser->id){
+                    $this->notificationService->setNotificationTo($craftUser);
+                    $this->notificationService->createNotification();
+                }
+            }
         }
+
         $shift->delete();
     }
 
@@ -279,6 +462,10 @@ class ShiftController extends Controller
      */
     public function addShiftUser(Shift $shift, User $user, Request $request): void
     {
+        $this->notificationService->setProjectId($shift->event()->first()->project()->first()->id);
+        $this->notificationService->setEventId($shift->event()->first()->id);
+        $this->notificationService->setShiftId($shift->id);
+
         if($shift->is_committed) {
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde zur Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') hinzugefügt', 'shift');
@@ -300,6 +487,8 @@ class ShiftController extends Controller
         if(!$project->users->contains($user->id)){
             $project->users()->attach($user->id);
         }
+
+
 
         if($request->chooseData['onlyThisDay'] === false) {
             $start = Carbon::parse($request->chooseData['start'])->startOfDay();
@@ -327,6 +516,211 @@ class ShiftController extends Controller
         }
 
         $shift->users()->attach($user->id, ['shift_count' => $collideCount + 1]);
+
+        // if shift longer when 10h send notification
+        $vacations = $user->vacations()->where('from', '<=', $shift->event_start_day)->where('until', '>=', $shift->event_end_day)->get();
+
+
+        if($vacations->count() > 0) {
+
+            $notificationTitle = 'Schichtkonflikt ' . Carbon::parse($shift->event_start_day)->format('d.m.Y') . ' ' . $project->name . ' ' . $shift->craft()->first()->abbreviation;
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => $user->getFullNameAttribute() . ' ist nicht verfügbar',
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setButtons(['change_shift_conflict']);
+            $crafts = $user->crafts()->get();
+            $hasGetNotification = [];
+            foreach ($crafts as $craft){
+                foreach ($craft->users()->get() as $craftUser){
+                    if(in_array($craftUser->id, $hasGetNotification)){
+                        continue;
+                    }
+                    $this->notificationService->setNotificationTo($craftUser);
+                    $this->notificationService->createNotification();
+                    $hasGetNotification[] = $craftUser->id;
+                }
+            }
+            $this->notificationService->clearNotificationData();
+
+        }
+
+
+
+        $notificationTitle = 'Neue Schichtbesetzung ' . $project->name . ' ' . $shift->craft()->first()->abbreviation;
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'success',
+            'message' => $notificationTitle
+        ];
+        $notificationDescription = [
+            1 => [
+                'type' => 'string',
+                'title' => 'Deine Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                'href' => null
+            ],
+        ];
+
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setNotificationTo($user);
+        $this->notificationService->createNotification();
+        $this->notificationService->clearNotificationData();
+
+        $shiftCheck = $this->notificationService->checkIfUserInMoreThanTeenShifts($user, $shift);
+        $shiftBreakCheck = $this->notificationService->checkIfShortBreakBetweenTwoShifts($user, $shift);
+
+        //dd($shiftBreakCheck);
+
+        if($shiftBreakCheck->shortBreak){
+            $notificationTitle = 'Du wurdest mit zu kurzer Ruhepause geplant';
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => 'Betrifft: ' . $user->getFullNameAttribute(),
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'string',
+                    'title' => 'Zeitraum: ' . Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setNotificationTo($user);
+            $this->notificationService->createNotification();
+
+            // send same notification to admin
+            $notificationTitle = 'Mitarbeiter*in mit zu kurzer Ruhepause geplant';
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+            $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
+
+            foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $authUser){
+                $this->notificationService->setNotificationTo($authUser);
+                $this->notificationService->createNotification();
+            }
+
+            $crafts = $user->crafts()->get();
+            $hasGetNotification = [];
+            foreach ($crafts as $craft){
+                foreach ($craft->users()->get() as $craftUser){
+                    if($craftUser->id === $user->id){
+                        continue;
+                    }
+                    if(in_array($craftUser->id, $hasGetNotification)){
+                        continue;
+                    }
+                    $this->notificationService->setNotificationTo($craftUser);
+                    $this->notificationService->createNotification();
+                    $hasGetNotification[] = $craftUser->id;
+                }
+            }
+            $this->notificationService->clearNotificationData();
+        }
+
+
+        if($shiftCheck->moreThanTenShifts){
+
+            $notificationTitle = 'Du wurdest mehr als 10 Tage am Stück eingeplant';
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => 'Betrifft: ' . $user->getFullNameAttribute(),
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'string',
+                    'title' => 'Zeitraum: ' . Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setNotificationTo($user);
+            $this->notificationService->createNotification();
+
+            // send same notification to admin
+
+            $notificationTitle = 'Mitarbeiter*in mehr als 10 Tage am Stück eingeplant';
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => 'Betrifft: ' . $user->getFullNameAttribute(),
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'string',
+                    'title' => 'Zeitraum: ' . Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
+
+            foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $authUser){
+                $this->notificationService->setNotificationTo($authUser);
+                $this->notificationService->createNotification();
+            }
+
+            $crafts = $user->crafts()->get();
+            foreach ($crafts as $craft){
+                foreach ($craft->users()->get() as $craftUser){
+                    if($craftUser->id === $user->id){
+                        continue;
+                    }
+                    $this->notificationService->setNotificationTo($craftUser);
+                    $this->notificationService->createNotification();
+                }
+            }
+            $this->notificationService->clearNotificationData();
+        }
     }
 
     /**
@@ -370,6 +764,158 @@ class ShiftController extends Controller
                             $allShift->users()->attach($user->id, ['is_master' => true]);
                         }
                     }
+                }
+            }
+        }
+
+        $notificationTitle = 'Neue Schichtbesetzung ' . $project->name . ' ' . $shift->craft()->first()->abbreviation;
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'success',
+            'message' => $notificationTitle
+        ];
+        $notificationDescription = [
+            1 => [
+                'type' => 'string',
+                'title' => 'Deine Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                'href' => null
+            ],
+        ];
+
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('green');
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setNotificationTo($user);
+        $this->notificationService->createNotification();
+
+
+        $shiftCheck = $this->notificationService->checkIfUserInMoreThanTeenShifts($user, $shift);
+        $shiftBreakCheck = $this->notificationService->checkIfShortBreakBetweenTwoShifts($user, $shift);
+
+        if($shiftBreakCheck->shortBreak){
+            $notificationTitle = 'Du wurdest mit zu kurzer Ruhepause geplant';
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => 'Betrifft: ' . $user->getFullNameAttribute(),
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'string',
+                    'title' => 'Zeitraum: ' . Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setNotificationTo($user);
+            $this->notificationService->createNotification();
+
+            // send same notification to admin
+            $notificationTitle = 'Mitarbeiter*in mit zu kurzer Ruhepause geplant';
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+            $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
+
+            foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $authUser){
+                $this->notificationService->setNotificationTo($authUser);
+                $this->notificationService->createNotification();
+            }
+
+            $crafts = $user->crafts()->get();
+            foreach ($crafts as $craft){
+                foreach ($craft->users()->get() as $craftUser){
+                    if($craftUser->id === $user->id){
+                        continue;
+                    }
+                    $this->notificationService->setNotificationTo($craftUser);
+                    $this->notificationService->createNotification();
+                }
+            }
+        }
+
+
+        if($shiftCheck->moreThanTenShifts){
+            $notificationTitle = 'Du wurdest mehr als 10 Tage am Stück eingeplant';
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => 'Betrifft: ' . $user->getFullNameAttribute(),
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'string',
+                    'title' => 'Zeitraum: ' . Carbon::parse($shiftCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftCheck->lastShift->event_start_day)->format('d.m.Y'),
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setNotificationTo($user);
+            $this->notificationService->createNotification();
+
+            // send same notification to admin
+
+
+            $notificationTitle = 'Mitarbeiter*in mehr als 10 Tage am Stück eingeplant';
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => 'Betrifft: ' . $user->getFullNameAttribute(),
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'string',
+                    'title' => 'Zeitraum: ' . Carbon::parse($shiftCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftCheck->lastShift->event_start_day)->format('d.m.Y'),
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setButtons(['change_shift', 'delete_shift_notification']);
+
+            foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $authUser){
+                $this->notificationService->setNotificationTo($authUser);
+                $this->notificationService->createNotification();
+            }
+
+            $crafts = $user->crafts()->get();
+            foreach ($crafts as $craft){
+                foreach ($craft->users()->get() as $craftUser){
+                    if($craftUser->id === $user->id){
+                        continue;
+                    }
+                    $this->notificationService->setNotificationTo($craftUser);
+                    $this->notificationService->createNotification();
                 }
             }
         }
@@ -551,6 +1097,29 @@ class ShiftController extends Controller
                 'shift_count' => $collideCount > 0 ? $collideCount : 1
             ]
         );
+
+        $notificationTitle = 'Schichtbesetzung gelöscht  ' . $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'success',
+            'message' => $notificationTitle
+        ];
+        $notificationDescription = [
+            1 => [
+                'type' => 'string',
+                'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                'href' => null
+            ],
+        ];
+
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('red');
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setNotificationTo($user);
+        $this->notificationService->createNotification();
+
     }
 
     /**
@@ -703,5 +1272,7 @@ class ShiftController extends Controller
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Alle eingeplanten Mitarbeiter wurde von Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') entfernt', 'shift');
         }
+
+
     }
 }

@@ -417,7 +417,7 @@ export default {
         },
         projectManagerIds: function () {
             let managerIdArray = [];
-            this.project.project_managers.forEach(manager => {
+            this.project?.project_managers?.forEach(manager => {
                     managerIdArray.push(manager.id)
                 }
             )

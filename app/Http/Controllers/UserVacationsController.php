@@ -78,7 +78,7 @@ class UserVacationsController extends Controller
     public function checkVacation(Request $request, User $user) {
 
         if($request->checked){
-            $vacations = $user->vacations()->where('from', '<=', $request->day)->where('until', '>=', $request->day)->get();
+            $vacations = $user->vacations()->where('from', '<=', Carbon::parse($request->day)->format('Y-m-d'))->where('until', '>=', Carbon::parse($request->day)->format('Y-m-d'))->get();
             foreach ($vacations as $vacation){
                 $vacation->delete();
             }
@@ -95,9 +95,7 @@ class UserVacationsController extends Controller
             foreach ($shifts as $shift){
                 $shift->users()->detach($user->id);
             }
-            //dd('hier');
         }
-        //dd($user, $request);
     }
 
     /**

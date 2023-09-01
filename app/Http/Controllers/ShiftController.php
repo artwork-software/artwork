@@ -621,7 +621,7 @@ class ShiftController extends Controller
             $notificationTitle = 'Mitarbeiter*in mit zu kurzer Ruhepause geplant';
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
-            $this->notificationService->setButtons(['change_shift', 'delete_shift_notification']);
+            $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
             foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $authUser){
                 $this->notificationService->setNotificationTo($authUser);
@@ -702,7 +702,7 @@ class ShiftController extends Controller
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setButtons(['change_shift', 'delete_shift_notification']);
+            $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
             foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $authUser){
                 $this->notificationService->setNotificationTo($authUser);
@@ -826,7 +826,7 @@ class ShiftController extends Controller
             $notificationTitle = 'Mitarbeiter*in mit zu kurzer Ruhepause geplant';
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
-            $this->notificationService->setButtons(['change_shift', 'delete_shift_notification']);
+            $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
             foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $authUser){
                 $this->notificationService->setNotificationTo($authUser);

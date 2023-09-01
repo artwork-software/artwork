@@ -104,7 +104,7 @@ class EventController extends Controller
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'eventsAtAGlance' => $eventsAtAGlance,
             'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
-            'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
+            //'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters']
         ]);

@@ -3,8 +3,12 @@
         <div class="py-4">
             <div class="max-w-screen-xl mb-40 my-12 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
-                    <div class="w-full flex my-auto justify-between">
+                    <div>
+                        <p class="items-center flex mr-2 headline1 mb-11">Finanzierungsquellen</p>
+                    </div>
+                    <div class="w-full flex my-auto">
                         <div class="flex justify-between w-full">
+                            <div class="flex">
                             <Listbox as="div" class="flex" v-model="moneySourceFilter">
                                 <ListboxButton
                                     class="bg-white w-full relative py-2 ml-5 cursor-pointer focus:outline-none">
@@ -36,7 +40,7 @@
                                     </ListboxOptions>
                                 </transition>
                             </Listbox>
-                            <div class="flex items-center">
+                            <div class="flex items-center ml-8">
                                 <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
                                      class="cursor-pointer inset-y-0 mr-3">
                                     <SearchIcon class="h-5 w-5" aria-hidden="true"/>
@@ -46,6 +50,7 @@
                                                     placeholder="Suche nach Quellen/Gruppen"/>
                                     <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                                 </div>
+                            </div>
                             </div>
                             <div class="flex"
                                  v-if="$can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">

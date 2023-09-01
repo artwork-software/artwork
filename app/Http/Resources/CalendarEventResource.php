@@ -72,7 +72,6 @@ class CalendarEventResource extends JsonResource
             'subEvents' => SubEventResource::collection($this->subEvents),
             'comments' => $this->comments,
             'shifts' => $this->shifts,
-
         ];
     }
 }

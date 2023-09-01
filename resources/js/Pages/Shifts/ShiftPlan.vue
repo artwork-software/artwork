@@ -93,7 +93,7 @@
                                         <span v-for="shift in user.element?.shifts[day.full_day]" v-if="!user.vacations?.includes(day.without_format)">
                                             {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                         </span>
-                                        <span v-else>
+                                        <span v-else class="h-full flex justify-center items-center">
                                             nicht verfügbar
                                         </span>
 

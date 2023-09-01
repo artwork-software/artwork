@@ -247,6 +247,8 @@ class ShiftController extends Controller
                     $this->notificationService->createNotification();
                 }
             }
+
+
         } else {
             $notificationTitle = 'Schichtänderung ' . $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
             $broadcastMessage = [

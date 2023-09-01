@@ -31,7 +31,7 @@ class NotificationService
 {
 
 
-    public User $notificationTo;
+    public ?User $notificationTo = null;
     public String $title;
     public array|null $description = [];
     public ?NotificationConstEnum $notificationConstEnum = null;
@@ -242,6 +242,26 @@ class NotificationService
         $this->notificationKey = $notificationKey;
     }
 
+    public function clearNotificationData(){
+        //$this->setNotificationTo(null);
+        $this->setTitle('');
+        $this->setDescription([]);
+        $this->setNotificationConstEnum(null);
+        $this->setIcon('green');
+        $this->setButtons([]);
+        $this->setShowHistory(false);
+        $this->setHistoryType('');
+        $this->setModelId(null);
+        $this->setBroadcastMessage([]);
+        $this->setRoomId(null);
+        $this->setEventId(null);
+        $this->setProjectId(null);
+        $this->setDepartmentId(null);
+        $this->setTaskId(null);
+        $this->setBudgetData(null);
+        $this->setNotificationKey('');
+        $this->setShiftId(null);
+    }
 
     /**
      * show the form for creating a new resource.
@@ -461,6 +481,9 @@ class NotificationService
      */
     public function createNotification(): void
     {
+        if(!$this->getNotificationTo()){
+            return;
+        }
         $body = new \stdClass();
         $body->icon = $this->getIcon();
         $body->groupType = $this->getNotificationConstEnum()->groupType();

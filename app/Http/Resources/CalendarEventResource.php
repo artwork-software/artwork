@@ -59,7 +59,7 @@ class CalendarEventResource extends JsonResource
             'is_series'=> $this->is_series,
             'series_id'=> $this->series_id,
             'option_string'=>$this->option_string,
-            'series' => $this->series()->first(),
+            'series' => $this->series,
             // to display rooms as split
             'split' => $this->room_id,
             // Todo Add Authorization
@@ -70,8 +70,8 @@ class CalendarEventResource extends JsonResource
             'canAccept' => Auth::user()->can('update', $this->resource),
             'canDelete' => Auth::user()->can('delete', $this->resource),
             'subEvents' => SubEventResource::collection($this->subEvents),
-            'comments' => $this->comments()->get(),
-            'shifts' => $this->shifts()->get(),
+            'comments' => $this->comments,
+            'shifts' => $this->shifts,
 
         ];
     }

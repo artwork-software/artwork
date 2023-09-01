@@ -201,6 +201,7 @@ class Shift extends Model
         return false;
     }
 
+
     public function getAllUsersAttribute(): array
     {
         return [

@@ -131,7 +131,7 @@ class EventController extends Controller
 
         $events = Event::with(['shifts','event_type', 'room'])
             ->whereHas('shifts', function ($query) {
-                $query->whereNotNull('shifts.id');
+                $query->whereNotNull('shifts.id')->without('crafts');
             })->whereBetween('start_time', [$startDate, $endDate])
             ->get();
 
@@ -144,13 +144,15 @@ class EventController extends Controller
 
         foreach ($users as $user) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
-
+            $vacations = $user->getHasVacationDaysAttribute();
             $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
+
 
             $usersWithPlannedWorkingHours[] = [
                 'user' => UserIndexResource::make($user),
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'expectedWorkingHours' => $expectedWorkingHours,
+                'vacations' => $vacations
             ];
         }
 

@@ -75,6 +75,31 @@ class UserVacationsController extends Controller
         //
     }
 
+    public function checkVacation(Request $request, User $user) {
+
+        if($request->checked){
+            $vacations = $user->vacations()->where('from', '<=', $request->day)->where('until', '>=', $request->day)->get();
+            foreach ($vacations as $vacation){
+                $vacation->delete();
+            }
+        } else {
+            $vacations = $user->vacations()->where('from', '<=', Carbon::parse($request->day)->format('Y-m-d'))->where('until', '>=',Carbon::parse($request->day)->format('Y-m-d'))->get();
+            if($vacations->count() === 0){
+                $user->vacations()->create([
+                    'from' => Carbon::parse($request->day)->format('Y-m-d'),
+                    'until' => Carbon::parse($request->day)->format('Y-m-d')
+                ]);
+            }
+
+            $shifts = $user->shifts()->where('event_start_day', Carbon::parse($request->day)->format('Y-m-d'))->get();
+            foreach ($shifts as $shift){
+                $shift->users()->detach($user->id);
+            }
+            //dd('hier');
+        }
+        //dd($user, $request);
+    }
+
     /**
      * Update the specified resource in storage.
      *

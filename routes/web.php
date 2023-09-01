@@ -599,5 +599,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/preset/timeline/update', [\App\Http\Controllers\PresetTimeLineController::class, 'update'])->name('preset.timeline.update');
     Route::delete('/preset/timeline/{presetTimeLine}/delete', [\App\Http\Controllers\PresetTimeLineController::class, 'destroy'])->name('preset.delete.timeline.row');
     Route::post('/preset/{shiftPreset}/add', [\App\Http\Controllers\PresetTimeLineController::class, 'store'])->name('preset.add.timeline.row');
+
+    Route::patch('/user/{user}/check/vacation', [\App\Http\Controllers\UserVacationsController::class, 'checkVacation'])->name('user.check.vacation');
 });
 

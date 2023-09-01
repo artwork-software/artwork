@@ -516,7 +516,46 @@ class ShiftController extends Controller
         $shift->users()->attach($user->id, ['shift_count' => $collideCount + 1]);
 
         // if shift longer when 10h send notification
+        $vacations = $user->vacations()->where('from', '<=', $shift->event_start_day)->where('until', '>=', $shift->event_end_day)->get();
 
+
+        if($vacations->count() > 0) {
+
+            $notificationTitle = 'Schichtkonflikt ' . Carbon::parse($shift->event_start_day)->format('d.m.Y') . ' ' . $project->name . ' ' . $shift->craft()->first()->abbreviation;
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => $user->getFullNameAttribute() . ' ist nicht verfügbar',
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setButtons(['change_shift_conflict']);
+            $crafts = $user->crafts()->get();
+            $hasGetNotification = [];
+            foreach ($crafts as $craft){
+                foreach ($craft->users()->get() as $craftUser){
+                    if(in_array($craftUser->id, $hasGetNotification)){
+                        continue;
+                    }
+                    $this->notificationService->setNotificationTo($craftUser);
+                    $this->notificationService->createNotification();
+                    $hasGetNotification[] = $craftUser->id;
+                }
+            }
+            $this->notificationService->clearNotificationData();
+
+        }
 
 
 
@@ -541,7 +580,7 @@ class ShiftController extends Controller
         $this->notificationService->setDescription($notificationDescription);
         $this->notificationService->setNotificationTo($user);
         $this->notificationService->createNotification();
-
+        $this->notificationService->clearNotificationData();
 
         $shiftCheck = $this->notificationService->checkIfUserInMoreThanTeenShifts($user, $shift);
         $shiftBreakCheck = $this->notificationService->checkIfShortBreakBetweenTwoShifts($user, $shift);
@@ -588,19 +627,26 @@ class ShiftController extends Controller
             }
 
             $crafts = $user->crafts()->get();
+            $hasGetNotification = [];
             foreach ($crafts as $craft){
                 foreach ($craft->users()->get() as $craftUser){
                     if($craftUser->id === $user->id){
                         continue;
                     }
+                    if(in_array($craftUser->id, $hasGetNotification)){
+                        continue;
+                    }
                     $this->notificationService->setNotificationTo($craftUser);
                     $this->notificationService->createNotification();
+                    $hasGetNotification[] = $craftUser->id;
                 }
             }
+            $this->notificationService->clearNotificationData();
         }
 
 
         if($shiftCheck->moreThanTenShifts){
+
             $notificationTitle = 'Du wurdest mehr als 10 Tage am Stück eingeplant';
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
@@ -615,7 +661,7 @@ class ShiftController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => 'Zeitraum: ' . Carbon::parse($shiftCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftCheck->lastShift->event_start_day)->format('d.m.Y'),
+                    'title' => 'Zeitraum: ' . Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
                     'href' => null
                 ],
             ];
@@ -644,7 +690,7 @@ class ShiftController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => 'Zeitraum: ' . Carbon::parse($shiftCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftCheck->lastShift->event_start_day)->format('d.m.Y'),
+                    'title' => 'Zeitraum: ' . Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
                     'href' => null
                 ],
             ];
@@ -671,6 +717,7 @@ class ShiftController extends Controller
                     $this->notificationService->createNotification();
                 }
             }
+            $this->notificationService->clearNotificationData();
         }
     }
 

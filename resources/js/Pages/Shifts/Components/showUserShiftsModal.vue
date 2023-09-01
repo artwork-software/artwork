@@ -22,11 +22,11 @@
 
                                 <div class="flex items-center mb-5">
                                     <div>
-                                        <img :src="user.profile_photo_url" class="object-cover h-10 w-10 rounded-full" alt="">
+                                        <img :src="user.element.profile_photo_url" class="object-cover h-10 w-10 rounded-full" alt="">
                                     </div>
                                     <div class="ml-3 text-sm font-bold">
-                                        <span v-if="user.resource !== 'ServiceProviderShiftResource'">
-                                            {{ user.first_name }} {{ user.last_name }}
+                                        <span v-if="user.element.resource !== 'ServiceProviderShiftResource'">
+                                            {{ user.element.first_name }} {{ user.element.last_name }}
                                             <span v-if="user.resource === 'FreelancerShiftResource'">
                                             (extern)
                                             </span>
@@ -35,12 +35,12 @@
                                             </span>
                                         </span>
                                         <span v-else>
-                                            {{ user.provider_name }} (Dienstleister)
+                                            {{ user.element.provider_name }} (Dienstleister)
                                         </span>
 
                                     </div>
                                 </div>
-                                <div v-for="shift in user.shifts[day.full_day]">
+                                <div v-for="shift in user.element.shifts[day.full_day]">
                                     <div class="flex items-center justify-between group mb-2" :id="'shift-' + shift.id">
                                         <div class="flex text-sm">
                                             {{ shift.craft?.abbreviation }} {{ shift.start }} - {{ shift.end }} | {{ shift.event.room?.name }} | {{ shift.event.event_type?.abbreviation }}: {{ findProjectById(shift.event.project_id)?.name }}
@@ -62,7 +62,7 @@
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
-                                <AddButton mode="modal" @click="deleteElement(true)"
+                                <AddButton mode="modal" @click="checkVacation"
                                            class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none"
                                            text="Speichern"/>
                             </div>
@@ -97,7 +97,7 @@ export default defineComponent({
     data(){
         return {
             open: true,
-            checked: this.user.shifts[this.day.full_day]?.length > 0
+            checked: !this.user.vacations?.includes(this.day.without_format)
         }
     },
     props: ['user', 'day', 'projects'],
@@ -106,33 +106,41 @@ export default defineComponent({
         closeModal(bool) {
             this.$emit('closed', bool)
         },
-        deleteElement(bool) {
-            this.$emit('delete', bool)
-        },
         findProjectById(projectId) {
             return this.projects.find(project => project.id === projectId);
         },
         removeUserFromShift(shift){
             const shiftContainer = document.getElementById('shift-' + shift);
             if(this.user.resource === 'ServiceProviderShiftResource'){
-                Inertia.delete(route('shifts.removeProvider', {shift: shift, serviceProvider: this.user.id}), {
+                Inertia.delete(route('shifts.removeProvider', {shift: shift, serviceProvider: this.user.element.id}), {
                     onSuccess: () => {
                         shiftContainer.remove()
                     }
                 })
             } else if(this.user.resource === 'FreelancerShiftResource'){
-                Inertia.delete(route('shifts.removeFreelancer', {shift: shift, freelancer: this.user.id}), {
+                Inertia.delete(route('shifts.removeFreelancer', {shift: shift, freelancer: this.user.element.id}), {
                     onSuccess: () => {
                         shiftContainer.remove()
                     }
                 })
             } else {
-                Inertia.delete(route('shifts.removeUser', {shift: shift, user: this.user.id}), {
+                Inertia.delete(route('shifts.removeUser', {shift: shift, user: this.user.element.id}), {
                     onSuccess: () => {
                         shiftContainer.remove()
                     }
                 })
             }
+        },
+        checkVacation(){
+            Inertia.patch(route('user.check.vacation', {user: this.user.element.id}), {
+                checked: this.checked,
+                day: this.day.full_day
+            }, {
+                onSuccess: () => {
+                    this.closeModal(true)
+                }
+            });
+
         }
     }
 

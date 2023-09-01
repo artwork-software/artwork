@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Http\Resources\CalendarEventResource;
+use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -134,6 +135,7 @@ class User extends Authenticatable
         'profile_photo_url',
         'full_name',
         'type',
+        'has_vacation_days'
     ];
 
     protected $with = ['calendar_settings'];
@@ -319,5 +321,37 @@ class User extends Authenticatable
         }
 
         return $plannedWorkingHours;
+    }
+
+    public function getHasVacationDaysAttribute(){
+        $vacations = $this->vacations()->get();
+        $returnInterval = [];
+        foreach ($vacations as $vacation) {
+            $start = Carbon::parse($vacation->from);
+            $end = Carbon::parse($vacation->until);
+
+            $interval = CarbonPeriod::create($start, $end);
+
+            foreach ($interval as $date) {
+                $returnInterval[] = $date->format('Y-m-d');
+            }
+        }
+        return $returnInterval;
+    }
+
+    public function hasVacation(){
+        $vacations = $this->vacations()->get();
+        $returnInterval = [];
+        foreach ($vacations as $vacation) {
+            $start = Carbon::parse($vacation->from);
+            $end = Carbon::parse($vacation->until);
+
+            $interval = CarbonPeriod::create($start, $end);
+
+            foreach ($interval as $date) {
+                $returnInterval[$date->format('d.m.Y')] = $date->format('Y-m-d');
+            }
+        }
+        return $returnInterval;
     }
 }

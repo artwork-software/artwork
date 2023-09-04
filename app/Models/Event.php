@@ -67,7 +67,8 @@ class Event extends Model
         'is_series',
         'accepted',
         'option_string',
-        'declined_room_id'
+        'declined_room_id',
+        'allDay'
     ];
 
 
@@ -82,7 +83,8 @@ class Event extends Model
         'start_time' => 'datetime:d. M Y H:i',
         'end_time' => 'datetime:d. M Y H:i',
         'is_series' => 'boolean',
-        'accepted' => 'boolean'
+        'accepted' => 'boolean',
+        'allDay' => 'boolean'
     ];
 
     protected $appends = [

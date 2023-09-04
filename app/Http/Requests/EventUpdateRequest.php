@@ -32,7 +32,8 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
             'adminComment' => $this->get('adminComment'),
             'optionString' => $this->get('optionString'),
             'accept' => $this->get('accept'),
-            'optionAccept' => $this->get('optionAccept')
+            'optionAccept' => $this->get('optionAccept'),
+            'allDay' => $this->get('allDay'),
         ];
     }
 }

@@ -60,6 +60,7 @@ class CalendarEventResource extends JsonResource
             'series_id'=> $this->series_id,
             'option_string'=>$this->option_string,
             'series' => $this->series,
+            'allDay' => $this->allDay,
             // to display rooms as split
             'split' => $this->room_id,
             // Todo Add Authorization

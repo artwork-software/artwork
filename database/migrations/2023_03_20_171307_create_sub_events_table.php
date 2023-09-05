@@ -22,6 +22,7 @@ return new class extends Migration
             $table->timestamp('end_time')->nullable();
             $table->boolean('audience')->default(false)->nullable();
             $table->boolean('is_loud')->default(false)->nullable();
+            $table->boolean('allDay')->default(false)->nullable();
             $table->unsignedBigInteger('event_type_id');
             $table->unsignedBigInteger('user_id');
             $table->timestamps();

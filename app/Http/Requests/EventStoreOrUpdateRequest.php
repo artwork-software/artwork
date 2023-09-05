@@ -35,6 +35,7 @@ class EventStoreOrUpdateRequest extends FormRequest
             'eventTypeId' => ['required', 'exists:event_types,id'],
             'adminComment' => ['sometimes','nullable','string'],
             'optionString' => ['sometimes','nullable','string'],
+            'allDay' => ['sometimes', 'nullable', 'boolean'],
         ];
     }
 }

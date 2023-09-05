@@ -317,6 +317,12 @@ export default {
 
     emits: ['closed'],
 
+    mounted() {
+        this.$inertia.post(route('project.budget.cell-calculation.add', this.cell.id), {}, {
+            preserveScroll: true
+        })
+    },
+
     watch: {
         moneySource_query: {
             handler() {

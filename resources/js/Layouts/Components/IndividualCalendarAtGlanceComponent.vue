@@ -75,10 +75,6 @@
         @delete="deleteSelectedEvents"
         title="Belegungen löschen"
         description="Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht."/>
-
-    <div v-for="events in eventsAtAGlance[1]">
-
-    </div>
 </template>
 
 <script>

@@ -1,10 +1,15 @@
 <template>
-    <div :class="[event.class, textStyle]" :style="{ width: width + 'px', height: totalHeight - heightSubtraction(event) * zoomFactor + 'px' }"
+    <div :class="[event.class, textStyle]"
+         :style="{ width: width + 'px', height: totalHeight - heightSubtraction(event) * zoomFactor + 'px' }"
          class="px-1 py-0.5 rounded-lg relative group">
         <div v-if="zoomFactor > 0.4"
              class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-indigo-500/50'">
             <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit">
+                <a v-if="event.project" type="button" :href="getEditHref(event.project)"
+                   class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    <img src="/Svgs/IconSvgs/icon_connected.svg" class="h-4 w-4"/>
+                </a>
                 <button type="button" @click="openEditEventModal(event)"
                         class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -123,22 +128,39 @@
                 <!-- Time -->
                 <div class="flex" :style="textStyle"
                      :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
-                <span
-                    v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
-                    class="items-center">{{
-                        new Date(event.start).formatTime("HH:mm")
-                    }} - {{ new Date(event.end).formatTime("HH:mm") }}
-                </span>
-                    <span class="flex w-full" v-else>
-                    <span class="items-center">
-                        <span class="text-error">
+                    <div
+                        v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
+                        class="items-center">
+                        <div v-if="event.allDay">
+                            ganztägig
+                        </div>
+                        <div v-else>
+                            {{
+                                new Date(event.start).formatTime("HH:mm")
+                            }} - {{ new Date(event.end).formatTime("HH:mm") }}
+                        </div>
+                    </div>
+                    <div class="flex w-full" v-else>
+                        <div v-if="event.allDay">
+                            <div v-if="atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()">
+                                ganztägig, {{ new Date(event.start).format("DD.MM.") }}
+                            </div>
+                            <div v-else>
+                                ganztägig, {{ new Date(event.start).format("DD.MM.") }} - {{
+                                    new Date(event.end).format("DD.MM.")
+                                }}
+                            </div>
+
+                        </div>
+                        <div v-else class="items-center">
+                            <span class="text-error">
                         {{ new Date(event.start).toDateString() !== new Date(event.end).toDateString() ? '!' : '' }}
-                        </span>
+                            </span>
                         {{
-                            new Date(event.start).format("DD.MM. HH:mm")
-                        }} - {{ new Date(event.end).format("DD.MM. HH:mm") }}
-                    </span>
-                </span>
+                                new Date(event.start).format("DD.MM. HH:mm")
+                            }} - {{ new Date(event.end).format("DD.MM. HH:mm") }}
+                        </div>
+                    </div>
                 </div>
                 <div v-if="event.option_string && $page.props.user.calendar_settings.options" class="flex items-center">
                     <div
@@ -222,7 +244,9 @@
         <div v-if="$page.props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs">
             <div v-for="shift in event.shifts">
                 <span>{{ shift.craft.abbreviation }}</span>
-                (<VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>/{{ shift.number_employees }}
+                (
+                <VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>
+                /{{ shift.number_employees }}
                 <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)
             </div>
         </div>
@@ -252,20 +276,21 @@
                         </button>
                     </div>
                 </div>
-                <div :class="[subEvent.class]" :style="{ width: width + 'px', height: (totalHeight - heightSubtraction(subEvent)) * zoomFactor + 'px' }"
+                <div :class="[subEvent.class]"
+                     :style="{ width: width + 'px', height: (totalHeight - heightSubtraction(subEvent)) * zoomFactor + 'px' }"
                      class="px-1 py-0.5 rounded-lg overflow-y-auto">
                     <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
                          class="flex justify-between">
                         <div class="flex" v-if="subEvent.title?.length > 0">
-                        <div v-if="subEvent.eventTypeAbbreviation" class="mr-1">
-                            {{ subEvent.eventTypeAbbreviation }}:
-                        </div>
-                        <div class="flex items-center">
-                            {{ subEvent.title }}
-                        </div>
+                            <div v-if="subEvent.eventTypeAbbreviation" class="mr-1">
+                                {{ subEvent.eventTypeAbbreviation }}:
+                            </div>
+                            <div class="flex items-center">
+                                {{ subEvent.title }}
+                            </div>
                         </div>
                         <div v-else class="flex items-center">
-                            {{subEvent.eventTypeName}}
+                            {{ subEvent.eventTypeName }}
                         </div>
                         <!-- Icons -->
                         <div v-if="subEvent.audience"
@@ -322,7 +347,8 @@
                             </span>
                         </span>
                     </div>
-                    <div v-if="subEvent.option_string && $page.props.user.calendar_settings.options" class="flex items-center">
+                    <div v-if="subEvent.option_string && $page.props.user.calendar_settings.options"
+                         class="flex items-center">
                         <div
                             v-if="!atAGlance && new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString()"
                             class="flex eventTime font-medium subpixel-antialiased" :style="textStyle">
@@ -335,8 +361,13 @@
                     <div v-if="$page.props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs">
                         <div v-for="shift in subEvent.shifts">
                             <span>{{ shift.craft.abbreviation }}</span>
-                            (<VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>/{{ shift.number_employees }}
-                            <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)
+                            (
+                            <VueMathjax
+                                :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>
+                            /{{ shift.number_employees }}
+                            <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{
+                                    shift.number_masters
+                                }}</span>)
                         </div>
                     </div>
                 </div>
@@ -465,17 +496,17 @@ export default {
             return (b) ? this.gcd(b, a % b) : a;
         },
         // calculates if there is unneeded height for each event
-        heightSubtraction(event){
+        heightSubtraction(event) {
             let heightSubtraction = 0;
             console.log(event);
-            if (this.$page.props.user.calendar_settings.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)){
+            if (this.$page.props.user.calendar_settings.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)) {
                 heightSubtraction += 17;
             }
-            if (this.$page.props.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)){
+            if (this.$page.props.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)) {
                 console.log("event");
                 heightSubtraction += 20;
             }
-            if (this.$page.props.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)){
+            if (this.$page.props.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
                 heightSubtraction += 18;
             }
             return heightSubtraction;
@@ -564,7 +595,10 @@ export default {
         editSubEvent(subEvent) {
             this.subEventToEdit = subEvent;
             this.showAddSubEventModal = true;
-        }
+        },
+        getEditHref(project) {
+            return route('projects.show.info', {project: project.id});
+        },
     },
     watch: {
         multiEdit: {

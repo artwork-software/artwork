@@ -13,6 +13,7 @@ use App\Http\Resources\CalendarEventCollectionResource;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\ChecklistTemplateIndexResource;
 use App\Http\Resources\EventTypeResource;
+use App\Http\Resources\FreelancerDropResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectIndexShowResource;
@@ -23,6 +24,8 @@ use App\Http\Resources\ProjectResources\ProjectCommentResource;
 use App\Http\Resources\ProjectResources\ProjectInfoResource;
 use App\Http\Resources\ProjectResources\ProjectShiftResource;
 use App\Http\Resources\ProjectShowResource;
+use App\Http\Resources\ServiceProviderDropResource;
+use App\Http\Resources\UserDropResource;
 use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
 use App\Models\BudgetSumDetails;
@@ -2065,13 +2068,14 @@ class ProjectController extends Controller
 
         foreach ($users as $user) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
-
+            $vacations = $user->getHasVacationDaysAttribute();
             $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
 
             $usersWithPlannedWorkingHours[] = [
-                'user' => UserShowResource::make($user),
+                'user' => UserDropResource::make($user),
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'expectedWorkingHours' => $expectedWorkingHours,
+                'vacations' => $vacations,
             ];
         }
 
@@ -2083,12 +2087,12 @@ class ProjectController extends Controller
             $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
 
             $freelancersWithPlannedWorkingHours[] = [
-                'freelancer' => $freelancer,
+                'freelancer' => FreelancerDropResource::make($freelancer),
                 'plannedWorkingHours' => $plannedWorkingHours,
             ];
         }
 
-        $service_providers = ServiceProvider::all();
+        $service_providers = ServiceProvider::without(['contacts'])->get();
 
         $serviceProvidersWithPlannedWorkingHours = [];
 
@@ -2096,7 +2100,7 @@ class ProjectController extends Controller
             $plannedWorkingHours = $service_provider->plannedWorkingHours($startDate, $endDate);
 
             $serviceProvidersWithPlannedWorkingHours[] = [
-                'service_provider' => $service_provider,
+                'service_provider' => ServiceProviderDropResource::make($service_provider),
                 'plannedWorkingHours' => $plannedWorkingHours,
             ];
         }

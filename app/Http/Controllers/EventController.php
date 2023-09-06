@@ -78,7 +78,14 @@ class EventController extends Controller
     {
 
         $calendar = new CalendarController();
-        $showCalendar = $calendar->createCalendarData();
+        $events = [];
+        if(\request('startDate') === \request('endDate')) {
+            $showCalendar = $calendar->createCalendarData('dashboard');
+            $events = new CalendarEventCollectionResource($calendar->getEventsOfDay());
+        }else{
+            $showCalendar = $calendar->createCalendarData();
+        }
+
 
         $eventsAtAGlance = [];
 
@@ -94,6 +101,7 @@ class EventController extends Controller
             $eventsAtAGlance = $calendar->getEventsAtAGlance($startDate, $endDate);
         }
 
+
         return inertia('Events/EventManagement', [
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'calendar' => $showCalendar['roomsWithEvents'],
@@ -104,7 +112,7 @@ class EventController extends Controller
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'eventsAtAGlance' => $eventsAtAGlance,
             'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
-            //'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
+            'events' => $events,
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters']
         ]);

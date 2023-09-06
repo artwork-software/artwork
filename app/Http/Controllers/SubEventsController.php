@@ -60,6 +60,7 @@ class SubEventsController extends Controller
             'user_id',
             'audience',
             'is_loud',
+            'allDay'
         ]));
 
 
@@ -124,7 +125,8 @@ class SubEventsController extends Controller
             'event_type_id',
             'user_id',
             'audience',
-            'is_loud'
+            'is_loud',
+            'allDay'
         ]));
     }
 

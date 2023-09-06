@@ -30,13 +30,15 @@ class SubEvents extends Model
         'event_type_id',
         'user_id',
         'audience',
-        'is_loud'
+        'is_loud',
+        'allDay'
     ];
 
 
     protected $casts = [
         'audience' => 'boolean',
         'is_loud' => 'boolean',
+        'allDay' => 'boolean'
     ];
 
     protected $with = ['type', 'creator'];

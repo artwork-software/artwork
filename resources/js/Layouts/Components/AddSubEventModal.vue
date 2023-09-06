@@ -3,8 +3,11 @@
         <template #content>
             <img alt="Neue Spalte" src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
-                <div class="headline1 my-2">
+                <div class="headline1 my-2" v-if="!this.subEventToEdit">
                     Neuer Untertermin
+                </div>
+                <div class="headline1 my-2" v-else>
+                    Untertermin bearbeiten
                 </div>
                 <p class="mb-3 text-gray-400 text-sm">
                     Gehört zu Blocker in {{ event.roomName }}
@@ -139,6 +142,20 @@
                             <TagComponent displayed-text="es wird laut" hideX="true"/>
                         </div>
                     </div>
+                    <div class="w-full">
+                        <SwitchGroup as="div" class="flex items-center">
+                            <Switch v-model="this.allDayEvent"
+                                    :class="[this.allDayEvent ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                            <span aria-hidden="true"
+                                  :class="[this.allDayEvent ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                            </Switch>
+                            <SwitchLabel as="span" class="ml-3 text-sm">
+                            <span :class="[this.allDayEvent ? 'xsDark' : 'xsLight', 'text-sm']">
+                                Ganztägig
+                            </span>
+                            </SwitchLabel>
+                        </SwitchGroup>
+                    </div>
                     <div class="flex pb-1 flex-col sm:flex-row align-baseline gap-1">
                         <div class="sm:w-1/2">
                             <label for="startDate" class="xxsLight">Start</label>
@@ -151,6 +168,7 @@
                                        class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
                                 <input v-model="startTime"
                                        id="changeStartTime"
+                                       v-if="!allDayEvent"
                                        @change="checkTimes()"
                                        type="time"
                                        required
@@ -168,6 +186,7 @@
                                        class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
                                 <input v-model="endTime"
                                        id="changeEndTime"
+                                       v-if="!allDayEvent"
                                        @change="checkTimes()"
                                        type="time"
                                        required
@@ -225,7 +244,7 @@ import {
     ListboxOptions,
     Menu,
     MenuButton,
-    MenuItem, MenuItems
+    MenuItem, MenuItems, Switch, SwitchGroup, SwitchLabel
 } from "@headlessui/vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
@@ -248,6 +267,9 @@ export default {
 
     },
     components: {
+        SwitchLabel,
+        Switch,
+        SwitchGroup,
         Input,
         TagComponent,
         JetDialogModal,
@@ -269,19 +291,21 @@ export default {
                 audience: this.subEventToEdit?.audience ? this.subEventToEdit?.audience : false,
                 description: this.subEventToEdit?.description ? this.subEventToEdit?.description : '',
                 user_id: this.$page.props.user.id,
-                event_type_id: this.subEventToEdit?.eventTypeId ? this.subEventToEdit?.eventTypeId : ''
+                event_type_id: this.subEventToEdit?.eventTypeId ? this.subEventToEdit?.eventTypeId : '',
+                allDay: this.subEventToEdit?.allDay ? this.subEventToEdit?.allDay : false,
             }),
             edit: !!this.subEventToEdit?.id,
             helpText: '',
             helpTextStart: '',
             helpTextEnd: '',
             helpTextLength: '',
+            allDayEvent: this.subEventToEdit?.allDay ? this.subEventToEdit.allDay : false,
             startTime: this.subEventToEdit?.start ? dayjs(this.subEventToEdit?.start).format('HH:mm') : dayjs(this.event.start).format('HH:mm'),
             endTime: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('HH:mm') : dayjs(this.event.end).format('HH:mm'),
             startDate: this.subEventToEdit?.start ? dayjs(this.subEventToEdit?.start).format('YYYY-MM-DD') : dayjs(this.event.start).format('YYYY-MM-DD'),
             endDate: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('YYYY-MM-DD') : dayjs(this.event.end).format('YYYY-MM-DD'),
             show: true,
-            submit: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType.individual_name ? this.subEventToEdit?.title.length > 0 : true : true,
+            submit: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType.individual_name ? this.subEventToEdit?.title?.length > 0 : true : true,
         }
     },
     props: ['event', 'eventTypes', 'subEventToEdit'],
@@ -296,8 +320,12 @@ export default {
         },
         checkTimes() {
             this.submit = true;
-            this.subEvent.start_time = this.formatDate(this.startDate, this.startTime);
-            this.subEvent.end_time = this.formatDate(this.endDate, this.endTime);
+            this.subEvent.allDay = this.allDayEvent;
+            if(this.allDayEvent){
+                this.handleAllDayEventChange()
+            }
+            this.subEvent.start_time = dayjs(this.formatDate(this.startDate, this.startTime)).format('YYYY-MM-DD HH:mm');
+            this.subEvent.end_time = dayjs(this.formatDate(this.endDate, this.endTime)).format('YYYY-MM-DD HH:mm');
             if (this.subEvent.start_time > this.subEvent.end_time && this.subEvent.end_time && this.subEvent.start_time) {
                 this.helpText = 'Endzeit kann nicht vor der Startzeit liegen!';
                 this.submit = false;
@@ -347,9 +375,18 @@ export default {
         },
         checkSubmitStatus() {
             if (this.subEvent.selectedEventType?.individual_name) {
-                this.submit = this.subEvent.eventName.length > 0;
+                this.submit = this.subEvent.eventName?.length > 0;
             } else {
                 this.submit = true;
+            }
+        },
+        handleAllDayEventChange() {
+            if (this.allDayEvent) {
+                // Set startTime to "00:00" and endTime to "23:59" for all-day event
+                this.startTime = "00:00";
+                this.endTime = "23:59";
+            } else {
+                // Handle other logic if needed when allDayEvent is false
             }
         },
         updateOrCreateEvent() {
@@ -379,6 +416,11 @@ export default {
             },
             deep: true,
         },
+        allDayEvent:{
+            handler(){
+                this.checkTimes()
+            }
+        }
     },
 }
 </script>

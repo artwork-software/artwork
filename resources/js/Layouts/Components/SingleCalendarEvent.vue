@@ -333,19 +333,42 @@
                     <div :style="textStyle"
                          :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']"
                          class="flex">
-                        <span :style="textStyle"
-                              v-if="new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString()"
-                              class="items-center">{{
-                                new Date(subEvent.start).formatTime("HH:mm")
-                            }} - {{ new Date(subEvent.end).formatTime("HH:mm") }}
-                        </span>
-                        <span class="flex w-full" v-else>
-                            <span class="items-center">
+                        <div
+                            v-if="new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString() && !project && !atAGlance"
+                            class="items-center">
+                            <div v-if="subEvent.allDay">
+                                ganztägig
+                            </div>
+                            <div v-else>
+                                {{
+                                    new Date(subEvent.start).formatTime("HH:mm")
+                                }} - {{ new Date(subEvent.end).formatTime("HH:mm") }}
+                            </div>
+                        </div>
+                        <div class="flex w-full" v-else>
+                            <div v-if="subEvent.allDay">
+                                <div v-if="atAGlance && new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString()">
+                                    ganztägig, {{ new Date(subEvent.start).format("DD.MM.") }}
+                                </div>
+                                <div v-else>
+                                    <span class="text-error">
+                        {{ new Date(subEvent.start).toDateString() !== new Date(subEvent.end).toDateString() ? '!' : '' }}
+                            </span>
+                                    ganztägig, {{ new Date(subEvent.start).format("DD.MM.") }} - {{
+                                        new Date(subEvent.end).format("DD.MM.")
+                                    }}
+                                </div>
+
+                            </div>
+                            <div v-else class="items-center">
+                            <span class="text-error">
+                        {{ new Date(subEvent.start).toDateString() !== new Date(subEvent.end).toDateString() ? '!' : '' }}
+                            </span>
                                 {{
                                     new Date(subEvent.start).format("DD.MM. HH:mm")
                                 }} - {{ new Date(subEvent.end).format("DD.MM. HH:mm") }}
-                            </span>
-                        </span>
+                            </div>
+                        </div>
                     </div>
                     <div v-if="subEvent.option_string && $page.props.user.calendar_settings.options"
                          class="flex items-center">

@@ -3,8 +3,11 @@
         <template #content>
             <img alt="Neue Spalte" src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
-                <div class="headline1 my-2">
+                <div class="headline1 my-2" v-if="!this.subEventToEdit">
                     Neuer Untertermin
+                </div>
+                <div class="headline1 my-2" v-else>
+                    Untertermin bearbeiten
                 </div>
                 <p class="mb-3 text-gray-400 text-sm">
                     Gehört zu Blocker in {{ event.roomName }}
@@ -302,7 +305,7 @@ export default {
             startDate: this.subEventToEdit?.start ? dayjs(this.subEventToEdit?.start).format('YYYY-MM-DD') : dayjs(this.event.start).format('YYYY-MM-DD'),
             endDate: this.subEventToEdit?.end ? dayjs(this.subEventToEdit?.end).format('YYYY-MM-DD') : dayjs(this.event.end).format('YYYY-MM-DD'),
             show: true,
-            submit: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType.individual_name ? this.subEventToEdit?.title.length > 0 : true : true,
+            submit: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType.individual_name ? this.subEventToEdit?.title?.length > 0 : true : true,
         }
     },
     props: ['event', 'eventTypes', 'subEventToEdit'],
@@ -317,12 +320,12 @@ export default {
         },
         checkTimes() {
             this.submit = true;
+            this.subEvent.allDay = this.allDayEvent;
             if(this.allDayEvent){
                 this.handleAllDayEventChange()
             }
             this.subEvent.start_time = dayjs(this.formatDate(this.startDate, this.startTime)).format('YYYY-MM-DD HH:mm');
             this.subEvent.end_time = dayjs(this.formatDate(this.endDate, this.endTime)).format('YYYY-MM-DD HH:mm');
-            console.log(this.subEvent.start_time, this.subEvent.end_time);
             if (this.subEvent.start_time > this.subEvent.end_time && this.subEvent.end_time && this.subEvent.start_time) {
                 this.helpText = 'Endzeit kann nicht vor der Startzeit liegen!';
                 this.submit = false;
@@ -372,7 +375,7 @@ export default {
         },
         checkSubmitStatus() {
             if (this.subEvent.selectedEventType?.individual_name) {
-                this.submit = this.subEvent.eventName.length > 0;
+                this.submit = this.subEvent.eventName?.length > 0;
             } else {
                 this.submit = true;
             }

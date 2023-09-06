@@ -587,7 +587,7 @@
                          v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects || roomAdminIds.includes(this.$page.props.user.id)) || this.hasAdminRole()">
                         <button
                             :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
-                            :class="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null || (this.accept === false && this.optionAccept === false && adminComment === '') ? 'bg-secondary hover:bg-secondary' : ''"
+                            :class="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || (this.startTime === null && !this.allDayEvent) || this.startDate === null  || (this.endTime === null && !this.allDayEvent) || this.endDate === null || (this.accept === false && this.optionAccept === false && adminComment === '') ? 'bg-secondary hover:bg-secondary' : ''"
                             class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                             @click="updateOrCreateEvent()">
                             {{

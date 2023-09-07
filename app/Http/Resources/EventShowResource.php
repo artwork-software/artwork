@@ -41,7 +41,7 @@ class EventShowResource extends JsonResource
             'event_type' => $this->event_type,
             'room' => $this->room,
             'project' => $this->project,
-            'created_at' => $this->created_at->format('d.m.Y, H:i'),
+            'created_at' => $this->created_at?->format('d.m.Y, H:i'),
             'created_by' => $this->creator,
         ];
     }

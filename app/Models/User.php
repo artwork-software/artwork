@@ -153,7 +153,7 @@ class User extends Authenticatable
 
     public function shifts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(Shift::class);
+        return $this->belongsToMany(Shift::class, 'shift_user', 'user_id', 'shift_id')->withPivot(['is_master'])->orderByPivot('is_master', 'desc')->withCasts(['is_master' => 'boolean']);
     }
 
     public function getShiftsAttribute(): Collection

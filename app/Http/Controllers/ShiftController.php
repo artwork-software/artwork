@@ -12,7 +12,6 @@ use App\Models\User;
 use App\Support\Services\NewHistoryService;
 
 use App\Support\Services\NotificationService;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -308,8 +307,6 @@ class ShiftController extends Controller
             'is_committed',
         ]);
 
-        Debugbar::info($shiftIds);
-
         Shift::whereIn('id', $shiftIds)->update($updateData);
         return Redirect::route('projects.show.shift', $projectId)->with('success', 'Shift updated');
 
@@ -470,6 +467,7 @@ class ShiftController extends Controller
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde zur Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') hinzugefügt', 'shift');
         }
+
         $eventIdsOfUserShifts = $user->shifts()->get()->pluck('event.id')->all();
         $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, user_id: $user->id);
         $collideCount = $collidingShiftIds->count();
@@ -487,8 +485,6 @@ class ShiftController extends Controller
         if(!$project->users->contains($user->id)){
             $project->users()->attach($user->id);
         }
-
-
 
         if($request->chooseData['onlyThisDay'] === false) {
             $start = Carbon::parse($request->chooseData['start'])->startOfDay();
@@ -646,7 +642,6 @@ class ShiftController extends Controller
             $this->notificationService->clearNotificationData();
         }
 
-
         if($shiftCheck->moreThanTenShifts){
 
             $notificationTitle = 'Du wurdest mehr als 10 Tage am Stück eingeplant';
@@ -736,6 +731,19 @@ class ShiftController extends Controller
             $this->history->createHistory($shift->id, 'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde  zur Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') als Meister hinzugefügt', 'shift');
         }
 
+        $eventIdsOfUserShifts = $user->shifts()->get()->pluck('event.id')->all();
+
+        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, user_id: $user->id);
+
+        $collideCount = $collidingShiftIds->count();
+
+        if($collideCount > 0) {
+            $user->shifts()->updateExistingPivot(
+                $collidingShiftIds,
+                ['shift_count' => $collideCount + 1]
+            );
+        }
+
         //add user to the project team of the project of the event of the shift, if the user is not already in the project team
         $event = $shift->event;
         $project = $event->project;
@@ -761,7 +769,7 @@ class ShiftController extends Controller
                     }
                     if($allShift->getEmptyMasterCountAttribute() > 0){
                         if(!$allShift->users->contains($user->id)) {
-                            $allShift->users()->attach($user->id, ['is_master' => true]);
+                            $allShift->users()->attach($user->id, ['is_master' => true,'shift_count' => $collideCount + 1]);
                         }
                     }
                 }
@@ -920,7 +928,7 @@ class ShiftController extends Controller
             }
         }
 
-        $shift->users()->attach($user->id, ['is_master' => true]);
+        $shift->users()->attach($user->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
     }
 
 
@@ -990,6 +998,17 @@ class ShiftController extends Controller
             $this->history->createHistory($shift->id, 'Freelancer ' . $freelancer->getNameAttribute() . ' wurde zur Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') als Meister hinzugefügt', 'shift');
         }
 
+        $eventIdsOfUserShifts = $freelancer->shifts()->get()->pluck('event.id')->all();
+        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, freelancer_id: $freelancer->id);
+        $collideCount = $collidingShiftIds->count();
+
+        if($collideCount > 0) {
+            $freelancer->shifts()->updateExistingPivot(
+                $collidingShiftIds,
+                ['shift_count' => $collideCount + 1]
+            );
+        }
+
         if($request->chooseData['onlyThisDay'] === false) {
             $start = Carbon::parse($request->chooseData['start'])->startOfDay();
             $end = Carbon::parse($request->chooseData['end'])->endOfDay();
@@ -1008,13 +1027,13 @@ class ShiftController extends Controller
                     }
                     if($allShift->getEmptyMasterCountAttribute() > 0) {
                         if(!$allShift->freelancer->contains($freelancer->id)) {
-                            $allShift->freelancer()->attach($freelancer->id, ['is_master' => true]);
+                            $allShift->freelancer()->attach($freelancer->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
                         }
                     }
                 }
             }
         }
-        $shift->freelancer()->attach($freelancer->id, ['is_master' => true]);
+        $shift->freelancer()->attach($freelancer->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
     }
 
 
@@ -1029,6 +1048,17 @@ class ShiftController extends Controller
         if($shift->is_committed) {
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Dienstleister ' . $serviceProvider->getNameAttribute() . ' wurde zur Schicht ('. $shift->craft()->first()->abbreviation .' - '. $event->eventName .') als Meister hinzugefügt', 'shift');
+        }
+
+        $eventIdsOfUserShifts = $serviceProvider->shifts()->get()->pluck('event.id')->all();
+        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, service_provider_id: $serviceProvider->id);
+        $collideCount = $collidingShiftIds->count();
+
+        if($collideCount > 0) {
+            $serviceProvider->shifts()->updateExistingPivot(
+                $collidingShiftIds,
+                ['shift_count' => $collideCount + 1]
+            );
         }
 
         if($request->chooseData['onlyThisDay'] === false) {
@@ -1049,13 +1079,13 @@ class ShiftController extends Controller
                     }
                     if($allShift->getEmptyMasterCountAttribute() > 0){
                         if(!$allShift->service_provider->contains($serviceProvider->id)) {
-                            $allShift->service_provider()->attach($serviceProvider->id, ['is_master' => true]);
+                            $allShift->service_provider()->attach($serviceProvider->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
                         }
                     }
                 }
             }
         }
-        $shift->service_provider()->attach($serviceProvider->id, ['is_master' => true]);
+        $shift->service_provider()->attach($serviceProvider->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
     }
 
     /**
@@ -1240,7 +1270,7 @@ class ShiftController extends Controller
                     }
                     if($allShift->getEmptyUserCountAttribute() > 0){
                         if(!$allShift->service_provider->contains($serviceProvider->id)) {
-                            $allShift->service_provider()->attach($serviceProvider->id, ['is_master' => true]);
+                            $allShift->service_provider()->attach($serviceProvider->id, ['shift_count' => $collideCount + 1]);
                         }
                     }
                 }

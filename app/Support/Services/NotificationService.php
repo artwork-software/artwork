@@ -622,7 +622,7 @@ class NotificationService
 
 
         $notificationObj = new \stdClass();
-        $notificationObj->moreThanTenShifts = false;
+        $notificationObj->shortBreak = false;
 
         foreach ($shifts as $shift) {
             $formattedStartTime = Carbon::parse($shift->event_start_day . ' ' . $shift->start);

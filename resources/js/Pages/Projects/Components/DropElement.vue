@@ -72,7 +72,6 @@ export default defineComponent({
 
             if(dropElement.master && dropElement.type === 0 && this.freeMasterCount > 0){
                 this.$inertia.post(route('add.shift.master', {shift: this.shiftId, user: dropElement.id}), {
-                        user_id: dropElement.id,
                         chooseData: this.buffer
                     }, {
                         preserveState: true,

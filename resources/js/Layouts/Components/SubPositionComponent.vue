@@ -32,7 +32,7 @@
             <div class="flex items-center justify-end">
                 <div class="flex flex-wrap w-8 z-50">
                     <div class="flex">
-                        <Menu as="div" class="my-auto relative" >
+                        <Menu as="div" class="my-auto relative" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
                              <!-- v-show="showMenu === 'subPosition' + subPosition.id"-->
                             <div class="flex">
                                 <MenuButton
@@ -99,12 +99,13 @@
             <div v-if="subPosition.sub_position_rows?.length > 0"
                  v-for="(row,rowIndex) in subPosition.sub_position_rows">
                 <tr
-                    :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id ? 'border-buttonBlue ' : '']"
+                    :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$page.props.can.edit_budget_templates || !table.is_template) ? 'border-buttonBlue ' : '']"
                     @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
                     class="bg-secondaryHover flex justify-between items-center border-2"
                 >
                     <div class="flex items-center">
                         <PlusCircleIcon @click="openRowDetailModal(row)"
+                                        v-if="this.$page.props.can.edit_budget_templates || !table.is_template"
                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                         class="h-6 w-6 z-20 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                         <td v-for="(cell,index) in row.cells"
@@ -135,6 +136,7 @@
                                     :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
                                     class="my-2 xsDark  appearance-none z-10"
                                     type="text"
+                                    :disabled="!this.$page.props.can.edit_budget_templates && table.is_template"
                                     v-model="cell.value"
                                     @keypress="isNumber($event, index)"
                                     @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
@@ -167,11 +169,12 @@
 
                     </div>
                     <XCircleIcon @click="openDeleteRowModal(row)"
+                                 v-if="this.$page.props.can.edit_budget_templates || !table.is_template"
                                  :class="hoveredRow === row.id ? '' : 'hidden'"
                                  class="h-6 w-6 -mr-3 cursor-pointer justify-end text-secondaryHover bg-error rounded-full"></XCircleIcon>
 
                 </tr>
-                <div @click="addRowToSubPosition(subPosition, row)"
+                <div @click="addRowToSubPosition(subPosition, row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template"
                      class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
                     <div
                         class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
@@ -181,7 +184,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else @click="addRowToSubPosition(subPosition, row)"
+            <div v-else @click="addRowToSubPosition(subPosition, row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template"
                  class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                 <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                     Zeile
@@ -211,7 +214,7 @@
                             <span>
                                 {{subPosition.columnSums[column.id]?.sum.toLocaleString() }}
                             </span>
-                            <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openSubPositionSumDetailModal(subPosition, column)">
+                            <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openSubPositionSumDetailModal(subPosition, column)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
                                 <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
                             </div>
                         </div>
@@ -220,7 +223,7 @@
             </tr>
             </tbody>
         </table>
-        <div @click="addSubPosition(mainPosition.id, subPosition)"
+        <div @click="addSubPosition(mainPosition.id, subPosition)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template"
              class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
             <div
                 class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">

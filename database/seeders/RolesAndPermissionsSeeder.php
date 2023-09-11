@@ -224,6 +224,20 @@ class RolesAndPermissionsSeeder extends Seeder
             'name_de' => "artwork-Admin",
         ]);
 
+        Permission::create([
+            'name' => PermissionNameEnum::VIEW_BUDGET_TEMPLATES->value,
+            'name_de' => "Budgetvorlagen einsehen",
+            "checked" => false
+        ]);
+
+        Permission::create([
+            'name' => PermissionNameEnum::UPDATE_BUDGET_TEMPLATES->value,
+            'name_de' => "Budgetvorlagen bearbeiten",
+            "checked" => false
+        ]);
+
+
+
         /*$user = Role::create([
             'name' => RoleNameEnum::USER->value,
             'name_de' => "Standard-Nutzer*in",

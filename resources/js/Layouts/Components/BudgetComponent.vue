@@ -3,7 +3,7 @@
         <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
                 {{ table.name }}
-                <Menu as="div" class="ml-4">
+                <Menu as="div" class="ml-4" v-if="this.$page.props.can.edit_budget_templates">
                     <div class="flex">
                         <MenuButton
                             class="flex bg-tagBg p-0.5 rounded-full">
@@ -122,7 +122,7 @@
                                     </div>
                                     <span  class="-mt-4"
                                           v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
-                                        <Listbox as="div" class="flex ml-2" v-model="column.color">
+                                        <Listbox as="div" class="flex ml-2" v-model="column.color" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
                                                 <ListboxButton>
                                                    <button class="w-4 h-4 flex justify-center items-center rounded-full"
                                                            :class="column.color === 'whiteColumn' ? 'whiteColumn border border-1' : column.color"
@@ -182,7 +182,7 @@
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
                             </div>
-                            <Menu as="div" v-show="showMenu === column.id">
+                            <Menu as="div" v-show="showMenu === column.id" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
                                 <div class="flex">
                                     <MenuButton
                                         class="flex bg-tagBg p-0.5 rounded-full">
@@ -246,7 +246,7 @@
                             </div>
                         </div>
                     </th>
-                    <button @click="openAddColumnModal()" class="text-white font-bold ml-4 text-xl bg-buttonBlue p-1 hover:bg-buttonHover rounded-full items-center uppercase shadow-sm text-secondaryHover">
+                    <button @click="openAddColumnModal()" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="text-white font-bold ml-4 text-xl bg-buttonBlue p-1 hover:bg-buttonHover rounded-full items-center uppercase shadow-sm text-secondaryHover">
                         <PlusIcon class="h-4 w-4"></PlusIcon>
                     </button>
                 </tr>
@@ -337,6 +337,7 @@
                         </Menu>
                         </div>
                         <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
+                             v-if="this.$page.props.can.edit_budget_templates || !table.is_template"
                              class="group w-[97%] bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                             <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                                 Hauptposition

@@ -113,6 +113,8 @@ class HandleInertiaRequests extends Middleware
                 'edit_event_settings' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::EVENT_SETTINGS_UPDATE->value),
                 'edit_checklist_settings' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value),
                 'global_nofitication' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::SYSTEM_NOTIFICATION->value),
+                'edit_budget_templates' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::UPDATE_BUDGET_TEMPLATES->value),
+                'view_budget_templates' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::VIEW_BUDGET_TEMPLATES->value),
 
                 // Shifts
                 'shift_planner' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::SHIFT_PLANNER->value),

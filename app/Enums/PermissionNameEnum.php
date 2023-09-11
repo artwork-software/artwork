@@ -42,6 +42,10 @@ enum PermissionNameEnum : string
 
     case SYSTEM_NOTIFICATION = 'change system notification';
 
+    case VIEW_BUDGET_TEMPLATES = 'view budget templates';
+
+    case UPDATE_BUDGET_TEMPLATES = 'edit budget templates';
+
     // deleted
     //case PROJECT_DELETE = 'delete projects';
     //case EVENT_TYPE_SETTINGS_ADMIN = 'admin eventTypeSettings';

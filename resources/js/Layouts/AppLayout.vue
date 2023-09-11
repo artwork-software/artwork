@@ -24,7 +24,8 @@
                             'change tool settings',
                             'change project settings',
                             'change event settings',
-                            'change system notification'
+                            'change system notification',
+                            'view budget templates'
                         ]) || hasAdminRole()
                         ">
                         <div class="flex">
@@ -354,7 +355,7 @@ export default {
                 },
                 {
                     name: 'Budget Vorlagen',
-                    has_permission: this.hasAdminRole(),
+                    has_permission: this.hasAdminRole() || this.$can('view budget templates'),
                     href: route('templates.view.index'),
                     route: ['/templates/index']
                 },

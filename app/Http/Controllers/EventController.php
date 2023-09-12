@@ -132,10 +132,10 @@ class EventController extends Controller
         $events = Event::with(['shifts','event_type', 'room'])
             ->whereHas('shifts', function ($query) {
                 $query->whereNotNull('shifts.id')->without('crafts');
-            })->whereBetween('start_time', [$startDate, $endDate])
+            })->whereBetween('start_time', [$startDate, $endDate])->without(['series'])
             ->get();
 
-        $users = User::all()->where('can_work_shifts', true);
+        $users = User::where('can_work_shifts', true)->without(['roles', 'permissions', 'calendar_settings'])->get();
 
         $usersWithPlannedWorkingHours = [];
 

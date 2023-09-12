@@ -14,6 +14,7 @@ use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\ChecklistTemplateIndexResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\FreelancerDropResource;
+use App\Http\Resources\ProjectCalendarShowEventResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectIndexShowResource;
@@ -1812,7 +1813,7 @@ class ProjectController extends Controller
             $eventsQuery = $project->events();
             $filteredEvents = $calendar->filterEvents($eventsQuery, null, null, null, $project);
 
-            $eventsAtAGlance = CalendarEventResource::collection($filteredEvents
+            $eventsAtAGlance = ProjectCalendarShowEventResource::collection($filteredEvents
                 ->with(['room','project','creator'])
                 ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
         }

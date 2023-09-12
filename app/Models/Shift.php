@@ -80,7 +80,7 @@ class Shift extends Model
 
     public function event(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(Event::class);
+        return $this->belongsTo(Event::class)->without(['series']);
     }
 
     public function craft(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -116,7 +116,7 @@ class Shift extends Model
 
     public function getCurrentCountAttribute(): int
     {
-        return $this->users()->count() + $this->freelancer()->count() + $this->service_provider()->count();
+        return $this->users->count() + $this->freelancer->count() + $this->service_provider->count();
     }
 
     public function getMaxCountAttribute(): int
@@ -139,28 +139,38 @@ class Shift extends Model
         return $this->number_employees - $this->getWorkerCount();
     }
 
-    protected function getWorkerCount($is_master = false): float {
-
-        $employeeCount = $this->users()
+    protected function getWorkerCount($is_master = false): float
+    {
+        $users = $this->users()
             ->wherePivot('is_master', $is_master)
-            ->get()
-            ->map( fn(User $user) => 1 / $user->pivot->shift_count )
-            ->sum();
+            ->without(['calender_settings'])
+            ->get();
 
-        $serviceProviderCount = $this->service_provider()
+        $serviceProviders = $this->service_provider()
             ->wherePivot('is_master', $is_master)
-            ->get()
-            ->map( fn(ServiceProvider $serviceProvider) => 1 / $serviceProvider->pivot->shift_count )
-            ->sum();
+            ->get();
 
-        $freelancerCount = $this->freelancer()
+        $freelancers = $this->freelancer()
             ->wherePivot('is_master', $is_master)
-            ->get()
-            ->map( fn(Freelancer $freelancer) => 1 / $freelancer->pivot->shift_count )
-            ->sum();
+            ->get();
 
-        return $employeeCount + $serviceProviderCount + $freelancerCount;
+        $totalCount = 0;
+
+        foreach ($users as $user) {
+            $totalCount += 1 / $user->pivot->shift_count;
+        }
+
+        foreach ($serviceProviders as $serviceProvider) {
+            $totalCount += 1 / $serviceProvider->pivot->shift_count;
+        }
+
+        foreach ($freelancers as $freelancer) {
+            $totalCount += 1 / $freelancer->pivot->shift_count;
+        }
+
+        return $totalCount;
     }
+
 
     public function getUserCountAttribute(): float
     {
@@ -174,12 +184,16 @@ class Shift extends Model
 
     public function getMastersAttribute(): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->users()->wherePivot('is_master', true)->get()->merge($this->freelancer()->wherePivot('is_master', true)->get())->merge($this->service_provider()->wherePivot('is_master', true)->get());
+        $masterUsers = $this->users()->wherePivot('is_master', true)->without(['calender_settings'])->get();
+        $masterFreelancers = $this->freelancer()->wherePivot('is_master', true)->get();
+        $masterServiceProviders = $this->service_provider()->wherePivot('is_master', true)->get();
+
+        return $masterUsers->concat((array)$masterFreelancers)->concat((array)$masterServiceProviders);
     }
 
     public function getEmployeesAttribute(): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->users()->wherePivot('is_master', false)->get()->merge($this->freelancer()->wherePivot('is_master', false)->get())->merge($this->service_provider()->wherePivot('is_master', false)->get());
+        return $this->users()->wherePivot('is_master', false)->without(['calender_settings'])->get()->merge($this->freelancer()->wherePivot('is_master', false)->get())->merge($this->service_provider()->wherePivot('is_master', false)->get());
     }
 
     public function getBreakFormattedAttribute(): string

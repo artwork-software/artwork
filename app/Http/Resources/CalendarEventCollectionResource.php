@@ -35,7 +35,7 @@ class CalendarEventCollectionResource extends ResourceCollection
         //dd($this->collection);
         return [
             'resource' => class_basename($this),
-            'events' => CalendarEventResource::collection($this->collection),
+            'events' => ProjectCalendarShowEventResource::collection($this->collection),
 
             'calendarFilters' => Filter::where('user_id', Auth::id())->get()->map(fn(Filter $filter) => [
                 'id' => $filter->id,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Builders\EventBuilder;
 use App\Http\Resources\CalendarEventResource;
+use App\Http\Resources\CalendarShowEventResource;
 use App\Models\Area;
 use App\Models\Event;
 use App\Models\EventType;
@@ -100,7 +101,7 @@ class CalendarController extends Controller
             if ($hasShifts) {
                 $query->whereHas('shifts');
             }
-        })->first();
+        })->without(['admins'])->first();
 
         foreach ($room_query->events as $event) {
             if (in_array($today, $event->days_of_event)) {
@@ -119,26 +120,23 @@ class CalendarController extends Controller
 
     private function get_events_per_day($date_of_day, $minDate, $maxDate, $userId = null): array
     {
-
-        $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
         $events = Event::with(['shifts' => function ($query) use ($userId) {
-                $query->whereHas('users', function ($query) use ($userId) {
-                    $query->where('user_id', $userId);
-                });
-            }])
+            $query->whereHas('users', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            });
+        }])
             ->where('start_time', '>=', $minDate)
             ->where('end_time', '<=', $maxDate)
             ->whereHas('shifts.users', function ($query) use ($userId) {
                 $query->where('user_id', $userId);
             })
             ->get();
-        foreach ($events as $event) {
-            if (in_array($today, $event->days_of_event)) {
-                $eventsToday[] = $event;
-            }
-        }
+
+        $eventsToday = $events->filter(function ($event) use ($today) {
+            return in_array($today, $event->days_of_event);
+        })->all();
 
         return $eventsToday;
     }
@@ -290,7 +288,6 @@ class CalendarController extends Controller
 
             $eventsWithoutRooms = CalendarEventResource::collection($events)->resolve();
         }
-
         return [
             'days' => $periodArray,
             'dateValue' => [$this->startDate->format('Y-m-d'), $this->endDate->format('Y-m-d')],
@@ -614,7 +611,7 @@ class CalendarController extends Controller
                 ->mapWithKeys(fn($date) => [
                     $date->format('d.m.') => [
                         'roomName' => $room->name,
-                        'events' => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id, true))
+                        'events' => CalendarShowEventResource::collection($this->get_events_of_day($date, $room, @$project->id, true))
                     ]
                 ]));
 
@@ -676,6 +673,7 @@ class CalendarController extends Controller
                     ->when($roomCategoryIds, fn(Builder $roomBuilder) => $roomBuilder
                         ->whereHas('categories', fn(Builder $roomCategoryBuilder) => $roomCategoryBuilder
                             ->whereIn('room_categories.id', $roomCategoryIds)))
+                    ->without(['admins'])
                 )
             )
             ->unless(empty($eventTypeIds), function($builder) use ($eventTypeIds) {

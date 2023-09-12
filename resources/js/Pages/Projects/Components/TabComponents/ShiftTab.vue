@@ -2,7 +2,7 @@
     <div class="bg-backgroundGray mt-6 p-5">
         <div class="flex justify-between items-center ">
             <div>
-                <SwitchGroup as="div" class="flex items-center">
+                <SwitchGroup as="div" class="flex items-center" v-if="eventsWithRelevant?.length > 0">
                     <Switch v-model="hasUncommittedShift"
                             @update:modelValue="updateCommitmentOfShifts"
                             :class="[!hasUncommittedShift ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">

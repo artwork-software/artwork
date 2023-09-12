@@ -257,12 +257,8 @@ class ProjectController extends Controller
 
         $this->generateBasicBudgetValues($project);
 
-        $eventRelevantEventTypes = EventType::where('relevant_for_shift', true)->get();
-        foreach ($eventRelevantEventTypes as $eventRelevantEventType ){
-            $project->shiftRelevantEventTypes()->create([
-                'event_type_id' => $eventRelevantEventType->id
-            ]);
-        }
+        $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id')->toArray();
+        $project->shiftRelevantEventTypes()->sync(collect($eventRelevantEventTypeIds));
 
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }

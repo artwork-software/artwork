@@ -72,6 +72,7 @@ export default {
                     type: 0,
                     plannedWorkingHours: user.plannedWorkingHours,
                     expectedWorkingHours: user.expectedWorkingHours,
+                    vacations: user.vacations,
                 })
             })
             this.freelancersForShifts.forEach((freelancer) => {

@@ -80,7 +80,7 @@ class EventController extends Controller
         $calendar = new CalendarController();
         $events = [];
         if(\request('startDate') === \request('endDate')) {
-            $showCalendar = $calendar->createCalendarData('dashboard');
+            $showCalendar = $calendar->createCalendarData('individual', null, null, \request('startDate'), \request('endDate'));
             $events = new CalendarEventCollectionResource($calendar->getEventsOfDay());
         }else{
             $showCalendar = $calendar->createCalendarData();
@@ -220,7 +220,7 @@ class EventController extends Controller
     public function showDashboardPage(Request $request): Response
     {
         $calendarController = new CalendarController();
-        $showCalendar = $calendarController->createCalendarData('dashboard');
+        $showCalendar = $calendarController->createCalendarData('dashboard', null, null, \request('startDate'), \request('endDate'));
 
         $projects = Project::query()->with( ['managerUsers'])->get();
 

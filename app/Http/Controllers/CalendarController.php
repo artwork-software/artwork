@@ -24,6 +24,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\ErrorHandler\Debug;
 
@@ -193,32 +194,43 @@ class CalendarController extends Controller
         return $eventsToday;
     }
 
-    public function createCalendarData($type = '', ?Project $project = null, ?Room $room = null)
+    public function createCalendarData($type = '', ?Project $project = null, ?Room $room = null,$startDate = null,$endDate = null)
     {
 
         $calendarType = 'individual';
         $selectedDate = null;
-        $this->startDate = Carbon::now()->startOfDay();
-
-        $filterController = new FilterController();
-
-        if ($type === 'dashboard') {
-            $this->endDate = Carbon::now()->endOfDay();
-        } else {
+        if(\request('startDate') && \request('endDate')){
+            $this->setDefaultDates();
+        }else{
+            $this->startDate = Carbon::now()->startOfDay();
             $this->endDate = Carbon::now()->addWeeks()->endOfDay();
         }
+
+
+
+        if ($startDate) {
+            $this->startDate = Carbon::create($startDate)->startOfDay();
+        }else{
+            $this->setDefaultDates();
+        }
+        if ($endDate) {
+            $this->endDate = Carbon::create($endDate)->endOfDay();
+        }else{
+            if ($type === 'dashboard') {
+                $this->endDate = Carbon::now()->endOfDay();
+            } else {
+                $this->setDefaultDates();
+            }
+        }
+        $filterController = new FilterController();
+
         if (!empty($project)) {
             $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
             $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
             if (!empty($firstEventInProject) && !empty($lastEventInProject)) {
                 $this->startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
                 $this->endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
-            } else {
-                $this->setDefaultDates();
             }
-
-        } else {
-            $this->setDefaultDates();
         }
         $startDay = $this->startDate->format('Y-m-d');
         $endDay = $this->endDate->format('Y-m-d');

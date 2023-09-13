@@ -128,9 +128,6 @@
             </div>
         </div>
         <div class="mt-5">
-            <pre>
-                {{ filteredUsers }}
-            </pre>
             <div class="xsDark" v-if="eventsWithRelevant.length === 0">
                 Bisher gibt es für dieses Projekt keine schichtrelevanten Termine.
             </div>

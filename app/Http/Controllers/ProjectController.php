@@ -79,6 +79,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
@@ -3049,11 +3050,21 @@ class ProjectController extends Controller
 
         $oldKeyVisual = $project->key_visual_path;
         if($request->file('keyVisual')) {
-            Storage::delete('keyVisual/'. $project->key_visual_path);
             $file = $request->file('keyVisual');
 
-            $img = Image::make($file)->resize(1150, 200);
+            $img = Image::make($file);
 
+            $height = $img->height();
+            $width = $img->width();
+            $ratio = $width / $height;
+
+            if($ratio < 4 || $ratio > 8) {
+                throw ValidationException::withMessages([
+                    'key_visual' => 'Das Key Visual sollte mindestens 4 und maximal 8 mal so breit wie hoch sein. Im Idealfall 1150px breit und 200px hoch.'
+                ]);
+            }
+
+            Storage::delete('keyVisual/'. $project->key_visual_path);
 
             $original_name = $file->getClientOriginalName();
             $basename = Str::random(20).$original_name;

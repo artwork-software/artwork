@@ -279,12 +279,12 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div class="flex justify-center">
                             <AddButton @click="editRoom"
                                        text="Speichern"
                                        mode="modal"
                                        :class="[editRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                        :disabled="editRoomForm.name.length === 0"
                                        class="mt-8 px-24 py-3"/>
                         </div>

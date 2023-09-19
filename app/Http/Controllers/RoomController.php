@@ -112,11 +112,11 @@ class RoomController extends Controller
             'order' => Room::max('order') + 1,
         ]);
 
-        $room->adjoining_rooms()->sync(collect($request->adjoining_rooms)->pluck("id"));
-
-        $room->attributes()->sync(collect($request->room_attributes)->pluck("id"));
-
-        $room->categories()->sync(collect($request->room_categories)->pluck("id"));
+        if(!is_null($request->adjoining_rooms) && !is_null($request->room_attributes) && !is_null($request->room_categories)) {
+            $room->adjoining_rooms()->sync($request->adjoining_rooms);
+            $room->attributes()->sync($request->room_attributes);
+            $room->categories()->sync($request->room_categories);
+        }
 
         return Redirect::route('areas.management')->with('success', 'Room created.');
     }
@@ -173,7 +173,6 @@ class RoomController extends Controller
      */
     public function update(Request $request, Room $room): RedirectResponse
     {
-        //dd($request->all());
 
         $oldRoomDescription = $room->description;
         $oldRoomTitle = $room->name;

@@ -12,11 +12,11 @@
             </div>
             <div class="flex z-10" v-if="this.project.key_visual_path !== null">
                 <img :src="'/storage/keyVisual/header_' + this.project.key_visual_path" alt="Aktuelles Key-Visual"
-                     class="rounded-md w-full h-[200px]">
+                     class="rounded-md mx-auto h-[200px]">
             </div>
             <div v-else class="w-full h-40 bg-gray-200 flex justify-center items-center">
-                <img src="/Svgs/IconSvgs/placeholder.svg" alt="Aktuelles Key-Visual"
-                     class="rounded-md ">
+                <img src="/images/place.png" alt="Aktuelles Key-Visual"
+                     class="rounded-md h-[200px]">
             </div>
             <div class="mt-5 subpixel-antialiased text-secondary text-xs flex items-center"
                  v-if="project.project_history.length">

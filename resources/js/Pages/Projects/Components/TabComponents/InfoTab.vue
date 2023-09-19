@@ -235,7 +235,12 @@ export default{
 
             if (allowedTypes.includes(file.type)) {
                 this.keyVisualForm.keyVisual = file
-                this.keyVisualForm.post(route('projects_key_visual.update', {project: this.project.id}));
+                this.keyVisualForm.post(route('projects_key_visual.update', {project: this.project.id}), {
+                        onError: error => {
+                            this.uploadDocumentFeedback = error.key_visual
+                        }
+                }
+                );
             } else {
                 this.uploadDocumentFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert."
             }

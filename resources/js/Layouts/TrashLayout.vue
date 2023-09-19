@@ -50,15 +50,9 @@
                                 </transition>
                             </div>
                         </Listbox>
-
-                        <div class="flex items-center">
-                            <div class="inset-y-0 mr-3 pointer-events-none">
-                                <SearchIcon class="h-5 w-5" aria-hidden="true"/>
-                            </div>
-                        </div>
                     </div>
 
-                    <slot/>
+                    <slot />
                 </div>
             </div>
         </div>
@@ -70,13 +64,16 @@ import {Listbox, ListboxButton, ListboxOptions, ListboxOption} from "@headlessui
 import {SearchIcon, ChevronDownIcon, CheckIcon} from "@heroicons/vue/solid";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
+import {XIcon} from "@heroicons/vue/outline";
+import Input from "@/Layouts/Components/InputComponent.vue";
 
 export default {
     name: "TrashLayout",
     mixins: [Permissions],
     data() {
         return {
-            selectedTrash: null
+            selectedTrash: null,
+
         }
     },
     watch: {
@@ -117,6 +114,7 @@ export default {
         }
     },
     components: {
+        Input, XIcon,
         Listbox,
         SearchIcon,
         ListboxButton,

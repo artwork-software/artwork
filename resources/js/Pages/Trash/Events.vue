@@ -1,5 +1,25 @@
 <template>
-    <div v-for="event in trashed_events"
+    <div class="flex w-full justify-between">
+        <div>
+
+        </div>
+        <div class="flex justify-end items-center ml-8 -mt-14">
+            <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+                 class="cursor-pointer inset-y-0 mr-3">
+                <SearchIcon class="h-5 w-5" aria-hidden="true"/>
+            </div>
+            <div v-else class="flex items-center w-64 mr-2">
+                <div>
+                    <input type="text"
+                           placeholder="Suche"
+                           v-model="searchText"
+                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                </div>
+                <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
+            </div>
+        </div>
+    </div>
+    <div v-for="event in filteredTrashedEvents"
          class="flex w-full bg-white my-2 border border-gray-200">
         <div class="flex mt-2 w-full ml-4 flex-wrap p-4">
             <div class="flex justify-between w-full">
@@ -10,14 +30,14 @@
 
                     <div v-else class="flex w-full items-center justify-between">
                         <div class="mr-12 headline2">
-                            {{ event.name}}
+                            {{ event.name }}
                         </div>
                         <div v-if="event.project" class="mt-1.5 flex">
                             zugeordnet zu:
                             <a v-if="event.project?.id"
                                :href="route('projects.show.calendar', {project: event.project.id})"
                                class="ml-3 text-md flex font-bold font-lexend text-primary">
-                                {{ event.project.name}}
+                                {{ event.project.name }}
                             </a>
                         </div>
                     </div>
@@ -87,25 +107,39 @@
 <script>
 import AppLayout from "@/Layouts/AppLayout";
 import TrashLayout from "@/Layouts/TrashLayout";
-import {ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon, RefreshIcon} from "@heroicons/vue/solid";
+import {ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon, RefreshIcon, SearchIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {TrashIcon} from "@heroicons/vue/outline";
+import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
+import Input from "@/Layouts/Components/InputComponent.vue";
 
 export default {
     name: "Events",
     layout: [AppLayout, TrashLayout],
     props: ['trashed_events'],
     components: {
+        Input, XIcon, SearchIcon,
         ChevronDownIcon,
         ChevronUpIcon,
         Menu, MenuButton, DotsVerticalIcon,
-        MenuItems,MenuItem, RefreshIcon, TrashIcon, Link,EventTypeIconCollection
+        MenuItems, MenuItem, RefreshIcon, TrashIcon, Link, EventTypeIconCollection
     },
     data() {
         return {
             showTemporaryEvents: [],
+            showSearchbar: false,
+            searchText: '',
+        }
+    },
+    computed: {
+        filteredTrashedEvents() {
+            if(!this.searchText){
+                return this.trashed_events;
+            }
+            return this.trashed_events.filter(event => {
+                return event.name.toLowerCase().includes(this.searchText.toLowerCase())
+            })
         }
     },
     methods: {
@@ -115,7 +149,12 @@ export default {
             } else {
                 this.showTemporaryEvents.push(eventId);
             }
-        },
+        }
+        ,
+        closeSearchbar() {
+            this.showSearchbar = false
+            this.searchText = ''
+        }
     }
 }
 </script>

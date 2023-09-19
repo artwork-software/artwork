@@ -1,11 +1,32 @@
 <template>
-    <div v-if="trashed_projects.length > 0" v-for="(project,index) in trashed_projects" :key="project.id" class="mt-5 border-b-2 border-gray-200 w-full">
+    <div class="flex w-full justify-between">
+        <div>
+
+        </div>
+        <div class="flex justify-end items-center ml-8 -mt-14">
+            <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+                 class="cursor-pointer inset-y-0 mr-3">
+                <SearchIcon class="h-5 w-5" aria-hidden="true"/>
+            </div>
+            <div v-else class="flex items-center w-64 mr-2">
+                <div>
+                    <input type="text"
+                           placeholder="Suche"
+                           v-model="searchText"
+                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                </div>
+                <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
+            </div>
+        </div>
+    </div>
+    <div v-if="filteredTrashedProjects.length > 0" v-for="(project,index) in filteredTrashedProjects" :key="project.id"
+         class="mt-5 border-b-2 border-gray-200 w-full">
         <div class="py-5 flex justify-between">
             <div class="flex">
                 <div class="w-full mr-6">
                     <div class="flex my-auto">
                         <p class="text-2xl subpixel-antialiased text-gray-900">{{ project.name }}</p>
-                        {{project.access_budget}}
+                        {{ project.access_budget }}
                     </div>
                 </div>
             </div>
@@ -55,7 +76,7 @@
                         <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full ring-2 ring-white"
                              :src="user.profile_photo_url"
                              alt=""/>
-                        <UserTooltip :user="user" />
+                        <UserTooltip :user="user"/>
                     </div>
                     <div v-if="project.users.length >= 4" class="my-auto">
                         <Menu as="div" class="relative">
@@ -182,24 +203,45 @@
 import AppLayout from "@/Layouts/AppLayout";
 import TrashLayout from "@/Layouts/TrashLayout";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import { MenuButton,Menu, MenuItems, MenuItem } from "@headlessui/vue";
-import { ChevronDownIcon, DotsVerticalIcon, ChevronRightIcon, XIcon, RefreshIcon } from "@heroicons/vue/solid";
-import { TrashIcon} from "@heroicons/vue/outline";
+import {MenuButton, Menu, MenuItems, MenuItem} from "@headlessui/vue";
+import {
+    ChevronDownIcon,
+    DotsVerticalIcon,
+    ChevronRightIcon,
+    XIcon,
+    RefreshIcon,
+    SearchIcon
+} from "@heroicons/vue/solid";
+import {TrashIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {Link} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
+import Input from "@/Layouts/Components/InputComponent.vue";
+
 export default {
     props: ['trashed_projects'],
     name: "Projects",
     layout: [AppLayout, TrashLayout],
     data() {
-      return {
-          showProjectHistory: false,
-          projectHistoryToDisplay: [],
-          projectBudgetAccess: {},
-      }
+        return {
+            showProjectHistory: false,
+            projectHistoryToDisplay: [],
+            projectBudgetAccess: {},
+            showSearchbar: false,
+            searchText: '',
+        }
+    },
+    computed: {
+        filteredTrashedProjects() {
+            if (this.searchText === '') {
+                return this.trashed_projects;
+            }
+            return this.trashed_projects.filter(project => {
+                return project.name.toLowerCase().includes(this.searchText.toLowerCase())
+            })
+        }
     },
     methods: {
         openProjectHistoryModal(project) {
@@ -210,9 +252,14 @@ export default {
         closeProjectHistoryModal() {
             this.showProjectHistory = false;
             this.projectHistoryToDisplay = [];
+        },
+        closeSearchbar() {
+            this.showSearchbar = false
+            this.searchText = ''
         }
     },
     components: {
+        Input, SearchIcon,
         ProjectHistoryComponent,
         TrashIcon,
         TeamIconCollection,

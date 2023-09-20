@@ -241,12 +241,12 @@ const navigation = [
         has_permission: 'is_money_source_admin'
     },
     {
-        name: 'Finanzierungsquellen',
+        name: 'Nutzer*innen',
         href: route('users'),
         route: ['/users'],
         svgSrc: '/Svgs/Sidebar/icon_users_teams.svg',
         svgSrc_active: '/Svgs/Sidebar/icon_users_teams_active.svg',
-        has_permission: 'is_money_source_admin'
+        has_permission: 'all'
     },
 
     {

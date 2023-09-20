@@ -63,7 +63,7 @@
                                      alt=""/>
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
-                                        <Link :href="checkLink(user) " v-if="$role('artwork admin')"
+                                        <Link :href="checkLink(user) "
                                               class="mr-3 sDark">
                                             {{ user.display_name ?? user.provider_name }}
                                             <span v-if="user.position || user.business">, </span>

@@ -61,7 +61,7 @@
                 <div class="hidden sm:block">
                     <div class="">
                         <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
-                            <div v-for="tab in tabs" :key="tab.name" @click="changeTab(tab.id)" :class="[tab.current ? 'border-indigo-500 text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']" :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}</div>
+                            <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)" :class="[tab.current ? 'border-indigo-500 text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']" :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}</div>
                         </nav>
                     </div>
                 </div>
@@ -106,7 +106,7 @@
                         <div class="col-span-3">
                             <label for="first_name" class="xxsLight">Vorname</label>
                             <div>
-                                <input type="text" v-model="freelancerData.first_name" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Vorname" />
+                                <input  type="text" v-model="freelancerData.first_name" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Vorname" />
                             </div>
                         </div>
                         <div class="col-span-4">
@@ -177,7 +177,7 @@ import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPla
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import UserSidebar from "@/Pages/Users/Components/UserSidebar.vue";
 
-export default defineComponent({
+export default {
     name: "Show",
     mixins: [Permissions],
     components: {
@@ -210,9 +210,9 @@ export default defineComponent({
     data(){
         return {
             tabs: [
-                { id: 1, name: 'Einsatzplan', href: '#', current: false },
-                { id: 2, name: 'Persönliche Daten', href: '#', current: true },
-                { id: 3, name: 'Konditionen', href: '#', current: false },
+                { id: 1, name: 'Einsatzplan', href: '#', current: false, has_permission: this.$can('can plan shifts') || this.hasAdminRole() },
+                { id: 2, name: 'Persönliche Daten', href: '#', current: true, has_permission: true },
+                { id: 3, name: 'Konditionen', href: '#', current: false, has_permission: this.$can('can edit external users conditions') || this.hasAdminRole() },
 
             ],
             currentTab: 2,
@@ -277,7 +277,7 @@ export default defineComponent({
             })
         },
     }
-})
+}
 </script>
 
 <style scoped>

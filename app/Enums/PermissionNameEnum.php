@@ -61,4 +61,14 @@ enum PermissionNameEnum : string
     // NEW PERMISSIONS JUNE'23
     case MA_MANAGER = 'can manage workers';
     case SHIFT_PLANNER = 'can plan shifts';
+
+    case GLOBAL_DOCUMENT_ADMIN = 'can manage global documents';
+
+    case GLOBAL_PROJECT_BUDGET_ADMIN = 'can manage global project budgets';
+
+    case VIEW_SHIFT_PLAN = 'can view shift plan';
+
+    case CAN_COMMIT_SHIFTS = 'can commit shifts';
+
+    case EDIT_EXTERNAL_USERS_CONDITIONS = 'can edit external users conditions';
 }

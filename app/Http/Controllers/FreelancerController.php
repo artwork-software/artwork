@@ -125,7 +125,7 @@ class FreelancerController extends Controller
         $showCalendar = $shiftPlan->createCalendarDataForFreelancerShiftPlan($freelancer);
         $availabilityData = $this->getAvailabilityData($freelancer, request('month'));
 
-        return Inertia::render('Freelancer/Show', [
+        return inertia('Freelancer/Show', [
             'freelancer' => $freelancer,
             //needed for availability calendar
             'calendarData' => $availabilityData['calendarData'],

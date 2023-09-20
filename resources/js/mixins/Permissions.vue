@@ -10,10 +10,10 @@ export default {
     },
     methods: {
         $can(permissionName) {
-            return this.permissions.includes(permissionName);
+            return this.$page.props.permissionsArray.includes(permissionName);
         },
         $role(roleName) {
-            return this.rolesArray.includes(roleName);
+            return this.$page.props.rolesArray.includes(roleName);
         },
         $canAny(permissionNames) {
             for (const permission of permissionNames) {

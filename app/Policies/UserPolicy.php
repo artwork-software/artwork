@@ -21,7 +21,7 @@ class UserPolicy
      */
     public function viewAny(User $user): Response|bool
     {
-        return $user->canAny([PermissionNameEnum::USER_UPDATE->value, PermissionNameEnum::PROJECT_MANAGEMENT->value]) || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value);
+        return true;
     }
 
     /**
@@ -33,7 +33,7 @@ class UserPolicy
      */
     public function view(User $user, User $model)
     {
-        return $user->can(PermissionNameEnum::USER_UPDATE->value) || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) || $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value);
+        return true;
     }
 
     /**

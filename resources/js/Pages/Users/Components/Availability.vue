@@ -4,7 +4,7 @@
             <h3 class="headline2 mb-6">Verfügbarkeit</h3>
             <div class="mb-10" v-if="type !== 'freelancer'">
                 <TemporarilyHired :user="user" v-if="$can('can manage workers') || hasAdminRole()" />
-                <div v-if="user.temporary && !$can('can manage workers') || !hasAdminRole()">
+                <div v-if="user.temporary && user.employStart && user.employEnd">
                     Temporär angestellt: {{ dayjs(user.employStart).format('DD.MM.YYYY') }} - {{ dayjs(user.employEnd).format('DD.MM.YYYY') }}
                 </div>
             </div>

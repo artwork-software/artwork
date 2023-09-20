@@ -12,7 +12,7 @@
 
                 <div class="sm:col-span-3">
                     <div class="mt-1">
-                        <input type="text" v-model="userForm.position" placeholder="Position"
+                        <input :disabled="!this.$can('can manage workers')" :class="this.$can('can manage workers') ? '' : 'bg-gray-100'" type="text" v-model="userForm.position" placeholder="Position"
                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                     </div>
                 </div>
@@ -27,7 +27,7 @@
                 </div>
                 <div class="sm:col-span-3">
                     <div class="mt-1">
-                        <input type="text" v-model="userForm.phone_number"
+                        <input :disabled="!this.$can('can manage workers')" :class="this.$can('can manage workers') ? '' : 'bg-gray-100'" type="text" v-model="userForm.phone_number"
                                placeholder="Telefonnummer"
                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                     </div>
@@ -36,7 +36,7 @@
 
                 <div class="sm:col-span-6">
                     <div class="mt-1">
-                                            <textarea placeholder="Was sollten die anderen artwork-User wissen?"
+                                            <textarea :disabled="!this.$can('can manage workers')" :class="this.$can('can manage workers') ? '' : 'bg-gray-100'" placeholder="Was sollten die anderen artwork-User wissen?"
                                                       v-model="userForm.description" rows="5"
                                                       class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                     </div>
@@ -49,7 +49,7 @@
                                             <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white"
                                                                 :iconName="team.svg_name"/>
                                         </span>
-                    <Menu as="div" class="my-auto relative ml-5">
+                    <Menu v-show="this.$can('can manage workers')" as="div" class="my-auto relative ml-5">
                         <div>
                             <MenuButton
                                 class="flex bg-tagBg p-0.5 rounded-full">
@@ -191,6 +191,7 @@ import JetInputError from "@/Jetstream/InputError.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     components: {
@@ -207,6 +208,7 @@ export default {
         MenuItem,
         MenuItems,
     },
+    mixins: [Permissions],
     props: [
         'user_to_edit',
         'password_reset_status',

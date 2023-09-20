@@ -21,7 +21,7 @@
                         <div class="hidden sm:block">
                             <div class="">
                                 <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
-                                    <div v-for="tab in tabs" :key="tab.name" @click="changeTab(tab.id)"
+                                    <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)"
                                          :class="[tab.current ? 'border-indigo-500 text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']"
                                          :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}
                                     </div>
@@ -51,8 +51,11 @@ import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue"
 import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
 import ProjectSidenav from "@/Layouts/Components/ProjectSidenav.vue";
 import {Inertia} from "@inertiajs/inertia";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
+    name: "UserEditHeader",
     components: {
         ProjectSidenav,
         ProjectShiftSidenav,
@@ -60,6 +63,7 @@ export default {
         BaseSidenav,
         AppLayout, InfoTab, ProjectShowHeaderComponent
     },
+
     props: [
         'user_to_edit',
         'currentTab',
@@ -69,10 +73,10 @@ export default {
         return {
             show: false,
             tabs: [
-                {id: 1, name: 'Einsatzplan', href: '#', current: this.currentTab === 'shiftplan'},
-                {id: 2, name: 'Konditionen', href: '#', current: this.currentTab === 'terms'},
-                {id: 3, name: 'Persönliche Daten', href: '#', current: this.currentTab === 'info'},
-                {id: 4, name: 'Nutzerrechte', href: '#', current: this.currentTab === 'permissions'},
+                {id: 1, name: 'Einsatzplan', href: '#', current: this.currentTab === 'shiftplan', has_permission: this.$can('can plan shifts') || this.hasAdminRole()},
+                {id: 2, name: 'Konditionen', href: '#', current: this.currentTab === 'terms', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
+                {id: 3, name: 'Persönliche Daten', href: '#', current: this.currentTab === 'info', has_permission: true},
+                {id: 4, name: 'Nutzerrechte', href: '#', current: this.currentTab === 'permissions', has_permission: this.hasAdminRole()},
             ],
             currentTab: 1,
         }

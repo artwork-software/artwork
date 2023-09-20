@@ -351,11 +351,11 @@ export default defineComponent({
                 email: this.user_to_edit.email
             }),
             tabs: [
-                {id: 1, name: 'Einsatzplan', href: '#', current: true},
+                {id: 1, name: 'Einsatzplan', href: '#', current: true, has_permission: this.$can('can plan shifts') || this.hasAdminRole()},
                 {id: 2, name: 'Verfügbarkeit', href: '#', current: false},
                 {id: 3, name: 'Konditionen', href: '#', current: false},
                 {id: 4, name: 'Persönliche Daten', href: '#', current: false},
-                {id: 5, name: 'Nutzerrechte', href: '#', current: false},
+                {id: 5, name: 'Nutzerrechte', href: '#', current: false, has_permission: this.hasAdminRole()},
             ],
             currentTab: 1,
         }

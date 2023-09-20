@@ -236,6 +236,7 @@ class RolesAndPermissionsSeeder extends Seeder
             "checked" => false
         ]);
 
+        //not implemented
         Permission::create([
             'name' => PermissionNameEnum::GLOBAL_DOCUMENT_ADMIN->value,
             'name_de' => "Gloables Dokumentenmanagement",
@@ -243,6 +244,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
 
+        //not implemented
         Permission::create([
             'name' => PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
             'name_de' => "Gloabler Budgetzugriff",
@@ -250,6 +252,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
 
+        //not implemented
         Permission::create([
             'name' => PermissionNameEnum::VIEW_SHIFT_PLAN->value,
             'name_de' => "Schichtplan einsehen",
@@ -257,6 +260,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
 
+        //not implemented
         Permission::create([
             'name' => PermissionNameEnum::CAN_COMMIT_SHIFTS->value,
             'name_de' => "Dienstpläne festschreiben",
@@ -264,6 +268,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
 
+        //implemented
         Permission::create([
             'name' => PermissionNameEnum::EDIT_EXTERNAL_USERS_CONDITIONS->value,
             'name_de' => "Externe Mitarbeiterkonditionen verwalten",

@@ -201,14 +201,14 @@
 
                                                                         {{ element.done_at }}
                                                         <span class="ml-2">
-                                                            <NewUserToolTip :height="7" :width="7" v-if="element.done_by_user"
+                                                            <UserPopoverTooltip :height="7" :width="7" v-if="element.done_by_user"
                                                                             :user="element.done_by_user" :id="element.id"/>
                                                         </span>
 
                                                                     </span>
                                                     <span class="mx-3 flex" v-else>
                                                         <span class="flex -mr-3" v-for="user in element.users">
-                                                        <NewUserToolTip :id="element.id + 'user' + user.id" :user="user" height="7"
+                                                        <UserPopoverTooltip :id="element.id + 'user' + user.id" :user="user" height="7"
                                                                         width="7"/>
                                                     </span>
                                                     </span>
@@ -418,7 +418,7 @@
 
                                                                         {{ element.done_at }}
                                                         <span class="ml-2">
-                                                            <NewUserToolTip :height="7" :width="7" v-if="element.done_by_user"
+                                                            <UserPopoverTooltip :height="7" :width="7" v-if="element.done_by_user"
                                                                             :user="element.done_by_user" :id="element.id"/>
                                                         </span>
 
@@ -948,12 +948,14 @@ import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent.
 import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     mixins: [Permissions],
     name: "ChecklistComponent",
     props: ['project', 'opened_checklists', 'checklist_templates', 'projectManagerIds'],
     components: {
+        UserPopoverTooltip,
         NewUserToolTip,
         AddChecklistUserModal,
         TagComponent,

@@ -37,8 +37,7 @@
                                     <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                         {{ historyItem.created_at }}:
                                     </span>
-                                <NewUserToolTip class="absolute" :height="7" :width="7" v-if="historyItem.changes[0].changed_by"
-                                                :user="historyItem.changes[0].changed_by" :id="index"/>
+                                <UserPopoverTooltip v-if="historyItem.changes[0].changed_by" :user="historyItem.changes[0].changed_by" :id="index" height="7" width="7"/>
                                 <div v-else class="xsLight ml-3">
                                     gelöschte Nutzer:in
                                 </div>
@@ -56,8 +55,7 @@
                             <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                 {{ historyItem.created_at }}:
                             </span>
-                            <NewUserToolTip :height="7" :width="7" v-if="historyItem.changes[0].changed_by"
-                                            :user="historyItem.changes[0].changed_by" :id="index"/>
+                            <UserPopoverTooltip v-if="historyItem.changes[0].changed_by" :user="historyItem.changes[0].changed_by" :id="index" height="7" width="7"/>
                             <div v-else class="xsLight ml-3">
                                 gelöschte Nutzer:in
                             </div>
@@ -81,11 +79,13 @@ import AddButton from "@/Layouts/Components/AddButton";
 import {CheckIcon} from "@heroicons/vue/solid";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: 'ProjectHistoryComponent',
     mixins: [Permissions],
     components: {
+        UserPopoverTooltip,
         NewUserToolTip,
         JetDialogModal,
         XIcon,

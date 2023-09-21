@@ -28,10 +28,7 @@
                      @mouseout="commentHovered = null">
                     <div class="flex justify-between">
                         <div class="flex items-center">
-                            <img v-if="comment.user" :data-tooltip-target="comment.user"
-                                 :src="comment.user.profile_photo_url" :alt="comment.user.name"
-                                 class="rounded-full h-7 w-7 object-cover"/>
-                            <UserTooltip v-if="comment.user" :user="comment.user"/>
+                            <UserPopoverTooltip v-if="comment.user" :user="comment.user" height="7" width="7" :id="comment.user.id"/>
                             <div class="ml-2 text-secondary"
                                  :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                 {{ comment.created_at }}
@@ -65,9 +62,11 @@ import {CheckIcon, XCircleIcon} from "@heroicons/vue/solid";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     components: {
+        UserPopoverTooltip,
         CheckIcon,
         UserTooltip,
         PencilAltIcon, XCircleIcon, DocumentTextIcon, SvgCollection, XIcon, JetInputError

@@ -21,7 +21,7 @@
                                     <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                         {{ dayjs(historyItem.created_at).format('DD.MM.YYYY HH:mm') }}
                                     </span>
-                                <NewUserToolTip :height="7" :width="7" v-if="JSON.parse(historyItem.changes, null, 2)[0].changed_by"
+                                <UserPopoverTooltip :height="7" :width="7" v-if="JSON.parse(historyItem.changes, null, 2)[0].changed_by"
                                                 :user="JSON.parse(historyItem.changes, null, 2)[0].changed_by" :id="index"/>
                                 <div v-else class="xsLight ml-3">
                                     gelöschte Nutzer:in
@@ -55,11 +55,13 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import dayjs from "dayjs";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: 'ShiftHistoryModal',
     mixins: [Permissions],
     components: {
+        UserPopoverTooltip,
         NewUserToolTip,
         JetDialogModal,
         XIcon,

@@ -10,9 +10,7 @@
         <div class="text-secondary text-sm mt-4">RAUMADMIN</div>
         <div class="flex" v-if="room.room_admins.length > 0">
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in room.room_admins">
-                <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
-                     class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
-                <UserTooltip :user="user"/>
+                <UserPopoverTooltip :user="user" height="11" width="11" :id="user.id"/>
             </div>
         </div>
         <div v-else class="text-secondary text-sm mt-2">
@@ -21,9 +19,7 @@
         <div class="text-secondary text-sm mt-4">ANFRAGEBERECHTIGT</div>
         <div class="flex" v-if="room.requestable_by.length > 0">
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in room.requestable_by">
-                <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
-                     class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
-                <UserTooltip :user="user"/>
+                <UserPopoverTooltip :user="user" height="11" width="11" :id="user.id"/>
             </div>
         </div>
         <div v-else class="text-secondary text-sm mt-2">
@@ -129,6 +125,7 @@ import RoomAccessModal from "@/Layouts/Components/RoomAccessModal.vue";
 import RoomAttributeEditModal from "@/Layouts/Components/RoomAttributeEditModal.vue";
 import FileDeleteModal from "@/Layouts/Components/FileDeleteModal.vue";
 import RoomFileUploadModal from "@/Layouts/Components/RoomFileUploadModal.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 
 const props = defineProps({

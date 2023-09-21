@@ -336,8 +336,8 @@
                     <div class="my-6" v-for="comment in this.event.comments">
                         <div class="flex justify-between">
                             <div class="flex items-center">
-                                <NewUserToolTip :id="comment.id" :user="comment.user" :height="8"
-                                                :width="8"></NewUserToolTip>
+                                <UserPopoverTooltip :id="comment.id" :user="comment.user" :height="8"
+                                                :width="8"></UserPopoverTooltip>
                                 <div class="ml-2 text-secondary">
                                     {{ comment.created_at }}
                                 </div>
@@ -393,11 +393,13 @@ import TagComponent from "@/Layouts/Components/TagComponent";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: 'EventWithoutRoomComponent',
     mixins: [Permissions],
     components: {
+        UserPopoverTooltip,
         NewUserToolTip,
         Input,
         JetDialogModal,

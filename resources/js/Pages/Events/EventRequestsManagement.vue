@@ -68,11 +68,7 @@
                                         </div>
 
                                         <div v-for="projectLeader in eventRequest.project.project_managers">
-                                            <img :data-tooltip-target="projectLeader.id"
-                                                 :src="projectLeader.profile_photo_url"
-                                                 :alt="projectLeader.name"
-                                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                            <UserTooltip :user="projectLeader"/>
+                                            <UserPopoverTooltip :user="projectLeader" :id="projectLeader.id" height="7" width="7"/>
                                         </div>
 
                                     </div>
@@ -80,12 +76,8 @@
                                         Keinem Projekt zugeordnet
                                     </div>
                                     <div class="flex xsLight items-center">
-                                        angefragt:<img v-if="eventRequest.created_by.profile_photo_url"
-                                                       :data-tooltip-target="eventRequest.created_by.id"
-                                                       :src="eventRequest.created_by.profile_photo_url"
-                                                       :alt="eventRequest.created_by.name"
-                                                       class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                        <UserTooltip :user="eventRequest.created_by"/>
+                                        angefragt:
+                                        <UserPopoverTooltip :user="eventRequest.created_by" :id="eventRequest.created_by.id" height="7" width="7" class="ml-2"/>
                                         <span class="ml-2 xsLight"> {{ eventRequest.created_at }}</span>
                                     </div>
 
@@ -175,11 +167,8 @@
                                     Keinem Projekt zugeordnet
                                 </div>
                                 <div class="flex xsLight items-center">
-                                    angefragt:<img :data-tooltip-target="requestToApprove.created_by.id"
-                                                   :src="requestToApprove.created_by.profile_photo_url"
-                                                   :alt="requestToApprove.created_by.name"
-                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip :user="requestToApprove.created_by"/>
+                                    angefragt:
+                                    <UserPopoverTooltip :user="requestToApprove.created_by" :id="requestToApprove.created_by.id" height="7" width="7" class="ml-2"/>
                                     <span class="ml-2 xsLight"> {{ requestToApprove.created_at }}</span>
                                 </div>
                                 <div>
@@ -275,11 +264,8 @@
                                     Keinem Projekt zugeordnet
                                 </div>
                                 <div class="flex xsLight items-center">
-                                    angefragt:<img :data-tooltip-target="requestToDecline.created_by.id"
-                                                   :src="requestToDecline.created_by.profile_photo_url"
-                                                   :alt="requestToDecline.created_by.name"
-                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip :user="requestToDecline.created_by"/>
+                                    angefragt:
+                                    <UserPopoverTooltip :user="requestToDecline.created_by" :id="requestToDecline.created_by.id" height="7" width="7" class="ml-2"/>
                                     <span class="ml-2"> {{ requestToDecline.created_at }}</span>
                                 </div>
                                 <div>
@@ -342,11 +328,13 @@ import {Link} from "@inertiajs/inertia-vue3";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        UserPopoverTooltip,
         ListboxLabel,
         SvgCollection,
         Button,

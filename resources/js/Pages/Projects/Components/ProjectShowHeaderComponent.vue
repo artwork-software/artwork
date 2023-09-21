@@ -23,13 +23,7 @@
                 <div>
                     zuletzt geändert:
                 </div>
-                <img v-if="project.project_history[0]?.changes[0]?.changed_by"
-                     :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
-                     :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
-                     :alt="project.project_history[0].changes[0].changed_by?.first_name"
-                     class="ml-2 ring-white ring-2 rounded-full h-4 w-4 object-cover"/>
-                <UserTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
-                             :user="project.project_history[0].changes[0].changed_by"/>
+                <UserPopoverTooltip :user="project.project_history[0]?.changes[0]?.changed_by" :id="project.project_history[0]?.changes[0]?.changed_by.id" height="4" width="4" class="ml-2"/>
                 <span class="ml-2 subpixel-antialiased">
                         {{ project.project_history[0]?.created_at }}
                     </span>
@@ -206,9 +200,11 @@ import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue"
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import {Inertia} from "@inertiajs/inertia";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     components: {
+        UserPopoverTooltip,
         ProjectHistoryComponent,
         JetDialogModal,
         XIcon,

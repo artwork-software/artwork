@@ -48,7 +48,7 @@
             </div>
             <div id="userOverview" :style="{ 'max-height': computedUserOverviewMaxHeight }" class="w-[102.5%]  overflow-x-scroll -ml-14">
                 <div class="flex justify-center overflow-y-scroll ">
-                    <div @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
+                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
                          class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">
                         <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
@@ -308,7 +308,7 @@ export default {
     },
     data() {
         return {
-            showUserOverview: true,
+            showUserOverview: this.$can('can plan shifts') || this.hasAdminRole(),
             isFullscreen: false,
             showHistoryModal: false,
             showUserShifts: false,

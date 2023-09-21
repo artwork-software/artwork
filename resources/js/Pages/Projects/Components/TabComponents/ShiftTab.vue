@@ -2,7 +2,7 @@
     <div class="bg-backgroundGray mt-6 p-5">
         <div class="flex justify-between items-center ">
             <div>
-                <SwitchGroup as="div" class="flex items-center" v-if="eventsWithRelevant?.length > 0">
+                <SwitchGroup as="div" class="flex items-center" v-if="eventsWithRelevant?.length > 0 && (this.$can('can commit shifts') || this.hasAdminRole())">
                     <Switch v-model="hasUncommittedShift"
                             @update:modelValue="updateCommitmentOfShifts"
                             :class="[!hasUncommittedShift ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
@@ -145,11 +145,13 @@ import SingleShiftEvent from "@/Pages/Projects/Components/SingleRelevantEvent.vu
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import SingleRelevantEvent from "@/Pages/Projects/Components/SingleRelevantEvent.vue";
 import Input from "@/Jetstream/Input.vue";
+import Permissions from "@/mixins/Permissions.vue";
 import {usePage} from "@inertiajs/inertia-vue3";
 
 export default defineComponent({
     name: "ShiftTab",
     props: ['eventsWithRelevant', 'crafts', 'users', 'dropUsers', 'eventTypes'],
+    mixins: [Permissions],
     components: {
         Input,
         SingleRelevantEvent,

@@ -50,7 +50,7 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                    <a v-show="!tableIsEmpty && !table.is_template" @click="openAddBudgetTemplateModal()"
+                                    <a v-show="!tableIsEmpty && !table.is_template && this.$can('edit budget templates')" @click="openAddBudgetTemplateModal()"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -305,7 +305,7 @@
                                             </a>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
-                                            <a v-show="!tableIsEmpty && !table.is_template" @click="openAddBudgetTemplateModal()"
+                                            <a v-show="!tableIsEmpty && !table.is_template && this.$can('edit budget templates')" @click="openAddBudgetTemplateModal()"
                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <TrashIcon
                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"

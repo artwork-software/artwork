@@ -255,8 +255,8 @@ export default {
                 {name: 'Projektinformationen', href: '#', current: this.openTab === 'info', show: true},
                 {name: 'Ablaufplan', href: '#', current: this.openTab === 'calendar', show: true},
                 {name: 'Checklisten', href: '#', current: this.openTab === 'checklist', show: true},
-                {name: 'Schichten', href: '#', current: this.openTab === 'shift', show: true},
-                {name: 'Budget', href: '#', current: this.openTab === 'budget', show: this.$page.props.is_admin || this.access_budget?.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)},
+                {name: 'Schichten', href: '#', current: this.openTab === 'shift', show: this.hasAdminRole() || this.$can('can plan shifts')},
+                {name: 'Budget', href: '#', current: this.openTab === 'budget', show: this.$page.props.is_admin || this.access_budget?.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id) || this.$can('can manage global project budgets')},
                 {name: 'Kommentare', href: '#', current: this.openTab === 'comment', show: true},
             ]
         },

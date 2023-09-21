@@ -752,7 +752,7 @@ export default {
             eventName: null,
             eventTypeName: null,
             selectedEventType: this.eventTypes[0],
-            showProjectInfo: false,
+            showProjectInfo: this.project ? true : false,
             allDayEvent: false,
             selectedProject: null,
             selectedRoom: null,

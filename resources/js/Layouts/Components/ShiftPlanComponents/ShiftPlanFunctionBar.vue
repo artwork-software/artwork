@@ -12,7 +12,7 @@
                     </button>
                 </div>
             </div>
-            <div class="flex items-center">
+            <div class="flex items-center" v-if="this.$can('can commit shifts') || this.hasAdminRole()">
                 <AddButton text="Alle Schichten festsetzen" type="secondary" @click="showConfirmCommitModal = true" />
             </div>
 

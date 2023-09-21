@@ -90,7 +90,7 @@
                         </Switch>
                         <span v-if="$page.props.can.show_hints" class="ml-2 flex w-40">
                                     <SvgCollection svgName="arrowLeft" class="mr-1"/>
-                                    <span class="hind">Hilfe einblenden </span>
+                                    <span class="hind">Hilfe einblenden</span>
                                 </span>
                     </div>
                     <div class="flex justify-end w-full">
@@ -221,7 +221,7 @@ const navigation = [
         route: ['/shifts/view'],
         svgSrc: '/Svgs/Sidebar/icon_shift_plan.svg',
         svgSrc_active: '/Svgs/Sidebar/icon_shift_plan_active.svg',
-        has_permission: 'all'
+        has_permission: 'can see shift plan'
     },
     {
         name: 'Aufgaben',
@@ -238,7 +238,7 @@ const navigation = [
         route: ['/money_sources'],
         svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',
         svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg',
-        has_permission: 'is_money_source_admin'
+        has_permission: 'all'
     },
     {
         name: 'Nutzer*innen',
@@ -371,6 +371,10 @@ export default {
         checkPermission(item) {
             if (item.has_permission === 'is_money_source_admin') {
                 if (this.$page.props.myMoneySources.length > 0 || this.$canAny(['can edit and delete money sources', 'view edit add money_sources'])) {
+                    return true;
+                }
+            }else if(item.has_permission === 'can see shift plan'){
+                if(this.$can('can view shift plan') || this.hasAdminRole()){
                     return true;
                 }
             }

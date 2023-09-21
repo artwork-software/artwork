@@ -341,4 +341,14 @@ class UserController extends Controller
         ]));
 
     }
+
+    public function updateCalendarSettings(User $user, Request $request){
+        $user->calendar_settings()->update($request->only([
+            'project_status',
+            'options',
+            'project_management',
+            'repeating_events',
+            'work_shifts'
+        ]));
+    }
 }

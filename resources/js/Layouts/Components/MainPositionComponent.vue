@@ -74,7 +74,6 @@
                             <path id="Icon_metro-warning" data-name="Icon metro-warning" d="M11.85,14.748a.921.921,0,1,1-.921-.921A.921.921,0,0,1,11.85,14.748Zm-.921-1.842a.921.921,0,0,1-.921-.921V9.224a.921.921,0,0,1,1.842,0v2.762A.921.921,0,0,1,10.929,12.907Z" transform="translate(1221.046 663.831)" fill="#fcfcfb" stroke="#fcfcfb" stroke-width="0.2"/>
                         </g>
                     </svg>
-
                 </div>
                 <div class="flex flex-wrap w-8">
                     <div class="flex w-full">

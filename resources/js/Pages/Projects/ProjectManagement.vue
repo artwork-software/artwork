@@ -169,13 +169,9 @@
                                         <span class=" xxsLight">
                                               zuletzt geändert:
                                         </span>
-                                            <img v-if="project.project_history[0].changes[0].changed_by"
-                                                 :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
-                                                 :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
-                                                 :alt="project.project_history[0].changes[0].changed_by?.first_name"
-                                                 class="ml-2 ring-white ring-2 rounded-full h-4 w-4 object-cover"/>
-                                            <UserTooltip v-if="project.project_history[0].changes[0].changed_by"
-                                                         :user="project.project_history[0].changes[0].changed_by"/>
+                                            <UserPopoverTooltip v-if="project.project_history[0].changes[0].changed_by"
+                                                                :user="project.project_history[0].changes[0].changed_by"
+                                                                :id="index" height="4" width="4" class="ml-2"/>
                                             <span class="ml-2 xxsLight subpixel-antialiased">
                                                 {{ project.project_history[0].created_at }}
                                             </span>
@@ -205,7 +201,7 @@
                                 </div>
                                 <div class="flex items-top shrink-0 px-4">
                                     <div class="-mr-3 " v-for="(user) in project.project_managers">
-                                        <NewUserToolTip :user="user" :id="user.id" height="8" width="8"/>
+                                        <UserPopoverTooltip :user="user" :id="user.id" height="8" width="8"/>
                                     </div>
                                 </div>
                                 <div class="flex w-1/12 ml-4">
@@ -310,11 +306,7 @@
                             </div>
                             <div class="flex w-96">
                                 <div class="my-auto -mr-3 flex" v-for="user in project.users.slice(0,3)">
-                                    <img :data-tooltip-target="user.id"
-                                         class="h-9 w-9 rounded-full ring-2 ring-white object-cover"
-                                         :src="user.profile_photo_url"
-                                         alt=""/>
-                                    <UserTooltip :user="user"/>
+                                    <UserPopoverTooltip :user="user" :id="user.id" height="9" width="9"/>
                                 </div>
                             </div>
                             <div class="flex w-12 justify-end">
@@ -945,6 +937,7 @@ import Dropdown from "@/Jetstream/Dropdown.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -956,6 +949,7 @@ const number_of_participants = [
 
 export default defineComponent({
     components: {
+        UserPopoverTooltip,
         Input,
         BaseFilter,
         Dropdown,

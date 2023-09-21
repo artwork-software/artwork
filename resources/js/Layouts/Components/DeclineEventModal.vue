@@ -34,7 +34,7 @@
                                 </div>
                                 <div class="flex items-start text-xs">
                                     Erstellt von:
-                                    <NewUserToolTip class="ml-2" :user="requestToDecline.created_by" :id="requestToDecline.created_by.id" height="4" width="4"/>
+                                    <UserPopoverTooltip class="ml-2" :user="requestToDecline.created_by" :id="requestToDecline.created_by.id" height="4" width="4"/>
                                 </div>
                             </div>
                         </div>
@@ -103,6 +103,7 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: "DeclineEventModal",
@@ -112,7 +113,9 @@ export default {
             return dayjs
         }
     },
-    components: {NewUserToolTip, EventTypeIconCollection, AdjustmentsIcon, Button, UserTooltip, JetDialogModal, XIcon},
+    components: {
+        UserPopoverTooltip,
+        NewUserToolTip, EventTypeIconCollection, AdjustmentsIcon, Button, UserTooltip, JetDialogModal, XIcon},
     emits: ['closed', 'declined'],
     props: ['requestToDecline', 'eventTypes'],
     data(){

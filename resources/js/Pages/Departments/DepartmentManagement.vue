@@ -40,11 +40,7 @@
                             <div class="flex">
                                 <div class="flex mr-8">
                                     <div class="my-auto -mr-3" v-for="user in department.users.slice(0,9)">
-                                        <img :data-tooltip-target="user.id"
-                                             class="h-9 w-9 rounded-full object-cover ring-2 ring-white"
-                                             :src="user.profile_photo_url"
-                                             alt=""/>
-                                        <UserTooltip :user="user"/>
+                                        <UserPopoverTooltip :id="user.id" :user="user" :height="9" :width="9"/>
                                     </div>
                                     <div v-if="department.users.length >= 9" class="my-auto">
                                         <Menu as="div" class="relative">
@@ -155,11 +151,7 @@
                             <div class="flex">
                                 <div class="flex mr-8">
                                     <div class="my-auto -mr-3" v-for="user in department.users.slice(0,9)">
-                                        <img :data-tooltip-target="user.id"
-                                             class="h-9 w-9 rounded-full object-cover ring-2 ring-white"
-                                             :src="user.profile_photo_url"
-                                             alt=""/>
-                                        <UserTooltip :user="user"/>
+                                        <UserPopoverTooltip :id="user.id" :user="user" :height="9" :width="9"/>
                                     </div>
                                     <div v-if="department.users.length >= 9" class="my-auto">
                                         <Menu as="div" class="relative">
@@ -519,6 +511,7 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import Permissions from "@/mixins/Permissions.vue";
 import UserHeader from "@/Pages/Users/UserHeader.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -554,6 +547,7 @@ const iconMenuItems = [
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        UserPopoverTooltip,
         UserHeader,
         AddButton,
         TeamIconCollection,

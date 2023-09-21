@@ -71,13 +71,8 @@
                 <div class="flex items-center w-full justify-between mt-4">
                     <div class="flex mt-2 xsDark items-center">
                         erstellt von
-                        <img v-if="moneySource.creator"
-                             :data-tooltip-target="moneySource.creator?.id"
-                             :src="moneySource.creator?.profile_photo_url"
-                             :alt="moneySource.creator?.first_name"
-                             class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                        <UserTooltip v-if="moneySource.creator"
-                                     :user="moneySource.creator"/>
+                        <UserPopoverTooltip v-if="moneySource.creator" :user="moneySource.creator" :id="moneySource.creator?.id"
+                                            :height="7" :width="7" class="ml-2"/>
                     </div>
                     <button class="ml-4 mt-3 subpixel-antialiased flex items-center linkText cursor-pointer"
                             @click="openMoneySourceHistoryModal()">
@@ -282,12 +277,14 @@ import MoneySourceSidenav from "@/Layouts/Components/MoneySourceSidenav.vue";
 import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     mixins: [Permissions],
     name: "MoneySourceShow",
     props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects', 'linkedProjects'],
     components: {
+        UserPopoverTooltip,
         ConfirmDeleteModal,
         MoneySourceSidenav,
         BaseSidenav,

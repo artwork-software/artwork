@@ -68,13 +68,9 @@
                     <div>
                         zuletzt geändert:
                     </div>
-                    <img v-if="room.room_history[0].changes[0].changed_by"
-                         :data-tooltip-target="room.room_history[0].changes[0].changed_by?.id"
-                         :src="room.room_history[0].changes[0].changed_by?.profile_photo_url"
-                         :alt="room.room_history[0].changes[0].changed_by?.first_name"
-                         class="ml-2 ring-white ring-2 rounded-full h-4 w-4 object-cover"/>
-                    <UserTooltip v-if="room.room_history[0].changes[0].changed_by"
-                                 :user="room.room_history[0].changes[0].changed_by"/>
+                    <UserPopoverTooltip :user="room.room_history[0].changes[0].changed_by"
+                                        :id="room.room_history[0].changes[0].changed_by?.id"
+                                        height="4" width="4" class="ml-2"/>
                     <span class="ml-2 subpixel-antialiased">
                         {{ room.room_history[0].created_at }}
                     </span>
@@ -412,7 +408,7 @@
                                 </div>
                                 <div class="flex xsLight items-center">
                                     angefragt:
-                                    <NewUserToolTip :height="7" :width="7" v-if="requestToApprove.created_by"
+                                    <UserPopoverTooltip :height="7" :width="7" v-if="requestToApprove.created_by"
                                                     :user="requestToApprove.created_by" :id="1"/>
                                     <span class="ml-2 xsLight"> {{ requestToApprove.created_at }}</span>
                                 </div>
@@ -510,7 +506,7 @@
                                 </div>
                                 <div class="flex xsLight items-center">
                                     angefragt:
-                                    <NewUserToolTip :height="7" :width="7" v-if="requestToDecline.created_by"
+                                    <UserPopoverTooltip :height="7" :width="7" v-if="requestToDecline.created_by"
                                                     :user="requestToDecline.created_by" :id="1"/>
                                     <span class="ml-2 xsLight"> {{ requestToDecline.created_at }}</span>
                                 </div>
@@ -613,6 +609,7 @@ import RoomSidenav from "@/Layouts/Components/RoomSidenav.vue";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import SingleRoomCalendarComponent from "@/Layouts/Components/SingleRoomCalendarComponent.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -648,6 +645,7 @@ export default {
         'personalFilters'
     ],
     components: {
+        UserPopoverTooltip,
         IndividualCalendarComponent,
         RoomSidenav,
         BaseSidenav,

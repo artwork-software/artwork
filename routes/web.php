@@ -98,6 +98,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/users/invitations/{invitation}', [InvitationController::class, 'update']);
     Route::delete('/users/invitations/{invitation}', [InvitationController::class, 'destroy']);
 
+    Route::patch('/users/{user}/calendar-settings', [UserController::class, 'updateCalendarSettings'])->name('user.calendar_settings.update');
+
     //Users
     Route::get('/users', [UserController::class, 'index'])->name('users');
     Route::get('/users/search', [UserController::class, 'search'])->name('users.search');

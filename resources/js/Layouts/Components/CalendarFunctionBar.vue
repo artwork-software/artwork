@@ -70,67 +70,74 @@
                     @filters-changed="filtersChanged"
                 />
 
-                <!-- Calendar Settings Dropdown -->
-                <Dropdown :hide-chevron="true" :open="calendarSettingsOpen" align="right" content-classes="" width="64"
-                          class="text-right">
-                    <template #trigger>
-                                            <span class="inline-flex">
-                                                <button @click="calendarSettingsOpen = !calendarSettingsOpen"
-                                                        type="button"
-                                                        class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
-                                                    <img src="/Svgs/IconSvgs/icon_settings.svg" class="h-6 w-6 mx-2"/>
-                                                </button>
-                                                <span v-if="$page.props.user.calendar_settings.project_status || $page.props.user.calendar_settings.options || $page.props.user.calendar_settings.project_management || $page.props.user.calendar_settings.repeating_events || $page.props.user.calendar_settings.work_shifts"
-                                                      class="rounded-full border-2 border-error w-2 h-2 bg-error absolute ml-6 ring-white ring-1">
-                                                </span>
-                                            </span>
-                    </template>
 
-                    <template #content>
-                        <div class="w-44 p-6">
-                            <div class="flex py-1" v-if="!project">
-                                <input @click="toggle_calendarSettingsProjectStatus"
-                                       v-model="$page.props.user.calendar_settings.project_status"
-                                       type="checkbox"
-                                       class="checkBoxOnDark"/>
-                                <p :class="$page.props.user.calendar_settings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                   class=" ml-4 my-auto text-secondary">Projektstatus</p>
+                <Menu as="div" class="relative inline-block flex items-center text-left">
+                    <div class="">
+                        <MenuButton>
+                            <span class="inline-flex">
+                                <button
+                                        type="button"
+                                        class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
+                                    <img src="/Svgs/IconSvgs/icon_settings.svg" class="h-6 w-6 mx-2"/>
+                                </button>
+                                <span v-if="$page.props.user.calendar_settings.project_status || $page.props.user.calendar_settings.options || $page.props.user.calendar_settings.project_management || $page.props.user.calendar_settings.repeating_events || $page.props.user.calendar_settings.work_shifts"
+                                      class="rounded-full border-2 border-error w-2 h-2 bg-error absolute ml-6 ring-white ring-1">
+                                </span>
+                            </span>
+                        </MenuButton>
+                    </div>
+                    <transition
+                        enter-active-class="transition duration-50 ease-out"
+                        enter-from-class="transform scale-100 opacity-100"
+                        enter-to-class="transform scale-100 opacity-100"
+                        leave-active-class="transition duration-75 ease-in"
+                        leave-from-class="transform scale-100 opacity-100"
+                        leave-to-class="transform scale-95 opacity-0"
+                    >
+                        <MenuItems class="w-80 absolute right-0 top-12 origin-top-right rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            <div class="w-44 p-6">
+                                <div class="flex py-1" v-if="!project">
+                                    <input v-model="userCalendarSettings.project_status"
+                                           type="checkbox"
+                                           class="checkBoxOnDark"/>
+                                    <p :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                       class=" ml-4 my-auto text-secondary">Projektstatus</p>
+                                </div>
+                                <div class="flex py-1">
+                                    <input v-model="userCalendarSettings.options"
+                                           type="checkbox"
+                                           class="checkBoxOnDark"/>
+                                    <p :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                       class=" ml-4 my-auto text-secondary">Optionspriorisierung</p>
+                                </div>
+                                <div class="flex py-1" v-if="!project">
+                                    <input v-model="userCalendarSettings.project_management"
+                                           type="checkbox"
+                                           class="checkBoxOnDark"/>
+                                    <p :class="userCalendarSettings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                       class=" ml-4 my-auto text-secondary">Projektleitungen</p>
+                                </div>
+                                <div class="flex py-1">
+                                    <input v-model="userCalendarSettings.repeating_events"
+                                           type="checkbox"
+                                           class="checkBoxOnDark"/>
+                                    <p :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                       class=" ml-4 my-auto text-secondary">Wiederholungstermin</p>
+                                </div>
+                                <div class="flex py-1" v-if="$page.props.can.ma_manager || $page.props.can.shift_planner">
+                                    <input v-model="userCalendarSettings.work_shifts"
+                                           type="checkbox"
+                                           class="checkBoxOnDark"/>
+                                    <p :class="userCalendarSettings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                       class=" ml-4 my-auto text-secondary">Schichten</p>
+                                </div>
                             </div>
-                            <div class="flex py-1">
-                                <input @click="toggle_calendarSettingsOptions"
-                                       v-model="$page.props.user.calendar_settings.options"
-                                       type="checkbox"
-                                       class="checkBoxOnDark"/>
-                                <p :class="$page.props.user.calendar_settings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                   class=" ml-4 my-auto text-secondary">Optionspriorisierung</p>
+                            <div class="flex justify-end">
+                                <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">Speichern</button>
                             </div>
-                            <div class="flex py-1" v-if="!project">
-                                <input @click="toggle_calendarSettingsProjectManagement"
-                                       v-model="$page.props.user.calendar_settings.project_management"
-                                       type="checkbox"
-                                       class="checkBoxOnDark"/>
-                                <p :class="$page.props.user.calendar_settings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                   class=" ml-4 my-auto text-secondary">Projektleitungen</p>
-                            </div>
-                            <div class="flex py-1">
-                                <input @click="toggle_calendarSettingsRepeatingEvents"
-                                       v-model="$page.props.user.calendar_settings.repeating_events"
-                                       type="checkbox"
-                                       class="checkBoxOnDark"/>
-                                <p :class="$page.props.user.calendar_settings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                   class=" ml-4 my-auto text-secondary">Wiederholungstermin</p>
-                            </div>
-                            <div class="flex py-1" v-if="$page.props.can.ma_manager || $page.props.can.shift_planner">
-                                <input @click="toggle_calendarSettingsWorkShifts"
-                                       v-model="$page.props.user.calendar_settings.work_shifts"
-                                       type="checkbox"
-                                       class="checkBoxOnDark"/>
-                                <p :class="$page.props.user.calendar_settings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                   class=" ml-4 my-auto text-secondary">Schichten</p>
-                            </div>
-                        </div>
-                    </template>
-                </Dropdown>
+                        </MenuItems>
+                    </transition>
+                </Menu>
             </div>
             <button @click="openEventComponent()" type="button" :class="'bg-buttonBlue hover:bg-buttonHover'"
                     class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton  focus:outline-none">
@@ -154,12 +161,15 @@ import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import {useForm} from "@inertiajs/inertia-vue3";
+import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 
 
 export default {
     name: "CalendarFunctionBar",
     mixins: [Permissions],
     components: {
+        BaseFilter,
         BaseFilterTag,
         Dropdown,
         Menu,
@@ -195,7 +205,14 @@ export default {
             atAGlance: this.atAGlance,
             calendarSettingsOpen: false,
             multiEdit: false,
-            activeFilters: []
+            activeFilters: [],
+            userCalendarSettings: useForm({
+                project_status: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.project_status : false,
+                options: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.options : false,
+                project_management: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.project_management : false,
+                repeating_events: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.repeating_events : false,
+                work_shifts: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.work_shifts : false
+            }),
         }
     },
     methods: {
@@ -208,21 +225,7 @@ export default {
         enterFullscreenMode() {
             this.$emit('enterFullscreenMode')
         },
-        toggle_calendarSettingsProjectStatus() {
-            this.$inertia.post(route('toggle.calendar_settings_project_status'))
-        },
-        toggle_calendarSettingsOptions() {
-            this.$inertia.post(route('toggle.calendar_settings_options'))
-        },
-        toggle_calendarSettingsProjectManagement() {
-            this.$inertia.post(route('toggle.calendar_settings_project_management'))
-        },
-        toggle_calendarSettingsRepeatingEvents() {
-            this.$inertia.post(route('toggle.calendar_settings_repeating_events'))
-        },
-        toggle_calendarSettingsWorkShifts() {
-            this.$inertia.post(route('toggle.calendar_settings_work_shifts'))
-        },
+
         incrementZoomFactor() {
             this.$emit('incrementZoomFactor')
         },
@@ -246,6 +249,9 @@ export default {
         },
         filtersChanged(activeFilters) {
             this.activeFilters = activeFilters
+        },
+        saveUserCalendarSettings() {
+            this.userCalendarSettings.patch(route('user.calendar_settings.update', {user: this.$page.props.user.id}))
         }
 
     },

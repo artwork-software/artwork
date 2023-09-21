@@ -43,21 +43,18 @@
                     <div class="mt-3" v-if="teamForm.users.length === 0">
                         <span class="xsLight">Noch keine Team-Mitglieder hinzugefügt</span>
                     </div>
-                    <div v-else class="mt-3 -mr-3" v-for="user in teamForm.users">
-                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full object-cover"
-                             :src="user.profile_photo_url"
-                             alt=""/>
-                        <UserTooltip :user="user"/>
+                    <div v-else class="mt-3" v-for="(user, index) in teamForm.users">
+                        <UserPopoverTooltip :id="user.id" :user="user" :height="9" :width="9" :class="index !== 0 ? '-ml-3' : ''"/>
                     </div>
-                    <Menu as="div" class="my-auto relative">
-                        <div class="flex mt-3">
+                    <Menu as="div" class="my-auto relative ml-4">
+                        <div class="flex">
                             <MenuButton
                                 class="flex bg-tagBg p-0.5 rounded-full">
                                 <DotsVerticalIcon
                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
-                            <div v-if="$page.props.can.show_hints" class="absolute flex w-48 ml-12">
+                            <div v-if="$page.props.can.show_hints" class="absolute flex w-48 ml-8">
                                 <div>
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 </div>
@@ -301,12 +298,14 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Inertia} from "@inertiajs/inertia";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     mixins: [Permissions],
     name: "Show",
     props: ['department'],
     components: {
+        UserPopoverTooltip,
         AddButton,
         TeamIconCollection,
         AppLayout,

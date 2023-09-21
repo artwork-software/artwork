@@ -37,10 +37,7 @@
                                 <p class="ml-1 xsLight my-auto"> angelegt am
                                     {{ template.created_at }} von
                                 </p>
-                                <img :data-tooltip-target="template.user.id" class="h-6 w-6 ml-2 my-auto rounded-full flex justify-start"
-                                     :src="template.user.profile_photo_url"
-                                     alt=""/>
-                                <UserTooltip :user="template.user" />
+                                <UserPopoverTooltip :height="6" :width="6" :user="template.user" :id="template.user.id" class="ml-2"/>
                             </div>
                         </div>
                     </div>
@@ -118,10 +115,7 @@
                                 <p class="ml-1 xsLight my-auto"> angelegt am
                                     {{ template.created_at }} von
                                 </p>
-                                <img :data-tooltip-target="template.user.id" class="h-6 w-6 ml-2 object-cover my-auto rounded-full flex justify-start"
-                                     :src="template.user.profile_photo_url"
-                                     alt=""/>
-                                <UserTooltip :user="template.user" />
+                                <UserPopoverTooltip :height="6" :width="6" :user="template.user" :id="template.user.id" class="ml-2"/>
                             </div>
                         </div>
                     </div>
@@ -263,12 +257,14 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     mixins: [Permissions],
     name: "Checklist Management",
     props: ['checklist_templates'],
     components: {
+        UserPopoverTooltip,
         AddButton,
         PlusSmIcon,
         SvgCollection,

@@ -227,13 +227,9 @@
                                                                     <div
                                                                         class="ml-6 flex items-center xsLight my-auto">
                                                                         angelegt am {{ element.created_at }} von
-                                                                        <img
-                                                                            :data-tooltip-target="element.created_by.id"
-                                                                            :src="element.created_by.profile_photo_url"
-                                                                            :alt="element.created_by.first_name"
-                                                                            class="rounded-full ml-2 h-6 w-6 object-cover cursor-pointer">
-                                                                        <UserTooltip
-                                                                            :user="element.created_by"></UserTooltip>
+                                                                        <UserPopoverTooltip :user="element.created_by"
+                                                                                            :id="element.created_by.id"
+                                                                                            :height="6" :width="6" class="ml-2"/>
                                                                     </div>
                                                                 </div>
                                                                 <Menu as="div" class="my-auto relative"
@@ -332,13 +328,10 @@
                                                                         <div
                                                                             class="ml-6 flex items-center xsLight my-auto">
                                                                             angelegt am {{ element.created_at }} von
-                                                                            <img
-                                                                                :data-tooltip-target="element.created_by.id"
-                                                                                :src="element.created_by.profile_photo_url"
-                                                                                :alt="element.created_by.first_name"
-                                                                                class="rounded-full ml-2 h-6 w-6 object-cover cursor-pointer">
-                                                                            <UserTooltip
-                                                                                :user="element.created_by"></UserTooltip>
+                                                                            <UserPopoverTooltip :user="element.created_by"
+                                                                                                :id="element.created_by.id"
+                                                                                                height="h-6"
+                                                                                                width="w-6"></UserPopoverTooltip>
                                                                         </div>
                                                                     </div>
                                                                     <Menu as="div" class="my-auto relative"
@@ -1077,10 +1070,12 @@ import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        UserPopoverTooltip,
         AddButton,
         UserTooltip,
         SvgCollection,

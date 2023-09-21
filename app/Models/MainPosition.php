@@ -76,11 +76,10 @@ class MainPosition extends Model
     }
 
     public function getColumnVerifiedChangesAttribute(){
-        $subPositionRowIds = SubPositionRow::whereIn('sub_position_id', $this->subPositions()->pluck('id'))
-            ->pluck('id');
-
+        $subPositionRowIds = SubPositionRow::whereIn('sub_position_id', $this->subPositions()->pluck('id'))->pluck('id');
         $changes = ColumnCell::whereIn('sub_position_row_id', $subPositionRowIds)
             ->whereColumn('verified_value', '!=', 'value')
+            ->where('verified_value', '!=', '')
             ->exists();
 
         return $changes;

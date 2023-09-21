@@ -73,10 +73,7 @@
             <div class="flex">
                 <div class="flex mr-8">
                     <div class="my-auto -mr-3" v-for="user in project.users.slice(0,3)">
-                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full ring-2 ring-white"
-                             :src="user.profile_photo_url"
-                             alt=""/>
-                        <UserTooltip :user="user"/>
+                        <UserPopoverTooltip :user="user" :id="user.id" height="9" width="9"/>
                     </div>
                     <div v-if="project.users.length >= 4" class="my-auto">
                         <Menu as="div" class="relative">
@@ -166,13 +163,11 @@
             <div>
                 zuletzt geändert:
             </div>
-            <img v-if="project.project_history[0]?.changes[0]?.changed_by"
-                 :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
-                 :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
-                 :alt="project.project_history[0].changes[0].changed_by?.first_name"
-                 class="ml-2 ring-white ring-2 rounded-full h-4 w-4 object-cover"/>
-            <UserTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
-                         :user="project.project_history[0].changes[0].changed_by"/>
+            <UserPopoverTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
+                                :user="project.project_history[0].changes[0].changed_by"
+                                :id="project.project_history[0].changes[0].changed_by.id"
+                                height="4"
+                                width="4" class="ml-2"/>
             <span class="ml-2 subpixel-antialiased">
                         {{ project.project_history[0]?.created_at }}
                     </span>
@@ -219,6 +214,7 @@ import {Link} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     props: ['trashed_projects'],
@@ -259,6 +255,7 @@ export default {
         }
     },
     components: {
+        UserPopoverTooltip,
         Input, SearchIcon,
         ProjectHistoryComponent,
         TrashIcon,

@@ -39,8 +39,8 @@
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
-                                        <NewUserToolTip :id="comment.id" :user="comment.user" :height="8"
-                                                        :width="8"></NewUserToolTip>
+                                        <UserPopoverTooltip :id="comment.id" :user="comment.user" :height="8"
+                                                        :width="8"></UserPopoverTooltip>
                                         <div class="ml-2 text-secondary"
                                              :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                             {{ formatDate(comment.created_at) }}
@@ -100,12 +100,14 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 
 export default {
     name: 'CellDetailComponent',
     mixins: [Permissions],
     components: {
+        UserPopoverTooltip,
         NewUserToolTip,
         UserTooltip,
         AddButton,

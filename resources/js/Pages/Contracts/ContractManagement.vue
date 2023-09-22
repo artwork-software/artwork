@@ -6,11 +6,15 @@
                     <div class="w-full flex my-auto">
                         <div class="flex flex-wrap w-full">
                             <div class="flex flex-wrap w-full">
-                                <div class="flex w-full mb-6">
+                                <div class="flex justify-between w-full mb-6">
                                     <h2 class="headline1">Verträge</h2>
-                                    <div class="flex ml-60">
+                                    <div class="flex">
                                         <ContractFilter class="ml-auto" @filter="filterContracts" />
                                     </div>
+                                    <div>
+                                        <AddButton @click="openContractUploadModal" text="Neu" mode="page"/>
+                                    </div>
+
                                 </div>
 
                                 <div class="flex w-full mb-4" >
@@ -41,6 +45,10 @@
             <ContractModuleSidenav :contractModules="contract_modules" @upload="this.show = true" />
         </BaseSidenav>
     </app-layout>
+    <ContractUploadModal
+        :show="showContractUploadModal"
+        :close-modal="closeContractUploadModal"
+    />
 </template>
 
 <script>
@@ -51,11 +59,15 @@ import ContractModuleSidenav from "@/Layouts/Components/ContractModuleSidenav";
 import ContractFilter from "@/Layouts/Components/ContractFilter";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
 import Permissions from "@/mixins/Permissions.vue";
+import ContractUploadModal from "@/Layouts/Components/ContractUploadModal.vue";
+import AddButton from "@/Layouts/Components/AddButton.vue";
 
 export default {
     mixins: [Permissions],
     name: "ContractManagement",
     components: {
+        AddButton,
+        ContractUploadModal,
         BaseFilterTag,
         ContractFilter,
         ContractModuleSidenav,
@@ -69,12 +81,14 @@ export default {
     ],
     data() {
         return {
-            show: true,
+            show: false,
             contractsCopy: this.contracts,
             filters: {},
             costNames: [],
             companyTypeNames: [],
-            contractTypeNames: []
+            contractTypeNames: [],
+            showContractUploadModal: false,
+
         }
     },
     methods: {
@@ -102,6 +116,12 @@ export default {
                 ids.push(item.id)
             })
             return ids
+        },
+        openContractUploadModal() {
+            this.showContractUploadModal = true
+        },
+        closeContractUploadModal() {
+            this.showContractUploadModal = false
         },
         removeFilter(filter) {
             let costFilter = this.filters.costsFilter.filter((costFilter) => costFilter.name === filter);

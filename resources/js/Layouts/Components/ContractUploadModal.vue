@@ -39,6 +39,30 @@
                     </div>
                 </div>
                 <div>
+                    <div class="flex xsDark my-2 items-center" v-if="selectedProject">
+                    Aktuell zugeordnet zu:
+                    <a v-if="this.selectedProject?.id"
+                       :href="route('projects.show.calendar', {project: selectedProject.id})"
+                       class="ml-3 flex xsDark">
+                        {{ this.selectedProject?.name }}
+                    </a>
+                    </div>
+                    <div class="w-full" v-if="!this.projectId">
+                        <input type="text"
+                               placeholder="In welchem Projekt speichern?*"
+                               v-model="project_query"
+                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        <div
+                            v-if="project_search_results.length > 0"
+                            class="bg-primary truncate sm:text-sm">
+                            <div v-for="(project, index) in project_search_results"
+                                 :key="index"
+                                 @click="selectProject(project)"
+                                 class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                                {{ project.name }}
+                            </div>
+                        </div>
+                    </div>
                     <div class="py-1">
                         <input type="text"
                                v-model="this.contractPartner"
@@ -246,7 +270,7 @@
                         <div class="relative w-full">
                             <div class="w-full">
                                 <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                       placeholder="Dokumentzugriff für*"
+                                       placeholder="Dokumentzugriff für"
                                        class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                             <transition leave-active-class="transition ease-in duration-100"
@@ -337,8 +361,8 @@
                 <div class="justify-center flex w-full my-6">
                     <button
                         class="flex p-2 px-8 mt-1 items-center border border-transparent rounded-full shadow-sm  focus:outline-none"
-                        :class="(this.file === null || this.contractAmount === '' || this.contractPartner === '')? 'bg-secondary text-white' : 'text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover'"
-                        :disabled="this.file === null || this.contractAmount === '' || this.contractPartner === ''"
+                        :class="(this.file === null || this.contractAmount === '' || this.contractPartner === '') || (this.projectId === null && this.selectedProject === null)? 'bg-secondary text-white' : 'text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover'"
+                        :disabled="this.file === null || this.contractAmount === '' || this.contractPartner === '' || (this.projectId === null && this.selectedProject === null)"
                         @click="storeContract">Vertrag hochladen
                     </button>
                 </div>
@@ -360,6 +384,8 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import ContractTaskForm from "@/Layouts/Components/ContractTaskForm.vue";
 import Button from "@/Jetstream/Button.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import InputComponent from "@/Layouts/Components/InputComponent.vue";
+import Input from "@/Jetstream/Input.vue";
 
 export default {
     name: "ContractUploadModal",
@@ -372,6 +398,8 @@ export default {
         budgetAccess: Array
     },
     components: {
+        Input,
+        InputComponent,
         Button,
         ContractTaskForm,
         JetDialogModal,
@@ -395,7 +423,24 @@ export default {
                     axios.get('/users/search', {
                         params: {query: this.user_query}
                     }).then(response => {
-                        this.user_search_results = response.data.filter(user => this.budgetAccess.some(budgetAccess => budgetAccess.id === user.id))
+                        if(this.budgetAccess){
+                            this.user_search_results = response.data.filter(user => this.budgetAccess.some(budgetAccess => budgetAccess.id === user.id))
+                        }else{
+                            this.user_search_results = response.data
+                        }
+
+                    })
+                }
+            },
+            deep: true
+        },
+        project_query: {
+            handler() {
+                if (this.project_query.length > 0) {
+                    axios.get('/projects/search', {
+                        params: {query: this.project_query}
+                    }).then(response => {
+                        this.project_search_results = response.data
                     })
                 }
             },
@@ -404,6 +449,9 @@ export default {
     },
     data() {
         return {
+            selectedProject: null,
+            project_query: '',
+            project_search_results: [],
             contractTypes: [],
             companyTypes: [],
             currencies: [],
@@ -457,6 +505,11 @@ export default {
     methods: {
         showError() {
             this.errorText = 'Du musst die Aufgabe einer Person mit Dokumentenzugriff zuweisen'
+        },
+        selectProject(project) {
+            this.selectedProject = project;
+            this.project_query = '';
+            this.project_search_results = [];
         },
         addTask(task) {
             this.tasks.push(task)
@@ -552,11 +605,16 @@ export default {
             })
             this.contractForm.accessibleUsers = userIds;
             this.contractForm.tasks = this.tasks
-            this.contractForm.post(this.route('contracts.store', this.projectId));
+            if(this.projectId){
+                this.contractForm.post(this.route('contracts.store', this.projectId));
+            }else{
+                this.contractForm.post(this.route('contracts.store', this.selectedProject.id));
+            }
+
             this.resetValues();
             this.closeModal()
         }
-    }
+    },
 }
 </script>
 

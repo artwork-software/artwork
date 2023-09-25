@@ -90,12 +90,14 @@ class BudgetTemplateController extends Controller
      */
     public function store(Table $table, Request $request)
     {
-        $oldTable = $table->first();
+        $oldTable = $table;
         $this->createTemplate($request->template_name, $oldTable);
     }
 
     private function createTemplate($name, $oldTable, $isTemplate = true, $projectId = null)
     {
+
+        //dd($oldTable);
 
         $newTable = Table::create([
             'name' => $name,
@@ -111,6 +113,7 @@ class BudgetTemplateController extends Controller
                 'linked_second_column' => $column->linked_second_column !== null ? $this->columns[$column->linked_second_column] : null
             ]);
         });
+
         $oldTable->mainPositions->map(function (MainPosition $mainPosition) use ($newTable) {
             $replicated_mainPosition = $mainPosition->replicate()->fill(['table_id' => $newTable->id]);
             $replicated_mainPosition->save();

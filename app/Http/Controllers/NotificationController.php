@@ -111,6 +111,8 @@ class NotificationController extends Controller
         $output = [];
         $outputRead = [];
 
+        $user->notifications()->latest()->limit(10)->get();
+
         foreach ($user->notifications as $notification) {
             if($notification->read_at === null){
                 $output[$notification->data['groupType']][] = $notification;

@@ -290,7 +290,7 @@ class SchedulingController extends Controller
                         'message' => $notificationTitle
                     ];
                     $this->notificationService->setTitle($notificationTitle);
-                    $this->notificationService->setIcon('green');
+                    $this->notificationService->setIcon('blue');
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_CHANGED);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setTaskId($task->id);

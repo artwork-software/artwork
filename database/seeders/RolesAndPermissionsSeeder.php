@@ -206,7 +206,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create([
             'name' => PermissionNameEnum::MA_MANAGER->value,
             'name_de' => "MA-Verwaltung",
-            'group' => 'MA-Einstellungen',
+            'group' => 'Mitarbeiter-Einstellungen',
             'tooltipText' => 'Darf MA Seiten anlegen und bearbeiten, aber die User nicht einladen.',
             'checked' => false
         ]);
@@ -214,7 +214,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create([
             'name' => PermissionNameEnum::SHIFT_PLANNER->value,
             'name_de' => "Schichtplaner",
-            'group' => 'MA-Einstellungen',
+            'group' => 'Schichten',
             'tooltipText' => 'Darf MA Seiten nicht anlegen aber die User verplanen.',
             'checked' => false
         ]);
@@ -227,26 +227,21 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create([
             'name' => PermissionNameEnum::VIEW_BUDGET_TEMPLATES->value,
             'name_de' => "Budgetvorlagen einsehen",
+            'group' => 'Dokumente & Budget',
             "checked" => false
         ]);
 
         Permission::create([
             'name' => PermissionNameEnum::UPDATE_BUDGET_TEMPLATES->value,
             'name_de' => "Budgetvorlagen bearbeiten",
+            'group' => 'Dokumente & Budget',
             "checked" => false
-        ]);
-
-        //not implemented
-        Permission::create([
-            'name' => PermissionNameEnum::GLOBAL_DOCUMENT_ADMIN->value,
-            'name_de' => "Gloables Dokumentenmanagement",
-            'tooltipText' => 'Darf alle Budget-Dokumente & Verträge von allen Projekten einsehen, bearbeiten und löschen',
-            'checked' => false
         ]);
 
         Permission::create([
             'name' => PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
             'name_de' => "Globaler Budgetzugriff",
+            'group' => 'Dokumente & Budget',
             'tooltipText' => 'Hat auf alle Projekte Budgetzugriff, d.h. kann die Budgetplanung von allen Projekten einsehen',
             'checked' => false
         ]);
@@ -254,6 +249,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create([
             'name' => PermissionNameEnum::VIEW_SHIFT_PLAN->value,
             'name_de' => "Schichtplan einsehen",
+            'group' => 'Schichten',
             'tooltipText' => 'Darf den globalen Schichtplan einsehen',
             'checked' => false
         ]);
@@ -261,6 +257,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create([
             'name' => PermissionNameEnum::CAN_COMMIT_SHIFTS->value,
             'name_de' => "Dienstpläne festschreiben",
+            'group' => 'Schichten',
             'tooltipText' => 'Darf Dienstpläne festschreiben',
             'checked' => false
         ]);
@@ -268,6 +265,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create([
             'name' => PermissionNameEnum::EDIT_EXTERNAL_USERS_CONDITIONS->value,
             'name_de' => "Externe Mitarbeiterkonditionen verwalten",
+            'group' => 'Mitarbeiter-Einstellungen',
             'tooltipText' => 'Darf die Konditionen von externen Mitarbeitern sehen und bearbeiten',
             'checked' => false
         ]);

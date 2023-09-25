@@ -121,6 +121,7 @@ class ContractController extends Controller
         $contract = $project->contracts()->create([
             'name' => $original_name,
             'basename' => $basename,
+            'creator_id' => Auth::id(),
             'contract_partner' => $request->contract_partner,
             'amount' => $request->amount,
             'project_id' => $project->id,

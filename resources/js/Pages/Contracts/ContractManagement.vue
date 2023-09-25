@@ -28,7 +28,7 @@
                                         <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
                                     </div>
                                 </div>
-                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="hasAdminRole() || $canAny(['view edit upload contracts', 'can see and download contract modules']) && contractsCopy.data.length !== 0">
+                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="contractsCopy.data.length !== 0">
                                     <ContractListItem :contract="contract" class="mb-6"></ContractListItem>
                                     <hr class="text-secondary">
                                 </div>
@@ -79,6 +79,9 @@ export default {
         'contracts',
         'contract_modules'
     ],
+    mounted() {
+        this.filterContracts()
+    },
     data() {
         return {
             show: false,
@@ -92,10 +95,11 @@ export default {
         }
     },
     methods: {
-        async filterContracts(filters) {
-            if(filters.costsFilter ||
-                filters.companyTypesFilter ||
-                filters.contractTypesFilter) {
+        async filterContracts(filters = null) {
+            this.contractsCopy.data = [];
+            if(filters && (filters?.costsFilter ||
+                filters?.companyTypesFilter ||
+                filters?.contractTypesFilter)){
                 this.filters = filters
                 this.costNames = filters.costsFilter.map(cost => cost.name)
                 this.companyTypeNames = filters.companyTypesFilter.map(companyType => companyType.name)
@@ -107,14 +111,27 @@ export default {
                 contractTypesFilter: { array: this.getArrayOfIds(this.filters.contractTypesFilter) },
             }})
             .then(res => {
-                this.contractsCopy.data = res.data.contracts
+                if(this.$can('can see, edit and delete project contracts and docs') || this.hasAdminRole()){
+                    this.contractsCopy.data = res.data.contracts
+                }else{
+                    res.data.contracts.forEach(contract => {
+                        console.log(contract);
+                        if(contract.creator?.id === this.$page.props.user.id) {
+                            this.contractsCopy.data.push(contract)
+                        }else if(contract.accessibleUsers.map(user => user.id).includes(this.$page.props.user.id)) {
+                            this.contractsCopy.data.push(contract)
+                        }
+                    })
+                }
             })
         },
         getArrayOfIds(array) {
             let ids = []
-            array.forEach(item => {
-                ids.push(item.id)
-            })
+            if(array){
+                array.forEach(item => {
+                    ids.push(item.id)
+                })
+            }
             return ids
         },
         openContractUploadModal() {

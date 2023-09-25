@@ -122,9 +122,6 @@ class HandleInertiaRequests extends Middleware
                 'view_shift_plan' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::VIEW_SHIFT_PLAN->value),
                 'can_commit_shifts' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::CAN_COMMIT_SHIFTS->value),
 
-                // Global Documents
-                'global_document_admin' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::GLOBAL_DOCUMENT_ADMIN->value),
-
                 // Global Project Budgets
                 'global_project_budget_admin' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value),
 

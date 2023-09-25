@@ -17,6 +17,7 @@ class Contract extends Model
         'is_freed',
         'has_power_of_attorney',
         'amount',
+        'creator_id',
         'project_id',
         'contract_type_id',
         'company_type_id',
@@ -58,6 +59,11 @@ class Contract extends Model
     public function accessing_users()
     {
         return $this->belongsToMany(User::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'creator_id');
     }
 
     public function tasks()

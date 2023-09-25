@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('basename');
             $table->string("contract_partner");
             $table->integer('amount');
+            $table->unsignedBigInteger('creator_id')->nullable();
+            $table->foreign('creator_id')->references('id')->on('users');
             $table->unsignedBigInteger('project_id');
             $table->string('description')->nullable();
             $table->string('contract_type_id')->nullable();

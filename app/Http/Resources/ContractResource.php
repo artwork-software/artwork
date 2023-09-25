@@ -17,7 +17,7 @@ class ContractResource extends JsonResource
 
     public function getAccessibleUsers(): array|\JsonSerializable|\Illuminate\Contracts\Support\Arrayable
     {
-        $usersWithAccess = [];
+        $usersWithAccess = $this->accessing_users;
         $project = Project::where('id', $this->project_id)->with(['users'])->first();
         foreach($project->users as $user) {
             if($user->pivot->is_manager) {
@@ -34,6 +34,7 @@ class ContractResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'creator' => $this->creator,
             'basename' => $this->basename,
             'project' => $this->project,
             'amount' => $this->amount,

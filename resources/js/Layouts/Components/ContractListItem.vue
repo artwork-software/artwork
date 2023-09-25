@@ -2,6 +2,8 @@
     <div class="flex">
         <div class="w-full">
             <div class="flex items-center">
+                <div @click="download" class="text-buttonBlue cursor-pointer underline text-sm">{{ contract.name }}</div>
+                <hr class="border-l border-l-primary h-5 mx-2">
                 <div class="text-primary text-sm">{{ contract.partner }}</div>
                 <hr class="border-l border-l-primary h-5 mx-2">
                 <div class="text-buttonBlue text-sm"><a
@@ -13,7 +15,7 @@
                 <div class="text-secondary text-xs">{{ contract.company_type?.name }}</div>
                 <hr v-if="contract.company_type" class="border-l border-l-secondary h-4 mx-2">
                 <div class="text-secondary text-xs">{{ contract.contract_type?.name }}</div>
-                <hr class="border-l border-l-secondary h-4 mx-2">
+                <hr v-if="contract.contract_type" class="border-l border-l-secondary h-4 mx-2">
                 <div class="text-secondary text-xs">
                     {{ contract.ksk_liable ? 'KSK-pflichtig' : 'Nicht KSK-pflichtig' }}
                 </div>
@@ -25,9 +27,6 @@
             <div class="flex items-center text-secondary text-xs mt-1">
                 {{ contract.description }}
             </div>
-        </div>
-        <div class="ml-auto">
-            <DownloadIcon @click="download" class="w-5 h-5 p-1 rounded-full bg-buttonBlue text-white"/>
         </div>
     </div>
 </template>

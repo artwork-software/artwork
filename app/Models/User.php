@@ -187,11 +187,6 @@ class User extends Authenticatable
         return $this->hasMany(UserVacations::class);
     }
 
-    public function contracts()
-    {
-        return $this->hasMany(Contract::class);
-    }
-
     public function project_files()
     {
         return $this->hasMany(ProjectFile::class);
@@ -240,7 +235,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Event::class);
     }
-
     public function privateTasks()
     {
         return $this->hasManyThrough(Task::class, Checklist::class);

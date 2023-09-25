@@ -508,7 +508,7 @@ class ProjectController extends Controller
             ]
         ];
         $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('green');
+        $this->notificationService->setIcon('blue');
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setButtons(['calculation_check', 'delete_request']);
@@ -773,7 +773,7 @@ class ProjectController extends Controller
             ]
         ];
         $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('green');
+        $this->notificationService->setIcon('blue');
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setNotificationTo(User::find($request->user));

@@ -688,7 +688,7 @@ class EventController extends Controller
             ]
         ];
         $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('green');
+        $this->notificationService->setIcon('blue');
         $this->notificationService->setEventId($event->id);
         $this->notificationService->setRoomId($room->id);
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_REQUEST);
@@ -835,7 +835,7 @@ class EventController extends Controller
                     ]
                 ];
                 $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
+                $this->notificationService->setIcon('blue');
                 $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setDescription($notificationDescription);
@@ -1080,7 +1080,7 @@ class EventController extends Controller
         ];
 
         $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('green');
+        $this->notificationService->setIcon('blue');
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_REQUEST);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
@@ -1243,7 +1243,7 @@ class EventController extends Controller
                 ]
             ];
             $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('green');
+            $this->notificationService->setIcon('blue');
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -1303,7 +1303,7 @@ class EventController extends Controller
             ]
         ];
         $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('green');
+        $this->notificationService->setIcon('blue');
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
@@ -1493,7 +1493,7 @@ class EventController extends Controller
             ]
         ];
         $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('green');
+        $this->notificationService->setIcon('blue');
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);

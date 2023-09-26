@@ -87,7 +87,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/toggle/calendar_settings_repeating_events', [AppController::class, 'toggle_calendar_settings_repeating_events'])->name('toggle.calendar_settings_repeating_events');
     Route::post('/toggle/calendar_settings_work_shifts', [AppController::class, 'toggle_calendar_settings_work_shifts'])->name('toggle.calendar_settings_work_shifts');
 
-    Route::get('/dashboard', [EventController::class, 'showDashboard'])->name('dashboard');
+    Route::get('/dashboard', [EventController::class, 'showDashboardPage'])->name('dashboard');
     Route::get('/checklist/templates', function () { return Inertia::render('ChecklistTemplates/Edit'); })->name('checklistTemplates.edit');
 
     //Invitations
@@ -306,7 +306,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
      */
     Route::get('/events/view', [EventController::class, 'viewEventIndex'])->name('events');
     Route::get('/events/requests', [EventController::class, 'viewRequestIndex'])->name('events.requests');
-    Route::get('/dashboard', [EventController::class, 'showDashboardPage'])->name('dashboard');
     Route::get('/events/trashed', [EventController::class, 'getTrashed'])->name('events.trashed');
 
     /**

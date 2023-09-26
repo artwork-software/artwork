@@ -1,120 +1,77 @@
 <template>
     <app-layout>
-        <div class="py-4 flex">
-            <!-- Greetings Div -->
-            <div class="mr-2 w-4/6">
-                <div class="ml-12 mt-10">
-                    <h2 class="headline1 flex mb-4">Hallo {{ $page.props.user.first_name }}</h2>
-                    <p class="xsLight">
-                        Herzlich willkommen im artwork! Um dich hier gut zurechtzufinden, haben wir die Hilfetexte
-                        aktiviert.<br/>
-                        Du kannst sie oben neben deinem Nutzernamen ausstellen.<br/>
-                    </p>
-                    <p class="mt-2 xsLight">Viel Spaß beim Loslegen!</p>
+        <div class="max-w-screen-2xl mb-40 my-12 flex ml-14 mr-40">
+            <div class="headline1">
+                Dashboard
+            </div>
+            <!-- Schichten Widget -->
+            <div>
+                <div class="dashboardHeader tracking-widest uppercase">
+                    Schichten heute
                 </div>
-                <!-- Calendar Div -->
-                <div>
-                    <div v-if="calendarType && calendarType === 'daily'">
-                        <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                            <CalendarComponent
-                                :selected-date="selectedDate"
-                                :dateValue="dateValue"
-                                :eventTypes=this.eventTypes
-                                :events="this.events.events"
-                                :rooms="this.rooms"
-                                :events-without-room="eventsWithoutRoom"
-                                initial-view="day"
-                                :filter-options="filterOptions"
-                                :personal-filters="personalFilters"
-                            />
-                        </div>
+                <div class="flex flex-col w-full bg-white shadow-lg p-4">
+                    <div>
+                        {{todayDate}}
                     </div>
-                    <div v-else class="overflow-x-auto">
-                        <IndividualCalendarAtGlanceComponent
-                            v-if="atAGlance"
-                            :dateValue="dateValue"
-                            @change-at-a-glance="changeAtAGlance"
-                            :atAGlance="this.atAGlance"
-                            :eventTypes=this.eventTypes
-                            :rooms="rooms"
-                            :eventsAtAGlance="eventsAtAGlance"
-                            :filter-options="filterOptions"
-                            :personal-filters="personalFilters"
-                        >
-                        </IndividualCalendarAtGlanceComponent>
-
-                        <IndividualCalendarComponent
-                            v-else
-                            is-dashboard="true"
-                            :dateValue="dateValue"
-                            :atAGlance="this.atAGlance"
-                            :eventTypes=this.eventTypes
-                            :calendarData="calendar"
-                            :rooms="rooms"
-                            :days="days"
-                            :events-without-room="eventsWithoutRoom"
-                            @change-at-a-glance="changeAtAGlance"
-                            :filter-options="filterOptions"
-                            :personal-filters="personalFilters"
-                        />
+                    <div v-for="shift of shiftsOfDay" :key="shift.event.id" class="py-2 w-full">
+                        <div>
+                            <div>
+                                <div class="text-secondaryHover xsWhiteBold px-1 py-1"
+                                     :class="shift.event?.event_type?.svg_name">
+                                    {{ shift.event?.event_type?.abbreviation }}: {{ shift.event?.project?.name }}
+                                </div>
+                            </div>
+                            <div class="bg-backgroundGray">
+                                <div class="flex items-center xsLight text-shiftText subpixel-antialiased">
+                                    <div>
+                                        {{ shift.craft?.abbreviation }} {{ shift.start }} - {{ shift.end }}
+                                    </div>
+                                    <div v-if="shift.room" class="truncate">
+                                        , {{ shift.room?.name }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <!-- Task Div -->
-            <div class="px-6 mt-20 overflow-y-auto">
-                <div class="flex">
-                    <h2 class="headline2">Meine Aufgaben</h2>
-                    <Link :href="route('tasks.own')"
-                        class="flex ml-4 justify-end uppercase xsLight items-end ">
-                        Alle Ansehen
-                    </Link>
+            <!-- Aufgaben Widget -->
+            <div>
+                <div class="dashboardHeader tracking-widest">
+                    Nächste Aufgaben
                 </div>
-                <div class="mt-10" v-for="task in this.sortedTasksDeadline">
-                    <div :key="task.id">
-                        <div>
-                            <div class="flex">
-                                <input @change="updateTaskStatus(task)" v-model="task.done"
-                                    type="checkbox"
-                                    class="ring-offset-0 my-auto cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p class="ml-4 my-auto mDark w-full"
-                                    :class="task.done ? 'text-secondary line-through' : ''">
-                                    {{ task.name }}</p>
-                                <div v-show="task.departments.length > 0" class="my-auto shrink-0 -mr-3"
-                                    v-for="department in task.departments">
-                                    <TeamIconCollection :data-tooltip-target="department.name" :iconName="department.svg_name" :alt="department.name"
-                                        class="shrink-0 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
-                                    <TeamTooltip :team="department"/>
-                                </div>
-                                <div v-if="task.checklist" v-show="task.checklist?.user_id !== null" class="my-auto">
-                                    <img class="h-9 w-9 rounded-full object-cover"
-                                        :src="$page.props.user.profile_photo_url"
-                                        alt=""/>
+                <div class="flex flex-col w-full bg-white shadow-lg p-4">
+                    <div v-for="task in tasks" :key="task.id" class="py-2 w-full">
+                        <div class="flex w-full justify-between">
+                            <div class="flex w-full">
+                                <input @change="updateTaskStatus(task)"
+                                       v-model="task.done"
+                                       type="checkbox"
+                                       class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-success"/>
+                                <div class="ml-4 my-auto mDark truncate w-96"
+                                     :class="task.done ? 'text-secondary line-through' : 'text-primary'">
+                                    {{ task.name }}
                                 </div>
                             </div>
-                            <div class="flex w-full ml-8">
-                                    <span v-if="!task.done && task.deadline"
-                                        class="ml-2 my-auto xsLight subpixel-antialiased"
-                                        :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
-                                            task.deadline
-                                                                                                                                                   }}</span>
+                            <div v-if="!task.done && task.deadline"
+                                 class=" my-auto pt-1 xsLight w-52"
+                                 :class="task.isDeadlineInFuture ? '' : 'text-error'">
+                                bis {{ task.deadline }}
                             </div>
                         </div>
-                        <div class="flex xsLight mt-0.5 w-full items-center ml-10">
-                            <Link v-if="task.project"
-                                :href="route('projects.show.calendar',{project: task.project?.id})"
-                                class="cursor-pointer text-secondary flex subpixel-antialiased">
-                                {{ task.project.name }}
-                                <ChevronRightIcon class="h-5 w-5 my-auto text-secondary subpixel-antialiased"
-                                    aria-hidden="true"/>
-                                <span class="text-sm ml-4 subpixel-antialiased text-secondary flex">
-                                        {{ task.checklist.name }}
-                                        </span>
-                            </Link>
-                        </div>
+
+
+                        <Link v-if="task.projectId" :href="route('projects.show.checklist',{project: task.projectId})"
+                              class="my-1 flex ml-10 xsDark">
+                            {{ task.projectName }}
+                            <ChevronRightIcon class="h-5 w-5 my-auto mx-3" aria-hidden="true"/>
+                            {{ task.checklistName }}
+                        </Link>
 
                         <div class="ml-10 my-3 xsLight">
                             {{ task.description }}
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -141,25 +98,18 @@ import {Inertia} from "@inertiajs/inertia";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import VueMathjax from "vue-mathjax-next";
+import {CheckIcon} from "@heroicons/vue/outline";
 
 export default defineComponent({
     mixins: [Permissions],
     props: [
-        'events',
         'tasks',
-        'projects',
-        'eventTypes',
-        'calendar',
-        'rooms',
-        'days',
-        'dateValue',
-        'calendarType',
-        'selectedDate',
-        'eventsAtAGlance',
-        'filterOptions',
-        'personalFilters'
-    ,'eventsWithoutRoom'],
+        'shiftsOfDay',
+        'todayDate'
+    ],
     components: {
+        CheckIcon, VueMathjax,
         IndividualCalendarAtGlanceComponent,
         AppLayout,
         CalendarIcon,
@@ -183,35 +133,13 @@ export default defineComponent({
                 Inertia.reload({only: ['rooms', 'calendar', 'days']})
             });
     },
-    computed: {
-        sortedTasksDeadline: function () {
-            let taskCopy = this.tasks.slice();
-            let undoneSortedTasksDeadline = taskCopy.filter(task => task.done === false);
-
-            function compare(a, b) {
-                if (b.deadline === null) {
-                    return -1;
-                }
-                if (a.deadline === null) {
-                    return 1;
-                }
-                if (a.deadline < b.deadline)
-                    return -1;
-                if (a.deadline > b.deadline)
-                    return 1;
-                return 0;
-            }
-
-            return undoneSortedTasksDeadline.sort(compare);
-        },
-    },
     methods: {
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
             this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
         },
         changeAtAGlance() {
-           this.atAGlance = !this.atAGlance;
+            this.atAGlance = !this.atAGlance;
         }
     },
     data() {
@@ -219,10 +147,54 @@ export default defineComponent({
             doneTaskForm: useForm({
                 done: false
             }),
-            showIndividualCalendar: true,
-            atAGlance: this.eventsAtAGlance.length > 0,
         }
     },
 
 })
 </script>
+<style scoped>
+
+.eventType0 {
+    background-color: #7F7E88;
+}
+
+.eventType1 {
+    background-color: #631D53;
+}
+
+.eventType2 {
+    background-color: #D84387;
+}
+
+.eventType3 {
+    background-color: #E97A45;
+}
+
+.eventType4 {
+    background-color: #CB8913;
+}
+
+.eventType5 {
+    background-color: #648928;
+}
+
+.eventType6 {
+    background-color: #35A965;
+}
+
+.eventType7 {
+    background-color: #35ACB2;
+}
+
+.eventType8 {
+    background-color: #2290C1;
+}
+
+.eventType9 {
+    background-color: #50908E;
+}
+
+.eventType10 {
+    background-color: #23485B;
+}
+</style>

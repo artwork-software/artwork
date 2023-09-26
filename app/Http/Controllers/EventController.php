@@ -16,6 +16,7 @@ use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\FreelancerShiftResource;
 use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\ServiceProviderShiftResource;
+use App\Http\Resources\TaskDashboardResource;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
@@ -225,13 +226,24 @@ class EventController extends Controller
         $projects = Project::query()->with( ['managerUsers'])->get();
 
         $tasks = Task::query()
-            ->whereHas('checklist', fn (Builder $checklistBuilder) => $checklistBuilder
-                ->where('user_id', Auth::id())
-            )
-            ->orWhereHas('task_users', fn (Builder $userBuilder) => $userBuilder
-                ->where('user_id', Auth::id())
-            )
+            ->where('done', false)
+            ->where(function ($query) {
+                $query->whereHas('checklist', function (Builder $checklistBuilder) {
+                    $checklistBuilder->where('user_id', Auth::id());
+                })
+                    ->orWhereHas('task_users', function (Builder $userBuilder) {
+                        $userBuilder->where('user_id', Auth::id());
+                    });
+            })
+            ->orderBy('deadline', 'asc')
+            ->limit(5)
             ->get();
+
+        $user = Auth::user();
+
+        $shiftsOfDay = $user->shifts()->whereDate('event_start_day', Carbon::now()->format('Y-m-d'))->with(['event','event.project','event.room'])->get();
+
+
 
         $eventsAtAGlance = [];
 
@@ -249,21 +261,15 @@ class EventController extends Controller
 
         $rooms = $calendarController->filterRooms($startDate, $endDate)->get();
 
+        //get date for humans of today with weekday
+        $todayDate = Carbon::now()->locale('de')->isoFormat('dddd, DD.MM.YYYY');
+
+
+
         return inertia('Dashboard', [
-            'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
-            'tasks' => TaskIndexResource::collection($tasks)->resolve(),
-            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-            'calendar' => $showCalendar['roomsWithEvents'],
-            'days' => $showCalendar['days'],
-            'dateValue'=> $showCalendar['dateValue'],
-            'calendarType' => $showCalendar['calendarType'],
-            'selectedDate' => $showCalendar['selectedDate'],
-            'rooms' => $rooms,
-            'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
-            'eventsAtAGlance' => $eventsAtAGlance,
-            'events' => new CalendarEventCollectionResource($calendarController->getEventsOfDay()),
-            'filterOptions' => $showCalendar["filterOptions"],
-            'personalFilters' => $showCalendar['personalFilters']
+            'tasks' => TaskDashboardResource::collection($tasks)->resolve(),
+            'shiftsOfDay' => $shiftsOfDay,
+            'todayDate' => $todayDate,
         ]);
     }
 

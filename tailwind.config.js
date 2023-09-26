@@ -58,14 +58,15 @@ module.exports = {
               header: '900'
             },
             boxShadow: {
-                'buttonBlue': '0 35px 60px -15px #2D1FDE'
+                'buttonBlue': '0 35px 60px -15px #2D1FDE',
+                'cardShadow': '0px 4px 25px #27233c47',
             },
             flex: {
                 'tags': '1 1 30%'
             },
             zIndex: {
                 '100': '100',
-            }
+            },
         },
     },
     plugins: [

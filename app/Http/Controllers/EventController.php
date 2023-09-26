@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Builders\EventBuilder;
+use App\Casts\TimeAgoCast;
 use App\Enums\NotificationConstEnum;
 use App\Events\OccupancyUpdated;
 use App\Http\Requests\EventAcceptionRequest;
@@ -264,12 +265,15 @@ class EventController extends Controller
         //get date for humans of today with weekday
         $todayDate = Carbon::now()->locale('de')->isoFormat('dddd, DD.MM.YYYY');
 
-
+        $notification = $user->notifications()->select(['data->icon as icon', 'data'])->whereDate('created_at', Carbon::now()->format('Y-m-d'))->withCasts(['created_at' => TimeAgoCast::class]);
 
         return inertia('Dashboard', [
             'tasks' => TaskDashboardResource::collection($tasks)->resolve(),
             'shiftsOfDay' => $shiftsOfDay,
             'todayDate' => $todayDate,
+            'eventsOfDay' => Event::where('start_time', '>=', Carbon::now()->startOfDay())->where('start_time', '<=', Carbon::now()->endOfDay())->with(['room', 'event_type', 'project'])->get(),
+            'notificationOfToday' => $notification->get()->groupBy('icon'),
+            'notificationCount' => $notification->count(),
         ]);
     }
 

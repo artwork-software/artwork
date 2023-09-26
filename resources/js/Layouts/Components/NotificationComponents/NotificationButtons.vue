@@ -65,6 +65,11 @@
                 Ignorieren
             </button>
         </div>
+        <div v-if="buttons?.includes('showInTasks')">
+            <button @click="$emit('showInTask', true)" type="button" class="rounded-full bg-transparent px-3.5 py-1.5 text-sm font-semibold text-indigo-600 hover:text-white ring-2 ring-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                In Aufgaben ansehen
+            </button>
+        </div>
     </div>
 
 </template>
@@ -80,7 +85,7 @@ export default {
 
     },
     props: ['buttons'],
-    emits: ['openDeclineModal', 'openEventEditAccept', 'deleteEvent', 'openProjectCalculation', 'deleteVerificationRequest','openEventWithoutRoomModal','openDialogModal', 'deleteNotification', 'openProject'],
+    emits: ['openDeclineModal', 'openEventEditAccept', 'deleteEvent', 'openProjectCalculation', 'deleteVerificationRequest','openEventWithoutRoomModal','openDialogModal', 'deleteNotification', 'openProject', 'showInTask'],
     components: {
         DeclineEventModal,
         PencilAltIcon, XIcon

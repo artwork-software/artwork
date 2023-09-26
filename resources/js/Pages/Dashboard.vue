@@ -1,77 +1,203 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-2xl mb-40 my-12 flex ml-14 mr-40">
-            <div class="headline1">
+        <div class="max-w-screen-2xl mb-40 my-12 ml-14 mr-40">
+            <div class="headline1 mb-10">
                 Dashboard
             </div>
-            <!-- Schichten Widget -->
-            <div>
-                <div class="dashboardHeader tracking-widest uppercase">
-                    Schichten heute
-                </div>
-                <div class="flex flex-col w-full bg-white shadow-lg p-4">
-                    <div>
-                        {{todayDate}}
-                    </div>
-                    <div v-for="shift of shiftsOfDay" :key="shift.event.id" class="py-2 w-full">
-                        <div>
+
+
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-10">
+                <div class="col-span-2">
+                    <div class="mb-10">
+                        <!-- Termin Widget -->
+                        <div class="flex justify-between items-center w-fit gap-x-5 mb-5">
                             <div>
-                                <div class="text-secondaryHover xsWhiteBold px-1 py-1"
-                                     :class="shift.event?.event_type?.svg_name">
-                                    {{ shift.event?.event_type?.abbreviation }}: {{ shift.event?.project?.name }}
+                                <h3 class=" tracking-widest uppercase font-semibold text-base">Termine heute</h3>
+                            </div>
+                            <div class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                                {{ eventsOfDay?.length ?? 0 }}
+                            </div>
+                        </div>
+                        <div class="flex flex-col w-full bg-white shadow-cardShadow p-4">
+                            <div class="font-semibold flex items-center gap-x-3 mb-3">
+                                <svg id="Gruppe_1806" data-name="Gruppe 1806" xmlns="http://www.w3.org/2000/svg" width="22.065" height="18.527" viewBox="0 0 22.065 18.527">
+                                    <path id="Pfad_1003" data-name="Pfad 1003" d="M685.02,351.271h-2.832a.7.7,0,1,0,0,1.4h2.832a.7.7,0,1,0,0-1.4Z" transform="translate(-676.376 -341.693)" fill="#27233c"/>
+                                    <path id="Pfad_1004" data-name="Pfad 1004" d="M695.9,351.271h-2.832a.7.7,0,1,0,0,1.4H695.9a.7.7,0,1,0,0-1.4Z" transform="translate(-679.643 -341.693)" fill="#27233c"/>
+                                    <path id="Pfad_1005" data-name="Pfad 1005" d="M685.02,356.806h-2.832a.7.7,0,1,0,0,1.4h2.832a.7.7,0,1,0,0-1.4Z" transform="translate(-676.376 -343.355)" fill="#27233c"/>
+                                    <path id="Pfad_1006" data-name="Pfad 1006" d="M695.9,356.806h-2.832a.7.7,0,1,0,0,1.4H695.9a.7.7,0,1,0,0-1.4Z" transform="translate(-679.643 -343.355)" fill="#27233c"/>
+                                    <path id="Pfad_1007" data-name="Pfad 1007" d="M695.546,338.995h-4.721v-.716a.7.7,0,1,0-1.4,0v.716h-3.514v-.716a.7.7,0,1,0-1.4,0v.716h-3.971v-.716a.7.7,0,0,0-1.4,0v.716H674.88a.7.7,0,0,0-.7.7v15.712a.7.7,0,0,0,.7.7h20.666a.7.7,0,0,0,.7-.7V339.694A.7.7,0,0,0,695.546,338.995Zm-16.4,1.4v.716a.7.7,0,0,0,1.4,0v-.716h3.971v.716a.7.7,0,1,0,1.4,0v-.716h3.514v.716a.7.7,0,1,0,1.4,0v-.716h4.021v3.068H675.579v-3.068Zm-3.564,14.313v-9.846h19.267v9.846Z" transform="translate(-674.18 -337.579)" fill="#27233c"/>
+                                </svg>
+                                {{todayDate}}
+                            </div>
+                            <div v-if="eventsOfDay?.length > 0" class=" max-h-64 overflow-scroll">
+                                <div v-for="event of eventsOfDay" :key="event.id" class="py-1 w-full">
+                                    <div :class="event.event_type.svg_name"  class="py-1 px-2 rounded">
+                                        <div class="underline font-semibold">
+                                            {{ event.event_type?.abbreviation }}: {{ event.project?.name }}
+                                        </div>
+                                        <div class="text-sm">
+                                            <div v-if="event.allDay">
+                                                Ganztags
+                                            </div>
+                                            <div v-else>
+                                                {{ event.start_time }} - {{ event.end_time }}
+                                            </div>
+                                            <div>
+                                                {{ event.room.name }}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="bg-backgroundGray">
-                                <div class="flex items-center xsLight text-shiftText subpixel-antialiased">
+                            <div v-else class="mt-3">
+                                <div class="flex justify-center">
+                                    <div class="bg-gray-50 p-2 text-center">
+                                        <p class="text-sm text-gray-500">
+                                            Es liegen für heute keine Termine für heute vor.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end mt-3">
+                            <a :href="route('events')" class="text-indigo-800 underline font-semibold text-sm">zum Kalender</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center w-fit gap-x-5 mb-5">
+                            <div>
+                                <h3 class=" tracking-widest uppercase font-semibold text-base">Schichten heute</h3>
+                            </div>
+                            <div class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                                {{ shiftsOfDay?.length ?? 0 }}
+                            </div>
+                        </div>
+                        <div class="flex flex-col w-full bg-white shadow-cardShadow p-4">
+                            <div class="font-semibold flex items-center gap-x-3">
+                                {{todayDate}}
+                            </div>
+                            <div v-if="shiftsOfDay?.length > 0">
+                                <div v-for="shift of shiftsOfDay" :key="shift.event.id" class="py-2 w-full">
                                     <div>
-                                        {{ shift.craft?.abbreviation }} {{ shift.start }} - {{ shift.end }}
-                                    </div>
-                                    <div v-if="shift.room" class="truncate">
-                                        , {{ shift.room?.name }}
+                                        <div>
+                                            <div class="text-secondaryHover xsWhiteBold px-1 py-1"
+                                                 :class="shift.event?.event_type?.svg_name">
+                                                {{ shift.event?.event_type?.abbreviation }}: {{ shift.event?.project?.name }}
+                                            </div>
+                                        </div>
+                                        <div class="bg-backgroundGray">
+                                            <div class="flex items-center xsLight text-shiftText subpixel-antialiased">
+                                                <div>
+                                                    {{ shift.craft?.abbreviation }} {{ shift.start }} - {{ shift.end }}
+                                                </div>
+                                                <div v-if="shift.room" class="truncate">
+                                                    , {{ shift.room?.name }}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                            <div v-else class="mt-3">
+                                <div class="flex justify-center">
+                                    <div class="bg-gray-50 p-2 text-center">
+                                        <p class="text-sm text-gray-500">
+                                            Heute liegen für heute keine Schichten vor.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end mt-3">
+                            <a :href="route('shifts.plan')" class="text-indigo-800 underline font-semibold text-sm">zum Schichtplan</a>
                         </div>
                     </div>
                 </div>
-            </div>
-            <!-- Aufgaben Widget -->
-            <div>
-                <div class="dashboardHeader tracking-widest">
-                    Nächste Aufgaben
-                </div>
-                <div class="flex flex-col w-full bg-white shadow-lg p-4">
-                    <div v-for="task in tasks" :key="task.id" class="py-2 w-full">
-                        <div class="flex w-full justify-between">
-                            <div class="flex w-full">
-                                <input @change="updateTaskStatus(task)"
-                                       v-model="task.done"
-                                       type="checkbox"
-                                       class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-success"/>
-                                <div class="ml-4 my-auto mDark truncate w-96"
-                                     :class="task.done ? 'text-secondary line-through' : 'text-primary'">
-                                    {{ task.name }}
+                <div class="col-span-3">
+                    <div class="mb-10">
+                        <!-- Notification Widget -->
+                        <div class="flex justify-between items-center w-fit gap-x-5 mb-5">
+                            <div>
+                                <h3 class=" tracking-widest uppercase font-semibold text-base">Benachrichtigungen heute</h3>
+                            </div>
+                            <div class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                                {{ notificationCount }}
+                            </div>
+                        </div>
+                        <div class="" >
+                            <div v-for="notificationGroup in notificationOfToday">
+                                <div v-for="(notification, index) in notificationGroup">
+                                    <div class="bg-white shadow-cardShadow p-3 mb-4" >
+                                        <NotificationBlock :notification="notification" @setOnRead="setOnRead"/>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="flex justify-end mt-3">
+                            <a :href="route('notifications.index')" class="text-indigo-800 underline font-semibold text-sm">Zu den Benachrichtigungen</a>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center w-fit gap-x-5 mb-5">
+                            <div>
+                                <h3 class=" tracking-widest uppercase font-semibold text-base">Nächste Aufgaben</h3>
+                            </div>
+                            <div class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
+                                {{ tasks?.length ?? 0 }}
+                            </div>
+                        </div>
+                        <div class="flex flex-col w-full bg-white shadow-cardShadow">
+                            <div v-if="tasks.length > 0" class="p-4">
+                                <div v-for="task in tasks" :key="task.id" class="py-2 w-full">
+                                    <div class="flex w-full justify-between">
+                                        <div class="flex w-full">
+                                            <input @change="updateTaskStatus(task)"
+                                                   v-model="task.done"
+                                                   type="checkbox"
+                                                   class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-success"/>
+                                            <div class="ml-4 my-auto mDark truncate w-96"
+                                                 :class="task.done ? 'text-secondary line-through' : 'text-primary'">
+                                                {{ task.name }}
+                                            </div>
+                                        </div>
+                                        <div v-if="!task.done && task.deadline"
+                                             class=" my-auto pt-1 xsLight w-52"
+                                             :class="task.isDeadlineInFuture ? '' : 'text-error'">
+                                            bis {{ task.deadline }}
+                                        </div>
+                                    </div>
+
+
+                                    <Link v-if="task.projectId" :href="route('projects.show.checklist',{project: task.projectId})"
+                                          class="my-1 flex ml-10 xsDark">
+                                        {{ task.projectName }}
+                                        <ChevronRightIcon class="h-5 w-5 my-auto mx-3" aria-hidden="true"/>
+                                        {{ task.checklistName }}
+                                    </Link>
+
+                                    <div class="ml-10 my-3 xsLight">
+                                        {{ task.description }}
+                                    </div>
+
                                 </div>
                             </div>
-                            <div v-if="!task.done && task.deadline"
-                                 class=" my-auto pt-1 xsLight w-52"
-                                 :class="task.isDeadlineInFuture ? '' : 'text-error'">
-                                bis {{ task.deadline }}
+                            <div v-else class="relative">
+                                <div class="p-6 flex justify-center">
+                                    <div class="bg-gray-50 p-2 text-center">
+                                        <p class="text-sm text-gray-500">
+                                            Es liegen für heute keine neuen Aufgaben vor.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="absolute bottom-0 right-0">
+                                    <img src="/Svgs/IconSvgs/empty_state.svg" alt="">
+                                </div>
                             </div>
                         </div>
-
-
-                        <Link v-if="task.projectId" :href="route('projects.show.checklist',{project: task.projectId})"
-                              class="my-1 flex ml-10 xsDark">
-                            {{ task.projectName }}
-                            <ChevronRightIcon class="h-5 w-5 my-auto mx-3" aria-hidden="true"/>
-                            {{ task.checklistName }}
-                        </Link>
-
-                        <div class="ml-10 my-3 xsLight">
-                            {{ task.description }}
+                        <div class="flex justify-end mt-3">
+                            <a :href="route('tasks.own')" class="text-indigo-800 underline font-semibold text-sm">zur Aufgabenübersicht</a>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -100,15 +226,23 @@ import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/Individual
 import Permissions from "@/mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
 import {CheckIcon} from "@heroicons/vue/outline";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import NotificationButtons from "@/Layouts/Components/NotificationComponents/NotificationButtons.vue";
+import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     props: [
         'tasks',
         'shiftsOfDay',
-        'todayDate'
+        'todayDate',
+        'eventsOfDay',
+        'notificationOfToday',
+        'notificationCount'
     ],
     components: {
+        NotificationBlock,
+        NotificationButtons, NewUserToolTip,
         CheckIcon, VueMathjax,
         IndividualCalendarAtGlanceComponent,
         AppLayout,

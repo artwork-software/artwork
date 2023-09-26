@@ -6,7 +6,7 @@
             </div>
 
 
-            <div class="grid grid-cols-1 sm:grid-cols-5 gap-10">
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-x-20">
                 <div class="col-span-2">
                     <div class="mb-10">
                         <!-- Termin Widget -->

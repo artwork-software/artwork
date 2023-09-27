@@ -221,11 +221,6 @@ class EventController extends Controller
      */
     public function showDashboardPage(Request $request): Response
     {
-        $calendarController = new CalendarController();
-        $showCalendar = $calendarController->createCalendarData('dashboard', null, null, \request('startDate'), \request('endDate'));
-
-        $projects = Project::query()->with( ['managerUsers'])->get();
-
         $tasks = Task::query()
             ->where('done', false)
             ->where(function ($query) {
@@ -244,23 +239,12 @@ class EventController extends Controller
 
         $shiftsOfDay = $user->shifts()->whereDate('event_start_day', Carbon::now()->format('Y-m-d'))->with(['event','event.project','event.room'])->get();
 
-
-
-        $eventsAtAGlance = [];
-
-        if(\request('startDate') && \request('endDate')){
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
-        }else{
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
-        }
-
-        if(request('atAGlance') === 'true') {
-            $eventsAtAGlance = $calendarController->getEventsAtAGlance($startDate, $endDate);
-        }
-
-        $rooms = $calendarController->filterRooms($startDate, $endDate)->get();
+        // get user events from Projects in which the user is currently working
+        $userEvents = Event::where('start_time', '>=', Carbon::now()->startOfDay())->where('start_time', '<=', Carbon::now()->endOfDay())->whereHas('project', function (Builder $query) {
+            $query->whereHas('users', function (Builder $query) {
+                $query->where('user_id', Auth::id());
+            });
+        })->with(['project', 'room'])->get();
 
         //get date for humans of today with weekday
         $todayDate = Carbon::now()->locale('de')->isoFormat('dddd, DD.MM.YYYY');
@@ -271,7 +255,7 @@ class EventController extends Controller
             'tasks' => TaskDashboardResource::collection($tasks)->resolve(),
             'shiftsOfDay' => $shiftsOfDay,
             'todayDate' => $todayDate,
-            'eventsOfDay' => Event::where('start_time', '>=', Carbon::now()->startOfDay())->where('start_time', '<=', Carbon::now()->endOfDay())->with(['room', 'event_type', 'project'])->get(),
+            'eventsOfDay' => $userEvents,
             'notificationOfToday' => $notification->get()->groupBy('icon'),
             'notificationCount' => $notification->count(),
         ]);

@@ -143,6 +143,7 @@ export default {
             })
         },
         calculateShiftDuration(events) {
+            events = Object.values(events);
             const allShifts = events.flatMap(event => event.shifts);
             if (allShifts.length === 0) {
                 return '00:00';
@@ -161,6 +162,7 @@ export default {
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
         },
         calculateTotalBreakDuration(events) {
+            events = Object.values(events);
             const allShifts = events.flatMap(event => event.shifts);
             if (allShifts.length === 0) {
                 return '00:00';

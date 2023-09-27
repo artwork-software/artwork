@@ -50,13 +50,15 @@
                              class="cursor-pointer inset-y-0 mr-3">
                             <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                         </div>
-                        <div v-else class="flex items-center w-full w-64 mr-2">
-                            <inputComponent v-model="user_query" placeholder="Suche nach Nutzer*innen" />
+                        <div v-else class="flex items-center w-64 mr-2">
+                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
+                                   placeholder="Suche nach User*innen"
+                                   class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                         </div>
                     </div>
                     <ul role="list" class="mt-6 w-full">
-                        <li v-if="user_query.length < 1" v-for="(user,index) in userObjectsToShow" :key="user.email" class="py-6 flex justify-between">
+                        <li v-if="user_search_results.length < 1" v-for="(user,index) in userObjectsToShow" :key="user.email" class="py-6 flex justify-between">
                             <div class="flex">
                                 <img class="h-14 w-14 rounded-full object-cover flex-shrink-0 flex justify-start"
                                      :src="user.profile_photo_url ?? user.profile_image"
@@ -547,7 +549,12 @@ export default defineComponent({
                         params: {query: this.user_query}
                     }).then(response => {
                         this.user_search_results = response.data
+                        this.user_search_results.forEach((user) => {
+                            user.name = user.first_name + ' ' + user.last_name;
+                        })
                     })
+                }else{
+                    this.user_search_results = [];
                 }
             },
             deep: true

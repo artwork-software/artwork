@@ -32,9 +32,9 @@
                             <div v-if="eventsOfDay?.length > 0" class=" max-h-64 overflow-scroll">
                                 <div v-for="event of eventsOfDay" :key="event.id" class="py-1 w-full">
                                     <div :class="event.event_type.svg_name"  class="py-1 px-2 rounded">
-                                        <div class="underline font-semibold">
+                                        <a :href="getHref(event.project)" class="font-semibold" :class="event.project? 'underline' : ''" >
                                             {{ event.event_type?.abbreviation }}: {{ event.project?.name }}
-                                        </div>
+                                        </a>
                                         <div class="text-sm">
                                             <div v-if="event.allDay">
                                                 Ganztags
@@ -53,7 +53,7 @@
                                 <div class="flex justify-center">
                                     <div class="bg-gray-50 p-2 text-center">
                                         <p class="text-sm text-gray-500">
-                                            Es liegen für heute keine Termine für heute vor.
+                                            Du hast heute keine Termine.
                                         </p>
                                     </div>
                                 </div>
@@ -81,7 +81,7 @@
                                     <div>
                                         <div>
                                             <div class="text-secondaryHover xsWhiteBold px-1 py-1"
-                                                 :class="shift.event?.event_type?.svg_name">
+                                                 :class="shift.event?.event_type?.svg_name + 'Shift'">
                                                 {{ shift.event?.event_type?.abbreviation }}: {{ shift.event?.project?.name }}
                                             </div>
                                         </div>
@@ -90,8 +90,8 @@
                                                 <div>
                                                     {{ shift.craft?.abbreviation }} {{ shift.start }} - {{ shift.end }}
                                                 </div>
-                                                <div v-if="shift.room" class="truncate">
-                                                    , {{ shift.room?.name }}
+                                                <div v-if="shift.event?.room" class="truncate">
+                                                    , {{ shift.event?.room?.name }}
                                                 </div>
                                             </div>
                                         </div>
@@ -102,7 +102,7 @@
                                 <div class="flex justify-center">
                                     <div class="bg-gray-50 p-2 text-center">
                                         <p class="text-sm text-gray-500">
-                                            Heute liegen für heute keine Schichten vor.
+                                            Du hast heute keine Schichten.
                                         </p>
                                     </div>
                                 </div>
@@ -186,7 +186,7 @@
                                 <div class="p-6 flex justify-center">
                                     <div class="bg-gray-50 p-2 text-center">
                                         <p class="text-sm text-gray-500">
-                                            Es liegen für heute keine neuen Aufgaben vor.
+                                            Du hast keine offenen Aufgaben.
                                         </p>
                                     </div>
                                 </div>
@@ -274,7 +274,10 @@ export default defineComponent({
         },
         changeAtAGlance() {
             this.atAGlance = !this.atAGlance;
-        }
+        },
+        getHref(project) {
+            return route('projects.show.info', {project: project.id});
+        },
     },
     data() {
         return {
@@ -288,47 +291,112 @@ export default defineComponent({
 </script>
 <style scoped>
 
-.eventType0 {
+.eventType0Shift {
     background-color: #7F7E88;
 }
 
-.eventType1 {
+.eventType1Shift {
     background-color: #631D53;
 }
 
-.eventType2 {
+.eventType2Shift {
     background-color: #D84387;
 }
 
-.eventType3 {
+.eventType3Shift {
     background-color: #E97A45;
 }
 
-.eventType4 {
+.eventType4Shift {
     background-color: #CB8913;
 }
 
-.eventType5 {
+.eventType5Shift {
     background-color: #648928;
 }
 
-.eventType6 {
+.eventType6Shift {
     background-color: #35A965;
 }
 
-.eventType7 {
+.eventType7Shift {
     background-color: #35ACB2;
 }
 
-.eventType8 {
+.eventType8Shift {
     background-color: #2290C1;
 }
 
-.eventType9 {
+.eventType9Shift {
     background-color: #50908E;
 }
 
-.eventType10 {
+.eventType10Shift {
     background-color: #23485B;
+}
+.eventType0 {
+    background-color: #A7A6B115;
+    stroke: #7F7E88;
+    color: #7F7E88
+}
+
+.eventType1 {
+    background-color: #641a5415;
+    stroke: #631D53;
+    color: #631D53
+}
+
+.eventType2 {
+    background-color: #da3f8715;
+    stroke: #D84387;
+    color: #D84387
+}
+
+.eventType3 {
+    background-color: #eb7a3d15;
+    stroke: #E97A45;
+    color: #E97A45
+}
+
+.eventType4 {
+    background-color: #f1b64015;
+    stroke: #CB8913;
+    color: #CB8913
+}
+
+.eventType5 {
+    background-color: #86c55415;
+    stroke: #648928;
+    color: #648928
+}
+
+.eventType6 {
+    background-color: #2eaa6315;
+    stroke: #35A965;
+    color: #35A965
+}
+
+.eventType7 {
+    background-color: #3dc3cb15;
+    stroke: #35ACB2;
+    color: #35ACB2
+}
+
+.eventType8 {
+    background-color: #168fc315;
+    stroke: #2290C1;
+    color: #2290C1
+}
+
+.eventType9 {
+    background-color: #4d908e15;
+    stroke: #50908E;
+    color: #50908E
+}
+
+.eventType10 {
+    background-color: #21485C15;
+    stroke: #23485B;
+    color: #23485B
 }
 </style>

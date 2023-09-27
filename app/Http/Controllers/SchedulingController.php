@@ -150,6 +150,7 @@ class SchedulingController extends Controller
                         ];
                         $this->notificationService->setTitle($notificationTitle);
                         $this->notificationService->setIcon('red');
+                        $this->notificationService->setPriority(2);
                         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
                         $this->notificationService->setBroadcastMessage($broadcastMessage);
                         $this->notificationService->setTaskId($privateChecklistTask->id);
@@ -165,6 +166,7 @@ class SchedulingController extends Controller
                         ];
                         $this->notificationService->setTitle($notificationTitle);
                         $this->notificationService->setIcon('red');
+                        $this->notificationService->setPriority(2);
                         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
                         $this->notificationService->setBroadcastMessage($broadcastMessage);
                         $this->notificationService->setTaskId($privateChecklistTask->id);
@@ -216,6 +218,7 @@ class SchedulingController extends Controller
                     ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('red');
+                    $this->notificationService->setPriority(2);
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setTaskId($task->id);
@@ -231,6 +234,7 @@ class SchedulingController extends Controller
                     ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('red');
+                    $this->notificationService->setPriority(2);
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setTaskId($task->id);
@@ -257,6 +261,7 @@ class SchedulingController extends Controller
                     ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('green');
+                    $this->notificationService->setPriority(3);
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_NEW_TASK);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setNotificationTo($user);
@@ -272,6 +277,7 @@ class SchedulingController extends Controller
                     ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('green');
+                    $this->notificationService->setPriority(3);
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PROJECT);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setShowHistory(true);
@@ -291,6 +297,7 @@ class SchedulingController extends Controller
                     ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('blue');
+                    $this->notificationService->setPriority(1);
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_CHANGED);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setTaskId($task->id);
@@ -308,6 +315,7 @@ class SchedulingController extends Controller
                     ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('green');
+                    $this->notificationService->setPriority(3);
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setRoomId($room->id);
@@ -324,6 +332,7 @@ class SchedulingController extends Controller
                     ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('green');
+                    $this->notificationService->setPriority(3);
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_EVENT_CHANGED);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setEventId($event->id);
@@ -340,6 +349,7 @@ class SchedulingController extends Controller
                     ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('green');
+                    $this->notificationService->setPriority(3);
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setProjectId($project->id);
@@ -360,6 +370,7 @@ class SchedulingController extends Controller
                     ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('green');
+                    $this->notificationService->setPriority(3);
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_AVAILABLE);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setShowHistory(true);

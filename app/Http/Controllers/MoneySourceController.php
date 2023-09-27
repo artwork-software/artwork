@@ -116,6 +116,7 @@ class MoneySourceController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('green');
+            $this->notificationService->setPriority(3);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setNotificationTo($user);
@@ -521,6 +522,7 @@ class MoneySourceController extends Controller
                 ];
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
                 $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo(User::find($user->id));
@@ -570,6 +572,7 @@ class MoneySourceController extends Controller
                 ];
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('green');
+                $this->notificationService->setPriority(3);
                 $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo(User::find($newUser->id));
@@ -588,6 +591,7 @@ class MoneySourceController extends Controller
                 ];
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
                 $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo(User::find($newUser->id));

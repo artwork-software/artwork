@@ -137,6 +137,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('blue');
+            $this->notificationService->setPriority(1);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -230,6 +231,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -265,6 +267,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('green');
+            $this->notificationService->setPriority(3);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -340,6 +343,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('green');
+            $this->notificationService->setPriority(3);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -376,6 +380,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -535,6 +540,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('blue');
+            $this->notificationService->setPriority(1);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -573,6 +579,7 @@ class ShiftController extends Controller
 
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('green');
+        $this->notificationService->setPriority(3);
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
@@ -607,6 +614,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('blue');
+            $this->notificationService->setPriority(1);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -616,6 +624,7 @@ class ShiftController extends Controller
             // send same notification to admin
             $notificationTitle = 'Mitarbeiter*in mit zu kurzer Ruhepause geplant';
             $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setPriority(1);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
             $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
@@ -665,6 +674,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -694,6 +704,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('blue');
+            $this->notificationService->setPriority(1);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -792,6 +803,7 @@ class ShiftController extends Controller
 
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('green');
+        $this->notificationService->setPriority(3);
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
@@ -824,6 +836,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('blue');
+            $this->notificationService->setPriority(1);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -833,6 +846,7 @@ class ShiftController extends Controller
             // send same notification to admin
             $notificationTitle = 'Mitarbeiter*in mit zu kurzer Ruhepause geplant';
             $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setPriority(1);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
             $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
@@ -876,6 +890,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -906,6 +921,7 @@ class ShiftController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('blue');
+            $this->notificationService->setPriority(1);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
@@ -1144,6 +1160,7 @@ class ShiftController extends Controller
 
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('red');
+        $this->notificationService->setPriority(2);
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);

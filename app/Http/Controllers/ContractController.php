@@ -165,6 +165,7 @@ class ContractController extends Controller
 
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('green');
+        $this->notificationService->setPriority(3);
         $this->notificationService->setProjectId($project->id);
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
@@ -248,6 +249,7 @@ class ContractController extends Controller
 
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('green');
+        $this->notificationService->setPriority(3);
         $this->notificationService->setProjectId($project->id);
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
@@ -318,6 +320,7 @@ class ContractController extends Controller
 
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('red');
+        $this->notificationService->setPriority(2);
         $this->notificationService->setProjectId($project->id);
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);

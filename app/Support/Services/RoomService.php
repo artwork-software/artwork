@@ -191,6 +191,7 @@ class RoomService
                 ];
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('green');
+                $this->notificationService->setPriority(3);
                 $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
@@ -211,6 +212,7 @@ class RoomService
                 ];
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
                 $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);

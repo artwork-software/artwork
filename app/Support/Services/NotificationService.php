@@ -52,6 +52,19 @@ class NotificationService
     public int|null $taskId = null;
     public int|null $shiftId = null;
 
+    public int $priority = 0;
+
+    public function getPriority(): int
+    {
+        return $this->priority;
+    }
+
+    public function setPriority(int $priority): void
+    {
+        $this->priority = $priority;
+    }
+
+
     public function getShiftId(): ?int
     {
         return $this->shiftId;
@@ -486,6 +499,7 @@ class NotificationService
         }
         $body = new \stdClass();
         $body->icon = $this->getIcon();
+        $body->priority = $this->getPriority();
         $body->groupType = $this->getNotificationConstEnum()->groupType();
         $body->type = $this->getNotificationConstEnum();
         $body->description = $this->getDescription();

@@ -79,6 +79,7 @@ class SubEventsController extends Controller
             $this->notificationService->setNotificationTo($roomAdmin);
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
             $this->notificationService->setEventId($event);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
             $this->notificationService->setBroadcastMessage($broadcastMessage);

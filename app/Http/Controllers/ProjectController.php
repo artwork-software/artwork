@@ -658,6 +658,7 @@ class ProjectController extends Controller
             ];
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setBudgetData($budgetData);
@@ -697,6 +698,7 @@ class ProjectController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setBudgetData($budgetData);
@@ -743,6 +745,7 @@ class ProjectController extends Controller
             ];
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setNotificationTo($user);
@@ -774,6 +777,7 @@ class ProjectController extends Controller
         ];
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('blue');
+        $this->notificationService->setPriority(1);
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setNotificationTo(User::find($request->user));
@@ -838,6 +842,7 @@ class ProjectController extends Controller
         ];
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('red');
+        $this->notificationService->setPriority(2);
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setBudgetData($budgetData);
@@ -882,6 +887,7 @@ class ProjectController extends Controller
 
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('red');
+        $this->notificationService->setPriority(2);
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setBudgetData($budgetData);
@@ -2747,6 +2753,7 @@ class ProjectController extends Controller
                 ];
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('green');
+                $this->notificationService->setPriority(3);
                 $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PROJECT);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setProjectId($project->id);
@@ -2770,6 +2777,7 @@ class ProjectController extends Controller
                 ];
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('green');
+                $this->notificationService->setPriority(3);
                 $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PROJECT);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setProjectId($project->id);
@@ -2792,6 +2800,7 @@ class ProjectController extends Controller
                 ];
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
                 $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PROJECT);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setProjectId($project->id);
@@ -2810,6 +2819,7 @@ class ProjectController extends Controller
                 ];
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
                 $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PROJECT);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setProjectId($project->id);
@@ -2828,6 +2838,7 @@ class ProjectController extends Controller
                 ];
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('green');
+                $this->notificationService->setPriority(3);
                 $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PROJECT);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setProjectId($project->id);
@@ -2846,6 +2857,7 @@ class ProjectController extends Controller
                 ];
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
                 $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PROJECT);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setProjectId($project->id);
@@ -2920,6 +2932,7 @@ class ProjectController extends Controller
 
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('red');
+        $this->notificationService->setPriority(2);
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PROJECT);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setProjectId($project->id);

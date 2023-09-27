@@ -43,7 +43,7 @@
                                                 {{ event.start_time }} - {{ event.end_time }}
                                             </div>
                                             <div>
-                                                {{ event.room.name }}
+                                                {{ event.room?.name }}
                                             </div>
                                         </div>
                                     </div>
@@ -125,13 +125,37 @@
                             </div>
                         </div>
                         <div class="" >
-                            <div v-for="notificationGroup in notificationOfToday">
-                                <div v-for="(notification, index) in notificationGroup">
-                                    <div class="bg-white shadow-cardShadow p-3 mb-4" >
-                                        <NotificationBlock :notification="notification" @setOnRead="setOnRead"/>
+                            <div v-if="notificationOfToday?.length > 0">
+                                <div v-for="notificationGroup in notificationOfToday">
+                                    <div v-for="(notification, index) in notificationGroup">
+                                        <div class="bg-white shadow-cardShadow p-3 mb-4" >
+                                            <NotificationBlock :notification="notification" @setOnRead="setOnRead"/>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div v-else>
+                                <div class="bg-white shadow-cardShadow p-6 mb-4 flex gap-4 items-start" >
+                                    <svg id="Gruppe_642" data-name="Gruppe 642" xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0 0 45 45">
+                                        <g id="icon_note" data-name="icon–note">
+                                            <g id="Gruppe_642-2" data-name="Gruppe 642">
+                                                <circle id="Bildschirmfoto_2022-08-28_um_10.42.36" data-name="Bildschirmfoto 2022-08-28 um 10.42.36" cx="22.5" cy="22.5" r="22.5" fill="#cecdd8"/>
+                                            </g>
+                                            <g id="clock" transform="translate(9.5 6.313)">
+                                                <path id="Pfad_1078" data-name="Pfad 1078" d="M13.124,13.124h0A13.139,13.139,0,0,0,26.231,0H13.106A13.139,13.139,0,0,0,0,13.124Z" transform="translate(13.124 28.419) rotate(-90)" fill="#a7a6b1"/>
+                                                <path id="Pfad_1079" data-name="Pfad 1079" d="M13.124,0h0A13.139,13.139,0,0,1,26.231,13.124H13.106A13.139,13.139,0,0,1,0,0Z" transform="translate(0 28.428) rotate(-90)" fill="#fcfcfb"/>
+                                                <g id="Pfad_1507" data-name="Pfad 1507" transform="translate(17.07)" fill="#27233c">
+                                                    <path d="M 5.471749305725098 10.19349956512451 C 2.86816930770874 10.19349956512451 0.7499992847442627 8.075329780578613 0.7499992847442627 5.471749305725098 C 0.7499992847442627 2.86816930770874 2.86816930770874 0.7499992847442627 5.471749305725098 0.7499992847442627 C 8.075329780578613 0.7499992847442627 10.19349956512451 2.86816930770874 10.19349956512451 5.471749305725098 C 10.19349956512451 8.075329780578613 8.075329780578613 10.19349956512451 5.471749305725098 10.19349956512451 Z" stroke="none"/>
+                                                    <path d="M 5.471749305725098 1.499999046325684 C 3.281719207763672 1.499999046325684 1.499999046325684 3.281719207763672 1.499999046325684 5.471749305725098 C 1.499999046325684 7.661779403686523 3.281719207763672 9.443499565124512 5.471749305725098 9.443499565124512 C 7.661779403686523 9.443499565124512 9.443499565124512 7.661779403686523 9.443499565124512 5.471749305725098 C 9.443499565124512 3.281719207763672 7.661779403686523 1.499999046325684 5.471749305725098 1.499999046325684 M 5.471749305725098 -9.5367431640625e-07 C 8.493709564208984 -9.5367431640625e-07 10.94349956512451 2.449789047241211 10.94349956512451 5.471749305725098 C 10.94349956512451 8.493709564208984 8.493709564208984 10.94349956512451 5.471749305725098 10.94349956512451 C 2.449789047241211 10.94349956512451 -9.5367431640625e-07 8.493709564208984 -9.5367431640625e-07 5.471749305725098 C -9.5367431640625e-07 2.449789047241211 2.449789047241211 -9.5367431640625e-07 5.471749305725098 -9.5367431640625e-07 Z" stroke="none" fill="#cecdd8"/>
+                                                </g>
+                                            </g>
+                                        </g>
+                                    </svg>
+                                    <div class="text-sm text-gray-500 font-medium text-md">
+                                        Es liegen für heute keine neuen Mitteilungen vor.
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                         <div class="flex justify-end mt-3">
@@ -276,7 +300,7 @@ export default defineComponent({
             this.atAGlance = !this.atAGlance;
         },
         getHref(project) {
-            return route('projects.show.info', {project: project.id});
+            //return route('projects.show.info', {project: project?.id});
         },
     },
     data() {

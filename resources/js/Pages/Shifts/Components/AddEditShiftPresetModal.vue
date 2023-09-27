@@ -53,6 +53,7 @@
                                             <input type="number"
                                                    placeholder="Pausenlänge in Minuten*"
                                                    v-model="shiftForm.break_minutes"
+                                                   minlength="0"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                                    required
                                             />
@@ -217,6 +218,39 @@ export default defineComponent({
             } else {
                 this.helpTexts.breakText = '';
             }
+
+            // check if break positive
+            if(this.shiftForm.break_minutes < 0){
+                this.helpTexts.breakText = 'Die Pausenzeit kann nicht negativ sein.';
+                return;
+            } else {
+                this.helpTexts.breakText = '';
+            }
+
+            // check if break is not longer than shift
+            if(this.shiftForm.break_minutes >= (this.shiftForm.end - this.shiftForm.start)){
+                this.helpTexts.breakText = 'Die Pausenzeit kann nicht länger als die Schicht sein.';
+                return;
+            } else {
+                this.helpTexts.breakText = '';
+            }
+
+            // check if number of employees is not negative
+            if(this.shiftForm.number_employees < 0){
+                this.helpTexts.employeeText = 'Die Anzahl der Mitarbeiter:innen kann nicht negativ sein.';
+                return;
+            } else {
+                this.helpTexts.employeeText = '';
+            }
+
+            // check if number of masters is not negative
+            if(this.shiftForm.number_masters < 0){
+                this.helpTexts.masterText = 'Die Anzahl der Meister:innen kann nicht negativ sein.';
+                return;
+            } else {
+                this.helpTexts.masterText = '';
+            }
+
 
             if(this.shiftForm.start >= this.shiftForm.end ){
                 this.helpTexts.time = 'Der Endzeitpunkt muss nach dem Startzeitpunkt liegen.';

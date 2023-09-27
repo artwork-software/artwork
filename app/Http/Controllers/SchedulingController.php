@@ -326,7 +326,7 @@ class SchedulingController extends Controller
                     $this->notificationService->setIcon('green');
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_EVENT_CHANGED);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
-                    $this->notificationService->setEventId($room->id);
+                    $this->notificationService->setEventId($event->id);
                     $this->notificationService->setNotificationTo($user);
                     $this->notificationService->createNotification();
                     break;

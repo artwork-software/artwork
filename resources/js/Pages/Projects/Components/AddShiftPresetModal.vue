@@ -63,7 +63,6 @@
                                             </ListboxOptions>
                                         </transition>
                                     </Listbox>
-
                                    <div class="w-full mb-3 mt-3">
                                        <input v-model="presetForm.name"
                                               id="changeEndTime"
@@ -122,12 +121,12 @@ export default defineComponent({
         ListboxOptions,
     },
     emits: ['closed'],
-    props: ['event_types', 'eventId', 'preset'],
+    props: ['event_types', 'eventId', 'preset','event_type_id'],
     data() {
         return {
             open: true,
             showAddTimeLine: false,
-            selectedEventType: this.preset ? this.event_types[this.preset.event_type_id - 1] : this.event_types[1],
+            selectedEventType: this.preset ? this.event_types[this.preset.event_type_id - 1] : this.event_types.find(event_type => event_type.id === this.event_type_id),
             presetForm: useForm({
                 name: this.preset ? this.preset.name : null,
                 event_type_id: null,
@@ -163,7 +162,7 @@ export default defineComponent({
                     }
                 })
             }
-        }
+        },
     },
 })
 </script>

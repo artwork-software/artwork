@@ -76,6 +76,7 @@
             v-if="showAddShiftPresetModal"
             @closed="showAddShiftPresetModal = false"
             :event_types="eventTypes"
+            :event_type_id="event.event_type.id"
             :event-id="event.event.id"
         />
 

@@ -231,7 +231,7 @@ class EventController extends Controller
                         $userBuilder->where('user_id', Auth::id());
                     });
             })
-            ->orderBy('deadline', 'asc')
+            ->orderByRaw('CASE WHEN deadline IS NULL THEN 1 ELSE 0 END, deadline ASC')
             ->limit(5)
             ->get();
 

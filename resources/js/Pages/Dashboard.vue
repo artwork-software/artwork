@@ -32,7 +32,7 @@
                             <div v-if="eventsOfDay?.length > 0" class=" max-h-64 overflow-scroll">
                                 <div v-for="event of eventsOfDay" :key="event.id" class="py-1 w-full">
                                     <div :class="event.event_type.svg_name"  class="py-1 px-2 rounded">
-                                        <a :href="getHref(event.project)" class="font-semibold" :class="event.project? 'underline' : ''" >
+                                        <a :href="getHref(event.project)" class="font-semibold" :class="event.project? 'underline cursor-pointer' : ''" >
                                             {{ event.event_type?.abbreviation }}: {{ event.project?.name }}
                                         </a>
                                         <div class="text-sm">
@@ -125,8 +125,8 @@
                             </div>
                         </div>
                         <div class="" >
-                            <div v-if="notificationOfToday?.length > 0">
-                                <div v-for="notificationGroup in notificationOfToday">
+                            <div v-if="Object.values(notificationOfToday)?.length > 0">
+                                <div v-for="notificationGroup in Object.values(notificationOfToday)">
                                     <div v-for="(notification, index) in notificationGroup">
                                         <div class="bg-white shadow-cardShadow p-3 mb-4" >
                                             <NotificationBlock :notification="notification" @setOnRead="setOnRead"/>
@@ -300,7 +300,7 @@ export default defineComponent({
             this.atAGlance = !this.atAGlance;
         },
         getHref(project) {
-            //return route('projects.show.info', {project: project?.id});
+            return route('projects.show.info', {project: project?.id});
         },
     },
     data() {

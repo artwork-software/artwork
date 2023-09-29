@@ -97,14 +97,14 @@ class CalendarController extends Controller
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
-        $room_query = Room::query()->where('id', $room->id)->with('events', function ($query) use ($room, $hasShifts) {
+        /*$room_query = Room::query()->where('id', $room->id)->with('events', function ($query) use ($room, $hasShifts) {
             $query = $this->filterEvents($query, null, null, $room, null)->orderBy('start_time', 'ASC');
             if ($hasShifts) {
                 $query->whereHas('shifts');
             }
-        })->without(['admins'])->first();
+        })->without(['admins'])->first();*/
 
-        foreach ($room_query->events as $event) {
+        foreach ($room->events as $event) {
             if (in_array($today, $event->days_of_event)) {
                 if (!empty($projectId)) {
                     if ($event->project_id === $projectId) {

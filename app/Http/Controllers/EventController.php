@@ -81,7 +81,7 @@ class EventController extends Controller
 
         $calendar = new CalendarController();
         $events = [];
-        if(\request('startDate') === \request('endDate')) {
+        if(\request('startDate') && \request('endDate')) {
             $showCalendar = $calendar->createCalendarData('individual', null, null, \request('startDate'), \request('endDate'));
             $events = new CalendarEventCollectionResource($calendar->getEventsOfDay());
         }else{

@@ -179,114 +179,7 @@
                 </div>
 
             </div>
-            <div v-if="hasAdminRole() || $canAny(['change system notification'])">
-
-                <div class="headline2 mt-12 mb-6">
-                    Benachrichtigung an alle
-                </div>
-                <div class="xsLight">
-                    Teile allen Usern etwas Wichtiges mit - z.B. Änderungen oder neue Funktionen im artwork oder
-                    wichtige Mitteilungen, die
-                    das ganze Haus betreffen. Die Nachricht können alle User in den Benachrichtigungen einsehen (auch
-                    die Externen!).
-                </div>
-                <div>
-                    <label class="block mt-12 mb-2 xsLight">
-                        Bild </label>
-                    <div class="items-center">
-                        <div
-                            class="flex w-full justify-center border-2 bg-stone-50 w-5/12 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
-                            @click="selectNewNotificationImage"
-                            @dragover.prevent
-                            @drop.stop.prevent="uploadDraggedImage($event)">
-                            <div v-show="!notificationImagePreview" class="space-y-1 text-center">
-                                <div class="xsLight flex my-auto h-40 items-center"
-                                     v-if="this.globalNotificationForm.notificationImage === null && notificationImagePreview === null">
-                                    Ziehe hier dein <br/> Bild für die Benachrichtigung hin
-                                    <input id="notificationImage-upload" ref="notificationImage"
-                                           @change="updateNotificationImagePreview()"
-                                           name="file-upload" type="file" class="sr-only"/>
-                                </div>
-                                <div class="cursor-pointer" v-else>
-                                    <img :src="this.globalNotificationForm.notificationImage" alt="Aktuelles Bild"
-                                         class="rounded-md h-40 w-40">
-                                </div>
-                            </div>
-                            <div class="cursor-pointer">
-                                <img v-show="notificationImagePreview" :src="notificationImagePreview"
-                                     alt="Aktuelles Banner"
-                                     class="rounded-md h-40 w-40">
-                                <input type="file" class="hidden"
-                                       ref="notificationImage"
-                                       @change="updateNotificationImagePreview">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex my-4 w-full pr-7">
-                    <div class="w-5/12 mr-6">
-                        <input type="text"
-                               v-model="this.globalNotificationForm.notificationName"
-                               id="eventTitle"
-                               placeholder="Titel*"
-                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                    </div>
-                    <div class="w-full flex w-5/12">
-                        <label for="deadlineDate" class="flex items-center xsLight mr-3">
-                            Ablaufdatum:
-                        </label>
-                        <input v-model="this.globalNotificationForm.notificationDeadlineDate"
-                               id="deadlineDate"
-                               type="date"
-                               required
-                               class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
-                        <input v-model="this.globalNotificationForm.notificationDeadlineTime"
-                               id="deadlineTime"
-                               type="time"
-                               required
-                               class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
-                    </div>
-                </div>
-                <div class="py-2 w-10/12">
-                    <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
-                              id="description"
-                              v-model="this.globalNotificationForm.notificationDescription"
-                              rows="4"
-                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                </div>
-                <div class="w-10/12 flex justify-between">
-                    <AddButton @click="createGlobalNotification()" class="flex px-12"
-                               text="Benachrichtigung teilen" mode="modal"/>
-                    <AddButton @click="deleteGlobalNotification($page.props.globalNotification.id)" type="secondary"
-                               text="Benachrichtigung löschen"></AddButton>
-                </div>
-            </div>
         </div>
-        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="font-black text-primary font-lexend text-3xl my-2">
-                        Benachrichtigung für alle erstellt
-                    </div>
-                    <XIcon @click="closeSuccessModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
-                        Die Benachrichtigung wurde erfolgreich erstellt.
-                    </div>
-                    <div class="mt-6">
-                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-24 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="closeSuccessModal">
-                            <CheckIcon class="h-6 w-12 text-secondaryHover"/>
-                        </button>
-                    </div>
-                </div>
-
-            </template>
-        </jet-dialog-modal>
-
     </app-layout>
 </template>
 
@@ -328,13 +221,6 @@ export default defineComponent({
                 smallLogo: null,
                 banner: null,
             }),
-            globalNotificationForm: this.$inertia.form({
-                notificationImage: this.$page.props.globalNotification?.image_url,
-                notificationName: this.$page.props.globalNotification?.title,
-                notificationDeadlineDate: this.$page.props.globalNotification.expiration_date ? this.getDateOfDate(this.$page.props.globalNotification.expiration_date) : null,
-                notificationDeadlineTime: this.$page.props.globalNotification.expiration_date ? this.getTimeOfDate(this.$page.props.globalNotification.expiration_date) : null,
-                notificationDescription: this.$page.props.globalNotification?.description,
-            }),
             mailForm: this.$inertia.form({
                 _method: 'PUT',
                 businessName: this.$page.props.businessName,
@@ -375,10 +261,6 @@ export default defineComponent({
                         this.bannerPreview = e.target.result;
                         this.form.banner = file
                     }
-                    if (type === 'notificationImage') {
-                        this.notificationImagePreview = e.target.result;
-                        this.globalNotificationForm.notificationImage = file
-                    }
 
                 }
 
@@ -412,9 +294,6 @@ export default defineComponent({
         uploadDraggedBanner(event) {
             this.validateTypeAndUpload(event.dataTransfer.files[0], 'banner');
         },
-        uploadDraggedImage(event) {
-          this.validateTypeAndUpload(event.dataTransfer.files[0], 'notificationImage')
-        },
         selectNewBigLogo() {
             this.$refs.bigLogo.click();
         },
@@ -426,9 +305,6 @@ export default defineComponent({
         },
         selectNewNotificationImage() {
           this.$refs.notificationImage.click();
-        },
-        updateNotificationImagePreview(){
-          this.validateTypeAndUpload(this.$refs.notificationImage.files[0], 'notificationImage')
         },
         updateBannerPreview() {
             this.validateTypeAndUpload(this.$refs.banner.files[0], 'banner');
@@ -446,20 +322,6 @@ export default defineComponent({
             console.log(this.mailForm)
             this.mailForm.post(route('tool.updateMail'))
         },
-        createGlobalNotification(){
-            this.globalNotificationForm.post(route('global_notification.store'));
-            this.showSuccessModal = true;
-            setTimeout(() => this.showSuccessModal = false, 2000)
-        },
-        deleteGlobalNotification(globalNotificationId){
-            this.$inertia.delete(route('global_notification.destroy',globalNotificationId));
-            this.globalNotificationForm.notificationImage = null;
-            this.globalNotificationForm.notificationName = null;
-            this.globalNotificationForm.notificationDeadlineDate = null;
-            this.globalNotificationForm.notificationDeadlineTime = null;
-            this.globalNotificationForm.notificationDescription = null;
-            this.notificationImagePreview = null;
-        }
     },
 })
 </script>

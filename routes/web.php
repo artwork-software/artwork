@@ -304,7 +304,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     /**
      * Event Views
      */
-    Route::get('/events/view', [EventController::class, 'viewEventIndex'])->name('events');
+    Route::get('/calendar/view', [EventController::class, 'viewEventIndex'])->name('events');
     Route::get('/events/requests', [EventController::class, 'viewRequestIndex'])->name('events.requests');
     Route::get('/events/trashed', [EventController::class, 'getTrashed'])->name('events.trashed');
 

@@ -4,7 +4,7 @@
             <!-- Greetings Div -->
             <div class="mr-2 w-4/6">
                 <div class="ml-12 mt-10">
-                    <h2 class="headline1 flex mb-4">Benachrichtungen</h2>
+                    <h2 class="headline1 flex mb-4">Benachrichtigungen</h2>
                 </div>
             </div>
 

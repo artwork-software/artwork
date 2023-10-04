@@ -215,31 +215,67 @@ class ShiftPresetController extends Controller
 
     public function import(Request $request, Event $event, ShiftPreset $shiftPreset)
     {
-        $event->shifts()->delete();
-        $event->timeline()->delete();
+        if($request->all === true){
+            $project = $event->project()->first();
 
-        $shifts = $shiftPreset->shifts()->get();
-        $timeLines = $shiftPreset->timeline()->get();
+            $eventsByProject = $project->events()->where('event_type_id', $shiftPreset->event_type_id)->get();
 
-        foreach ($shifts as $shift){
-            $event->shifts()->create([
-                'start' => $shift->start,
-                'end' => $shift->end,
-                'break_minutes' => $shift->break_minutes,
-                'craft_id' => $shift->craft_id,
-                'number_employees' => $shift->number_employees,
-                'number_masters' => $shift->number_masters,
-                'description' => $shift->description,
-                'is_committed' => false
-            ]);
-        }
+            foreach ($eventsByProject as $eventByProject){
+                $eventByProject->shifts()->delete();
+                $eventByProject->timeline()->delete();
 
-        foreach ($timeLines as $timeLine){
-            $event->timeline()->create([
-                'start' => $timeLine->start,
-                'end' => $timeLine->end,
-                'description' => $timeLine->description,
-            ]);
+                $shifts = $shiftPreset->shifts()->get();
+                $timeLines = $shiftPreset->timeline()->get();
+
+                foreach ($shifts as $shift){
+                    $eventByProject->shifts()->create([
+                        'start' => $shift->start,
+                        'end' => $shift->end,
+                        'break_minutes' => $shift->break_minutes,
+                        'craft_id' => $shift->craft_id,
+                        'number_employees' => $shift->number_employees,
+                        'number_masters' => $shift->number_masters,
+                        'description' => $shift->description,
+                        'is_committed' => false
+                    ]);
+                }
+
+                foreach ($timeLines as $timeLine){
+                    $eventByProject->timeline()->create([
+                        'start' => $timeLine->start,
+                        'end' => $timeLine->end,
+                        'description' => $timeLine->description,
+                    ]);
+                }
+            }
+
+        } else {
+            $event->shifts()->delete();
+            $event->timeline()->delete();
+
+            $shifts = $shiftPreset->shifts()->get();
+            $timeLines = $shiftPreset->timeline()->get();
+
+            foreach ($shifts as $shift){
+                $event->shifts()->create([
+                    'start' => $shift->start,
+                    'end' => $shift->end,
+                    'break_minutes' => $shift->break_minutes,
+                    'craft_id' => $shift->craft_id,
+                    'number_employees' => $shift->number_employees,
+                    'number_masters' => $shift->number_masters,
+                    'description' => $shift->description,
+                    'is_committed' => false
+                ]);
+            }
+
+            foreach ($timeLines as $timeLine){
+                $event->timeline()->create([
+                    'start' => $timeLine->start,
+                    'end' => $timeLine->end,
+                    'description' => $timeLine->description,
+                ]);
+            }
         }
     }
 }

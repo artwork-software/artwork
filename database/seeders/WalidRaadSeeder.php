@@ -215,8 +215,14 @@ class WalidRaadSeeder extends Seeder
         /**
          * Attach Project Headlines to Project
          */
-        $project->headlines()->attach(1, ['text' => '']);
-        $project->headlines()->attach(2, ['text' => 'Hallo']);
+
+
+        $projects = Project::all();
+
+        foreach ($projects as $project){
+            $project->headlines()->attach(1, ['text' => '']);
+            $project->headlines()->attach(2, ['text' => 'Hallo']);
+        }
 
 
         /**

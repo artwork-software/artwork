@@ -100,38 +100,20 @@
                         </SwitchGroup>
                         -->
                         <div v-if="type !== 'project'">
-                        <SwitchGroup class="mb-1">
-                            <div class="flex items-center">
-                                <Switch v-model="filterArray.eventAttributes.adjoiningNotLoud.checked"
-                                        :class="filterArray.eventAttributes.adjoiningNotLoud.checked ? 'bg-white' : 'bg-darkGray'"
-                                        class="relative inline-flex h-3 w-7 items-center rounded-full">
-                                            <span
-                                                :class="filterArray.eventAttributes.adjoiningNotLoud.checked ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
-                                                class="inline-block h-2 w-2 transform rounded-full transition"/>
-                                </Switch>
-                                <SwitchLabel class="ml-4 text-xs"
-                                             :class="filterArray.eventAttributes.adjoiningNotLoud.checked ? 'text-white' : 'text-secondary'">
-                                    Ohne laute Nebenveranstaltung
-                                </SwitchLabel>
+                            <div class="flex w-full mb-2">
+                                <input type="checkbox" v-model="filterArray.eventAttributes.adjoiningNotLoud.checked"
+                                       @change="reloadFilterBackend"
+                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                <p :class="[filterArray.eventAttributes.adjoiningNotLoud.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">Ohne laute Nebenveranstaltung</p>
                             </div>
-                        </SwitchGroup>
-
-                        <SwitchGroup>
-                            <div class="flex items-center">
-                                <Switch v-model="filterArray.eventAttributes.adjoiningNoAudience.checked"
-                                        :class="filterArray.eventAttributes.adjoiningNoAudience.checked ? 'bg-white' : 'bg-darkGray'"
-                                        class="relative inline-flex h-3 w-7 items-center rounded-full">
-                                            <span
-                                                :class="filterArray.eventAttributes.adjoiningNoAudience.checked ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
-                                                class="inline-block h-2 w-2 transform rounded-full transition"/>
-                                </Switch>
-                                <SwitchLabel class="ml-4 text-xs"
-                                             :class="filterArray.eventAttributes.adjoiningNoAudience.checked ? 'text-white' : 'text-secondary'">
-                                    Ohne Nebenveranstaltung mit Publikum
-                                </SwitchLabel>
+                            <div class="flex w-full mb-2">
+                                <input type="checkbox" v-model="filterArray.eventAttributes.adjoiningNoAudience.checked"
+                                       @change="reloadFilterBackend"
+                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                <p :class="[filterArray.eventAttributes.adjoiningNoAudience.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">Ohne Nebenveranstaltung mit Publikum</p>
                             </div>
-                        </SwitchGroup>
-
                         <!-- temporarily not included
 
                         <Menu as="div" v-if="calendarFilters.allDayFree">
@@ -184,6 +166,7 @@
                                  v-for="category in filterArray.roomCategories"
                                  class="flex w-full mb-2">
                                 <input type="checkbox" v-model="category.checked"
+                                       @change="reloadFilterBackend"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -208,6 +191,7 @@
                             <div v-if="filterArray.areas.length > 0" v-for="area in filterArray.areas"
                                  class="flex w-full mb-2">
                                 <input type="checkbox" v-model="area.checked"
+                                       @change="reloadFilterBackend"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -232,6 +216,7 @@
                                  v-for="attribute in filterArray.roomAttributes"
                                  class="flex w-full mb-2">
                                 <input type="checkbox" v-model="attribute.checked"
+                                       @change="reloadFilterBackend"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -257,6 +242,7 @@
                             <div v-if="filterArray.rooms.length > 0" v-for="room in filterArray.rooms"
                                  class="flex w-full mb-2">
                                 <input type="checkbox" v-model="room.checked"
+                                       @change="reloadFilterBackend"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -297,6 +283,7 @@
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                             <div v-for="eventType in filterArray.eventTypes" class="flex w-full mb-2">
                                 <input type="checkbox" v-model="eventType.checked"
+                                       @change="reloadFilterBackend"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -318,6 +305,7 @@
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                             <div v-for="eventAttribute in filterArray.eventAttributes" class="flex w-full mb-2">
                                 <input type="checkbox" v-model="eventAttribute.checked"
+                                       @change="reloadFilterBackend"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[eventAttribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -446,6 +434,9 @@ export default {
         }
     },
     methods: {
+        reloadFilterBackend() {
+            this.reloadChanges()
+        },
         setCheckedFalse(array) {
             array.forEach(item => item.checked = false)
         },
@@ -461,6 +452,8 @@ export default {
             this.filterArray.eventAttributes.hasNoAudience.checked = false
             this.filterArray.eventAttributes.adjoiningNotLoud.checked = false
             this.filterArray.eventAttributes.adjoiningNoAudience.checked = false
+
+            this.reloadChanges()
         },
         async saveFilter() {
             const filterIds = this.getFilterFields();
@@ -623,7 +616,7 @@ export default {
     watch: {
         filterArray: {
             handler() {
-                this.reloadChanges()
+                //this.reloadChanges()
                 this.$emit('filtersChanged', this.activeFilters)
             },
             deep: true

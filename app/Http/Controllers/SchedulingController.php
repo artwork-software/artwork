@@ -140,6 +140,9 @@ class SchedulingController extends Controller
                 $privateChecklistTasks = $checklist->tasks()->get();
                 foreach ($privateChecklistTasks as $privateChecklistTask) {
                     $user = User::find($checklist->user_id);
+                    if($privateChecklistTask->deadline === null){
+                        continue;
+                    }
                     $deadline = new DateTime($privateChecklistTask->deadline);
                     if ($deadline <= Carbon::now()->addDay() && $deadline >= Carbon::now()) {
                         $notificationTitle = 'Deadline von ' . $privateChecklistTask->name . ' ist morgen erreicht';
@@ -178,6 +181,9 @@ class SchedulingController extends Controller
             }
             $tasks = $checklist->tasks()->get();
             foreach ($tasks->where('done_at', null) as $task) {
+                if($task->deadline === null){
+                    continue;
+                }
                 $deadline = new DateTime($task->deadline);
                 if ($deadline <= now()) {
                     // create array with deadline reached tasks

@@ -14,7 +14,7 @@
         </div>
         <div class="w-full">
             <span v-if="project.public_checklists.length === 0 && project.private_checklists.length === 0"
-                  class="text-secondary subpixel-antialiased text-xs mb-4">
+                  class="xsDark mb-4">
                 Noch keine Checklisten hinzugefügt. Erstelle Checklisten mit Aufgaben. Die Checklisten kannst du Teams zuordnen. Nutze Vorlagen und spare Zeit.
             </span>
             <div v-else>

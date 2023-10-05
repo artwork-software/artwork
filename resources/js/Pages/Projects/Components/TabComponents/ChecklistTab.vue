@@ -1,5 +1,5 @@
 <template>
-    <div class="mt-6 bg-lightBackgroundGray">
+    <div class="mt-6 pb-6 bg-lightBackgroundGray">
         <div class="">
             <ChecklistComponent
                 :project="project"

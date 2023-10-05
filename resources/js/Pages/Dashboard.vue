@@ -50,8 +50,8 @@
                                 </div>
                             </div>
                             <div v-else class="mt-3">
-                                <div class="flex justify-center">
-                                    <div class="bg-gray-50 p-2 text-center">
+                                <div class="flex justify-start">
+                                    <div class="bg-gray-50 p-2">
                                         <p class="text-sm text-gray-500">
                                             Du hast heute keine Termine.
                                         </p>
@@ -99,7 +99,7 @@
                                 </div>
                             </div>
                             <div v-else class="mt-3">
-                                <div class="flex justify-center">
+                                <div class="flex justify-start">
                                     <div class="bg-gray-50 p-2 text-center">
                                         <p class="text-sm text-gray-500">
                                             Du hast heute keine Schichten.
@@ -135,8 +135,8 @@
 
                                 </div>
                             </div>
-                            <div v-else>
-                                <div class="bg-white shadow-cardShadow p-6 mb-4 flex gap-4 items-start" >
+                            <div v-else class="">
+                                <div class="bg-white shadow-cardShadow p-6 mb-4 flex gap-4 items-center" >
                                     <svg id="Gruppe_642" data-name="Gruppe 642" xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0 0 45 45">
                                         <g id="icon_note" data-name="icon–note">
                                             <g id="Gruppe_642-2" data-name="Gruppe 642">
@@ -152,7 +152,7 @@
                                             </g>
                                         </g>
                                     </svg>
-                                    <div class="text-sm text-gray-500 font-medium text-md">
+                                    <div class="xsLight">
                                         Es liegen für heute keine neuen Mitteilungen vor.
                                     </div>
                                 </div>
@@ -207,7 +207,7 @@
                                 </div>
                             </div>
                             <div v-else class="relative">
-                                <div class="p-6 flex justify-center">
+                                <div class="p-6 flex justify-start">
                                     <div class="bg-gray-50 p-2 text-center">
                                         <p class="text-sm text-gray-500">
                                             Du hast keine offenen Aufgaben.

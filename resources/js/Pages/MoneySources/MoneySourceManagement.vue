@@ -11,7 +11,7 @@
                             <div class="flex">
                             <Listbox as="div" class="flex" v-model="moneySourceFilter">
                                 <ListboxButton
-                                    class="bg-white w-full relative py-2 ml-5 cursor-pointer focus:outline-none">
+                                    class="bg-white w-full relative py-2 cursor-pointer focus:outline-none">
                                     <div class="flex items-center my-auto">
                                         <p class="items-center flex mr-2 xsDark">
                                             {{ moneySourceFilter.name }}</p>

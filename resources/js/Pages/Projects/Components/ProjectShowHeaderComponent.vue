@@ -18,24 +18,7 @@
                 <img src="/images/place.png" alt="Aktuelles Key-Visual"
                      class="rounded-md h-[200px]">
             </div>
-            <div class="mt-5 subpixel-antialiased text-secondary text-xs flex items-center"
-                 v-if="project.project_history.length">
-                <div>
-                    zuletzt geändert:
-                </div>
-                <UserPopoverTooltip :user="project.project_history[0]?.changes[0]?.changed_by" :id="project.project_history[0]?.changes[0]?.changed_by.id" height="4" width="4" class="ml-2"/>
-                <span class="ml-2 subpixel-antialiased">
-                        {{ project.project_history[0]?.created_at }}
-                    </span>
-                <button class="ml-4 subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
-                        @click="openProjectHistoryModal()">
-                    <ChevronRightIcon
-                        class="-mr-0.5 h-4 w-4  group-hover:text-white"
-                        aria-hidden="true"/>
-                    Verlauf ansehen
-                </button>
-            </div>
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center mt-4">
                 <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl items-center">
                         <span v-if="project.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
@@ -106,7 +89,7 @@
                               :displayed-text="projectGroup.name" :property="projectGroup"></TagComponent>
             </div>
 
-            <div class="w-full mt-5 text-secondary subpixel-antialiased">
+            <div class="w-full mt-1 text-secondary subpixel-antialiased">
                 <div v-if="firstEventInProject && lastEventInProject">
                     Zeitraum/Öffnungszeiten: {{ firstEventInProject?.start_time }} <span
                     v-if="firstEventInProject?.start_time">Uhr -</span> {{ lastEventInProject?.end_time }} <span
@@ -118,6 +101,23 @@
                 <div v-if="!RoomsWithAudience && !(firstEventInProject && lastEventInProject)">
                     Noch keine Termine innerhalb dieses Projektes
                 </div>
+            </div>
+            <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center"
+                 v-if="project.project_history.length">
+                <div>
+                    zuletzt geändert:
+                </div>
+                <UserPopoverTooltip :user="project.project_history[0]?.changes[0]?.changed_by" :id="project.project_history[0]?.changes[0]?.changed_by.id" height="4" width="4" class="ml-2"/>
+                <span class="ml-2 subpixel-antialiased">
+                        {{ project.project_history[0]?.created_at }}
+                    </span>
+                <button class="ml-4 subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
+                        @click="openProjectHistoryModal()">
+                    <ChevronRightIcon
+                        class="-mr-0.5 h-4 w-4  group-hover:text-white"
+                        aria-hidden="true"/>
+                    Verlauf ansehen
+                </button>
             </div>
         </div>
     </div>

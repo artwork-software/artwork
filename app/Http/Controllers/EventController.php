@@ -91,7 +91,7 @@ class EventController extends Controller
 
         $eventsAtAGlance = [];
 
-        if(\request('startDate') && \request('endDate')){
+        if(request('startDate') && \request('endDate')){
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
         }else{

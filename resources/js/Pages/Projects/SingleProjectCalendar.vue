@@ -93,14 +93,12 @@ export default {
     methods:{
         changeAtAGlance() {
             this.atAGlance = !this.atAGlance;
-            if (this.atAGlance) {
-                Inertia.reload({
-                    data: {
-                        atAGlance: this.atAGlance,
-                    },
-                    only: ['calendar']
-                })
-            }
+            Inertia.reload({
+                data: {
+                    atAGlance: this.atAGlance,
+                },
+                only: ['calendar', 'eventsAtAGlance']
+            })
         }
     }
 }

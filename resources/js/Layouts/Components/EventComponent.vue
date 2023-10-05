@@ -7,7 +7,7 @@
                  class="-ml-6 -mt-8 mb-4"/>
             <XIcon @click="closeModal(false)"
                    class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"/>
+                   aria-hidden="true"/> 
             <div class="mx-4">
                 <!--   Heading   -->
                 <div v-if="this.isRoomAdmin || this.hasAdminRole()">

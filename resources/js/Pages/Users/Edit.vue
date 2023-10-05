@@ -4,7 +4,7 @@
             <div>
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
                     <div>
-                        <div class="max-w-screen-lg py-4 pl-20 pr-4">
+                        <div class="max-w-screen-lg py-4 pl-5 pr-4">
                             <div class="flex">
                                 <img class="mt-6 h-16 w-16 rounded-full flex justify-start object-cover"
                                      :src="user_to_edit.profile_photo_url"

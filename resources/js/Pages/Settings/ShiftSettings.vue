@@ -1,17 +1,17 @@
 <template>
     <AppLayout>
-        <div class="max-w-screen-lg my-8 ml-14 mr-40">
+        <div class="max-w-screen-lg ml-14 mr-40">
             <div class="">
-                <h2 class="headline1 my-6">Schichteinstellungen</h2>
-                <div class="xxsLight">
+                <h2 class="headline1">Schichteinstellungen</h2>
+                <div class="xsLight mt-2">
                     Definiere globale Einstellungen für die Schichtplanung.
                 </div>
             </div>
 
 
             <div class="mt-10">
-                <h3 class="headline2 mb-8">Gewerke</h3>
-                <p class="xxsLight">
+                <h3 class="headline2 mb-2">Gewerke</h3>
+                <p class="xsLight">
                     Definiere Gewerke, welchen du später Mitarbeiter*innen sowie Schichten zuteilen kannst.
                     Zusätzlich kannst du hier festlegen welche Nutzer*innen welche Art von Mitarbeiter*innen Schichten zuteilen dürfen.
                 </p>
@@ -25,10 +25,10 @@
                         <div class="min-w-0 flex-auto">
                             <p class="text-sm font-semibold leading-6 text-gray-900">{{ craft.name }} ({{ craft.abbreviation }})</p>
                             <div class="" v-if="craft.assignable_by_all">
-                                <p class="mt-1 truncate text-xs leading-5 text-gray-500">Von allen Schichtplaner*innen zuteilbar</p>
+                                <p class="mt-1 truncate xsLight">Von allen Schichtplaner*innen zuteilbar</p>
                             </div>
                             <div v-else>
-                                <p class="mt-1 truncate text-xs leading-5 text-gray-500">
+                                <p class="mt-1 truncate xsLight">
                                     Darf ausschließlich zugeteilt werden von:
                                     <span class="" v-for="(user, index) in craft.users">
                                         {{ user.full_name }}<span>, </span>
@@ -86,8 +86,8 @@
 
 
             <div class="mt-10">
-                <h4 class="mb-6 headline2">Schichtrelevante Termintypen</h4>
-                <p class="xxsLight">
+                <h4 class="mb-2 headline2">Schichtrelevante Termintypen</h4>
+                <p class="xsLight">
                     Lege fest, welche Termintypen standardmäßig als Schichtrelevant angezeigt werden.
                     Diese werden dann automatisch im Projekttab „Schichten“ angezeigt.
                     Auf Projektebene kannst du weitere Termine als schichtrelevant definieren.

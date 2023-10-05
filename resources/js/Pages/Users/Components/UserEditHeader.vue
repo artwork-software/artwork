@@ -2,12 +2,12 @@
     <app-layout>
         <div v-if="$page.props.jetstream.canUpdateProfileInformation">
             <div>
-                <div class="max-w-screen-lg py-4 pl-20 pr-4">
+                <div class="max-w-screen-lg pl-14 pr-4">
                     <div class="flex">
-                        <img class="mt-6 h-16 w-16 rounded-full flex justify-start object-cover"
+                        <img class=" h-16 w-16 rounded-full flex justify-start object-cover"
                              :src="user_to_edit.profile_photo_url"
                              alt=""/>
-                        <div class="mt-6 flex flex-grow w-full">
+                        <div class="flex flex-grow w-full">
                             <div class="headline1 flex my-auto ml-6">
                                 {{ user_to_edit.first_name }}
                             </div>
@@ -31,7 +31,7 @@
                     </div>
                 </div>
                 <div class="">
-                    <div class="w-full pl-20 pr-4">
+                    <div class="w-full pl-14 pr-4">
                         <slot></slot>
                     </div>
                 </div>

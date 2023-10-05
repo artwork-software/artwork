@@ -1,7 +1,7 @@
 <template>
     <div class="w-full">
         <div>
-            <div class="mb-6 -ml-12">
+            <div class="mb-6 -ml-4">
                 <UserShiftPlanFunctionBar :type="type" :totalPlannedWorkingHours="totalPlannedWorkingHours" :weeklyWorkingHours="weeklyWorkingHours"
                                           @previousTimeRange="previousTimeRange"
                                           @next-time-range="nextTimeRange"

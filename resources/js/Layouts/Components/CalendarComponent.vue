@@ -25,7 +25,7 @@
             />
 
             <!--  Calendar  -->
-            <div class="pl-3 overflow-x-scroll">
+            <div class="pl-14 overflow-x-scroll">
                 <vue-cal
                     ref="vuecal"
                     id="vuecal"

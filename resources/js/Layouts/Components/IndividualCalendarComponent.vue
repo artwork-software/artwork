@@ -1,6 +1,6 @@
 <template>
     <div id="myCalendar" class="bg-white w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
-        <div class="w-full flex flex-wrap bg-secondaryHover">
+        <div class="w-full flex flex-wrap bg-secondaryHover ml-14">
             <div class="flex justify-center w-full bg-white">
                 <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
                      @click="openEventsWithoutRoomComponent()"

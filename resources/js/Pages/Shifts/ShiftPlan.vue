@@ -46,7 +46,7 @@
                     </div>
                 </table>
             </div>
-            <div id="userOverview" :style="{ 'max-height': computedUserOverviewMaxHeight }" class="w-[102.5%]  overflow-x-scroll -ml-14">
+            <div id="userOverview" :style="{ 'max-height': computedUserOverviewMaxHeight }" class="w-[102.5%]  overflow-x-scroll -ml-5">
                 <div class="flex justify-center overflow-y-scroll ">
                     <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
                          class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">

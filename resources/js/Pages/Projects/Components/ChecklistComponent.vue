@@ -1,6 +1,6 @@
 <template>
-    <div class="col-span-2">
-        <div class="flex w-full items-center mb-8 ">
+    <div class="col-span-2 ml-14 pt-4 pr-14">
+        <div class="flex w-full items-center mb-8">
             <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
             <div class="flex items-center"
                  v-if="$role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">

@@ -1,6 +1,6 @@
 <template>
-    <div class="mt-6 p-5 bg-lightBackgroundGray">
-        <div class=" ">
+    <div class="mt-6 bg-lightBackgroundGray">
+        <div class="">
             <ChecklistComponent
                 :project="project"
                 :opened_checklists="opened_checklists"

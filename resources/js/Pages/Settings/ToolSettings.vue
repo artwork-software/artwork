@@ -1,7 +1,6 @@
 <template>
     <app-layout>
-
-        <div class="max-w-screen-xl my-8 ml-14 mr-40">
+        <div class="max-w-screen-xl ml-14 mr-40">
             <div v-if="hasAdminRole() || $canAny(['change tool settings'])">
                 <h2 class="headline1 mb-2">Tooleinstellungen</h2>
                 <div class="headline3Light">

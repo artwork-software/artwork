@@ -1,13 +1,13 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-lg my-8 ml-14 mr-40">
+        <div class="max-w-screen-lg ml-14 mr-40">
             <div class="">
-                <h2 class="headline1 my-2">Termineinstellungen</h2>
-                <div class="xsLight">
+                <h2 class="headline1">Termineinstellungen</h2>
+                <div class="xsLight mt-2">
                     Definiere globale Einstellungen für Termine.
                 </div>
             </div>
-            <div class="mt-12 max-w-2xl">
+            <div class="mt-4 max-w-2xl">
                 <div class="flex">
                     <h2 class="headline2 my-2">Termintypen</h2>
                     <AddButton @click="openAddEventTypeModal" text="Neuer Termintyp" mode="page"/>
@@ -16,13 +16,13 @@
                         <span class="hind ml-1 my-auto">Erstelle neue Termintypen</span>
                     </div>
                 </div>
-                <div class="xsLight mt-5">
+                <div class="xsLight mt-2">
                     Lege bis zu 10 Termintypen fest, denen Termine später zugeordnet werden können. Du kannst außerdem
                     definieren ob sie Projekten zugeordnet werden müssen oder ob sie einen eigenen individuellen
                     Terminnamen bekommen können.
                 </div>
             </div>
-            <ul role="list" class="mt-5 mb-20 w-full">
+            <ul role="list" class="mt-4 mb-20 w-full">
                 <li v-for="(eventType,index) in event_types" :key="eventType.id"
                     class="flex justify-between">
                     <div class="flex my-4">

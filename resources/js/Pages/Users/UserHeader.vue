@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div class="my-12 ml-14 mr-10">
+        <div class=" ml-14 mr-10">
             <h2 class="headline1">Nutzer*innen & Teams</h2>
 
             <UserTabs />

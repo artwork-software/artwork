@@ -1,6 +1,6 @@
 <template>
     <AppLayout>
-        <div class="ml-14 my-10">
+        <div class="ml-14">
             <div class="flex justify-between">
             <div class="headline1">
                 Budgetvorlagen

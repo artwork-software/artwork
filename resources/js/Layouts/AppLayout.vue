@@ -2,7 +2,7 @@
     <!-- Static sidebar for desktop -->
     <div class="my-auto w-full">
         <div class="sidebar fixed z-50 top-0 bottom-0 p-2 w-full sm:w-16 bg-primary hidden sm:block">
-            <div class="w-full py-2 mt-3 flex flex-col items-center">
+            <div class="w-full py-2 flex flex-col items-center">
                 <div class="text-2xl font-bold text-secondaryHover">
                     <img src="/Svgs/Logos/artwork_logo_small.svg" class="h-16 w-16 mb-8" alt="artwork-logo"/>
                 </div>
@@ -69,16 +69,16 @@
             </div>
         </div>
 
-        <!--   Top Menu     -->
-        <div class="sm:pl-16 flex flex-col">
-            <div class="sticky top-0 z-40 flex-shrink-0 flex h-16">
+        <div class="pl-2 flex flex-col">
+            <!--   Top Menu     -->
+            <div class="sticky top-0 z-40 flex-shrink-0 flex h-24">
                 <button type="button"
-                        class="px-4 border-r border-primaryText text-primaryText focus:outline-none sm:hidden"
+                        class="px-5 border-r border-primaryText text-primaryText focus:outline-none sm:hidden"
                         @click="openSideBarOnMobile">
                     <span class="sr-only">Open sidebar</span>
                     <MenuAlt2Icon class="h-6 w-6" aria-hidden="true"/>
                 </button>
-                <div class="px-4 pl-10 flex w-full bg-white">
+                <div class="px-4 pl-16 ml-3 flex w-full bg-white">
                     <div class="flex justify-start items-center">
                         <Switch @click="toggle_hints()"
                                 :class="[$page.props.can.show_hints ?
@@ -95,19 +95,20 @@
                     </div>
                     <div class="flex justify-end w-full">
                         <div class="ml-4 flex items-center md:ml-6">
-                            <div class="flex items-center">
+                            <div class="flex items-center mr-4">
 
                                 <Link v-if="hasAdminRole()"
-                                      class="inset-y-0 mr-5"
+                                      class="inset-y-0 mr-1"
                                       :href="getTrashRoute()">
                                     <TrashIcon class="h-5 w-5" aria-hidden="true"/>
                                 </Link>
+                                <Link :href="route('notifications.index')" type="button"
+                                      class="p-1 rounded-full text-black hover:text-primaryText focus:outline-none">
+                                    <span class="sr-only">View notifications</span>
+                                    <BellIcon class="h-6 w-6" aria-hidden="true"/>
+                                </Link>
                             </div>
-                            <Link :href="route('notifications.index')" type="button"
-                                  class="p-1 rounded-full text-black hover:text-primaryText focus:outline-none">
-                                <span class="sr-only">View notifications</span>
-                                <BellIcon class="h-6 w-6" aria-hidden="true"/>
-                            </Link>
+
                             <Menu as="div" class="ml-3 relative">
                                 <div>
                                     <MenuButton @click="showUserMenu = !showUserMenu"
@@ -172,7 +173,7 @@
             <!-- Notification -->
 
             <!--     Main       -->
-            <main class="main">
+            <main class="main pl-5">
                 <slot></slot>
             </main>
         </div>

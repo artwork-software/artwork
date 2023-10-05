@@ -1,9 +1,10 @@
 <template>
-    <div class="mt-6 p-5  bg-lightBackgroundGray">
-        <div class="grid grid-cols-6 mr-8">
+    <div class="mt-6 bg-lightBackgroundGray">
+        <div class="ml-14 pr-14 pt-6">
+        <div class="grid grid-cols-6">
             <div class="col-span-4">
                 <!-- Description -->
-                <div class="mt-4">
+                <div class="">
                     <div class="sDark"> Kurzbeschreibung</div>
                     <div v-if="descriptionClicked === false"
                          class="mt-2 subpixel-antialiased text-secondary"
@@ -139,6 +140,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 

@@ -1,7 +1,7 @@
 <template>
     <app-layout>
-        <div class="py-4">
-            <div class="max-w-screen-2xl mb-40 my-12 flex flex-row ml-14 mr-40">
+        <div class="">
+            <div class="max-w-screen-2xl mb-40 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto">
                         <div class="flex flex-wrap w-full">

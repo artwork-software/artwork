@@ -1,12 +1,12 @@
 <template>
     <app-layout>
-        <div class="py-4">
-            <div class="max-w-screen-lg mb-40 my-12 flex flex-row ml-14 mr-40">
+        <div class="">
+            <div class="max-w-screen-lg mb-40 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap">
                             <h2 class="headline1 flex w-full">Belegungsanfragen</h2>
-                            <div class="text-secondary subpixel-antialiased flex mt-4">
+                            <div class="text-secondary subpixel-antialiased flex mt-2">
                                 Hier siehst du alle Raumbelegungsanfragen auf einen Blick und kannst sie verwalten.
                             </div>
                         </div>

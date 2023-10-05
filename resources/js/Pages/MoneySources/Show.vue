@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-2xl my-12 pl-20 pr-10 flex flex-row">
+        <div class="max-w-screen-2xl pl-14 pr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
                 <div class="flex items-center">
                     <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
@@ -122,7 +122,7 @@
         <div class="w-full h-full mb-48">
             <div class="max-w-screen-2xl bg-lightBackgroundGray">
                 <div class="flex pt-12 justify-between items-center">
-                    <div class="headline4  ml-20">
+                    <div class="headline4  ml-14">
                         Verlinkte Positionen
                     </div>
                     <div>
@@ -189,9 +189,9 @@
                         </Listbox>
                     </div>
                 </div>
-                <div class="w-full ml-20 py-12">
+                <div class="w-full ml-14 py-6 pr-14">
                     <div>
-                        <div class="flex border-b border-gray-300 w-full pb-5 pt-5"
+                        <div class="flex border-b border-gray-300 pb-5 pt-5"
                              v-for="position in filteredPositions">
                             <div class="sum w-72 text-2xl" :class="position.type === 'COST' ? 'text-red-500' : ''">
                                 <span v-if="position.type === 'EARNING'">+</span><span v-else>-</span>

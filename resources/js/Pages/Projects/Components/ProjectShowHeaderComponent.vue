@@ -1,5 +1,5 @@
 <template>
-    <div class="my-12 pl-10 pr-10">
+    <div class="ml-14 pr-14">
         <div class="flex flex-col">
             <div v-if="currentGroup" class="bg-secondaryHover -mb-6 z-20 w-fit pr-6 pb-0.5">
                 <div class="flex items-center">
@@ -122,7 +122,7 @@
         </div>
     </div>
     <div class="w-full h-full mb-48">
-        <div class="ml-10">
+        <div class="ml-14">
             <div class="hidden sm:block">
                 <div class="border-gray-200">
                     <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">

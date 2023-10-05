@@ -1,7 +1,8 @@
 <template>
-    <div class="bg-backgroundGray mt-6 p-5">
-        <div class="flex justify-between items-center ">
-            <div>
+    <div class="bg-backgroundGray mt-6 pb-6">
+        <div class=" ml-14 pt-3 pr-14">
+            <div class="flex justify-between items-center mt-4">
+            <div class="">
                 <SwitchGroup as="div" class="flex items-center" v-if="eventsWithRelevant?.length > 0 && (this.$can('can commit shifts') || this.hasAdminRole())">
                     <Switch v-model="hasUncommittedShift"
                             @update:modelValue="updateCommitmentOfShifts"
@@ -127,11 +128,13 @@
                 </transition>
             </div>
         </div>
+
         <div class="mt-5">
             <div class="xsDark" v-if="eventsWithRelevant.length === 0">
                 Bisher gibt es für dieses Projekt keine schichtrelevanten Termine.
             </div>
             <SingleRelevantEvent v-for="event in eventsWithRelevant" :crafts="crafts" :event="event" :event-types="eventTypes"/>
+        </div>
         </div>
     </div>
 

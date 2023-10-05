@@ -1,5 +1,5 @@
 <template>
-    <div class="w-[98%] flex justify-between items-center mt-4 mb-2 ml-14">
+    <div class="w-[98%] flex justify-between items-center mt-4 mb-2" :class="atAGlance? 'ml-14' : ''">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue"></date-picker-component>
             <div v-if="!project">

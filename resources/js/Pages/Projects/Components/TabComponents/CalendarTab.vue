@@ -1,6 +1,6 @@
 <template>
-    <div class="mt-6 p-5  bg-lightBackgroundGray">
-        <div class="px-5 mt-6 max-w-screen-2xl bg-lightBackgroundGray">
+    <div class="mt-6  bg-lightBackgroundGray">
+        <div class=" mt-6 max-w-screen-2xl bg-lightBackgroundGray">
             <div v-if="calendarType && calendarType === 'daily'">
                 <CalendarComponent
                     :selected-date="selectedDate"

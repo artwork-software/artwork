@@ -699,7 +699,11 @@ class CalendarController extends Controller
             ->unless(is_null($isLoud), fn(EventBuilder $builder) => $builder->where('is_loud', true))
             ->unless(is_null($isNotLoud), fn(EventBuilder $builder) => $builder->where('is_loud', false)->orWhere('is_loud', null))
             ->when($startDate, fn(EventBuilder $builder) => $builder->whereBetween('start_time', [$startDate, $endDate]))
-            ->when($endDate, fn(EventBuilder $builder) => $builder->whereBetween('end_time', [$startDate, $endDate]));
+            ->when($endDate, fn(EventBuilder $builder) => $builder->whereBetween('end_time', [$startDate, $endDate])
+            //also all events where startDate is before the given startDate and endDate is after the given endDate
+            ->orWhere(function ($query) use ($startDate, $endDate) {
+                $query->where('start_time', '<', $startDate)->where('end_time', '>', $endDate);
+            }));
     }
 
     public function filterRooms($startDate, $endDate)

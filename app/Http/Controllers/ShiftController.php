@@ -211,6 +211,7 @@ class ShiftController extends Controller
      */
     public function updateShift(Request $request, Shift $shift): RedirectResponse
     {
+        $projectId =  $shift->event()->first()->project()->first()->id;
         if($shift->is_committed) {
             $event = $shift->event;
             $this->history->createHistory($shift->id, 'Schicht von Event '. $event->eventName .' wurde bearbeitet', 'shift');
@@ -299,7 +300,7 @@ class ShiftController extends Controller
             'description',
         ]));
 
-        return Redirect::route('projects.show.shift')->with('success', 'Shift updated');
+        return Redirect::route('projects.show.shift', $projectId)->with('success', 'Shift updated');
     }
 
     public function updateCommitments(Request $request)

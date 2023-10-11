@@ -6,7 +6,7 @@
                     <form @submit.prevent="updateProfileInformation">
                         <div>
                             <div>
-                                <h2 class="headline1 my-2">Dein Konto</h2>
+                                <h2 class="headline1 my-2">Mein Konto</h2>
                                 <div class="col-span-6 sm:col-span-4">
                                     <!-- Profile Photo File Input -->
                                     <input type="file" class="hidden"

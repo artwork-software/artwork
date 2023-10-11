@@ -173,6 +173,13 @@ class UserController extends Controller
         ]);
     }
 
+    public function updateUserPhoto( User $user,Request $request): void
+    {
+        if (isset($request['photo'])) {
+            $user->updateProfilePhoto($request['photo']);
+        }
+    }
+
     function getAvailabilityData(User $user, $month = null): array
     {
         $vacationDays = $user->vacations()->orderBy('from', 'ASC')->get();

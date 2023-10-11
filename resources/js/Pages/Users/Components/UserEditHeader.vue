@@ -3,6 +3,9 @@
         <div v-if="$page.props.jetstream.canUpdateProfileInformation">
             <div>
                 <div class="max-w-screen-lg pl-14 pr-4">
+                    <div class="headline1 mb-5" v-if="user_to_edit.id === $page.props.user.id">
+                        Mein Konto
+                    </div>
                     <div class="flex">
                         <img class=" h-16 w-16 rounded-full flex justify-start object-cover"
                              :src="user_to_edit.profile_photo_url"

@@ -135,7 +135,7 @@
                                     <MenuItems
                                         class="origin-top-right absolute right-0 mt-2 w-48 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                         <MenuItem v-slot="{ active }">
-                                            <Link :href="route('profile.show')"
+                                            <Link :href="route('user.edit.info', {user: this.$page.props.user.id})"
                                                   :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 Dein Konto
                                             </Link>

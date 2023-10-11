@@ -1,5 +1,48 @@
 <template>
     <div>
+        <div v-if="this.user_to_edit.id === $page.props.user.id" class="mb-8">
+                <div>
+                    <div class="col-span-6 sm:col-span-4">
+                        <!-- Profile Photo File Input -->
+                        <input type="file" class="hidden"
+                               ref="photo"
+                               @change="updatePhotoPreview">
+                        <div class="mt-1 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            <div class="sm:col-span-3 flex items-end">
+
+                                <div @click="openChangePictureModal" class="mt-2">
+                                    <img :src="this.user_to_edit.profile_photo_url" :alt="this.user_to_edit.first_name"
+                                         class="rounded-full h-20 w-20 object-cover cursor-pointer">
+                                </div>
+
+                                <div class="mt-1 ml-5 flex-grow relative">
+                                    <input id="first_name" v-model="userForm.first_name" type="text"
+                                           class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                           placeholder="placeholder"/>
+                                    <label for="first_name"
+                                           class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-3 flex items-end">
+                                <div class="relative mt-1 w-full">
+                                    <input id="last_name" v-model="userForm.last_name" type="text"
+                                           class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0
+                                                   border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                           placeholder="placeholder"/>
+                                    <label for="last_name"
+                                           class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
+                                                   focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Nachname</label>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div v-if="hasNameError" class="text-error mt-1">{{ nameError }}</div>
+
+                    </div>
+
+                </div>
+        </div>
         <div>
             <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3">
@@ -178,6 +221,58 @@
 
         </template>
     </jet-dialog-modal>
+    <!-- Change Profile Picture Modal -->
+
+    <jet-dialog-modal :show="showChangePictureModal" @close="closeChangePictureModal">
+        <template #content>
+            <div class="mx-4">
+                <div class="font-bold font-lexend text-primary text-2xl my-2">
+                    Profilbild ändern
+                </div>
+                <span class="text-secondary my-auto">Wähle hier dein Profilbild aus. Es sollte die Größe von 1024 KB nicht überschreiten. </span>
+                <XIcon @click="closeChangePictureModal"
+                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                       aria-hidden="true"/>
+                <!-- New Profile Photo Preview -->
+                <h2 class="" v-show="photoPreview">Vorschau neues Profilbild:</h2>
+                <div class="flex">
+                    <div class="mt-1 flex items-center">
+                        <div class="mt-2" v-show="photoPreview">
+                            <span class="block rounded-full w-20 h-20 bg-cover bg-no-repeat bg-center"
+                                  :style="'background-image: url(\'' + photoPreview + '\');'">
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
+                        <AddButton
+                            class="my-auto px-3 py-3"
+                            text="Datei auswählen"
+                            mode="modal"
+                            @click.prevent="selectNewPhoto"/>
+                        <AddButton
+                            class=" ml-3 my-auto px-3 py-3"
+                            @click.prevent="deletePhoto"
+                            text="Aktuelles Profilbild löschen"
+                            mode="modal"
+                            v-if="this.user_to_edit.profile_photo_url" />
+                    </div>
+                </div>
+
+                <jet-input-error :message="updateProfilePictureFeedback" class="mt-2"/>
+
+                <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
+                <div class="mt-6">
+                    <AddButton
+                        class="px-8 py-3"
+                        text="Neues Profilbild speichern"
+                        mode="modal"
+                        @click="validateTypeAndChange" />
+                </div>
+            </div>
+
+        </template>
+
+    </jet-dialog-modal>
 </template>
 
 
@@ -218,10 +313,17 @@ export default {
         return {
             showChangeTeamsModal: false,
             showSuccessModal: false,
+            nameError: '',
+            hasNameError: false,
+            updateProfilePictureFeedback: "",
+            photoPreview: null,
+            showChangePictureModal: false,
+
             userForm: useForm({
                 first_name: this.user_to_edit.first_name,
                 last_name: this.user_to_edit.last_name,
                 email: this.user_to_edit.email,
+                photo:this.user_to_edit.profile_photo_path,
                 position: this.user_to_edit.position,
                 departments: this.user_to_edit.departments,
                 phone_number: this.user_to_edit.phone_number,
@@ -261,7 +363,14 @@ export default {
             if (this.$page.props.is_admin) {
                 this.userForm.email = this.user_to_edit.email;
             }
+            if (!this.userForm.first_name || !this.userForm.last_name) {
+                this.nameError = 'Vorname und Nachname sind notwendig';
+                this.hasNameError = true;
+                return; // Exit the function without making the API call
+            }
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
+            this.nameError = '';
+            this.hasNameError = false;
             this.openSuccessModal();
         },
         resetPassword() {
@@ -287,6 +396,83 @@ export default {
                     return team.id === teamToSplice.id
                 })
                 this.userForm.departments.splice(spliceIndex, 1);
+            }
+        },
+        updateProfileInformation() {
+            if (this.$refs.photo) {
+                this.userForm.photo = this.$refs.photo.files[0]
+            }
+
+            this.userForm.post(route('user-profile-information.update'), {
+                errorBag: 'updateProfileInformation',
+                preserveScroll: true,
+                onSuccess: () => (this.clearPhotoFileInput(), this.showSuccessButton()),
+            });
+        },
+        openChangePictureModal() {
+            this.showChangePictureModal = true;
+        },
+        closeChangePictureModal() {
+            this.showChangePictureModal = false;
+        },
+        updatePhotoPreview() {
+            const photo = this.$refs.photo.files[0];
+
+            if (!photo) return;
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                if (e.target.result.includes("data:image/png") || e.target.result.includes("data:image/jpeg")) {
+                    this.photoPreview = e.target.result;
+                } else {
+                    this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+                }
+            };
+
+            reader.readAsDataURL(photo);
+        },
+        selectNewPhoto() {
+            this.$refs.photo.click();
+        },
+        validateTypeAndChange() {
+            this.updateProfilePictureFeedback = "";
+            const forbiddenTypes = [
+                "application/vnd.microsoft.portable-executable",
+                "application/x-apple-diskimage",
+            ]
+
+            if (forbiddenTypes.includes(this.$refs.photo.files[0].type)
+                || this.$refs.photo.files[0].type.match('video.*')
+                || this.$refs.photo.files[0].type === "") {
+                this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+            } else {
+                this.changeProfilePicture()
+            }
+
+        },
+        changeProfilePicture() {
+            if (this.$refs.photo) {
+                this.userForm.photo = this.$refs.photo.files[0]
+            }
+            this.userForm.post(route('user.update.photo', this.user_to_edit.id), {
+                preserveScroll: true,
+                onSuccess: () => (this.clearPhotoFileInput(), this.closeChangePictureModal()),
+            });
+
+        },
+        deletePhoto() {
+            this.$inertia.delete(route('current-user-photo.destroy'), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.photoPreview = null;
+                    this.clearPhotoFileInput();
+                },
+            });
+        },
+        clearPhotoFileInput() {
+            if (this.$refs.photo?.value) {
+                this.$refs.photo.value = null;
             }
         },
     }

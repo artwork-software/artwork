@@ -30,7 +30,7 @@
                 </button>
             </div>
             <div class="flex items-center justify-end">
-                <div class="flex flex-wrap w-8 z-50">
+                <div class="flex flex-wrap w-8">
                     <div class="flex">
                         <Menu as="div" class="my-auto relative" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
                              <!-- v-show="showMenu === 'subPosition' + subPosition.id"-->
@@ -57,9 +57,9 @@
                                                                                 <span
                                                                                     @click="fixSubPosition(subPosition.id)"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <TrashIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                                                    </svg>
                                                                                     Festschreiben
                                                                                 </span>
                                         </MenuItem>
@@ -68,9 +68,9 @@
                                                                                 <span
                                                                                     @click="unfixSubPosition(subPosition.id)"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <TrashIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                                                    </svg>
                                                                                     Festschreibung aufheben
                                                                                 </span>
                                         </MenuItem>
@@ -84,7 +84,15 @@
                                                                                         Löschen
                                                                                     </span>
                                         </MenuItem>
-
+                                        <MenuItem v-slot="{ active }">
+                                            <a @click="duplicateSubpostion(subPosition.id)"
+                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
+                                                </svg>
+                                                Duplizieren
+                                            </a>
+                                        </MenuItem>
 
                                     </div>
                                 </MenuItems>
@@ -109,7 +117,7 @@
                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                         class="h-6 w-6 z-20 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                         <td v-for="(cell,index) in row.cells"
-                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-gray-200' : '']">
+                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
                             <div
                                 :class="[row.commented || cell.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
                                 class="my-4 h-6 flex items-center"
@@ -332,6 +340,12 @@ export default {
         }
     },
     methods: {
+        duplicateSubpostion(subPositionId) {
+            this.$inertia.post(route('project.budget.sub-position.duplicate', subPositionId), {}, {
+                preserveScroll: true,
+                preserveState: true
+            })
+        },
         isNumber(event, index) {
             if (index > 2 && !(new RegExp('^([0-9])$')).test(event.key)) {
                 event.preventDefault();
@@ -497,6 +511,9 @@ export default {
                     if (cell.column.color !== 'whiteColumn') {
                         cssString += ' xsDark '
                         cssString += cell.column.color;
+                        if(cell.column.is_locked) {
+                            cssString += ' lockedColumn '
+                        }
                     } else {
                         cssString += ' xsDark '
                     }
@@ -505,6 +522,9 @@ export default {
                 if (cell.column.color !== 'whiteColumn') {
                     cssString += ' xsDark '
                     cssString += cell.column.color;
+                    if(cell.column.is_locked) {
+                        cssString += ' lockedColumn '
+                    }
                 } else {
                     cssString += ' xsDark '
                 }
@@ -538,6 +558,9 @@ export default {
 </script>
 
 <style scoped>
+.lockedColumn {
+    filter: brightness(0.9);
+}
 
 .whiteColumn {
     background-color: #FCFCFBFF;

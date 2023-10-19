@@ -421,6 +421,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/project/budget/column-color/change', [ProjectController::class, 'changeColumnColor'])->name('project.budget.column-color.change');
     Route::post('/project/budget/duplicate/{column}/column', [ProjectController::class, 'duplicateColumn'])->name('project.budget.column.duplicate');
     Route::post('/project/budget/duplicate/{subPosition}/subpostion', [ProjectController::class, 'duplicateSubPosition'])->name('project.budget.sub-position.duplicate');
+    Route::post('/project/budget/duplicate/{mainPosition}/mainPosition', [ProjectController::class, 'duplicateMainPosition'])->name('project.budget.main-position.duplicate');
 
     Route::post('/project/budget/verified/main-position/request', [ProjectController::class, 'verifiedRequestMainPosition'])->name('project.budget.verified.main-position.request');
     Route::patch('/project/budget/verified/main-position', [ProjectController::class, 'verifiedMainPosition'])->name('project.budget.verified.main-position');

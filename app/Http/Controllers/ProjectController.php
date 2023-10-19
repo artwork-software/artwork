@@ -3136,12 +3136,15 @@ class ProjectController extends Controller
         $newColumn->cells()->createMany($column->cells()->get()->toArray());
     }
 
-    public function duplicateSubPosition(SubPosition $subPosition): void
+    public function duplicateSubPosition(SubPosition $subPosition, $mainPositionId = null): void
     {
         $newSubPosition = $subPosition->replicate();
         $newSubPosition->save();
         $newSubPosition->update(['name' => $subPosition->name . ' (Kopie)']);
 
+        if($mainPositionId !== null){
+            $newSubPosition->update(['main_position_id' => $mainPositionId]);
+        }
 
         foreach ($subPosition->subPositionRows()->get() as $subPositionRow){
             $newSubPositionRow = $subPositionRow->replicate();
@@ -3150,5 +3153,18 @@ class ProjectController extends Controller
             $newSubPositionRow->cells()->delete();
             $newSubPositionRow->cells()->createMany($subPositionRow->cells()->get()->toArray());
         }
+    }
+
+    public function duplicateMainPosition(MainPosition $mainPosition): void
+    {
+        $newMainPosition = $mainPosition->replicate();
+        $newMainPosition->save();
+        $newMainPosition->update(['name' => $mainPosition->name . ' (Kopie)']);
+
+        // duplicate sub positions
+        foreach ($mainPosition->subPositions()->get() as $subPosition){
+            $this->duplicateSubPosition($subPosition, $newMainPosition->id);
+        }
+
     }
 }

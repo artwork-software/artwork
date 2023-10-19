@@ -89,8 +89,8 @@
             </div>
         </div>
         <div class="w-full flex">
-            <table class="w-full flex ml-6">
-                <thead>
+            <table class="w-full flex ml-6 h-10">
+                <thead class="">
                 <tr>
                     <th v-for="(column,index) in table.columns"
                         :class="index <= 1 ? 'pl-2 w-28 text-left' : index === 2 ? 'w-64 text-left pl-2' : index === 3 ? 'w-52 text-right' : 'w-48 px-1 text-right'">
@@ -120,8 +120,7 @@
                                             ({{ column.calculateName }})
                                         </span>
                                     </div>
-                                    <span  class="-mt-4"
-                                          v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
+                                    <span  class="-mt-4" v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
                                         <Listbox as="div" class="flex ml-2" v-model="column.color" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
                                                 <ListboxButton>
                                                    <button class="w-4 h-4 flex justify-center items-center rounded-full"
@@ -138,7 +137,7 @@
 
                                                 <transition leave-active-class="transition ease-in duration-100"
                                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                                    <ListboxOptions
+                                                    <ListboxOptions :static="column.showColorMenu"
                                                         class="absolute w-24 z-10 mt-12 bg-primary shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                                         <ListboxOption as="template" class=""
                                                                        v-for="color in colors"
@@ -204,27 +203,30 @@
                                             <MenuItem v-slot="{ active }">
                                                 <a @click="column.showColorMenu = true"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <PencilAltIcon
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
+                                                    </svg>
+
                                                     Einfärben
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }" v-if="!column.is_locked">
                                                 <a @click="lockColumn(column.id)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <PencilAltIcon
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                    </svg>
+
                                                     Sperren
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }" v-if="column.is_locked">
                                                 <a @click="unlockColumn(column.id)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <PencilAltIcon
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                    </svg>
+
                                                     Entsperren
                                                 </a>
                                             </MenuItem>
@@ -235,6 +237,15 @@
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
                                                     Löschen
+                                                </a>
+                                            </MenuItem>
+                                            <MenuItem v-slot="{ active }">
+                                                <a v-show="index > 2" @click="duplicateColumn(column.id)"
+                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
+                                                    </svg>
+                                                    Duplizieren
                                                 </a>
                                             </MenuItem>
                                         </div>
@@ -361,7 +372,7 @@
                                 :project-managers="projectManager"
                                 type="BUDGET_TYPE_COST"></MainPositionComponent>
                             </tr>
-                            <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
+                            <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right te">
                                 <td class="w-28"></td>
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM</td>
@@ -798,7 +809,7 @@ export default {
         AddBudgetTemplateComponent,
         PlusIcon,
         RenameTableComponent,
-        ErrorComponent
+        ErrorComponent,
     },
 
     data() {
@@ -916,6 +927,12 @@ export default {
     },
 
     methods: {
+        duplicateColumn(columnId){
+            Inertia.post(route('project.budget.column.duplicate', columnId), {}, {
+                preserveState: true,
+                preserveScroll: true
+            });
+        },
         checkCellColor(cell, mainPosition, subPosition) {
             let cssString = '';
             if (cell.column.color === 'whiteColumn') {

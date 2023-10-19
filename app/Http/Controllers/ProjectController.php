@@ -3126,4 +3126,29 @@ class ProjectController extends Controller
     public function deleteTimeLineRow(TimeLine $timeLine){
         $timeLine->delete();
     }
+
+    public function duplicateColumn(Request $request, Column $column): void
+    {
+        $newColumn = $column->replicate();
+        $newColumn->save();
+        $newColumn->update(['name' => $column->name . ' (Kopie)']);
+        $newColumn->cells()->delete();
+        $newColumn->cells()->createMany($column->cells()->get()->toArray());
+    }
+
+    public function duplicateSubPosition(SubPosition $subPosition): void
+    {
+        $newSubPosition = $subPosition->replicate();
+        $newSubPosition->save();
+        $newSubPosition->update(['name' => $subPosition->name . ' (Kopie)']);
+
+
+        foreach ($subPosition->subPositionRows()->get() as $subPositionRow){
+            $newSubPositionRow = $subPositionRow->replicate();
+            $newSubPositionRow->save();
+            $newSubPositionRow->update(['name' => $subPositionRow->name . ' (Kopie)', 'sub_position_id' => $newSubPosition->id]);
+            $newSubPositionRow->cells()->delete();
+            $newSubPositionRow->cells()->createMany($subPositionRow->cells()->get()->toArray());
+        }
+    }
 }

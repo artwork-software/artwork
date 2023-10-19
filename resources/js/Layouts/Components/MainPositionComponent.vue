@@ -102,9 +102,9 @@
                                                                                 <span
                                                                                     @click="openVerifiedModal(true, false, mainPosition.id, mainPosition)"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <TrashIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                                                    </svg>
                                                                                     Von User verifizieren lassen
                                                                                 </span>
                                         </MenuItem>
@@ -113,9 +113,9 @@
                                                                                 <span
                                                                                     @click="removeVerification(mainPosition, 'main')"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <TrashIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                                                    </svg>
                                                                                     Verifizierung aufheben
                                                                                 </span>
                                         </MenuItem>
@@ -124,9 +124,9 @@
                                                                                 <span
                                                                                     @click="requestRemove(mainPosition, 'main')"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <TrashIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                                                    </svg>
                                                                                     Verifizierungsanfrage zurücknehmen
                                                                                 </span>
                                         </MenuItem>
@@ -135,9 +135,9 @@
                                                                                 <span
                                                                                     @click="fixMainPosition(mainPosition.id)"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <TrashIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                                                    </svg>
                                                                                     Festschreiben
                                                                                 </span>
                                         </MenuItem>
@@ -146,9 +146,9 @@
                                                                                 <span
                                                                                     @click="unfixMainPosition(mainPosition.id)"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <TrashIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
+                                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                                                    </svg>
                                                                                     Festschreibung aufheben
                                                                                 </span>
                                         </MenuItem>
@@ -184,11 +184,11 @@
                 <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal" @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @open-error-modal="openErrorModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="table.columns" :project="project" :table="table" :project-managers="projectManagers"></SubPositionComponent>
             </tr>
 
-            <tr class=" xsWhiteBold flex h-10 w-full text-right"
+            <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center"
                 :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-buttonBlue' : 'bg-primary'">
                 <td class="w-28"></td>
                 <td class="w-28"></td>
-                <td class="w-72 my-2">SUM</td>
+                <td class="w-72">SUM</td>
                 <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center"
                      v-for="column in table.columns.slice(3)">
                     <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="mainPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">

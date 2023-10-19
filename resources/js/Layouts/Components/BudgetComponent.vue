@@ -1,5 +1,5 @@
 <template>
-    <div :class="table.is_template ? '' : 'bg-lightBackgroundGray'" class="mx-1 pr-10 pt-6">
+    <div :class="table.is_template ? '' : 'bg-lightBackgroundGray'" class="mx-1 pr-10 pt-6 relative">
         <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
                 {{ table.name }}
@@ -88,10 +88,10 @@
 
             </div>
         </div>
-        <div class="w-full flex">
-            <table class="w-full flex ml-6 h-10">
-                <thead class="">
-                <tr>
+        <div class="w-full flex stickyHeader" >
+            <table class="w-full flex ml-6 py-5">
+                <thead>
+                <tr class="">
                     <th v-for="(column,index) in table.columns"
                         :class="index <= 1 ? 'pl-2 w-28 text-left' : index === 2 ? 'w-64 text-left pl-2' : index === 3 ? 'w-52 text-right' : 'w-48 px-1 text-right'">
                         <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
@@ -112,7 +112,7 @@
                                                 <img :src="column?.locked_by?.profile_photo_url" alt="" class="object-cover w-6 h-6 border-2 border-white rounded-full">
                                             </div>
                                         </div>
-                                        <div class="columnSubName xsLight ">
+                                        <div class="columnSubName text-white ">
                                             {{ column.subName }}
                                         </div>
 
@@ -122,18 +122,6 @@
                                     </div>
                                     <span  class="-mt-4" v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
                                         <Listbox as="div" class="flex ml-2" v-model="column.color" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
-                                                <ListboxButton>
-                                                   <button class="w-4 h-4 flex justify-center items-center rounded-full"
-                                                           :class="column.color === 'whiteColumn' ? 'whiteColumn border border-1' : column.color"
-                                                           @click="column.openColor = !column.openColor">
-                                                        <ChevronUpIcon v-if="column.openColor"
-                                                                       class="h-3 w-3 my-auto"
-                                                                       :class="column.color === 'whiteColumn' ? 'text-black' : 'text-white'"></ChevronUpIcon>
-                                                        <ChevronDownIcon v-else
-                                                                         class="h-3 w-3 text-white my-auto"
-                                                                         :class="column.color === 'whiteColumn' ? 'text-black' : 'text-white'"></ChevronDownIcon>
-                                                    </button>
-                                                </ListboxButton>
 
                                                 <transition leave-active-class="transition ease-in duration-100"
                                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -1422,6 +1410,15 @@ export default {
     background-color: #641A54;
 }
 
+.stickyHeader {
+    position: sticky;
+    align-self: flex-start;
+    position: -webkit-sticky;
+    display: block;
+    top: 6rem;
+    z-index: 21;
+    background-color: #CECDD8;
+}
 
 
 </style>

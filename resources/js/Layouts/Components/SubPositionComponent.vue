@@ -30,7 +30,7 @@
                 </button>
             </div>
             <div class="flex items-center justify-end">
-                <div class="flex flex-wrap w-8 z-50">
+                <div class="flex flex-wrap w-8">
                     <div class="flex">
                         <Menu as="div" class="my-auto relative" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
                              <!-- v-show="showMenu === 'subPosition' + subPosition.id"-->
@@ -117,7 +117,7 @@
                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                         class="h-6 w-6 z-20 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                         <td v-for="(cell,index) in row.cells"
-                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B1]/20' : '']">
+                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
                             <div
                                 :class="[row.commented || cell.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
                                 class="my-4 h-6 flex items-center"
@@ -511,6 +511,9 @@ export default {
                     if (cell.column.color !== 'whiteColumn') {
                         cssString += ' xsDark '
                         cssString += cell.column.color;
+                        if(cell.column.is_locked) {
+                            cssString += ' lockedColumn '
+                        }
                     } else {
                         cssString += ' xsDark '
                     }
@@ -519,6 +522,9 @@ export default {
                 if (cell.column.color !== 'whiteColumn') {
                     cssString += ' xsDark '
                     cssString += cell.column.color;
+                    if(cell.column.is_locked) {
+                        cssString += ' lockedColumn '
+                    }
                 } else {
                     cssString += ' xsDark '
                 }
@@ -552,6 +558,9 @@ export default {
 </script>
 
 <style scoped>
+.lockedColumn {
+    filter: brightness(0.9);
+}
 
 .whiteColumn {
     background-color: #FCFCFBFF;

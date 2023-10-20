@@ -672,7 +672,7 @@ export default {
                     hasNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
                     showAdjoiningRooms: this.returnNullIfFalse(this.filterArray.roomFilters.showAdjoiningRooms),
                     allDayFree: this.returnNullIfFalse(this.filterArray.roomFilters.allDayFree),
-                    roomIds: this.arrayToIds(this.filterArray.rooms),
+                    roomIds: this.roomIds,
                     areaIds: this.areaIds,
                     eventTypeIds: this.eventTypeIds,
                     roomAttributeIds: this.roomAttributeIds,

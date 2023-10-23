@@ -2,20 +2,10 @@
 
 namespace App\Http\Resources;
 
-use App\Builders\EventBuilder;
-use App\Models\Area;
-use App\Models\Event;
-use App\Models\EventType;
+use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Models\Filter;
-use App\Models\Project;
 use App\Models\Room;
-use App\Models\RoomAttribute;
-use App\Models\RoomCategory;
-use Barryvdh\Debugbar\Facades\Debugbar;
-use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Http\Resources\Json\ResourceCollection;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * @mixin \App\Models\Event
@@ -32,12 +22,15 @@ class CalendarEventCollectionResource extends ResourceCollection
      */
     public function toArray($request)
     {
-        //dd($this->collection);
+
+        /** @var CalendarEventCollectionResourceModel $resource */
+        $resource = $this->resource;
+
         return [
             'resource' => class_basename($this),
-            'events' => ProjectCalendarShowEventResource::collection($this->collection),
+            'events' => ProjectCalendarShowEventResource::collection($resource->events),
 
-            'calendarFilters' => Filter::where('user_id', Auth::id())->get()->map(fn(Filter $filter) => [
+            'calendarFilters' => $resource->filter->map(fn(Filter $filter) => [
                 'id' => $filter->id,
                 'name' => $filter->name,
                 'isLoud' => $filter->isLoud,
@@ -60,17 +53,9 @@ class CalendarEventCollectionResource extends ResourceCollection
                 'eventTypes' => $filter->event_types,
             ]),
 
-            'types' => EventType::all()->map(fn(EventType $type) => [
-                'id' => $type->id,
-                'label' => $type->name,
-                'img' => $type->svg_name,
-            ]),
+            'types' => $resource->eventTypes,
 
-            'projects' => Project::all()->map(fn(Project $project) => [
-                'id' => $project->id,
-                'label' => $project->name,
-                'access_budget' => $project->access_budget
-            ]),
+            'projects' => $resource->projects,
 
             'rooms' => Room::with('adjoining_rooms', 'main_rooms')->get()->map(fn(Room $room) => [
                 'id' => $room->id,
@@ -91,25 +76,13 @@ class CalendarEventCollectionResource extends ResourceCollection
                 'attributes' => $room->attributes
             ]),
 
-            'roomCategories' => RoomCategory::all()->map(fn(RoomCategory $roomCategory) => [
-                'id' => $roomCategory->id,
-                'name' => $roomCategory->name,
-            ]),
+            'roomCategories' => $resource->roomCategories,
 
-            'roomAttributes' => RoomAttribute::all()->map(fn(RoomAttribute $roomAttribute) => [
-                'id' => $roomAttribute->id,
-                'name' => $roomAttribute->name,
-            ]),
+            'roomAttributes' =>  $resource->roomAttributes,
 
-            'eventTypes' => EventType::all()->map(fn(EventType $eventType) => [
-                'id' => $eventType->id,
-                'name' => $eventType->name,
-            ]),
+            'eventTypes' => $resource->eventTypes,
 
-            'areas' => Area::all()->map(fn(Area $area) => [
-                'id' => $area->id,
-                'name' => $area->name,
-            ]),
+            'areas' => $resource->areas,
         ];
     }
 }

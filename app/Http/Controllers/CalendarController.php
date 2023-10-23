@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Builders\EventBuilder;
+use App\Http\Controllers\Calendar\FilterProvider;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\CalendarShowEventResource;
 use App\Models\Area;
@@ -33,7 +34,7 @@ class CalendarController extends Controller
     protected ?Carbon $startDate = null;
     protected ?Carbon $endDate = null;
 
-    public function __construct()
+    public function __construct(private readonly FilterProvider $filterProvider)
     {
     }
 
@@ -43,52 +44,7 @@ class CalendarController extends Controller
      */
     public function getFilters(): array
     {
-        return [
-            'projects' => Project::all()->map(fn(Project $project) => [
-                'id' => $project->id,
-                'label' => $project->name,
-                'access_budget' => $project->access_budget
-            ]),
-
-            'rooms' => Room::with('adjoining_rooms', 'main_rooms')->get()->map(fn(Room $room) => [
-                'id' => $room->id,
-                'name' => $room->name,
-                'area' => $room->area,
-                'room_admins' => $room->room_admins,
-                'everyone_can_book' => $room->everyone_can_book,
-                'label' => $room->name,
-                'adjoining_rooms' => $room->adjoining_rooms->map(fn(Room $adjoining_room) => [
-                    'id' => $adjoining_room->id,
-                    'label' => $adjoining_room->name
-                ]),
-                'main_rooms' => $room->main_rooms->map(fn(Room $main_room) => [
-                    'id' => $main_room->id,
-                    'label' => $main_room->name
-                ]),
-                'categories' => $room->categories,
-                'attributes' => $room->attributes
-            ]),
-
-            'roomCategories' => RoomCategory::all()->map(fn(RoomCategory $roomCategory) => [
-                'id' => $roomCategory->id,
-                'name' => $roomCategory->name,
-            ]),
-
-            'roomAttributes' => RoomAttribute::all()->map(fn(RoomAttribute $roomAttribute) => [
-                'id' => $roomAttribute->id,
-                'name' => $roomAttribute->name,
-            ]),
-
-            'eventTypes' => EventType::all()->map(fn(EventType $eventType) => [
-                'id' => $eventType->id,
-                'name' => $eventType->name,
-            ]),
-
-            'areas' => Area::all()->map(fn(Area $area) => [
-                'id' => $area->id,
-                'name' => $area->name,
-            ]),
-        ];
+        return $this->filterProvider->provide();
     }
 
     private function get_events_of_day($date_of_day, $room, $projectId = null, $hasShifts = false): array
@@ -205,8 +161,6 @@ class CalendarController extends Controller
             $this->startDate = Carbon::now()->startOfDay();
             $this->endDate = Carbon::now()->addWeeks()->endOfDay();
         }
-
-
 
         if ($startDate) {
             $this->startDate = Carbon::create($startDate)->startOfDay();

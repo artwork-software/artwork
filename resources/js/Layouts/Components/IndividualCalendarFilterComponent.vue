@@ -320,7 +320,6 @@
 
         </div>
     </BaseFilter>
-
 </template>
 
 <script>
@@ -366,7 +365,8 @@ export default {
         'filterOptions',
         'personalFilters',
         'atAGlance',
-        'type'
+        'type',
+        'user_filters'
     ],
     mounted() {
         this.filterArray.rooms = this.filterOptions.rooms
@@ -380,72 +380,33 @@ export default {
         this.setCheckedFalse(this.filterArray.roomAttributes)
         this.setCheckedFalse(this.filterArray.eventTypes)
 
-        if (this.$page.props.urlParameters.roomCategoryIds) {
-            this.$page.props.urlParameters.roomCategoryIds.forEach((id) => {
-                if(!this.roomCategoryIds.includes(Number(id))){
-                    this.roomCategoryIds.push(Number(id))
-                }
-            })
-        }
-
-        if (this.$page.props.urlParameters.roomAttributeIds) {
-            this.$page.props.urlParameters.roomAttributeIds.forEach((id) => {
-                if(!this.roomAttributeIds.includes(Number(id))){
-                    this.roomAttributeIds.push(Number(id))
-                }
-            })
-        }
-
-        if (this.$page.props.urlParameters.eventTypeIds) {
-            this.$page.props.urlParameters.eventTypeIds.forEach((id) => {
-                if(!this.eventTypeIds.includes(Number(id))){
-                    this.eventTypeIds.push(Number(id))
-                }
-            })
-        }
-
-        if (this.$page.props.urlParameters.areaIds) {
-            this.$page.props.urlParameters.areaIds.forEach((id) => {
-                if(!this.areaIds.includes(Number(id))){
-                    this.areaIds.push(Number(id))
-                }
-            })
-        }
-
-        if (this.$page.props.urlParameters.roomIds) {
-            this.$page.props.urlParameters.roomIds.forEach((id) => {
-                if(!this.roomIds.includes(Number(id))){
-                    this.roomIds.push(Number(id))
-                }
-            })
-        }
 
         this.filterArray.roomCategories.forEach((category) => {
-            if(this.roomCategoryIds.includes(category.id)){
+            if(this.user_filters.room_categories?.includes(category.id)){
                 category.checked = true
             }
         })
 
         this.filterArray.roomAttributes.forEach((attribute) => {
-            if(this.roomAttributeIds.includes(attribute.id)){
+            if(this.user_filters.room_attributes?.includes(attribute.id)){
                 attribute.checked = true
             }
         })
 
         this.filterArray.eventTypes.forEach((eventType) => {
-            if(this.eventTypeIds.includes(eventType.id)){
+            if(this.user_filters.event_types?.includes(eventType.id)){
                 eventType.checked = true
             }
         })
 
         this.filterArray.areas.forEach((area) => {
-            if(this.areaIds.includes(area.id)){
+            if(this.user_filters.areas?.includes(area.id)){
                 area.checked = true
             }
         })
 
         this.filterArray.rooms.forEach((room) => {
-            if(this.roomIds.includes(room.id)){
+            if(this.user_filters.rooms?.includes(room.id)){
                 room.checked = true
             }
         })
@@ -481,32 +442,32 @@ export default {
                     isLoud: {
                         name: 'laut',
                         value: 'isLoud',
-                        checked: !!this.$page.props.urlParameters.isLoud
+                        checked: !!this.user_filters.is_loud
                     },
                     isNotLoud: {
                         name: 'nicht laut',
                         value: 'isNotLoud',
-                        checked: !!this.$page.props.urlParameters.isNotLoud
+                        checked: !!this.user_filters.is_not_loud
                     },
                     adjoiningNotLoud: {
                         name: 'ohne laute Nebenveranstaltung',
                         value: 'adjoiningNotLoud',
-                        checked: !!this.$page.props.urlParameters.adjoiningNotLoud
+                        checked: !!this.user_filters.adjoining_not_loud
                     },
                     hasAudience: {
                         name: 'Mit Publikum',
                         value: 'hasAudience',
-                        checked: !!this.$page.props.urlParameters.hasAudience
+                        checked: !!this.user_filters.has_audience
                     },
                     hasNoAudience: {
                         name: 'ohne Publikum',
                         value: 'hasNoAudience',
-                        checked: !!this.$page.props.urlParameters.hasNoAudience
+                        checked: !!this.user_filters.has_no_audience
                     },
                     adjoiningNoAudience: {
                         name: 'ohne Nebenveranstaltung mit Publikum',
                         value: 'adjoiningNoAudience',
-                        checked: !!this.$page.props.urlParameters.adjoiningNoAudience
+                        checked: !!this.user_filters.adjoining_no_audience
                     },
                 },
             },
@@ -563,19 +524,22 @@ export default {
             array.forEach(item => item.checked = false)
         },
         resetCalendarFilter() {
-            this.filterArray.rooms.forEach(room => room.checked = false)
-            this.filterArray.areas.forEach(area => area.checked = false)
-            this.filterArray.roomAttributes.forEach(attribute => attribute.checked = false)
-            this.filterArray.roomCategories.forEach(category => category.checked = false)
-            this.filterArray.eventTypes.forEach(eventType => eventType.checked = false)
-            this.filterArray.eventAttributes.isLoud.checked = false
-            this.filterArray.eventAttributes.isNotLoud.checked = false
-            this.filterArray.eventAttributes.hasAudience.checked = false
-            this.filterArray.eventAttributes.hasNoAudience.checked = false
-            this.filterArray.eventAttributes.adjoiningNotLoud.checked = false
-            this.filterArray.eventAttributes.adjoiningNoAudience.checked = false
+            this.$inertia.delete(route('reset.user.calendar.filter'), {
+                onSuccess: () => {
+                    this.filterArray.rooms.forEach(room => room.checked = false)
+                    this.filterArray.areas.forEach(area => area.checked = false)
+                    this.filterArray.roomAttributes.forEach(attribute => attribute.checked = false)
+                    this.filterArray.roomCategories.forEach(category => category.checked = false)
+                    this.filterArray.eventTypes.forEach(eventType => eventType.checked = false)
+                    this.filterArray.eventAttributes.isLoud.checked = false
+                    this.filterArray.eventAttributes.isNotLoud.checked = false
+                    this.filterArray.eventAttributes.hasAudience.checked = false
+                    this.filterArray.eventAttributes.hasNoAudience.checked = false
+                    this.filterArray.eventAttributes.adjoiningNotLoud.checked = false
+                    this.filterArray.eventAttributes.adjoiningNoAudience.checked = false
 
-            this.reloadChanges()
+                }
+            })
         },
         async saveFilter() {
             const filterIds = this.getFilterFields();
@@ -598,6 +562,7 @@ export default {
             return elementsToChange
         },
         applyFilter(filter) {
+            console.log(filter);
             this.filterArray.rooms = this.changeChecked(this.filterArray.rooms, filter.rooms)
             this.filterArray.areas = this.changeChecked(this.filterArray.areas, filter.areas)
             this.filterArray.roomAttributes = this.changeChecked(this.filterArray.roomAttributes, filter.roomAttributes)
@@ -609,6 +574,9 @@ export default {
             this.filterArray.eventAttributes.hasNoAudience.checked = filter.hasNoAudience
             this.filterArray.eventAttributes.adjoiningNotLoud.checked = filter.adjoiningNotLoud
             this.filterArray.eventAttributes.adjoiningNoAudience.checked = filter.adjoiningNoAudience
+            this.filterArray.roomFilters.showAdjoiningRooms = filter.showAdjoiningRooms
+            this.filterArray.roomFilters.allDayFree = filter.allDayFree
+            this.reloadChanges();
         },
         async deleteFilter(id) {
             await axios.delete(`/filters/${id}`)
@@ -619,7 +587,7 @@ export default {
         },
         returnNullIfFalse(variable) {
             if (!variable) {
-                return null
+                return false
             }
             return variable
         },
@@ -660,25 +628,20 @@ export default {
             }
         },
         reloadChanges() {
-            const pageRoute = this.getRoute(window.location.pathname.split('/')[1])
-
-            Inertia.reload({
-                data: {
-                    isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
-                    isNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),
-                    adjoiningNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNoAudience.checked),
-                    adjoiningNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
-                    hasAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
-                    hasNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
-                    showAdjoiningRooms: this.returnNullIfFalse(this.filterArray.roomFilters.showAdjoiningRooms),
-                    allDayFree: this.returnNullIfFalse(this.filterArray.roomFilters.allDayFree),
-                    roomIds: this.roomIds,
-                    areaIds: this.areaIds,
-                    eventTypeIds: this.eventTypeIds,
-                    roomAttributeIds: this.roomAttributeIds,
-                    roomCategoryIds: this.roomCategoryIds,
-                    atAGlance: this.atAGlance
-                }
+            Inertia.patch(route('update.user.calendar.filter', this.$page.props.user.id), {
+                is_loud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
+                is_not_loud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),
+                adjoining_no_audience: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNoAudience.checked),
+                adjoining_not_loud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
+                has_audience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
+                has_no_audience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
+                show_adjoining_rooms: this.returnNullIfFalse(this.filterArray.roomFilters.showAdjoiningRooms),
+                all_day_free: this.returnNullIfFalse(this.filterArray.roomFilters.allDayFree),
+                rooms: this.arrayToIds(this.filterArray.rooms),
+                areas: this.arrayToIds(this.filterArray.areas),
+                event_types: this.arrayToIds(this.filterArray.eventTypes),
+                room_attributes: this.arrayToIds(this.filterArray.roomAttributes),
+                room_categories: this.arrayToIds(this.filterArray.roomCategories)
             })
         }
     },
@@ -738,7 +701,6 @@ export default {
     watch: {
         filterArray: {
             handler() {
-                //this.reloadChanges()
                 this.$emit('filtersChanged', this.activeFilters)
             },
             deep: true

@@ -22,6 +22,7 @@
                         :events-without-room="eventsWithoutRoom"
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
+                        :user_filters="user_filters"
                     />
                 </div>
             </div>
@@ -36,6 +37,7 @@
                     :eventsAtAGlance="eventsAtAGlance"
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
+                    :user_filters="user_filters"
                 >
                 </IndividualCalendarAtGlanceComponent>
 
@@ -51,6 +53,7 @@
                     :days="days"
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
+                    :user_filters="user_filters"
                 />
             </div>
         </div>
@@ -88,7 +91,8 @@ export default defineComponent({
         'eventsAtAGlance',
         'eventsWithoutRoom',
         'filterOptions',
-        'personalFilters'
+        'personalFilters',
+        'user_filters'
     ],
     methods: {
         changeAtAGlance() {

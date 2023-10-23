@@ -268,6 +268,12 @@ class User extends Authenticatable
         return $this->belongsToMany(MoneySource::class, 'money_source_users')->withPivot(['competent', 'write_access'])->using(MoneySourceUserPivot::class);
     }
 
+
+    public function calendar_filter(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserCalendarFilter::class);
+    }
+
     public function getAllPermissionsAttribute(): array
     {
         $permissions = [];

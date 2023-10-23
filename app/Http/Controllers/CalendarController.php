@@ -310,7 +310,8 @@ class CalendarController extends Controller
             'roomsWithEvents' => $better,
             'eventsWithoutRoom' => $eventsWithoutRooms,
             'filterOptions' => $this->getFilters(),
-            'personalFilters' => $filterController->index()
+            'personalFilters' => $filterController->index(),
+            'user_filters' => Auth::user()->calendar_filter()->first()
         ];
     }
 
@@ -634,7 +635,8 @@ class CalendarController extends Controller
             'selectedDate' => $selectedDate,
             'roomsWithEvents' => $better,
             'filterOptions' => $this->getFilters(),
-            'personalFilters' => $filterController->index()
+            'personalFilters' => $filterController->index(),
+            'user_filters' => Auth::user()->calendar_filter()->first()
         ];
     }
 
@@ -705,16 +707,19 @@ class CalendarController extends Controller
                 $query->where('start_time', '<', $startDate)->where('end_time', '>', $endDate);
             }));*/
 
-        $isLoud = request('isLoud');
-        $isNotLoud = request('isNotLoud');
-        $hasAudience = request('hasAudience');
-        $hasNoAudience = request('hasNoAudience');
-        $showAdjoiningRooms = request('showAdjoiningRooms');
-        $eventTypeIds = request('eventTypeIds');
-        $roomIds = request('roomIds');
-        $areaIds = request('areaIds');
-        $roomAttributeIds = request('roomAttributeIds');
-        $roomCategoryIds = request('roomCategoryIds');
+        $user = Auth::user();
+        $calendarFilter = $user->calendar_filter()->first();
+
+        $isLoud = $calendarFilter->is_loud;
+        $isNotLoud = $calendarFilter->is_not_loud;
+        $hasAudience = $calendarFilter->has_audience;
+        $hasNoAudience = $calendarFilter->has_no_audience;
+        $showAdjoiningRooms = $calendarFilter->show_adjoining_rooms;
+        $eventTypeIds = $calendarFilter->event_types;
+        $roomIds = $calendarFilter->rooms;
+        $areaIds = $calendarFilter->areas;
+        $roomAttributeIds = $calendarFilter->room_attributes;
+        $roomCategoryIds = $calendarFilter->room_categories;
 
         return $query
             ->when($project, fn($builder) => $builder->where('project_id', $project->id))
@@ -790,25 +795,27 @@ class CalendarController extends Controller
                 })
                     ->orWhereDoesntHave('adjoining_rooms');
             });*/
+        $user = Auth::user();
+        $calendarFilter = $user->calendar_filter()->first();
 
         return Room::query()
             ->with('attributes', 'categories', 'adjoining_rooms.events')
-            ->when(request('roomIds'), fn($query, $roomIds) => $query->whereIn('id', $roomIds))
-            ->when(request('roomAttributeIds'), function ($query, $roomAttributeIds) {
+            ->when($calendarFilter->rooms, fn($query, $roomIds) => $query->whereIn('id', $roomIds))
+            ->when($calendarFilter->room_attributes, function ($query, $roomAttributeIds) {
                 return $query->whereHas('attributes', fn($q) => $q->whereIn('room_attributes.id', $roomAttributeIds));
             })
-            ->when(request('areaIds'), fn($query, $areaIds) => $query->whereIn('area_id', $areaIds))
-            ->where(function ($query) use ($startDate, $endDate) {
-                $query->where(function ($subQuery) use ($startDate, $endDate) {
+            ->when($calendarFilter->areas, fn($query, $areaIds) => $query->whereIn('area_id', $areaIds))
+            ->where(function ($query) use ($calendarFilter, $startDate, $endDate) {
+                $query->where(function ($subQuery) use ($calendarFilter, $startDate, $endDate) {
                     $subQuery->when(
-                        !(request('adjoiningNoAudience') === null && request('adjoiningNotLoud') === null),
-                        function ($q) use ($startDate, $endDate) {
-                            $q->whereHas('adjoining_rooms.events', function ($eventQuery) use ($startDate, $endDate) {
+                        !($calendarFilter->adjoining_no_audience === null && $calendarFilter->adjoining_not_loud === null),
+                        function ($q) use ($calendarFilter, $startDate, $endDate) {
+                            $q->whereHas('adjoining_rooms.events', function ($eventQuery) use ($calendarFilter, $startDate, $endDate) {
                                 $eventQuery
                                     ->when($startDate, fn($q) => $q->whereBetween('start_time', [$startDate, $endDate]))
                                     ->when($endDate, fn($q) => $q->whereBetween('end_time', [$startDate, $endDate]))
-                                    ->when(request('adjoiningNotLoud'), fn($q) => $q->where('is_loud', false))
-                                    ->when(request('adjoiningNoAudience'), fn($q) => $q->where('audience', false));
+                                    ->when($calendarFilter->adjoining_not_loud, fn($q) => $q->where('is_loud', false))
+                                    ->when($calendarFilter->adjoining_no_audience, fn($q) => $q->where('audience', false));
                             });
                         }
                     );

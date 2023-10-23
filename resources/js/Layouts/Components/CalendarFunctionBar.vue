@@ -68,6 +68,7 @@
                     :at-a-glance="atAGlance"
                     :type="project ? 'project' : 'individual'"
                     @filters-changed="filtersChanged"
+                    :user_filters="user_filters"
                 />
 
 
@@ -145,10 +146,13 @@
                 <p class="text-sm">Neue Belegung</p>
             </button>
         </div>
+
     </div>
-    <div class="mb-1 ml-4 flex items-center w-full">
-        <BaseFilterTag type="calendar" v-for="activeFilter in activeFilters" :filter="activeFilter.name" />
-    </div>
+
+        <div class="mb-1 ml-4 flex items-center w-full">
+            <BaseFilterTag type="calendar" v-for="activeFilter in activeFilters" :filter="activeFilter.name" />
+        </div>
+
 </template>
 
 <script>
@@ -197,7 +201,8 @@ export default {
         'project',
         'roomMode',
         'filterOptions',
-        'personalFilters'
+        'personalFilters',
+        'user_filters'
     ],
     emits: ['changeAtAGlance', 'changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent','previousTimeRange','nextTimeRange'],
     data() {

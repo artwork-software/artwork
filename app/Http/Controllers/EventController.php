@@ -116,7 +116,8 @@ class EventController extends Controller
             'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
             'events' => $events,
             'filterOptions' => $showCalendar["filterOptions"],
-            'personalFilters' => $showCalendar['personalFilters']
+            'personalFilters' => $showCalendar['personalFilters'],
+            'user_filters' => $showCalendar['user_filters'],
         ]);
     }
 
@@ -201,6 +202,7 @@ class EventController extends Controller
             'rooms' => $shiftPlan->filterRooms($startDate, $endDate)->get(),
             'days' => $showCalendar['days'],
             'filterOptions' => $showCalendar['filterOptions'],
+            'user_filters' => $showCalendar['user_filters'],
             'dateValue'=> $showCalendar['dateValue'],
             'personalFilters' => $shiftFilters,
             'selectedDate' => $showCalendar['selectedDate'],

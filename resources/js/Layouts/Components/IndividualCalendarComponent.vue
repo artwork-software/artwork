@@ -23,6 +23,7 @@
                                  :at-a-glance="atAGlance"
                                  :filter-options="filterOptions"
                                  :personal-filters="personalFilters"
+                                 :user_filters="user_filters"
             />
             <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
                 <!-- Calendar -->
@@ -188,7 +189,8 @@ export default {
         'eventsWithoutRoom',
         'isDashboard',
         'filterOptions',
-        'personalFilters'
+        'personalFilters',
+        'user_filters'
     ],
     emits: ['changeAtAGlance'],
     mounted() {

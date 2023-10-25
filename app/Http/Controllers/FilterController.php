@@ -58,7 +58,7 @@ class FilterController extends Controller
             'isNotLoud' => $request->input('calendarFilters.isNotLoud'),
             'hasAudience' => $request->input('calendarFilters.hasAudience'),
             'hasNoAudience' => $request->input('calendarFilters.hasNoAudience'),
-            'adjoiningNoAudience' => $request->input('calendarFilters.hasNoAudience'),
+            'adjoiningNoAudience' => $request->input('calendarFilters.adjoiningNoAudience'),
             'adjoiningNotLoud' => $request->input('calendarFilters.adjoiningNotLoud'),
             'allDayFree' => $request->input('calendarFilters.allDayFree'),
             'showAdjoiningRooms' => $request->input('calendarFilters.showAdjoiningRooms'),

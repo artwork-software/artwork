@@ -10,6 +10,7 @@
                 <label class="text-xs cursor-pointer">Speichern</label>
             </button>
         </div>
+
         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
 
             <!-- Save Filter Section -->
@@ -68,7 +69,7 @@
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                             <div v-if="filterArray.rooms.length > 0" v-for="room in filterArray.rooms"
                                  class="flex w-full mb-2">
-                                <input type="checkbox" v-model="room.checked"
+                                <input type="checkbox" v-model="room.checked" @change="addRoomsToFilter(room)"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -106,7 +107,7 @@
                         </DisclosureButton>
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                             <div v-for="eventType in filterArray.eventTypes" class="flex w-full mb-2">
-                                <input type="checkbox" v-model="eventType.checked"
+                                <input type="checkbox" v-model="eventType.checked" @change="addEventTypesToFilter(eventType)"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -119,6 +120,7 @@
 
         </div>
     </BaseFilter>
+
 </template>
 
 <script>
@@ -164,18 +166,26 @@ export default {
         'filterOptions',
         'personalFilters',
         'atAGlance',
+        'user_filters'
     ],
     mounted() {
         this.filterArray.rooms = this.filterOptions.rooms
-        this.filterArray.areas = this.filterOptions.areas
-        this.filterArray.roomCategories = this.filterOptions.roomCategories
-        this.filterArray.roomAttributes = this.filterOptions.roomAttributes
         this.filterArray.eventTypes = this.filterOptions.eventTypes
         this.setCheckedFalse(this.filterArray.rooms)
-        this.setCheckedFalse(this.filterArray.areas)
-        this.setCheckedFalse(this.filterArray.roomCategories)
-        this.setCheckedFalse(this.filterArray.roomAttributes)
         this.setCheckedFalse(this.filterArray.eventTypes)
+
+        this.filterArray.eventTypes.forEach((eventType) => {
+            if(this.user_filters?.event_types?.includes(eventType.id)){
+                eventType.checked = true
+            }
+        })
+
+        this.filterArray.rooms.forEach((room) => {
+            if(this.user_filters?.rooms?.includes(room.id)){
+                room.checked = true
+            }
+        })
+
     },
     data() {
         return {
@@ -186,49 +196,15 @@ export default {
             deletingEvent: false,
             eventComponentIsVisible: false,
             createEventComponentIsVisible: false,
+            roomCategoryIds: [],
+            roomAttributeIds: [],
+            eventTypeIds: [],
+            areaIds: [],
+            roomIds: [],
+            roomCategories: [],
             filterArray: {
                 rooms: [],
-                areas: [],
                 eventTypes: [],
-                roomAttributes: [],
-                roomCategories: [],
-                showFreeRooms: false,
-                roomFilters: {
-                    showAdjoiningRooms: false,
-                    allDayFree: false
-                },
-                eventAttributes: {
-                    isLoud: {
-                        name: 'laut',
-                        value: 'isLoud',
-                        checked: false
-                    },
-                    isNotLoud: {
-                        name: 'nicht laut',
-                        value: 'isNotLoud',
-                        checked: false
-                    },
-                    adjoiningNotLoud: {
-                        name: 'ohne laute Nebenveranstaltung',
-                        value: 'adjoiningNotLoud',
-                        checked: false
-                    },
-                    hasAudience: {
-                        name: 'Mit Publikum',
-                        value: 'hasAudience',
-                        checked: false
-                    },
-                    hasNoAudience: {
-                        name: 'ohne Publikum',
-                        value: 'hasNoAudience',
-                        checked: false
-                    },
-                    adjoiningNoAudience: {
-                        name: 'ohne Nebenveranstaltung mit Publikum',
-                        value: 'adjoiningNoAudience',
-                        checked: false
-                    },
-                },
             },
             saving: false,
         }
@@ -237,18 +213,30 @@ export default {
         setCheckedFalse(array) {
             array.forEach(item => item.checked = false)
         },
+        addEventTypesToFilter(eventType) {
+            if (this.eventTypeIds.includes(eventType.id)) {
+                this.eventTypeIds.splice(this.eventTypeIds.indexOf(eventType.id), 1)
+            } else {
+                this.eventTypeIds.push(eventType.id)
+            }
+            this.reloadChanges()
+        },
+
+        addRoomsToFilter(room) {
+            if (this.roomIds.includes(room.id)) {
+                this.roomIds.splice(this.roomIds.indexOf(room.id), 1)
+            } else {
+                this.roomIds.push(room.id)
+            }
+            this.reloadChanges()
+        },
         resetCalendarFilter() {
-            this.filterArray.rooms.forEach(room => room.checked = false)
-            this.filterArray.areas.forEach(area => area.checked = false)
-            this.filterArray.roomAttributes.forEach(attribute => attribute.checked = false)
-            this.filterArray.roomCategories.forEach(category => category.checked = false)
-            this.filterArray.eventTypes.forEach(eventType => eventType.checked = false)
-            this.filterArray.eventAttributes.isLoud.checked = false
-            this.filterArray.eventAttributes.isNotLoud.checked = false
-            this.filterArray.eventAttributes.hasAudience.checked = false
-            this.filterArray.eventAttributes.hasNoAudience.checked = false
-            this.filterArray.eventAttributes.adjoiningNotLoud.checked = false
-            this.filterArray.eventAttributes.adjoiningNoAudience.checked = false
+            this.$inertia.delete(route('reset.user.shift.calendar.filter', this.$page.props.user.id), {
+                onSuccess: () => {
+                    this.filterArray.rooms.forEach(room => room.checked = false)
+                    this.filterArray.eventTypes.forEach(eventType => eventType.checked = false)
+                }
+            })
         },
         async saveFilter() {
             const filterIds = this.getFilterFields();
@@ -272,16 +260,8 @@ export default {
         },
         applyFilter(filter) {
             this.filterArray.rooms = this.changeChecked(this.filterArray.rooms, filter.rooms)
-            this.filterArray.areas = this.changeChecked(this.filterArray.areas, filter.areas)
-            this.filterArray.roomAttributes = this.changeChecked(this.filterArray.roomAttributes, filter.roomAttributes)
-            this.filterArray.roomCategories = this.changeChecked(this.filterArray.roomCategories, filter.roomCategories)
             this.filterArray.eventTypes = this.changeChecked(this.filterArray.eventTypes, filter.eventTypes)
-            this.filterArray.eventAttributes.isLoud.checked = filter.isLoud
-            this.filterArray.eventAttributes.isNotLoud.checked = filter.isNotLoud
-            this.filterArray.eventAttributes.hasAudience.checked = filter.hasAudience
-            this.filterArray.eventAttributes.hasNoAudience.checked = filter.hasNoAudience
-            this.filterArray.eventAttributes.adjoiningNotLoud.checked = filter.adjoiningNotLoud
-            this.filterArray.eventAttributes.adjoiningNoAudience.checked = filter.adjoiningNoAudience
+            this.reloadChanges()
         },
         async deleteFilter(id) {
             await axios.delete(`/shifts/filters/${id}`)
@@ -292,7 +272,7 @@ export default {
         },
         returnNullIfFalse(variable) {
             if (!variable) {
-                return null
+                return false
             }
             return variable
         },
@@ -307,19 +287,8 @@ export default {
         },
         getFilterFields() {
             return {
-                isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
-                isNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),
-                adjoiningNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNoAudience.checked),
-                adjoiningNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
-                hasAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
-                hasNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
-                showAdjoiningRooms: this.returnNullIfFalse(this.filterArray.roomFilters.showAdjoiningRooms),
-                allDayFree: this.returnNullIfFalse(this.filterArray.roomFilters.allDayFree),
                 roomIds: this.arrayToIds(this.filterArray.rooms),
-                areaIds: this.arrayToIds(this.filterArray.areas),
                 eventTypeIds: this.arrayToIds(this.filterArray.eventTypes),
-                roomAttributeIds: this.arrayToIds(this.filterArray.roomAttributes),
-                roomCategoryIds: this.arrayToIds(this.filterArray.roomCategories)
             }
         },
         getRoute(pathName) {
@@ -333,7 +302,12 @@ export default {
             }
         },
         reloadChanges() {
-            const pageRoute = this.getRoute(window.location.pathname.split('/')[1])
+            //console.log(this.arrayToIds(this.filterArray.rooms));
+            Inertia.patch(route('update.user.shift.calendar.filter', this.$page.props.user.id), {
+                rooms: this.arrayToIds(this.filterArray.rooms),
+                event_types: this.arrayToIds(this.filterArray.eventTypes),
+            })
+            /*const pageRoute = this.getRoute(window.location.pathname.split('/')[1])
             Inertia.reload( {
                 data: {
                     isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
@@ -352,7 +326,7 @@ export default {
                     atAGlance: this.atAGlance
                 },
                 preserveState: true
-            })
+            })*/
         }
     },
     computed: {
@@ -368,42 +342,9 @@ export default {
                 if(room.checked) activeFiltersArray.push(room)
             })
 
-            this.filterArray.areas.forEach(area => {
-                if(area.checked) activeFiltersArray.push(area)
-            })
-
             this.filterArray.eventTypes.forEach(eventType => {
                 if(eventType.checked) activeFiltersArray.push(eventType)
             })
-
-            this.filterArray.roomCategories.forEach(category => {
-                if(category.checked) activeFiltersArray.push(category)
-            })
-
-            this.filterArray.roomAttributes.forEach(attribute => {
-                if(attribute.checked) activeFiltersArray.push(attribute)
-            })
-
-            if(this.filterArray.eventAttributes.isLoud.checked)
-                activeFiltersArray.push({name: "Laute Termine"})
-
-            if(this.filterArray.eventAttributes.isNotLoud.checked)
-                activeFiltersArray.push({name: "Ohne laute Termine"})
-
-            if(this.filterArray.eventAttributes.adjoiningNoAudience.checked)
-                activeFiltersArray.push({name: "Ohne Nebenveranstaltung mit Publikum"})
-
-            if(this.filterArray.eventAttributes.adjoiningNotLoud.checked)
-                activeFiltersArray.push({name: "Ohne laute Nebenveranstaltung"})
-
-            if(this.filterArray.eventAttributes.hasAudience.checked)
-                activeFiltersArray.push({name: "Mit Publikum"})
-
-            if(this.filterArray.eventAttributes.hasNoAudience.checked)
-                activeFiltersArray.push({name: "Ohne Publikum"})
-
-            if(this.filterArray.roomFilters.showAdjoiningRooms)
-                activeFiltersArray.push({name: "Nebenräume anzeigen"})
 
             return activeFiltersArray
         }
@@ -411,7 +352,7 @@ export default {
     watch: {
         filterArray: {
             handler() {
-                this.reloadChanges()
+                //this.reloadChanges()
                 this.$emit('filtersChanged', this.activeFilters)
             },
             deep: true

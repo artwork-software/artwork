@@ -155,10 +155,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
-    Route::delete('/project/group', [ProjectController::class, 'deleteProjectFromGroup'])->name('projects.group.delete');
-    Route::get('/project/user/search', [ProjectController::class, 'projectUserSearch'])->name('project.user.search');
-    Route::get('/project/{project}/download/keyVisual', [ProjectController::class, 'downloadKeyVisual'])->name('project.download.keyVisual');
-    Route::delete('/project/{project}/delete/keyVisual', [ProjectController::class, 'deleteKeyVisual'])->name('project.delete.keyVisual');
+
 
     //ProjectTabs
     Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])->name('projects.show.info');
@@ -251,9 +248,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/sum/comments', [SumCommentController::class, 'store'])->name('sum.comments.store');
     Route::delete('/sum/comments/{comment}', [SumCommentController::class, 'destroy'])->name('sum.comments.delete');
 
-    Route::post('/project/sums/money-source', [SumDetailsController::class, 'store'])->name('project.sum.money.source.store');
-    Route::patch('/project/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'update'])->name('project.sum.money.source.update');
-    Route::delete('/project/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'destroy'])->name('project.sum.money.source.destroy');
+
 
     //Areas
     Route::get('/areas', [AreaController::class, 'index'])->name('areas.management');
@@ -394,59 +389,119 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('money_source/task/{moneySourceTask}/undone', [\App\Http\Controllers\MoneySourceTaskController::class, 'markAsUnDone'])->name('money_source.task.undone');
     Route::post('/money_source/task', [\App\Http\Controllers\MoneySourceTaskController::class, 'store'])->name('money_source.task.add');
 
+    Route::post('/{event}/shift/preset/store', [\App\Http\Controllers\ShiftPresetController::class, 'store'])->name('shift-presets.store');
+
+    Route::delete('/user/{user}/calendar/filter/reset', [\App\Http\Controllers\UserCalendarFilterController::class, 'reset'])->name('reset.user.calendar.filter');
+    Route::delete('/user/{user}/calendar/shift/filter/reset', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'reset'])->name('reset.user.shift.calendar.filter');
+    Route::patch('/user/{user}/calendar/filter/update', [\App\Http\Controllers\UserCalendarFilterController::class, 'update'])->name('update.user.calendar.filter');
+    Route::patch('/user/{user}/shift/calendar/filter/update', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'update'])->name('update.user.shift.calendar.filter');
+
+
+    // Project Routes
+    Route::group(['prefix' => 'project'], function (){
+
+        // GET
+        Route::get('/user/search', [ProjectController::class, 'projectUserSearch'])->name('project.user.search');
+        Route::get('/{project}/download/keyVisual', [ProjectController::class, 'downloadKeyVisual'])->name('project.download.keyVisual');
+
+        // POST
+        Route::post('/{shift}/add/user/{user}', [ShiftController::class, 'addShiftUser'])->name('add.shift.user');
+        Route::post('/{shift}/add/{user}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftMaster'])->name('add.shift.master');
+        Route::post('/{shift}/add/freelancer/{freelancer}', [\App\Http\Controllers\ShiftController::class, 'addShiftFreelancer'])->name('add.shift.freelancer');
+        Route::post('/{shift}/add/freelancer/{freelancer}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftFreelancerMaster'])->name('add.shift.freelancer.master');
+        Route::post('/{shift}/add/provider/{serviceProvider}', [\App\Http\Controllers\ShiftController::class, 'addShiftProvider'])->name('add.shift.provider');
+        Route::post('/{shift}/add/provider/{serviceProvider}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftProviderMaster'])->name('add.shift.provider.master');
+        Route::post('/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
+        Route::post('/{event}/shift/store', [\App\Http\Controllers\ShiftController::class, 'store'])->name('event.shift.store');
+        Route::post('/sums/money-source', [SumDetailsController::class, 'store'])->name('project.sum.money.source.store');
+
+        // PATCH
+        Route::patch('/timelines/update', [ProjectController::class, 'updateTimeLines'])->name('update.timelines');
+        Route::patch('/shifts/commit', [\App\Http\Controllers\ShiftController::class, 'updateCommitments'])->name('update.shift.commitment');
+        Route::patch('/{shift}/update', [\App\Http\Controllers\ShiftController::class, 'updateShift'])->name('event.shift.update');
+        Route::patch('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'update'])->name('project.sum.money.source.update');
+
+        // DELETE
+        Route::delete('/{shift}/remove/user/{user}', [\App\Http\Controllers\ShiftController::class, 'removeUser'])->name('shifts.removeUser');
+        Route::delete('/{shift}/remove/freelancer/{freelancer}', [\App\Http\Controllers\ShiftController::class, 'removeFreelancer'])->name('shifts.removeFreelancer');
+        Route::delete('/{shift}/remove/provider/{serviceProvider}', [\App\Http\Controllers\ShiftController::class, 'removeProvider'])->name('shifts.removeProvider');
+        Route::delete('/{shift}/remove/employees/master', [\App\Http\Controllers\ShiftController::class, 'clearEmployeesAndMaster'])->name('shifts.clearEmployeesAndMaster');
+        Route::delete('/{shift}/destroy', [\App\Http\Controllers\ShiftController::class, 'destroy'])->name('shifts.destroy');
+        Route::delete('/timeline/delete/{timeLine}', [ProjectController::class, 'deleteTimeLineRow'])->name('delete.timeline.row');
+        Route::delete('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'destroy'])->name('project.sum.money.source.destroy');
+        Route::delete('/group', [ProjectController::class, 'deleteProjectFromGroup'])->name('projects.group.delete');
+        Route::delete('/{project}/delete/keyVisual', [ProjectController::class, 'deleteKeyVisual'])->name('project.delete.keyVisual');
+
+
+
+        Route::group(['prefix' => 'budget'], function (){
+
+            // GET
+            Route::get('/cell/comments', [\App\Http\Controllers\CellCommentsController::class, 'get'])->name('project.budget.cell.comment.get');
+
+            // POST
+            Route::post('/column/add', [ProjectController::class, 'addColumn'])->name('project.budget.column.add');
+            Route::post('/cell-calculation/{cell}/add', [ProjectController::class, 'addCalculation'])->name('project.budget.cell-calculation.add');
+            Route::post('/sub-position/add', [ProjectController::class, 'addSubPosition'])->name('project.budget.sub-position.add');
+            Route::post('/main-position/add', [ProjectController::class, 'addMainPosition'])->name('project.budget.main-position.add');
+            Route::post('/sub-position-row/add', [ProjectController::class, 'addSubPositionRow'])->name('project.budget.sub-position-row.add');
+            Route::post('/cell/{columnCell}/comment/add', [\App\Http\Controllers\CellCommentsController::class, 'store'])->name('project.budget.cell.comment.store');
+            Route::post('/row/{row}/comment/add', [\App\Http\Controllers\RowCommentController::class, 'store'])->name('project.budget.row.comment.store');
+            Route::post('/duplicate/{column}/column', [ProjectController::class, 'duplicateColumn'])->name('project.budget.column.duplicate');
+            Route::post('/duplicate/{subPosition}/subpostion', [ProjectController::class, 'duplicateSubPosition'])->name('project.budget.sub-position.duplicate');
+            Route::post('/duplicate/{mainPosition}/mainPosition', [ProjectController::class, 'duplicateMainPosition'])->name('project.budget.main-position.duplicate');
+            Route::post('/verified/main-position/request', [ProjectController::class, 'verifiedRequestMainPosition'])->name('project.budget.verified.main-position.request');
+            Route::post('/verified/sub-position/request', [ProjectController::class, 'verifiedRequestSubPosition'])->name('project.budget.verified.sub-position.request');
+            Route::post('/verified/take-back/position', [ProjectController::class, 'takeBackVerification'])->name('project.budget.take-back.verification');
+            Route::post('/verified/remove/position', [ProjectController::class, 'removeVerification'])->name('project.budget.remove.verification');
+            Route::post('/template/{table}/create', [\App\Http\Controllers\BudgetTemplateController::class, 'store'])->name('project.budget.template.create');
+            Route::post('/template/{table}/use', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplate'])->name('project.budget.template.use');
+            Route::post('/template/use/project', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplateFromProject'])->name('project.budget.template.project');
+
+            // PATCH
+            Route::patch('/cell', [ProjectController::class, 'updateCellValue'])->name('project.budget.cell.update');
+            Route::patch('/column/update-name', [ProjectController::class, 'updateColumnName'])->name('project.budget.column.update-name');
+            Route::patch('/table/update-name', [ProjectController::class, 'updateTableName'])->name('project.budget.table.update-name');
+            Route::patch('/main-position/update-name', [ProjectController::class, 'updateMainPositionName'])->name('project.budget.main-position.update-name');
+            Route::patch('/sub-position/update-name', [ProjectController::class, 'updateSubPositionName'])->name('project.budget.sub-position.update-name');
+            Route::patch('/cell-source/update', [ProjectController::class, 'updateCellSource'])->name('project.budget.cell-source.update');
+            Route::patch('/cell-calculation/update', [ProjectController::class, 'updateCellCalculation'])->name('project.budget.cell-calculation.update');
+            Route::patch('/row/{row}/commentedStatus', [ProjectController::class, 'updateCommentedStatusOfRow'])->name('project.budget.row.commented');
+            Route::patch('/cell/{columnCell}/commentedStatus', [ProjectController::class, 'updateCommentedStatusOfCell'])->name('project.budget.cell.commented');
+            Route::patch('/column-color/change', [ProjectController::class, 'changeColumnColor'])->name('project.budget.column-color.change');
+            Route::patch('/verified/main-position', [ProjectController::class, 'verifiedMainPosition'])->name('project.budget.verified.main-position');
+            Route::patch('/verified/sub-position', [ProjectController::class, 'verifiedSubPosition'])->name('project.budget.verified.sub-position');
+            Route::patch('/lock/column', [ProjectController::class, 'lockColumn'])->name('project.budget.lock.column');
+            Route::patch('/unlock/column', [ProjectController::class, 'unlockColumn'])->name('project.budget.unlock.column');
+            Route::patch('/fix/sub-position', [ProjectController::class, 'fixSubPosition'])->name('project.budget.fix.sub-position');
+            Route::patch('/unfix/sub-position', [ProjectController::class, 'unfixSubPosition'])->name('project.budget.unfix.sub-position');
+            Route::patch('/fix/main-position', [ProjectController::class, 'fixMainPosition'])->name('project.budget.fix.main-position');
+            Route::patch('/unfix/main-position', [ProjectController::class, 'unfixMainPosition'])->name('project.budget.unfix.main-position');
+
+            // DELETE
+            Route::delete('/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])->name('project.budget.sub-position-row.delete');
+            Route::delete('/cell/comment/{cellComment}', [\App\Http\Controllers\CellCommentsController::class, 'destroy'])->name('project.budget.cell.comment.delete');
+            Route::delete('/cell/calculation/{cellCalculation}', [\App\Http\Controllers\CellCalculationsController::class, 'destroy'])->name('project.budget.cell.calculation.delete');
+            Route::delete('/row/comment/{rowComment}', [\App\Http\Controllers\RowCommentController::class, 'destroy'])->name('project.budget.row.comment.delete');
+            Route::delete('/column/{column}/delete', [ProjectController::class, 'columnDelete'])->name('project.budget.column.delete');
+            Route::delete('/main-position/{mainPosition}', [ProjectController::class, 'deleteMainPosition'])->name('project.budget.main-position.delete');
+            Route::delete('/sub-position/{subPosition}', [ProjectController::class, 'deleteSubPosition'])->name('project.budget.sub-position.delete');
+            Route::delete('/table/{table}', [ProjectController::class, 'deleteTable'])->name('project.budget.table.delete');
+
+        });
+
+    });
+
     //Budget
-    Route::patch('/project/budget/cell', [ProjectController::class, 'updateCellValue'])->name('project.budget.cell.update');
-    Route::post('/project/budget/column/add', [ProjectController::class, 'addColumn'])->name('project.budget.column.add');
-    Route::post('/project/budget/cell-calculation/{cell}/add', [ProjectController::class, 'addCalculation'])->name('project.budget.cell-calculation.add');
-    Route::patch('/project/budget/column/update-name', [ProjectController::class, 'updateColumnName'])->name('project.budget.column.update-name');
-    Route::patch('/project/budget/table/update-name', [ProjectController::class, 'updateTableName'])->name('project.budget.table.update-name');
-    Route::patch('/project/budget/main-position/update-name', [ProjectController::class, 'updateMainPositionName'])->name('project.budget.main-position.update-name');
-    Route::patch('/project/budget/sub-position/update-name', [ProjectController::class, 'updateSubPositionName'])->name('project.budget.sub-position.update-name');
-    Route::patch('/project/budget/cell-source/update', [ProjectController::class, 'updateCellSource'])->name('project.budget.cell-source.update');
-    Route::patch('/project/budget/cell-calculation/update', [ProjectController::class, 'updateCellCalculation'])->name('project.budget.cell-calculation.update');
-    Route::post('/project/budget/sub-position/add', [ProjectController::class, 'addSubPosition'])->name('project.budget.sub-position.add');
-    Route::post('/project/budget/main-position/add', [ProjectController::class, 'addMainPosition'])->name('project.budget.main-position.add');
-    Route::post('/project/budget/sub-position-row/add', [ProjectController::class, 'addSubPositionRow'])->name('project.budget.sub-position-row.add');
-    Route::delete('/project/budget/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])->name('project.budget.sub-position-row.delete');
-    Route::post('/project/budget/cell/{columnCell}/comment/add', [\App\Http\Controllers\CellCommentsController::class, 'store'])->name('project.budget.cell.comment.store');
-    Route::delete('/project/budget/cell/comment/{cellComment}', [\App\Http\Controllers\CellCommentsController::class, 'destroy'])->name('project.budget.cell.comment.delete');
-    Route::delete('/project/budget/cell/calculation/{cellCalculation}', [\App\Http\Controllers\CellCalculationsController::class, 'destroy'])->name('project.budget.cell.calculation.delete');
-    Route::post('/project/budget/row/{row}/comment/add', [\App\Http\Controllers\RowCommentController::class, 'store'])->name('project.budget.row.comment.store');
-    Route::patch('/project/budget/row/{row}/commentedStatus', [ProjectController::class, 'updateCommentedStatusOfRow'])->name('project.budget.row.commented');
-    Route::patch('/project/budget/cell/{columnCell}/commentedStatus', [ProjectController::class, 'updateCommentedStatusOfCell'])->name('project.budget.cell.commented');
-    Route::delete('/project/budget/row/comment/{rowComment}', [\App\Http\Controllers\RowCommentController::class, 'destroy'])->name('project.budget.row.comment.delete');
-    Route::get('/project/budget/cell/comments', [\App\Http\Controllers\CellCommentsController::class, 'get'])->name('project.budget.cell.comment.get');
-    Route::delete('/project/budget/column/{column}/delete', [ProjectController::class, 'columnDelete'])->name('project.budget.column.delete');
-    Route::delete('/project/budget/main-position/{mainPosition}', [ProjectController::class, 'deleteMainPosition'])->name('project.budget.main-position.delete');
-    Route::delete('/project/budget/sub-position/{subPosition}', [ProjectController::class, 'deleteSubPosition'])->name('project.budget.sub-position.delete');
-    Route::delete('/project/budget/table/{table}', [ProjectController::class, 'deleteTable'])->name('project.budget.table.delete');
-    Route::patch('/project/budget/column-color/change', [ProjectController::class, 'changeColumnColor'])->name('project.budget.column-color.change');
-    Route::post('/project/budget/duplicate/{column}/column', [ProjectController::class, 'duplicateColumn'])->name('project.budget.column.duplicate');
-    Route::post('/project/budget/duplicate/{subPosition}/subpostion', [ProjectController::class, 'duplicateSubPosition'])->name('project.budget.sub-position.duplicate');
-    Route::post('/project/budget/duplicate/{mainPosition}/mainPosition', [ProjectController::class, 'duplicateMainPosition'])->name('project.budget.main-position.duplicate');
-
-    Route::post('/project/budget/verified/main-position/request', [ProjectController::class, 'verifiedRequestMainPosition'])->name('project.budget.verified.main-position.request');
-    Route::patch('/project/budget/verified/main-position', [ProjectController::class, 'verifiedMainPosition'])->name('project.budget.verified.main-position');
-
-    Route::post('/project/budget/verified/sub-position/request', [ProjectController::class, 'verifiedRequestSubPosition'])->name('project.budget.verified.sub-position.request');
-    Route::patch('/project/budget/verified/sub-position', [ProjectController::class, 'verifiedSubPosition'])->name('project.budget.verified.sub-position');
-    Route::post('/project/budget/verified/take-back/position', [ProjectController::class, 'takeBackVerification'])->name('project.budget.take-back.verification');
-    Route::post('/project/budget/verified/remove/position', [ProjectController::class, 'removeVerification'])->name('project.budget.remove.verification');
 
 
     // Lock
-    Route::patch('/project/budget/lock/column', [ProjectController::class, 'lockColumn'])->name('project.budget.lock.column');
-    Route::patch('/project/budget/unlock/column', [ProjectController::class, 'unlockColumn'])->name('project.budget.unlock.column');
+
 
     // fixed
-    Route::patch('/project/budget/fix/sub-position', [ProjectController::class, 'fixSubPosition'])->name('project.budget.fix.sub-position');
-    Route::patch('/project/budget/unfix/sub-position', [ProjectController::class, 'unfixSubPosition'])->name('project.budget.unfix.sub-position');
-    Route::patch('/project/budget/fix/main-position', [ProjectController::class, 'fixMainPosition'])->name('project.budget.fix.main-position');
-    Route::patch('/project/budget/unfix/main-position', [ProjectController::class, 'unfixMainPosition'])->name('project.budget.unfix.main-position');
 
-    Route::post('/project/budget/template/{table}/create', [\App\Http\Controllers\BudgetTemplateController::class, 'store'])->name('project.budget.template.create');
-    Route::post('/project/budget/template/{table}/use', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplate'])->name('project.budget.template.use');
-    Route::post('/project/budget/template/use/project', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplateFromProject'])->name('project.budget.template.project');
+
+
     Route::patch('/project/{project}/budget/reset', [\App\Http\Controllers\ProjectController::class, 'resetTable'])->name('project.budget.reset.table');
 
     // Templates
@@ -555,41 +610,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
         Route::patch('shift/update/relevant/event-type/{eventType}', [\App\Http\Controllers\EventTypeController::class, 'updateRelevant'])->name('event-type.update.relevant');
     });
 
-    // timeline
-    Route::post('/project/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
-    Route::delete('/project/timeline/delete/{timeLine}', [ProjectController::class, 'deleteTimeLineRow'])->name('delete.timeline.row');
-    Route::patch('/project/timelines/update', [ProjectController::class, 'updateTimeLines'])->name('update.timelines');
-    Route::post('/project/{event}/shift/store', [\App\Http\Controllers\ShiftController::class, 'store'])->name('event.shift.store');
 
-    // update shifts commitment
-    Route::patch('/project/shifts/commit', [\App\Http\Controllers\ShiftController::class, 'updateCommitments'])->name('update.shift.commitment');
-
-    // Add User to Shift
-    Route::post('/project/{shift}/add/user/{user}', [ShiftController::class, 'addShiftUser'])->name('add.shift.user');
-    Route::post('/project/{shift}/add/{user}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftMaster'])->name('add.shift.master');
-
-    // add freelancer to shift
-    Route::post('/project/{shift}/add/freelancer/{freelancer}', [\App\Http\Controllers\ShiftController::class, 'addShiftFreelancer'])->name('add.shift.freelancer');
-    Route::post('/project/{shift}/add/freelancer/{freelancer}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftFreelancerMaster'])->name('add.shift.freelancer.master');
-
-    // add provider to shift
-    Route::post('/project/{shift}/add/provider/{serviceProvider}', [\App\Http\Controllers\ShiftController::class, 'addShiftProvider'])->name('add.shift.provider');
-    Route::post('/project/{shift}/add/provider/{serviceProvider}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftProviderMaster'])->name('add.shift.provider.master');
-
-    // remove User from Shift
-    Route::delete('/project/{shift}/remove/user/{user}', [\App\Http\Controllers\ShiftController::class, 'removeUser'])->name('shifts.removeUser');
-
-    // remove freelancer from Shift
-    Route::delete('/project/{shift}/remove/freelancer/{freelancer}', [\App\Http\Controllers\ShiftController::class, 'removeFreelancer'])->name('shifts.removeFreelancer');
-
-    Route::delete('/project/{shift}/remove/provider/{serviceProvider}', [\App\Http\Controllers\ShiftController::class, 'removeProvider'])->name('shifts.removeProvider');
-
-
-    Route::delete('/project/{shift}/remove/employees/master', [\App\Http\Controllers\ShiftController::class, 'clearEmployeesAndMaster'])->name('shifts.clearEmployeesAndMaster');
-    Route::delete('/project/{shift}/destroy', [\App\Http\Controllers\ShiftController::class, 'destroy'])->name('shifts.destroy');
-    Route::patch('/project/{shift}/update', [\App\Http\Controllers\ShiftController::class, 'updateShift'])->name('event.shift.update');
-
-    Route::post('/project/{event}/shift/preset/store', [\App\Http\Controllers\ShiftPresetController::class, 'store'])->name('shift-presets.store');
 
     Route::post('/empty/preset/store', [\App\Http\Controllers\ShiftPresetController::class, 'storeEmpty'])->name('empty.presets.store');
     Route::delete('/preset/{presetShift}/shift/delete', [\App\Http\Controllers\PresetShiftController::class, 'destroy'])->name('preset.shift.destroy');

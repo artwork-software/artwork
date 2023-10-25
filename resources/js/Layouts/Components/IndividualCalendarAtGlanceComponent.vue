@@ -9,6 +9,7 @@
             :filter-options="filterOptions"
             :personal-filters="personalFilters"
             @change-multi-edit="changeMultiEdit"
+            :user_filters="user_filters"
         />
 
         <!-- Calendar -->
@@ -128,7 +129,8 @@ export default {
         'rooms',
         'project',
         'filterOptions',
-        'personalFilters'
+        'personalFilters',
+        'user_filters'
     ],
     emits:['changeAtAGlance'],
     methods: {

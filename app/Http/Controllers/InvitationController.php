@@ -191,6 +191,8 @@ class InvitationController extends Controller
         $user->assignRole(json_decode($invitation->roles));
         $user->givePermissionTo(json_decode($invitation->permissions));
         $user->calendar_settings()->create();
+        $user->calendar_filter()->create();
+        $user->shift_calendar_filter()->create();
         $invitation->delete();
 
         $guard->login($user);

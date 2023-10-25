@@ -22,6 +22,7 @@
                         :events-without-room="eventsWithoutRoom"
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
+                        :user_filters="user_filters"
                     />
                 </div>
             </div>
@@ -36,6 +37,7 @@
                     :eventsAtAGlance="eventsAtAGlance"
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
+                    :user_filters="user_filters"
                 >
                 </IndividualCalendarAtGlanceComponent>
 
@@ -51,10 +53,13 @@
                     :days="days"
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
+                    :user_filters="user_filters"
                 />
             </div>
         </div>
     </app-layout>
+
+
 </template>
 <script>
 
@@ -64,7 +69,7 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm, usePage} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
 
@@ -88,9 +93,11 @@ export default defineComponent({
         'eventsAtAGlance',
         'eventsWithoutRoom',
         'filterOptions',
-        'personalFilters'
+        'personalFilters',
+        'user_filters'
     ],
     methods: {
+        usePage,
         changeAtAGlance() {
             this.atAGlance = !this.atAGlance;
             Inertia.reload({
@@ -103,7 +110,7 @@ export default defineComponent({
     },
     data() {
         return {
-            atAGlance: this.eventsAtAGlance.length > 0,
+            atAGlance: this.$page.props.urlParameters.atAGlance ? this.$page.props.urlParameters.atAGlance : false,
         }
     },
 })

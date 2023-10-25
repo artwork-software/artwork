@@ -116,7 +116,8 @@ class EventController extends Controller
             'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
             'events' => $events,
             'filterOptions' => $showCalendar["filterOptions"],
-            'personalFilters' => $showCalendar['personalFilters']
+            'personalFilters' => $showCalendar['personalFilters'],
+            'user_filters' => $showCalendar['user_filters'],
         ]);
     }
 
@@ -154,7 +155,7 @@ class EventController extends Controller
 
         foreach ($users as $user) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
-            $vacations = $user->getHasVacationDaysAttribute();
+            $vacations = $user->hasVacationDays();
             $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
 
 
@@ -192,6 +193,8 @@ class EventController extends Controller
             ];
         }
 
+        //dd($showCalendar['user_filters']);
+
 
         return inertia('Shifts/ShiftPlan', [
             'events' => $events,
@@ -201,6 +204,7 @@ class EventController extends Controller
             'rooms' => $shiftPlan->filterRooms($startDate, $endDate)->get(),
             'days' => $showCalendar['days'],
             'filterOptions' => $showCalendar['filterOptions'],
+            'user_filters' => $showCalendar['user_filters'],
             'dateValue'=> $showCalendar['dateValue'],
             'personalFilters' => $shiftFilters,
             'selectedDate' => $showCalendar['selectedDate'],

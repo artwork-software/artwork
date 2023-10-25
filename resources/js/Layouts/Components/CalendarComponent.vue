@@ -22,6 +22,7 @@
                 :filter-options="filterOptions"
                 :personal-filters="personalFilters"
                 :is-fullscreen="isFullscreen"
+                :user_filters="user_filters"
             />
 
             <!--  Calendar  -->
@@ -390,7 +391,8 @@ export default {
         'rooms',
         'eventsWithoutRoom',
         'filterOptions',
-        'personalFilters'
+        'personalFilters',
+        'user_filters'
     ],
     emits: ['changeAtAGlance'],
     mounted() {

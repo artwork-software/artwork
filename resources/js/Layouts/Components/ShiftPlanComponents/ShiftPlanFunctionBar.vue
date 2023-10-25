@@ -38,6 +38,7 @@
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     @filters-changed="filtersChanged"
+                    :user_filters="user_filters"
                 />
 
             </div>
@@ -46,6 +47,7 @@
     <div class="mb-1 ml-4 flex items-center w-full">
         <BaseFilterTag type="calendar" v-for="activeFilter in activeFilters" :filter="activeFilter.name" />
     </div>
+
 
     <ConfirmDeleteModal
         v-if="showConfirmCommitModal"
@@ -58,6 +60,7 @@
 </template>
 
 <script>
+
 import Button from "@/Jetstream/Button";
 import {PlusCircleIcon, CalendarIcon} from '@heroicons/vue/outline'
 import {Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
@@ -100,7 +103,8 @@ export default {
         'filterOptions',
         'allShiftsCommitted',
         'personalFilters',
-        'rooms'
+        'rooms',
+        'user_filters'
     ],
     emits: ['enterFullscreenMode','previousTimeRange','nextTimeRange', 'openHistoryModal'],
     data() {

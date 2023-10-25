@@ -39,7 +39,7 @@
                                 <div v-for="event in room[day.day].events.data" class="mb-1">
                                     <SingleShiftPlanEvent :eventType="this.findEventTypeById(event.eventTypeId)"
                                                           :project="this.findProjectById(event.projectId)"
-                                                          :event="event"/>
+                                                          :event="event" v-if="event.shifts.length > 0"/>
                                 </div>
                             </td>
                         </tr>

@@ -135,7 +135,6 @@ class User extends Authenticatable
         'profile_photo_url',
         'full_name',
         'type',
-        'has_vacation_days'
     ];
 
     protected $with = ['calendar_settings'];
@@ -328,7 +327,7 @@ class User extends Authenticatable
         return $plannedWorkingHours;
     }
 
-    public function getHasVacationDaysAttribute(){
+    public function hasVacationDays(){
         $vacations = $this->vacations()->get();
         $returnInterval = [];
         foreach ($vacations as $vacation) {
@@ -343,6 +342,7 @@ class User extends Authenticatable
         }
         return $returnInterval;
     }
+
 
     public function hasVacation(){
         $vacations = $this->vacations()->get();

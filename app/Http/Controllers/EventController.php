@@ -155,7 +155,7 @@ class EventController extends Controller
 
         foreach ($users as $user) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
-            $vacations = $user->getHasVacationDaysAttribute();
+            $vacations = $user->hasVacationDays();
             $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
 
 

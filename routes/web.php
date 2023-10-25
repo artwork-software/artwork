@@ -67,6 +67,8 @@ Route::post('/setup', [AppController::class, 'createAdmin'])->name('setup.create
 Route::get('/users/invitations/accept', [InvitationController::class, 'accept']);
 Route::post('/users/invitations/accept', [InvitationController::class, 'createUser'])->name('invitation.accept');
 
+Route::get('/reset-password', [UserController::class, 'reset_password'])->name('reset_user_password');
+
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
 

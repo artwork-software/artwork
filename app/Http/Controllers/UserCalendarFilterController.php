@@ -103,9 +103,8 @@ class UserCalendarFilterController extends Controller
         //
     }
 
-    public function reset(){
-        $user = Auth::user();
-
+    public function reset(User $user): \Illuminate\Http\RedirectResponse
+    {
         $user->calendar_filter()->update([
             'is_loud' => false,
             'is_not_loud' => false,
@@ -116,11 +115,11 @@ class UserCalendarFilterController extends Controller
             'show_free_rooms' => false,
             'show_adjoining_rooms' => false,
             'all_day_free' => false,
-            'event_types' => [],
-            'rooms' => [],
-            'areas' => [],
-            'room_attributes' => [],
-            'room_categories' => [],
+            'event_types' => null,
+            'rooms' => null,
+            'areas' => null,
+            'room_attributes' => null,
+            'room_categories' => null,
         ]);
 
         // reload page

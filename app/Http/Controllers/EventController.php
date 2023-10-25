@@ -193,6 +193,8 @@ class EventController extends Controller
             ];
         }
 
+        //dd($showCalendar['user_filters']);
+
 
         return inertia('Shifts/ShiftPlan', [
             'events' => $events,

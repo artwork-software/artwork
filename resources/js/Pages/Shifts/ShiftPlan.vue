@@ -12,6 +12,7 @@
                                       :rooms="shiftPlan"
                                       @enterFullscreenMode="openFullscreen"
                                       @openHistoryModal="openHistoryModal"
+                                      :user_filters="user_filters"
                 ></ShiftPlanFunctionBar>
                 <table class="w-full bg-white">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
@@ -162,6 +163,7 @@ export default {
         'usersForShifts',
         'freelancersForShifts',
         'serviceProvidersForShifts',
+        'user_filters'
     ],
     mounted() {
         // Listen for scroll events on both sections

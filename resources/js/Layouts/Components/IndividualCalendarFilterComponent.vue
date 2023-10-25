@@ -524,7 +524,7 @@ export default {
             array.forEach(item => item.checked = false)
         },
         resetCalendarFilter() {
-            this.$inertia.delete(route('reset.user.calendar.filter'), {
+            this.$inertia.delete(route('reset.user.calendar.filter', this.$page.props.user.id), {
                 onSuccess: () => {
                     this.filterArray.rooms.forEach(room => room.checked = false)
                     this.filterArray.areas.forEach(area => area.checked = false)
@@ -642,6 +642,10 @@ export default {
                 event_types: this.arrayToIds(this.filterArray.eventTypes),
                 room_attributes: this.arrayToIds(this.filterArray.roomAttributes),
                 room_categories: this.arrayToIds(this.filterArray.roomCategories)
+            }, {
+                preserveScroll: true,
+                preserveState: true,
+
             })
         }
     },

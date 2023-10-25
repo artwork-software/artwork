@@ -61,6 +61,7 @@ class AuthUserSeeder extends Seeder
 
         $user->calendar_settings()->create();
         $user->calendar_filter()->create();
+        $user->shift_calendar_filter()->create();
         $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
 
         $user = User::create([
@@ -79,6 +80,7 @@ class AuthUserSeeder extends Seeder
         ]);
         $user->calendar_settings()->create();
         $user->calendar_filter()->create();
+        $user->shift_calendar_filter()->create();
         $user->givePermissionTo([
             PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value,
             PermissionNameEnum::PROJECT_VIEW->value,
@@ -117,6 +119,7 @@ class AuthUserSeeder extends Seeder
 
         $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
         $user->calendar_filter()->create();
+        $user->shift_calendar_filter()->create();
         $user->calendar_settings()->create();
         foreach (NotificationConstEnum::cases() as $notificationType) {
 

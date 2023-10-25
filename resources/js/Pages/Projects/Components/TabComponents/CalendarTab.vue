@@ -11,6 +11,7 @@
                     :events-without-room="eventsWithoutRoom"
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
+                    :user_filters="user_filters"
                 />
             </div>
             <div v-else>
@@ -25,6 +26,7 @@
                     :eventsAtAGlance="eventsAtAGlance"
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
+                    :user_filters="user_filters"
                 >
                 </IndividualCalendarAtGlanceComponent>
 
@@ -41,6 +43,7 @@
                     :days="days"
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
+                    :user_filters="user_filters"
                 />
             </div>
         </div>
@@ -84,6 +87,7 @@ export default {
         'eventTypes',
         'projectWriteIds',
         'projectManagerIds',
+        'user_filters'
     ],
     data() {
 

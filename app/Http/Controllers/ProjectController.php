@@ -1896,6 +1896,7 @@ class ProjectController extends Controller
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
+            'user_filters' => $showCalendar['user_filters'],
         ]);
     }
     public function projectChecklistTab(Project $project, Request $request)

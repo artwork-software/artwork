@@ -274,6 +274,11 @@ class User extends Authenticatable
         return $this->hasOne(UserCalendarFilter::class);
     }
 
+    public function shift_calendar_filter(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserShiftCalendarFilter::class);
+    }
+
     public function getAllPermissionsAttribute(): array
     {
         $permissions = [];

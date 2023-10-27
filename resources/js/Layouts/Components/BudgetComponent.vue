@@ -245,14 +245,14 @@
                             </div>
                         </div>
                     </th>
-                    <button @click="openAddColumnModal()" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="text-white font-bold ml-4 text-xl bg-buttonBlue p-1 hover:bg-buttonHover rounded-full items-center uppercase shadow-sm text-secondaryHover">
-                        <PlusIcon class="h-4 w-4"></PlusIcon>
-                    </button>
+                        <button @click="openAddColumnModal()" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="font-bold ml-4 text-xl bg-buttonBlue p-1 mt-3 hover:bg-buttonHover rounded-full items-center uppercase shadow-sm text-secondaryHover">
+                            <PlusIcon class="h-4 w-4"></PlusIcon>
+                        </button>
                 </tr>
                 </thead>
             </table>
         </div>
-        <div class="w-full flex my-8">
+        <div class="w-full flex mb-6">
             <div class="flex flex-wrap w-full bg-secondaryHover border border-2 border-gray-300">
                 <div class="w-full flex">
                     <div class="bg-secondaryHover ml-5 w-full" v-if="costsOpened">

@@ -6,6 +6,7 @@ sudo NEEDRESTART_MODE=a apt-get install -y curl \
  git \
  python3 \
  gcc \
+ wget \
  gosu \
  build-essential \
  ca-certificates \
@@ -31,7 +32,7 @@ sudo echo "deb [trusted=yes] https://apt.fury.io/meilisearch/ /" | sudo tee /etc
 ##Node
 sudo mkdir -p /etc/apt/keyrings
 sudo curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
-sudo echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+sudo echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
 ##PHP
 sudo curl -sS 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x14aa40ec0831756756d7f66c4f4ea0aae5267a6c' | sudo gpg --dearmor | sudo tee /etc/apt/keyrings/ppa_ondrej_php.gpg > /dev/null
 sudo echo "deb [signed-by=/etc/apt/keyrings/ppa_ondrej_php.gpg] https://ppa.launchpadcontent.net/ondrej/php/ubuntu jammy main" | sudo tee /etc/apt/sources.list.d/ppa_ondrej_php.list
@@ -49,9 +50,6 @@ sudo NEEDRESTART_MODE=a apt-get install -y php8.2-cli php8.2-dev php8.2-fpm \
        php8.2-memcached php8.2-pcov \
        nodejs \
        meilisearch
-
-# Install composer
-sudo curl -sLS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
 
 #Cleanup apt
 
@@ -74,15 +72,20 @@ sudo cp -rf /var/www/html/.install/artwork.vhost.conf /etc/nginx/sites-available
 sudo systemctl restart nginx
 
 ## Composer
-sudo  COMPOSER_ALLOW_SUPERUSER=1 composer -d /var/www/html --no-interaction install
+sudo wget -O /var/www/html/composer.phar https://getcomposer.org/download/2.6.5/composer.phar
+sudo COMPOSER_ALLOW_SUPERUSER=1 php /var/www/html/composer.phar -d /var/www/html --no-interaction install
 
 ## Setup db
 PASSWORD=$(openssl rand -hex 24)
-sudo mysql -uroot "CREATE DATABASE artwork_tools;CREATE USER artwork@\"%\" IDENTIFIED BY \"$PASSWORD\"; GRANT ALL PRIVILEGES ON *.* TO \"artwork\"@\"%\" WITH GRANT OPTION;FLUSH PRIVILEGES;"
+sudo mysql -uroot -e "CREATE DATABASE artwork_tools;CREATE USER artwork@\"%\" IDENTIFIED BY \"$PASSWORD\"; GRANT ALL PRIVILEGES ON *.* TO \"artwork\"@\"%\" WITH GRANT OPTION;FLUSH PRIVILEGES;"
 sudo sed -i "s/DB_PASSWORD=/DB_PASSWORD=$PASSWORD/g" /var/www/html/.env
 
 sudo chown -R www-data:www-data /var/www/html
 
+#Setup Soketi (pusher)
+sudo npm install -g @soketi/soketi
+sudo npm install -g pm2
+sudo pm2 start soketi -- start
 ## Setup laravel
 sudo php /var/www/html/artisan key:generate --force
 sudo php /var/www/html/artisan storage:link
@@ -90,6 +93,8 @@ sudo php /var/www/html/artisan migrate:fresh --seed --force
 
 ## Setup js
 sudo npm --prefix /var/www/html install
+#First dev, then prod to bake the keys into soketi(pusher)
+sudo npm --prefix /var/www/html run dev
 sudo npm --prefix /var/www/html run prod
 
 sudo chown -R www-data:www-data /var/www/html

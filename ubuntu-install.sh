@@ -63,8 +63,7 @@ sudo rm -rf /var/www/html/
 sudo mkdir /var/www/html
 
 ##Clone repo and set it up
-sudo git clone https://github.com/updatedData/artwork.git /var/www/html/
-cd /var/www/html && sudo git checkout full-install
+sudo git clone https://github.com/artwork-software/artwork.git /var/www/html/
 sudo cp /var/www/html/.env.standalone.example /var/www/html/.env
 
 ## nginx config

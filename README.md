@@ -44,6 +44,18 @@ Edit the ``.env`` file located in `/var/www/html/.env`
 
 Locate the string ``APP_URL=http://localhost`` and replace `http://localhost` with your domain. `http` or `https` are required.
 
+For e-mail support locate the following block in the same file and fill in your credentials
+````
+MAIL_HOST=
+MAIL_PORT=
+MAIL_MAILER=
+MAIL_USERNAME=Inbox-Name
+MAIL_PASSWORD=
+MAIL_ENCRYPTION=
+````
+
+
+
 ### SSL
 We do not ship dummy or selfsigned certificates with the installation.
 

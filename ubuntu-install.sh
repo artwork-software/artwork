@@ -61,12 +61,12 @@ sudo apt-get clean
 #Install artwork
 
 ##Delete existing stuff for a clean install
-rm -rf /var/www/html/
-mkdir /var/www/html
+sudo rm -rf /var/www/html/
+sudo mkdir /var/www/html
 
 ##Clone repo and set it up
 sudo git clone https://github.com/updatedData/artwork.git /var/www/html/
-cd /var/www/html && git checkout full-install
+cd /var/www/html && sudo git checkout full-install
 sudo cp /var/www/html/.env.standalone.example /var/www/html/.env
 
 ## nginx config
@@ -78,7 +78,7 @@ sudo  COMPOSER_ALLOW_SUPERUSER=1 composer -d /var/www/html --no-interaction inst
 
 ## Setup db
 PASSWORD=$(openssl rand -hex 24)
-mysql -e "CREATE DATABASE artwork_tools;CREATE USER artwork@\"%\" IDENTIFIED BY \"$PASSWORD\"; GRANT ALL PRIVILEGES ON *.* TO \"artwork\"@\"%\" WITH GRANT OPTION;FLUSH PRIVILEGES;"
+sudo mysql -uroot "CREATE DATABASE artwork_tools;CREATE USER artwork@\"%\" IDENTIFIED BY \"$PASSWORD\"; GRANT ALL PRIVILEGES ON *.* TO \"artwork\"@\"%\" WITH GRANT OPTION;FLUSH PRIVILEGES;"
 sudo sed -i "s/DB_PASSWORD=/DB_PASSWORD=$PASSWORD/g" /var/www/html/.env
 
 sudo chown -R www-data:www-data /var/www/html

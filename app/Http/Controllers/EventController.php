@@ -16,17 +16,22 @@ use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\FreelancerShiftResource;
 use App\Http\Resources\ProjectIndexAdminResource;
+use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderShiftResource;
 use App\Http\Resources\TaskDashboardResource;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
+use App\Models\Area;
 use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\Project;
 use App\Models\Room;
+use App\Models\RoomAttribute;
+use App\Models\RoomCategory;
 use App\Models\Scheduling;
 use App\Models\SeriesEvents;
 use App\Models\ServiceProvider;
@@ -76,18 +81,25 @@ class EventController extends Controller
      * @param Request $request
      * @return Response
      */
-    public function viewEventIndex(Request $request): Response
+    public function viewEventIndex(Request $request, CalendarController $calendarController): Response
     {
 
-        $calendar = new CalendarController();
         $events = [];
         if(\request('startDate') && \request('endDate')) {
-            $showCalendar = $calendar->createCalendarData('individual', null, null, \request('startDate'), \request('endDate'));
-            $events = new CalendarEventCollectionResource($calendar->getEventsOfDay());
+            $showCalendar = $calendarController->createCalendarData('individual', null, null, \request('startDate'), \request('endDate'));
+            $eventsOfDay = $calendarController->getEventsOfDay();
+            $events = new CalendarEventCollectionResourceModel(
+                areas: $showCalendar['filterOptions']['areas'],
+                projects: $showCalendar['filterOptions']['projects'],
+                eventTypes: $showCalendar['filterOptions']['eventTypes'],
+                roomCategories: $showCalendar['filterOptions']['roomCategories'],
+                roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
+                events: $eventsOfDay,
+                filter: Filter::where('user_id', Auth::id())->get(),
+            );
         }else{
-            $showCalendar = $calendar->createCalendarData();
+            $showCalendar = $calendarController->createCalendarData();
         }
-
 
         $eventsAtAGlance = [];
 
@@ -100,9 +112,8 @@ class EventController extends Controller
         }
 
         if(\request('atAGlance') === 'true') {
-            $eventsAtAGlance = $calendar->getEventsAtAGlance($startDate, $endDate);
+            $eventsAtAGlance = $calendarController->getEventsAtAGlance($startDate, $endDate);
         }
-
 
         return inertia('Events/EventManagement', [
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
@@ -113,7 +124,7 @@ class EventController extends Controller
             'selectedDate' => $showCalendar['selectedDate'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'eventsAtAGlance' => $eventsAtAGlance,
-            'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
+            'rooms' => $calendarController->filterRooms($startDate, $endDate)->get(),
             'events' => $events,
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters'],
@@ -121,9 +132,8 @@ class EventController extends Controller
         ]);
     }
 
-    public function viewShiftPlan(Request $request): Response
+    public function viewShiftPlan(Request $request, CalendarController $shiftPlan): Response
     {
-        $shiftPlan = new CalendarController();
         $showCalendar = $shiftPlan->createCalendarDataForShiftPlan();
         $shiftFilterController = new ShiftFilterController();
         $shiftFilters = $shiftFilterController->index();

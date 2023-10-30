@@ -112,6 +112,7 @@ class Project extends Model
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
             ->wherePivot('can_write', true);
     }
+
     public function delete_permission_users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
@@ -195,11 +196,13 @@ class Project extends Model
         return $this->hasOne(Table::class);
     }
 
-    public function moneySources(){
+    public function moneySources()
+    {
         return $this->belongsToMany(MoneySource::class, 'money_source_project');
     }
 
-    public function state(){
+    public function state()
+    {
         return $this->belongsTo(ProjectStates::class);
     }
 

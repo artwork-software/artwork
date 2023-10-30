@@ -12,6 +12,7 @@
                                       :rooms="shiftPlan"
                                       @enterFullscreenMode="openFullscreen"
                                       @openHistoryModal="openHistoryModal"
+                                      :user_filters="user_filters"
                 ></ShiftPlanFunctionBar>
                 <table class="w-full bg-white">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
@@ -38,7 +39,7 @@
                                 <div v-for="event in room[day.day].events.data" class="mb-1">
                                     <SingleShiftPlanEvent :eventType="this.findEventTypeById(event.eventTypeId)"
                                                           :project="this.findProjectById(event.projectId)"
-                                                          :event="event"/>
+                                                          :event="event" v-if="event.shifts.length > 0"/>
                                 </div>
                             </td>
                         </tr>
@@ -162,6 +163,7 @@ export default {
         'usersForShifts',
         'freelancersForShifts',
         'serviceProvidersForShifts',
+        'user_filters'
     ],
     mounted() {
         // Listen for scroll events on both sections

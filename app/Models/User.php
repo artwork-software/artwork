@@ -135,7 +135,6 @@ class User extends Authenticatable
         'profile_photo_url',
         'full_name',
         'type',
-        'has_vacation_days'
     ];
 
     protected $with = ['calendar_settings'];
@@ -268,6 +267,17 @@ class User extends Authenticatable
         return $this->belongsToMany(MoneySource::class, 'money_source_users')->withPivot(['competent', 'write_access'])->using(MoneySourceUserPivot::class);
     }
 
+
+    public function calendar_filter(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserCalendarFilter::class);
+    }
+
+    public function shift_calendar_filter(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserShiftCalendarFilter::class);
+    }
+
     public function getAllPermissionsAttribute(): array
     {
         $permissions = [];
@@ -317,7 +327,7 @@ class User extends Authenticatable
         return $plannedWorkingHours;
     }
 
-    public function getHasVacationDaysAttribute(){
+    public function hasVacationDays(){
         $vacations = $this->vacations()->get();
         $returnInterval = [];
         foreach ($vacations as $vacation) {
@@ -332,6 +342,7 @@ class User extends Authenticatable
         }
         return $returnInterval;
     }
+
 
     public function hasVacation(){
         $vacations = $this->vacations()->get();

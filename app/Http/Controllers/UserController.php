@@ -79,6 +79,16 @@ class UserController extends Controller
             : app(FailedPasswordResetLinkRequestResponse::class, ['status' => $status]);
     }
 
+    public function reset_password(){
+        $token = request('token');
+        $email = request('email');
+
+        return inertia('Auth/ResetPassword', [
+            'token' => $token,
+            'email' => $email,
+        ]);
+    }
+
     /**
      * Display a listing of the resource.
      *

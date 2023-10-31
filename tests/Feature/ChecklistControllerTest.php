@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\PermissionNameEnum;
-use App\Models\Checklist;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\Department;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,14 +12,11 @@ use Tests\TestCase;
 
 class ChecklistControllerTest extends TestCase
 {
-    use RefreshDatabase;
-
-    public function testChecklistUpdateAuthorization()
+    public function testChecklistUpdateAuthorization(): void
     {
         $checklist = Checklist::factory()->create();
         /** @var Department $department */
         $department = Department::factory()->create();
-        $checklist->departments()->sync([$department->id]);
         Permission::firstOrCreate(['name' => PermissionNameEnum::DEPARTMENT_UPDATE->value]);
         Permission::firstOrCreate(['name' => PermissionNameEnum::CHECKLIST_UPDATE->value]);
 
@@ -35,20 +32,18 @@ class ChecklistControllerTest extends TestCase
         $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [])
             ->assertForbidden();
 
-        $user->givePermissionTo(PermissionNameEnum::CHECKLIST_UPDATE->value);
+        //@todo bogus permission, never checked
+       // $user->givePermissionTo(PermissionNameEnum::CHECKLIST_UPDATE->value);
         $user->departments()->sync([$department->id]);
 
-        // user not authorized to add departments
         $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [
             'assigned_department_ids' => [$department->id]
-        ])
-            ->assertUnprocessable();
+        ])->assertForbidden();
 
-        $user->givePermissionTo(PermissionNameEnum::DEPARTMENT_UPDATE->value);
+        $user->givePermissionTo(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
 
-        // user not authorized
         $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [])
-            ->assertSuccessful();
+            ->assertFound();
     }
 
     public function testChecklistUpdateChecklist()

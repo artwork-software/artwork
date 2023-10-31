@@ -32,7 +32,7 @@ use App\Http\Resources\UserShowResource;
 use App\Models\BudgetSumDetails;
 use App\Models\Category;
 use App\Models\CellCalculations;
-use App\Models\Checklist;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\CollectingSociety;
 use App\Models\Column;

@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\BudgetTypesEnum;
 use App\Http\Controllers\ProjectController;
-use App\Models\Checklist;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\CollectingSociety;
 use App\Models\CompanyType;
 use App\Models\Contract;

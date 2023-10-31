@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Checklist\Models\BelongsToChecklist;
+use Artwork\Modules\Checklist\Models\Checklist;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,12 +22,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property  \Illuminate\Support\Carbon $created_at
  * @property  \Illuminate\Support\Carbon $updated_at
  *
- * @property Checklist $checklist
+ * @property-read Checklist $checklist
  * @property User $user_who_done
  */
 class Task extends Model
 {
     use HasFactory;
+    use BelongsToChecklist;
 
     protected $fillable = [
         'name',
@@ -51,11 +54,6 @@ class Task extends Model
     public function contract(): BelongsTo
     {
         return $this->belongsTo(Contract::class, 'contract_id');
-    }
-
-    public function checklist(): BelongsTo
-    {
-        return $this->belongsTo(Checklist::class, 'checklist_id');
     }
 
     public function task_users(): BelongsToMany

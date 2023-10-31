@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Checklist;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Department;
 use App\Models\Genre;

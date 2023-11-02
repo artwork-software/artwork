@@ -39,8 +39,7 @@
                              v-for="(calculation,index) in this.cell.calculations">
                             <div @mouseover="!cell.column.is_locked ? calculationHovered = calculation.id : null"
                                  @mouseout="calculationHovered = null">
-                                <div class="h-1.5 my-2 bg-silverGray"
-                                />
+                                <div class="h-1.5 my-2 bg-silverGray"/>
                                 <div class="flex space-x-4 mb-3">
                                     <div class="w-1/2">
                                         <input type="text"
@@ -318,9 +317,6 @@ export default {
     emits: ['closed'],
 
     mounted() {
-        this.$inertia.post(route('project.budget.cell-calculation.add', this.cell.id), {}, {
-            preserveScroll: true
-        })
     },
 
     watch: {

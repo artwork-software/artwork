@@ -4,7 +4,17 @@
             <img :src="'/Svgs/IconSvgs/icon_notification_' + notification.data.icon + '.svg'" alt="">
             <div class="">
                 <div class="flex items-center gap-4">
-                    <h4 class="sDark">{{ notification.data.title }}</h4>
+                    <div class="flex gap-5 items-center">
+                        <h4 class="sDark">{{ notification.data.title }}</h4>
+                        <div class="" v-if="notification.data.showHistory">
+                            <div @click="openHistory" class="xxsLight cursor-pointer items-center flex text-buttonBlue">
+                                <ChevronRightIcon class="h-3 w-3"/>
+                                <span>
+                             Verlauf ansehen
+                        </span>
+                            </div>
+                        </div>
+                    </div>
                     <div class="flex items-center gap-2 xxsLight" v-if="notification.data?.description[0]">
                         {{ notification.data?.description[0].text }}
                         von
@@ -32,14 +42,7 @@
                 <p v-if="notification.data?.description[5]" class="mt-2 xxsLight">
                     {{ notification.data?.description[5]?.title }}
                 </p>
-                <div class="" v-if="notification.data.showHistory">
-                    <div @click="openHistory" class="xxsLight cursor-pointer items-center flex text-buttonBlue">
-                        <ChevronRightIcon class="h-3 w-3"/>
-                        <span>
-                             Verlauf ansehen
-                        </span>
-                    </div>
-                </div>
+
                 <NotificationButtons v-if="!isArchive"
                                      :buttons="notification.data.buttons"
                                      @openDeclineModal="loadEventDataForDecline"
@@ -74,6 +77,12 @@
         v-if="showUserVacationHistory"
         :project_history="historyObjects"
         @closed="showUserVacationHistory = false" />
+
+
+    <EventHistoryModal
+        v-if="showEventHistory"
+        :project_history="historyObjects"
+        @closed="showEventHistory = false" />
 
 
     <DeclineEventModal
@@ -145,10 +154,12 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent.vue";
 import RoomRequestDialogComponent from "@/Layouts/Components/RoomRequestDialogComponent.vue";
 import UserVacationHistoryModal from "@/Pages/Notifications/Components/UserVacationHistoryModal.vue";
+import EventHistoryModal from "@/Pages/Notifications/Components/EventHistoryModal.vue";
 
 export default {
     name: "NotificationBlock",
     components: {
+        EventHistoryModal,
         UserVacationHistoryModal,
         EventWithoutRoomNewRequestComponent,
         ConfirmDeleteModal,
@@ -173,6 +184,7 @@ export default {
             showEventWithoutRoomComponent: false,
             showRoomRequestDialogComponent: false,
             showUserVacationHistory: false,
+            showEventHistory: false
         }
     },
     computed: {},
@@ -188,12 +200,14 @@ export default {
                     modelId: this.notification.data?.modelId,
                 },
                 onFinish: () => {
-                    console.log(this.notification.data?.historyType);
                     if (this.notification.data?.historyType === 'project') {
                         this.showProjectHistory = true;
                     }
                     if (this.notification.data?.historyType === 'vacations') {
                         this.showUserVacationHistory = true;
+                    }
+                    if (this.notification.data?.historyType === 'event') {
+                        this.showEventHistory = true;
                     }
                 }
             })

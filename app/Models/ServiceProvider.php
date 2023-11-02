@@ -72,17 +72,15 @@ class ServiceProvider extends Model
         return $this->provider_name;
     }
 
-    public function getShiftsAttribute($start, $end): Collection
+    public function getShiftsAttribute(): Collection
     {
         return $this->shifts()
-            ->with(['event' => function($query) use ($start, $end){
-                $query->whereBetween('start_time', [$start, $end])
-                    ->whereBetween('end_time', [$start, $end]);
-            }, 'event.room', 'event.project'])
+            ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
+            ->with(['event.room'])
             ->get()
             ->makeHidden(['allUsers'])
             ->groupBy(function ($shift) {
-                return $shift->event?->days_of_event;
+                return $shift->event->days_of_event;
             });
     }
 

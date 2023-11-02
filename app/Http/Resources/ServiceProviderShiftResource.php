@@ -18,23 +18,12 @@ class ServiceProviderShiftResource extends JsonResource
     public function toArray($request)
     {
 
-        if(\request('startDate') && \request('endDate')){
-
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
-
-        }else{
-
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
-
-        }
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
             'provider_name' => $this->provider_name,
             'profile_photo_url' => $this->profile_image,
-            'shifts' => $this->getShiftsAttribute($startDate, $endDate  ),
+            'shifts' => $this->getShiftsAttribute(),
         ];
     }
 }

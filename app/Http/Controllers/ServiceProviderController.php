@@ -58,9 +58,9 @@ class ServiceProviderController extends Controller
      * @param ServiceProvider $serviceProvider
      * @return Response
      */
-    public function show(ServiceProvider $serviceProvider): \Inertia\Response
+    public function show(ServiceProvider $serviceProvider, CalendarController $shiftPlan): \Inertia\Response
     {
-        $shiftPlan = new CalendarController();
+        //$shiftPlan = new CalendarController();
         $showCalendar = $shiftPlan->createCalendarDataForServiceProviderShiftPlan($serviceProvider);
 
         return Inertia::render('ServiceProvider/Show', [

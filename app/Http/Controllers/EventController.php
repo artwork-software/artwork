@@ -14,7 +14,6 @@ use App\Http\Resources\CalendarEventCollectionResource;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\FreelancerShiftResource;
 use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderShiftResource;
@@ -39,6 +38,8 @@ use App\Models\Shift;
 use App\Models\SubEvents;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\UserCalendarFilter;
+use App\Models\UserShiftCalendarFilter;
 use App\Support\Services\CollisionService;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
@@ -54,6 +55,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Response;
+use JetBrains\PhpStorm\NoReturn;
 
 class EventController extends Controller
 {
@@ -64,8 +66,13 @@ class EventController extends Controller
     protected ?NewHistoryService $history = null;
     protected ?string $notificationKey = '';
 
+    private $user;
+    private UserShiftCalendarFilter $userShiftCalendarFilter;
+    private UserCalendarFilter $userCalendarFilter;
+
     public function __construct()
     {
+
         $this->collisionService = new CollisionService();
         $this->notificationService = new NotificationService();
         $this->notificationData = new \stdClass();
@@ -75,6 +82,7 @@ class EventController extends Controller
 
         $this->notificationKey = Str::random(15);
 
+
     }
 
     /**
@@ -83,10 +91,12 @@ class EventController extends Controller
      */
     public function viewEventIndex(Request $request, CalendarController $calendarController): Response
     {
-
+        $this->user = Auth::user();
+        $this->userCalendarFilter = $this->user->calendar_filter()->first();
+        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter()->first();
         $events = [];
-        if(\request('startDate') && \request('endDate')) {
-            $showCalendar = $calendarController->createCalendarData('individual', null, null, \request('startDate'), \request('endDate'));
+        if(!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
+            $showCalendar = $calendarController->createCalendarData('individual', null, null, $this->userCalendarFilter->start_date, $this->userCalendarFilter->end_date);
             $eventsOfDay = $calendarController->getEventsOfDay();
             $events = new CalendarEventCollectionResourceModel(
                 areas: $showCalendar['filterOptions']['areas'],
@@ -103,9 +113,9 @@ class EventController extends Controller
 
         $eventsAtAGlance = [];
 
-        if(request('startDate') && \request('endDate')){
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        if(!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
+            $startDate = Carbon::create($this->userCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($this->userCalendarFilter->end_date)->endOfDay();
         }else{
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
@@ -132,16 +142,20 @@ class EventController extends Controller
         ]);
     }
 
-    public function viewShiftPlan(Request $request, CalendarController $shiftPlan): Response
+    public function viewShiftPlan(CalendarController $shiftPlan): Response
     {
+
+        $this->user = Auth::user();
+        $this->userCalendarFilter = $this->user->calendar_filter()->first();
+        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter()->first();
         $showCalendar = $shiftPlan->createCalendarDataForShiftPlan();
         $shiftFilterController = new ShiftFilterController();
         $shiftFilters = $shiftFilterController->index();
 
-        if(\request('startDate') && \request('endDate')){
+        if(!is_null($this->userShiftCalendarFilter->start_date) && !is_null($this->userShiftCalendarFilter->end_date)){
 
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+            $startDate = Carbon::create($this->userShiftCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($this->userShiftCalendarFilter->end_date)->endOfDay();
 
         }else{
 
@@ -183,9 +197,16 @@ class EventController extends Controller
 
         foreach ($freelancers as $freelancer) {
             $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
-
+            //dd($freelancer->getShiftsAttribute());
             $freelancersWithPlannedWorkingHours[] = [
-                'freelancer' => FreelancerShiftResource::make($freelancer),
+                'freelancer' => [
+                    'resource' => 'FreelancerShiftResource',
+                    'id' => $freelancer->id,
+                    'first_name' => $freelancer->first_name,
+                    'last_name' => $freelancer->last_name,
+                    'profile_photo_url' => $freelancer->profile_image,
+                    'shifts' => $freelancer->getShiftsAttribute(),
+                ],
                 'plannedWorkingHours' => $plannedWorkingHours,
             ];
         }
@@ -198,7 +219,7 @@ class EventController extends Controller
             $plannedWorkingHours = $service_provider->plannedWorkingHours($startDate, $endDate);
 
             $serviceProvidersWithPlannedWorkingHours[] = [
-                'service_provider' => ServiceProviderShiftResource::make($service_provider),
+                'service_provider' => ServiceProviderShiftResource::make($service_provider ),
                 'plannedWorkingHours' => $plannedWorkingHours,
             ];
         }
@@ -738,7 +759,8 @@ class EventController extends Controller
         if(!empty($project)){
             $projectManagers = $project->managerUsers()->get();
         }
-        if($request->accept || $request->optionAccept){
+        //dd($request->all());
+        /*if($request->accept || $request->optionAccept){
             $event->update(['occupancy_option' => false]);
 
             if($request->accept){
@@ -801,7 +823,7 @@ class EventController extends Controller
             $this->notificationService->setNotificationTo($event->creator);
             $this->notificationService->createNotification();
 
-        } else {
+        } else {*/
             if (!empty($request->adminComment)) {
                 $projectManagers = [];
                 $this->notificationService->setNotificationKey($this->notificationKey);
@@ -871,7 +893,7 @@ class EventController extends Controller
                 $this->notificationService->createNotification();
             }
         }
-        }
+        //}
 
         if($request->roomChange){
             $notificationTitle = 'Raumanfrage mit Raumänderung bestätigt';

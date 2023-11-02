@@ -65,6 +65,19 @@ class NotificationController extends Controller
                 }
             }
 
+            if(request('historyType') === 'event'){
+                $event = Event::find(request('modelId'));
+                $historyComplete = $event->historyChanges()->all();
+                foreach ($historyComplete as $history){
+                    $historyObjects[] = [
+                        'changes' => json_decode($history->changes),
+                        'created_at' => $history->created_at->diffInHours() < 24
+                            ? $history->created_at->diffForHumans()
+                            : $history->created_at->format('d.m.Y, H:i'),
+                    ];
+                }
+            }
+
             if(request('historyType') === 'vacations'){
                 $userVacations = UserVacations::where('user_id', request('modelId'))->get();
 

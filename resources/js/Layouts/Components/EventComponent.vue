@@ -119,7 +119,7 @@
                         {{ this.selectedProject?.name }}
                     </a>
                     </div>
-                    <div class="flex items-center w-1/2">
+                    <div v-if="this.event.created_by" class="flex items-center w-1/2">
                         <p class="truncate xsLight subpixel-antialiased max-w-60">
                             erstellt von {{ this.event.created_by.first_name }}
                             {{ this.event.created_by.last_name }}</p> <img
@@ -825,7 +825,7 @@ export default {
             return this.rooms.find(room => room.id === this.event?.roomId)?.admins.some(admin => admin.id === this.$page.props.user.id) || false;
         },
         isCreator() {
-            return this.event ? this.event?.created_by.id === this.$page.props.user.id : false
+            return this.event ? this.event?.user_id === this.$page.props.user.id : false
         },
     },
     methods: {
@@ -878,7 +878,7 @@ export default {
                     this.selectedFrequency = frequency
                 }
             })
-            this.selectedProject = {id: this.event.projectId, name: this.event.projectName}
+            this.selectedProject = {id: this.event.projectId, name: this.event.projectName};
             if (this.selectedProject.id !== null) {
                 this.showProjectInfo = true;
             }

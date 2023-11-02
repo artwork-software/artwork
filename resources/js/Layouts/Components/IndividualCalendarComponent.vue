@@ -273,6 +273,7 @@ export default {
                 document.exitFullscreen();
                 this.isFullscreen = false;
             }
+            console.log(this.selectedEvent);
             this.createEventComponentIsVisible = true;
 
         },

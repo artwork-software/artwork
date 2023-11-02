@@ -7,7 +7,7 @@
                  class="-ml-6 -mt-8 mb-4"/>
             <XIcon @click="closeModal(false)"
                    class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"/> 
+                   aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
                 <div v-if="this.isRoomAdmin || this.hasAdminRole()">
@@ -598,7 +598,7 @@
                     <div class="flex justify-center w-full py-4" v-else>
                         <button
                             :disabled="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || !this.$can('request room occupancy')"
-                            :class="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null || !this.$can('request room occupancy') ? 'bg-secondary hover:bg-secondary' : ''"
+                            :class="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || (this.startTime === null && !this.allDayEvent) || this.startDate === null  || (this.endTime === null && !this.allDayEvent) || this.endDate === null || !this.$can('request room occupancy') ? 'bg-secondary hover:bg-secondary' : ''"
                             class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                             @click="updateOrCreateEvent(true)">
                             Belegung anfragen

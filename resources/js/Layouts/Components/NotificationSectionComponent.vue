@@ -255,7 +255,7 @@ export default  {
         },
         setAllOnRead(notifications) {
             notifications.forEach((notification) => {
-                if ((!this.isErrorType(notification.type, notification)  || notification.type.indexOf('RoomRequestNotification') === -1) && notification.data.title.indexOf('Neue Raumanfrage') === -1) {
+                if (notification.data.icon !== 'blue') {
                     this.setOnRead(notification.id);
                 }
             })

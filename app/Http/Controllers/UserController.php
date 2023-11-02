@@ -119,10 +119,10 @@ class UserController extends Controller
         ]);
     }
 
-    public function editUserShiftplan(User $user, CalendarController $calendarController): Response|ResponseFactory
+    public function editUserShiftplan(User $user, CalendarController $shiftPlan): Response|ResponseFactory
     {
 
-        $showCalendar = $calendarController->createCalendarDataForUserShiftPlan($user);
+        $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
         $availabilityData = $this->getAvailabilityData($user, request('month'));
 
         if(\request('startDate') && \request('endDate')){

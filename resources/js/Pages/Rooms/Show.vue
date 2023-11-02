@@ -202,12 +202,12 @@
                 <div v-if="calendarType && calendarType === 'daily'">
                     <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
                         <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue"
-                                           :eventTypes=this.event_types initial-view="day"/>
+                                           :eventTypes=this.event_types initial-view="day" :user_filters="user_filters"/>
                     </div>
                 </div>
                 <div v-else>
-                    <SingleRoomCalendarComponent :personal-filters="personalFilters" :filter-options="filterOptions" :eventsWithoutRoom="eventsWithoutRoom" :dateValue="dateValue" :eventTypes=this.event_types
-                                                 :calendarData="calendar" :days="days" :rooms="rooms"/>
+                    <SingleRoomCalendarComponent  :personal-filters="personalFilters" :filter-options="filterOptions" :eventsWithoutRoom="eventsWithoutRoom" :dateValue="dateValue" :eventTypes=this.event_types
+                                                 :calendarData="calendar" :days="days" :rooms="rooms" :user_filters="user_filters" />
                 </div>
             </div>
         </div>
@@ -642,7 +642,8 @@ export default {
         'days',
         'eventsWithoutRoom',
         'filterOptions',
-        'personalFilters'
+        'personalFilters',
+        'user_filters'
     ],
     components: {
         UserPopoverTooltip,

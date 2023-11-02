@@ -396,10 +396,8 @@ class EventController extends Controller
 
     public function commit_shifts(Request $request)
     {
-
         foreach ($request->events as $event) {
 
-            // Prepare an array to hold shift IDs
             $shiftIds = [];
 
             // Loop through each shift and collect the IDs
@@ -413,30 +411,33 @@ class EventController extends Controller
             // get first shift in shifts
             $firstShift = $shifts->first();
 
+
             // get last shift in Shifts
             $lastShift = $shifts->last();
-
             $notificationTitle = 'Dienstplan festgeschrieben';
-            $broadcastMessage = [
-                'id' => rand(1, 1000000),
-                'type' => 'success',
-                'message' => $notificationTitle
-            ];
+            if(!empty($firstShift) && !empty($lastShift)){
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $notificationTitle
+                ];
 
-            $notificationDescription = [
-                1 => [
-                    'type' => 'string',
-                    'title' => 'Betrifft Zeitraum: ' . Carbon::parse($firstShift->event_start_day . ' ' . $firstShift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($lastShift->event_end_day . ' ' . $lastShift->end)->format('d.m.Y H:i'),
-                    'href' => null
-                ],
-            ];
+                $notificationDescription = [
+                    1 => [
+                        'type' => 'string',
+                        'title' => 'Betrifft Zeitraum: ' . Carbon::parse($firstShift->event_start_day . ' ' . $firstShift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($lastShift->event_end_day . ' ' . $lastShift->end)->format('d.m.Y H:i'),
+                        'href' => null
+                    ],
+                ];
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
 
+            }
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_LOCKED);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setDescription($notificationDescription);
+
 
             $userIdHasGetNotification = [];
             // Loop over the shifts and set is_committed to true

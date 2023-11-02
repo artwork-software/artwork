@@ -11,19 +11,21 @@
         </div>
 
         <div class="bg-white">
-            <CalendarFunctionBar
-                @open-event-component="openEventComponent"
-                @nextDay="nextDay"
-                @previousDay="previousDay"
-                @enterFullscreenMode="openFullscreen"
-                :dateValue="dateValue"
-                @change-at-a-glance="changeAtAGlance"
-                :at-a-glance="atAGlance"
-                :filter-options="filterOptions"
-                :personal-filters="personalFilters"
-                :is-fullscreen="isFullscreen"
-                :user_filters="user_filters"
-            />
+          <div class="pl-14">
+              <CalendarFunctionBar
+                  @open-event-component="openEventComponent"
+                  @nextDay="nextDay"
+                  @previousDay="previousDay"
+                  @enterFullscreenMode="openFullscreen"
+                  :dateValue="dateValue"
+                  @change-at-a-glance="changeAtAGlance"
+                  :at-a-glance="atAGlance"
+                  :filter-options="filterOptions"
+                  :personal-filters="personalFilters"
+                  :is-fullscreen="isFullscreen"
+                  :user_filters="user_filters"
+              />
+          </div>
 
             <!--  Calendar  -->
             <div class="pl-14 overflow-x-scroll">

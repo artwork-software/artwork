@@ -50,6 +50,7 @@
                                      @open-event-without-room-modal="loadEventDataForEventWithoutRoom"
                                      @deleteNotification="setOnRead"
                                      @openProject="openProjectShift(notification.data?.projectId, notification.data?.eventId, notification.data?.shiftId)"
+                                     @showInTask="openProjectTasks(notification.data?.taskId)"
                 />
             </div>
         </div>
@@ -307,6 +308,9 @@ export default {
         },
         openProjectShift(projectId, eventId, shiftId){
             window.location.href = route('projects.show.shift', projectId) + '?eventId=' + eventId + '&shiftId=' + shiftId;
+        },
+        openProjectTasks(taskId){
+            window.location.href = route('tasks.own') + '?taskId=' + taskId;
         }
     }
 }

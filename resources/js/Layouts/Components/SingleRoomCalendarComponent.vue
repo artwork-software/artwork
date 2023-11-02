@@ -3,7 +3,7 @@
         <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
             <CalendarFunctionBar :personal-filters="personalFilters" :filter-options="filterOptions" :roomMode="true" :project="project" @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
                                  @change-at-a-glance="changeAtAGlance"
-                                 :at-a-glance="atAGlance"></CalendarFunctionBar>
+                                 :at-a-glance="atAGlance" :user_filters="user_filters"></CalendarFunctionBar>
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48"
                  @click="openEventsWithoutRoomComponent()"
                  v-if="filteredEvents?.length > 0">
@@ -90,7 +90,7 @@ export default {
             zoomFactor: 1
         }
     },
-    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue','project','eventsWithoutRoom','filterOptions','personalFilters'],
+    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue','project','eventsWithoutRoom','filterOptions','personalFilters', 'user_filters'],
     emits: ['changeAtAGlance'],
     mounted(){
         window.addEventListener('resize', this.listenToFullscreen);

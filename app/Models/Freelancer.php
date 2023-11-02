@@ -65,7 +65,7 @@ class Freelancer extends Model
 
     public function shifts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(Shift::class, 'shifts_freelancers', 'freelancer_id', 'shift_id')->withPivot(['is_master'])->orderByPivot('is_master', 'desc')->withCasts(['is_master' => 'boolean']);
+        return $this->belongsToMany(Shift::class, 'shifts_freelancers', 'freelancer_id', 'shift_id')->withPivot(['is_master'])->orderByPivot('is_master', 'desc')->withCasts(['is_master' => 'boolean'])->without(['users', 'freelancer']);
     }
 
     public function getProfilePhotoUrlAttribute(): string
@@ -92,17 +92,15 @@ class Freelancer extends Model
         return $this->hasMany(FreelancerVacation::class);
     }
 
-    public function getShiftsAttribute($start, $end): Collection
+    public function getShiftsAttribute(): Collection
     {
         return $this->shifts()
-            ->with(['event' => function($query) use ($start, $end){
-                $query->whereBetween('start_time', [$start, $end])
-                    ->whereBetween('end_time', [$start, $end]);
-            }, 'event.room'])
+            ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
+            ->with(['event.room'])
             ->get()
             ->makeHidden(['allUsers'])
             ->groupBy(function ($shift) {
-                return $shift->event?->days_of_event;
+                return $shift->event->days_of_event;
             });
     }
 

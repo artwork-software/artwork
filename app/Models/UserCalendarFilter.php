@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property int $user_id
+ * @property \Illuminate\Support\Carbon $start_date
+ * @property \Illuminate\Support\Carbon $end_date
  * @property boolean $is_loud
  * @property boolean $is_not_loud
  * @property boolean $adjoining_not_loud
@@ -30,6 +32,8 @@ class UserCalendarFilter extends Model
     use HasFactory;
 
     protected $fillable = [
+        'start_date',
+        'end_date',
         'user_id',
         'is_loud',
         'is_not_loud',

@@ -46,10 +46,13 @@
                         class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
-                    <label for="business" class="text-sm font-bold text-secondary">Unternehmen</label>
-                    <div class="text-darkGray font-semibold px-3 py-2 border-2 w-full border-gray-300">
-                        {{ $page.props.businessName }}
-                    </div>
+                    <label for="phoneNumber" class="text-sm font-bold text-secondary">Unternehmen</label>
+                    <input
+                        v-model="form.business"
+                        id="business"
+                        type="text"
+                        :placeholder="$page.props.businessName"
+                        class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
 
                 <div class="sm:col-span-3 mt-1">
@@ -106,7 +109,10 @@
                     class="flex px-44 py-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover focus:outline-none">
                 <p class="text-sm">Registrieren</p>
             </button>
-            {{this.error}}
+
+            <pre>
+                {{ form }}
+            </pre>
         </form>
     </div>
 </template>
@@ -165,6 +171,7 @@ export default defineComponent({
                 position: '',
                 phone_number: '',
                 password: '',
+                business: this.$page.props.businessName,
                 token: this.token
             })
         }

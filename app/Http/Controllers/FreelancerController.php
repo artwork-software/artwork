@@ -118,10 +118,9 @@ class FreelancerController extends Controller
      * @param Freelancer $freelancer
      * @return Response
      */
-    public function show(Freelancer $freelancer): Response
+    public function show(Freelancer $freelancer, CalendarController $shiftPlan): Response
     {
 
-        $shiftPlan = new CalendarController();
         $showCalendar = $shiftPlan->createCalendarDataForFreelancerShiftPlan($freelancer);
         $availabilityData = $this->getAvailabilityData($freelancer, request('month'));
 

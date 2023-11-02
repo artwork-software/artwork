@@ -119,10 +119,9 @@ class UserController extends Controller
         ]);
     }
 
-    public function editUserShiftplan(User $user): Response|ResponseFactory
+    public function editUserShiftplan(User $user, CalendarController $shiftPlan): Response|ResponseFactory
     {
 
-        $shiftPlan = new CalendarController();
         $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
         $availabilityData = $this->getAvailabilityData($user, request('month'));
 

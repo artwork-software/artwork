@@ -589,6 +589,7 @@ class CalendarController extends Controller
             // Selected Date is needed for change from individual Calendar to VueCal-Daily, so that vuecal knows which date to load
             'selectedDate' => $selectedDate,
             'roomsWithEvents' => $better,
+            'test' => $this->get_events_of_day($this->startDate, $room, @$project->id, true),
             'filterOptions' => $this->getFilters(),
             'personalFilters' => $filterController->index(),
             'user_filters' => Auth::user()->shift_calendar_filter()->first(),

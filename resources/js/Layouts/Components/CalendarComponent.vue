@@ -536,12 +536,12 @@ export default {
             this.eventsSince = startDate ?? this.eventsSince;
             this.eventsUntil = endDate ?? this.eventsUntil;
 
-            this.events.map(event => event.start = this.convertDateFormat(new Date(event.start_time)))
-            this.events.map(event => event.end = this.convertDateFormat(new Date(event.end_time)))
+            this.events?.map(event => event.start = this.convertDateFormat(new Date(event.start_time)))
+            this.events?.map(event => event.end = this.convertDateFormat(new Date(event.end_time)))
 
             //split is needed for the vue-cal component to connect the events with the rooms
             //class is needed for design purposes
-            this.events.forEach((event) => {
+            this.events?.forEach((event) => {
                 event.split = event.room_id;
                 event.class = event.event_type.svg_name;
             })

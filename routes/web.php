@@ -400,8 +400,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/user/{user}/calendar/filter/date/update', [\App\Http\Controllers\UserCalendarFilterController::class, 'updateDates'])->name('update.user.calendar.filter.dates');
 
 
-    Route::patch('/user/{user}/calendar/filter/single/update', [\App\Http\Controllers\UserCalendarFilterController::class, 'singleValueUpdate'])->name('user.calendar.filter.single.value.update');
-    Route::patch('/user/{user}/calendar/filter/single/update', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'singleValueUpdate'])->name('user.shift.calendar.filter.single.value.update');
+    Route::patch('/user/{user}/calendar/filter/single/update/calendar', [\App\Http\Controllers\UserCalendarFilterController::class, 'singleValueUpdate'])->name('user.calendar.filter.single.value.update');
+    Route::patch('/user/{user}/calendar/filter/single/update/shift', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'singleValueUpdate'])->name('user.shift.calendar.filter.single.value.update');
     Route::patch('/user/{user}/shift/calendar/filter/date/update', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'updateDates'])->name('update.user.shift.calendar.filter.dates');
 
 

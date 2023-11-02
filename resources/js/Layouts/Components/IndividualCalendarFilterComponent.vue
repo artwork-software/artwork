@@ -683,52 +683,6 @@ export default {
 
             return pathName !== "rooms";
         },
-        activeFilters: function () {
-            let activeFiltersArray = []
-
-            this.filterArray.rooms.forEach(room => {
-                if (room.checked) activeFiltersArray.push(room)
-            })
-
-            this.filterArray.areas.forEach(area => {
-                if (area.checked) activeFiltersArray.push(area)
-            })
-
-            this.filterArray.eventTypes.forEach(eventType => {
-                if (eventType.checked) activeFiltersArray.push(eventType)
-            })
-
-            this.filterArray.roomCategories.forEach(category => {
-                if (category.checked) activeFiltersArray.push(category)
-            })
-
-            this.filterArray.roomAttributes.forEach(attribute => {
-                if (attribute.checked) activeFiltersArray.push(attribute)
-            })
-
-            if (this.filterArray.eventAttributes.isLoud.checked)
-                activeFiltersArray.push({name: "Laute Termine", value: 'isLoud', user_filter_key: 'is_loud'})
-
-            if (this.filterArray.eventAttributes.isNotLoud.checked)
-                activeFiltersArray.push({name: "Ohne laute Termine", value: 'isNotLoud', user_filter_key: 'is_not_loud'})
-
-            if (this.filterArray.eventAttributes.adjoiningNoAudience.checked)
-                activeFiltersArray.push({name: "Ohne Nebenveranstaltung mit Publikum", value: 'adjoiningNoAudience', user_filter_key: 'adjoining_no_audience' })
-
-            if (this.filterArray.eventAttributes.adjoiningNotLoud.checked)
-                activeFiltersArray.push({name: "Ohne laute Nebenveranstaltung", value: 'adjoiningNotLoud', user_filter_key: 'adjoining_not_loud'})
-
-            if (this.filterArray.eventAttributes.hasAudience.checked)
-                activeFiltersArray.push({name: "Mit Publikum", value: 'hasAudience', user_filter_key: 'has_audience'})
-
-            if (this.filterArray.eventAttributes.hasNoAudience.checked)
-                activeFiltersArray.push({name: "Ohne Publikum", value: 'hasNoAudience', user_filter_key: 'has_no_audience'})
-
-            if (this.filterArray.roomFilters.showAdjoiningRooms)
-                activeFiltersArray.push({name: "Nebenräume anzeigen", value: 'showAdjoiningRooms', user_filter_key: 'show_adjoining_rooms'})
-
-            return activeFiltersArray
-        }
     },
     watch: {
         atAGlance: {

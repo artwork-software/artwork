@@ -262,7 +262,7 @@ export default {
             this.userCalendarSettings.patch(route('user.calendar_settings.update', {user: this.$page.props.user.id}))
         },
         removeFilter(filter) {
-            console.log(filter);
+
             if(filter.value === 'isLoud'){
                 this.updateFilterValue('is_loud', false);
             }
@@ -398,50 +398,6 @@ export default {
             }
 
             return activeFiltersArray
-
-
-            /*this.filterOptions.rooms.forEach(room => {
-                if (room.checked) activeFiltersArray.push(room)
-            })
-
-            this.filterOptions.areas.forEach(area => {
-                if (area.checked) activeFiltersArray.push(area)
-            })
-
-            this.filterOptions.eventTypes.forEach(eventType => {
-                if (eventType.checked) activeFiltersArray.push(eventType)
-            })
-
-            this.filterOptions.roomCategories.forEach(category => {
-                if (category.checked) activeFiltersArray.push(category)
-            })
-
-            this.filterOptions.roomAttributes.forEach(attribute => {
-                if (attribute.checked) activeFiltersArray.push(attribute)
-            })
-
-            if (this.filterOptions.eventAttributes.isLoud.checked)
-                activeFiltersArray.push({name: "Laute Termine", value: 'isLoud', user_filter_key: 'is_loud'})
-
-            if (this.filterOptions.eventAttributes.isNotLoud.checked)
-                activeFiltersArray.push({name: "Ohne laute Termine", value: 'isNotLoud', user_filter_key: 'is_not_loud'})
-
-            if (this.filterOptions.eventAttributes.adjoiningNoAudience.checked)
-                activeFiltersArray.push({name: "Ohne Nebenveranstaltung mit Publikum", value: 'adjoiningNoAudience', user_filter_key: 'adjoining_no_audience' })
-
-            if (this.filterOptions.eventAttributes.adjoiningNotLoud.checked)
-                activeFiltersArray.push({name: "Ohne laute Nebenveranstaltung", value: 'adjoiningNotLoud', user_filter_key: 'adjoining_not_loud'})
-
-            if (this.filterOptions.eventAttributes.hasAudience.checked)
-                activeFiltersArray.push({name: "Mit Publikum", value: 'hasAudience', user_filter_key: 'has_audience'})
-
-            if (this.filterOptions.eventAttributes.hasNoAudience.checked)
-                activeFiltersArray.push({name: "Ohne Publikum", value: 'hasNoAudience', user_filter_key: 'has_no_audience'})
-
-            if (this.filterOptions.roomFilters.showAdjoiningRooms)
-                activeFiltersArray.push({name: "Nebenräume anzeigen", value: 'showAdjoiningRooms', user_filter_key: 'show_adjoining_rooms'})
-
-            return activeFiltersArray*/
         }
     }
 }

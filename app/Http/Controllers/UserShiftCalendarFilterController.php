@@ -87,6 +87,13 @@ class UserShiftCalendarFilterController extends Controller
 
     }
 
+    public function singleValueUpdate(Request $request, User $user): void
+    {
+        $user->shift_calendar_filter()->update([
+            $request->key => $request->value
+        ]);
+    }
+
     /**
      * Remove the specified resource from storage.
      *

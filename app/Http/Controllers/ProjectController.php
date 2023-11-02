@@ -2073,7 +2073,7 @@ class ProjectController extends Controller
 
         foreach ($users as $user) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
-            $vacations = $user->getHasVacationDaysAttribute();
+            $vacations = $user->hasVacationDays();
             $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
 
             $usersWithPlannedWorkingHours[] = [
@@ -2411,7 +2411,7 @@ class ProjectController extends Controller
             $findTimeLine->update([
                 'start' => $timeline['start'],
                 'end' => $timeline['end'],
-                'description' => $timeline['description']
+                'description' => nl2br($timeline['description'])
             ]);
         }
     }

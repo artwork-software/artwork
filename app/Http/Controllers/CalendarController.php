@@ -17,25 +17,35 @@ use App\Models\RoomAttribute;
 use App\Models\RoomCategory;
 use App\Models\ServiceProvider;
 use App\Models\User;
+use App\Models\UserCalendarFilter;
+use App\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use DateTime;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 use Symfony\Component\ErrorHandler\Debug;
 
 class CalendarController extends Controller
 {
     protected ?Carbon $startDate = null;
     protected ?Carbon $endDate = null;
+    private Authenticatable $user;
+    private UserCalendarFilter $userCalendarFilter;
+    private UserShiftCalendarFilter $userShiftCalendarFilter;
 
     public function __construct(private readonly FilterProvider $filterProvider)
     {
+        $this->user = Auth::user();
+        $this->userCalendarFilter = $this->user->calendar_filter()->first();
+        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter()->first();
     }
 
     /**
@@ -152,24 +162,23 @@ class CalendarController extends Controller
 
     public function createCalendarData($type = '', ?Project $project = null, ?Room $room = null,$startDate = null,$endDate = null)
     {
-
         $calendarType = 'individual';
         $selectedDate = null;
-        if(\request('startDate') && \request('endDate')){
+        if(!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)){
             $this->setDefaultDates();
-        }else{
+        } else {
             $this->startDate = Carbon::now()->startOfDay();
             $this->endDate = Carbon::now()->addWeeks()->endOfDay();
         }
 
         if ($startDate) {
             $this->startDate = Carbon::create($startDate)->startOfDay();
-        }else{
+        } else {
             $this->setDefaultDates();
         }
         if ($endDate) {
             $this->endDate = Carbon::create($endDate)->endOfDay();
-        }else{
+        } else {
             if ($type === 'dashboard') {
                 $this->endDate = Carbon::now()->endOfDay();
             } else {
@@ -219,9 +228,9 @@ class CalendarController extends Controller
                     $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
                 ]);
         } else {
-            if (\request('startDate') && \request('endDate')) {
-                $startDate = Carbon::create(\request('startDate'))->startOfDay();
-                $endDate = Carbon::create(\request('endDate'))->endOfDay();
+            if (!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
+                $startDate = Carbon::create($this->userCalendarFilter->start_date)->startOfDay();
+                $endDate = Carbon::create($this->userCalendarFilter->end_date)->endOfDay();
             } else {
                 $startDate = Carbon::now()->startOfDay();
                 $endDate = Carbon::now()->addWeeks()->endOfDay();
@@ -265,7 +274,7 @@ class CalendarController extends Controller
             'eventsWithoutRoom' => $eventsWithoutRooms,
             'filterOptions' => $this->getFilters(),
             'personalFilters' => $filterController->index(),
-            'user_filters' => Auth::user()->calendar_filter()->first(),
+            'user_filters' => $this->userCalendarFilter,
         ];
     }
 
@@ -290,9 +299,9 @@ class CalendarController extends Controller
                 'full_day' => $period->format('d.m.Y')
             ];
         }*/
-        if (\request('startDate') && \request('endDate')) {
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        if (!is_null($this->userShiftCalendarFilter->start_date) && !is_null($this->userShiftCalendarFilter->end_date)) {
+            $startDate = Carbon::create($this->userShiftCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($this->userShiftCalendarFilter->end_date)->endOfDay();
         } else {
             $currentDate = Carbon::now();
             // Calculate the start of the Monday of the recent calendar week
@@ -380,9 +389,9 @@ class CalendarController extends Controller
                 'full_day' => $period->format('d.m.Y')
             ];
         }*/
-        if (\request('startDate') && \request('endDate')) {
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        if (!is_null($this->userShiftCalendarFilter->start_date) && !is_null($this->userShiftCalendarFilter->end_date)) {
+            $startDate = Carbon::create($this->userShiftCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($this->userShiftCalendarFilter->end_date)->endOfDay();
         } else {
             $currentDate = Carbon::now();
             // Calculate the start of the Monday of the recent calendar week
@@ -470,9 +479,9 @@ class CalendarController extends Controller
                 'full_day' => $period->format('d.m.Y')
             ];
         }*/
-        if (\request('startDate') && \request('endDate')) {
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        if (!is_null($this->userShiftCalendarFilter->start_date) && !is_null($this->userShiftCalendarFilter->end_date)) {
+            $startDate = Carbon::create($this->userShiftCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($this->userShiftCalendarFilter->end_date)->endOfDay();
         } else {
             $currentDate = Carbon::now();
             // Calculate the start of the Monday of the recent calendar week
@@ -544,9 +553,9 @@ class CalendarController extends Controller
                 'without_format' => $period->format('Y-m-d')
             ];
         }
-        if (request('startDate') && request('endDate')) {
-            $startDate = Carbon::create(request('startDate'))->startOfDay();
-            $endDate = Carbon::create(request('endDate'))->endOfDay();
+        if (!is_null($this->userShiftCalendarFilter->start_date) && !is_null($this->userShiftCalendarFilter->end_date)) {
+            $startDate = Carbon::create($this->userShiftCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($this->userShiftCalendarFilter->end_date)->endOfDay();
         } else {
             $currentDate = Carbon::now();
             // Calculate the start of the Monday of the recent calendar week
@@ -833,11 +842,11 @@ class CalendarController extends Controller
 
     private function setDefaultDates()
     {
-        if (\request('startDate')) {
-            $this->startDate = Carbon::create(\request('startDate'))->startOfDay();
+        if (!is_null($this->userCalendarFilter->start_date)) {
+            $this->startDate = Carbon::create($this->userCalendarFilter->start_date)->startOfDay();
         }
-        if (\request('endDate')) {
-            $this->endDate = Carbon::create(\request('endDate'))->endOfDay();
+        if (!is_null($this->userCalendarFilter->end_date)) {
+            $this->endDate = Carbon::create($this->userCalendarFilter->end_date)->endOfDay();
         }
     }
 }

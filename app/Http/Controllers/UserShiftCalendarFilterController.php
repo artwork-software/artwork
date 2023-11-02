@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserShiftCalendarFilter;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -75,6 +76,15 @@ class UserShiftCalendarFilterController extends Controller
             'event_types',
             'rooms',
         ]));
+    }
+
+    public function updateDates(Request $request, User $user): void
+    {
+        $user->calendar_filter()->update([
+            'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
+            'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
+        ]);
+
     }
 
     /**

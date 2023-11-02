@@ -366,51 +366,14 @@ export default {
         'personalFilters',
         'atAGlance',
         'type',
-        'user_filters'
+        'user_filters',
+        'externUpdated',
     ],
     mounted() {
-        this.filterArray.rooms = this.filterOptions.rooms
-        this.filterArray.areas = this.filterOptions.areas
-        this.filterArray.roomCategories = this.filterOptions.roomCategories
-        this.filterArray.roomAttributes = this.filterOptions.roomAttributes
-        this.filterArray.eventTypes = this.filterOptions.eventTypes
-        this.setCheckedFalse(this.filterArray.rooms)
-        this.setCheckedFalse(this.filterArray.areas)
-        this.setCheckedFalse(this.filterArray.roomCategories)
-        this.setCheckedFalse(this.filterArray.roomAttributes)
-        this.setCheckedFalse(this.filterArray.eventTypes)
-
-
-        this.filterArray.roomCategories.forEach((category) => {
-            if(this.user_filters.room_categories?.includes(category.id)){
-                category.checked = true
-            }
-        })
-
-        this.filterArray.roomAttributes.forEach((attribute) => {
-            if(this.user_filters.room_attributes?.includes(attribute.id)){
-                attribute.checked = true
-            }
-        })
-
-        this.filterArray.eventTypes.forEach((eventType) => {
-            if(this.user_filters.event_types?.includes(eventType.id)){
-                eventType.checked = true
-            }
-        })
-
-        this.filterArray.areas.forEach((area) => {
-            if(this.user_filters.areas?.includes(area.id)){
-                area.checked = true
-            }
-        })
-
-        this.filterArray.rooms.forEach((room) => {
-            if(this.user_filters.rooms?.includes(room.id)){
-                room.checked = true
-            }
-        })
-
+        this.initFilter()
+    },
+    updated() {
+        this.initFilter()
     },
     data() {
         return {
@@ -438,38 +401,7 @@ export default {
                     showAdjoiningRooms: false,
                     allDayFree: false
                 },
-                eventAttributes: {
-                    isLoud: {
-                        name: 'laut',
-                        value: 'isLoud',
-                        checked: !!this.user_filters.is_loud
-                    },
-                    isNotLoud: {
-                        name: 'nicht laut',
-                        value: 'isNotLoud',
-                        checked: !!this.user_filters.is_not_loud
-                    },
-                    adjoiningNotLoud: {
-                        name: 'ohne laute Nebenveranstaltung',
-                        value: 'adjoiningNotLoud',
-                        checked: !!this.user_filters.adjoining_not_loud
-                    },
-                    hasAudience: {
-                        name: 'Mit Publikum',
-                        value: 'hasAudience',
-                        checked: !!this.user_filters.has_audience
-                    },
-                    hasNoAudience: {
-                        name: 'ohne Publikum',
-                        value: 'hasNoAudience',
-                        checked: !!this.user_filters.has_no_audience
-                    },
-                    adjoiningNoAudience: {
-                        name: 'ohne Nebenveranstaltung mit Publikum',
-                        value: 'adjoiningNoAudience',
-                        checked: !!this.user_filters.adjoining_no_audience
-                    },
-                },
+                eventAttributes: {},
             },
             saving: false,
         }
@@ -617,6 +549,102 @@ export default {
                 roomCategoryIds: this.arrayToIds(this.filterArray.roomCategories)
             }
         },
+        initFilter(){
+            this.filterArray.rooms = this.filterOptions.rooms
+            this.filterArray.areas = this.filterOptions.areas
+            this.filterArray.roomCategories = this.filterOptions.roomCategories
+            this.filterArray.roomAttributes = this.filterOptions.roomAttributes
+            this.filterArray.eventTypes = this.filterOptions.eventTypes
+            this.setCheckedFalse(this.filterArray.rooms)
+            this.setCheckedFalse(this.filterArray.areas)
+            this.setCheckedFalse(this.filterArray.roomCategories)
+            this.setCheckedFalse(this.filterArray.roomAttributes)
+            this.setCheckedFalse(this.filterArray.eventTypes)
+
+
+            this.filterArray.roomCategories.forEach((category) => {
+                if(this.user_filters.room_categories?.includes(category.id)){
+                    category.checked = true;
+                    category.value = 'room_categories'
+                } else {
+                    category.checked = false
+                    category.value = 'room_categories'
+                }
+            })
+
+            this.filterArray.roomAttributes.forEach((attribute) => {
+                if(this.user_filters.room_attributes?.includes(attribute.id)){
+                    attribute.checked = true
+                    attribute.value = 'room_attributes'
+                } else {
+                    attribute.checked = false
+                    attribute.value = 'room_attributes'
+                }
+            })
+
+            this.filterArray.eventTypes.forEach((eventType) => {
+                if(this.user_filters.event_types?.includes(eventType.id)){
+                    eventType.checked = true
+                    eventType.value = 'event_types'
+                } else {
+                    eventType.checked = false
+                    eventType.value = 'event_types'
+                }
+            })
+
+            this.filterArray.areas.forEach((area) => {
+                if(this.user_filters.areas?.includes(area.id)){
+                    area.checked = true
+                    area.value = 'areas'
+                } else {
+                    area.checked = false
+                    area.value = 'areas'
+                }
+            })
+
+            this.filterArray.rooms.forEach((room) => {
+                if(this.user_filters.rooms?.includes(room.id)){
+                    room.checked = true
+                    room.value = 'rooms'
+                } else {
+                    room.checked = false
+                    room.value = 'rooms'
+                }
+            })
+
+            this.filterArray.eventAttributes = {
+                isLoud: {
+                    checked: this.user_filters.is_loud,
+                    value: 'is_loud',
+                    name: 'Laut'
+                },
+                isNotLoud: {
+                    checked: this.user_filters.is_not_loud,
+                    value: 'is_not_loud',
+                    name: 'nicht laut',
+                },
+                adjoiningNoAudience: {
+                    checked: this.user_filters.adjoining_no_audience,
+                    value: 'adjoining_no_audience',
+                    name: 'ohne Nebenveranstaltung mit Publikum',
+                },
+                adjoiningNotLoud: {
+                    checked: this.user_filters.adjoining_not_loud,
+                    value: 'adjoining_not_loud',
+                    name: 'ohne laute Nebenveranstaltung',
+                },
+                hasAudience: {
+                    checked: this.user_filters.has_audience,
+                    value: 'has_audience',
+                    name: 'Mit Publikum',
+                },
+                hasNoAudience: {
+                    checked: this.user_filters.has_no_audience,
+                    value: 'has_no_audience',
+                    name: 'ohne Publikum',
+                },
+            }
+        },
         getRoute(pathName) {
             switch (pathName) {
                 case 'dashboard':
@@ -679,41 +707,36 @@ export default {
             })
 
             if (this.filterArray.eventAttributes.isLoud.checked)
-                activeFiltersArray.push({name: "Laute Termine"})
+                activeFiltersArray.push({name: "Laute Termine", value: 'isLoud', user_filter_key: 'is_loud'})
 
             if (this.filterArray.eventAttributes.isNotLoud.checked)
-                activeFiltersArray.push({name: "Ohne laute Termine"})
+                activeFiltersArray.push({name: "Ohne laute Termine", value: 'isNotLoud', user_filter_key: 'is_not_loud'})
 
             if (this.filterArray.eventAttributes.adjoiningNoAudience.checked)
-                activeFiltersArray.push({name: "Ohne Nebenveranstaltung mit Publikum"})
+                activeFiltersArray.push({name: "Ohne Nebenveranstaltung mit Publikum", value: 'adjoiningNoAudience', user_filter_key: 'adjoining_no_audience' })
 
             if (this.filterArray.eventAttributes.adjoiningNotLoud.checked)
-                activeFiltersArray.push({name: "Ohne laute Nebenveranstaltung"})
+                activeFiltersArray.push({name: "Ohne laute Nebenveranstaltung", value: 'adjoiningNotLoud', user_filter_key: 'adjoining_not_loud'})
 
             if (this.filterArray.eventAttributes.hasAudience.checked)
-                activeFiltersArray.push({name: "Mit Publikum"})
+                activeFiltersArray.push({name: "Mit Publikum", value: 'hasAudience', user_filter_key: 'has_audience'})
 
             if (this.filterArray.eventAttributes.hasNoAudience.checked)
-                activeFiltersArray.push({name: "Ohne Publikum"})
+                activeFiltersArray.push({name: "Ohne Publikum", value: 'hasNoAudience', user_filter_key: 'has_no_audience'})
 
             if (this.filterArray.roomFilters.showAdjoiningRooms)
-                activeFiltersArray.push({name: "Nebenräume anzeigen"})
+                activeFiltersArray.push({name: "Nebenräume anzeigen", value: 'showAdjoiningRooms', user_filter_key: 'show_adjoining_rooms'})
 
             return activeFiltersArray
         }
     },
     watch: {
-        filterArray: {
-            handler() {
-                this.$emit('filtersChanged', this.activeFilters)
-            },
-            deep: true
-        },
         atAGlance: {
             handler() {
                 this.reloadChanges()
             }
-        }
+        },
+
     }
 }
 </script>

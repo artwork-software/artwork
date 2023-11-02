@@ -1,7 +1,7 @@
 <template>
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2">
         <div class="inline-flex items-center">
-            <date-picker-component v-if="dateValue" :dateValueArray="dateValue"></date-picker-component>
+            <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
             <div>
                 <div>
                     <button  class="ml-2 -mt-2 text-black" @click="previousTimeRange">
@@ -143,6 +143,8 @@ export default {
                     }
                 });
             });
+
+
 
             Inertia.post('/shifts/commit', { events: filteredEvents }, {
                 onSuccess: () => {

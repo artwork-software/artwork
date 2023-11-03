@@ -86,7 +86,7 @@
                         </Link>
                     </template>
                     <template #event="{ event, view}">
-                        <div class="text-left centered mt-3 cursor-pointer" :class="event.event_type.svg_name">
+                        <div class="text-left centered mt-3 cursor-pointer" :class="event.event_type?.svg_name">
                             <div class="flex w-full justify-between items-center">
                                 <div v-if="!project" class="flex eventHeader truncate mx-1">
                                     <div v-if="event.event_type.abbreviation" class="mr-1">
@@ -613,16 +613,16 @@ export default {
                         end: event?.end,
                     }
                 })
-                    .then(response => this.roomCollisions = response.data);
+                    .then(response => this.roomCollisions = response?.data);
             }
             this.selectedEvent = event;
             if (this.isFullscreen) {
                 document.exitFullscreen();
                 this.isFullscreen = false;
             }
-            this.selectedEvent.room_id = event.roomId;
-            this.selectedEvent.eventTypeId = event.event_type.id;
-            this.selectedEvent.projectId = event.project_id;
+            this.selectedEvent.room_id = event?.roomId;
+            this.selectedEvent.eventTypeId = event?.event_type?.id;
+            this.selectedEvent.projectId = event?.project_id;
             this.createEventComponentIsVisible = true;
         },
         openEventsWithoutRoomComponent() {

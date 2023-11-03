@@ -282,6 +282,18 @@
                             </div>
 
                             <!--    Time    -->
+                            <SwitchGroup as="div" class="flex items-center">
+                                <Switch v-model="event.allDay"
+                                        :class="[event.allDay ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                            <span aria-hidden="true"
+                                  :class="[event.allDay ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                                </Switch>
+                                <SwitchLabel as="span" class="ml-3 text-sm">
+                            <span :class="[event.allDay ? 'xsDark' : 'xsLight', 'text-sm']">
+                                Ganztägig
+                            </span>
+                                </SwitchLabel>
+                            </SwitchGroup>
                             <div class="flex py-1 flex-col sm:flex-row align-baseline">
                                 <div class="sm:w-1/2">
                                     <label for="startDate" class="xsLight">Start</label>
@@ -294,6 +306,7 @@
                                                required
                                                class="border-gray-300 border-2  disabled:border-none flex-grow"/>
                                         <input v-model="event.startTime"
+                                               v-if="!event.allDay"
                                                id="changeStartTime"
                                                @change="checkChanges()"
                                                type="time"
@@ -314,6 +327,7 @@
                                                :disabled="!event.canEdit"
                                                class="border-gray-300 border-2 disabled:border-none flex-grow"/>
                                         <input v-model="event.endTime"
+                                               v-if="!event.allDay"
                                                id="changeEndTime"
                                                @change="checkChanges()"
                                                type="time"
@@ -460,7 +474,7 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems
+    MenuItems, Switch, SwitchGroup, SwitchLabel
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
@@ -473,6 +487,9 @@ export default {
     name: 'EventsWithoutRoomComponent',
     mixins: [Permissions],
     components: {
+        Switch,
+        SwitchGroup,
+        SwitchLabel,
         Input,
         JetDialogModal,
         XIcon,
@@ -520,6 +537,7 @@ export default {
             canEdit: false,
             deleteComponentVisible: false,
             eventToDelete: null,
+            allDayEvent: false
         }
     },
 
@@ -707,6 +725,9 @@ export default {
                 eventTypeId: event.eventTypeId,
                 projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
                 creatingProject: event.creatingProject,
+                isOption: false,
+                allDay: event.allDay,
+                is_series: false
             };
         },
     },

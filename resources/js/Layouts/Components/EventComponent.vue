@@ -22,10 +22,10 @@
                         Bitte beachte, dass du Vor- und Nachbereitungszeit einplanst.
                     </h2>
                     <div v-else class="flex items-center">
-                        erstellt von <img v-if="this.event.created_by" :data-tooltip-target="this.event.created_by.id"
-                                          :src="this.event.created_by.profile_photo_url"
-                                          :alt="this.event.created_by.last_name"
-                                          class="ml-2 my-auto ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                        erstellt von
+                        <div v-if="this.event.created_by">
+                            <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="7" width="7" class="ml-2"/>
+                        </div>
                         <div class="xsLight ml-3" v-else>
                             gelöschte Nutzer:in
                         </div>
@@ -121,11 +121,8 @@
                     </div>
                     <div v-if="this.event.created_by" class="flex items-center w-1/2">
                         <p class="truncate xsLight subpixel-antialiased max-w-60">
-                            erstellt von {{ this.event.created_by.first_name }}
-                            {{ this.event.created_by.last_name }}</p> <img
-                        :data-tooltip-target="this.event.created_by.id" :src="this.event.created_by.profile_photo_url"
-                        :alt="this.event.created_by.last_name"
-                        class="ml-4 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                            erstellt von <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="9" width="9" class="ml-2"/>
+                        </p>
                     </div>
                 </div>
                 <div v-if="!canEdit" class="my-2">
@@ -669,11 +666,13 @@ import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue"
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions],
     components: {
+        UserPopoverTooltip,
         NewUserToolTip,
         ChangeAllSubmitModal,
         ListboxLabel,

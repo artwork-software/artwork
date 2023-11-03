@@ -2457,7 +2457,7 @@ class ProjectController extends Controller
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         } else {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-            $group = Project::find($request->selectedGroup);
+            $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
         }
         $oldProjectName = $project->name;

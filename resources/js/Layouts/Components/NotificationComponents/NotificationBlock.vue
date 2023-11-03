@@ -306,7 +306,10 @@ export default {
             })
         },
         deleteEvent() {
-            this.$inertia.delete(route('events.delete', this.notification.data?.eventId), {
+            this.checkNotificationKey();
+            this.$inertia.post(route('events.delete.by.notification', this.notification.data?.eventId), {
+                notificationKey: this.notification.data?.notificationKey
+            }, {
                 preserveScroll: true,
                 preserveState: true
             })
@@ -318,7 +321,6 @@ export default {
         },
         checkNotificationKey(key){
             return key !== null || key !== '' || key.length > 0;
-
         },
         openProjectShift(projectId, eventId, shiftId){
             window.location.href = route('projects.show.shift', projectId) + '?eventId=' + eventId + '&shiftId=' + shiftId;

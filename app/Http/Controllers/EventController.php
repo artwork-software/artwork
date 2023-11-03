@@ -1489,6 +1489,9 @@ class EventController extends Controller
     {
         $this->authorize('delete', $event);
 
+
+
+
         if(!empty($event->project_id)){
             $eventProject = $event->project()->first();
             $projectHistory = new NewHistoryService('App\Models\Project');
@@ -1499,61 +1502,34 @@ class EventController extends Controller
 
         broadcast(new OccupancyUpdated())->toOthers();
         $event->delete();
+    }
 
-        // create and send notification to event owner
-        $notificationTitle = 'Termin abgesagt';
-        $broadcastMessage = [
-            'id' => rand(1, 1000000),
-            'type' => 'error',
-            'message' => $notificationTitle
-        ];
-        $room = $event->room()->first();
-        $project = $event->project()->first();
-        $projectManagers = [];
-        if(!empty($project)){
-            $projectManagers = $project->managerUsers()->get();
+    public function destroyByNotification(Event $event, Request $request){
+        $this->authorize('delete', $event);
+
+        if(!empty($event->project_id)){
+            $eventProject = $event->project()->first();
+            $projectHistory = new NewHistoryService('App\Models\Project');
+            $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
         }
-        $notificationDescription = [
-            1 => [
-                'type' => 'link',
-                'title' => $room->name,
-                'href' => route('rooms.show', $room->id)
-            ],
-            2 => [
-                'type' => 'string',
-                'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
-                'href' => null
-            ],
-            3 => [
-                'type' => 'link',
-                'title' => $project ? $project->name : '',
-                'href' => $project ? route('projects.show.calendar', $project->id) : null
-            ],
-            4 => [
-                'type' => 'string',
-                'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
-                'href' => null
-            ]
-        ];
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('blue');
-        $this->notificationService->setPriority(1);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->setRoomId($event->room_id);
-        $this->notificationService->setEventId($event->id);
-        $this->notificationService->setProjectId($event->project_id);
-        $this->notificationService->setButtons(['answer']);
-        foreach ($projectManagers as $projectManager){
-            if($projectManager->id === $event->creator){
-                continue;
+
+        if(!empty($request->notificationKey)){
+            $notifications = DatabaseNotification::query()
+                ->whereJsonContains("data->notificationKey", $request->notificationKey)
+                ->get();
+
+            foreach ($notifications as $notification){
+                $notification->delete();
             }
-            $this->notificationService->setNotificationTo($projectManager);
-            $this->notificationService->createNotification();
         }
-        $this->notificationService->setNotificationTo($event->creator);
-        $this->notificationService->createNotification();
+
+        if(!empty($event)){
+            $event->subEvents()->delete();
+
+            broadcast(new OccupancyUpdated())->toOthers();
+            $event->delete();
+        }
+
     }
 
     /**

@@ -315,6 +315,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
+    Route::post('/events/{event}/by/notification', [EventController::class, 'destroyByNotification'])->name('events.delete.by.notification');
     Route::delete('/events/{event}/shifts', [EventController::class, 'destroy_shifts'])->name('events.shifts.delete');
 
     Route::put('/event/requests/{event}',[EventController::class, 'acceptEvent'])->name('events.accept');

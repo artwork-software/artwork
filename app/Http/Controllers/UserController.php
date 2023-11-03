@@ -125,7 +125,7 @@ class UserController extends Controller
         $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
         $availabilityData = $this->getAvailabilityData($user, request('month'));
 
-        if(\request('startDate') && \request('endDate')){
+        /*if(\request('startDate') && \request('endDate')){
 
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
@@ -141,7 +141,7 @@ class UserController extends Controller
             ->whereHas('shifts', function ($query) {
                 $query->whereNotNull('shifts.id');
             })
-            ->get();
+            ->get();*/
 
         return inertia('Users/UserShiftPlanPage', [
             //needed for UserEditHeader

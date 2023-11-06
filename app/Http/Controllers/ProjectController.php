@@ -151,7 +151,7 @@ class ProjectController extends Controller
         return inertia('Projects/ProjectManagement', [
             'projects' => ProjectIndexShowResource::collection($projects)->resolve(),
             'states' => ProjectStates::all(),
-            'projectGroups' => Project::where('is_group', 1)->get(),
+            'projectGroups' => Project::where('is_group', 1)->with('groups')->get(),
 
             'users' => User::all(),
 
@@ -2457,7 +2457,7 @@ class ProjectController extends Controller
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         } else {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-            $group = Project::find($request->selectedGroup);
+            $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
         }
         $oldProjectName = $project->name;

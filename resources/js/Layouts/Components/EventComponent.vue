@@ -7,7 +7,7 @@
                  class="-ml-6 -mt-8 mb-4"/>
             <XIcon @click="closeModal(false)"
                    class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"/> 
+                   aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
                 <div v-if="this.isRoomAdmin || this.hasAdminRole()">
@@ -219,15 +219,16 @@
                     </div>
                 </div>
                 <!-- Serien Termin -->
-                <div v-if="!this.event">
+                <div v-if="!event || event?.is_series">
                     <SwitchGroup as="div" class="flex items-center my-3">
                         <Switch v-model="series"
-                                :class="[series ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                                :disabled="event?.is_series"
+                                :class="[series && !event?.is_series ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
                             <span aria-hidden="true"
-                                  :class="[series ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                                  :class="[series? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                         </Switch>
                         <SwitchLabel as="span" class="ml-3 text-sm">
-                            <span :class="[series ? 'xsDark' : 'xsLight', 'text-sm']">
+                            <span :class="[series && !event?.is_series ? 'xsDark' : 'xsLight', 'text-sm']">
                                 Wiederholungstermin
                             </span>
                         </SwitchLabel>
@@ -235,7 +236,7 @@
 
                     <div v-show="series">
                         <div class="grid grid-cols-2 gap-2 mb-2">
-                            <Listbox as="div" v-model="selectedFrequency">
+                            <Listbox :disabled="event?.is_series" as="div" v-model="selectedFrequency">
                                 <div class="relative mt-2">
                                     <ListboxButton
                                         class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
@@ -271,13 +272,15 @@
                             </Listbox>
                             <div class="mt-2">
                                 <div class="w-full flex">
-                                    <input v-model="seriesEndDate"
-                                           id="endDate"
-                                           :type="seriesEndDate ? 'date' : 'text'"
-                                           placeholder="Enddatum Wiederholungstermin"
-                                           required
-                                           @focus="input => input.target.type = 'date'"
-                                           class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
+                                    <input
+                                        :disabled="event?.is_series"
+                                        v-model="seriesEndDate"
+                                        id="endDate"
+                                        :type="seriesEndDate ? 'date' : 'text'"
+                                        placeholder="Enddatum Wiederholungstermin"
+                                        required
+                                        @focus="input => input.target.type = 'date'"
+                                        class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
                                 </div>
                             </div>
                         </div>

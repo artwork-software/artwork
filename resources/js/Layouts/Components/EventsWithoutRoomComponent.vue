@@ -207,7 +207,9 @@
                                     <p class="text-xs text-red-800">{{ event.error?.end?.join('. ') }}</p>
                                 </div>
                             </div>
-
+                            <!-- Serien Termin -->
+                            <div v-if="event?.is_series" class="xsLight mt-2">Termin ist Teil eines Wiederholungstermines</div>
+                            <div v-if="event?.is_series" class="xsLight mb-2">Turnus: {{ event.selectedFrequencyName }} bis zum {{ convertDateFormat(event.series.end_date) }}</div>
                             <!--    Room    -->
                             <div class="py-1">
                                 <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!event.canEdit">
@@ -558,7 +560,25 @@ export default {
             eventToDelete: null,
             allDayEvent: false,
             showProjectInfo: false,
-            firstCall: true
+            firstCall: true,
+            frequencies: [
+                {
+                    id: 1,
+                    name: 'Täglich'
+                },
+                {
+                    id: 2,
+                    name: 'Wöchentlich'
+                },
+                {
+                    id: 3,
+                    name: 'Alle 2 Wochen'
+                },
+                {
+                    id: 4,
+                    name: 'Monatlich'
+                }
+            ]
         }
     },
 
@@ -587,8 +607,6 @@ export default {
         },
     },
     computed: {
-        console: () => console,
-
         computedEventsWithoutRoom: function () {
             this.eventsWithoutRoom.forEach((event) => {
                 event.startDate = new Date(event.start).format('YYYY-MM-DD');
@@ -599,6 +617,7 @@ export default {
                 //setting show project info for every event on first rendering
                 if (this.firstCall) {
                     event.showProjectInfo = (event.projectId !== null);
+                    event.selectedFrequencyName = this.getFrequencyName(event.series?.frequency_id);
                 }
             })
             this.firstCall = false;
@@ -608,6 +627,19 @@ export default {
     },
 
     methods: {
+        convertDateFormat(dateString) {
+            const parts = dateString.split('-');
+            return parts[2] + "." + parts[1] + "." +parts[0];
+        },
+        getFrequencyName(frequencyId) {
+            const matchedFrequency = this.frequencies.find(frequency => frequency.id === frequencyId);
+
+            if (matchedFrequency) {
+                return matchedFrequency.name;
+            } else {
+                return 'Kein Turnus ausgewählt';
+            }
+        },
         onLinkingProject(project, event) {
             event.projectId = project.id;
             event.project = project;
@@ -763,7 +795,7 @@ export default {
                 creatingProject: event.creatingProject,
                 isOption: false,
                 allDay: event.allDay,
-                is_series: false
+                is_series: event.series ? event.series : false
             };
         },
     },

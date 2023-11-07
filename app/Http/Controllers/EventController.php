@@ -396,7 +396,7 @@ class EventController extends Controller
         return new CalendarEventResource($firstEvent);
     }
 
-    private function createSeriesEvent($startDate,$endDate, $request, $series, $projectId){
+    private function createSeriesEvent($startDate, $endDate, $request, $series, $projectId){
         $event = Event::create([
             'name' => $request->title,
             'eventName' => $request->eventName,
@@ -412,6 +412,7 @@ class EventController extends Controller
             'project_id' => $projectId ? $projectId : null,
             'is_series' => true,
             'series_id' => $series->id,
+            'allDay' => $request->allDay
         ]);
     }
 

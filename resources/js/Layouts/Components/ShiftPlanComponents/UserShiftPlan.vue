@@ -135,11 +135,9 @@ export default {
             return this.rooms.find(room => room.id === roomId);
         },
         updateTimes() {
-            Inertia.reload({
-                data: {
-                    startDate: this.dateValue[0],
-                    endDate: this.dateValue[1],
-                }
+            Inertia.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
+                start_date: this.dateValue[0],
+                end_date: this.dateValue[1],
             })
         },
         calculateShiftDuration(events) {

@@ -1511,8 +1511,8 @@ class EventController extends Controller
         $notificationDescription = [
             1 => [
                 'type' => 'link',
-                'title' => $room->name,
-                'href' => route('rooms.show', $room->id)
+                'title' => $room ? $room->name : '',
+                'href' => $room ? route('rooms.show', $room->id) : null
             ],
             2 => [
                 'type' => 'string',

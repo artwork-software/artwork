@@ -595,7 +595,7 @@ export default {
             } else {
                 this.type = type;
                 this.deleteTitle = 'Untertermin Löschen?';
-                this.deleteDescription = 'Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest?';
+                this.deleteDescription = 'Bist du sicher, dass du die ausgewählten Belegungen löschen möchtest?';
             }
             this.eventToDelete = eventId
             this.deleteComponentVisible = true;

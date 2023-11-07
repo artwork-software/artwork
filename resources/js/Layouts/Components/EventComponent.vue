@@ -216,10 +216,10 @@
                     </div>
                 </div>
                 <!-- Serien Termin -->
-                <div v-if="!this.event">
+                <div v-if="!event">
                     <SwitchGroup as="div" class="flex items-center my-3">
                         <Switch v-model="series"
-                                :class="[series ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                                :class="[series ? 'bg-indigo-600 cursor-pointer' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
                             <span aria-hidden="true"
                                   :class="[series ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                         </Switch>
@@ -229,10 +229,9 @@
                             </span>
                         </SwitchLabel>
                     </SwitchGroup>
-
                     <div v-show="series">
                         <div class="grid grid-cols-2 gap-2 mb-2">
-                            <Listbox as="div" v-model="selectedFrequency">
+                            <Listbox :disabled="event?.is_series" as="div" v-model="selectedFrequency">
                                 <div class="relative mt-2">
                                     <ListboxButton
                                         class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
@@ -268,18 +267,22 @@
                             </Listbox>
                             <div class="mt-2">
                                 <div class="w-full flex">
-                                    <input v-model="seriesEndDate"
-                                           id="endDate"
-                                           :type="seriesEndDate ? 'date' : 'text'"
-                                           placeholder="Enddatum Wiederholungstermin"
-                                           required
-                                           @focus="input => input.target.type = 'date'"
-                                           class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
+                                    <input
+                                        :disabled="event?.is_series"
+                                        v-model="seriesEndDate"
+                                        id="endDate"
+                                        :type="seriesEndDate ? 'date' : 'text'"
+                                        placeholder="Enddatum Wiederholungstermin"
+                                        required
+                                        @focus="input => input.target.type = 'date'"
+                                        class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div v-else-if="event?.is_series" class="xsLight mt-2">Termin ist Teil eines Wiederholungstermines</div>
+                <div v-if="event?.is_series" class="xsLight mb-2">Turnus: {{ selectedFrequency.name }} bis zum {{ convertDateFormat(seriesEndDate) }}</div>
                 <!--    Room    -->
                 <div class="pt-1 mb-4" v-if="canEdit">
                     <Listbox as="div" v-model="selectedRoom" id="room" v-if="canEdit && selectedRoom">
@@ -828,6 +831,10 @@ export default {
         },
     },
     methods: {
+        convertDateFormat(dateString) {
+            const parts = dateString.split('-');
+            return parts[2] + "." + parts[1] + "." +parts[0];
+        },
         checkButtonDisabled() {
             if (this.series) {
                 if (this.seriesEndDate) {

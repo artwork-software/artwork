@@ -30,7 +30,7 @@
                     </div>
                 </div>
 
-                <div class="flex  w-full flex-wrap mt-4" v-if="showProjectHistoryTab">
+                <div class="flex  w-full flex-wrap mt-4 max-h-96 overflow-x-scroll" v-if="showProjectHistoryTab">
                     <div v-for="(historyItem,index) in project_history">
                         <div class="flex w-full my-1" v-if="historyItem?.changes !== null && historyItem.changes[0]?.type === 'project' || historyItem.changes[0]?.type === 'public_changes'">
                             <div class="flex w-full">
@@ -49,7 +49,7 @@
                     </div>
                 </div>
 
-                <div class="flex w-full flex-wrap mt-4 max-h-96" v-if="showBudgetHistoryTab">
+                <div class="flex w-full flex-wrap mt-4 max-h-96 overflow-x-scroll" v-if="showBudgetHistoryTab">
                     <div class="flex w-full my-1" v-for="historyItem in project_history">
                         <div v-if="historyItem.changes[0].type === 'budget'" class="flex w-full ">
                             <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">

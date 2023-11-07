@@ -471,8 +471,8 @@ export default {
                 this.selectedProject = {id: this.project.id, name: this.project.name};
             }
 
-            const start = dayjs(this.event.start);
-            const end = dayjs(this.event.end);
+            const start = dayjs(this.event?.start);
+            const end = dayjs(this.event?.end);
 
             this.event.startDate = start?.format('YYYY-MM-DD');
             this.event.startTime = start?.format('HH:mm');
@@ -626,14 +626,16 @@ export default {
                 roomId: event.room_id,
                 description: event.description,
                 audience: event.audience,
-                isLoud: event.is_loud,
+                isLoud: event.is_loud ?? false,
                 isOption:this.isOption,
                 eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
                 projectId: !this.creatingProject ? this.selectedProject?.id : null,
                 projectName: this.creatingProject ? event.projectName : '',
                 eventTypeId: event.eventTypeId,
                 projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
-                creatingProject: this.creatingProject
+                creatingProject: this.creatingProject,
+                allDay: false,
+                is_series: false
             };
         },
     },

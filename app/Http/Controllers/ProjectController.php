@@ -2219,11 +2219,7 @@ class ProjectController extends Controller
             ? SubPositionRow::find(request('selectedRow'))
             : null;
 
-        $templates = null;
-
-        if(request('useTemplates')){
-            $templates = Table::where('is_template', true)->get();
-        }
+        $templates = Table::where('is_template', true)->get();
 
         $selectedSumDetail = null;
 

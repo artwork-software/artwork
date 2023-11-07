@@ -987,9 +987,12 @@ export default {
                 })
                 .then(response => this.collisionCount = response.data);
         },
+        checkYear(date) {
+            return (parseInt(date.split('-')[0]) > 1900);
+        },
         updateTimes() {
             if (this.startDate) {
-                if (!this.endDate) {
+                if (!this.endDate && this.checkYear(this.startDate)) {
                     this.endDate = this.startDate;
                 }
                 if (this.startTime) {

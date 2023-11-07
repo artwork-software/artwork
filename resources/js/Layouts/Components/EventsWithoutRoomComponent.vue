@@ -445,8 +445,8 @@
                                            class="text-error mr-1 line-through">
                                             {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }},
                                         </p>
-                                    {{ event.startDate.toString().substring(10, 8) }}.{{ event.startDate.toString().substring(7, 5) }}.{{ event.startDate.toString().substring(4, 0) }},
-                                    {{ event.startTime }} - {{ event.endTime }}
+                                        {{ event.startDate.toString().substring(10, 8) }}.{{ event.startDate.toString().substring(7, 5) }}.{{ event.startDate.toString().substring(4, 0) }},
+                                        {{ event.allDay ? 'Ganztägig' : event.startTime + "-" + event.endTime }}
                                     </div>
                                 </div>
                                 <div v-else>
@@ -456,9 +456,9 @@
                                     </p>
                                     <div class="xsDark">
                                     {{ event.startDate.toString().substring(10, 8) }}.{{ event.startDate.toString().substring(7, 5) }}.{{ event.startDate.toString().substring(4, 0) }},
-                                    {{ event.startTime }} -
+                                    {{ event.allDay ? 'Ganztägig' : event.startTime }} -
                                     {{ event.endDate.toString().substring(10, 8) }}.{{ event.endDate.toString().substring(7, 5) }}.{{ event.endDate.toString().substring(4, 0) }},
-                                    {{ event.endTime }}
+                                    {{ event.allDay ? 'Ganztägig' : event.endTime }}
                                     </div>
                                 </div>
                             </div>

@@ -102,13 +102,13 @@
                 </Menu>
                 <div class="mt-2 flex flex-wrap">
                     <div v-for="(category, index) in currentCategories">
-                        <BaseFilterTag v-if="currentCategories.includes(category)"  :filter="category.name" @remove-filter="removeCategoryFromRoom(index)" class="w-fit" />
+                        <BaseFilterTag v-if="currentCategories.includes(category)"  :filter="category" @remove-filter="removeCategoryFromRoom(index)" class="w-fit" />
                     </div>
                     <div v-for="(adjoining_room, index) in currentAdjoiningRooms">
-                        <BaseFilterTag v-if="currentAdjoiningRooms.includes(adjoining_room)"  :filter="adjoining_room.name" @remove-filter="removeAdjoiningRoom(index)" class="w-fit" />
+                        <BaseFilterTag v-if="currentAdjoiningRooms.includes(adjoining_room)"  :filter="adjoining_room" @remove-filter="removeAdjoiningRoom(index)" class="w-fit" />
                     </div>
                     <div v-for="(attribute, index) in currentAttributes">
-                        <BaseFilterTag v-if="currentAttributes.includes(attribute)"  :filter="attribute.name" @remove-filter="removeAttributeFromRoom(index)" class="w-fit" />
+                        <BaseFilterTag v-if="currentAttributes.includes(attribute)"  :filter="attribute" @remove-filter="removeAttributeFromRoom(index)" class="w-fit" />
                     </div>
                 </div>
             </div>

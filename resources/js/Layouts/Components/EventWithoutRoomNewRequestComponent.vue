@@ -471,8 +471,8 @@ export default {
                 this.selectedProject = {id: this.project.id, name: this.project.name};
             }
 
-            const start = dayjs(this.event?.start);
-            const end = dayjs(this.event?.end);
+            const start = dayjs(this.event.start);
+            const end = dayjs(this.event.end);
 
             this.event.startDate = start?.format('YYYY-MM-DD');
             this.event.startTime = start?.format('HH:mm');
@@ -510,7 +510,6 @@ export default {
             this.checkCollisions(event)
         },
         checkTypeChange(event) {
-
             this.checkCollisions(event);
         },
 

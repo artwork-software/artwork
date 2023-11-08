@@ -6,7 +6,6 @@ use App\Builders\EventBuilder;
 use App\Casts\TimeAgoCast;
 use App\Enums\NotificationConstEnum;
 use App\Events\OccupancyUpdated;
-use App\Http\Requests\EventAcceptionRequest;
 use App\Http\Requests\EventIndexRequest;
 use App\Http\Requests\EventStoreRequest;
 use App\Http\Requests\EventUpdateRequest;
@@ -14,28 +13,19 @@ use App\Http\Resources\CalendarEventCollectionResource;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderShiftResource;
 use App\Http\Resources\TaskDashboardResource;
-use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\UserIndexResource;
-use App\Http\Resources\UserShowResource;
-use App\Models\Area;
-use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\Project;
 use App\Models\Room;
-use App\Models\RoomAttribute;
-use App\Models\RoomCategory;
-use App\Models\Scheduling;
 use App\Models\SeriesEvents;
 use App\Models\ServiceProvider;
 use App\Models\Shift;
-use App\Models\SubEvents;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
@@ -47,15 +37,13 @@ use App\Support\Services\NotificationService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
-use Illuminate\Notifications\Notification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Response;
-use JetBrains\PhpStorm\NoReturn;
 
 class EventController extends Controller
 {
@@ -97,14 +85,14 @@ class EventController extends Controller
         $events = [];
         if(!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
             $showCalendar = $calendarController->createCalendarData('individual', null, null, $this->userCalendarFilter->start_date, $this->userCalendarFilter->end_date);
-            $eventsOfDay = $calendarController->getEventsOfDay();
             $events = new CalendarEventCollectionResourceModel(
                 areas: $showCalendar['filterOptions']['areas'],
                 projects: $showCalendar['filterOptions']['projects'],
                 eventTypes: $showCalendar['filterOptions']['eventTypes'],
                 roomCategories: $showCalendar['filterOptions']['roomCategories'],
                 roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
-                events: $eventsOfDay,
+                events: Collection::make(CalendarEventResource::collection($calendarController->getEventsOfDay())
+                    ->resolve()),
                 filter: Filter::where('user_id', Auth::id())->get(),
             );
         }else{

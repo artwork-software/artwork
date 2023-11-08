@@ -125,6 +125,7 @@ class EventController extends Controller
             $eventsAtAGlance = $calendarController->getEventsAtAGlance($startDate, $endDate);
         }
 
+
         return inertia('Events/EventManagement', [
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'calendar' => $showCalendar['roomsWithEvents'],
@@ -256,6 +257,7 @@ class EventController extends Controller
      */
     public function showDashboardPage(Request $request): Response
     {
+        $event = null;
         $tasks = Task::query()
             ->where('done', false)
             ->where(function ($query) {
@@ -285,6 +287,9 @@ class EventController extends Controller
         $todayDate = Carbon::now()->locale('de')->isoFormat('dddd, DD.MM.YYYY');
 
         $notification = $user->notifications()->select(['data->priority as priority', 'data'])->whereDate('created_at', Carbon::now()->format('Y-m-d'))->withCasts(['created_at' => TimeAgoCast::class]);
+        if(request('openEditEvent')){
+            $event = Event::find(request('eventId'));
+        }
 
         return inertia('Dashboard', [
             'tasks' => TaskDashboardResource::collection($tasks)->resolve(),
@@ -293,6 +298,9 @@ class EventController extends Controller
             'eventsOfDay' => $userEvents,
             'notificationOfToday' => $notification->get()->groupBy('priority'),
             'notificationCount' => $notification->count(),
+            'event' => $event !== null ? new CalendarEventResource($event) : null,
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'rooms' => Room::all()
         ]);
     }
 

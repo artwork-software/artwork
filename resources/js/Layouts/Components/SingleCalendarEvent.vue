@@ -521,7 +521,6 @@ export default {
         // calculates if there is unneeded height for each event
         heightSubtraction(event) {
             let heightSubtraction = 0;
-            console.log(event);
             if (this.$page.props.user.calendar_settings.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)) {
                 heightSubtraction += 17;
             }

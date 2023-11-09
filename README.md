@@ -5,6 +5,68 @@
 Artwork is a project organization tool that allows you to schedule projects with multiple events, tasks, and responsibilities. It helps you keep track of all the essential components of your projects. The project can be run using Laravel Sail. A light-weight command-line interface for interacting with Laravel's default Docker development environment.
 Consult the [official documentation](https://laravel.com/docs/10.x/sail) for more information. 
 
+# Installation
+
+Artwork supports to be installed as a standalone application for dedicated servers or as a multi container app powered by docker
+
+# Standalone
+
+## Prerequisites
+
+**Currently only Ubuntu is supported!**
+
+Either `root` account or a user with `sudo` rights. The installation is fully automated and without prompts.
+
+## Installation
+
+Login to your server and run ``sudo curl -fsSL https://raw.githubusercontent.com/artwork-software/artwork/dev/ubuntu-install.sh | sh``
+
+Alternatively copy the ``ubuntu-install.sh`` script to your server. No other files, like the rest of the repository, or software installations needed.
+
+Simple give the script executable permissions ``chmod +x ubuntu-install.sh``
+
+and run it ``./ubuntu-install.sh`` 
+
+What it will do:
+- Install nginx as webserver and setups up a default config. **This will override the default config. Create a backup if you have other services running**
+- Install mysql-8 and create a user account for the application and fills the database
+- Install NodeJs in version 18.x (LTS) 
+- Create a service for the queue worker
+- Setup a cronjob for the planned schedules
+- Install Soketi (global) as Pusher compatible service and daemonizes it
+- Setup and install PHP with all needed plugins
+- Install meilisearch
+- Installs Artwork itself
+
+**It is highly discouraged to run the installer multiple times as some steps are intended to be executed once.**
+
+## After installation
+
+Edit the ``.env`` file located in `/var/www/html/.env`
+
+Locate the string ``APP_URL=http://localhost`` and replace `http://localhost` with your domain. `http` or `https` are required.
+
+For e-mail support locate the following block in the same file and fill in your credentials
+````
+MAIL_HOST=
+MAIL_PORT=
+MAIL_MAILER=
+MAIL_USERNAME=Inbox-Name
+MAIL_PASSWORD=
+MAIL_ENCRYPTION=
+````
+
+
+
+### SSL
+We do not ship dummy or selfsigned certificates with the installation.
+
+SSL should be configured like you would your regular nginx instance https://nginx.org/en/docs/http/configuring_https_servers.html
+
+Soketi, the websocket service, also needs to be configured. See the official documentation https://docs.soketi.app/getting-started/ssl-configuration on how to achieve this.
+
+# Docker installation
+
 ## Prerequisites
 Laravel Sail is supported on macOS, Linux, and Windows (via [WSL2](https://learn.microsoft.com/en-us/windows/wsl/about)).
 
@@ -29,7 +91,7 @@ git clone https://github.com/artwork-software/artwork.git
 2. Access the project in the terminal and copy the .env.example file and rename it to .env
 
 ```shell
-composer install
+composer install --ignore-platform-reqs
 ```
 
 2. Now start the Docker container by running:

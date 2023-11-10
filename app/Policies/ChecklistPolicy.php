@@ -30,13 +30,11 @@ class ChecklistPolicy
     public function update(User $user, Checklist $checklist)
     {
         return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
-           // && $user->departments->intersect($checklist->departments)->isNotEmpty();
     }
 
     public function delete(User $user, Checklist $checklist)
     {
-        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value)
-            && $user->departments->intersect($checklist->departments)->isNotEmpty();
+        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
     }
 
     public function restore(User $user, Checklist $checklist)

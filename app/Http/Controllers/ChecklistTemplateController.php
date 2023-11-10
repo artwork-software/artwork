@@ -127,16 +127,8 @@ class ChecklistTemplateController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\ChecklistTemplate $checklistTemplate
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(Request $request, ChecklistTemplate $checklistTemplate)
+    public function update(Request $request, ChecklistTemplate $checklistTemplate): \Illuminate\Http\RedirectResponse
     {
-        //dd($request->task_templates);
 
         $checklistTemplate->update($request->only('name'));
 

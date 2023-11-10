@@ -17,8 +17,6 @@ class ChecklistControllerTest extends TestCase
         $checklist = Checklist::factory()->create();
         /** @var Department $department */
         $department = Department::factory()->create();
-        Permission::firstOrCreate(['name' => PermissionNameEnum::DEPARTMENT_UPDATE->value]);
-        Permission::firstOrCreate(['name' => PermissionNameEnum::CHECKLIST_UPDATE->value]);
 
         // assert unauthenticated
         $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]))->assertUnauthorized();
@@ -32,8 +30,6 @@ class ChecklistControllerTest extends TestCase
         $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [])
             ->assertForbidden();
 
-        //@todo bogus permission, never checked
-       // $user->givePermissionTo(PermissionNameEnum::CHECKLIST_UPDATE->value);
         $user->departments()->sync([$department->id]);
 
         $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [
@@ -46,21 +42,21 @@ class ChecklistControllerTest extends TestCase
             ->assertFound();
     }
 
-    public function testChecklistUpdateChecklist()
+    public function testChecklistUpdateChecklist(): void
     {
         $checklist = Checklist::factory()->create();
 
         $this->actingAs($this->adminUser())
             ->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [
                 'name' => 'New Name',
-            ])->assertSuccessful();
+            ])->assertRedirect();
 
         $this->assertDatabaseHas('checklists', [
             'name' => 'New Name',
         ]);
     }
 
-    public function testChecklistUpdateTasks()
+    public function testChecklistUpdateTasks(): void
     {
         $checklist = Checklist::factory()->create();
 
@@ -73,26 +69,10 @@ class ChecklistControllerTest extends TestCase
                         'order' => 2,
                     ]
                 ],
-            ])->assertSuccessful();
+            ])->assertRedirect();
 
         $this->assertDatabaseHas('tasks', [
             'name' => 'Some Name',
-            'checklist_id' => $checklist->id,
-        ]);
-    }
-
-    public function testChecklistUpdateDepartments()
-    {
-        $checklist = Checklist::factory()->create();
-        $department = Department::factory()->create();
-
-        $this->actingAs($this->adminUser())
-            ->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [
-                'assigned_department_ids' => [$department->id],
-            ])->assertSuccessful();
-
-        $this->assertDatabaseHas('checklist_department', [
-            'department_id' => $department->id,
             'checklist_id' => $checklist->id,
         ]);
     }

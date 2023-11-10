@@ -159,16 +159,9 @@ class ChecklistController extends Controller
         return Redirect::back()->with('success', 'Checklist updated');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Checklist  $checklist
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(Checklist $checklist, HistoryService $historyService)
+    public function destroy(Checklist $checklist, HistoryService $historyService): RedirectResponse
     {
-
-        $this->history = new NewHistoryService('App\Models\Project');
+        $this->history = new NewHistoryService(Project::class);
         $this->history->createHistory($checklist->project_id, 'Checkliste ' . $checklist->name . ' gelöscht');
         $checklist->delete();
         $historyService->checklistUpdated($checklist);

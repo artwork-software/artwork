@@ -37,6 +37,7 @@ class CalendarEventResource extends JsonResource
             'title' => $this->project?->name ?: $this->eventName? : $this->event_type->name,
             'alwaysEventName' => $this->eventName,
             'eventName' => $this->eventName,
+            'event_type' => $this->event_type,
             'description' => $this->description,
             'audience' => $this->audience,
             'isLoud' => $this->is_loud,

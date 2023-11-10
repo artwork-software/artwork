@@ -169,23 +169,11 @@ export default {
         'user_filters'
     ],
     mounted() {
-        this.filterArray.rooms = this.filterOptions.rooms
-        this.filterArray.eventTypes = this.filterOptions.eventTypes
-        this.setCheckedFalse(this.filterArray.rooms)
-        this.setCheckedFalse(this.filterArray.eventTypes)
+           this.initFilter()
+    },
 
-        this.filterArray.eventTypes.forEach((eventType) => {
-            if(this.user_filters?.event_types?.includes(eventType.id)){
-                eventType.checked = true
-            }
-        })
-
-        this.filterArray.rooms.forEach((room) => {
-            if(this.user_filters?.rooms?.includes(room.id)){
-                room.checked = true
-            }
-        })
-
+    updated() {
+        this.initFilter()
     },
     data() {
         return {
@@ -210,6 +198,33 @@ export default {
         }
     },
     methods: {
+        initFilter(){
+            this.filterArray.rooms = this.filterOptions.rooms
+            this.filterArray.eventTypes = this.filterOptions.eventTypes
+            this.setCheckedFalse(this.filterArray.rooms)
+            this.setCheckedFalse(this.filterArray.eventTypes)
+
+            this.filterArray.eventTypes.forEach((eventType) => {
+                if(this.user_filters.event_types?.includes(eventType.id)){
+                    eventType.checked = true
+                    eventType.value = 'event_types'
+                } else {
+                    eventType.checked = false
+                    eventType.value = 'event_types'
+                }
+            })
+
+
+            this.filterArray.rooms.forEach((room) => {
+                if(this.user_filters.rooms?.includes(room.id)){
+                    room.checked = true
+                    room.value = 'rooms'
+                } else {
+                    room.checked = false
+                    room.value = 'rooms'
+                }
+            })
+        },
         setCheckedFalse(array) {
             array.forEach(item => item.checked = false)
         },
@@ -353,7 +368,7 @@ export default {
         filterArray: {
             handler() {
                 //this.reloadChanges()
-                this.$emit('filtersChanged', this.activeFilters)
+                //this.$emit('filtersChanged', this.activeFilters)
             },
             deep: true
         },

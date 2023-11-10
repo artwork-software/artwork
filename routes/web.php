@@ -315,6 +315,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
+    Route::post('/events/{event}/by/notification', [EventController::class, 'destroyByNotification'])->name('events.delete.by.notification');
     Route::delete('/events/{event}/shifts', [EventController::class, 'destroy_shifts'])->name('events.shifts.delete');
 
     Route::put('/event/requests/{event}',[EventController::class, 'acceptEvent'])->name('events.accept');
@@ -395,6 +396,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/user/{user}/calendar/shift/filter/reset', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'reset'])->name('reset.user.shift.calendar.filter');
     Route::patch('/user/{user}/calendar/filter/update', [\App\Http\Controllers\UserCalendarFilterController::class, 'update'])->name('update.user.calendar.filter');
     Route::patch('/user/{user}/shift/calendar/filter/update', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'update'])->name('update.user.shift.calendar.filter');
+
+
+    Route::patch('/user/{user}/calendar/filter/date/update', [\App\Http\Controllers\UserCalendarFilterController::class, 'updateDates'])->name('update.user.calendar.filter.dates');
+
+
+    Route::patch('/user/{user}/calendar/filter/single/update/calendar', [\App\Http\Controllers\UserCalendarFilterController::class, 'singleValueUpdate'])->name('user.calendar.filter.single.value.update');
+    Route::patch('/user/{user}/calendar/filter/single/update/shift', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'singleValueUpdate'])->name('user.shift.calendar.filter.single.value.update');
+    Route::patch('/user/{user}/shift/calendar/filter/date/update', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'updateDates'])->name('update.user.shift.calendar.filter.dates');
 
 
     // Project Routes

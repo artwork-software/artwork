@@ -129,7 +129,7 @@
                                 <div v-for="notificationGroup in Object.values(notificationOfToday)">
                                     <div v-for="(notification, index) in notificationGroup">
                                         <div class="bg-white shadow-cardShadow p-3 mb-4" >
-                                            <NotificationBlock :notification="notification" @setOnRead="setOnRead"/>
+                                            <NotificationBlock :notification="notification" @setOnRead="setOnRead" :event="event" :event-types="eventTypes" :rooms="rooms"/>
                                         </div>
                                     </div>
 
@@ -262,7 +262,10 @@ export default defineComponent({
         'todayDate',
         'eventsOfDay',
         'notificationOfToday',
-        'notificationCount'
+        'notificationCount',
+        'event',
+        'eventTypes',
+        'rooms'
     ],
     components: {
         NotificationBlock,

@@ -127,7 +127,7 @@ export default {
     mixins: [Permissions],
     name: "DatePickerComponent",
     components: {VueTailwindDatepicker, CalendarIcon},
-    props: ['dateValueArray','project'],
+    props: ['dateValueArray','project', 'is_shift_plan'],
     data() {
         return {
             dateValue: this.dateValueArray ? this.dateValueArray : [],
@@ -145,12 +145,7 @@ export default {
         dateValuePicker: {
             handler() {
                 this.showDateRangePicker = false;
-                Inertia.reload({
-                    data: {
-                        startDate: this.dateValueArray[0],
-                        endDate: this.dateValueArray[1],
-                    }
-                })
+                this.updateTimes()
             }
         }
     },
@@ -166,13 +161,27 @@ export default {
                 this.errorMessage = '';
                 this.hasError = false;
 
+                if(this.is_shift_plan){
+                    Inertia.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
+                        start_date: startDate,
+                        end_date: endDate,
+                    })
+                } else {
+                    Inertia.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+                        start_date: startDate,
+                        end_date: endDate,
+                    })
+                }
+
+
                 // Perform the reload or other actions here
-                Inertia.reload({
+                /*Inertia.reload({
                     data: {
                         startDate: this.dateValueArray[0],
                         endDate: this.dateValueArray[1],
                     }
-                });
+                });*/
+
             }
         },
     }

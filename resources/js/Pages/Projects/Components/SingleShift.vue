@@ -3,11 +3,12 @@
     <div class=" flex items-center justify-between px-4 text-white text-xs relative"
          :class="[shift.user_count === shift.number_employees && Math.floor(shift.master_count) === shift.number_masters ? 'bg-green-500' : 'bg-gray-500', anyoneHasVacation ? '!bg-red-500' : '']">
         <div class="h-9 flex items-center">
-            {{ shift.craft.abbreviation }} ({{ truncateDecimal(shift.user_count) }}/{{ shift.number_employees }})
+            {{ shift.craft.abbreviation }} ({{ decimalToCommonFraction(shift.user_count) }}/{{ shift.number_employees }})
             <span class="ml-1" v-if="shift.number_masters > 0">
-                 ({{ truncateDecimal(shift.master_count) }}/{{ shift.number_masters }})
+                 ({{ decimalToCommonFraction(shift.master_count) }}/{{ shift.number_masters }})
             </span>
         </div>
+
         <div class="absolute flex items-center right-0">
             <div
                 v-if="shift.user_count === shift.number_employees && Math.floor(shift.master_count) === shift.number_masters"
@@ -174,6 +175,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import ChooseDeleteUserShiftModal from "@/Pages/Projects/Components/ChooseDeleteUserShiftModal.vue";
+import Helper from "@/mixins/Helper.vue";
 
 export default defineComponent({
     name: "SingleShift",
@@ -183,6 +185,7 @@ export default defineComponent({
         DotsVerticalIcon, SvgCollection, TrashIcon, DuplicateIcon, PencilAltIcon, DropElement, XIcon,
         Menu, MenuButton, MenuItem, MenuItems
     },
+    mixins: [Helper],
     props: ['shift', 'crafts', 'event'],
     data() {
         return {

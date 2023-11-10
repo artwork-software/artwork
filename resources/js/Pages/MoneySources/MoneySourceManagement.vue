@@ -46,8 +46,10 @@
                                     <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                                 </div>
                                 <div v-else class="flex items-center w-full mr-2">
-                                    <inputComponent v-model="this.moneySource_query"
-                                                    placeholder="Suche nach Quellen/Gruppen"/>
+                                    <input type="text"
+                                           placeholder="Suche nach Projekten"
+                                           v-model="moneySource_query"
+                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                                 </div>
                             </div>
@@ -69,7 +71,7 @@
 
                     </div>
                     <ul role="list" class="mt-5 w-full">
-                        <li v-if="moneySource_query.length < 1" v-for="(moneySource,index) in sourcesToShow"
+                        <li v-for="(moneySource,index) in filteredMoneySources"
                             :key="moneySource.id"
                         >
                             <div class="py-5 flex justify-between border-b-2 border-gray-200 my-2"
@@ -146,68 +148,6 @@
                                 </div>
                             </div>
                         </li>
-                        <li v-else v-for="(moneySource,index) in moneySource_search_results" :key="moneySource.id"
-                            class="py-5 flex justify-between">
-                            <div class="flex">
-                                <Link :href="getEditHref(moneySource)" class="ml-5 my-auto w-full justify-start mr-6">
-                                    <div class="flex my-auto">
-                                        <p class="sDark">{{ moneySource.name }}</p>
-                                    </div>
-                                </Link>
-                            </div>
-                            <div class="flex">
-                                <Menu as="div" class="my-auto relative">
-                                    <div class="flex">
-                                        <MenuButton
-                                            class="flex bg-tagBg p-0.5 rounded-full">
-                                            <DotsVerticalIcon
-                                                class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                                aria-hidden="true"/>
-                                        </MenuButton>
-                                    </div>
-                                    <transition enter-active-class="transition ease-out duration-100"
-                                                enter-from-class="transform opacity-0 scale-95"
-                                                enter-to-class="transform opacity-100 scale-100"
-                                                leave-active-class="transition ease-in duration-75"
-                                                leave-from-class="transform opacity-100 scale-100"
-                                                leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems
-                                            class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                            <div class="py-1">
-                                                <MenuItem v-slot="{ active }">
-                                                    <a :href="getEditHref(moneySource)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Bearbeiten
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                                    <a @click="duplicateMoneySource(moneySource)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <DuplicateIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Duplizieren
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                                    <a @click="openDeleteSourceModal(moneySource)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <TrashIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Löschen
-                                                    </a>
-                                                </MenuItem>
-                                            </div>
-                                        </MenuItems>
-                                    </transition>
-                                </Menu>
-
-                            </div>
-                        </li>
                     </ul>
                 </div>
             </div>
@@ -250,11 +190,13 @@ import {DuplicateIcon, PencilAltIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
 import Permissions from "@/mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import Input from "@/Layouts/Components/InputComponent.vue";
 
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        Input,
         ConfirmDeleteModal,
         AppLayout,
         Listbox,
@@ -284,14 +226,11 @@ export default defineComponent({
 
     },
     computed: {
-        sourcesToShow: function () {
-            if (this.moneySourceFilter.type === 'all') {
-                return this.moneySources
-            } else if (this.moneySourceFilter.type === 'single') {
-                return this.moneySources.filter(moneySource => moneySource.is_group === 0);
-            } else if (this.moneySourceFilter.type === 'group') {
-                return this.moneySourceGroups;
-            }
+        filteredMoneySources() {
+            const allMoneySources = this.sourcesToShow();
+            return allMoneySources.filter(moneySource => {
+                return moneySource.name.toLowerCase().includes(this.moneySource_query.toLowerCase());
+            });
         },
     },
     methods: {
@@ -309,6 +248,15 @@ export default defineComponent({
                 }
             })
             return returnArray;
+        },
+        sourcesToShow() {
+            if (this.moneySourceFilter.type === 'all') {
+                return this.moneySources
+            } else if (this.moneySourceFilter.type === 'single') {
+                return this.moneySources.filter(moneySource => moneySource.is_group === false);
+            } else if (this.moneySourceFilter.type === 'group') {
+                return this.moneySourceGroups;
+            }
         },
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;
@@ -341,7 +289,7 @@ export default defineComponent({
         },
     },
     watch: {
-        moneySource_query: {
+        /*moneySource_query: {
             handler() {
                 if (this.moneySource_query.length > 0) {
                     axios.get('/money_sources/search', {
@@ -352,7 +300,7 @@ export default defineComponent({
                 }
             },
             deep: true
-        },
+        },*/
     },
     data() {
         return {

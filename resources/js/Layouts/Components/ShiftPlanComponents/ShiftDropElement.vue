@@ -3,11 +3,13 @@ import {defineComponent} from 'vue'
 import {CheckIcon} from "@heroicons/vue/outline";
 import VueMathjax from "vue-mathjax-next";
 import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesShift.vue";
+import Helper from "../../../mixins/Helper.vue";
 
 export default defineComponent({
     name: "ShiftDropElement",
     components: {ChooseUserSeriesShift, CheckIcon, VueMathjax},
     props: ['shift', 'users','showRoom','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount'],
+    mixins: [Helper],
     computed: {
         userIds(){
             return this.users.map(user => user.id)
@@ -49,7 +51,7 @@ export default defineComponent({
         gcd(a, b) {
             return (b) ? this.gcd(b, a % b) : a;
         },
-        decimalToFraction(decimal) {
+        /*decimalToFraction(decimal) {
             let wholePart = Math.floor(decimal);
             decimal = decimal - wholePart;
 
@@ -66,7 +68,7 @@ export default defineComponent({
                 let x = this.gcd(top, bottom);
                 return `${wholePart} ${top / x}/${bottom / x}`;
             }
-        },
+        },*/
         getFirstDigitAfterDecimal(number) {
             const decimalPart = number.toString().split('.')[1];
             if (decimalPart && decimalPart.length > 0) {
@@ -105,6 +107,48 @@ export default defineComponent({
             this.buffer = buffer
             this.showChooseUserSeriesShiftModal = false
             this.saveUser();
+        },
+        decimalToFraction(decimal) {
+            // Überprüfen, ob die Zahl bereits eine ganze Zahl ist
+            if (decimal % 1 === 0) {
+                // Zahl ist eine ganze Zahl, also einfach zurückgeben
+                return decimal.toString();
+            } else {
+                // Die Zahl ist eine Dezimalzahl, also in Bruch umwandeln
+                const tolerance = 1.0E-6;
+                let numerator = 1;
+                let denominator = 1;
+                let lower_n = 0;
+                let lower_d = 1;
+                let upper_n = 1;
+                let upper_d = 0;
+                let fraction = decimal;
+
+                while (denominator <= 10000 && Math.abs(numerator / denominator - fraction) > tolerance) {
+                    if (fraction < numerator / denominator) {
+                        upper_n = numerator;
+                        upper_d = denominator;
+                        denominator = lower_d + upper_d;
+                        numerator = lower_n + upper_n;
+                    } else {
+                        lower_n = numerator;
+                        lower_d = denominator;
+                        denominator = lower_d + upper_d;
+                        numerator = lower_n + upper_n;
+                    }
+                }
+
+                // Vereinfache den Bruch, falls möglich
+                const gcd = function(a, b) {
+                    if (!b) return a;
+                    return gcd(b, a % b);
+                };
+                const greatestCommonDivisor = gcd(numerator, denominator);
+                numerator /= greatestCommonDivisor;
+                denominator /= greatestCommonDivisor;
+
+                return `${numerator}/${denominator}`;
+            }
         },
         saveUser(){
             let dropElement = this.selectedUser;
@@ -209,7 +253,7 @@ export default defineComponent({
         </div>
 
         <div v-if="!showRoom" class="ml-0.5 text-xs">
-             (<VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))" />/{{ shift.number_employees }}
+             ({{ decimalToCommonFraction(shift.user_count) }}/{{ shift.number_employees }}
             <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)
         </div>
         <div v-else-if="room" class="truncate">

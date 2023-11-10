@@ -237,12 +237,12 @@
                                                 <div class="py-1">
                                                     <MenuItem v-slot="{ active }"
                                                               v-if="$role('artwork admin') || $can('write projects') || this.checkPermission(project, 'edit')">
-                                                        <a :href="getEditHref(project)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <a @click="openEditProjectModal(project)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
                                                             <PencilAltIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Bearbeiten
+                                                            Basisdaten bearbeiten
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }"
@@ -875,6 +875,16 @@
 
             </template>
         </jet-dialog-modal>
+        <project-data-edit-modal
+            v-if="editingProject"
+            :show="editingProject"
+            @closed="closeEditProjectModal"
+            :project="this.projectToEdit"
+            :group-projects="this.projectGroups"
+            :current-group="this.groupPerProject[this.projectToEdit?.id]"
+            :states="states"
+        />
+
         <!-- Project History Modal -->
         <project-history-component
             @closed="closeProjectHistoryModal"
@@ -938,6 +948,7 @@ import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -949,6 +960,7 @@ const number_of_participants = [
 
 export default defineComponent({
     components: {
+        ProjectDataEditModal,
         UserPopoverTooltip,
         Input,
         BaseFilter,
@@ -1050,6 +1062,8 @@ export default defineComponent({
                 projects: [],
                 selectedGroup: null
             }),
+            editingProject: false,
+            projectToEdit: null,
         }
     },
     computed: {
@@ -1085,11 +1099,26 @@ export default defineComponent({
                 // Check if the project name contains the search term
                 return project.name.toLowerCase().includes(this.project_search.toLowerCase());
             });
+        },
+        groupPerProject() {
+            let groupPerProject = [];
+            this.projectGroups.forEach((projectGroup) => {
+                projectGroup.groups?.forEach((groupProject) => {
+                    groupPerProject[groupProject.id] = projectGroup;
+                })
+            })
+            return groupPerProject;
         }
-
-
     },
     methods: {
+        openEditProjectModal(project) {
+            this.projectToEdit = project;
+            this.editingProject = true;
+        },
+        closeEditProjectModal() {
+            this.editingProject = false;
+            this.projectToEdit = null;
+        },
         openCloseMenu() {
             if (this.openedMenu) {
                 this.openedMenu = false

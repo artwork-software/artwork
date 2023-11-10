@@ -294,6 +294,7 @@ class ContentSeeder extends Seeder
 
         DB::table('events')->insert([
             'name' => 'Aufführung',
+            'eventName' => 'Aufführung',
             'description' => null,
             'start_time' => Carbon::now()->addDay()->addHours(2),
             'end_time' => Carbon::now()->addDay()->addHours(3),
@@ -305,6 +306,7 @@ class ContentSeeder extends Seeder
 
         DB::table('events')->insert([
             'name' => 'Meeting Rock & Wrestling',
+            'eventName' => 'Meeting Rock & Wrestling',
             'description' => null,
             'start_time' => Carbon::now()->addDay(),
             'end_time' => Carbon::now()->addDay()->addHour(),

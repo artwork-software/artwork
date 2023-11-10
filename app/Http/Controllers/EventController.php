@@ -6,7 +6,6 @@ use App\Builders\EventBuilder;
 use App\Casts\TimeAgoCast;
 use App\Enums\NotificationConstEnum;
 use App\Events\OccupancyUpdated;
-use App\Http\Requests\EventAcceptionRequest;
 use App\Http\Requests\EventIndexRequest;
 use App\Http\Requests\EventStoreRequest;
 use App\Http\Requests\EventUpdateRequest;
@@ -14,31 +13,23 @@ use App\Http\Resources\CalendarEventCollectionResource;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\FreelancerShiftResource;
-use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderShiftResource;
 use App\Http\Resources\TaskDashboardResource;
-use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\UserIndexResource;
-use App\Http\Resources\UserShowResource;
-use App\Models\Area;
-use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\Project;
 use App\Models\Room;
-use App\Models\RoomAttribute;
-use App\Models\RoomCategory;
-use App\Models\Scheduling;
 use App\Models\SeriesEvents;
 use App\Models\ServiceProvider;
 use App\Models\Shift;
-use App\Models\SubEvents;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\UserCalendarFilter;
+use App\Models\UserShiftCalendarFilter;
 use App\Support\Services\CollisionService;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
@@ -46,10 +37,9 @@ use App\Support\Services\NotificationService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
-use Illuminate\Notifications\Notification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
@@ -64,8 +54,13 @@ class EventController extends Controller
     protected ?NewHistoryService $history = null;
     protected ?string $notificationKey = '';
 
+    private $user;
+    private UserShiftCalendarFilter $userShiftCalendarFilter;
+    private UserCalendarFilter $userCalendarFilter;
+
     public function __construct()
     {
+
         $this->collisionService = new CollisionService();
         $this->notificationService = new NotificationService();
         $this->notificationData = new \stdClass();
@@ -75,6 +70,7 @@ class EventController extends Controller
 
         $this->notificationKey = Str::random(15);
 
+
     }
 
     /**
@@ -83,18 +79,20 @@ class EventController extends Controller
      */
     public function viewEventIndex(Request $request, CalendarController $calendarController): Response
     {
-
+        $this->user = Auth::user();
+        $this->userCalendarFilter = $this->user->calendar_filter()->first();
+        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter()->first();
         $events = [];
-        if(\request('startDate') && \request('endDate')) {
-            $showCalendar = $calendarController->createCalendarData('individual', null, null, \request('startDate'), \request('endDate'));
-            $eventsOfDay = $calendarController->getEventsOfDay();
+        if(!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
+            $showCalendar = $calendarController->createCalendarData('individual', null, null, $this->userCalendarFilter->start_date, $this->userCalendarFilter->end_date);
             $events = new CalendarEventCollectionResourceModel(
                 areas: $showCalendar['filterOptions']['areas'],
                 projects: $showCalendar['filterOptions']['projects'],
                 eventTypes: $showCalendar['filterOptions']['eventTypes'],
                 roomCategories: $showCalendar['filterOptions']['roomCategories'],
                 roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
-                events: $eventsOfDay,
+                events: Collection::make(CalendarEventResource::collection($calendarController->getEventsOfDay())
+                    ->resolve()),
                 filter: Filter::where('user_id', Auth::id())->get(),
             );
         }else{
@@ -103,9 +101,9 @@ class EventController extends Controller
 
         $eventsAtAGlance = [];
 
-        if(request('startDate') && \request('endDate')){
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        if(!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
+            $startDate = Carbon::create($this->userCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($this->userCalendarFilter->end_date)->endOfDay();
         }else{
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
@@ -114,6 +112,7 @@ class EventController extends Controller
         if(\request('atAGlance') === 'true') {
             $eventsAtAGlance = $calendarController->getEventsAtAGlance($startDate, $endDate);
         }
+
 
         return inertia('Events/EventManagement', [
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
@@ -132,16 +131,20 @@ class EventController extends Controller
         ]);
     }
 
-    public function viewShiftPlan(Request $request, CalendarController $shiftPlan): Response
+    public function viewShiftPlan(CalendarController $shiftPlan): Response
     {
+
+        $this->user = Auth::user();
+        $this->userCalendarFilter = $this->user->calendar_filter()->first();
+        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter()->first();
         $showCalendar = $shiftPlan->createCalendarDataForShiftPlan();
         $shiftFilterController = new ShiftFilterController();
         $shiftFilters = $shiftFilterController->index();
 
-        if(\request('startDate') && \request('endDate')){
+        if(!is_null($this->userShiftCalendarFilter->start_date) && !is_null($this->userShiftCalendarFilter->end_date)){
 
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+            $startDate = Carbon::create($this->userShiftCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($this->userShiftCalendarFilter->end_date)->endOfDay();
 
         }else{
 
@@ -183,9 +186,16 @@ class EventController extends Controller
 
         foreach ($freelancers as $freelancer) {
             $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
-
+            //dd($freelancer->getShiftsAttribute());
             $freelancersWithPlannedWorkingHours[] = [
-                'freelancer' => FreelancerShiftResource::make($freelancer),
+                'freelancer' => [
+                    'resource' => 'FreelancerShiftResource',
+                    'id' => $freelancer->id,
+                    'first_name' => $freelancer->first_name,
+                    'last_name' => $freelancer->last_name,
+                    'profile_photo_url' => $freelancer->profile_image,
+                    'shifts' => $freelancer->getShiftsAttribute(),
+                ],
                 'plannedWorkingHours' => $plannedWorkingHours,
             ];
         }
@@ -198,7 +208,7 @@ class EventController extends Controller
             $plannedWorkingHours = $service_provider->plannedWorkingHours($startDate, $endDate);
 
             $serviceProvidersWithPlannedWorkingHours[] = [
-                'service_provider' => ServiceProviderShiftResource::make($service_provider),
+                'service_provider' => ServiceProviderShiftResource::make($service_provider ),
                 'plannedWorkingHours' => $plannedWorkingHours,
             ];
         }
@@ -235,6 +245,7 @@ class EventController extends Controller
      */
     public function showDashboardPage(Request $request): Response
     {
+        $event = null;
         $tasks = Task::query()
             ->where('done', false)
             ->where(function ($query) {
@@ -264,6 +275,9 @@ class EventController extends Controller
         $todayDate = Carbon::now()->locale('de')->isoFormat('dddd, DD.MM.YYYY');
 
         $notification = $user->notifications()->select(['data->priority as priority', 'data'])->whereDate('created_at', Carbon::now()->format('Y-m-d'))->withCasts(['created_at' => TimeAgoCast::class]);
+        if(request('openEditEvent')){
+            $event = Event::find(request('eventId'));
+        }
 
         return inertia('Dashboard', [
             'tasks' => TaskDashboardResource::collection($tasks)->resolve(),
@@ -272,6 +286,9 @@ class EventController extends Controller
             'eventsOfDay' => $userEvents,
             'notificationOfToday' => $notification->get()->groupBy('priority'),
             'notificationCount' => $notification->count(),
+            'event' => $event !== null ? new CalendarEventResource($event) : null,
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'rooms' => Room::all()
         ]);
     }
 
@@ -375,7 +392,7 @@ class EventController extends Controller
         return new CalendarEventResource($firstEvent);
     }
 
-    private function createSeriesEvent($startDate,$endDate, $request, $series, $projectId){
+    private function createSeriesEvent($startDate, $endDate, $request, $series, $projectId){
         $event = Event::create([
             'name' => $request->title,
             'eventName' => $request->eventName,
@@ -391,15 +408,14 @@ class EventController extends Controller
             'project_id' => $projectId ? $projectId : null,
             'is_series' => true,
             'series_id' => $series->id,
+            'allDay' => $request->allDay
         ]);
     }
 
     public function commit_shifts(Request $request)
     {
-
         foreach ($request->events as $event) {
 
-            // Prepare an array to hold shift IDs
             $shiftIds = [];
 
             // Loop through each shift and collect the IDs
@@ -413,30 +429,33 @@ class EventController extends Controller
             // get first shift in shifts
             $firstShift = $shifts->first();
 
+
             // get last shift in Shifts
             $lastShift = $shifts->last();
-
             $notificationTitle = 'Dienstplan festgeschrieben';
-            $broadcastMessage = [
-                'id' => rand(1, 1000000),
-                'type' => 'success',
-                'message' => $notificationTitle
-            ];
+            if(!empty($firstShift) && !empty($lastShift)){
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $notificationTitle
+                ];
 
-            $notificationDescription = [
-                1 => [
-                    'type' => 'string',
-                    'title' => 'Betrifft Zeitraum: ' . Carbon::parse($firstShift->event_start_day . ' ' . $firstShift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($lastShift->event_end_day . ' ' . $lastShift->end)->format('d.m.Y H:i'),
-                    'href' => null
-                ],
-            ];
+                $notificationDescription = [
+                    1 => [
+                        'type' => 'string',
+                        'title' => 'Betrifft Zeitraum: ' . Carbon::parse($firstShift->event_start_day . ' ' . $firstShift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($lastShift->event_end_day . ' ' . $lastShift->end)->format('d.m.Y H:i'),
+                        'href' => null
+                    ],
+                ];
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
 
+            }
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_LOCKED);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setDescription($notificationDescription);
+
 
             $userIdHasGetNotification = [];
             // Loop over the shifts and set is_committed to true
@@ -737,7 +756,8 @@ class EventController extends Controller
         if(!empty($project)){
             $projectManagers = $project->managerUsers()->get();
         }
-        if($request->accept || $request->optionAccept){
+        //dd($request->all());
+        /*if($request->accept || $request->optionAccept){
             $event->update(['occupancy_option' => false]);
 
             if($request->accept){
@@ -800,7 +820,7 @@ class EventController extends Controller
             $this->notificationService->setNotificationTo($event->creator);
             $this->notificationService->createNotification();
 
-        } else {
+        } else {*/
             if (!empty($request->adminComment)) {
                 $projectManagers = [];
                 $this->notificationService->setNotificationKey($this->notificationKey);
@@ -870,7 +890,7 @@ class EventController extends Controller
                 $this->notificationService->createNotification();
             }
         }
-        }
+        //}
 
         if($request->roomChange){
             $notificationTitle = 'Raumanfrage mit Raumänderung bestätigt';
@@ -1465,36 +1485,31 @@ class EventController extends Controller
     public function destroy(Event $event)
     {
         $this->authorize('delete', $event);
-
         if(!empty($event->project_id)){
             $eventProject = $event->project()->first();
             $projectHistory = new NewHistoryService('App\Models\Project');
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
         }
 
-        $event->subEvents()->delete();
+        $room = $event->room()->first();
+        $project = $event->project()->first();
+        $projectManagers = [];
 
-        broadcast(new OccupancyUpdated())->toOthers();
-        $event->delete();
 
-        // create and send notification to event owner
+        if(!empty($project)) {
+            $projectManagers = $project->managerUsers()->get();
+        }
         $notificationTitle = 'Termin abgesagt';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
             'type' => 'error',
             'message' => $notificationTitle
         ];
-        $room = $event->room()->first();
-        $project = $event->project()->first();
-        $projectManagers = [];
-        if(!empty($project)){
-            $projectManagers = $project->managerUsers()->get();
-        }
         $notificationDescription = [
             1 => [
                 'type' => 'link',
-                'title' => $room->name,
-                'href' => route('rooms.show', $room->id)
+                'title' => $room ? $room->name : '',
+                'href' => $room ? route('rooms.show', $room->id) : null
             ],
             2 => [
                 'type' => 'string',
@@ -1518,10 +1533,6 @@ class EventController extends Controller
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->setRoomId($event->room_id);
-        $this->notificationService->setEventId($event->id);
-        $this->notificationService->setProjectId($event->project_id);
-        $this->notificationService->setButtons(['answer']);
         foreach ($projectManagers as $projectManager){
             if($projectManager->id === $event->creator){
                 continue;
@@ -1531,6 +1542,93 @@ class EventController extends Controller
         }
         $this->notificationService->setNotificationTo($event->creator);
         $this->notificationService->createNotification();
+
+
+
+        $event->subEvents()->delete();
+
+        broadcast(new OccupancyUpdated())->toOthers();
+        $event->delete();
+    }
+
+    public function destroyByNotification(Event $event, Request $request){
+        $this->authorize('delete', $event);
+
+        if(!empty($event->project_id)){
+            $eventProject = $event->project()->first();
+            $projectHistory = new NewHistoryService('App\Models\Project');
+            $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
+        }
+
+        $room = Room::find($event->declined_room_id);
+        $project = $event->project()->first();
+        $projectManagers = [];
+
+        if(!empty($project)) {
+            $projectManagers = $project->managerUsers()->get();
+        }
+        $notificationTitle = 'Termin abgesagt';
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'error',
+            'message' => $notificationTitle
+        ];
+        $notificationDescription = [
+            1 => [
+                'type' => 'link',
+                'title' => $room->name,
+                'href' => route('rooms.show', $room->id)
+            ],
+            2 => [
+                'type' => 'string',
+                'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                'href' => null
+            ],
+            3 => [
+                'type' => 'link',
+                'title' => $project ? $project->name : '',
+                'href' => $project ? route('projects.show.calendar', $project->id) : null
+            ],
+            4 => [
+                'type' => 'string',
+                'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
+                'href' => null
+            ]
+        ];
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setIcon('red');
+        $this->notificationService->setPriority(1);
+        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setDescription($notificationDescription);
+        foreach ($projectManagers as $projectManager){
+            if($projectManager->id === $event->creator){
+                continue;
+            }
+            $this->notificationService->setNotificationTo($projectManager);
+            $this->notificationService->createNotification();
+        }
+        $this->notificationService->setNotificationTo($event->creator);
+        $this->notificationService->createNotification();
+
+
+        if(!empty($request->notificationKey)){
+            $notifications = DatabaseNotification::query()
+                ->whereJsonContains("data->notificationKey", $request->notificationKey)
+                ->get();
+
+            foreach ($notifications as $notification){
+                $notification->delete();
+            }
+        }
+
+        if(!empty($event)){
+            $event->subEvents()->delete();
+
+            broadcast(new OccupancyUpdated())->toOthers();
+            $event->delete();
+        }
+
     }
 
     /**

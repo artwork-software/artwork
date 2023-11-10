@@ -336,11 +336,37 @@ class SchedulingController extends Controller
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
+                    $notificationDescription = [
+                        1 => [
+                            'type' => 'link',
+                            'title' => $event->room()->first()->name,
+                            'href' => route('rooms.show', $event->room()->first()->id)
+                        ],
+                        2 => [
+                            'type' => 'string',
+                            'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                            'href' => null
+                        ],
+                        3 => [
+                            'type' => 'link',
+                            'title' => $event->project()->first() ? $event->project()->first()->name : '',
+                            'href' => $event->project()->first() ? route('projects.show.calendar', $event->project()->first()->id) : null
+                        ],
+                        4 => [
+                            'type' => 'string',
+                            'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
+                            'href' => null
+                        ]
+                    ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('green');
                     $this->notificationService->setPriority(3);
                     $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_EVENT_CHANGED);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setShowHistory(true);
+                    $this->notificationService->setHistoryType('event');
+                    $this->notificationService->setModelId($event->id);
+                    $this->notificationService->setDescription($notificationDescription);
                     $this->notificationService->setEventId($event->id);
                     $this->notificationService->setNotificationTo($user);
                     $this->notificationService->createNotification();

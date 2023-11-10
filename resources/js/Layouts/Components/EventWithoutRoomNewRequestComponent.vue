@@ -510,7 +510,6 @@ export default {
             this.checkCollisions(event)
         },
         checkTypeChange(event) {
-
             this.checkCollisions(event);
         },
 
@@ -626,14 +625,16 @@ export default {
                 roomId: event.room_id,
                 description: event.description,
                 audience: event.audience,
-                isLoud: event.is_loud,
+                isLoud: event.is_loud ?? false,
                 isOption:this.isOption,
                 eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
                 projectId: !this.creatingProject ? this.selectedProject?.id : null,
                 projectName: this.creatingProject ? event.projectName : '',
                 eventTypeId: event.eventTypeId,
                 projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
-                creatingProject: this.creatingProject
+                creatingProject: this.creatingProject,
+                allDay: false,
+                is_series: false
             };
         },
     },

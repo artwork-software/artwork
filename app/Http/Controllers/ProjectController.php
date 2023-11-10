@@ -25,6 +25,7 @@ use App\Http\Resources\ProjectResources\ProjectCommentResource;
 use App\Http\Resources\ProjectResources\ProjectInfoResource;
 use App\Http\Resources\ProjectResources\ProjectShiftResource;
 use App\Http\Resources\ProjectShowResource;
+use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderDropResource;
 use App\Http\Resources\UserDropResource;
 use App\Http\Resources\UserIndexResource;
@@ -44,6 +45,7 @@ use App\Models\Currency;
 use App\Models\Department;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\Genre;
 use App\Models\MainPosition;
@@ -149,7 +151,7 @@ class ProjectController extends Controller
         return inertia('Projects/ProjectManagement', [
             'projects' => ProjectIndexShowResource::collection($projects)->resolve(),
             'states' => ProjectStates::all(),
-            'projectGroups' => Project::where('is_group', 1)->get(),
+            'projectGroups' => Project::where('is_group', 1)->with('groups')->get(),
 
             'users' => User::all(),
 
@@ -1777,9 +1779,8 @@ class ProjectController extends Controller
 
         ]);
     }
-    public function projectCalendarTab(Project $project, Request $request)
+    public function projectCalendarTab(Project $project, Request $request,CalendarController $calendar)
     {
-        $calendar = new CalendarController();
         $showCalendar = $calendar->createCalendarData('', $project);
 
         $project->load([
@@ -1857,6 +1858,8 @@ class ProjectController extends Controller
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
+        $eventsOfDay = $calendar->getEventsOfDay();
+
         return inertia('Projects/SingleProjectCalendar', [
             // needed for the ProjectShowHeaderComponent
             'project' => new ProjectCalendarResource($project),
@@ -1892,7 +1895,15 @@ class ProjectController extends Controller
             'days' => $showCalendar['days'],
             'selectedDate' => $showCalendar['selectedDate'],
             'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
-            'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
+            'events' => $events = new CalendarEventCollectionResourceModel(
+                areas: $showCalendar['filterOptions']['areas'],
+                projects: $showCalendar['filterOptions']['projects'],
+                eventTypes: $showCalendar['filterOptions']['eventTypes'],
+                roomCategories: $showCalendar['filterOptions']['roomCategories'],
+                roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
+                events: $eventsOfDay,
+                filter: Filter::where('user_id', Auth::id())->get(),
+            ),
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
@@ -2073,7 +2084,7 @@ class ProjectController extends Controller
 
         foreach ($users as $user) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
-            $vacations = $user->getHasVacationDaysAttribute();
+            $vacations = $user->hasVacationDays();
             $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
 
             $usersWithPlannedWorkingHours[] = [
@@ -2208,11 +2219,7 @@ class ProjectController extends Controller
             ? SubPositionRow::find(request('selectedRow'))
             : null;
 
-        $templates = null;
-
-        if(request('useTemplates')){
-            $templates = Table::where('is_template', true)->get();
-        }
+        $templates = Table::where('is_template', true)->get();
 
         $selectedSumDetail = null;
 
@@ -2411,7 +2418,7 @@ class ProjectController extends Controller
             $findTimeLine->update([
                 'start' => $timeline['start'],
                 'end' => $timeline['end'],
-                'description' => $timeline['description']
+                'description' => nl2br($timeline['description'])
             ]);
         }
     }
@@ -2446,7 +2453,7 @@ class ProjectController extends Controller
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         } else {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-            $group = Project::find($request->selectedGroup);
+            $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
         }
         $oldProjectName = $project->name;

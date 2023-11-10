@@ -1984,9 +1984,6 @@ class ProjectController extends Controller
 
     public function projectShiftTab(Project $project, Request $request)
     {
-
-
-
         $project->load([
             'departments.users.departments',
             'managerUsers',
@@ -2037,6 +2034,11 @@ class ProjectController extends Controller
         $eventsWithRelevant = [];
         foreach ($shiftRelevantEvents as $event) {
             $timeline = $event->timeline()->get()->toArray();
+
+            foreach($timeline as &$singleTimeLine) {
+                $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
+            }
+
             usort($timeline, function ($a, $b) {
                 if ($a['start'] === null && $b['start'] === null) {
                     return 0;
@@ -2415,7 +2417,7 @@ class ProjectController extends Controller
             $findTimeLine->update([
                 'start' => $timeline['start'],
                 'end' => $timeline['end'],
-                'description' => nl2br($timeline['description'])
+                'description' => nl2br($timeline['description_without_html'])
             ]);
         }
     }

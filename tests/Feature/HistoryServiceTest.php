@@ -12,7 +12,7 @@ use Tests\TestCase;
 
 class HistoryServiceTest extends TestCase
 {
-    use RefreshDatabase;
+
 
     public function testHistoryOfDeletedModel()
     {

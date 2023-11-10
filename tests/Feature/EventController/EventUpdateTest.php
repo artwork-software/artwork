@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 class EventUpdateTest extends TestCase
 {
-    use RefreshDatabase;
+
 
     public function testEventUpdate()
     {

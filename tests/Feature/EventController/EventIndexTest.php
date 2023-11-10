@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 class EventIndexTest extends TestCase
 {
-    use RefreshDatabase;
+
 
     public function testEventIndex()
     {

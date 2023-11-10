@@ -30,11 +30,11 @@ beforeEach(function () {
 
 test('users with the permission can create template checklists from scratch and without tasks', function () {
 
-    $this->auth_user->givePermissionTo('create checklist_templates', 'update departments');
+    $this->auth_user->givePermissionTo(\App\Enums\PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
 
     $this->actingAs($this->auth_user);
 
-    $this->post('/checklist_templates', [
+    $response = $this->post(route('checklist_templates.store'), [
         'name' => 'TestTemplateChecklist',
         'user_id' => $this->auth_user->id,
         'departments' => [$this->assigned_department]

@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 class EventDeleteTest extends TestCase
 {
-    use RefreshDatabase;
+
 
     public function testEventDelete()
     {

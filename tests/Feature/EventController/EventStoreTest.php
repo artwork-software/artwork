@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 class EventStoreTest extends TestCase
 {
-    use RefreshDatabase;
+
 
     public function testEventStoreValidation()
     {

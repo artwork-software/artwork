@@ -15,7 +15,7 @@ use Tests\TestCase;
 
 class UserInvitationAcceptTest extends TestCase
 {
-    use RefreshDatabase;
+
 
     public function testAbortsInvalidTokens()
     {

@@ -48,9 +48,7 @@ use Inertia\Response;
 class EventController extends Controller
 {
 
-    protected ?NotificationService $notificationService = null;
     protected ?\stdClass $notificationData = null;
-    protected ?CollisionService $collisionService = null;
     protected ?NewHistoryService $history = null;
     protected ?string $notificationKey = '';
 
@@ -58,19 +56,18 @@ class EventController extends Controller
     private UserShiftCalendarFilter $userShiftCalendarFilter;
     private UserCalendarFilter $userCalendarFilter;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly CollisionService $collisionService,
+        private readonly NotificationService $notificationService,
 
-        $this->collisionService = new CollisionService();
-        $this->notificationService = new NotificationService();
+    )
+    {
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
-        $this->history = new NewHistoryService('App\Models\Event');
+        $this->history = new NewHistoryService(Event::class);
 
         $this->notificationKey = Str::random(15);
-
-
     }
 
     /**
@@ -1482,12 +1479,12 @@ class EventController extends Controller
      *
      * @param Event $event
      */
-    public function destroy(Event $event)
+    public function destroy(Event $event): void
     {
         $this->authorize('delete', $event);
         if(!empty($event->project_id)){
             $eventProject = $event->project()->first();
-            $projectHistory = new NewHistoryService('App\Models\Project');
+            $projectHistory = new NewHistoryService(Project::class);
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
         }
 
@@ -1501,14 +1498,14 @@ class EventController extends Controller
         }
         $notificationTitle = 'Termin abgesagt';
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => random_int(1, 1000000),
             'type' => 'error',
             'message' => $notificationTitle
         ];
         $notificationDescription = [
             1 => [
                 'type' => 'link',
-                'title' => $room ? $room->name : '',
+                'title' => $room->name ?? '',
                 'href' => $room ? route('rooms.show', $room->id) : null
             ],
             2 => [
@@ -1518,7 +1515,7 @@ class EventController extends Controller
             ],
             3 => [
                 'type' => 'link',
-                'title' => $project ? $project->name : '',
+                'title' => $project->name ?? '',
                 'href' => $project ? route('projects.show.calendar', $project->id) : null
             ],
             4 => [
@@ -1542,8 +1539,6 @@ class EventController extends Controller
         }
         $this->notificationService->setNotificationTo($event->creator);
         $this->notificationService->createNotification();
-
-
 
         $event->subEvents()->delete();
 

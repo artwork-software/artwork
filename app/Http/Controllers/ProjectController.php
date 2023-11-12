@@ -30,7 +30,6 @@ use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderDropResource;
 use App\Http\Resources\UserDropResource;
 use App\Http\Resources\UserIndexResource;
-use App\Http\Resources\UserShowResource;
 use App\Models\BudgetSumDetails;
 use App\Models\Category;
 use App\Models\CellCalculations;
@@ -55,22 +54,18 @@ use App\Models\MoneySource;
 use App\Models\Project;
 use App\Models\ProjectGroups;
 use App\Models\ProjectStates;
-use App\Models\Room;
 use App\Models\Sector;
 use App\Models\ServiceProvider;
 use App\Models\SubPosition;
 use App\Models\SubPositionRow;
 use App\Models\SubpositionSumDetail;
 use App\Models\Table;
-use App\Models\Task;
 use App\Models\TimeLine;
 use App\Models\User;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -87,7 +82,6 @@ use Inertia\Response;
 use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
 use stdClass;
-use Symfony\Component\ErrorHandler\Debug;
 
 class ProjectController extends Controller
 {
@@ -1991,9 +1985,6 @@ class ProjectController extends Controller
 
     public function projectShiftTab(Project $project, Request $request)
     {
-
-
-
         $project->load([
             'departments.users.departments',
             'managerUsers',
@@ -2044,6 +2035,11 @@ class ProjectController extends Controller
         $eventsWithRelevant = [];
         foreach ($shiftRelevantEvents as $event) {
             $timeline = $event->timeline()->get()->toArray();
+
+            foreach($timeline as &$singleTimeLine) {
+                $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
+            }
+
             usort($timeline, function ($a, $b) {
                 if ($a['start'] === null && $b['start'] === null) {
                     return 0;
@@ -2404,12 +2400,16 @@ class ProjectController extends Controller
     }
 
 
-    public function addTimeLineRow(Event $event){
-        $event->timeline()->create([
-            'start' => null,
-            'end' => null,
-            'description' => ''
-        ]);
+    public function addTimeLineRow(Event $event, Request $request) {
+        $event->timeline()->create(
+            $request->validate(
+                [
+                    'start' => 'required',
+                    'end' => 'required',
+                    'description' => 'nullable'
+                ]
+            )
+        );
     }
 
     public function updateTimeLines(Request $request){
@@ -2418,7 +2418,7 @@ class ProjectController extends Controller
             $findTimeLine->update([
                 'start' => $timeline['start'],
                 'end' => $timeline['end'],
-                'description' => nl2br($timeline['description'])
+                'description' => nl2br($timeline['description_without_html'])
             ]);
         }
     }

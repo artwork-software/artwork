@@ -15,6 +15,18 @@ permissions:
   contents: read
 
 jobs:
+
+  phpstan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: php-actions/composer@v6
+
+      - name: PHPStan Static Analysis
+        uses: php-actions/phpstan@v3
+        with:
+          path: app/ artwork/
+
   tests:
     runs-on: ${{ matrix.operating-systems }}
     timeout-minutes: 15
@@ -65,14 +77,12 @@ jobs:
           sed -i "s|^\(DB_DATABASE=\s*\).*$|\1artwork_tools|" .env.testing
           sed -i "s|^\(DB_USERNAME=\s*\).*$|\1root|" .env.testing
           sed -i "s|^\(DB_PASSWORD=\s*\).*$|\1root|" .env.testing
-      - name: Key Generate
-        run: php artisan key:generate --env=testing
 
-      - name: Seed database
-        run: php artisan migrate:fresh --seed --env=testing
-
-      - name: Optimize Stuffs
-        run: php artisan optimize --env=testing
+      - name: Setup Application
+        run: |
+          php artisan key:generate --env=testing
+          php artisan optimize --env=testing
+          php artisan migrate:fresh --seed --env=testing
 
       - name: Running Test
         run: vendor/bin/pest --colors=always

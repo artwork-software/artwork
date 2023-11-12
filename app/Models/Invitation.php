@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property int id
  * @property string email
  * @property string token
- * @property string permissions
- * @property string roles
+ * @property array permissions
+ * @property array roles
  * @property string created_at
  * @property string updated_at
  *

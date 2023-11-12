@@ -9,8 +9,8 @@ class Model extends EloquentModel
 {
     public function belongsTo($related, $foreignKey = null, $ownerKey = null, $relation = null): BelongsTo
     {
-        if(!$foreignKey || !$ownerKey || $related) {
-            throw new \InvalidArgumentException('All params have to be used');
+        if(!$foreignKey || !$ownerKey || !$relation) {
+            throw new \InvalidArgumentException('All params of belongsTo have to be used');
         }
 
         return parent::belongsTo($related, $foreignKey, $ownerKey, $relation);

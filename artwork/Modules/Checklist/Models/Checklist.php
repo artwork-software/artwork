@@ -7,6 +7,8 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Project\Models\BelongsToProject;
+use Artwork\Modules\User\Models\BelongsToUser;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +30,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Checklist extends Model
 {
+    use BelongsToProject;
+    use BelongsToUser;
     use HasFactory;
 
     protected $fillable = [
@@ -39,16 +43,6 @@ class Checklist extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
-    }
-
-    public function project()
-    {
-        return $this->belongsTo(Project::class, 'project_id');
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function users()

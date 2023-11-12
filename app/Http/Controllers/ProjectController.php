@@ -6,6 +6,7 @@ use App\Enums\BudgetTypesEnum;
 use App\Enums\NotificationConstEnum;
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
+use App\Http\Controllers\Calendar\FilterProvider;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
@@ -1449,9 +1450,8 @@ class ProjectController extends Controller
      * @param Project $project
      * @return Response|ResponseFactory
      */
-    public function show(Project $project, Request $request)
+    public function show(Project $project, Request $request, CalendarController $calendar)
     {
-        $calendar = new CalendarController();
         $showCalendar = $calendar->createCalendarData('', $project);
 
         $project->load([

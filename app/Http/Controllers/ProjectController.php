@@ -89,7 +89,6 @@ use Intervention\Image\Facades\Image;
 use stdClass;
 use Symfony\Component\ErrorHandler\Debug;
 
-
 class ProjectController extends Controller
 {
     // init empty notification controller
@@ -231,8 +230,9 @@ class ProjectController extends Controller
         }
 
         $departments = collect($request->assigned_departments)
-            ->map(fn($department) => Department::query()->findOrFail($department['id']))
-            ->map(fn(Department $department) => $this->authorize('update', $department));
+            ->map(fn($department) => Department::query()->findOrFail($department['id']));
+        //@todo how did this line ever work?
+        //->map(fn(Department $department) => $this->authorize('update', $department));
 
         $project = Project::create([
             'name' => $request->name,

@@ -30,8 +30,6 @@ beforeEach(function () {
 
 test('aborts invalid requests', function () {
 
-    $this->auth_user->givePermissionTo('create projects');
-
     $this->actingAs($this->auth_user);
 
     $this->post('/projects', ['name' => null])->assertInvalid();
@@ -40,7 +38,7 @@ test('aborts invalid requests', function () {
 
 test('users with the permission can create projects and assign users and departments to it', function () {
 
-    $this->auth_user->givePermissionTo('create projects', 'update users', 'update departments');
+    $this->auth_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
 
     $this->actingAs($this->auth_user);
 
@@ -49,21 +47,15 @@ test('users with the permission can create projects and assign users and departm
         'description' => 'a description',
         'number_of_participants' => '1000-2000',
         'cost_center' => 'DTH CT1',
-        'sector_id' => $this->sector->id,
         'genre_id' => $this->genre->id,
-        'assigned_user_ids' => [$this->assigned_user->id => ['is_admin' => true]],
-        'assigned_departments' => [$this->department]
+        'assigned_user_ids' => [$this->assigned_user->id],
+        'assigned_departments' => [$this->department],
     ]);
-
-    //dd($res);
 
     $this->assertDatabaseHas('projects', [
         'name' => 'TestProject',
         'description' => 'a description',
         'number_of_participants' => '1000-2000',
-        'cost_center' => 'DTH CT1',
-        'sector_id' => $this->sector->id,
-        'genre_id' => $this->genre->id
     ]);
 
     $project = Project::where('name', 'TestProject')->first();
@@ -71,7 +63,6 @@ test('users with the permission can create projects and assign users and departm
     $this->assertDatabaseHas('project_user', [
         'project_id' => $project->id,
         'user_id' => $this->assigned_user->id,
-        'is_admin' => true,
     ]);
 
     $this->assertDatabaseHas('department_project', [

@@ -34,11 +34,8 @@ use JetBrains\PhpStorm\NoReturn;
 class RoomController extends Controller
 {
     // init notification system
-    protected ?RoomService $roomService = null;
-
-    public function __construct()
+    public function __construct(protected RoomService $roomService)
     {
-        $this->roomService = new RoomService();
     }
 
     /**

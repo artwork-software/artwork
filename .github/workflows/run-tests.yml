@@ -68,6 +68,9 @@ jobs:
       - name: Key Generate
         run: php artisan key:generate --env=testing
 
+      - name: Seed database
+        run: php artisan migrate:fresh --seed --env=testing
+
       - name: Optimize Stuffs
         run: php artisan optimize --env=testing
 

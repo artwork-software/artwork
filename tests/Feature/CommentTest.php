@@ -55,11 +55,12 @@ test('users cant create comments on projects they arent assigned to', function (
     ])->assertStatus(403);
 });
 
-test('users can only view comments from projects they are assigned to', function () {
+/**
+ * @todo the setup process is currently broken
+ */
+//test('users can only view comments from projects they are assigned to', function () {
 
-    /**
-     * @todo the setup process is currently broken
-     */
+
 
 //    $this->project->users()->attach($this->auth_user);
 //    $this->project->comments()->save($this->comment);
@@ -75,7 +76,7 @@ test('users can only view comments from projects they are assigned to', function
 //        );
 //
 //    $response->assertStatus(200);
-});
+//});
 
 test('users can update their own comments', function () {
 

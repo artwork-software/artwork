@@ -30,6 +30,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
 use App\Models\UserShiftCalendarFilter;
+use App\Notifications\EventNotification;
 use App\Support\Services\CollisionService;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
@@ -37,10 +38,12 @@ use App\Support\Services\NotificationService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Response;
@@ -60,7 +63,6 @@ class EventController extends Controller
 
     public function __construct()
     {
-
         $this->collisionService = new CollisionService();
         $this->notificationService = new NotificationService();
         $this->notificationData = new \stdClass();
@@ -69,8 +71,6 @@ class EventController extends Controller
         $this->history = new NewHistoryService('App\Models\Event');
 
         $this->notificationKey = Str::random(15);
-
-
     }
 
     /**
@@ -1548,7 +1548,20 @@ class EventController extends Controller
         $event->subEvents()->delete();
 
         broadcast(new OccupancyUpdated())->toOthers();
+        $eventId = $event->id;
         $event->delete();
+
+        $notificationCollection = DB::table('notifications')
+            ->where('type', EventNotification::class)
+            ->where('data->type', NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST)
+            ->where('data->eventId', $eventId)
+            ->get('id');
+
+        if ($notificationCollection->isNotEmpty()) {
+            DB::table('notifications')->delete($notificationCollection->first()->id);
+        }
+
+        return Redirect::back();
     }
 
     public function destroyByNotification(Event $event, Request $request){

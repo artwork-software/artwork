@@ -2269,6 +2269,9 @@ class ProjectController extends Controller
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
+        //load commented budget items setting for given user
+        Auth::user()->load(['commented_budget_items_setting']);
+
         return inertia('Projects/SingleProjectBudget', [
             'project' => new ProjectBudgetResource($project),
             'firstEventInProject' => $firstEventInProject,

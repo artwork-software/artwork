@@ -88,6 +88,20 @@
 
             </div>
         </div>
+        <div class="w-full flex flex-row-reverse mb-4">
+            <SwitchGroup as="div">
+                <Switch v-model="userExcludeCommentedBudgetItems"
+                        :class="[userExcludeCommentedBudgetItems ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                        <span aria-hidden="true"
+                              :class="[userExcludeCommentedBudgetItems ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                </Switch>
+                <SwitchLabel as="span">
+                    <span :class="[userExcludeCommentedBudgetItems ? 'xsDark' : 'xsLight', 'text-sm']">
+                        &nbsp;Ausgeklammerte Posten ausgeblendet
+                    </span>
+                </SwitchLabel>
+            </SwitchGroup>
+        </div>
         <div class="w-full flex stickyHeader" >
             <table class="w-full flex ml-6 py-5">
                 <thead>
@@ -745,7 +759,10 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
@@ -766,6 +783,9 @@ export default {
     name: 'BudgetComponent',
     mixins: [Permissions],
     components: {
+        SwitchGroup,
+        SwitchLabel,
+        Switch,
         SumDetailComponent,
         Button,
         UseTemplateFromProjectBudgetComponent,
@@ -864,6 +884,9 @@ export default {
                 project_title: this.project?.name,
                 table_id: this.table?.id
             }),
+            userExcludeCommentedBudgetItems: this.$page.props.user.commented_budget_items_setting ?
+                this.$page.props.user.commented_budget_items_setting.exclude === 1 :
+                false
         }
     },
 
@@ -900,6 +923,45 @@ export default {
         },
     },
     watch: {
+        userExcludeCommentedBudgetItems: {
+            handler(excludeHiddenItems) {
+                if (this.$page.props.user.commented_budget_items_setting === null) {
+                    Inertia.post(
+                        route(
+                            'user.commentedBudgetItemsSettings.store',
+                            {
+                                user: this.$page.props.user.id
+                            }
+                        ),
+                        {
+                            exclude: excludeHiddenItems
+                        },
+                        {
+                            preserveState: true,
+                            preserveScroll: true
+                        }
+                    );
+                    return;
+                }
+
+                Inertia.patch(
+                    route(
+                        'user.commentedBudgetItemsSettings.update',
+                        {
+                            user: this.$page.props.user.id,
+                            commentedBudgetItemsSetting: this.$page.props.user.commented_budget_items_setting.id
+                        }
+                    ),
+                    {
+                        exclude: excludeHiddenItems
+                    },
+                    {
+                        preserveScroll: true,
+                        preserveState: true
+                    }
+                );
+            }
+        },
         user_query: {
             handler() {
                 if (this.user_query.length > 0) {

@@ -107,6 +107,7 @@
             <div v-if="subPosition.sub_position_rows?.length > 0"
                  v-for="(row,rowIndex) in subPosition.sub_position_rows">
                 <tr
+                    v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting.exclude === 1)"
                     :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$page.props.can.edit_budget_templates || !table.is_template) ? 'border-buttonBlue ' : '']"
                     @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
                     class="bg-secondaryHover flex justify-between items-center border-2"

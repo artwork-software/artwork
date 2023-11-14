@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use App\Http\Resources\CalendarEventResource;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -176,7 +176,7 @@ class User extends Authenticatable
         return $this->last_name . ', ' . $this->first_name;
     }
 
-    public function calendar_settings(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function calendar_settings(): HasOne
     {
         return $this->hasOne(UserCalendarSettings::class);
     }
@@ -268,14 +268,19 @@ class User extends Authenticatable
     }
 
 
-    public function calendar_filter(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function calendar_filter(): HasOne
     {
         return $this->hasOne(UserCalendarFilter::class);
     }
 
-    public function shift_calendar_filter(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function shift_calendar_filter(): HasOne
     {
         return $this->hasOne(UserShiftCalendarFilter::class);
+    }
+
+    public function commented_budget_items_setting(): HasOne
+    {
+        return $this->hasOne(UserCommentedBudgetItemsSetting::class);
     }
 
     public function getAllPermissionsAttribute(): array

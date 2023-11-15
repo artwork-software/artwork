@@ -123,7 +123,7 @@
                         </div>
                         <div class="flex justify-center mt-6">
                             <AddButton @click="saveCalculation()" text="Speichern" :disabled="cell.column.is_locked"
-                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
+                                       class="text-sm ml-0 py-5 xsWhiteBold"></AddButton>
                         </div>
                     </div>
                     <!-- Commentary Tab -->

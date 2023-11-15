@@ -3177,4 +3177,14 @@ class ProjectController extends Controller
         }
 
     }
+
+    /**
+     * @param Request $request
+     * @param Column $column
+     * @return void
+     */
+    public function updateCommentedStatusOfColumn(Request $request, Column $column): void {
+        $validated = $request->validate(['commented' => 'required|boolean']);
+        $column->update(['commented' => $validated['commented']]);
+    }
 }

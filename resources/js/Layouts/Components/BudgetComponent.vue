@@ -173,7 +173,6 @@
                                      :class="index <= 1 ? 'w-16 justify-start' : index === 2 ? 'w-64 justify-start' : index === 3 ? 'w-48 justify-end' : 'w-40 px-3 justify-end'" class="h-5 pr-1 mr-1 xsDark flex "
                                      v-if="!column.clicked">
                                     {{ column.name }}
-
                                 </div>
                                 <div v-else>
                                     <input
@@ -248,6 +247,24 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
                                                     </svg>
                                                     Duplizieren
+                                                </a>
+                                            </MenuItem>
+                                            <MenuItem v-show="index > 2" v-slot="{ active }" v-if="column.commented === 1">
+                                                <a @click="updateColumnCommented(column.id, false)"
+                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                    </svg>
+                                                    Spalte einbeziehen
+                                                </a>
+                                            </MenuItem>
+                                            <MenuItem v-show="index > 2" v-slot="{ active }" v-else>
+                                                <a @click="updateColumnCommented(column.id, true)"
+                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                    </svg>
+                                                    Spalte ausklammern
                                                 </a>
                                             </MenuItem>
                                         </div>
@@ -975,8 +992,24 @@ export default {
             deep: true
         },
     },
-
     methods: {
+        updateColumnCommented(columnId, bool) {
+            Inertia.patch(
+                route(
+                    'project.budget.column.update.commented',
+                    {
+                        column: columnId
+                    }
+                ),
+                {
+                    commented: bool
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: true
+                }
+            );
+        },
         duplicateColumn(columnId){
             Inertia.post(route('project.budget.column.duplicate', columnId), {}, {
                 preserveState: true,

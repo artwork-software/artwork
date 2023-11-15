@@ -487,6 +487,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
             Route::patch('/unfix/sub-position', [ProjectController::class, 'unfixSubPosition'])->name('project.budget.unfix.sub-position');
             Route::patch('/fix/main-position', [ProjectController::class, 'fixMainPosition'])->name('project.budget.fix.main-position');
             Route::patch('/unfix/main-position', [ProjectController::class, 'unfixMainPosition'])->name('project.budget.unfix.main-position');
+            Route::patch('/column/{column}/commented', [ProjectController::class, 'updateCommentedStatusOfColumn'])->name('project.budget.column.update.commented');
 
             // DELETE
             Route::delete('/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])->name('project.budget.sub-position-row.delete');

@@ -224,23 +224,24 @@
                             ></AddButton>
                         </div>
                     </div>
-                    <div v-if="isExcludeTab">
-                        <h2 class="xsLight mb-2 mt-4">
-                            Ausgeklammerte Posten werden nicht in das Projektbudget gerechnet. So kannst du zB. internes
-                            Personal, virtuelle Kosten wie Eigenleistungen oä. aufführen, ohne dass diese Einfluss auf
-                            das Projektbudget haben.
-                        </h2>
-                        <div class="flex items-center justify-start my-6">
-                            <input v-model="isExcluded" type="checkbox" :disabled="cell.column.is_locked"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <p :class="[isExcluded ? 'xsDark' : 'xsLight']"
-                               class="ml-4 my-auto text-sm"> Ausklammern</p>
-                        </div>
-                        <div class="flex justify-center">
-                            <AddButton @click="updateCommentedStatus()" :disabled="cell.column.is_locked"  text="Speichern"
-                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
-                        </div>
-                    </div>
+<!-- is commented out for now, maybe this functionality is used in future again, maybe its removed -->
+<!--                    <div v-if="isExcludeTab">-->
+<!--                        <h2 class="xsLight mb-2 mt-4">-->
+<!--                            Ausgeklammerte Posten werden nicht in das Projektbudget gerechnet. So kannst du zB. internes-->
+<!--                            Personal, virtuelle Kosten wie Eigenleistungen oä. aufführen, ohne dass diese Einfluss auf-->
+<!--                            das Projektbudget haben.-->
+<!--                        </h2>-->
+<!--                        <div class="flex items-center justify-start my-6">-->
+<!--                            <input v-model="isExcluded" type="checkbox" :disabled="cell.column.is_locked"-->
+<!--                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>-->
+<!--                            <p :class="[isExcluded ? 'xsDark' : 'xsLight']"-->
+<!--                               class="ml-4 my-auto text-sm"> Ausklammern</p>-->
+<!--                        </div>-->
+<!--                        <div class="flex justify-center">-->
+<!--                            <AddButton @click="updateCommentedStatus()" :disabled="cell.column.is_locked"  text="Speichern"-->
+<!--                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>-->
+<!--                        </div>-->
+<!--                    </div>-->
                 </div>
             </div>
         </template>
@@ -339,7 +340,8 @@ export default {
                     return [
                         {name: 'Kalkulation', href: '#', current: this.isCalculateTab},
                         {name: 'Kommentar', href: '#', current: this.isCommentTab},
-                        {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
+                        //is commented out for now, maybe this functionality is used in future again, maybe its removed
+                        //{name: 'Ausklammern', href: '#', current: this.isExcludeTab},
                         {name: 'Verlinkung', href: '#', current: this.isLinkTab},
                     ]
             } else {
@@ -396,8 +398,9 @@ export default {
                 this.isCalculateTab = true;
             } else if (selectedTab.name === 'Kommentar') {
                 this.isCommentTab = true;
-            } else if (selectedTab.name === 'Ausklammern') {
-                this.isExcludeTab = true;
+            //is commented out for now, maybe this functionality is used in future again, maybe its removed
+            // } else if (selectedTab.name === 'Ausklammern') {
+            //     this.isExcludeTab = true;
             } else {
                 this.isLinkTab = true;
             }

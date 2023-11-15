@@ -330,8 +330,8 @@
                                                                             angelegt am {{ element.created_at }} von
                                                                             <UserPopoverTooltip :user="element.created_by"
                                                                                                 :id="element.created_by.id"
-                                                                                                height="h-6"
-                                                                                                width="w-6"></UserPopoverTooltip>
+                                                                                                height="6"
+                                                                                                width="6" class="ml-2"></UserPopoverTooltip>
                                                                         </div>
                                                                     </div>
                                                                     <Menu as="div" class="my-auto relative"

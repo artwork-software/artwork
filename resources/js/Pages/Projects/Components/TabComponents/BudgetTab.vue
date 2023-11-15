@@ -1,7 +1,7 @@
 <template>
     <div class="mt-6 p-5  bg-lightBackgroundGray">
         <div class="flex bg-lightBackgroundGray w-[95%]">
-            <BudgetComponent :table="budget.table" :project="project" :selectedCell="budget.selectedCell"
+            <BudgetComponent :table="budget.table" :columnCalculatedNames="budget.columnCalculatedNames" :project="project" :selectedCell="budget.selectedCell"
                              :selectedRow="budget.selectedRow" :templates="budget.templates"
                              :selected-sum-detail="budget.selectedSumDetail"
                              :money-sources="moneySources" :budget-access="projectWriteIds"

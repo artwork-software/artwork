@@ -2174,25 +2174,15 @@ class ProjectController extends Controller
 
         $columns = $project->table()->first()->columns()->get();
 
-        $outputColumns = [];
+        $calculateNames = [];
         foreach ($columns as $column) {
-            $columnOutput = new stdClass();
-            $columnOutput->id = $column->id;
-            $columnOutput->name = $column->name;
-            $columnOutput->subName = $column->subName;
-            $columnOutput->color = $column->color;
-            $columnOutput->is_locked = $column->is_locked;
-            if ($column->type === 'sum') {
+            $calculateName = '';
+            if ($column->type === 'difference' || $column->type === 'sum') {
                 $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
                 $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
-                $columnOutput->calculateName = $firstName . ' + ' . $secondName;
+                $calculateName = $firstName . ' + ' . $secondName;
             }
-            if ($column->type === 'difference') {
-                $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
-                $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
-                $columnOutput->calculateName = $firstName . ' - ' . $secondName;
-            }
-            $outputColumns[] = $columnOutput;
+            $calculateNames[$column->id] = $calculateName;
         }
 
         if (!$project->is_group) {
@@ -2279,7 +2269,6 @@ class ProjectController extends Controller
             'projectDeleteIds' => $deleteIds,
             'moneySources' => MoneySource::all(),
             'budget' => [
-                'columns' => $outputColumns,
                 'table' => $project->table()
                     ->with([
                         'columns',
@@ -2305,6 +2294,7 @@ class ProjectController extends Controller
                     $query->orderBy('created_at', 'desc');
                 }]),
                 'templates' => $templates,
+                'columnCalculatedNames' => $calculateNames,
             ],
             'projectGroups' => $project->groups()->get(),
             'groupProjects' => Project::where('is_group', 1)->get(),

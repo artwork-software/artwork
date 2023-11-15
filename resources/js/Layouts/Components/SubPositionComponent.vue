@@ -118,8 +118,8 @@
                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                         class="h-6 w-6 z-20 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                         <td v-for="(cell,index) in row.cells"
+                            v-show="!(cell.column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
                             :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
-
                             <div
                                 :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
                                 class="my-4 h-6 flex items-center"
@@ -210,7 +210,8 @@
                 <td class="w-28"></td>
                 <td class="w-72 my-2">SUM</td>
                 <td v-if="subPosition.sub_position_rows.length > 0"
-                    class="flex items-center w-48" v-for="column in columns.slice(3)">
+                    class="flex items-center w-48" v-for="column in columns.slice(3)"
+                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="my-4 w-48 p-1" :class="subPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
                         <div class="flex group relative justify-end items-center">
 

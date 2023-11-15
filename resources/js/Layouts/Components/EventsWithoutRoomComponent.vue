@@ -20,14 +20,14 @@
                 <!--    Form    -->
                 <div class="flex my-8 " v-for="event in this.computedEventsWithoutRoom">
                     <div class="flex w-full border border-2 border-gray-300">
-                        <button class="bg-buttonBlue w-6"
+                        <button v-if="this.computedEventsWithoutRoom.length > 1" class="bg-buttonBlue w-6"
                                 @click="event.opened = !event.opened">
                             <ChevronUpIcon v-if="event.opened"
                                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
                             <ChevronDownIcon v-else
                                              class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
                         </button>
-                        <div class="ml-2 w-11/12" v-if="event.opened && event.canEdit">
+                        <div class="mx-2 mt-2 w-full" v-if="(event.opened || this.computedEventsWithoutRoom.length === 1) && event.canEdit">
                             <div class="flex w-full justify-between">
                                 <div
                                     class="flex justify-start my-auto items-center mt-3.5 ml-1 text-error line-through">
@@ -37,8 +37,7 @@
 
                                     <div v-if="event?.canDelete"
                                          class="flex  justify-end">
-                                        <!-- openDeleteEventModal(event) on CLick for this button to open Modal (but right now modal in modal doesnt work -> direct delete) -->
-                                        <div class="flex mt-1 mr-2 cursor-pointer" @click="deleteEvent(event)">
+                                        <div class="flex mt-1 mr-2 cursor-pointer" @click="openDeleteEventModal(event)">
                                             <img class="bg-buttonBlue hover:bg-buttonHover h-8 w-8 p-1 rounded-full"
                                                  src="/Svgs/IconSvgs/icon_trash_white.svg"/>
                                         </div>
@@ -503,6 +502,7 @@ import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import Permissions from "@/mixins/Permissions.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     name: 'EventsWithoutRoomComponent',
@@ -561,6 +561,7 @@ export default {
             allDayEvent: false,
             showProjectInfo: false,
             firstCall: true,
+            isOption: false,
             frequencies: [
                 {
                     id: 1,
@@ -582,7 +583,7 @@ export default {
         }
     },
 
-    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'eventsWithoutRoom'],
+    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'eventsWithoutRoom', 'removeNotificationOnAction'],
 
     emits: ['closed'],
 
@@ -609,10 +610,14 @@ export default {
     computed: {
         computedEventsWithoutRoom: function () {
             this.eventsWithoutRoom.forEach((event) => {
-                event.startDate = new Date(event.start).format('YYYY-MM-DD');
-                event.startTime = new Date(event.start).format('HH:mm');
-                event.endDate = new Date(event.end).format('YYYY-MM-DD');
-                event.endTime = new Date(event.end).format('HH:mm');
+                const dateStart = new Date(event.start);
+                event.startDate = this.getDateOfDate(dateStart);
+                event.startTime = this.getTimeOfDate(dateStart);
+
+                const dateEnd = new Date(event.end);
+                event.endDate = this.getDateOfDate(dateEnd);
+                event.endTime = this.getTimeOfDate(dateEnd);
+
                 event.creatingProject = false;
                 //setting show project info for every event on first rendering
                 if (this.firstCall) {
@@ -627,6 +632,14 @@ export default {
     },
 
     methods: {
+        getTimeOfDate(date) {
+            //returns hours and minutes in format HH:mm, if necessary with leading zeros, from given date object
+            return ('0' + date.getUTCHours()).slice(-2) + ":" + ('0' + date.getUTCMinutes()).slice(-2);
+        },
+        getDateOfDate(date) {
+            //returns date in format "YYYY-MM-DD" from given date object
+            return date.toISOString().split('T')[0];
+        },
         convertDateFormat(dateString) {
             const parts = dateString.split('-');
             return parts[2] + "." + parts[1] + "." +parts[0];
@@ -754,10 +767,12 @@ export default {
          * @returns {Promise<*>}
          */
         async updateOrCreateEvent(event) {
-
+            if (this.removeNotificationOnAction && (this.selectedRoom?.everyone_can_book || this.isAdmin)) {
+              this.isOption = true;
+            }
             return await axios
                 .put('/events/' + event?.id, this.eventData(event))
-                .then(() => this.closeModal())
+                .then(() => this.closeModal(this.removeNotificationOnAction === true))
                 .catch(error => event.error = error.response.data.errors);
         },
         openDeleteEventModal(event) {
@@ -767,16 +782,12 @@ export default {
         async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;
 
-            return await axios
-                .delete(`/events/${this.eventToDelete.id}`)
-                .then(() => this.closeModal());
+            Inertia.delete(`/events/${this.eventToDelete.id}`, {
+              onFinish: () => {
+                this.closeModal();
+              }
+            })
         },
-        async deleteEvent(eventToDelete) {
-            return await axios
-                .delete(`/events/${eventToDelete.id}`)
-                .then(() => this.closeModal());
-        },
-
         eventData(event) {
             return {
                 title: event.title,
@@ -793,7 +804,7 @@ export default {
                 eventTypeId: event.eventTypeId,
                 projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
                 creatingProject: event.creatingProject,
-                isOption: false,
+                isOption: this.isOption,
                 allDay: event.allDay,
                 is_series: event.series ? event.series : false
             };

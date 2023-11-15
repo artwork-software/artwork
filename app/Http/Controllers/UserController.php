@@ -66,6 +66,8 @@ class UserController extends Controller
 
     public function reset_user_password(Request $request) {
 
+        //$user = Auth::user();
+
         $this->authorize('update',User::class);
 
         $request->validate([Fortify::email() => 'required|email']);
@@ -73,6 +75,10 @@ class UserController extends Controller
         $status = Password::broker()->sendResetLink(
             $request->only(Fortify::email())
         );
+
+        /*if($user->email === $request->email){
+            Auth::logout();
+        }*/
 
         return $status == Password::RESET_LINK_SENT
             ? Redirect::back()->with('status', __('passwords.sent_to_user', ['email' => $request->email]))

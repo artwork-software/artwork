@@ -130,8 +130,8 @@
                                             {{ column.subName }}
                                         </div>
 
-                                        <span v-if="column.calculateName" class="ml-1 truncate">
-                                            ({{ column.calculateName }})
+                                        <span v-if="columnCalculatedNames[column.id]" class="ml-1 truncate columnSubName text-white">
+                                            ({{columnCalculatedNames[column.id]}})
                                         </span>
                                     </div>
                                     <span  class="-mt-4" v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
@@ -276,9 +276,16 @@
                             </div>
                         </div>
                     </th>
-                        <button @click="openAddColumnModal()" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="font-bold ml-4 text-xl bg-buttonBlue p-1 mt-3 hover:bg-buttonHover rounded-full items-center uppercase shadow-sm text-secondaryHover">
+                    <th>
+                        <div class="flex items-center">
+                    <div class="text-white hidden xl:block mt-3">
+                        Neue Spalte
+                    </div>
+                        <button @click="openAddColumnModal()" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="font-bold ml-2 text-xl hover:bg-buttonHover p-1 mt-3 bg-secondary border-white border-2 hover:border-buttonBlue rounded-full items-center uppercase shadow-sm text-secondaryHover">
                             <PlusIcon class="h-4 w-4"></PlusIcon>
                         </button>
+                        </div>
+                    </th>
                 </tr>
                 </thead>
             </table>
@@ -907,7 +914,7 @@ export default {
         }
     },
 
-    props: ['selectedSumDetail','table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager'],
+    props: ['selectedSumDetail','columnCalculatedNames','table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager', 'columns'],
 
     computed: {
         tablesToShow: function () {

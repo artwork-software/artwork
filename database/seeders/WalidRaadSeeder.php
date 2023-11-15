@@ -770,22 +770,19 @@ class WalidRaadSeeder extends Seeder
         $row3->columns()->attach($columns[3]->id, [
             'value' => 850,
             'linked_money_source_id' => null,
-            'verified_value' => '',
-            'commented' => true,
+            'verified_value' => ''
         ]);
 
         $row3->columns()->attach($columns[4]->id, [
             'value' => 800,
             'linked_money_source_id' => null,
-            'verified_value' => '',
-            'commented' => true,
+            'verified_value' => ''
         ]);
 
         $row3->columns()->attach($columns[5]->id, [
             'value' => 800,
             'linked_money_source_id' => null,
-            'verified_value' => '',
-            'commented' => true,
+            'verified_value' => ''
         ]);
 
 
@@ -915,7 +912,6 @@ class WalidRaadSeeder extends Seeder
             'value' => 1500,
             'linked_money_source_id' => null,
             'verified_value' => '',
-            'commented' => true,
         ]);
 
         $costSubPositionRow3->columns()->attach($columns[4]->id, [

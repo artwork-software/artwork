@@ -54,7 +54,9 @@ class Table extends Model
             ->pluck('id');
 
         return ColumnCell::query()
-            ->where('commented', true)
+            ->whereRelation('column', 'commented', true)
+            ->whereIntegerInRaw('sub_position_row_id', $subPositionRowIds)
+            ->orWhere('commented', true)
             ->whereIntegerInRaw('sub_position_row_id', $subPositionRowIds)
             ->get()
             ->groupBy('column_id')
@@ -73,6 +75,7 @@ class Table extends Model
             ->pluck('id');
 
         return ColumnCell::query()
+            ->whereRelation('column', 'commented', false)
             ->where('commented', false)
             ->whereIntegerInRaw('sub_position_row_id', $subPositionRowIds)
             ->get()
@@ -121,14 +124,21 @@ class Table extends Model
 
     public function getCommentedCostSumsAttribute()
     {
-        $mainPositionIds = $this->mainPositions()->where('type', 'BUDGET_TYPE_COST')->pluck('id');
+        $mainPositionIds = $this
+            ->mainPositions()
+            ->where('type', 'BUDGET_TYPE_COST')
+            ->pluck('id');
 
         return $this->calculateCommentedSums($mainPositionIds);
     }
 
     public function getCommentedEarningSumsAttribute()
     {
-        $mainPositionIds = $this->mainPositions()->where('type', 'BUDGET_TYPE_EARNING')->pluck('id');
+        $mainPositionIds = $this
+            ->mainPositions()
+            ->where('type', 'BUDGET_TYPE_EARNING')
+            ->pluck('id');
+
 
         return $this->calculateCommentedSums($mainPositionIds);
     }

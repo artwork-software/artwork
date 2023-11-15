@@ -42,6 +42,7 @@ use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\SumDetailsController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTemplateController;
+use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -396,15 +397,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/user/{user}/calendar/shift/filter/reset', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'reset'])->name('reset.user.shift.calendar.filter');
     Route::patch('/user/{user}/calendar/filter/update', [\App\Http\Controllers\UserCalendarFilterController::class, 'update'])->name('update.user.calendar.filter');
     Route::patch('/user/{user}/shift/calendar/filter/update', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'update'])->name('update.user.shift.calendar.filter');
-
-
     Route::patch('/user/{user}/calendar/filter/date/update', [\App\Http\Controllers\UserCalendarFilterController::class, 'updateDates'])->name('update.user.calendar.filter.dates');
-
-
     Route::patch('/user/{user}/calendar/filter/single/update/calendar', [\App\Http\Controllers\UserCalendarFilterController::class, 'singleValueUpdate'])->name('user.calendar.filter.single.value.update');
     Route::patch('/user/{user}/calendar/filter/single/update/shift', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'singleValueUpdate'])->name('user.shift.calendar.filter.single.value.update');
     Route::patch('/user/{user}/shift/calendar/filter/date/update', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'updateDates'])->name('update.user.shift.calendar.filter.dates');
 
+    Route::resource(
+        'user.commentedBudgetItemsSettings',
+        UserCommentedBudgetItemsSettingController::class
+    )->only(['store', 'update']);
 
     // Project Routes
     Route::group(['prefix' => 'project'], function (){
@@ -486,6 +487,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
             Route::patch('/unfix/sub-position', [ProjectController::class, 'unfixSubPosition'])->name('project.budget.unfix.sub-position');
             Route::patch('/fix/main-position', [ProjectController::class, 'fixMainPosition'])->name('project.budget.fix.main-position');
             Route::patch('/unfix/main-position', [ProjectController::class, 'unfixMainPosition'])->name('project.budget.unfix.main-position');
+            Route::patch('/column/{column}/commented', [ProjectController::class, 'updateCommentedStatusOfColumn'])->name('project.budget.column.update.commented');
 
             // DELETE
             Route::delete('/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])->name('project.budget.sub-position-row.delete');

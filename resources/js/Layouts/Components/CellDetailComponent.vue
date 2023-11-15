@@ -397,6 +397,7 @@ export default {
                     return [
                         {name: 'Kalkulation', href: '#', current: this.isCalculateTab},
                         {name: 'Kommentar', href: '#', current: this.isCommentTab},
+                        //is commented out for now, maybe this functionality is used in future again, maybe its removed
                         //{name: 'Ausklammern', href: '#', current: this.isExcludeTab},
                         {name: 'Verlinkung', href: '#', current: this.isLinkTab},
                     ]
@@ -463,8 +464,9 @@ export default {
                 this.isCalculateTab = true;
             } else if (selectedTab.name === 'Kommentar') {
                 this.isCommentTab = true;
-            } else if (selectedTab.name === 'Ausklammern') {
-                this.isExcludeTab = true;
+            //is commented out for now, maybe this functionality is used in future again, maybe its removed
+            // } else if (selectedTab.name === 'Ausklammern') {
+            //     this.isExcludeTab = true;
             } else {
                 this.isLinkTab = true;
             }

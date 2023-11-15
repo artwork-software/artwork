@@ -56,6 +56,7 @@ class SubPosition extends Model
         // @Jakob hier bitte checken
         // Siehe Notion
         return ColumnCell::query()
+            ->whereRelation('column', 'commented', false)
             ->where('commented', false)
             ->whereIntegerInRaw('sub_position_row_id', $subPositionRowIds)
             ->get()

@@ -1331,13 +1331,30 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
-    public function addCalculation(ColumnCell $cell)
+    public function addCalculation(ColumnCell $cell, Request $request)
     {
-        $cell->calculations()->create([
+        // current position found in $request->position
+
+        // add check if $request->position is present, if not set to 0
+        if(!$request->position){
+            $request->position = 0;
+        }
+
+
+        $newCalculation = $cell->calculations()->create([
             'name' => '',
             'value' => 0,
-            'description' => ''
+            'description' => '',
+            'position' => $request->position + 1
         ]);
+
+        // update all positions of calculations where position is greater than $request->position and cell_id is $cell->id and where not id is $newCalculation->id, increment position by 1 after new calculation
+
+        CellCalculations::query()
+            ->where('cell_id', $cell->id)
+            ->where('position', '>', $request->position)
+            ->where('id', '!=', $newCalculation->id)
+            ->increment('position');
     }
 
     /**
@@ -2282,11 +2299,16 @@ class ProjectController extends Controller
                             return $query->orderBy('position');
                         }, 'mainPositions.subPositions.subPositionRows.cells' => function($query){
                             $query->withCount('comments')
-                                ->withCount('calculations');
+                                ->withCount(['calculations' => function($query){
+                                    // count if value is not 0
+                                    return $query->where('value', '!=', 0);
+                                }]);
                         }, 'mainPositions.subPositions.subPositionRows.cells.column'
                     ])
                     ->first(),
-                'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments', 'column' => function ($query) {
+                'selectedCell' => $selectedCell?->load(['calculations' => function($calculations) {
+                    $calculations->orderBy('position', 'asc');
+                }, 'comments.user', 'comments', 'column' => function ($query) {
                     $query->orderBy('created_at', 'desc');
                 }]),
                 'selectedSumDetail' => $selectedSumDetail,

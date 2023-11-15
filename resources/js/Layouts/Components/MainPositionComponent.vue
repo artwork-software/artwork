@@ -200,7 +200,8 @@
                 <td class="w-28"></td>
                 <td class="w-72">SUM</td>
                 <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center"
-                     v-for="column in table.columns.slice(3)">
+                    v-for="column in table.columns.slice(3)"
+                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="mainPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
 
                         <img v-if="mainPosition.columnSums[column.id]?.hasComments && mainPosition.columnSums[column.id]?.hasMoneySource"

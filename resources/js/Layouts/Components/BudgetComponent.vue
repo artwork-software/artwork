@@ -107,6 +107,7 @@
                 <thead>
                 <tr class="">
                     <th v-for="(column,index) in table.columns"
+                        v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
                         :class="index <= 1 ? 'pl-2 w-28 text-left' : index === 2 ? 'w-64 text-left pl-2' : index === 3 ? 'w-52 text-right' : 'w-48 px-1 text-right'">
                         <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
@@ -403,7 +404,8 @@
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns?.slice(3)">
+                                    v-for="column in table.columns?.slice(3)"
+                                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center" :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
 
                                         <img v-if="table.costSumDetails[column.id]?.hasComments && table.costSumDetails[column.id]?.hasMoneySource"
@@ -432,7 +434,8 @@
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns.slice(3)">
+                                    v-for="column in table.columns.slice(3)"
+                                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                         {{ table.commentedCostSums[column.id]?.toLocaleString() }}
                                     </div>
@@ -490,7 +493,8 @@
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns.slice(3)">
+                                    v-for="column in table.columns.slice(3)"
+                                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
                                          :class="this.getSumOfTable(1,column.id) < 0 ? 'text-red-500' : ''">
 
@@ -518,7 +522,8 @@
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns.slice(3)">
+                                    v-for="column in table.columns.slice(3)"
+                                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                         {{ table.commentedEarningSums[column.id]?.toLocaleString() }}
                                     </div>
@@ -549,7 +554,8 @@
                     <td class="w-10 mr-1"></td>
                     <td class="w-72 my-2">SUM</td>
                     <td class="flex items-center w-48"
-                        v-for="column in table.columns.slice(3)">
+                        v-for="column in table.columns.slice(3)"
+                        v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                         <div class="w-48 my-2 p-1"
                              :class="this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : ''">
                             {{ (this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id)).toLocaleString() }}

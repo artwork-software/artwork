@@ -22,11 +22,18 @@
                                 </div>
                                 <p class="text-error subpixel-antialiased">{{ description }}</p>
                             </div>
-                            <div class="flex justify-between mt-5">
+                            <div class="flex justify-between mt-5" v-if="!is_budget">
                                 <AddButton mode="modal" @click="deleteElement(true)"
                                            class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none"
                                            :text="buttonText"/>
                                 <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">Nein, doch nicht</p>
+                            </div>
+                            <div v-else class="flex justify-between mt-5">
+                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">Weiter ohne zu speichern</p>
+                                <AddButton mode="modal" @click="deleteElement(true)"
+                                           class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none"
+                                           :text="buttonText"/>
+
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -59,7 +66,7 @@ export default {
             buttonText: this.button ? this.button : 'Löschen'
         }
     },
-    props: ['title', 'description', 'button'],
+    props: ['title', 'description', 'button', 'is_budget'],
     emits: ['closed', 'delete'],
     methods: {
         closeModal(bool){

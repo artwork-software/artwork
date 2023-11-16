@@ -386,8 +386,7 @@
                         <table class="w-[97%] mb-6">
                             <tbody class="">
                             <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                                <MainPositionComponent @openRowDetailModal="openRowDetailModal"
-                                                       @openVerifiedModal="openVerifiedModal"
+                                <MainPositionComponent @openVerifiedModal="openVerifiedModal"
                                                        @openCellDetailModal="openCellDetailModal"
                                                        @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
                                                        @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
@@ -474,8 +473,7 @@
                         <table class="w-[97%] mb-6">
                             <tbody class="">
                             <tr v-if="tablesToShow[1]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[1]">
-                                <MainPositionComponent @openRowDetailModal="openRowDetailModal"
-                                                       @openVerifiedModal="openVerifiedModal"
+                                <MainPositionComponent @openVerifiedModal="openVerifiedModal"
                                                        @openCellDetailModal="openCellDetailModal"
                                                        @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
                                                        @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
@@ -749,13 +747,6 @@
         :table="table"
         @closed="closeRenameBudgetTemplateModal()"
     />
-    <!-- Row Detail Modal-->
-    <row-detail-component
-        v-if="showRowDetailModal"
-        :row="selectedRow"
-        :moneySources="moneySources"
-        @closed="closeRowDetailModal()"
-    />
     <!-- Nachfrage-Modal bei Löschfunktionalitäten -->
     <confirmation-component
         v-if="showDeleteModal"
@@ -859,7 +850,6 @@ export default {
             hoveredBorder: null,
             showAddColumnModal: false,
             showCellDetailModal: false,
-            showRowDetailModal: false,
             showUseTemplateModal: false,
             showRenameTableModal: false,
             showUseTemplateFromProjectModal: false,
@@ -1267,24 +1257,8 @@ export default {
                 }
             })
         },
-        openRowDetailModal(row) {
-            Inertia.visit(route('projects.show.budget', {
-                project: this.project.id,
-                selectedRow: row.id
-            }), {
-                only: ['budget'],
-                onSuccess: () => {
-                    this.showRowDetailModal = true;
-                },
-                preserveState: true,
-                preserveScroll: true
-            });
-        },
         closeCellDetailModal() {
             this.showCellDetailModal = false;
-        },
-        closeRowDetailModal() {
-            this.showRowDetailModal = false;
         },
         openDeleteRowModal(row) {
             this.confirmationTitle = 'Zeile löschen';

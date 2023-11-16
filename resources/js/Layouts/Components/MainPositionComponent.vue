@@ -134,7 +134,7 @@
         <table v-if="!mainPosition.closed" class="w-full ">
             <thead class="">
             <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal" @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @open-error-modal="openErrorModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="table.columns" :project="project" :table="table" :project-managers="projectManagers"></SubPositionComponent>
+                <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @open-error-modal="openErrorModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="table.columns" :project="project" :table="table" :project-managers="projectManagers"></SubPositionComponent>
             </tr>
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-buttonBlue' : 'bg-primary'">
@@ -398,9 +398,6 @@ export default {
                 preserveScroll: true,
                 preserveState: true
             });
-        },
-        openRowDetailModal(row){
-            this.$emit('openRowDetailModal', row)
         },
         openSubPositionSumDetailModal(subPosition, column) {
             this.$emit('openSubPositionSumDetailModal', subPosition, column)

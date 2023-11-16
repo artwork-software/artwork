@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Enums\BudgetTypesEnum;
-use App\Http\Controllers\ProjectController;
 use App\Models\Area;
 use App\Models\BudgetSumDetails;
 use App\Models\EventType;
@@ -13,9 +12,7 @@ use App\Models\ProjectHeadline;
 use App\Models\ProjectStates;
 use App\Models\SeriesEvents;
 use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class WalidRaadSeeder extends Seeder
@@ -1068,18 +1065,21 @@ class WalidRaadSeeder extends Seeder
             'value' => 200,
             'linked_money_source_id' => null,
             'verified_value' => '',
+            'commented' => true
         ]);
 
         $costSubPositionRow3Main2->columns()->attach($columns[4]->id, [
             'value' => 200,
             'linked_money_source_id' => null,
-            'verified_value' => ''
+            'verified_value' => '',
+            'commented' => true
         ]);
 
         $costSubPositionRow3Main2->columns()->attach($columns[5]->id, [
             'value' => 300,
             'linked_money_source_id' => null,
-            'verified_value' => ''
+            'verified_value' => '',
+            'commented' => true
         ]);
 
 

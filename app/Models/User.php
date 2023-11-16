@@ -135,6 +135,7 @@ class User extends Authenticatable
         'profile_photo_url',
         'full_name',
         'type',
+        'formatted_vacation_days',
     ];
 
     protected $with = ['calendar_settings'];
@@ -184,6 +185,23 @@ class User extends Authenticatable
     public function vacations(): HasMany
     {
         return $this->hasMany(UserVacations::class);
+    }
+
+    public function getFormattedVacationDaysAttribute(){
+        $vacations = $this->vacations;
+        $returnInterval = [];
+        foreach ($vacations as $vacation) {
+            $start = Carbon::parse($vacation->from);
+            $end = Carbon::parse($vacation->until);
+
+            $interval = CarbonPeriod::create($start, $end);
+
+            foreach ($interval as $date) {
+                $returnInterval[] = $date->format('Y-m-d');
+            }
+        }
+        return $returnInterval;
+
     }
 
     public function project_files()

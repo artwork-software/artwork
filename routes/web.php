@@ -467,7 +467,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
             Route::post('/template/{table}/create', [\App\Http\Controllers\BudgetTemplateController::class, 'store'])->name('project.budget.template.create');
             Route::post('/template/{table}/use', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplate'])->name('project.budget.template.use');
             Route::post('/template/use/project', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplateFromProject'])->name('project.budget.template.project');
-
+            Route::post('/subposition/row/{subPositionRow}/duplicate', [ProjectController::class, 'duplicateRow'])->name('project.budget.sub-position.duplicate.row');
             // PATCH
             Route::patch('/cell', [ProjectController::class, 'updateCellValue'])->name('project.budget.cell.update');
             Route::patch('/column/update-name', [ProjectController::class, 'updateColumnName'])->name('project.budget.column.update-name');

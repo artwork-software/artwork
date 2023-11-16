@@ -37,6 +37,7 @@ use App\Support\Services\NotificationService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection;
@@ -1478,7 +1479,7 @@ class EventController extends Controller
      *
      * @param Event $event
      */
-    public function destroy(Event $event): void
+    public function destroy(Event $event): RedirectResponse
     {
         $this->authorize('delete', $event);
         if(!empty($event->project_id)){

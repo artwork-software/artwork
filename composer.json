@@ -37,8 +37,10 @@
         "mockery/mockery": "^1.5.1",
         "nunomaduro/collision": "^v6.3.1",
         "pestphp/pest-plugin-faker": "^1.0",
+        "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^9.5.26",
-        "spatie/laravel-ignition": "^1.6.1"
+        "spatie/laravel-ignition": "^1.6.1",
+        "squizlabs/php_codesniffer": "^3.7"
     },
     "autoload": {
         "psr-4": {

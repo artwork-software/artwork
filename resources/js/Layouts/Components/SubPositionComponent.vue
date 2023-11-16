@@ -1,32 +1,20 @@
 <template>
     <th class="bg-silverGray xxsDark w-full">
-        <div class="flex" @mouseover="showMenu = 'subPosition' + subPosition.id"
-             @mouseout="showMenu = null">
-            <div
-                class="pl-2 xxsDark w-full flex items-center h-10"
-                v-if="!subPosition.clicked">
+        <div class="flex" @mouseover="showMenu = 'subPosition' + subPosition.id" @mouseout="showMenu = null">
+            <div class="pl-2 xxsDark w-full flex items-center h-10" v-if="!subPosition.clicked">
                 <div @click="subPosition.clicked = !subPosition.clicked">
                     {{ subPosition.name }}
                 </div>
-                <button class="my-auto w-6 ml-3"
-                        @click="subPosition.closed = !subPosition.closed">
-                    <ChevronUpIcon v-if="!subPosition.closed"
-                                   class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
-                    <ChevronDownIcon v-else
-                                     class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                <button class="my-auto w-6 ml-3" @click="openCloseMainPosition">
+                    <ChevronUpIcon v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto" />
+                    <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto" />
                 </button>
             </div>
             <div v-else class="flex w-full">
-                <input
-                    class="my-2 ml-1 xxsDark" type="text"
-                    v-model="subPosition.name"
-                    @focusout="updateSubPositionName(subPosition); subPosition.clicked = !subPosition.clicked">
-                <button class="my-auto w-6 ml-3"
-                        @click="subPosition.closed = !subPosition.closed">
-                    <ChevronUpIcon v-if="!subPosition.closed"
-                                   class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
-                    <ChevronDownIcon v-else
-                                     class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                <input class="my-2 ml-1 xxsDark" type="text" v-model="subPosition.name" @focusout="updateSubPositionName(subPosition); subPosition.clicked = !subPosition.clicked">
+                <button class="my-auto w-6 ml-3" @click="subPosition.closed = !subPosition.closed">
+                    <ChevronUpIcon v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto" />
+                    <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto" />
                 </button>
             </div>
             <div class="flex items-center justify-end">
@@ -35,65 +23,43 @@
                         <Menu as="div" class="my-auto relative" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
                              <!-- v-show="showMenu === 'subPosition' + subPosition.id"-->
                             <div class="flex">
-                                <MenuButton
-                                    class="flex bg-tagBg p-0.5 rounded-full">
-                                    <DotsVerticalIcon
-                                        class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                        aria-hidden="true"/>
+                                <MenuButton class="flex bg-tagBg p-0.5 rounded-full">
+                                    <DotsVerticalIcon class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto" aria-hidden="true"/>
                                 </MenuButton>
                             </div>
-                            <transition
-                                enter-active-class="transition ease-out duration-100"
-                                enter-from-class="transform opacity-0 scale-95"
-                                enter-to-class="transform opacity-100 scale-100"
-                                leave-active-class="transition ease-in duration-75"
-                                leave-from-class="transform opacity-100 scale-100"
-                                leave-to-class="transform opacity-0 scale-95">
-                                <MenuItems
-                                    class="origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                            <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
+                                <MenuItems class="origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                     <div class="py-1">
-                                        <MenuItem v-slot="{ active }"
-                                                  v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
-                                                                                <span
-                                                                                    @click="fixSubPosition(subPosition.id)"
-                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                                                                    </svg>
-                                                                                    Festschreiben
-                                                                                </span>
+                                        <MenuItem v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
+                                            <span @click="fixSubPosition(subPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                </svg>
+                                                Festschreiben
+                                            </span>
                                         </MenuItem>
-                                        <MenuItem v-slot="{ active }"
-                                                  v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
-                                                                                <span
-                                                                                    @click="unfixSubPosition(subPosition.id)"
-                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                                                                    </svg>
-                                                                                    Festschreibung aufheben
-                                                                                </span>
+                                        <MenuItem v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
+                                            <span @click="unfixSubPosition(subPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                </svg>
+                                                Festschreibung aufheben
+                                            </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
-                                                                                    <span
-                                                                                        @click="openDeleteSubPositionModal(subPosition)"
-                                                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                        <TrashIcon
-                                                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                            aria-hidden="true"/>
-                                                                                        Löschen
-                                                                                    </span>
+                                            <span @click="openDeleteSubPositionModal(subPosition)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <TrashIcon class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                                Löschen
+                                            </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
-                                            <a @click="duplicateSubpostion(subPosition.id)"
-                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <a @click="duplicateSubpostion(subPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
                                                 </svg>
                                                 Duplizieren
                                             </a>
                                         </MenuItem>
-
                                     </div>
                                 </MenuItems>
                             </transition>
@@ -104,127 +70,61 @@
         </div>
         <table class="w-full" v-if="!subPosition.closed">
             <tbody class="bg-secondaryHover w-full">
-            <div v-if="subPosition.sub_position_rows?.length > 0"
-                 v-for="(row,rowIndex) in subPosition.sub_position_rows">
-                <tr
-                    v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
-                    :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$page.props.can.edit_budget_templates || !table.is_template) ? 'border-buttonBlue ' : '']"
-                    @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
-                    class="bg-secondaryHover flex justify-between items-center border-2"
-                >
+            <div v-if="subPosition.sub_position_rows?.length > 0" v-for="(row,rowIndex) in subPosition.sub_position_rows">
+                <tr v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)" :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$page.props.can.edit_budget_templates || !table.is_template) ? 'border-buttonBlue ' : '']" @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null" class="bg-secondaryHover flex justify-between items-center border-2">
                     <div class="flex items-center">
-                        <PlusCircleIcon @click="openRowDetailModal(row)"
-                                        v-if="this.$page.props.can.edit_budget_templates || !table.is_template"
-                                        :class="hoveredRow === row.id ? '' : 'hidden'"
-                                        class="h-6 w-6 z-20 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
-                        <td v-for="(cell,index) in row.cells"
-                            v-show="!(cell.column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
-                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
-                            <div
-                                :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
-                                class="my-4 h-6 flex items-center"
-                                @click="handleCellClick(cell)"
-                                v-if="!cell.clicked">
+                        <PlusCircleIcon @click="openRowDetailModal(row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" :class="hoveredRow === row.id ? '' : 'hidden'" class="h-6 w-6 z-20 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                        <td v-for="(cell,index) in row.cells" v-show="!(cell.column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)" :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
+                            <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']" class="my-4 h-6 flex items-center" @click="handleCellClick(cell)" v-if="!cell.clicked">
                                 <div class=" flex items-center">
                                     <div v-if="cell.comments_count > 0">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-1">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
                                         </svg>
-
                                     </div>
-                                    <img v-else-if="cell.calculations_count > 0"
-                                         src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
-                                         class="h-5 w-5 mr-1"/>
-                                    <img v-else-if="cell.linked_money_source_id !== null"
-                                         src="/Svgs/IconSvgs/icon_linked_money_source.svg"
-                                         class="h-6 w-6 mr-1"/>
+                                    <img v-else-if="cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
+                                    <img v-else-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
                                     {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
                                 </div>
                             </div>
-                            <div class="flex items-center"
-                                 :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'"
-                                 v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
-                                <input
-                                    :ref="`cell-${cell.id}`"
-                                    :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
-                                    class="my-2 xsDark  appearance-none z-10"
-                                    type="text"
-                                    :disabled="!this.$page.props.can.edit_budget_templates && table.is_template"
-                                    v-model="cell.value"
-                                    @keypress="isNumber($event, index)"
-                                    @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
-                                <PlusCircleIcon v-if="index > 2"
-                                                @click="openCellDetailModal(cell)"
-                                                class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full">
-                                </PlusCircleIcon>
+                            <div class="flex items-center" :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'" v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
+                                <input :ref="`cell-${cell.id}`" :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'" class="my-2 xsDark  appearance-none z-10" type="text" :disabled="!this.$page.props.can.edit_budget_templates && table.is_template" v-model="cell.value" @keypress="isNumber($event, index)" @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
+                                <PlusCircleIcon v-if="index > 2" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
                             </div>
-                            <div
-                                :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
-                                class="my-4 h-6 flex items-center justify-end"
-                                @click="cell.clicked = !cell.clicked && cell.column.is_locked"
-                                v-else>
-                                <img v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)"
-                                     src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
-                                     class="h-6 w-6 mr-1"/>
-                                <img v-else-if="cell.comments_count > 0 || cell.calculations_count > 0"
-                                     src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
-                                     class="h-5 w-5 mr-1"/>
-                                <img v-else-if="cell.linked_money_source_id !== null"
-                                     src="/Svgs/IconSvgs/icon_linked_money_source.svg"
-                                     class="h-6 w-6 mr-1"/>
+                            <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']" class="my-4 h-6 flex items-center justify-end" @click="cell.clicked = !cell.clicked && cell.column.is_locked" v-else>
+                                <img v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)" src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg" class="h-6 w-6 mr-1"/>
+                                <img v-else-if="cell.comments_count > 0 || cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
+                                <img v-else-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
                                 {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
-                                <PlusCircleIcon v-if="index > 2 && cell.clicked"
-                                                @click="openCellDetailModal(cell)"
-                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                <PlusCircleIcon v-if="index > 2 && cell.clicked" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
                             </div>
-
                         </td>
-
                     </div>
-                    <XCircleIcon @click="openDeleteRowModal(row)"
-                                 v-if="this.$page.props.can.edit_budget_templates || !table.is_template"
-                                 :class="hoveredRow === row.id ? '' : 'hidden'"
-                                 class="h-6 w-6 -mr-3 cursor-pointer justify-end text-secondaryHover bg-error rounded-full"></XCircleIcon>
-
+                    <XCircleIcon @click="openDeleteRowModal(row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" :class="hoveredRow === row.id ? '' : 'hidden'" class="h-6 w-6 -mr-3 cursor-pointer justify-end text-secondaryHover bg-error rounded-full" />
                 </tr>
-                <div @click="addRowToSubPosition(subPosition, row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template"
-                     class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
-                    <div
-                        class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
+                <div @click="addRowToSubPosition(subPosition, row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
+                    <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                         Zeile
-                        <PlusCircleIcon
-                            class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                        <PlusCircleIcon class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
                     </div>
                 </div>
             </div>
-            <div v-else @click="addRowToSubPosition(subPosition, row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template"
-                 class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+            <div v-else @click="addRowToSubPosition(subPosition, row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                 <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                     Zeile
-                    <PlusCircleIcon
-                        class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                    <PlusCircleIcon class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
                 </div>
             </div>
             <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
                 <td class="w-28"></td>
                 <td class="w-28"></td>
                 <td class="w-72 my-2">SUM</td>
-                <td v-if="subPosition.sub_position_rows.length > 0"
-                    class="flex items-center w-48" v-for="column in columns.slice(3)"
-                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
+                <td v-if="subPosition.sub_position_rows.length > 0" class="flex items-center w-48" v-for="column in columns.slice(3)" v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="my-4 w-48 p-1" :class="subPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
                         <div class="flex group relative justify-end items-center">
-
-                            <img v-if="subPosition.columnSums[column.id]?.hasComments && subPosition.columnSums[column.id]?.hasMoneySource"
-                                 src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
-                                 class="h-6 w-6 mr-1"/>
-                            <img v-else-if="subPosition.columnSums[column.id]?.hasComments"
-                                 src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
-                                 class="h-5 w-5 mr-1"/>
-                            <img v-else-if="subPosition.columnSums[column.id]?.hasMoneySource"
-                                 src="/Svgs/IconSvgs/icon_linked_money_source.svg"
-                                 class="h-6 w-6 mr-1"/>
-
+                            <img v-if="subPosition.columnSums[column.id]?.hasComments && subPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg" class="h-6 w-6 mr-1"/>
+                            <img v-else-if="subPosition.columnSums[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
+                            <img v-else-if="subPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
                             <span>
                                 {{subPosition.columnSums[column.id]?.sum.toLocaleString() }}
                             </span>
@@ -237,13 +137,10 @@
             </tr>
             </tbody>
         </table>
-        <div @click="addSubPosition(mainPosition.id, subPosition)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template"
-             class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-            <div
-                class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
+        <div @click="addSubPosition(mainPosition.id, subPosition)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+            <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                 Unterposition
-                <PlusCircleIcon
-                    class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full" />
             </div>
         </div>
     </th>
@@ -346,7 +243,56 @@ export default {
             })
         }
     },
+    mounted() {
+        // check if main Position in localStorage in "closedSubPositions"
+        this.checkIfSubPositionClosed()
+    },
+    updated() {
+        this.checkIfSubPositionClosed()
+    },
+    beforeUnmount() {
+        // remove localeStorage key "closedSubPositions"
+        localStorage.removeItem('closedSubPositions')
+    },
     methods: {
+        checkIfSubPositionClosed(){
+            if(localStorage.getItem('closedSubPositions') !== null){
+                let closedSubPositions = JSON.parse(localStorage.getItem('closedSubPositions'))
+                // add fail over if closedMainPositions is not an array
+                if(!Array.isArray(closedSubPositions)){
+                    closedSubPositions = []
+                }
+                let index = closedSubPositions.findIndex((subPosition) => subPosition.id === this.subPosition.id)
+                if(index !== -1){
+                    this.subPosition.closed = closedSubPositions[index].closed
+                }
+            }
+        },
+        openCloseMainPosition(){
+            this.subPosition.closed = !this.subPosition.closed
+            if(localStorage.getItem('closedSubPositions') === null){
+                localStorage.setItem('closedSubPositions', JSON.stringify([{
+                    id: this.subPosition.id,
+                    closed: this.subPosition.closed
+                }]))
+            } else {
+                let closedSubPositions = JSON.parse(localStorage.getItem('closedSubPositions'))
+                // add fail over if closedMainPositions is not an array
+                if(!Array.isArray(closedSubPositions)){
+                    closedSubPositions = []
+                }
+                let index = closedSubPositions.findIndex((subPosition) => subPosition.id === this.subPosition.id)
+                if(index === -1){
+                    closedSubPositions.push({
+                        id: this.subPosition.id,
+                        closed: this.subPosition.closed
+                    })
+                } else {
+                    closedSubPositions[index].closed = this.subPosition.closed
+                }
+                localStorage.setItem('closedSubPositions', JSON.stringify(closedSubPositions))
+            }
+        },
         duplicateSubpostion(subPositionId) {
             this.$inertia.post(route('project.budget.sub-position.duplicate', subPositionId), {}, {
                 preserveScroll: true,

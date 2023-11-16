@@ -2,7 +2,7 @@
     <div class="bg-backgroundGray mt-6 pb-6">
         <div class=" ml-14 pt-3 pr-14">
             <div class="flex justify-between items-center mt-4">
-            <div class="">
+            <div class="flex items-center gap-6">
                 <SwitchGroup as="div" class="flex items-center" v-if="eventsWithRelevant?.length > 0 && (this.$can('can commit shifts') || this.hasAdminRole())">
                     <Switch v-model="hasUncommittedShift"
                             @update:modelValue="updateCommitmentOfShifts"
@@ -14,6 +14,23 @@
                         <span class="font-medium text-gray-900">Festgeschrieben</span>
                     </SwitchLabel>
                 </SwitchGroup>
+                <div v-if="conflictMessage.length > 0" class="text-red-500">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+
+                        <div class="pl-2">
+                            Schichtkonflikt:
+                        </div>
+                        <div class="flex divide-x divide-red-500">
+                            <div v-for="(conflict, index) in conflictMessage" :class="index < 0 ? 'pr-2' : 'px-2'">
+                                {{ dayjs(conflict.date).format('DD.MM.YYYY') }}, {{ conflict.abbreviation }}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
             <div>
                 <div @click="userWindow = !userWindow">
@@ -150,6 +167,7 @@ import SingleRelevantEvent from "@/Pages/Projects/Components/SingleRelevantEvent
 import Input from "@/Jetstream/Input.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import {usePage} from "@inertiajs/inertia-vue3";
+import dayjs from "dayjs";
 
 export default defineComponent({
     name: "ShiftTab",
@@ -171,10 +189,24 @@ export default defineComponent({
             openFilter: false,
             showIntern: false,
             showExtern: false,
-            showProvider: false
+            showProvider: false,
+
         }
     },
     computed: {
+        conflictMessage(){
+            let conflicts = [];
+            this.eventsWithRelevant.forEach(event => {
+                event.shifts.forEach(shift => {
+                    shift.users.forEach(user => {
+                        if(user.formatted_vacation_days?.includes(shift.event_start_day)){
+                            conflicts.push({ date: shift.event_start_day, abbreviation: shift.craft.abbreviation })
+                        }
+                    })
+                })
+            })
+            return conflicts;
+        },
         filteredUsers() {
             if (!this.showExtern && !this.showIntern && !this.showProvider) {
                 return this.dropUsers;
@@ -200,6 +232,7 @@ export default defineComponent({
         this.makeContainerDraggable();
     },
     methods: {
+        dayjs,
         usePage,
         updateCommitmentOfShifts() {
             this.$inertia.patch(route('update.shift.commitment'), {

@@ -29,7 +29,7 @@
                             <SingleShiftPlanEvent :eventType="this.findEventTypeById(event.event_type_id)"
                                                   :project="this.findProjectById(event.projectId)"
                                                   :room="this.findRoomById(event.room_id)" :event="event"
-                                                  :showRoom="true" :show-duration-info="true"></SingleShiftPlanEvent>
+                                                  :showRoom="true" :show-duration-info="true" />
                         </div>
                     </div>
                 </div>

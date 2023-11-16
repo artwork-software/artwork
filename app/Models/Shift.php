@@ -7,6 +7,7 @@ use App\Casts\TimeWithoutSeconds;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use function Clue\StreamFilter\fun;
 
 
 /**
@@ -141,31 +142,21 @@ class Shift extends Model
 
     protected function getWorkerCount($is_master = false): float
     {
-        $users = $this->users()
-            ->wherePivot('is_master', $is_master)
-            ->without(['calender_settings'])
-            ->get();
+        $relations = ['users', 'service_provider', 'freelancer'];
 
-        $serviceProviders = $this->service_provider()
-            ->wherePivot('is_master', $is_master)
-            ->get();
-
-        $freelancers = $this->freelancer()
-            ->wherePivot('is_master', $is_master)
-            ->get();
+        $this->load($relations, [
+            'pivot' => function ($query) use ($is_master) {
+                $query->where('is_master', $is_master);
+            }
+        ]);
 
         $totalCount = 0;
 
-        foreach ($users as $user) {
-            $totalCount += 1 / $user->pivot->shift_count;
-        }
-
-        foreach ($serviceProviders as $serviceProvider) {
-            $totalCount += 1 / $serviceProvider->pivot->shift_count;
-        }
-
-        foreach ($freelancers as $freelancer) {
-            $totalCount += 1 / $freelancer->pivot->shift_count;
+        // Iterieren über jede Beziehung
+        foreach ($relations as $relation) {
+            foreach ($this->$relation as $entity) {
+                $totalCount += 1 / $entity->pivot->shift_count;
+            }
         }
 
         return $totalCount;
@@ -184,16 +175,45 @@ class Shift extends Model
 
     public function getMastersAttribute(): \Illuminate\Database\Eloquent\Collection
     {
-        $masterUsers = $this->users()->wherePivot('is_master', true)->without(['calender_settings'])->get();
-        $masterFreelancers = $this->freelancer()->wherePivot('is_master', true)->get();
-        $masterServiceProviders = $this->service_provider()->wherePivot('is_master', true)->get();
+        // Eager Loading für alle Meister-Beziehungen mit 'is_master' true
+        $relations = ['users', 'freelancer', 'service_provider'];
 
-        return $masterUsers->concat((array)$masterFreelancers)->concat((array)$masterServiceProviders);
+        $this->load($relations, [
+            'pivot' => function ($query) {
+                $query->where('is_master', true);
+            }
+        ]);
+
+        $masterCollection = collect();
+
+        // Fügen Sie alle Meister-Entitäten in eine einzige Collection ein
+        foreach ($relations as $relation) {
+            $masterCollection = $masterCollection->concat($this->$relation);
+        }
+
+        return $masterCollection;
     }
+
 
     public function getEmployeesAttribute(): \Illuminate\Database\Eloquent\Collection
     {
-        return $this->users()->wherePivot('is_master', false)->without(['calender_settings'])->get()->merge($this->freelancer()->wherePivot('is_master', false)->get())->merge($this->service_provider()->wherePivot('is_master', false)->get());
+        // Eager Loading für alle Mitarbeiter-Beziehungen mit 'is_master' false
+        $relations = ['users', 'freelancer', 'service_provider'];
+
+        $this->load($relations, [
+            'pivot' => function ($query) {
+                $query->where('is_master', false);
+            }
+        ]);
+
+        $employeeCollection = collect();
+
+        // Fügen Sie alle Mitarbeiter-Entitäten in eine einzige Collection ein
+        foreach ($relations as $relation) {
+            $employeeCollection = $employeeCollection->merge($this->$relation);
+        }
+
+        return $employeeCollection;
     }
 
     public function getBreakFormattedAttribute(): string

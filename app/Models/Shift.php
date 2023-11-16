@@ -142,9 +142,7 @@ class Shift extends Model
 
     protected function getWorkerCount($is_master = false): float
     {
-        $relations = ['users' => function($query){
-            $query->without(['calender_settings']);
-        }, 'service_provider', 'freelancer'];
+        $relations = ['users', 'service_provider', 'freelancer'];
 
         $this->load($relations, [
             'pivot' => function ($query) use ($is_master) {
@@ -178,9 +176,7 @@ class Shift extends Model
     public function getMastersAttribute(): \Illuminate\Database\Eloquent\Collection
     {
         // Eager Loading für alle Meister-Beziehungen mit 'is_master' true
-        $relations = ['users' => function($query){
-            $query->without(['calender_settings']);
-        }, 'freelancer', 'service_provider'];
+        $relations = ['users', 'freelancer', 'service_provider'];
 
         $this->load($relations, [
             'pivot' => function ($query) {
@@ -202,9 +198,7 @@ class Shift extends Model
     public function getEmployeesAttribute(): \Illuminate\Database\Eloquent\Collection
     {
         // Eager Loading für alle Mitarbeiter-Beziehungen mit 'is_master' false
-        $relations = ['users' => function($query){
-            $query->without(['calender_settings']);
-        }, 'freelancer', 'service_provider'];
+        $relations = ['users', 'freelancer', 'service_provider'];
 
         $this->load($relations, [
             'pivot' => function ($query) {

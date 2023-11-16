@@ -1,6 +1,6 @@
 <template>
     <button v-if="text !== 'Zu Teams zuweisen' && text !== 'Areal hinzufügen' && text !== 'Raum hinzufügen' && mode !== 'modal' && type !== 'secondary'" type="button" :disabled="disabled" :class="disabled ? 'bg-secondary' : 'bg-buttonBlue hover:bg-buttonHover hover:shadow-blueButton'"
-            class="flex py-2 px-4 mt-1 ml-6 items-center border border-transparent rounded-full shadow-sm text-white  focus:outline-none">
+            class="flex py-2 px-12 mt-1 ml-6 items-center border border-transparent rounded-full shadow-sm text-white  focus:outline-none">
         <PlusCircleIcon v-if="mode !== 'modal' && text !== 'Speichern'" class="h-4 w-4 mr-2" aria-hidden="true"/>
         <p class="text-sm">{{ text }}</p>
     </button>

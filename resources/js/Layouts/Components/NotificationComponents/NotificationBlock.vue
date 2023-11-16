@@ -121,16 +121,18 @@
         :roomCollisions="roomCollisions"
     />
 
-    <event-without-room-new-request-component
+    <!-- Termine ohne Raum Modal -->
+    <events-without-room-component
         v-if="showEventWithoutRoomComponent"
         @closed="onEventWithoutRoomComponentClose"
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :project="project"
-        :event="event"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :eventsWithoutRoom="[event]"
+        :isAdmin="$page.props.is_admin || $page.props.can.admin_rooms"
+        :removeNotificationOnAction="true"
     />
+
     <ConfirmDeleteModal
         @closed="showDeleteConfirmModal = false"
         @delete="deleteEvent"
@@ -146,22 +148,21 @@ import {ChevronRightIcon} from "@heroicons/vue/solid";
 import {Inertia} from "@inertiajs/inertia";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import NotificationDeclineEvent from "@/Layouts/Components/NotificationComponents/NotificationDeclineEvent.vue";
 import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHistoryWithoutBudgetComponent.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent.vue";
 import RoomRequestDialogComponent from "@/Layouts/Components/RoomRequestDialogComponent.vue";
 import UserVacationHistoryModal from "@/Pages/Notifications/Components/UserVacationHistoryModal.vue";
 import EventHistoryModal from "@/Pages/Notifications/Components/EventHistoryModal.vue";
+import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 
 export default {
     name: "NotificationBlock",
     components: {
+        EventsWithoutRoomComponent,
         EventHistoryModal,
         UserVacationHistoryModal,
-        EventWithoutRoomNewRequestComponent,
         ConfirmDeleteModal,
         EventComponent,
         ProjectHistoryWithoutBudgetComponent,
@@ -283,10 +284,10 @@ export default {
                 })
             }
         },
-        onEventWithoutRoomComponentClose(bool){
+        onEventWithoutRoomComponentClose(bool) {
             this.showEventWithoutRoomComponent = false;
 
-            if(bool){
+            if (bool) {
                 this.checkNotificationKey();
                 Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey

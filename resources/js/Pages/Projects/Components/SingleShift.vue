@@ -93,8 +93,8 @@
                      class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">
                         <img :src="intern.profile_photo_url"
-                             class="h-4 w-4 rounded-full block bg-gray-500 object-cover" :class="intern.has_vacation_days?.includes(this.shift.event_start_day) ? 'ring-2 ring-red-500' : ''">
-                        <span class="text-xs" :class="intern.has_vacation_days?.includes(this.shift.event_start_day) ? '!text-red-500' : ''">{{ intern.full_name }} </span>
+                             class="h-4 w-4 rounded-full block bg-gray-500 object-cover" :class="intern.formatted_vacation_days?.includes(this.shift.event_start_day) ? 'ring-2 ring-red-500' : ''">
+                        <span class="text-xs" :class="intern.formatted_vacation_days?.includes(this.shift.event_start_day) ? '!text-red-500' : ''">{{ intern.full_name }} </span>
                         <span v-if="intern.pivot.shift_count > 1"
                               class="text-xs"> {{ `1/${intern.pivot.shift_count}` }} </span>
                         <span v-if="intern.pivot.is_master">
@@ -222,7 +222,7 @@ export default defineComponent({
                 providerIds: []
             }
             this.shift.users.forEach(user => {
-                if(user.has_vacation_days?.includes(this.shift.event_start_day)){
+                if(user.formatted_vacation_days?.includes(this.shift.event_start_day)){
                     this.anyoneHasVacation = true;
                 }
                 ids.userIds.push(user.id)

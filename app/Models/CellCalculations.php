@@ -13,7 +13,8 @@ class CellCalculations extends Model
         'cell_id',
         'name',
         'value',
-        'description'
+        'description',
+        'position'
     ];
 
     public function cell()

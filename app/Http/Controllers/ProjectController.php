@@ -1333,13 +1333,30 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
-    public function addCalculation(ColumnCell $cell)
+    public function addCalculation(ColumnCell $cell, Request $request)
     {
-        $cell->calculations()->create([
+        // current position found in $request->position
+
+        // add check if $request->position is present, if not set to 0
+        if(!$request->position){
+            $request->position = 0;
+        }
+
+
+        $newCalculation = $cell->calculations()->create([
             'name' => '',
             'value' => 0,
-            'description' => ''
+            'description' => '',
+            'position' => $request->position + 1
         ]);
+
+        // update all positions of calculations where position is greater than $request->position and cell_id is $cell->id and where not id is $newCalculation->id, increment position by 1 after new calculation
+
+        CellCalculations::query()
+            ->where('cell_id', $cell->id)
+            ->where('position', '>', $request->position)
+            ->where('id', '!=', $newCalculation->id)
+            ->increment('position');
     }
 
     /**
@@ -2175,25 +2192,15 @@ class ProjectController extends Controller
 
         $columns = $project->table()->first()->columns()->get();
 
-        $outputColumns = [];
+        $calculateNames = [];
         foreach ($columns as $column) {
-            $columnOutput = new stdClass();
-            $columnOutput->id = $column->id;
-            $columnOutput->name = $column->name;
-            $columnOutput->subName = $column->subName;
-            $columnOutput->color = $column->color;
-            $columnOutput->is_locked = $column->is_locked;
-            if ($column->type === 'sum') {
+            $calculateName = '';
+            if ($column->type === 'difference' || $column->type === 'sum') {
                 $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
                 $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
-                $columnOutput->calculateName = $firstName . ' + ' . $secondName;
+                $calculateName = $firstName . ' + ' . $secondName;
             }
-            if ($column->type === 'difference') {
-                $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
-                $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
-                $columnOutput->calculateName = $firstName . ' - ' . $secondName;
-            }
-            $outputColumns[] = $columnOutput;
+            $calculateNames[$column->id] = $calculateName;
         }
 
         if (!$project->is_group) {
@@ -2270,6 +2277,9 @@ class ProjectController extends Controller
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
+        //load commented budget items setting for given user
+        Auth::user()->load(['commented_budget_items_setting']);
+
         return inertia('Projects/SingleProjectBudget', [
             'project' => new ProjectBudgetResource($project),
             'firstEventInProject' => $firstEventInProject,
@@ -2280,7 +2290,6 @@ class ProjectController extends Controller
             'projectDeleteIds' => $deleteIds,
             'moneySources' => MoneySource::all(),
             'budget' => [
-                'columns' => $outputColumns,
                 'table' => $project->table()
                     ->with([
                         'columns',
@@ -2294,11 +2303,16 @@ class ProjectController extends Controller
                             return $query->orderBy('position');
                         }, 'mainPositions.subPositions.subPositionRows.cells' => function($query){
                             $query->withCount('comments')
-                                ->withCount('calculations');
+                                ->withCount(['calculations' => function($query){
+                                    // count if value is not 0
+                                    return $query->where('value', '!=', 0);
+                                }]);
                         }, 'mainPositions.subPositions.subPositionRows.cells.column'
                     ])
                     ->first(),
-                'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments', 'column' => function ($query) {
+                'selectedCell' => $selectedCell?->load(['calculations' => function($calculations) {
+                    $calculations->orderBy('position', 'asc');
+                }, 'comments.user', 'comments', 'column' => function ($query) {
                     $query->orderBy('created_at', 'desc');
                 }]),
                 'selectedSumDetail' => $selectedSumDetail,
@@ -2306,6 +2320,7 @@ class ProjectController extends Controller
                     $query->orderBy('created_at', 'desc');
                 }]),
                 'templates' => $templates,
+                'columnCalculatedNames' => $calculateNames,
             ],
             'projectGroups' => $project->groups()->get(),
             'groupProjects' => Project::where('is_group', 1)->get(),
@@ -3130,7 +3145,6 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
-
     public function deleteTimeLineRow(TimeLine $timeLine){
         $timeLine->delete();
     }
@@ -3173,6 +3187,33 @@ class ProjectController extends Controller
         foreach ($mainPosition->subPositions()->get() as $subPosition){
             $this->duplicateSubPosition($subPosition, $newMainPosition->id);
         }
+    }
 
+    /**
+     * @param SubPositionRow $subPositionRow
+     * @return void
+     */
+    public function duplicateRow(SubPositionRow $subPositionRow): void
+    {
+        $subPositionRowReplicate = $subPositionRow->replicate();
+        $subPositionRowReplicate->sub_position_id = $subPositionRow->subPosition->id;
+        $subPositionRowReplicate->save();
+
+        foreach ($subPositionRow->cells as $subPositionRowCell) {
+            $subPositionRowCellReplicate = $subPositionRowCell->replicate();
+            $subPositionRowCellReplicate->sub_position_row_id = $subPositionRowReplicate->id;
+            $subPositionRowCellReplicate->save();
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @param Column $column
+     * @return void
+     */
+    public function updateCommentedStatusOfColumn(Request $request, Column $column): void
+    {
+        $validated = $request->validate(['commented' => 'required|boolean']);
+        $column->update(['commented' => $validated['commented']]);
     }
 }

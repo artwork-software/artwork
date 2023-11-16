@@ -88,11 +88,26 @@
 
             </div>
         </div>
+        <div class="w-full flex flex-row-reverse mb-4">
+            <SwitchGroup as="div">
+                <Switch v-model="userExcludeCommentedBudgetItems"
+                        :class="[userExcludeCommentedBudgetItems ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                        <span aria-hidden="true"
+                              :class="[userExcludeCommentedBudgetItems ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                </Switch>
+                <SwitchLabel as="span">
+                    <span :class="[userExcludeCommentedBudgetItems ? 'xsDark' : 'xsLight', 'text-sm']">
+                        &nbsp;Ausgeklammerte Posten ausgeblendet
+                    </span>
+                </SwitchLabel>
+            </SwitchGroup>
+        </div>
         <div class="w-full flex stickyHeader" >
             <table class="w-full flex ml-6 py-5">
                 <thead>
                 <tr class="">
                     <th v-for="(column,index) in table.columns"
+                        v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
                         :class="index <= 1 ? 'pl-2 w-28 text-left' : index === 2 ? 'w-64 text-left pl-2' : index === 3 ? 'w-52 text-right' : 'w-48 px-1 text-right'">
                         <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
@@ -116,8 +131,8 @@
                                             {{ column.subName }}
                                         </div>
 
-                                        <span v-if="column.calculateName" class="ml-1 truncate">
-                                            ({{ column.calculateName }})
+                                        <span v-if="columnCalculatedNames[column.id]" class="ml-1 truncate columnSubName text-white">
+                                            ({{columnCalculatedNames[column.id]}})
                                         </span>
                                     </div>
                                     <span  class="-mt-4" v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
@@ -159,7 +174,6 @@
                                      :class="index <= 1 ? 'w-16 justify-start' : index === 2 ? 'w-64 justify-start' : index === 3 ? 'w-48 justify-end' : 'w-40 px-3 justify-end'" class="h-5 pr-1 mr-1 xsDark flex "
                                      v-if="!column.clicked">
                                     {{ column.name }}
-
                                 </div>
                                 <div v-else>
                                     <input
@@ -236,6 +250,24 @@
                                                     Duplizieren
                                                 </a>
                                             </MenuItem>
+                                            <MenuItem v-show="index > 2" v-slot="{ active }" v-if="column.commented === 1">
+                                                <a @click="updateColumnCommented(column.id, false)"
+                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                    </svg>
+                                                    Spalte einbeziehen
+                                                </a>
+                                            </MenuItem>
+                                            <MenuItem v-show="index > 2" v-slot="{ active }" v-else>
+                                                <a @click="updateColumnCommented(column.id, true)"
+                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                    </svg>
+                                                    Spalte ausklammern
+                                                </a>
+                                            </MenuItem>
                                         </div>
                                     </MenuItems>
                                 </transition>
@@ -245,9 +277,16 @@
                             </div>
                         </div>
                     </th>
-                        <button @click="openAddColumnModal()" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="font-bold ml-4 text-xl bg-buttonBlue p-1 mt-3 hover:bg-buttonHover rounded-full items-center uppercase shadow-sm text-secondaryHover">
+                    <th>
+                        <div class="flex items-center">
+                    <div class="text-white hidden xl:block mt-3">
+                        Neue Spalte
+                    </div>
+                        <button @click="openAddColumnModal()" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="font-bold ml-2 text-xl hover:bg-buttonHover p-1 mt-3 bg-secondary border-white border-2 hover:border-buttonBlue rounded-full items-center uppercase shadow-sm text-secondaryHover">
                             <PlusIcon class="h-4 w-4"></PlusIcon>
                         </button>
+                        </div>
+                    </th>
                 </tr>
                 </thead>
             </table>
@@ -347,8 +386,7 @@
                         <table class="w-[97%] mb-6">
                             <tbody class="">
                             <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                                <MainPositionComponent @openRowDetailModal="openRowDetailModal"
-                                                       @openVerifiedModal="openVerifiedModal"
+                                <MainPositionComponent @openVerifiedModal="openVerifiedModal"
                                                        @openCellDetailModal="openCellDetailModal"
                                                        @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
                                                        @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
@@ -365,7 +403,8 @@
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns?.slice(3)">
+                                    v-for="column in table.columns?.slice(3)"
+                                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center" :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
 
                                         <img v-if="table.costSumDetails[column.id]?.hasComments && table.costSumDetails[column.id]?.hasMoneySource"
@@ -394,7 +433,8 @@
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns.slice(3)">
+                                    v-for="column in table.columns.slice(3)"
+                                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                         {{ table.commentedCostSums[column.id]?.toLocaleString() }}
                                     </div>
@@ -433,8 +473,7 @@
                         <table class="w-[97%] mb-6">
                             <tbody class="">
                             <tr v-if="tablesToShow[1]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[1]">
-                                <MainPositionComponent @openRowDetailModal="openRowDetailModal"
-                                                       @openVerifiedModal="openVerifiedModal"
+                                <MainPositionComponent @openVerifiedModal="openVerifiedModal"
                                                        @openCellDetailModal="openCellDetailModal"
                                                        @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
                                                        @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
@@ -452,7 +491,8 @@
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns.slice(3)">
+                                    v-for="column in table.columns.slice(3)"
+                                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
                                          :class="this.getSumOfTable(1,column.id) < 0 ? 'text-red-500' : ''">
 
@@ -480,7 +520,8 @@
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns.slice(3)">
+                                    v-for="column in table.columns.slice(3)"
+                                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
                                         {{ table.commentedEarningSums[column.id]?.toLocaleString() }}
                                     </div>
@@ -511,7 +552,8 @@
                     <td class="w-10 mr-1"></td>
                     <td class="w-72 my-2">SUM</td>
                     <td class="flex items-center w-48"
-                        v-for="column in table.columns.slice(3)">
+                        v-for="column in table.columns.slice(3)"
+                        v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                         <div class="w-48 my-2 p-1"
                              :class="this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : ''">
                             {{ (this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id)).toLocaleString() }}
@@ -705,13 +747,6 @@
         :table="table"
         @closed="closeRenameBudgetTemplateModal()"
     />
-    <!-- Row Detail Modal-->
-    <row-detail-component
-        v-if="showRowDetailModal"
-        :row="selectedRow"
-        :moneySources="moneySources"
-        @closed="closeRowDetailModal()"
-    />
     <!-- Nachfrage-Modal bei Löschfunktionalitäten -->
     <confirmation-component
         v-if="showDeleteModal"
@@ -745,7 +780,10 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
@@ -766,6 +804,9 @@ export default {
     name: 'BudgetComponent',
     mixins: [Permissions],
     components: {
+        SwitchGroup,
+        SwitchLabel,
+        Switch,
         SumDetailComponent,
         Button,
         UseTemplateFromProjectBudgetComponent,
@@ -809,7 +850,6 @@ export default {
             hoveredBorder: null,
             showAddColumnModal: false,
             showCellDetailModal: false,
-            showRowDetailModal: false,
             showUseTemplateModal: false,
             showRenameTableModal: false,
             showUseTemplateFromProjectModal: false,
@@ -864,10 +904,13 @@ export default {
                 project_title: this.project?.name,
                 table_id: this.table?.id
             }),
+            userExcludeCommentedBudgetItems: this.$page.props.user.commented_budget_items_setting ?
+                this.$page.props.user.commented_budget_items_setting.exclude === 1 :
+                false
         }
     },
 
-    props: ['selectedSumDetail','table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager'],
+    props: ['selectedSumDetail','columnCalculatedNames','table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager', 'columns'],
 
     computed: {
         tablesToShow: function () {
@@ -900,6 +943,45 @@ export default {
         },
     },
     watch: {
+        userExcludeCommentedBudgetItems: {
+            handler(excludeHiddenItems) {
+                if (this.$page.props.user.commented_budget_items_setting === null) {
+                    Inertia.post(
+                        route(
+                            'user.commentedBudgetItemsSettings.store',
+                            {
+                                user: this.$page.props.user.id
+                            }
+                        ),
+                        {
+                            exclude: excludeHiddenItems
+                        },
+                        {
+                            preserveState: true,
+                            preserveScroll: true
+                        }
+                    );
+                    return;
+                }
+
+                Inertia.patch(
+                    route(
+                        'user.commentedBudgetItemsSettings.update',
+                        {
+                            user: this.$page.props.user.id,
+                            commentedBudgetItemsSetting: this.$page.props.user.commented_budget_items_setting.id
+                        }
+                    ),
+                    {
+                        exclude: excludeHiddenItems
+                    },
+                    {
+                        preserveScroll: true,
+                        preserveState: true
+                    }
+                );
+            }
+        },
         user_query: {
             handler() {
                 if (this.user_query.length > 0) {
@@ -913,8 +995,24 @@ export default {
             deep: true
         },
     },
-
     methods: {
+        updateColumnCommented(columnId, bool) {
+            Inertia.patch(
+                route(
+                    'project.budget.column.update.commented',
+                    {
+                        column: columnId
+                    }
+                ),
+                {
+                    commented: bool
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: true
+                }
+            );
+        },
         duplicateColumn(columnId){
             Inertia.post(route('project.budget.column.duplicate', columnId), {}, {
                 preserveState: true,
@@ -1159,24 +1257,8 @@ export default {
                 }
             })
         },
-        openRowDetailModal(row) {
-            Inertia.visit(route('projects.show.budget', {
-                project: this.project.id,
-                selectedRow: row.id
-            }), {
-                only: ['budget'],
-                onSuccess: () => {
-                    this.showRowDetailModal = true;
-                },
-                preserveState: true,
-                preserveScroll: true
-            });
-        },
         closeCellDetailModal() {
             this.showCellDetailModal = false;
-        },
-        closeRowDetailModal() {
-            this.showRowDetailModal = false;
         },
         openDeleteRowModal(row) {
             this.confirmationTitle = 'Zeile löschen';

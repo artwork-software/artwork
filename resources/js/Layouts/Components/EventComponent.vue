@@ -582,6 +582,8 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- TODO: JONAS -->
                 <div v-if="canEdit">
                     <div class="flex justify-center w-full py-4"
                          v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects || roomAdminIds.includes(this.$page.props.user.id)) || this.hasAdminRole()">

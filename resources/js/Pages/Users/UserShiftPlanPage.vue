@@ -1,6 +1,5 @@
 <template>
     <UserEditHeader :current-tab="currentTab" :user_to_edit="user_to_edit">
-        {{daysWithEvents}}
         <UserShiftPlan type="user" :totalPlannedWorkingHours="totalPlannedWorkingHours" :weeklyWorkingHours="this.user_to_edit.weekly_working_hours" :date-value="dateValue"
                        :days-with-events="daysWithEvents"
                        :projects="projects" :event-types="eventTypes" :rooms="rooms"

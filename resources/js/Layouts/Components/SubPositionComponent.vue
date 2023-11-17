@@ -73,9 +73,14 @@
             <div v-if="subPosition.sub_position_rows?.length > 0" v-for="(row,rowIndex) in subPosition.sub_position_rows">
                 <tr v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)" :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$page.props.can.edit_budget_templates || !table.is_template) ? 'border-buttonBlue ' : '']" @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null" class="bg-secondaryHover flex justify-between items-center border-2">
                     <div class="flex items-center">
-                        <PlusCircleIcon @click="openRowDetailModal(row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" :class="hoveredRow === row.id ? '' : 'hidden'" class="h-6 w-6 z-20 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
-                        <td v-for="(cell,index) in row.cells" v-show="!(cell.column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)" :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
-                            <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']" class="my-4 h-6 flex items-center" @click="handleCellClick(cell)" v-if="!cell.clicked">
+                        <td v-for="(cell,index) in row.cells"
+                            v-show="!(cell.column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
+                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
+                            <div
+                                :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
+                                class="my-4 h-6 flex items-center"
+                                @click="handleCellClick(cell)"
+                                v-if="!cell.clicked">
                                 <div class=" flex items-center">
                                     <div v-if="cell.comments_count > 0">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-1">
@@ -100,7 +105,74 @@
                             </div>
                         </td>
                     </div>
-                    <XCircleIcon @click="openDeleteRowModal(row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" :class="hoveredRow === row.id ? '' : 'hidden'" class="h-6 w-6 -mr-3 cursor-pointer justify-end text-secondaryHover bg-error rounded-full" />
+                    <Menu as="div"
+                          :class="[hoveredRow === row.id ? '' : 'hidden', 'my-auto mr-0.5 relative']" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
+                        <div class="flex">
+                            <MenuButton
+                                class="flex bg-tagBg p-0.5 rounded-full">
+                                <DotsVerticalIcon
+                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                    aria-hidden="true"/>
+                            </MenuButton>
+                        </div>
+                        <transition
+                            enter-active-class="transition ease-out duration-100"
+                            enter-from-class="transform opacity-0 scale-95"
+                            enter-to-class="transform opacity-100 scale-100"
+                            leave-active-class="transition ease-in duration-75"
+                            leave-from-class="transform opacity-100 scale-100"
+                            leave-to-class="transform opacity-0 scale-95">
+                            <MenuItems
+                                class="z-20 origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                <div class="py-1" >
+                                    <MenuItem v-slot="{ active }"
+                                              v-if="row.commented === false"
+                                              @click="updateRowCommented(row.id, true)">
+                                        <span
+                                            @click=""
+                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                            </svg>
+                                            Ausklammern
+                                        </span>
+                                    </MenuItem>
+                                    <MenuItem v-slot="{ active }"
+                                              v-else
+                                              @click="updateRowCommented(row.id, false)">
+                                        <span
+                                            @click=""
+                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                            </svg>
+                                            Positionen einbeziehen
+                                        </span>
+                                    </MenuItem>
+                                    <MenuItem v-slot="{ active }">
+                                        <span
+                                            @click="duplicateRow(row.id)"
+                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                            </svg>
+                                            Duplizieren
+                                        </span>
+                                    </MenuItem>
+                                    <MenuItem v-slot="{ active }">
+                                        <span
+                                            @click="openDeleteRowModal(row)"
+                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                            </svg>
+                                            Löschen
+                                        </span>
+                                    </MenuItem>
+                                </div>
+                            </MenuItems>
+                        </transition>
+                    </Menu>
                 </tr>
                 <div @click="addRowToSubPosition(subPosition, row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
                     <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
@@ -188,7 +260,6 @@ export default {
     emits: [
         'openDeleteModal',
         'openVerifiedModal',
-        'openRowDetailModal',
         'openErrorModal',
         'openCellDetailModal',
         'openSubPositionSumDetailModal'
@@ -255,6 +326,36 @@ export default {
         localStorage.removeItem('closedSubPositions')
     },
     methods: {
+        updateRowCommented(rowId, bool) {
+            this.$inertia.patch(
+                route(
+                    'project.budget.row.commented',
+                    {
+                        row: rowId
+                    }
+                ),
+                {
+                    commented: bool
+                },
+                {
+                    preserveScroll: true
+                }
+            );
+        },
+        duplicateRow(rowId) {
+            this.$inertia.post(
+                route(
+                    'project.budget.sub-position.duplicate.row',
+                    {
+                        subPositionRow: rowId
+                    }
+                ),
+                null,
+                {
+                    preserveScroll: true
+                }
+            )
+        },
         checkIfSubPositionClosed(){
             if(localStorage.getItem('closedSubPositions') !== null){
                 let closedSubPositions = JSON.parse(localStorage.getItem('closedSubPositions'))
@@ -388,13 +489,7 @@ export default {
             this.updateCellForm.patch(route('project.budget.cell.update'), {
                 preserveState: true,
                 preserveScroll: true,
-                onSuccess: () => {
-                    console.log("updated", cell.value)
-                }
             })
-        },
-        openRowDetailModal(row) {
-            this.$emit('openRowDetailModal', row)
         },
         openCellDetailModal(cell) {
             this.$emit('openCellDetailModal', cell)
@@ -505,7 +600,7 @@ export default {
             })
         }
 
-    },
+    }
 
 }
 </script>

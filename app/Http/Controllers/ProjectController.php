@@ -81,7 +81,6 @@ use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
 use stdClass;
 
-
 class ProjectController extends Controller
 {
     // init empty notification controller
@@ -3144,7 +3143,6 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
-
     public function deleteTimeLineRow(TimeLine $timeLine){
         $timeLine->delete();
     }
@@ -3187,7 +3185,23 @@ class ProjectController extends Controller
         foreach ($mainPosition->subPositions()->get() as $subPosition){
             $this->duplicateSubPosition($subPosition, $newMainPosition->id);
         }
+    }
 
+    /**
+     * @param SubPositionRow $subPositionRow
+     * @return void
+     */
+    public function duplicateRow(SubPositionRow $subPositionRow): void
+    {
+        $subPositionRowReplicate = $subPositionRow->replicate();
+        $subPositionRowReplicate->sub_position_id = $subPositionRow->subPosition->id;
+        $subPositionRowReplicate->save();
+
+        foreach ($subPositionRow->cells as $subPositionRowCell) {
+            $subPositionRowCellReplicate = $subPositionRowCell->replicate();
+            $subPositionRowCellReplicate->sub_position_row_id = $subPositionRowReplicate->id;
+            $subPositionRowCellReplicate->save();
+        }
     }
 
     /**
@@ -3195,7 +3209,8 @@ class ProjectController extends Controller
      * @param Column $column
      * @return void
      */
-    public function updateCommentedStatusOfColumn(Request $request, Column $column): void {
+    public function updateCommentedStatusOfColumn(Request $request, Column $column): void
+    {
         $validated = $request->validate(['commented' => 'required|boolean']);
         $column->update(['commented' => $validated['commented']]);
     }

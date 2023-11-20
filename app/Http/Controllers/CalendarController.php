@@ -33,9 +33,9 @@ class CalendarController extends Controller
     public function __construct(private readonly FilterProvider $filterProvider)
     {
         $this->user = Auth::user();
-        $this->userCalendarFilter = $this->user->calendar_filter()->first();
-        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter()->first();
-        $this->calendarSettings = $this->user->calendar_settings()->first();
+        $this->userCalendarFilter = $this->user->calendar_filter;
+        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter;
+        $this->calendarSettings = $this->user->calendar_settings;
     }
 
     /**
@@ -97,8 +97,6 @@ class CalendarController extends Controller
                 $query->where('freelancer_id', $freelancerId);
             });
         }])
-            ->where('start_time', '>=', $minDate)
-            ->where('end_time', '<=', $maxDate)
             ->whereHas('shifts.freelancer', function ($query) use ($freelancerId) {
                 $query->where('freelancer_id', $freelancerId);
             })
@@ -123,8 +121,6 @@ class CalendarController extends Controller
                 $query->where('service_provider_id', $serviceProviderId);
             });
         }])
-            ->where('start_time', '>=', $minDate)
-            ->where('end_time', '<=', $maxDate)
             ->whereHas('shifts.service_provider', function ($query) use ($serviceProviderId) {
                 $query->where('service_provider_id', $serviceProviderId);
             })

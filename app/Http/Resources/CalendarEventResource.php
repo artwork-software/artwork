@@ -25,7 +25,7 @@ class CalendarEventResource extends JsonResource
     public function toArray($request)
     {
 
-        $this->userCalendarSettings = Auth::user()->calendar_settings()->first();
+        $this->userCalendarSettings = Auth::user()->calendar_settings;
 
         $classString = '';
         if($this->occupancy_option){

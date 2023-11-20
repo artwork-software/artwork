@@ -131,7 +131,8 @@
                                                             Duplizieren
                                                         </a>
                                                     </MenuItem>
-                                                    <MenuItem v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
+
+                                                    <MenuItem v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('can edit and delete money sources') || $role('artwork admin')">
                                                         <a @click="openDeleteSourceModal(moneySource)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <TrashIcon
@@ -162,7 +163,7 @@
         v-if="showDeleteSourceModal"
         title="Finanzierungsquelle/gruppe löschen"
         :description="'Bist du sicher, dass du die Finanzierungsquelle/Gruppe ' + this.sourceToDelete.name + ' löschen möchtest?'"
-        @closed="afterConfirm"
+        @closed="afterConfirm(false)"
         @delete="afterConfirm(true)"/>
 </template>
 

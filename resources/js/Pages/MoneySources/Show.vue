@@ -238,7 +238,7 @@
         v-if="showDeleteSourceModal"
         title="Finanzierungsquelle/gruppe löschen"
         :description="'Bist du sicher, dass du die Finanzierungsquelle/Gruppe ' + this.sourceToDelete.name + ' löschen möchtest?'"
-        @closed="afterConfirm"
+        @closed="afterConfirm(false)"
     @delete="afterConfirm(true)"/>
 
     <MoneySourceHistoryComponent

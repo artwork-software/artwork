@@ -131,7 +131,7 @@
                                             {{ column.subName }}
                                         </div>
 
-                                        <span v-if="columnCalculatedNames[column.id]" class="ml-1 truncate columnSubName text-white">
+                                        <span v-if="columnCalculatedNames ? columnCalculatedNames[column.id] : false" class="ml-1 truncate columnSubName text-white">
                                             ({{columnCalculatedNames[column.id]}})
                                         </span>
                                     </div>

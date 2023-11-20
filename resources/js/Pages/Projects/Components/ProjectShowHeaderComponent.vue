@@ -235,6 +235,7 @@ export default {
         'projectManagerIds',
         'projectWriteIds',
         'projectDeleteIds',
+        'access_budget'
     ],
     data() {
         return {
@@ -245,20 +246,21 @@ export default {
         }
     },
     computed: {
-
         tabs() {
             return [
                 {name: 'Projektinformationen', href: '#', current: this.openTab === 'info', show: true},
                 {name: 'Ablaufplan', href: '#', current: this.openTab === 'calendar', show: true},
                 {name: 'Checklisten', href: '#', current: this.openTab === 'checklist', show: true},
                 {name: 'Schichten', href: '#', current: this.openTab === 'shift', show: this.hasAdminRole() || this.$can('can plan shifts')},
-                {name: 'Budget', href: '#', current: this.openTab === 'budget', show: this.$page.props.is_admin || this.access_budget?.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id) || this.$can('can manage global project budgets')},
+                {name: 'Budget', href: '#', current: this.openTab === 'budget', show: this.hasAdminRole() || this.hasBudgetAccess() || this.projectManagerIds.includes(this.$page.props.user.id) || this.$canAny(['can manage global project budgets', 'access project budgets'])},
                 {name: 'Kommentare', href: '#', current: this.openTab === 'comment', show: true},
             ]
         },
     },
     methods: {
-
+        hasBudgetAccess() {
+            return this.access_budget.filter((user) => user.id === this.$page.props.user.id).length > 0;
+        },
         openProjectHistoryModal() {
             this.showProjectHistory = true;
         },

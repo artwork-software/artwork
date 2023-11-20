@@ -1785,7 +1785,7 @@ class ProjectController extends Controller
             'projectSectorIds' => $project->sectors()->pluck('sector_id'),
             'projectSectors' => $project->sectors,
             'projectState' => $project->state,
-
+            'access_budget' => $project->access_budget,
         ]);
     }
     public function projectCalendarTab(Project $project, Request $request,CalendarController $calendar)
@@ -1917,6 +1917,7 @@ class ProjectController extends Controller
             'personalFilters' => $showCalendar['personalFilters'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'user_filters' => $showCalendar['user_filters'],
+            'access_budget' => $project->access_budget,
         ]);
     }
     public function projectChecklistTab(Project $project, Request $request)
@@ -1994,6 +1995,7 @@ class ProjectController extends Controller
             'projectGroups' => $project->groups()->get(),
             'currentGroup' => $groupOutput,
             'checklist_templates' => ChecklistTemplateIndexResource::collection(ChecklistTemplate::all())->resolve(),
+            'access_budget' => $project->access_budget,
         ]);
     }
 
@@ -2167,6 +2169,7 @@ class ProjectController extends Controller
             'states' => ProjectStates::all(),
             'eventsWithRelevant' => $eventsWithRelevant,
             'crafts' => Craft::all(),
+            'access_budget' => $project->access_budget,
         ]);
     }
 
@@ -2409,6 +2412,7 @@ class ProjectController extends Controller
             'projectState' => $project->state,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'states' => ProjectStates::all(),
+            'access_budget' => $project->access_budget,
         ]);
     }
 

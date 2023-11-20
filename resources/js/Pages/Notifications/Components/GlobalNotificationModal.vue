@@ -103,9 +103,9 @@
                                     </div>
 
                                     <div class="w-full flex justify-center">
-                                        <AddButton @click="createGlobalNotification()" v-if="!$page.props.globalNotification.title" class="flex"
+                                        <AddButton @click="createGlobalNotification()" v-if="!globalNotification.title" class="flex"
                                                    text="Benachrichtigung teilen" mode="modal"/>
-                                        <AddButton v-else @click="deleteGlobalNotification($page.props.globalNotification.id)" type="secondary"
+                                        <AddButton v-else @click="deleteGlobalNotification(globalNotification.id)" type="secondary"
                                                    text="Benachrichtigung löschen"></AddButton>
                                     </div>
                                 </div>
@@ -138,17 +138,18 @@ export default {
         TransitionRoot,
         XIcon, DialogPanel
     },
+    props: ['globalNotification'],
     data(){
         return {
             open: true,
             notificationImagePreview: null,
             buttonText: this.button ? this.button : 'Löschen',
             globalNotificationForm: this.$inertia.form({
-                notificationImage: this.$page.props.globalNotification?.image_url,
-                notificationName: this.$page.props.globalNotification?.title,
-                notificationDeadlineDate: this.$page.props.globalNotification.expiration_date ? this.getDateOfDate(this.$page.props.globalNotification.expiration_date) : null,
-                notificationDeadlineTime: this.$page.props.globalNotification.expiration_date ? this.getTimeOfDate(this.$page.props.globalNotification.expiration_date) : null,
-                notificationDescription: this.$page.props.globalNotification?.description,
+                notificationImage: this.globalNotification?.image_url,
+                notificationName: this.globalNotification?.title,
+                notificationDeadlineDate: this.globalNotification.expiration_date ? this.getDateOfDate(this.globalNotification.expiration_date) : null,
+                notificationDeadlineTime: this.globalNotification.expiration_date ? this.getTimeOfDate(this.globalNotification.expiration_date) : null,
+                notificationDescription: this.globalNotification?.description,
             }),
             uploadDocumentFeedback: "",
         }

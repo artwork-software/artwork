@@ -6,32 +6,20 @@ use App\Builders\EventBuilder;
 use App\Http\Controllers\Calendar\FilterProvider;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\CalendarShowEventResource;
-use App\Models\Area;
 use App\Models\Event;
-use App\Models\EventType;
-use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\Project;
 use App\Models\Room;
-use App\Models\RoomAttribute;
-use App\Models\RoomCategory;
 use App\Models\ServiceProvider;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
+use App\Models\UserCalendarSettings;
 use App\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Barryvdh\Debugbar\Facades\Debugbar;
-use DateTime;
-use Doctrine\DBAL\Query\QueryBuilder;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Date;
-use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
-use Symfony\Component\ErrorHandler\Debug;
 
 class CalendarController extends Controller
 {
@@ -40,12 +28,14 @@ class CalendarController extends Controller
     private Authenticatable $user;
     private UserCalendarFilter $userCalendarFilter;
     private UserShiftCalendarFilter $userShiftCalendarFilter;
+    private UserCalendarSettings $calendarSettings;
 
     public function __construct(private readonly FilterProvider $filterProvider)
     {
         $this->user = Auth::user();
-        $this->userCalendarFilter = $this->user->calendar_filter()->first();
-        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter()->first();
+        $this->userCalendarFilter = $this->user->calendar_filter;
+        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter;
+        $this->calendarSettings = $this->user->calendar_settings;
     }
 
     /**
@@ -62,14 +52,6 @@ class CalendarController extends Controller
 
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
-
-        /*$room_query = Room::query()->where('id', $room->id)->with('events', function ($query) use ($room, $hasShifts) {
-            $query = $this->filterEvents($query, null, null, $room, null)->orderBy('start_time', 'ASC');
-            if ($hasShifts) {
-                $query->whereHas('shifts');
-            }
-        })->without(['admins'])->first();*/
-
         foreach ($room->events as $event) {
             if (in_array($today, $event->days_of_event)) {
                 if (!empty($projectId)) {
@@ -93,13 +75,9 @@ class CalendarController extends Controller
             $query->whereHas('users', function ($query) use ($userId) {
                 $query->where('user_id', $userId);
             });
-        }])
-            ->where('start_time', '>=', $minDate)
-            ->where('end_time', '<=', $maxDate)
-            ->whereHas('shifts.users', function ($query) use ($userId) {
+        }])->whereHas('shifts.users', function ($query) use ($userId) {
                 $query->where('user_id', $userId);
-            })
-            ->get();
+        })->get();
 
         $eventsToday = $events->filter(function ($event) use ($today) {
             return in_array($today, $event->days_of_event);
@@ -119,8 +97,6 @@ class CalendarController extends Controller
                 $query->where('freelancer_id', $freelancerId);
             });
         }])
-            ->where('start_time', '>=', $minDate)
-            ->where('end_time', '<=', $maxDate)
             ->whereHas('shifts.freelancer', function ($query) use ($freelancerId) {
                 $query->where('freelancer_id', $freelancerId);
             })
@@ -145,8 +121,6 @@ class CalendarController extends Controller
                 $query->where('service_provider_id', $serviceProviderId);
             });
         }])
-            ->where('start_time', '>=', $minDate)
-            ->where('end_time', '<=', $maxDate)
             ->whereHas('shifts.service_provider', function ($query) use ($serviceProviderId) {
                 $query->where('service_provider_id', $serviceProviderId);
             })
@@ -236,23 +210,33 @@ class CalendarController extends Controller
                 $endDate = Carbon::now()->addWeeks()->endOfDay();
             }
 
+            // Vorbereitung der Beziehungen, die du laden möchtest
+            $relations = [
+                'events.shifts',
+                'events.event_type',
+                'events.comments',
+                'events.room',
+                'events.subEvents',
+                'events.series',
+                'events.subEvents.type',
+                'events.project',
+                'events.project.departments',
+                'events.project.users',
+                'events.project.managerUsers',
+                'events.creator',
+                'events' => function ($query) use ($project, $room) {
+                    $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC');
+                }
+            ];
+
+            // Überprüfe, ob work_shifts false ist und entferne 'events.shifts' aus dem Array
+            if (!$this->calendarSettings->work_shifts) {
+                unset($relations['events.shifts']);
+            }
+
+            // Führe die Abfrage mit den vorbereiteten Beziehungen aus
             $better = $this->filterRooms($startDate, $endDate)
-                ->with([
-                    'events.event_type',
-                    'events.comments',
-                    'events.shifts',
-                    'events.room',
-                    'events.subEvents',
-                    'events.series',
-                    'events.subEvents.type',
-                    'events.project',
-                    'events.project.departments',
-                    'events.project.users',
-                    'events.project.managerUsers',
-                    'events.creator',
-                    'events' => function ($query) use ($project, $room) {
-                        $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC');
-                    }])
+                ->with($relations)
                 ->get()
                 ->map(fn($room) => collect($calendarPeriod)
                     ->mapWithKeys(fn($date) => [

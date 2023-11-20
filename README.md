@@ -248,3 +248,20 @@ Feel free to use these commands to interact with the project and execute the nec
 ----------------
 
 Feel free to explore the features of Artwork and manage your projects effectively!
+
+# Test Instance
+If you use the docker installation you can use the following credentials to login to the test instance:
+
+For the admin account (with all permissions):
+Mail: anna.musterfrau@artwork.de
+Password: TestPass1234!$
+
+For the user account (with limited permissions):
+Mail: lisa.musterfrau@artwork.de
+Password: TestPass1234!$
+
+a full documentation of all features will be released and found here, when we have finished developement of version 1.0
+
+To be able to invite new Users you need to update the .env file with your mail credentials and the APP_URL
+
+If you have questions, feel free to open an issue :) 

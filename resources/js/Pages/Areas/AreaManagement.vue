@@ -225,7 +225,7 @@
                                                                         {{ element.name }}
                                                                     </Link>
                                                                     <div
-                                                                        class="ml-6 flex items-center xsLight my-auto">
+                                                                        class="ml-6 mt-1 flex items-center xsLight my-auto">
                                                                         angelegt am {{ element.created_at }} von
                                                                         <UserPopoverTooltip :user="element.created_by"
                                                                                             :id="element.created_by.id"
@@ -237,7 +237,7 @@
                                                                       v-show="showMenu === element.id">
                                                                     <div class="flex">
                                                                         <MenuButton
-                                                                            class="flex bg-tagBg p-0.5 rounded-full">
+                                                                            class="flex bg-tagBg ml-3 p-0.5 rounded-full">
                                                                             <DotsVerticalIcon
                                                                                 class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                                                 aria-hidden="true"/>
@@ -251,7 +251,7 @@
                                                                         leave-from-class="transform opacity-100 scale-100"
                                                                         leave-to-class="transform opacity-0 scale-95">
                                                                         <MenuItems
-                                                                            class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                            class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none z-50">
                                                                             <div class="py-1">
                                                                                 <MenuItem v-slot="{ active }">
                                                                                     <a @click="openEditRoomModal(element)"

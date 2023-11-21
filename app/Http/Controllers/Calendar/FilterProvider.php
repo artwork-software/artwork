@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Calendar;
 
 use App\Http\Resources\ResourceMappers\SimpleMapping;
-use App\Models\Area;
 use App\Models\EventType;
 use App\Models\Project;
-use App\Models\Room;
-use App\Models\RoomAttribute;
-use App\Models\RoomCategory;
+use Area;
+use Room;
+use RoomAttribute;
+use RoomCategory;
 
 class FilterProvider
 {

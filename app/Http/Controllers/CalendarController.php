@@ -6,28 +6,16 @@ use App\Builders\EventBuilder;
 use App\Http\Controllers\Calendar\FilterProvider;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\CalendarShowEventResource;
-use App\Models\Area;
 use App\Models\Event;
-use App\Models\EventType;
-use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\Project;
-use App\Models\Room;
-use App\Models\RoomAttribute;
-use App\Models\RoomCategory;
 use App\Models\ServiceProvider;
 use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
-use Barryvdh\Debugbar\Facades\Debugbar;
-use DateTime;
-use Doctrine\DBAL\Query\QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Date;
-use Illuminate\Support\Facades\DB;
-use Symfony\Component\ErrorHandler\Debug;
+use Artwork\Modules\Room\Models\Room;
 
 class CalendarController extends Controller
 {

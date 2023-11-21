@@ -4,19 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\RoomIndexResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
-use App\Models\Area;
-use App\Models\RoomAttribute;
-use App\Models\RoomCategory;
 use App\Models\User;
+use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Area\Services\AreaService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\RoomCategory;
 
 class AreaController extends Controller
 {
 
-    public function __construct()
+    public function __construct(private AreaService $areaService)
     {
         $this->authorizeResource(Area::class);
     }
@@ -50,17 +51,15 @@ class AreaController extends Controller
      */
     public function store(Request $request)
     {
-        Area::create([
-            'name' => $request->name
-        ]);
 
+        $this->areaService->createByRequest($request);
         return Redirect::route('areas.management')->with('success', 'Area created.');
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Area  $area
+     * @param  \Area  $area
      * @return \Illuminate\Http\Response
      */
     public function show(Area $area)
@@ -72,13 +71,12 @@ class AreaController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Area  $area
+     * @param  \Area  $area
      * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, Area $area)
     {
-        $area->update($request->only('name'));
-
+        $this->areaService->updateByRequest($area, $request);
         return Redirect::route('areas.management')->with('success', 'Area updated');
     }
 
@@ -87,36 +85,19 @@ class AreaController extends Controller
      */
     public function duplicate(Area $area)
     {
-        $new_area = Area::create([
-            'name' => '(Kopie) ' . $area->name
-        ]);
-
-        foreach ($area->rooms as $room) {
-            $new_room = $room->replicate();
-            $new_room->name = '(Kopie) ' . $room->name;
-            $new_room->created_at = Carbon::now();
-            $new_area->rooms()->save($new_room);
-            $new_area->save();
-        }
-
+        $this->areaService->duplicateByAreaModel($area);
         return Redirect::route('areas.management')->with('success', 'Area created.');
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Area  $area
+     * @param  \Area  $area
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Area $area)
     {
-        $rooms = $area->rooms()->get();
-        foreach ($rooms as $room){
-            $room->delete();
-        }
-
-        $area->delete();
-
+        $this->areaService->delete($area);
         return Redirect::route('areas.management')->with('success', 'Area moved to trash');
     }
 

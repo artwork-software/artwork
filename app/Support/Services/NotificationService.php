@@ -3,12 +3,7 @@
 namespace App\Support\Services;
 
 use App\Enums\NotificationConstEnum;
-use App\Models\Department;
-use App\Models\Event;
-use App\Models\Project;
-use App\Models\Room;
 use App\Models\Shift;
-use App\Models\Task;
 use App\Models\User;
 use App\Notifications\BudgetVerified;
 use App\Notifications\ConflictNotification;
@@ -21,11 +16,9 @@ use App\Notifications\RoomRequestNotification;
 use App\Notifications\ShiftNotification;
 use App\Notifications\TaskNotification;
 use App\Notifications\TeamNotification;
-use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
-use Ramsey\Uuid\Type\Integer;
 
 class NotificationService
 {

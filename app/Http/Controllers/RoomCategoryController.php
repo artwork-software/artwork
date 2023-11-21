@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RoomCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Artwork\Modules\Room\Models\RoomCategory;
 
 class RoomCategoryController extends Controller
 {
@@ -44,7 +44,7 @@ class RoomCategoryController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\RoomCategory  $roomCategory
+     * @param  \RoomCategory  $roomCategory
      * @return \Illuminate\Http\Response
      */
     public function show(RoomCategory $roomCategory)
@@ -55,7 +55,7 @@ class RoomCategoryController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\RoomCategory  $roomCategory
+     * @param  \RoomCategory  $roomCategory
      * @return \Illuminate\Http\Response
      */
     public function edit(RoomCategory $roomCategory)
@@ -67,7 +67,7 @@ class RoomCategoryController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\RoomCategory  $roomCategory
+     * @param  \RoomCategory  $roomCategory
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, RoomCategory $roomCategory)
@@ -78,7 +78,7 @@ class RoomCategoryController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\RoomCategory  $roomCategory
+     * @param  \RoomCategory  $roomCategory
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(RoomCategory $roomCategory)

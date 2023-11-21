@@ -2,21 +2,16 @@
 
 namespace Database\Seeders;
 
-use App\Enums\BudgetTypesEnum;
 use App\Http\Controllers\ProjectController;
 use App\Models\Checklist;
 use App\Models\CollectingSociety;
 use App\Models\CompanyType;
-use App\Models\Contract;
-use App\Models\ContractModule;
 use App\Models\ContractType;
 use App\Models\Copyright;
 use App\Models\CostCenter;
 use App\Models\Currency;
 use App\Models\Department;
-use App\Models\MoneySource;
 use App\Models\Project;
-use App\Models\RoomCategory;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;

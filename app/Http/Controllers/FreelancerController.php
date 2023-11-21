@@ -6,9 +6,6 @@ use App\Http\Resources\EventTypeResource;
 use App\Models\EventType;
 use App\Models\Freelancer;
 use App\Models\Project;
-use App\Models\Room;
-use App\Models\ServiceProvider;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Artwork\Modules\Room\Models\Room;
 
 class FreelancerController extends Controller
 {

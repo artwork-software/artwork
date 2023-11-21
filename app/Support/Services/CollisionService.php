@@ -3,10 +3,8 @@
 namespace App\Support\Services;
 
 use App\Models\Event;
-use App\Models\Room;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Request;
+use Room;
 
 class CollisionService
 {

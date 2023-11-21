@@ -2,11 +2,11 @@
 
 namespace Database\Factories;
 
-use App\Models\RoomAttribute;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use RoomAttribute;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Room>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Room>
  */
 class RoomAttributeFactory extends Factory
 {

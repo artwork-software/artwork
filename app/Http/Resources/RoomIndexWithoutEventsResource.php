@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Room
+ * @mixin \Room
  */
 class RoomIndexWithoutEventsResource extends JsonResource
 {

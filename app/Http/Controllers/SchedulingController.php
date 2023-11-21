@@ -7,7 +7,6 @@ use App\Models\Checklist;
 use App\Models\Event;
 use App\Models\GlobalNotification;
 use App\Models\Project;
-use App\Models\Room;
 use App\Models\Scheduling;
 use App\Models\Task;
 use App\Models\User;
@@ -16,6 +15,7 @@ use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Artwork\Modules\Room\Models\Room;
 use stdClass;
 
 class SchedulingController extends Controller

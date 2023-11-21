@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Area\Models\Area;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\RoomCategory;
 
 class Filter extends Model
 {

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RoomAttribute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Artwork\Modules\Room\Models\RoomAttribute;
 
 class RoomAttributeController extends Controller
 {
@@ -44,7 +44,7 @@ class RoomAttributeController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\RoomAttribute  $roomAttribute
+     * @param  \RoomAttribute  $roomAttribute
      * @return \Illuminate\Http\Response
      */
     public function show(RoomAttribute $roomAttribute)
@@ -55,7 +55,7 @@ class RoomAttributeController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\RoomAttribute  $roomAttribute
+     * @param  \RoomAttribute  $roomAttribute
      * @return \Illuminate\Http\Response
      */
     public function edit(RoomAttribute $roomAttribute)
@@ -67,7 +67,7 @@ class RoomAttributeController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\RoomAttribute  $roomAttribute
+     * @param  \RoomAttribute  $roomAttribute
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, RoomAttribute $roomAttribute)
@@ -78,7 +78,7 @@ class RoomAttributeController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\RoomAttribute  $roomAttribute
+     * @param  \RoomAttribute  $roomAttribute
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(RoomAttribute $roomAttribute)

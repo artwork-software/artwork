@@ -1,9 +1,9 @@
 <?php
+namespace Artwork\Modules\Area\Models;
 
-namespace App\Models;
-
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Carbon\Carbon $updated_at
  * @property \Carbon\Carbon $deleted_at
  *
- * @property \Illuminate\Database\Eloquent\Collection<\App\Models\Room> $rooms
  */
 class Area extends Model
 {

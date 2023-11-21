@@ -1,10 +1,10 @@
 <?php
-
-namespace App\Models;
+namespace Artwork\Modules\Room\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Area\Models\Area;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -25,7 +25,7 @@ use Illuminate\Support\Collection;
  * @property \Illuminate\Support\Carbon $deleted_at
  *
  * @property Area $area
- * @property User $creator
+ * @property \App\Models\User $creator
  * @property \Illuminate\Support\Collection<User> $room_admins
  * @property \Illuminate\Support\Collection<RoomFile> $room_files
  * @property \Illuminate\Support\Collection<Event> $events
@@ -59,23 +59,23 @@ class Room extends Model
 
     public function area()
     {
-        return $this->belongsTo(Area::class, 'area_id');
+        return $this->belongsTo(Area::class, 'area_id', 'id', 'areas' );
     }
 
     public function creator()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(\App\Models\User::class, 'user_id', 'id', 'users');
     }
 
     public function users()
     {
-        return $this->belongsToMany(User::class, 'room_user', 'room_id')
+        return $this->belongsToMany(\App\Models\User::class, 'room_user', 'room_id')
             ->withPivot('is_admin', 'can_request');
     }
 
     public function admins(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'room_user', 'room_id')
+        return $this->belongsToMany(\App\Models\User::class, 'room_user', 'room_id')
             ->wherePivot('is_admin', true);
     }
 
@@ -86,7 +86,7 @@ class Room extends Model
 
     public function events()
     {
-        return $this->hasMany(Event::class);
+        return $this->hasMany(\App\Models\Event::class);
     }
 
     public function adjoining_rooms()
@@ -123,6 +123,6 @@ class Room extends Model
     public function getEventsAt(Carbon $dateTime): Collection
     {
         return $this->events
-            ->filter(fn (Event $event) => $dateTime->between(Carbon::parse($event->start_time), Carbon::parse($event->end_time)));
+            ->filter(fn (\App\Models\Event $event) => $dateTime->between(Carbon::parse($event->start_time), Carbon::parse($event->end_time)));
     }
 }

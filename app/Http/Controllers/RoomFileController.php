@@ -3,17 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\FileUpload;
-use App\Models\Project;
 use App\Models\ProjectFile;
-use App\Models\Room;
-use App\Models\RoomFile;
 use App\Support\Services\NewHistoryService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomFile;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 
@@ -24,7 +22,7 @@ class RoomFileController extends Controller
 
     public function __construct()
     {
-        $this->historyController = new NewHistoryService('App\Models\Room');
+        $this->historyController = new NewHistoryService('Room');
     }
 
     /**

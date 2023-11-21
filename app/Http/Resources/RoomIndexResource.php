@@ -7,7 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Room
+ * @mixin \Room
  */
 class RoomIndexResource extends JsonResource
 {

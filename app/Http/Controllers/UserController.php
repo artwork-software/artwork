@@ -2,11 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Casts\GermanTimeCast;
-use App\Enums\PermissionNameEnum;
 use App\Events\UserUpdated;
 use App\Http\Requests\SearchRequest;
-use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
@@ -15,11 +12,9 @@ use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Freelancer;
 use App\Models\Project;
-use App\Models\Room;
 use App\Models\ServiceProvider;
 use App\Models\User;
 use Carbon\Carbon;
-use Carbon\CarbonInterval;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,8 +23,8 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
-use Laravel\Fortify\Contracts\SuccessfulPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Fortify;
+use Artwork\Modules\Room\Models\Room;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 

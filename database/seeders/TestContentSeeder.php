@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Area;
 use App\Models\Category;
 use App\Models\Checklist;
 use App\Models\Comment;
@@ -11,14 +10,15 @@ use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\Project;
-use App\Models\Room;
-use App\Models\RoomAttribute;
 use App\Models\Sector;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
+use Area;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Auth;
+use Room;
+use RoomAttribute;
 
 class TestContentSeeder extends Seeder
 {

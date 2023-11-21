@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Http\Resources\CalendarEventResource;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +14,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Scout\Searchable;
+use Artwork\Modules\Room\Models\Room;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasPermissions;
@@ -48,8 +48,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<\App\Models\Project> projects
  * @property Collection<\App\Models\Comment> comments
  * @property Collection<\App\Models\Checklist> private_checklists
- * @property Collection<\App\Models\Room> created_rooms
- * @property Collection<\App\Models\Room> admin_rooms
+ * @property Collection<\Room> created_rooms
+ * @property Collection<\Room> admin_rooms
  * @property Collection<\App\Models\Task> done_tasks
  * @property Collection<\App\Models\Event> events
  * @property Collection<\App\Models\Task> $privateTasks

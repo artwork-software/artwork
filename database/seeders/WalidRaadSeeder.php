@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Enums\BudgetTypesEnum;
-use App\Http\Controllers\ProjectController;
-use App\Models\Area;
 use App\Models\BudgetSumDetails;
 use App\Models\EventType;
 use App\Models\MoneySource;
@@ -12,10 +10,9 @@ use App\Models\Project;
 use App\Models\ProjectHeadline;
 use App\Models\ProjectStates;
 use App\Models\SeriesEvents;
+use Area;
 use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class WalidRaadSeeder extends Seeder

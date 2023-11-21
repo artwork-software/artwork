@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Antonrom\ModelChangesHistory\Models\Change;
-use App\Enums\NotificationConstEnum;
 use App\Http\Resources\AdjoiningRoomIndexResource;
 use App\Http\Resources\AttributeIndexResource;
 use App\Http\Resources\CategoryIndexResource;
@@ -11,16 +9,11 @@ use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\RoomCalendarResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
-use App\Models\Area;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Project;
-use App\Models\Room;
-use App\Models\RoomAttribute;
-use App\Models\RoomCategory;
-use App\Models\User;
-use App\Support\Services\CollisionService;
-use App\Support\Services\RoomService;
+use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Room\Services\RoomService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -28,17 +21,18 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use function Clue\StreamFilter\fun;
-use JetBrains\PhpStorm\NoReturn;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\RoomCategory;
 
 class RoomController extends Controller
 {
     // init notification system
-    protected ?RoomService $roomService = null;
+    //protected ?RoomService $roomService = null;
 
-    public function __construct()
+    public function __construct(private readonly RoomService $roomService)
     {
-        $this->roomService = new RoomService();
+        //$this->roomService = new RoomService();
     }
 
     /**
@@ -242,16 +236,7 @@ class RoomController extends Controller
      */
     public function duplicate(Room $room): RedirectResponse
     {
-        Room::create([
-            'name' => '(Kopie) ' . $room->name,
-            'description' => $room->description,
-            'temporary' => $room->temporary,
-            'start_date' => $room->start_date,
-            'end_date' => $room->end_date,
-            'area_id' => $room->area_id,
-            'user_id' => Auth::id(),
-            'order' => Room::max('order') + 1,
-        ]);
+        $this->roomService->duplicateByRoomModel($room);
 
         return Redirect::route('areas.management')->with('success', 'Room created.');
     }

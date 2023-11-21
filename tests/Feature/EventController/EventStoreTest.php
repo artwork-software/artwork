@@ -5,10 +5,10 @@ namespace Tests\Feature\EventController;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Project;
-use App\Models\Room;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Room;
 use Tests\TestCase;
 
 class EventStoreTest extends TestCase

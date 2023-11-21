@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Artwork\Modules\Room\Models\Room;
 
 class ShiftFilter extends Model
 {

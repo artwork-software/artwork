@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
@@ -35,7 +36,7 @@ use Laravel\Scout\Searchable;
  * @property \Illuminate\Database\Eloquent\Collection<Sector> $sectors
  * @property \Illuminate\Database\Eloquent\Collection<Genre> $genres
  * @property \Illuminate\Database\Eloquent\Collection<Project> $groups
- * @property \Illuminate\Database\Eloquent\Collection<\App\Models\Room> $rooms
+ * @property \Illuminate\Database\Eloquent\Collection<\Room> $rooms
  * @property Sector $sector
  * @property Category $category
  * @property Genre $genre

@@ -59,7 +59,7 @@
                             class="h-7 w-7 mx-2 cursor-pointer"></ZoomInIcon>
                 <ZoomOutIcon @click="decrementZoomFactor" :disabled="zoomFactor >= 1.4"
                              v-if="!atAGlance && isFullscreen" class="h-7 w-7 mx-2 cursor-pointer"></ZoomOutIcon>
-                <img v-if="!atAGlance && !isFullscreen" @click="enterFullscreenMode"
+                <img alt="Fullscreen" v-if="!atAGlance && !isFullscreen" @click="enterFullscreenMode"
                      src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
                 <IndividualCalendarFilterComponent
                     class="mt-1"

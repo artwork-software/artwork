@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds"
+        <ProjectShowHeaderComponent v-if="!hideProjectHeader" :project-delete-ids="projectDeleteIds"
                                     :projectWriteIds="projectWriteIds"
                                     :projectManagerIds="projectManagerIds"
                                     :project="project"
@@ -14,8 +14,9 @@
                                     :group-projects="groupProjects"
                                     :access_budget="access_budget"
                                     open-tab="budget">
-            <BudgetTab :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :budget="budget" :money-sources="moneySources"></BudgetTab>
+            <BudgetTab @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation" :hideProjectHeader="hideProjectHeader" :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :budget="budget" :money-sources="moneySources"></BudgetTab>
         </ProjectShowHeaderComponent>
+        <BudgetTab @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation" :hideProjectHeader="hideProjectHeader" :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :budget="budget" :money-sources="moneySources" v-else ></BudgetTab>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSidenav
                 :project="project"
@@ -70,7 +71,13 @@ export default defineComponent({
     data() {
         return {
             show: false,
+            hideProjectHeader: false
         }
+    },
+    methods: {
+        changeProjectHeaderVisualisation(boolean) {
+            this.hideProjectHeader = boolean;
+        },
     },
 })
 </script>

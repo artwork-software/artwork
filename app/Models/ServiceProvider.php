@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Shift\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

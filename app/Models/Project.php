@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

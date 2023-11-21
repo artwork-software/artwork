@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Builders\EventBuilder;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\Shift;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use DateTimeInterface;
@@ -12,7 +14,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
-use Artwork\Modules\Room\Models\Room;
 
 /**
  *

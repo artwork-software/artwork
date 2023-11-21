@@ -5,8 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
-use App\Models\Shift;
-use App\Models\ShiftPreset;
+use Artwork\Modules\Shift\Models\ShiftPreset;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -98,7 +97,7 @@ class ShiftPresetController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\ShiftPreset  $shiftPreset
+     * @param  \Artwork\Modules\Shift\Models\ShiftPreset  $shiftPreset
      * @return \Illuminate\Http\Response
      */
     public function show(ShiftPreset $shiftPreset)
@@ -109,7 +108,7 @@ class ShiftPresetController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\ShiftPreset  $shiftPreset
+     * @param  \Artwork\Modules\Shift\Models\ShiftPreset  $shiftPreset
      * @return \Illuminate\Http\Response
      */
     public function edit(ShiftPreset $shiftPreset)
@@ -121,7 +120,7 @@ class ShiftPresetController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\ShiftPreset  $shiftPreset
+     * @param  \Artwork\Modules\Shift\Models\ShiftPreset  $shiftPreset
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, ShiftPreset $shiftPreset)
@@ -132,7 +131,7 @@ class ShiftPresetController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\ShiftPreset  $shiftPreset
+     * @param  \Artwork\Modules\Shift\Models\ShiftPreset  $shiftPreset
      * @return \Illuminate\Http\Response
      */
     public function destroy(ShiftPreset $shiftPreset)

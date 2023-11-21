@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\EventType;
-use App\Models\ShiftFilter;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\ShiftFilter;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Artwork\Modules\Room\Models\Room;
 
 class ShiftFilterController extends Controller
 {

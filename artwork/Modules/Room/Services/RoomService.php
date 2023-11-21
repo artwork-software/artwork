@@ -8,6 +8,7 @@ use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
+use Illuminate\Http\Request;
 
 class RoomService
 {
@@ -31,6 +32,20 @@ class RoomService
         $this->roomRepository->save($new_room);
     }
 
+
+    public function createByRequest(Request $request)
+    {
+        $room = new Room();
+        $room->fill($request->only('name', 'description', 'area_id', 'room_type_id'));
+        $this->roomRepository->save($room);
+        $room->categories()->sync($request->categories);
+        $room->attributes()->sync($request->attributes);
+        $room->adjoiningRooms()->sync($request->adjoiningRooms);
+        $room->roomAdmins()->sync($request->roomAdmins);
+        $this->roomRepository->save($room);
+        $this->history->createHistory($room->id, 'Raum erstellt');
+        return $room;
+    }
 
     /**
      * @param $roomId

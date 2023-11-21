@@ -1,20 +1,23 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Budget\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-class RowComment extends Model
+class SumComment extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'sub_position_row_id',
-        'user_id',
-        'description'
-    ];
+    protected $guarded = [];
+
+    public function commentable(): MorphTo
+    {
+        return $this->morphTo();
+    }
 
     public function user(): BelongsTo
     {

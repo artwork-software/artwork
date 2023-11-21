@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Enums\BudgetTypesEnum;
-use App\Models\BudgetSumDetails;
 use App\Models\EventType;
 use App\Models\MoneySource;
 use App\Models\Project;
@@ -11,6 +10,7 @@ use App\Models\ProjectHeadline;
 use App\Models\ProjectStates;
 use App\Models\SeriesEvents;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;

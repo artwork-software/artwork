@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RowComment;
-use App\Models\SubPositionRow;
+use Artwork\Modules\Budget\Models\RowComment;
+use Artwork\Modules\Budget\Models\SubPositionRow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -49,7 +49,7 @@ class RowCommentController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\RowComment  $rowComment
+     * @param  \Artwork\Modules\Budget\Models\RowComment  $rowComment
      * @return \Illuminate\Http\Response
      */
     public function show(RowComment $rowComment)
@@ -60,7 +60,7 @@ class RowCommentController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\RowComment  $rowComment
+     * @param  \Artwork\Modules\Budget\Models\RowComment  $rowComment
      * @return \Illuminate\Http\Response
      */
     public function edit(RowComment $rowComment)
@@ -72,7 +72,7 @@ class RowCommentController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\RowComment  $rowComment
+     * @param  \Artwork\Modules\Budget\Models\RowComment  $rowComment
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, RowComment $rowComment)
@@ -83,7 +83,7 @@ class RowCommentController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\RowComment  $rowComment
+     * @param  \Artwork\Modules\Budget\Models\RowComment  $rowComment
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(RowComment $rowComment)

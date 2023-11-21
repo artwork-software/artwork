@@ -7,11 +7,10 @@ use App\Enums\RoleNameEnum;
 use App\Models\Event;
 use App\Models\Freelancer;
 use App\Models\ServiceProvider;
-use App\Models\Shift;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
-
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Shift\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +19,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
-use function React\Promise\reject;
 
 class ShiftController extends Controller
 {
@@ -32,7 +30,7 @@ class ShiftController extends Controller
      */
     public function __construct()
     {
-        $this->history = new NewHistoryService('App\Models\Shift');
+        $this->history = new NewHistoryService('Artwork\Modules\Shift\Models\Shift');
         $this->notificationService = new NotificationService();
     }
 

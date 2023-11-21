@@ -1,13 +1,17 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Shift\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Casts\TimeWithoutSeconds;
+use App\Models\Craft;
+use App\Models\Event;
+use App\Models\Freelancer;
+use App\Models\ServiceProvider;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use function Clue\StreamFilter\fun;
 
 
 /**

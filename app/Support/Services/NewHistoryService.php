@@ -3,7 +3,7 @@
 namespace App\Support\Services;
 
 use Antonrom\ModelChangesHistory\Models\Change;
-use App\Models\Shift;
+use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Support\Facades\Auth;
 
 /**

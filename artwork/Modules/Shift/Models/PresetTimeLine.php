@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Shift\Models;
 
 use App\Casts\TimeWithoutSeconds;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

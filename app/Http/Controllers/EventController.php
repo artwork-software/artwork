@@ -24,7 +24,6 @@ use App\Models\Freelancer;
 use App\Models\Project;
 use App\Models\SeriesEvents;
 use App\Models\ServiceProvider;
-use App\Models\Shift;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
@@ -33,6 +32,8 @@ use App\Support\Services\CollisionService;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\Shift;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -43,7 +44,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Response;
-use Artwork\Modules\Room\Models\Room;
 
 class EventController extends Controller
 {

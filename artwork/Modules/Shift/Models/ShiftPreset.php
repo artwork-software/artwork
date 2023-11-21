@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Shift\Models;
 
+use App\Models\EventType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;

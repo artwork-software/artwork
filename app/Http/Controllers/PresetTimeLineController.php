@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PresetTimeLine;
-use App\Models\ShiftPreset;
+use Artwork\Modules\Shift\Models\PresetTimeLine;
+use Artwork\Modules\Shift\Models\ShiftPreset;
 use Illuminate\Http\Request;
 
 class PresetTimeLineController extends Controller
@@ -42,7 +42,7 @@ class PresetTimeLineController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\PresetTimeLine  $presetTimeLine
+     * @param  \Artwork\Modules\Shift\Models\PresetTimeLine  $presetTimeLine
      * @return \Illuminate\Http\Response
      */
     public function show(PresetTimeLine $presetTimeLine)
@@ -53,7 +53,7 @@ class PresetTimeLineController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\PresetTimeLine  $presetTimeLine
+     * @param  \Artwork\Modules\Shift\Models\PresetTimeLine  $presetTimeLine
      * @return \Illuminate\Http\Response
      */
     public function edit(PresetTimeLine $presetTimeLine)
@@ -65,7 +65,7 @@ class PresetTimeLineController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\PresetTimeLine  $presetTimeLine
+     * @param  \Artwork\Modules\Shift\Models\PresetTimeLine  $presetTimeLine
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request)
@@ -83,7 +83,7 @@ class PresetTimeLineController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\PresetTimeLine  $presetTimeLine
+     * @param  \Artwork\Modules\Shift\Models\PresetTimeLine  $presetTimeLine
      * @return void
      */
     public function destroy(PresetTimeLine $presetTimeLine) : void

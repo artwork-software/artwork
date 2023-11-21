@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Table;
+use Artwork\Modules\Budget\Models\Table;
 use Illuminate\Http\Request;
 
 class TableController extends Controller
@@ -41,7 +41,7 @@ class TableController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Table  $table
+     * @param  \Artwork\Modules\Budget\Models\Table  $table
      * @return \Illuminate\Http\Response
      */
     public function show(Table $table)
@@ -52,7 +52,7 @@ class TableController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Table  $table
+     * @param  \Artwork\Modules\Budget\Models\Table  $table
      * @return \Illuminate\Http\Response
      */
     public function edit(Table $table)
@@ -64,7 +64,7 @@ class TableController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Table  $table
+     * @param  \Artwork\Modules\Budget\Models\Table  $table
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Table $table)
@@ -75,7 +75,7 @@ class TableController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Table  $table
+     * @param  \Artwork\Modules\Budget\Models\Table  $table
      * @return \Illuminate\Http\Response
      */
     public function destroy(Table $table)

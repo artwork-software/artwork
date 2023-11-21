@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Calendar;
 use App\Http\Resources\ResourceMappers\SimpleMapping;
 use App\Models\EventType;
 use App\Models\Project;
-use Area;
-use Room;
-use RoomAttribute;
-use RoomCategory;
+use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\RoomCategory;
 
 class FilterProvider
 {

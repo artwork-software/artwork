@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CellComment;
-use App\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\CellComment;
+use Artwork\Modules\Budget\Models\ColumnCell;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -52,7 +52,7 @@ class CellCommentsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\CellComment  $cellComments
+     * @param  \Artwork\Modules\Budget\Models\CellComment  $cellComments
      * @return \Illuminate\Http\Response
      */
     public function show(CellComment $cellComments)
@@ -63,7 +63,7 @@ class CellCommentsController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\CellComment  $cellComments
+     * @param  \Artwork\Modules\Budget\Models\CellComment  $cellComments
      * @return \Illuminate\Http\Response
      */
     public function edit(CellComment $cellComments)
@@ -75,7 +75,7 @@ class CellCommentsController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\CellComment  $cellComments
+     * @param  \Artwork\Modules\Budget\Models\CellComment  $cellComments
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, CellComment $cellComments)
@@ -86,7 +86,7 @@ class CellCommentsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\CellComment  $cellComments
+     * @param  \Artwork\Modules\Budget\Models\CellComment  $cellComments
      */
     public function destroy(CellComment $cellComment): \Illuminate\Http\RedirectResponse
     {

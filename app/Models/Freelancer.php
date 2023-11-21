@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Shift\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use function Termwind\render;
 
 /**
  * App\Models\Freelancer

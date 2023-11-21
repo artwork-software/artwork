@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Budget\Models;
 
-use Illuminate\Support\Collection;
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class Table extends Model
 {

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
-use App\Models\ProjectHeadline;
 use App\Support\Services\NewHistoryService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectHeadline;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -16,7 +16,7 @@ class ProjectHeadlineController extends Controller
 
     public function __construct()
     {
-        $this->history = new NewHistoryService('App\Models\Project');
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
     }
 
     /**
@@ -45,7 +45,7 @@ class ProjectHeadlineController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\ProjectHeadline  $projectHeadline
+     * @param  \Artwork\Modules\Project\Models\ProjectHeadline  $projectHeadline
      * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, ProjectHeadline $projectHeadline)
@@ -87,7 +87,7 @@ class ProjectHeadlineController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\ProjectHeadline  $projectHeadline
+     * @param  \Artwork\Modules\Project\Models\ProjectHeadline  $projectHeadline
      * @return \Illuminate\Http\Response
      */
     public function destroy(ProjectHeadline $projectHeadline)

@@ -30,7 +30,8 @@
                 {{ \Room::find($notification['event']['room_id'])->first()->name }}
                 | {{ \App\Models\EventType::find($notification['event']['event_type_id'])->first()->name }},
                 {{ $notification['event']['eventName'] }} | @if(!empty($notification['event']['project_id']))
-                    {{ \App\Models\Project::find($notification['event']['project_id'])->first()->name }} |
+                    {{ \Artwork\Modules\Project\Models\Project::find($notification['event']['project_id'])->first()->name }}
+                    |
                 @endif
                 {{ date('d.m.Y H:i', strtotime($notification['event']['start_time'])) }}
                 -  {{ date('d.m.Y H:i', strtotime($notification['event']['end_time'])) }}
@@ -38,7 +39,8 @@
             @if($notification['type']->value === 'NOTIFICATION_UPSERT_ROOM_REQUEST')
                 {{ \App\Models\EventType::find($notification['event']['event_type_id'])->first()->name }},
                 {{ $notification['event']['eventName'] }} | @if(!empty($notification['event']['project_id']))
-                    {{ \App\Models\Project::find($notification['event']['project_id'])->first()->name }} |
+                    {{ \Artwork\Modules\Project\Models\Project::find($notification['event']['project_id'])->first()->name }}
+                    |
                 @endif
                 {{ date('d.m.Y H:i', strtotime($notification['event']['start_time'])) }}
                 -  {{ date('d.m.Y H:i', strtotime($notification['event']['end_time'])) }}
@@ -48,7 +50,8 @@
                 | {{ \App\Models\EventType::find($notification['conflict']['event']['event_type_id'])->first()->name }},
                 {{ $notification['conflict']['event']['eventName'] }}
                 | @if(!empty($notification['conflict']['event']['project_id']))
-                    {{ \App\Models\Project::find($notification['conflict']['event']['project_id'])->first()->name }} |
+                    {{ \Artwork\Modules\Project\Models\Project::find($notification['conflict']['event']['project_id'])->first()->name }}
+                    |
                 @endif
                 {{ date('d.m.Y H:i', strtotime($notification['conflict']['event']['start_time'])) }}
                 -  {{ date('d.m.Y H:i', strtotime($notification['conflict']['event']['end_time'])) }}
@@ -58,7 +61,8 @@
                 | {{ \App\Models\EventType::find($notification['event']['event_type_id'])->first()->name }},
                 {{ $notification['event']['eventName'] }}
                 | @if(!empty($notification['conflict']['event']['project_id']))
-                    {{ \App\Models\Project::find($notification['event']['project_id'])->first()->name }} |
+                    {{ \Artwork\Modules\Project\Models\Project::find($notification['event']['project_id'])->first()->name }}
+                    |
                 @endif
                 {{ date('d.m.Y H:i', strtotime($notification['event']['start_time'])) }}
                 -  {{ date('d.m.Y H:i', strtotime($notification['event']['end_time'])) }}
@@ -67,7 +71,8 @@
                 {{ \Room::find($notification['conflict']['room_id'])->first()->name }}
                 | {{ \App\Models\EventType::find($notification['conflict']['event_type_id'])->first()->name }},
                 {{ $notification['conflict']['eventName'] }} | @if(!empty($notification['conflict']['project_id']))
-                    {{ \App\Models\Project::find($notification['conflict']['project_id'])->first()->name }} |
+                    {{ \Artwork\Modules\Project\Models\Project::find($notification['conflict']['project_id'])->first()->name }}
+                    |
                 @endif
                 {{ date('d.m.Y H:i', strtotime($notification['conflict']['start_time'])) }}
                 -  {{ date('d.m.Y H:i', strtotime($notification['conflict']['end_time'])) }}

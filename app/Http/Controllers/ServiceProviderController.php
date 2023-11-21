@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\EventTypeResource;
 use App\Models\EventType;
-use App\Models\Project;
 use App\Models\ServiceProvider;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -13,7 +14,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use Artwork\Modules\Room\Models\Room;
 
 class ServiceProviderController extends Controller
 {

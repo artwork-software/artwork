@@ -2,23 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\BudgetTypesEnum;
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\FileUpload;
 use App\Models\Comment;
-use App\Models\Project;
-use App\Models\ProjectFile;
-use App\Models\User;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
-use Barryvdh\Debugbar\Facades\Debugbar;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectFile;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -30,7 +26,7 @@ class ProjectFileController extends Controller
 
     public function __construct()
     {
-        $this->history = new NewHistoryService('App\Models\Project');
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
         $this->notificationService = new NotificationService();
     }
 

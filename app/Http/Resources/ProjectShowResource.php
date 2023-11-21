@@ -6,10 +6,9 @@ use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 /**
- * @mixin \App\Models\Project
+ * @mixin \Artwork\Modules\Project\Models\Project
  */
 class ProjectShowResource extends JsonResource
 {

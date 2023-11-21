@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Department
+ * @mixin \Artwork\Modules\Department\Models\Department
  */
 class DepartmentShowResource extends JsonResource
 {

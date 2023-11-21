@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
 use Artwork\Modules\Budget\Models\CellCalculations;
 use Artwork\Modules\Budget\Models\CellComment;
 use Artwork\Modules\Budget\Models\Column;
@@ -12,6 +11,7 @@ use Artwork\Modules\Budget\Models\RowComment;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * @mixin \App\Models\Project
+ * @mixin \Artwork\Modules\Project\Models\Project
  */
 class ProjectInEventResource extends JsonResource
 {

@@ -8,10 +8,8 @@ use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\TaskShowResource;
 use App\Models\Checklist;
-use App\Models\Department;
 use App\Models\MoneySourceTask;
 use App\Models\Task;
-use App\Models\Scheduling;
 use App\Models\User;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
@@ -99,7 +97,7 @@ class TaskController extends Controller
         }
 
         if ($authorized == true) {
-            $this->history = new NewHistoryService('App\Models\Project');
+            $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
             $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $request->name . ' zu ' . $checklist->name . ' hinzugefügt');
             $this->createNotificationForAllChecklistUser($checklist);
             return Redirect::back()->with('success', 'Task created.');
@@ -202,7 +200,7 @@ class TaskController extends Controller
 
         $checklist = $task->checklist()->first();
         if($checklist !== null){
-            $this->history = new NewHistoryService('App\Models\Project');
+            $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
             $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert');
 
             $this->createNotificationUpdateTask($task);
@@ -259,7 +257,7 @@ class TaskController extends Controller
     public function destroy(Task $task)
     {
         $checklist = $task->checklist()->first();
-        $this->history = new NewHistoryService('App\Models\Project');
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
         $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' gelöscht');
         $task->delete();
         return Redirect::back()->with('success', 'Task deleted');

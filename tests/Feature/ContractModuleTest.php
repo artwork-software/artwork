@@ -1,8 +1,6 @@
 <?php
 
-use App\Models\Contract;
 use App\Models\ContractModule;
-use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 

@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\ProjectFile;
 use App\Models\User;
+use Artwork\Modules\Project\Models\ProjectFile;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProjectFilePolicy
@@ -25,7 +25,7 @@ class ProjectFilePolicy
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\ProjectFile  $projectFile
+     * @param  \Artwork\Modules\Project\Models\ProjectFile  $projectFile
      * @return \Illuminate\Auth\Access\Response|bool
      */
     public function view(User $user, ProjectFile $projectFile)
@@ -48,7 +48,7 @@ class ProjectFilePolicy
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\ProjectFile  $projectFile
+     * @param  \Artwork\Modules\Project\Models\ProjectFile  $projectFile
      * @return \Illuminate\Auth\Access\Response|bool
      */
     public function update(User $user, ProjectFile $projectFile)
@@ -60,7 +60,7 @@ class ProjectFilePolicy
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\ProjectFile  $projectFile
+     * @param  \Artwork\Modules\Project\Models\ProjectFile  $projectFile
      * @return \Illuminate\Auth\Access\Response|bool
      */
     public function delete(User $user, ProjectFile $projectFile)
@@ -72,7 +72,7 @@ class ProjectFilePolicy
      * Determine whether the user can restore the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\ProjectFile  $projectFile
+     * @param  \Artwork\Modules\Project\Models\ProjectFile  $projectFile
      * @return \Illuminate\Auth\Access\Response|bool
      */
     public function restore(User $user, ProjectFile $projectFile)
@@ -84,7 +84,7 @@ class ProjectFilePolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\ProjectFile  $projectFile
+     * @param  \Artwork\Modules\Project\Models\ProjectFile  $projectFile
      * @return \Illuminate\Auth\Access\Response|bool
      */
     public function forceDelete(User $user, ProjectFile $projectFile)

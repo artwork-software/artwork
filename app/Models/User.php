@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Carbon\CarbonPeriod;
@@ -46,8 +49,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property boolean $can_master
  * @property boolean $can_work_shifts
  *
- * @property Collection<\App\Models\Department> departments
- * @property Collection<\App\Models\Project> projects
+ * @property Collection<\Artwork\Modules\Department\Models\Department> departments
+ * @property Collection<\Artwork\Modules\Project\Models\Project> projects
  * @property Collection<\App\Models\Comment> comments
  * @property Collection<\App\Models\Checklist> private_checklists
  * @property Collection<\Room> created_rooms

@@ -1,9 +1,22 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Project\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use App\Models\Category;
+use App\Models\Checklist;
+use App\Models\Comment;
+use App\Models\Contract;
+use App\Models\Copyright;
+use App\Models\CostCenter;
+use App\Models\Event;
+use App\Models\EventType;
+use App\Models\Genre;
+use App\Models\MoneySource;
+use App\Models\Sector;
+use App\Models\User;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

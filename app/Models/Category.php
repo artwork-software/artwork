@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Carbon\Carbon	$created_at
  * @property \Carbon\Carbon	$updated_at
  *
- * @property \Illuminate\Support\Collection<\App\Models\Project> $projects
+ * @property \Illuminate\Support\Collection<\Artwork\Modules\Project\Models\Project> $projects
  */
 class Category extends Model
 {

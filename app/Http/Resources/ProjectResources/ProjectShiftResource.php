@@ -2,22 +2,15 @@
 
 namespace App\Http\Resources\ProjectResources;
 
-use App\Http\Resources\ChecklistIndexResource;
-use App\Http\Resources\ContractResource;
-use App\Http\Resources\CopyrightResource;
-use App\Http\Resources\DepartmentIndexResource;
-use App\Http\Resources\ProjectFileResource;
-use App\Http\Resources\ProjectHeadlineResource;
 use App\Http\Resources\UserResourceWithoutShifts;
 use App\Models\Freelancer;
-use App\Models\ProjectStates;
 use App\Models\ServiceProvider;
+use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 /**
- * @mixin \App\Models\Project
+ * @mixin \Artwork\Modules\Project\Models\Project
  */
 class ProjectShiftResource extends JsonResource
 {

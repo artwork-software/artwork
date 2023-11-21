@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Calendar;
 
 use App\Http\Resources\ResourceMappers\SimpleMapping;
 use App\Models\EventType;
-use App\Models\Project;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Models\RoomCategory;

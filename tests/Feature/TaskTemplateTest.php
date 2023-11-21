@@ -1,13 +1,12 @@
 <?php
 
-use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
-use App\Models\Department;
 use App\Models\Genre;
-use App\Models\Project;
 use App\Models\Sector;
 use App\Models\TaskTemplate;
 use App\Models\User;
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Project\Models\Project;
 
 beforeEach(function () {
 

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -45,7 +45,7 @@ class ProjectStatesController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\ProjectStates  $projectStates
+     * @param  \Artwork\Modules\Project\Models\ProjectStates  $projectStates
      * @return \Illuminate\Http\Response
      */
     public function show(ProjectStates $projectStates)
@@ -56,7 +56,7 @@ class ProjectStatesController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\ProjectStates  $projectStates
+     * @param  \Artwork\Modules\Project\Models\ProjectStates  $projectStates
      * @return \Illuminate\Http\Response
      */
     public function edit(ProjectStates $projectStates)
@@ -68,7 +68,7 @@ class ProjectStatesController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\ProjectStates  $projectStates
+     * @param  \Artwork\Modules\Project\Models\ProjectStates  $projectStates
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, ProjectStates $projectStates)
@@ -79,7 +79,7 @@ class ProjectStatesController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\ProjectStates  $projectStates
+     * @param  \Artwork\Modules\Project\Models\ProjectStates  $projectStates
      * @return \Illuminate\Http\Response
      */
     public function destroy(ProjectStates $projectStates)

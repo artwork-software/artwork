@@ -11,8 +11,11 @@ use App\Http\Resources\RoomCalendarResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
 use App\Models\Event;
 use App\Models\EventType;
-use App\Models\Project;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\RoomCategory;
 use Artwork\Modules\Room\Services\RoomService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
@@ -21,9 +24,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Artwork\Modules\Room\Models\Room;
-use Artwork\Modules\Room\Models\RoomAttribute;
-use Artwork\Modules\Room\Models\RoomCategory;
 
 class RoomController extends Controller
 {

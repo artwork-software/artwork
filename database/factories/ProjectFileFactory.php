@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ProjectFile>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Artwork\Modules\Project\Models\ProjectFile>
  */
 class ProjectFileFactory extends Factory
 {

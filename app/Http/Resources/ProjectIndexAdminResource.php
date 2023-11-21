@@ -3,10 +3,9 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Http\Resources\MissingValue;
 
 /**
- * @mixin \App\Models\Project
+ * @mixin \Artwork\Modules\Project\Models\Project
  */
 class ProjectIndexAdminResource extends JsonResource
 {

@@ -3,9 +3,9 @@
 namespace App\Support\Services;
 
 use App\Models\Checklist;
-use App\Models\Project;
-use App\Models\ProjectHistory;
 use App\Models\Task;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectHistory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;

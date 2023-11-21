@@ -33,15 +33,12 @@ use App\Models\CompanyType;
 use App\Models\ContractType;
 use App\Models\Craft;
 use App\Models\Currency;
-use App\Models\Department;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\Genre;
 use App\Models\MoneySource;
-use App\Models\Project;
-use App\Models\ProjectStates;
 use App\Models\Sector;
 use App\Models\ServiceProvider;
 use App\Models\TimeLine;
@@ -59,6 +56,9 @@ use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\SubpositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectStates;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -91,7 +91,7 @@ class ProjectController extends Controller
         $this->notificationData = new stdClass();
         $this->notificationData->project = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
-        $this->history = new NewHistoryService('App\Models\Project');
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
         $this->schedulingController = new SchedulingController();
     }
 

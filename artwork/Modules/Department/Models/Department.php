@@ -1,7 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Department\Models;
 
+use App\Models\Checklist;
+use App\Models\ChecklistTemplate;
+use App\Models\Invitation;
+use App\Models\User;
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;

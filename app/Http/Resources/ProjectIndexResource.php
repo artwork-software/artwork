@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\MissingValue;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * @mixin \App\Models\Project
+ * @mixin \Artwork\Modules\Project\Models\Project
  */
 class ProjectIndexResource extends JsonResource
 {

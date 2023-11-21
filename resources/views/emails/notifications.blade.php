@@ -75,7 +75,7 @@
                                     ,
                                     {{ $body['body']['event']['eventName'] }}
                                     | @if(!empty($body['body']['event']['project_id']))
-                                        {{ \App\Models\Project::find($body['body']['event']['project_id'])->first()->name }}
+                                        {{ \Artwork\Modules\Project\Models\Project::find($body['body']['event']['project_id'])->first()->name }}
                                         |
                                     @endif
                                     {{ date('d.m.Y H:i', strtotime($body['body']['event']['start_time'])) }}
@@ -86,7 +86,7 @@
                                     ,
                                     {{ $body['body']['event']['eventName'] }}
                                     | @if(!empty($body['body']['event']['project_id']))
-                                        {{ \App\Models\Project::find($body['body']['event']['project_id'])->first()->name }}
+                                        {{ \Artwork\Modules\Project\Models\Project::find($body['body']['event']['project_id'])->first()->name }}
                                         |
                                     @endif
                                     {{ date('d.m.Y H:i', strtotime($body['body']['event']['start_time'])) }}
@@ -98,7 +98,7 @@
                                     ,
                                     {{ $body['body']['conflict']['event']['eventName'] }}
                                     | @if(!empty($body['body']['conflict']['event']['project_id']))
-                                        {{ \App\Models\Project::find($body['body']['conflict']['event']['project_id'])->first()->name }}
+                                        {{ \Artwork\Modules\Project\Models\Project::find($body['body']['conflict']['event']['project_id'])->first()->name }}
                                         |
                                     @endif
                                     {{ date('d.m.Y H:i', strtotime($body['body']['conflict']['event']['start_time'])) }}
@@ -111,7 +111,7 @@
                                     ,
                                     {{ $body['body']['event']['eventName'] }}
                                     | @if(!empty($body['body']['conflict']['event']['project_id']))
-                                        {{ \App\Models\Project::find($body['body']['event']['project_id'])->first()->name }}
+                                        {{ \Artwork\Modules\Project\Models\Project::find($body['body']['event']['project_id'])->first()->name }}
                                         |
                                     @endif
                                     {{ date('d.m.Y H:i', strtotime($body['body']['event']['start_time'])) }}
@@ -124,7 +124,7 @@
                                     ,
                                     {{ $body['body']['conflict']['eventName'] }}
                                     | @if(!empty($body['body']['conflict']['project_id']))
-                                        {{ \App\Models\Project::find($body['body']['conflict']['project_id'])->first()->name }}
+                                        {{ \Artwork\Modules\Project\Models\Project::find($body['body']['conflict']['project_id'])->first()->name }}
                                         |
                                     @endif
                                     {{ date('d.m.Y H:i', strtotime($body['body']['conflict']['start_time'])) }}

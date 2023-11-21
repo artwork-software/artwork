@@ -4,8 +4,8 @@ namespace Tests\Feature\EventController;
 
 use App\Models\Event;
 use App\Models\EventType;
-use App\Models\Project;
 use Area;
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Room;
 use RoomAttribute;

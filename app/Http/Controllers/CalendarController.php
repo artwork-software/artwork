@@ -8,18 +8,18 @@ use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\CalendarShowEventResource;
 use App\Models\Event;
 use App\Models\Freelancer;
-use App\Models\Project;
 use App\Models\ServiceProvider;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
 use App\Models\UserCalendarSettings;
 use App\Models\UserShiftCalendarFilter;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Artwork\Modules\Room\Models\Room;
-use Illuminate\Contracts\Auth\Authenticatable;
 
 class CalendarController extends Controller
 {

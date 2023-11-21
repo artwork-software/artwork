@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Department;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;

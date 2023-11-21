@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\ProjectHistory
+ * @mixin \Artwork\Modules\Project\Models\ProjectHistory
  */
 class ProjectHistoryResource extends JsonResource
 {

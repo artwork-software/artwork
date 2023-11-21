@@ -9,24 +9,21 @@ use App\Http\Resources\ContractResource;
 use App\Models\Comment;
 use App\Models\Contract;
 use App\Models\ContractModule;
-use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Project\Models\Project;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use function Pest\Laravel\json;
 
 class ContractController extends Controller
 {

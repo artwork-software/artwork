@@ -13,7 +13,6 @@ use App\Models\Event;
 use App\Models\EventType;
 use App\Models\GlobalNotification;
 use App\Models\NotificationSetting;
-use App\Models\Project;
 use App\Models\User;
 use App\Models\UserVacations;
 use App\Notifications\BudgetVerified;
@@ -26,10 +25,11 @@ use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
 use App\Notifications\TaskNotification;
 use App\Notifications\TeamNotification;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
-use Artwork\Modules\Room\Models\Room;
 use Illuminate\Support\Facades\Storage;
 
 class NotificationController extends Controller

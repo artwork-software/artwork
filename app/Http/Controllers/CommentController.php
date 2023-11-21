@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Enums\RoleNameEnum;
 use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
-use App\Models\Project;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -19,7 +19,7 @@ class CommentController extends Controller
     public function __construct()
     {
         $this->authorizeResource(Comment::class);
-        $this->history = new NewHistoryService('APP\Models\Project');
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
     }
 
     /**

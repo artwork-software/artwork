@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Copyright;
 use App\Models\CostCenter;
-use App\Models\Project;
 use App\Support\Services\NewHistoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -17,7 +15,7 @@ class CostCenterController extends Controller
 
     public function __construct()
     {
-        $this->history = new NewHistoryService('App\Models\Project');
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
     }
 
     /**

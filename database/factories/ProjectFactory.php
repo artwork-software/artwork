@@ -2,13 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Models\Category;
-use App\Models\Genre;
-use App\Models\Sector;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\project>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Artwork\Modules\Project\Models\project>
  */
 class ProjectFactory extends Factory
 {

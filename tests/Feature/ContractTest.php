@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\Contract;
-use App\Models\Project;
 use App\Models\User;
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\UploadedFile;
 
 beforeEach(function() {

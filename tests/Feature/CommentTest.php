@@ -2,10 +2,10 @@
 
 use App\Models\Checklist;
 use App\Models\Comment;
-use App\Models\Department;
-use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Project\Models\Project;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {

@@ -3,10 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Enums\RoleNameEnum;
-use App\Models\Department;
-use App\Models\Project;
 use App\Models\User;
+use Artwork\Modules\Department\Models\Department;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class DepartmentPolicy
@@ -29,7 +27,7 @@ class DepartmentPolicy
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
+     * @param  \Artwork\Modules\Department\Models\Department  $department
      * @return \Illuminate\Auth\Access\Response|bool
      */
     public function view(User $user, Department $department)
@@ -54,7 +52,7 @@ class DepartmentPolicy
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
+     * @param  \Artwork\Modules\Department\Models\Department  $department
      * @return \Illuminate\Auth\Access\Response|bool
      */
     public function update(User $user, Department $department)
@@ -67,7 +65,7 @@ class DepartmentPolicy
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
+     * @param  \Artwork\Modules\Department\Models\Department  $department
      * @return \Illuminate\Auth\Access\Response|bool
      */
     public function delete(User $user, Department $department)
@@ -80,7 +78,7 @@ class DepartmentPolicy
      * Determine whether the user can restore the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
+     * @param  \Artwork\Modules\Department\Models\Department  $department
      * @return \Illuminate\Auth\Access\Response|bool
      */
     public function restore(User $user, Department $department)
@@ -92,7 +90,7 @@ class DepartmentPolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
+     * @param  \Artwork\Modules\Department\Models\Department  $department
      * @return \Illuminate\Auth\Access\Response|bool
      */
     public function forceDelete(User $user, Department $department)

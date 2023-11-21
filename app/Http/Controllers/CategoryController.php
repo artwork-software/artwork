@@ -8,11 +8,10 @@ use App\Models\CompanyType;
 use App\Models\ContractType;
 use App\Models\Currency;
 use App\Models\Genre;
-use App\Models\ProjectHeadline;
-use App\Models\ProjectStates;
 use App\Models\Sector;
+use Artwork\Modules\Project\Models\ProjectHeadline;
+use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
 class CategoryController extends Controller

@@ -551,6 +551,11 @@
                                         <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </ListboxButton>
                                     <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                        <ListboxOption v-if="this.projectGroups.length === 0"
+                                                       class="w-full text-secondary cursor-pointer p-2 flex justify-between"
+                                                       :value="null">
+                                            Bisher ist keine Projektgruppe angelegt
+                                        </ListboxOption>
                                         <ListboxOption v-for="projectGroup in this.projectGroups"
                                                        class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
                                                        :key="projectGroup.id"
@@ -1266,8 +1271,6 @@ export default defineComponent({
             const managerAuth = [];
             const deleteAuth = [];
             const viewAuth = [];
-
-            console.log(project)
 
             project.users.forEach((user) => {
                 viewAuth.push(user.id);

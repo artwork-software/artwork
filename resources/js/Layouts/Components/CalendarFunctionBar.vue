@@ -1,7 +1,7 @@
 <template>
-    <div class="w-[98%] flex justify-between items-center mt-4 mb-2" :class="atAGlance? 'ml-14' : ''">
+    <div class="w-[98%] flex justify-between items-center mt-4 mb-2" :class="atAGlance || dateValue[0] === dateValue[1]? 'ml-14' : ''">
         <div class="inline-flex items-center">
-            <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue"></date-picker-component>
+            <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
             <div v-if="!project">
                 <div v-if="dateValue && dateValue[0] === dateValue[1]">
                     <button  class="ml-2 -mt-2 text-black" @click="previousDay">
@@ -59,7 +59,7 @@
                             class="h-7 w-7 mx-2 cursor-pointer"></ZoomInIcon>
                 <ZoomOutIcon @click="decrementZoomFactor" :disabled="zoomFactor >= 1.4"
                              v-if="!atAGlance && isFullscreen" class="h-7 w-7 mx-2 cursor-pointer"></ZoomOutIcon>
-                <img v-if="!atAGlance && !isFullscreen" @click="enterFullscreenMode"
+                <img alt="Fullscreen" v-if="!atAGlance && !isFullscreen" @click="enterFullscreenMode"
                      src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
                 <IndividualCalendarFilterComponent
                     class="mt-1"
@@ -67,12 +67,12 @@
                     :personal-filters="personalFilters"
                     :at-a-glance="atAGlance"
                     :type="project ? 'project' : 'individual'"
-                    @filters-changed="filtersChanged"
                     :user_filters="user_filters"
+                    :extern-updated="externUpdate"
                 />
 
 
-                <Menu as="div" class="relative inline-block flex items-center text-left">
+                <Menu as="div" class="relative inline-block items-center text-left">
                     <div class="">
                         <MenuButton>
                             <span class="inline-flex">
@@ -148,9 +148,10 @@
         </div>
 
     </div>
-
-        <div class="mb-1 ml-4 flex items-center w-full">
-            <BaseFilterTag type="calendar" v-for="activeFilter in activeFilters" :filter="activeFilter.name" />
+        <div class="my-3 w-full">
+            <div class="mb-1 ml-4 flex items-center w-full">
+                <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter"/>
+            </div>
         </div>
 
 </template>
@@ -167,6 +168,7 @@ import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 
 export default {
@@ -218,6 +220,7 @@ export default {
                 repeating_events: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.repeating_events : false,
                 work_shifts: this.$page.props.user.calendar_settings ? this.$page.props.user.calendar_settings.work_shifts : false
             }),
+            externUpdate: false,
         }
     },
     methods: {
@@ -257,9 +260,146 @@ export default {
         },
         saveUserCalendarSettings() {
             this.userCalendarSettings.patch(route('user.calendar_settings.update', {user: this.$page.props.user.id}))
-        }
+        },
+        removeFilter(filter) {
 
+            if(filter.value === 'isLoud'){
+                this.updateFilterValue('is_loud', false);
+            }
+
+            if(filter.value === 'isNotLoud'){
+                this.updateFilterValue('is_not_loud', false)
+            }
+
+            if(filter.value === 'adjoiningNoAudience'){
+                this.updateFilterValue('adjoining_no_audience', false)
+            }
+
+            if(filter.value === 'adjoiningNotLoud'){
+                this.updateFilterValue('adjoining_not_loud', false)
+            }
+
+            if(filter.value === 'hasAudience'){
+                this.updateFilterValue('has_audience', false)
+            }
+
+            if(filter.value === 'hasNoAudience'){
+                this.updateFilterValue('has_no_audience', false)
+            }
+
+            if(filter.value === 'showAdjoiningRooms'){
+                this.updateFilterValue('show_adjoining_rooms', false)
+            }
+
+            if(filter.value === 'rooms'){
+                this.user_filters.rooms.splice(this.user_filters.rooms.indexOf(filter.id), 1);
+                this.updateFilterValue('rooms', this.user_filters.rooms.length > 0 ? this.user_filters.rooms : null)
+            }
+
+            if(filter.value === 'room_categories'){
+                this.user_filters.room_categories.splice(this.user_filters.room_categories.indexOf(filter.id), 1);
+                this.updateFilterValue('room_categories', this.user_filters.room_categories.length > 0 ? this.user_filters.room_categories : null)
+            }
+
+            if(filter.value === 'areas'){
+                this.user_filters.areas.splice(this.user_filters.areas.indexOf(filter.id), 1);
+                this.updateFilterValue('areas', this.user_filters.areas.length > 0 ? this.user_filters.areas : null)
+            }
+
+            if(filter.value === 'event_types'){
+                this.user_filters.event_types.splice(this.user_filters.event_types.indexOf(filter.id), 1);
+                this.updateFilterValue('event_types', this.user_filters.event_types.length > 0 ? this.user_filters.event_types : null)
+            }
+
+            if(filter.value === 'room_attributes'){
+                this.user_filters.room_attributes.splice(this.user_filters.room_attributes.indexOf(filter.id), 1);
+                this.updateFilterValue('room_attributes', this.user_filters.room_attributes.length > 0 ? this.user_filters.room_attributes : null)
+            }
+        },
+
+        updateFilterValue(key, value){
+            Inertia.patch(route('user.calendar.filter.single.value.update', {user: this.$page.props.user.id}), {
+                key: key,
+                value: value
+            }, {
+                preserveScroll: true,
+            });
+        },
+
+        arrayToIds(array) {
+            const filteredArray = array.filter(item => item.checked === true)
+
+            if (filteredArray.length === 0) {
+                return null
+            }
+
+            return filteredArray.map(elem => elem.id)
+        },
     },
+    computed: {
+        activeFilters: function () {
+            let activeFiltersArray = []
+            this.filterOptions.rooms.forEach((room) => {
+                if(this.user_filters.rooms?.includes(room.id)){
+                    activeFiltersArray.push(room)
+                }
+            })
+
+            this.filterOptions.areas.forEach((area) => {
+                if(this.user_filters.areas?.includes(area.id)){
+                    activeFiltersArray.push(area)
+                }
+            })
+
+            this.filterOptions.eventTypes.forEach((eventType) => {
+                if(this.user_filters.event_types?.includes(eventType.id)){
+                    activeFiltersArray.push(eventType)
+                }
+            })
+
+            this.filterOptions.roomCategories.forEach((category) => {
+                if(this.user_filters.room_categories?.includes(category.id)){
+                    activeFiltersArray.push(category)
+                }
+            })
+
+            this.filterOptions.roomAttributes.forEach((attribute) => {
+                if(this.user_filters.room_attributes?.includes(attribute.id)){
+                    activeFiltersArray.push(attribute)
+                }
+            })
+
+            if(this.user_filters.is_loud){
+                activeFiltersArray.push({name: "Laute Termine", value: 'isLoud', user_filter_key: 'is_loud'})
+            }
+
+            if(this.user_filters.is_not_loud){
+                activeFiltersArray.push({name: "Ohne laute Termine", value: 'isNotLoud', user_filter_key: 'is_not_loud'})
+            }
+
+            if(this.user_filters.adjoining_no_audience){
+                activeFiltersArray.push({name: "Ohne Nebenveranstaltung mit Publikum", value: 'adjoiningNoAudience', user_filter_key: 'adjoining_no_audience'})
+            }
+
+            if(this.user_filters.adjoining_not_loud){
+                activeFiltersArray.push({name: "Ohne laute Nebenveranstaltung", value: 'adjoiningNotLoud', user_filter_key: 'adjoining_not_loud'})
+            }
+
+            if(this.user_filters.has_audience){
+                activeFiltersArray.push({name: "Mit Publikum", value: 'hasAudience', user_filter_key: 'has_audience'})
+            }
+
+            if(this.user_filters.has_no_audience){
+                activeFiltersArray.push({name: "Ohne Publikum", value: 'hasNoAudience', user_filter_key: 'has_no_audience'})
+            }
+
+            if(this.user_filters.show_adjoining_rooms){
+                activeFiltersArray.push({name: "Nebenräume anzeigen", value: 'showAdjoiningRooms', user_filter_key: 'show_adjoining_rooms'})
+            }
+
+            return activeFiltersArray
+        }
+    }
 }
 </script>
 

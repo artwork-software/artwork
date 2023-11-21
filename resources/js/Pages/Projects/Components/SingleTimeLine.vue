@@ -63,9 +63,9 @@ export default defineComponent({
                       @focusout="checkTime(time.start, time.end)"
                       class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
            </div>
-           <span class="text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</span>
+           <span class="mt-2 text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</span>
            <div class="mt-2 col-span-2">
-               <textarea v-model="time.description" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
+               <textarea v-model="time.description_without_html" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
            </div>
        </div>
        <div class="hidden group-hover:block ml-3">

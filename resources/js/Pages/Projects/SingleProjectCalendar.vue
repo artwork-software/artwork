@@ -1,9 +1,19 @@
 <template>
     <app-layout>
-    <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds" :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
-                                :states="states" :project-groups="projectGroups"
+    <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds"
+                                :projectWriteIds="projectWriteIds"
+                                :projectManagerIds="projectManagerIds"
+                                :project="project"
+                                :eventTypes="eventTypes"
+                                :currentGroup="currentGroup"
+                                :states="states"
+                                :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
-                                :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="calendar">
+                                :last-event-in-project="lastEventInProject"
+                                :rooms-with-audience="RoomsWithAudience"
+                                :group-projects="groupProjects"
+                                :access_budget="access_budget"
+                                open-tab="calendar">
         <CalendarTab :projectWriteIds="projectWriteIds" :user_filters="user_filters" :projectManagerIds="projectManagerIds" :project="project" :selected-date="selectedDate" :date-value="dateValue" :events="events" :rooms="rooms" :events-without-room="eventsWithoutRoom" :filter-options="filterOptions" :personal-filters="personalFilters" :at-a-glance="atAGlance" :events-at-a-glance="eventsAtAGlance" :calendar="calendar" :days="days" :event-types="eventTypes" @change-at-a-glance="changeAtAGlance"></CalendarTab>
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
@@ -83,8 +93,8 @@ export default {
         'projectManagerIds',
         'projectWriteIds',
         'projectDeleteIds',
-        'user_filters'
-
+        'user_filters',
+        'access_budget'
     ],
     data() {
         return {

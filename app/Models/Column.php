@@ -32,6 +32,7 @@ class Column extends Model
         'color',
         'is_locked',
         'locked_by',
+        'commented'
     ];
 
     protected $casts = [

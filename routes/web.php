@@ -42,6 +42,7 @@ use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\SumDetailsController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTemplateController;
+use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -143,7 +144,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::post('/projects/{project}/updateKeyVisual', [ProjectController::class, 'updateKeyVisual'])->name('projects_key_visual.update');
     Route::post('/projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
-    Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::patch('/projects/{project}/shiftDescription', [ProjectController::class, 'updateShiftDescription'])->name('projects.update.shift_description');
@@ -315,6 +315,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
+    Route::post('/events/{event}/by/notification', [EventController::class, 'destroyByNotification'])->name('events.delete.by.notification');
     Route::delete('/events/{event}/shifts', [EventController::class, 'destroy_shifts'])->name('events.shifts.delete');
 
     Route::put('/event/requests/{event}',[EventController::class, 'acceptEvent'])->name('events.accept');
@@ -395,7 +396,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/user/{user}/calendar/shift/filter/reset', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'reset'])->name('reset.user.shift.calendar.filter');
     Route::patch('/user/{user}/calendar/filter/update', [\App\Http\Controllers\UserCalendarFilterController::class, 'update'])->name('update.user.calendar.filter');
     Route::patch('/user/{user}/shift/calendar/filter/update', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'update'])->name('update.user.shift.calendar.filter');
+    Route::patch('/user/{user}/calendar/filter/date/update', [\App\Http\Controllers\UserCalendarFilterController::class, 'updateDates'])->name('update.user.calendar.filter.dates');
+    Route::patch('/user/{user}/calendar/filter/single/update/calendar', [\App\Http\Controllers\UserCalendarFilterController::class, 'singleValueUpdate'])->name('user.calendar.filter.single.value.update');
+    Route::patch('/user/{user}/calendar/filter/single/update/shift', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'singleValueUpdate'])->name('user.shift.calendar.filter.single.value.update');
+    Route::patch('/user/{user}/shift/calendar/filter/date/update', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'updateDates'])->name('update.user.shift.calendar.filter.dates');
 
+    Route::resource(
+        'user.commentedBudgetItemsSettings',
+        UserCommentedBudgetItemsSettingController::class
+    )->only(['store', 'update']);
 
     // Project Routes
     Route::group(['prefix' => 'project'], function (){
@@ -457,7 +466,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
             Route::post('/template/{table}/create', [\App\Http\Controllers\BudgetTemplateController::class, 'store'])->name('project.budget.template.create');
             Route::post('/template/{table}/use', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplate'])->name('project.budget.template.use');
             Route::post('/template/use/project', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplateFromProject'])->name('project.budget.template.project');
-
+            Route::post('/subposition/row/{subPositionRow}/duplicate', [ProjectController::class, 'duplicateRow'])->name('project.budget.sub-position.duplicate.row');
             // PATCH
             Route::patch('/cell', [ProjectController::class, 'updateCellValue'])->name('project.budget.cell.update');
             Route::patch('/column/update-name', [ProjectController::class, 'updateColumnName'])->name('project.budget.column.update-name');
@@ -477,6 +486,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
             Route::patch('/unfix/sub-position', [ProjectController::class, 'unfixSubPosition'])->name('project.budget.unfix.sub-position');
             Route::patch('/fix/main-position', [ProjectController::class, 'fixMainPosition'])->name('project.budget.fix.main-position');
             Route::patch('/unfix/main-position', [ProjectController::class, 'unfixMainPosition'])->name('project.budget.unfix.main-position');
+            Route::patch('/column/{column}/commented', [ProjectController::class, 'updateCommentedStatusOfColumn'])->name('project.budget.column.update.commented');
 
             // DELETE
             Route::delete('/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])->name('project.budget.sub-position-row.delete');

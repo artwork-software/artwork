@@ -1,7 +1,7 @@
 <template>
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2">
         <div class="inline-flex items-center">
-            <date-picker-component v-if="dateValue" :dateValueArray="dateValue"></date-picker-component>
+            <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
             <div>
                 <div>
                     <button  class="ml-2 -mt-2 text-black" @click="previousTimeRange">
@@ -37,7 +37,6 @@
                     class="mt-1"
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
-                    @filters-changed="filtersChanged"
                     :user_filters="user_filters"
                 />
 
@@ -45,7 +44,7 @@
         </div>
     </div>
     <div class="mb-1 ml-4 flex items-center w-full">
-        <BaseFilterTag type="calendar" v-for="activeFilter in activeFilters" :filter="activeFilter.name" />
+        <BaseFilterTag v-for="activeFilter in activeFilters" :filter="activeFilter" @removeFilter="removeFilter" />
     </div>
 
 
@@ -113,7 +112,43 @@ export default {
             showConfirmCommitModal: false,
         }
     },
+    computed: {
+        activeFilters(){
+            let activeFiltersArray = []
+            this.filterOptions.rooms.forEach((room) => {
+                if(this.user_filters.rooms?.includes(room.id)){
+                    activeFiltersArray.push(room)
+                }
+            })
+
+
+            this.filterOptions.eventTypes.forEach((eventType) => {
+                if(this.user_filters.event_types?.includes(eventType.id)){
+                    activeFiltersArray.push(eventType)
+                }
+            })
+            return activeFiltersArray
+        }
+    },
     methods: {
+        removeFilter(filter){
+            if(filter.value === 'rooms'){
+                this.user_filters.rooms.splice(this.user_filters.rooms.indexOf(filter.id), 1);
+                this.updateFilterValue('rooms', this.user_filters.rooms.length > 0 ? this.user_filters.rooms : null)
+            }
+            if(filter.value === 'event_types'){
+                this.user_filters.event_types.splice(this.user_filters.event_types.indexOf(filter.id), 1);
+                this.updateFilterValue('event_types', this.user_filters.event_types.length > 0 ? this.user_filters.event_types : null)
+            }
+        },
+        updateFilterValue(key, value){
+            Inertia.patch(route('user.shift.calendar.filter.single.value.update', {user: this.$page.props.user.id}), {
+                key: key,
+                value: value
+            }, {
+                preserveScroll: true,
+            });
+        },
         enterFullscreenMode() {
             this.$emit('enterFullscreenMode')
         },
@@ -143,6 +178,8 @@ export default {
                     }
                 });
             });
+
+
 
             Inertia.post('/shifts/commit', { events: filteredEvents }, {
                 onSuccess: () => {

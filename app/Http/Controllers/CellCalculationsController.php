@@ -81,6 +81,14 @@ class CellCalculationsController extends Controller
     public function destroy(CellCalculations $cellCalculation): \Illuminate\Http\RedirectResponse
     {
         $cellCalculation->delete();
+
+        // reset Positions on all other calculations in this cell
+        $cellCalculation->cell->calculations->each(function ($calculation, $index) {
+            $calculation->update([
+                'position' => $index
+            ]);
+        });
+
         return back();
     }
 }

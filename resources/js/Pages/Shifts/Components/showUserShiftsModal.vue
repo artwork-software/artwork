@@ -111,13 +111,13 @@ export default defineComponent({
         },
         removeUserFromShift(shift){
             const shiftContainer = document.getElementById('shift-' + shift);
-            if(this.user.resource === 'ServiceProviderShiftResource'){
+            if(this.user.element.resource === 'ServiceProviderShiftResource'){
                 Inertia.delete(route('shifts.removeProvider', {shift: shift, serviceProvider: this.user.element.id}), {
                     onSuccess: () => {
                         shiftContainer.remove()
                     }
                 })
-            } else if(this.user.resource === 'FreelancerShiftResource'){
+            } else if(this.user.element.resource === 'FreelancerShiftResource'){
                 Inertia.delete(route('shifts.removeFreelancer', {shift: shift, freelancer: this.user.element.id}), {
                     onSuccess: () => {
                         shiftContainer.remove()

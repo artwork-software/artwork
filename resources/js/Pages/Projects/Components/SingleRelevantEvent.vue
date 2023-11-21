@@ -4,7 +4,7 @@
         <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm"
              :class="event.event_type.svg_name">
             <div class="flex items-center">
-                {{ event.event?.start_time }} | {{ event.event_type.abbreviation }} | {{ event.room.name }}
+                {{ event.event?.start_time }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
 
                 <span v-if="event.event.is_series" class="ml-3">
                     <SvgCollection svg-name="iconRepeat"/>

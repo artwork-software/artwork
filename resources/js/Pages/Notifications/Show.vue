@@ -95,16 +95,16 @@
                                                       :room-collisions="roomCollisions"/>
                     </div>
                     <div  class="col-span-4 pr-8">
-                        <div v-if="this.$page.props.globalNotification.image_url || this.$page.props.globalNotification.title">
+                        <div v-if="globalNotification.image_url || globalNotification.title">
                             <div class="bg-backgroundGray">
-                                <img v-if="this.$page.props.globalNotification.image_url" alt="Benachrichtigungs Bild" class="max-h-96"
-                                     :src="this.$page.props.globalNotification.image_url"/>
+                                <img v-if="globalNotification.image_url" alt="Benachrichtigungs Bild" class="max-h-96"
+                                     :src="globalNotification.image_url"/>
                                 <div class="px-4 py-4">
                                     <div class="headline2 mt-2 mb-2">
-                                        {{ this.$page.props.globalNotification.title }}
+                                        {{ globalNotification.title }}
                                     </div>
                                     <div class="xsLight">
-                                        {{ this.$page.props.globalNotification.description }}
+                                        {{ globalNotification.description }}
                                     </div>
                                 </div>
                             </div>
@@ -141,7 +141,7 @@
             :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
         />
 
-        <GlobalNotificationModal v-if="showGlobalNotificationModal" @closed="showGlobalNotificationModal = false"/>
+        <GlobalNotificationModal v-if="showGlobalNotificationModal" @closed="showGlobalNotificationModal = false" :global-notification="globalNotification"/>
     </app-layout>
 </template>
 
@@ -245,7 +245,7 @@ export default defineComponent({
         AnswerEventRequestComponent,
 
     },
-    props: ['historyObjects','notifications', 'rooms', 'eventTypes', 'projects', 'readNotifications', 'notificationSettings', 'notificationFrequencies', 'groupTypes', 'event', 'project', 'wantedSplit', 'roomCollisions'],
+    props: ['historyObjects','notifications', 'rooms', 'eventTypes', 'projects', 'readNotifications', 'notificationSettings', 'notificationFrequencies', 'groupTypes', 'event', 'project', 'wantedSplit', 'roomCollisions', 'globalNotification'],
     created() {
 
     },

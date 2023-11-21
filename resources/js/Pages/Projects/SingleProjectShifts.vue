@@ -1,9 +1,19 @@
 <template>
     <app-layout>
-    <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds" :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
-                                :states="states" :project-groups="projectGroups"
+    <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds"
+                                :projectWriteIds="projectWriteIds"
+                                :projectManagerIds="projectManagerIds"
+                                :project="project"
+                                :eventTypes="eventTypes"
+                                :currentGroup="currentGroup"
+                                :states="states"
+                                :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
-                                :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="shift">
+                                :last-event-in-project="lastEventInProject"
+                                :rooms-with-audience="RoomsWithAudience"
+                                :group-projects="groupProjects"
+                                :access_budget="access_budget"
+                                open-tab="shift">
         <ShiftTab :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" :drop-users="dropUsers" :users="project.users" :event-types="eventTypes" />
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
@@ -57,6 +67,7 @@ export default {
         'projectWriteIds',
         'projectManagerIds',
         'projectDeleteIds',
+        'access_budget'
     ],
     data() {
         return {

@@ -41,6 +41,7 @@
     </jet-dialog-modal>
 </template>
 
+
 <script>
 import Permissions from "@/mixins/Permissions.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";

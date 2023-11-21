@@ -128,7 +128,7 @@ class Project extends Model
 
     public function events()
     {
-        return $this->hasMany(event::class);
+        return $this->hasMany(Event::class);
     }
 
     public function contracts()

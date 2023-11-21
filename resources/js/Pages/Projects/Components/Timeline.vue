@@ -16,7 +16,7 @@
             <div v-for="(time, index) in timeLine">
                 <div @click="showAddTimeLineModal = true" class="text-xs bg-gray-900 p-2 text-white my-1"  v-if="time.start !== null && time.end !== null">
                     {{ time.start }} - {{ time.end }}
-                    <p class="text-xs">{{ time.description }}</p>
+                    <p class="text-xs" v-html="time.description"></p>
                 </div>
             </div>
         </div>

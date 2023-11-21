@@ -9,7 +9,7 @@
                 <!-- <img alt="small-logo" v-else :src="$page.props.small_logo" class="rounded-full h-16 w-16"/> -->
                 <div class="flex-1 w-full space-y-1">
                     <a v-for="item in navigation" :key="item.name" :href="item.href"
-                       :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight  hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center', checkPermission(item) ? 'block': 'hidden']">
+                       :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight  hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center', item.has_permission ? 'block': 'hidden']">
                         <img :src="isCurrent(item.route) ? item.svgSrc_active : item.svgSrc"
                              alt="menu-item"
                              :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'xxsLight group-hover:text-secondaryHover', 'mb-1']"
@@ -191,75 +191,6 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {isAdmin} from "@/Helper/PermissionHelper";
 import Permissions from "@/mixins/Permissions.vue";
 
-const navigation = [
-    {
-        name: 'Dashboard',
-        href: route('dashboard'),
-        route: ['/dashboard'],
-        svgSrc: '/Svgs/Sidebar/icon_dashboard.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_dashboard_active.svg',
-        has_permission: 'all'
-    },
-    {
-        name: 'Projekte',
-        href: route('projects'),
-        route: ['/projects'],
-        svgSrc: '/Svgs/Sidebar/icon_projects.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_projects_active.svg',
-        has_permission: 'all'
-    },
-    {
-        name: 'Raumbelegung',
-        href: route('events'),
-        route: ['/calendar/view'],
-        svgSrc: '/Svgs/Sidebar/icon_calendar.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_calendar_active.svg',
-        has_permission: 'all'
-    },
-    {
-        name: 'Dienstplan',
-        href: route('shifts.plan'),
-        route: ['/shifts/view'],
-        svgSrc: '/Svgs/Sidebar/icon_shift_plan.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_shift_plan_active.svg',
-        has_permission: 'can see shift plan'
-    },
-    {
-        name: 'Aufgaben',
-        href: route('tasks.own'),
-        route: ['/tasks/own'],
-        svgSrc: '/Svgs/Sidebar/icon_tasks.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_tasks_active.svg',
-        has_permission: 'all'
-    },
-
-    {
-        name: 'Finanzierungsquellen',
-        href: route('money_sources.index'),
-        route: ['/money_sources'],
-        svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg',
-        has_permission: 'all'
-    },
-    {
-        name: 'Nutzer*innen',
-        href: route('users'),
-        route: ['/users'],
-        svgSrc: '/Svgs/Sidebar/icon_users_teams.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_users_teams_active.svg',
-        has_permission: 'all'
-    },
-
-    {
-        name: 'Verträge',
-        href: route('contracts.view.index'),
-        route: ['/contracts/view'],
-        svgSrc: '/Svgs/Sidebar/icon_contract.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_contract_active.svg',
-        has_permission: 'all'
-    }
-]
-
 const userNavigation = [
     {name: 'Your Profile', href: '#'},
     {name: 'Settings', href: '#'},
@@ -361,25 +292,82 @@ export default {
                     route: ['/templates/index']
                 },
             ]
+        },
+        navigation(){
+            return [
+                {
+                    name: 'Dashboard',
+                    href: route('dashboard'),
+                    route: ['/dashboard'],
+                    svgSrc: '/Svgs/Sidebar/icon_dashboard.svg',
+                    svgSrc_active: '/Svgs/Sidebar/icon_dashboard_active.svg',
+                    has_permission: true
+                },
+                {
+                    name: 'Projekte',
+                    href: route('projects'),
+                    route: ['/projects'],
+                    svgSrc: '/Svgs/Sidebar/icon_projects.svg',
+                    svgSrc_active: '/Svgs/Sidebar/icon_projects_active.svg',
+                    has_permission: true
+                },
+                {
+                    name: 'Raumbelegung',
+                    href: route('events'),
+                    route: ['/calendar/view'],
+                    svgSrc: '/Svgs/Sidebar/icon_calendar.svg',
+                    svgSrc_active: '/Svgs/Sidebar/icon_calendar_active.svg',
+                    has_permission: true
+                },
+                {
+                    name: 'Dienstplan',
+                    href: route('shifts.plan'),
+                    route: ['/shifts/view'],
+                    svgSrc: '/Svgs/Sidebar/icon_shift_plan.svg',
+                    svgSrc_active: '/Svgs/Sidebar/icon_shift_plan_active.svg',
+                    has_permission: this.$can('can view shift plan') || this.hasAdminRole()
+                },
+                {
+                    name: 'Aufgaben',
+                    href: route('tasks.own'),
+                    route: ['/tasks/own'],
+                    svgSrc: '/Svgs/Sidebar/icon_tasks.svg',
+                    svgSrc_active: '/Svgs/Sidebar/icon_tasks_active.svg',
+                    has_permission: true
+                },
+
+                {
+                    name: 'Finanzierungsquellen',
+                    href: route('money_sources.index'),
+                    route: ['/money_sources'],
+                    svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',
+                    svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg',
+                    has_permission: this.$canAny(['view edit add money_sources','can edit and delete money sources']) || this.hasAdminRole()
+                },
+                {
+                    name: 'Nutzer*innen',
+                    href: route('users'),
+                    route: ['/users'],
+                    svgSrc: '/Svgs/Sidebar/icon_users_teams.svg',
+                    svgSrc_active: '/Svgs/Sidebar/icon_users_teams_active.svg',
+                    has_permission: true
+                },
+
+                {
+                    name: 'Verträge',
+                    href: route('contracts.view.index'),
+                    route: ['/contracts/view'],
+                    svgSrc: '/Svgs/Sidebar/icon_contract.svg',
+                    svgSrc_active: '/Svgs/Sidebar/icon_contract_active.svg',
+                    has_permission: true
+                }
+            ]
         }
     },
     methods: {
         usePage,
         checkPermissionGlobalMessageAndToolSettings() {
             return this.$canAny(['change tool settings', 'change system notification'] || this.hasAdminRole());
-
-        },
-        checkPermission(item) {
-            if (item.has_permission === 'is_money_source_admin') {
-                if (this.$page.props.myMoneySources.length > 0 || this.$canAny(['can edit and delete money sources', 'view edit add money_sources'])) {
-                    return true;
-                }
-            }else if(item.has_permission === 'can see shift plan'){
-                if(this.$can('can view shift plan') || this.hasAdminRole()){
-                    return true;
-                }
-            }
-            return item.has_permission === 'all';
 
         },
         getTrashRoute() {
@@ -444,7 +432,6 @@ export default {
         const sidebarOpen = ref(false)
 
         return {
-            navigation,
             userNavigation,
             sidebarOpen,
             managementRoutes

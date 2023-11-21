@@ -61,6 +61,8 @@ class UserController extends Controller
 
     public function reset_user_password(Request $request) {
 
+        //$user = Auth::user();
+
         $this->authorize('update',User::class);
 
         $request->validate([Fortify::email() => 'required|email']);
@@ -68,6 +70,10 @@ class UserController extends Controller
         $status = Password::broker()->sendResetLink(
             $request->only(Fortify::email())
         );
+
+        /*if($user->email === $request->email){
+            Auth::logout();
+        }*/
 
         return $status == Password::RESET_LINK_SENT
             ? Redirect::back()->with('status', __('passwords.sent_to_user', ['email' => $request->email]))
@@ -114,14 +120,13 @@ class UserController extends Controller
         ]);
     }
 
-    public function editUserShiftplan(User $user): Response|ResponseFactory
+    public function editUserShiftplan(User $user, CalendarController $shiftPlan): Response|ResponseFactory
     {
 
-        $shiftPlan = new CalendarController();
         $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
         $availabilityData = $this->getAvailabilityData($user, request('month'));
 
-        if(\request('startDate') && \request('endDate')){
+        /*if(\request('startDate') && \request('endDate')){
 
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
@@ -137,7 +142,7 @@ class UserController extends Controller
             ->whereHas('shifts', function ($query) {
                 $query->whereNotNull('shifts.id');
             })
-            ->get();
+            ->get();*/
 
         return inertia('Users/UserShiftPlanPage', [
             //needed for UserEditHeader

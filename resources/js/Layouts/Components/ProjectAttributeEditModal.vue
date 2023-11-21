@@ -102,13 +102,13 @@
                 </Menu>
                 <div class="mt-2 flex flex-wrap">
                     <div v-for="category in categories">
-                        <BaseFilterTag v-if="projectCategoryIds.includes(category.id)"  :filter="category.name" @remove-filter="deleteProjectCategory(category.id)" class="w-fit" />
+                        <BaseFilterTag v-if="projectCategoryIds.includes(category.id)"  :filter="category" @remove-filter="deleteProjectCategory(category.id)" class="w-fit" />
                     </div>
                     <div v-for="genre in genres">
-                        <BaseFilterTag v-if="projectGenreIds.includes(genre.id)"  :filter="genre.name" @remove-filter="deleteProjectGenre(genre.id)" class="w-fit" />
+                        <BaseFilterTag v-if="projectGenreIds.includes(genre.id)"  :filter="genre" @remove-filter="deleteProjectGenre(genre.id)" class="w-fit" />
                     </div>
                     <div v-for="sector in sectors">
-                        <BaseFilterTag v-if="projectSectorIds.includes(sector.id)"  :filter="sector.name" @remove-filter="deleteProjectSector(sector.id)" class="w-fit" />
+                        <BaseFilterTag v-if="projectSectorIds.includes(sector.id)"  :filter="sector" @remove-filter="deleteProjectSector(sector.id)" class="w-fit" />
                     </div>
                 </div>
             </div>

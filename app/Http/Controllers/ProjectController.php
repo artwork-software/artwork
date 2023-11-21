@@ -25,6 +25,7 @@ use App\Http\Resources\ProjectResources\ProjectCommentResource;
 use App\Http\Resources\ProjectResources\ProjectInfoResource;
 use App\Http\Resources\ProjectResources\ProjectShiftResource;
 use App\Http\Resources\ProjectShowResource;
+use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderDropResource;
 use App\Http\Resources\UserDropResource;
 use App\Http\Resources\UserIndexResource;
@@ -42,6 +43,7 @@ use App\Models\Currency;
 use App\Models\Department;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\Genre;
 use App\Models\MainPosition;
@@ -77,7 +79,6 @@ use Inertia\Response;
 use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
 use stdClass;
-
 
 class ProjectController extends Controller
 {
@@ -141,7 +142,7 @@ class ProjectController extends Controller
         return inertia('Projects/ProjectManagement', [
             'projects' => ProjectIndexShowResource::collection($projects)->resolve(),
             'states' => ProjectStates::all(),
-            'projectGroups' => Project::where('is_group', 1)->get(),
+            'projectGroups' => Project::where('is_group', 1)->with('groups')->get(),
 
             'users' => User::all(),
 
@@ -1328,13 +1329,30 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
-    public function addCalculation(ColumnCell $cell)
+    public function addCalculation(ColumnCell $cell, Request $request)
     {
-        $cell->calculations()->create([
+        // current position found in $request->position
+
+        // add check if $request->position is present, if not set to 0
+        if(!$request->position){
+            $request->position = 0;
+        }
+
+
+        $newCalculation = $cell->calculations()->create([
             'name' => '',
             'value' => 0,
-            'description' => ''
+            'description' => '',
+            'position' => $request->position + 1
         ]);
+
+        // update all positions of calculations where position is greater than $request->position and cell_id is $cell->id and where not id is $newCalculation->id, increment position by 1 after new calculation
+
+        CellCalculations::query()
+            ->where('cell_id', $cell->id)
+            ->where('position', '>', $request->position)
+            ->where('id', '!=', $newCalculation->id)
+            ->increment('position');
     }
 
     /**
@@ -1433,253 +1451,6 @@ class ProjectController extends Controller
         return $eventsToday;
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param Project $project
-     * @return Response|ResponseFactory
-     */
-    public function show(Project $project, Request $request)
-    {
-        $calendar = new CalendarController();
-        $showCalendar = $calendar->createCalendarData('', $project);
-
-        $project->load([
-            'access_budget',
-            'categories',
-            'checklists.users',
-            'checklists.tasks.checklist.project',
-            'checklists.tasks.user_who_done',
-            'comments.user',
-            'departments.users.departments',
-            'genres',
-            'managerUsers',
-            'writeUsers',
-            'project_files',
-            'contracts',
-            'copyright',
-            'cost_center',
-            'project_histories.user',
-            'sectors',
-            'users.departments',
-            'state',
-            'delete_permission_users'
-        ]);
-
-        $columns = $project->table()->first()->columns()->get();
-
-        $outputColumns = [];
-        foreach ($columns as $column) {
-            $columnOutput = new stdClass();
-            $columnOutput->id = $column->id;
-            $columnOutput->name = $column->name;
-            $columnOutput->subName = $column->subName;
-            $columnOutput->color = $column->color;
-            $columnOutput->is_locked = $column->is_locked;
-            if ($column->type === 'sum') {
-                $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
-                $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
-                $columnOutput->calculateName = $firstName . ' + ' . $secondName;
-            }
-            if ($column->type === 'difference') {
-                $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
-                $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
-                $columnOutput->calculateName = $firstName . ' - ' . $secondName;
-            }
-            $outputColumns[] = $columnOutput;
-        }
-
-        if (!$project->is_group) {
-            $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
-            if (!empty($group)) {
-                $groupOutput = Project::find($group?->group_id);
-            } else {
-                $groupOutput = '';
-            }
-        } else {
-            $groupOutput = '';
-        }
-
-        $selectedCell = request('selectedCell')
-            ? ColumnCell::find(request('selectedCell'))
-            : null;
-
-        $selectedRow = request('selectedRow')
-            ? SubPositionRow::find(request('selectedRow'))
-            : null;
-
-        $templates = null;
-
-        if(request('useTemplates')){
-            $templates = Table::where('is_template', true)->get();
-        }
-
-        $eventsAtAGlance = [];
-
-        if(\request('atAGlance') === 'true'){
-
-            $eventsQuery = $project->events();
-
-            $filteredEventsQuery = $calendar->filterEvents($eventsQuery, null, null, null, $project);
-
-            $eventsAtAGlance = CalendarEventResource::collection($filteredEventsQuery
-                ->with(['room','project','creator'])
-                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
-        }
-
-        $selectedSumDetail = null;
-
-        if(request('selectedSubPosition') && request('selectedColumn')) {
-            $selectedSumDetail = Collection::make(SubpositionSumDetail::with(['comments.user', 'sumMoneySource.moneySource'])
-                ->where('sub_position_id', request('selectedSubPosition'))
-                ->where('column_id', request('selectedColumn'))
-                ->first())
-                ->merge(['class' => SubpositionSumDetail::class]);
-        }
-
-        if(request('selectedMainPosition') && request('selectedColumn')) {
-            $selectedSumDetail =  Collection::make(MainPositionDetails::with(['comments.user', 'sumMoneySource.moneySource'])
-                ->where('main_position_id', request('selectedMainPosition'))
-                ->where('column_id', request('selectedColumn'))
-                ->first())
-                ->merge(['class' => MainPositionDetails::class]);
-        }
-
-        if(request('selectedBudgetType') && request('selectedColumn')) {
-            $selectedSumDetail = Collection::make(BudgetSumDetails::with(['comments.user', 'sumMoneySource.moneySource'])
-                ->where('type', request('selectedBudgetType'))
-                ->where('column_id', request('selectedColumn'))
-                ->first())
-                ->merge(['class' => BudgetSumDetails::class]);
-        }
-        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
-        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
-
-        $events = $project->events()->get();
-        $RoomsWithAudience = null;
-
-
-        $shiftRelevantEventTypes = $project->shiftRelevantEventTypes()->pluck('event_type_id');
-        $shiftRelevantEvents = $project->events()
-            ->whereIn('event_type_id', $shiftRelevantEventTypes)
-            ->with(['timeline', 'shifts', 'event_type', 'room'])
-            ->get();
-
-        $eventsWithRelevant = [];
-        foreach ($shiftRelevantEvents as $event) {
-            $eventsWithRelevant[$event->id] = [
-                'event' => $event,
-                'timeline' => $event->timeline()->orderBy('start', 'ASC')->get(),
-                'shifts' => $event->shifts,
-                'event_type' => $event->event_type,
-                'room' => $event->room,
-            ];
-        }
-
-
-        foreach ($events as $event){
-            if(!$event->audience){
-                continue;
-            }
-            $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room){
-                $RoomsWithAudience[$room->id] = $room->name;
-            }
-        }
-
-        if(\request('startDate') && \request('endDate')){
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
-        }else{
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
-        }
-
-        rsort($eventsWithRelevant);
-
-        return inertia('Projects/Show', [
-            'project' => new ProjectShowResource($project),
-            'firstEventInProject' => $firstEventInProject,
-            'lastEventInProject' => $lastEventInProject,
-            'RoomsWithAudience' => $RoomsWithAudience,
-            'moneySources' => MoneySource::all(),
-            'eventsAtAGlance' => $eventsAtAGlance,
-            'calendar' => $showCalendar['roomsWithEvents'],
-
-            'dateValue'=>$showCalendar['dateValue'],
-            'days' => $showCalendar['days'],
-            'selectedDate' => $showCalendar['selectedDate'],
-            'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
-            'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
-            'filterOptions' => $showCalendar["filterOptions"],
-            'personalFilters' => $showCalendar['personalFilters'],
-            'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
-            'budget' => [
-                'columns' => $outputColumns,
-                'table' => $project->table()
-                    ->with([
-                        'columns',
-                        'mainPositions',
-                        'mainPositions.verified',
-                        'mainPositions.subPositions' => function ($query) {
-                            return $query->orderBy('position');
-                        },
-                        'mainPositions.subPositions.verified',
-                        'mainPositions.subPositions.subPositionRows' => function ($query) {
-                            return $query->orderBy('position');
-                        }, 'mainPositions.subPositions.subPositionRows.cells' => function($query){
-                            $query->withCount('comments')
-                            ->withCount('calculations');
-                        }, 'mainPositions.subPositions.subPositionRows.cells.column'
-                    ])
-                    ->first(),
-                'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments', 'column' => function ($query) {
-                    $query->orderBy('created_at', 'desc');
-                }]),
-                'selectedSumDetail' => $selectedSumDetail,
-                'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query) {
-                    $query->orderBy('created_at', 'desc');
-                }]),
-                'templates' => $templates,
-            ],
-
-            'categories' => Category::all(),
-            'projectCategoryIds' => $project->categories()->pluck('category_id'),
-            'projectCategories' => $project->categories,
-
-            'groupProjects' => Project::where('is_group', 1)->get(),
-            'projectGroups' => $project->groups()->get(),
-            'currentGroup' => $groupOutput,
-
-            'genres' => Genre::all(),
-            'projectGenreIds' => $project->genres()->pluck('genre_id'),
-            'projectGenres' => $project->genres,
-
-            'sectors' => Sector::all(),
-            'projectSectorIds' => $project->sectors()->pluck('sector_id'),
-            'projectSectors' => $project->sectors,
-            'projectState' => $project->state,
-
-            'checklist_templates' => ChecklistTemplate::all()->map(fn($checklist_template) => [
-                'id' => $checklist_template->id,
-                'name' => $checklist_template->name,
-                'task_templates' => $checklist_template->task_templates->map(fn($task_template) => [
-                    'id' => $task_template->id,
-                    'name' => $task_template->name,
-                    'description' => $task_template->description
-                ]),
-            ]),
-            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-
-            'openTab' => $request->openTab ?: 'info',
-            'project_id' => $project->id,
-            'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
-            'projectMoneySources' => $project->moneySources()->get(),
-            'states' => ProjectStates::all(),
-            'eventsWithRelevant' => $eventsWithRelevant,
-            'crafts' => Craft::all(),
-        ]);
-    }
     public function projectInfoTab(Project $project, Request $request)
     {
 
@@ -1766,12 +1537,11 @@ class ProjectController extends Controller
             'projectSectorIds' => $project->sectors()->pluck('sector_id'),
             'projectSectors' => $project->sectors,
             'projectState' => $project->state,
-
+            'access_budget' => $project->access_budget,
         ]);
     }
-    public function projectCalendarTab(Project $project, Request $request)
+    public function projectCalendarTab(Project $project, Request $request,CalendarController $calendar)
     {
-        $calendar = new CalendarController();
         $showCalendar = $calendar->createCalendarData('', $project);
 
         $project->load([
@@ -1849,6 +1619,8 @@ class ProjectController extends Controller
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
+        $eventsOfDay = $calendar->getEventsOfDay();
+
         return inertia('Projects/SingleProjectCalendar', [
             // needed for the ProjectShowHeaderComponent
             'project' => new ProjectCalendarResource($project),
@@ -1884,11 +1656,20 @@ class ProjectController extends Controller
             'days' => $showCalendar['days'],
             'selectedDate' => $showCalendar['selectedDate'],
             'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
-            'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
+            'events' => $events = new CalendarEventCollectionResourceModel(
+                areas: $showCalendar['filterOptions']['areas'],
+                projects: $showCalendar['filterOptions']['projects'],
+                eventTypes: $showCalendar['filterOptions']['eventTypes'],
+                roomCategories: $showCalendar['filterOptions']['roomCategories'],
+                roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
+                events: $eventsOfDay,
+                filter: Filter::where('user_id', Auth::id())->get(),
+            ),
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'user_filters' => $showCalendar['user_filters'],
+            'access_budget' => $project->access_budget,
         ]);
     }
     public function projectChecklistTab(Project $project, Request $request)
@@ -1966,15 +1747,13 @@ class ProjectController extends Controller
             'projectGroups' => $project->groups()->get(),
             'currentGroup' => $groupOutput,
             'checklist_templates' => ChecklistTemplateIndexResource::collection(ChecklistTemplate::all())->resolve(),
+            'access_budget' => $project->access_budget,
         ]);
     }
 
 
     public function projectShiftTab(Project $project, Request $request)
     {
-
-
-
         $project->load([
             'departments.users.departments',
             'managerUsers',
@@ -2025,6 +1804,11 @@ class ProjectController extends Controller
         $eventsWithRelevant = [];
         foreach ($shiftRelevantEvents as $event) {
             $timeline = $event->timeline()->get()->toArray();
+
+            foreach($timeline as &$singleTimeLine) {
+                $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
+            }
+
             usort($timeline, function ($a, $b) {
                 if ($a['start'] === null && $b['start'] === null) {
                     return 0;
@@ -2065,7 +1849,7 @@ class ProjectController extends Controller
 
         foreach ($users as $user) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
-            $vacations = $user->getHasVacationDaysAttribute();
+            $vacations = $user->hasVacationDays();
             $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
 
             $usersWithPlannedWorkingHours[] = [
@@ -2137,6 +1921,7 @@ class ProjectController extends Controller
             'states' => ProjectStates::all(),
             'eventsWithRelevant' => $eventsWithRelevant,
             'crafts' => Craft::all(),
+            'access_budget' => $project->access_budget,
         ]);
     }
 
@@ -2160,25 +1945,15 @@ class ProjectController extends Controller
 
         $columns = $project->table()->first()->columns()->get();
 
-        $outputColumns = [];
+        $calculateNames = [];
         foreach ($columns as $column) {
-            $columnOutput = new stdClass();
-            $columnOutput->id = $column->id;
-            $columnOutput->name = $column->name;
-            $columnOutput->subName = $column->subName;
-            $columnOutput->color = $column->color;
-            $columnOutput->is_locked = $column->is_locked;
-            if ($column->type === 'sum') {
+            $calculateName = '';
+            if ($column->type === 'difference' || $column->type === 'sum') {
                 $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
                 $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
-                $columnOutput->calculateName = $firstName . ' + ' . $secondName;
+                $calculateName = $firstName . ' + ' . $secondName;
             }
-            if ($column->type === 'difference') {
-                $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
-                $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
-                $columnOutput->calculateName = $firstName . ' - ' . $secondName;
-            }
-            $outputColumns[] = $columnOutput;
+            $calculateNames[$column->id] = $calculateName;
         }
 
         if (!$project->is_group) {
@@ -2200,11 +1975,7 @@ class ProjectController extends Controller
             ? SubPositionRow::find(request('selectedRow'))
             : null;
 
-        $templates = null;
-
-        if(request('useTemplates')){
-            $templates = Table::where('is_template', true)->get();
-        }
+        $templates = Table::where('is_template', true)->get();
 
         $selectedSumDetail = null;
 
@@ -2259,6 +2030,9 @@ class ProjectController extends Controller
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
+        //load commented budget items setting for given user
+        Auth::user()->load(['commented_budget_items_setting']);
+
         return inertia('Projects/SingleProjectBudget', [
             'project' => new ProjectBudgetResource($project),
             'firstEventInProject' => $firstEventInProject,
@@ -2269,7 +2043,6 @@ class ProjectController extends Controller
             'projectDeleteIds' => $deleteIds,
             'moneySources' => MoneySource::all(),
             'budget' => [
-                'columns' => $outputColumns,
                 'table' => $project->table()
                     ->with([
                         'columns',
@@ -2283,11 +2056,16 @@ class ProjectController extends Controller
                             return $query->orderBy('position');
                         }, 'mainPositions.subPositions.subPositionRows.cells' => function($query){
                             $query->withCount('comments')
-                                ->withCount('calculations');
+                                ->withCount(['calculations' => function($query){
+                                    // count if value is not 0
+                                    return $query->where('value', '!=', 0);
+                                }]);
                         }, 'mainPositions.subPositions.subPositionRows.cells.column'
                     ])
                     ->first(),
-                'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments', 'column' => function ($query) {
+                'selectedCell' => $selectedCell?->load(['calculations' => function($calculations) {
+                    $calculations->orderBy('position', 'asc');
+                }, 'comments.user', 'comments', 'column' => function ($query) {
                     $query->orderBy('created_at', 'desc');
                 }]),
                 'selectedSumDetail' => $selectedSumDetail,
@@ -2295,6 +2073,7 @@ class ProjectController extends Controller
                     $query->orderBy('created_at', 'desc');
                 }]),
                 'templates' => $templates,
+                'columnCalculatedNames' => $calculateNames,
             ],
             'projectGroups' => $project->groups()->get(),
             'groupProjects' => Project::where('is_group', 1)->get(),
@@ -2385,16 +2164,21 @@ class ProjectController extends Controller
             'projectState' => $project->state,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'states' => ProjectStates::all(),
+            'access_budget' => $project->access_budget,
         ]);
     }
 
 
-    public function addTimeLineRow(Event $event){
-        $event->timeline()->create([
-            'start' => null,
-            'end' => null,
-            'description' => ''
-        ]);
+    public function addTimeLineRow(Event $event, Request $request) {
+        $event->timeline()->create(
+            $request->validate(
+                [
+                    'start' => 'required',
+                    'end' => 'required',
+                    'description' => 'nullable'
+                ]
+            )
+        );
     }
 
     public function updateTimeLines(Request $request){
@@ -2403,7 +2187,7 @@ class ProjectController extends Controller
             $findTimeLine->update([
                 'start' => $timeline['start'],
                 'end' => $timeline['end'],
-                'description' => $timeline['description']
+                'description' => nl2br($timeline['description_without_html'])
             ]);
         }
     }
@@ -2438,7 +2222,7 @@ class ProjectController extends Controller
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         } else {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-            $group = Project::find($request->selectedGroup);
+            $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
         }
         $oldProjectName = $project->name;
@@ -3115,7 +2899,6 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
-
     public function deleteTimeLineRow(TimeLine $timeLine){
         $timeLine->delete();
     }
@@ -3158,6 +2941,33 @@ class ProjectController extends Controller
         foreach ($mainPosition->subPositions()->get() as $subPosition){
             $this->duplicateSubPosition($subPosition, $newMainPosition->id);
         }
+    }
 
+    /**
+     * @param SubPositionRow $subPositionRow
+     * @return void
+     */
+    public function duplicateRow(SubPositionRow $subPositionRow): void
+    {
+        $subPositionRowReplicate = $subPositionRow->replicate();
+        $subPositionRowReplicate->sub_position_id = $subPositionRow->subPosition->id;
+        $subPositionRowReplicate->save();
+
+        foreach ($subPositionRow->cells as $subPositionRowCell) {
+            $subPositionRowCellReplicate = $subPositionRowCell->replicate();
+            $subPositionRowCellReplicate->sub_position_row_id = $subPositionRowReplicate->id;
+            $subPositionRowCellReplicate->save();
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @param Column $column
+     * @return void
+     */
+    public function updateCommentedStatusOfColumn(Request $request, Column $column): void
+    {
+        $validated = $request->validate(['commented' => 'required|boolean']);
+        $column->update(['commented' => $validated['commented']]);
     }
 }

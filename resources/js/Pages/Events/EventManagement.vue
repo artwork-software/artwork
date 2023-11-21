@@ -94,7 +94,8 @@ export default defineComponent({
         'eventsWithoutRoom',
         'filterOptions',
         'personalFilters',
-        'user_filters'
+        'user_filters',
+        'events'
     ],
     methods: {
         usePage,

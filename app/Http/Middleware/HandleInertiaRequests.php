@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Inertia\Middleware;
 use Spatie\Permission\Models\Role;
 use Tightenco\Ziggy\Ziggy;
@@ -81,8 +82,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $globalNotification = GlobalNotification::first();
-        $globalNotification['image_url'] = $globalNotification?->image_name ? Storage::disk('public')->url($globalNotification->image_name) : null;
+        //$globalNotification = GlobalNotification::first();
+        //$globalNotification['image_url'] = $globalNotification?->image_name ? Storage::disk('public')->url($globalNotification->image_name) : null;
 
         return array_merge(parent::share($request), [
             'rolesArray' => Auth::guest() ? [] : json_encode(Auth::user()->allRoles, true),
@@ -143,7 +144,7 @@ class HandleInertiaRequests extends Middleware
             'impressumLink' => app(GeneralSettings::class)->impressum_link,
             'privacyLink' => app(GeneralSettings::class)->privacy_link,
             'emailFooter' => app(GeneralSettings::class)->email_footer,
-            'globalNotification' => $globalNotification,
+            //'globalNotification' => $globalNotification,
             'myMoneySources' => Auth::guest() ? false : Auth::user()->accessMoneySources()->get(['money_source_id']),
             'urlParameters' => $request->query()
         ]);

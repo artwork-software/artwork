@@ -7,7 +7,7 @@
                  class="-ml-6 -mt-8 mb-4"/>
             <XIcon @click="closeModal(false)"
                    class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"/> 
+                   aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
                 <div v-if="this.isRoomAdmin || this.hasAdminRole()">
@@ -22,10 +22,10 @@
                         Bitte beachte, dass du Vor- und Nachbereitungszeit einplanst.
                     </h2>
                     <div v-else class="flex items-center">
-                        erstellt von <img v-if="this.event.created_by" :data-tooltip-target="this.event.created_by.id"
-                                          :src="this.event.created_by.profile_photo_url"
-                                          :alt="this.event.created_by.last_name"
-                                          class="ml-2 my-auto ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                        erstellt von
+                        <div v-if="this.event.created_by">
+                            <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="7" width="7" class="ml-2"/>
+                        </div>
                         <div class="xsLight ml-3" v-else>
                             gelöschte Nutzer:in
                         </div>
@@ -119,13 +119,10 @@
                         {{ this.selectedProject?.name }}
                     </a>
                     </div>
-                    <div class="flex items-center w-1/2">
+                    <div v-if="this.event.created_by" class="flex items-center w-1/2">
                         <p class="truncate xsLight subpixel-antialiased max-w-60">
-                            erstellt von {{ this.event.created_by.first_name }}
-                            {{ this.event.created_by.last_name }}</p> <img
-                        :data-tooltip-target="this.event.created_by.id" :src="this.event.created_by.profile_photo_url"
-                        :alt="this.event.created_by.last_name"
-                        class="ml-4 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                            erstellt von <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="9" width="9" class="ml-2"/>
+                        </p>
                     </div>
                 </div>
                 <div v-if="!canEdit" class="my-2">
@@ -219,10 +216,10 @@
                     </div>
                 </div>
                 <!-- Serien Termin -->
-                <div v-if="!this.event">
+                <div v-if="!event">
                     <SwitchGroup as="div" class="flex items-center my-3">
                         <Switch v-model="series"
-                                :class="[series ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                                :class="[series ? 'bg-indigo-600 cursor-pointer' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
                             <span aria-hidden="true"
                                   :class="[series ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                         </Switch>
@@ -232,10 +229,9 @@
                             </span>
                         </SwitchLabel>
                     </SwitchGroup>
-
                     <div v-show="series">
                         <div class="grid grid-cols-2 gap-2 mb-2">
-                            <Listbox as="div" v-model="selectedFrequency">
+                            <Listbox :disabled="event?.is_series" as="div" v-model="selectedFrequency">
                                 <div class="relative mt-2">
                                     <ListboxButton
                                         class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
@@ -271,18 +267,22 @@
                             </Listbox>
                             <div class="mt-2">
                                 <div class="w-full flex">
-                                    <input v-model="seriesEndDate"
-                                           id="endDate"
-                                           :type="seriesEndDate ? 'date' : 'text'"
-                                           placeholder="Enddatum Wiederholungstermin"
-                                           required
-                                           @focus="input => input.target.type = 'date'"
-                                           class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
+                                    <input
+                                        :disabled="event?.is_series"
+                                        v-model="seriesEndDate"
+                                        id="endDate"
+                                        :type="seriesEndDate ? 'date' : 'text'"
+                                        placeholder="Enddatum Wiederholungstermin"
+                                        required
+                                        @focus="input => input.target.type = 'date'"
+                                        class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div v-else-if="event?.is_series" class="xsLight mt-2">Termin ist Teil eines Wiederholungstermines</div>
+                <div v-if="event?.is_series" class="xsLight mb-2">Turnus: {{ selectedFrequency.name }} bis zum {{ convertDateFormat(seriesEndDate) }}</div>
                 <!--    Room    -->
                 <div class="pt-1 mb-4" v-if="canEdit">
                     <Listbox as="div" v-model="selectedRoom" id="room" v-if="canEdit && selectedRoom">
@@ -582,13 +582,14 @@
                         </div>
                     </div>
                 </div>
+
                 <div v-if="canEdit">
                     <div class="flex justify-center w-full py-4"
                          v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects || roomAdminIds.includes(this.$page.props.user.id)) || this.hasAdminRole()">
                         <button
                             :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
-                            :class="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || (this.startTime === null && !this.allDayEvent) || this.startDate === null  || (this.endTime === null && !this.allDayEvent) || this.endDate === null || (this.accept === false && this.optionAccept === false && adminComment === '') ? 'bg-secondary hover:bg-secondary' : ''"
-                            class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
+                            :class="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || (this.startTime === null && !this.allDayEvent) || this.startDate === null  || (this.endTime === null && !this.allDayEvent) || this.endDate === null || (this.accept === false && this.optionAccept === false && adminComment === '') ? 'bg-secondary hover:bg-secondary' : 'cursor-pointer'"
+                            class="bg-buttonBlue hover:bg-buttonHover py-2 px-8 rounded-full text-white"
                             @click="updateOrCreateEvent()">
                             {{
                                 this.event?.occupancy_option ? this.accept ? 'Zusagen' : this.optionAccept ? 'Optional zusagen' : this.adminComment !== '' ? 'Nachricht senden' : 'Speichern' : 'Speichern'
@@ -598,8 +599,8 @@
                     <div class="flex justify-center w-full py-4" v-else>
                         <button
                             :disabled="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || !this.$can('request room occupancy')"
-                            :class="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null || !this.$can('request room occupancy') ? 'bg-secondary hover:bg-secondary' : ''"
-                            class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
+                            :class="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || (this.startTime === null && !this.allDayEvent) || this.startDate === null  || (this.endTime === null && !this.allDayEvent) || this.endDate === null || !this.$can('request room occupancy') ? 'bg-secondary hover:bg-secondary' : ''"
+                            class="bg-buttonBlue hover:bg-buttonHover py-2 px-8 rounded-full text-white"
                             @click="updateOrCreateEvent(true)">
                             Belegung anfragen
                         </button>
@@ -669,11 +670,13 @@ import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue"
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions],
     components: {
+        UserPopoverTooltip,
         NewUserToolTip,
         ChangeAllSubmitModal,
         ListboxLabel,
@@ -825,10 +828,14 @@ export default {
             return this.rooms.find(room => room.id === this.event?.roomId)?.admins.some(admin => admin.id === this.$page.props.user.id) || false;
         },
         isCreator() {
-            return this.event ? this.event?.created_by.id === this.$page.props.user.id : false
+            return this.event ? this.event.created_by.id === this.$page.props.user.id : false
         },
     },
     methods: {
+        convertDateFormat(dateString) {
+            const parts = dateString.split('-');
+            return parts[2] + "." + parts[1] + "." +parts[0];
+        },
         checkButtonDisabled() {
             if (this.series) {
                 if (this.seriesEndDate) {
@@ -878,8 +885,8 @@ export default {
                     this.selectedFrequency = frequency
                 }
             })
-            this.selectedProject = {id: this.event.projectId, name: this.event.projectName}
-            if (this.selectedProject.id !== null) {
+            this.selectedProject = {id: this.event.project?.id, name: this.event.project?.name};
+            if (this.selectedProject.id) {
                 this.showProjectInfo = true;
             }
             if (this.wantedRoomId) {
@@ -981,9 +988,12 @@ export default {
                 })
                 .then(response => this.collisionCount = response.data);
         },
+        checkYear(date) {
+            return (parseInt(date.split('-')[0]) > 1900);
+        },
         updateTimes() {
             if (this.startDate) {
-                if (!this.endDate) {
+                if (!this.endDate && this.checkYear(this.startDate)) {
                     this.endDate = this.startDate;
                 }
                 if (this.startTime) {

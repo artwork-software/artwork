@@ -121,14 +121,13 @@ class RoomController extends Controller
      * @param Room $room
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
-    public function show(Room $room, Request $request)
+    public function show(Room $room, Request $request, CalendarController $calendarController)
     {
         $room->load('creator');
         $projects = Project::query()->with(['access_budget', 'managerUsers'])->get();
 
-        $calendar = new CalendarController();
-        $showCalendar = $calendar->createCalendarData('',null,$room);
-
+        $showCalendar = $calendarController->createCalendarData('',null,$room);
+        //dd($showCalendar['user_filters']);
         return inertia('Rooms/Show', [
             'room' => new RoomCalendarResource($room),
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
@@ -155,6 +154,7 @@ class RoomController extends Controller
             'personalFilters' => $showCalendar['personalFilters'],
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
+            'user_filters' => $showCalendar['user_filters'],
         ]);
     }
 

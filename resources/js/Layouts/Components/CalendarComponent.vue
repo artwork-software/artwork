@@ -6,24 +6,27 @@
                  v-if="filteredEvents?.length > 0">
 
                 <ExclamationIcon class="h-6  mr-2"/>
-                {{ filteredEvents?.length }}{{ filteredEvents?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+                {{
+                    filteredEvents?.length
+                }}{{ filteredEvents?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
             </div>
         </div>
-
         <div class="bg-white">
-            <CalendarFunctionBar
-                @open-event-component="openEventComponent"
-                @nextDay="nextDay"
-                @previousDay="previousDay"
-                @enterFullscreenMode="openFullscreen"
-                :dateValue="dateValue"
-                @change-at-a-glance="changeAtAGlance"
-                :at-a-glance="atAGlance"
-                :filter-options="filterOptions"
-                :personal-filters="personalFilters"
-                :is-fullscreen="isFullscreen"
-                :user_filters="user_filters"
-            />
+          <div class="pl-14">
+              <CalendarFunctionBar
+                  @open-event-component="openEventComponent"
+                  @nextDay="nextDay"
+                  @previousDay="previousDay"
+                  @enterFullscreenMode="openFullscreen"
+                  :dateValue="dateValue"
+                  @change-at-a-glance="changeAtAGlance"
+                  :at-a-glance="atAGlance"
+                  :filter-options="filterOptions"
+                  :personal-filters="personalFilters"
+                  :is-fullscreen="isFullscreen"
+                  :user_filters="user_filters"
+              />
+          </div>
 
             <!--  Calendar  -->
             <div class="pl-14 overflow-x-scroll">
@@ -83,16 +86,16 @@
                         </Link>
                     </template>
                     <template #event="{ event, view}">
-                        <div class="text-left centered mt-3 cursor-pointer">
+                        <div class="text-left centered mt-3 cursor-pointer" :class="event.event_type?.svg_name">
                             <div class="flex w-full justify-between items-center">
                                 <div v-if="!project" class="flex eventHeader truncate mx-1">
-                                    <div v-if="event.eventTypeAbbreviation" class="mr-1">
-                                        {{ event.eventTypeAbbreviation }}:
+                                    <div v-if="event.event_type.abbreviation" class="mr-1">
+                                        {{ event.event_type.abbreviation }}:
                                     </div>
-                                    {{ event.title }}
+                                    {{ event.name }}
                                 </div>
                                 <div v-else class="truncate mx-1">
-                                    {{ this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.name }}
+                                    {{ this.eventTypes.find(eventType => eventType.id === event.event_type.id)?.name }}
                                 </div>
                                 <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
                                      class="flex">
@@ -142,8 +145,8 @@
                                     Untertermine:
                                 </div>
                                 <div v-for="subEvent in event.subEvents">
-                                    {{subEvent.eventType.abbreviation}}:
-                                    {{subEvent.title}}
+                                    {{ subEvent.event_type.abbreviation }}:
+                                    {{ subEvent.name }}
                                 </div>
 
                             </div>
@@ -152,7 +155,7 @@
                             <div v-if="currentView !== 'month'" class="mx-1">
                                 <div v-if="!project">
                         <span class="truncate"
-                              v-if="event.eventName && event.eventName !== event.title"> {{ event.eventName }}</span>
+                              v-if="event.eventName && event.eventName !== event.name"> {{ event.eventName }}</span>
                                 </div>
                                 <div v-else class="truncate">
                                     {{ event.eventName }}
@@ -181,7 +184,9 @@
                                              class="ml-2.5 flex flex-wrap ">
                                             <div class="-mr-3 flex flex-wrap flex-row"
                                                  v-for="user in event.projectLeaders?.slice(0,3)">
-                                                <img :src="user.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full" :class="['h-' + 6, 'w-' + 6]">
+                                                <img :src="user.profile_photo_url" alt=""
+                                                     class="mx-auto shrink-0 flex object-cover rounded-full"
+                                                     :class="['h-' + 6, 'w-' + 6]">
                                             </div>
                                             <div v-if="event.projectLeaders.length >= 4" class="my-auto">
                                                 <Menu as="div" class="relative">
@@ -226,7 +231,9 @@
                                         <div v-else-if="event.created_by"
                                              class="mt-1 ml-3 flex flex-wrap w-full">
                                             <div class="-mr-3 flex flex-wrap flex-row">
-                                                <img :src="event.created_by.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full" :class="['h-' + 6, 'w-' + 6]">
+                                                <img :src="event.created_by.profile_photo_url" alt=""
+                                                     class="mx-auto shrink-0 flex object-cover rounded-full"
+                                                     :class="['h-' + 6, 'w-' + 6]">
                                             </div>
                                         </div>
 
@@ -529,11 +536,36 @@ export default {
             this.eventsSince = startDate ?? this.eventsSince;
             this.eventsUntil = endDate ?? this.eventsUntil;
 
-            this.events.map(event => event.start = new Date(event.start))
-            this.events.map(event => event.end = new Date(event.end))
+            this.events?.map(event => event.start = this.convertDateFormat(new Date(event.start)))
+            this.events?.map(event => event.end = this.convertDateFormat(new Date(event.end)))
 
+            //split is needed for the vue-cal component to connect the events with the rooms
+            //class is needed for design purposes
+            this.events?.forEach((event) => {
+                event.split = event.roomId;
+                event.class = event.event_type.svg_name;
+            })
             this.displayedEvents = this.events
             this.displayedRooms = this.rooms
+        },
+        convertDateFormat(dateString) {
+            // Create a new Date object using the original date string
+            const date = new Date(dateString);
+
+            // Pad the month and minutes with leading zeros if necessary
+            const pad = (number) => number < 10 ? '0' + number : number;
+
+            // Construct the formatted date string
+            const year = date.getFullYear();
+            const month = pad(date.getMonth() + 1); // getMonth() returns 0-11
+            const day = pad(date.getDate());
+            const hours = pad(date.getHours());
+            const minutes = pad(date.getMinutes());
+
+            // Combine the parts into the final string
+            const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}`;
+
+            return formattedDate;
         },
         changeAtAGlance() {
             this.$emit('changeAtAGlance')
@@ -555,7 +587,7 @@ export default {
             this.wantedSplit = event?.split;
             if (event === null) {
                 this.selectedEvent = null;
-                if(this.isFullscreen){
+                if (this.isFullscreen) {
                     document.exitFullscreen();
                     this.isFullscreen = false;
                 }
@@ -581,13 +613,16 @@ export default {
                         end: event?.end,
                     }
                 })
-                    .then(response => this.roomCollisions = response.data);
+                    .then(response => this.roomCollisions = response?.data);
             }
             this.selectedEvent = event;
-            if(this.isFullscreen){
+            if (this.isFullscreen) {
                 document.exitFullscreen();
                 this.isFullscreen = false;
             }
+            this.selectedEvent.room_id = event?.roomId;
+            this.selectedEvent.eventTypeId = event?.event_type?.id;
+            this.selectedEvent.projectId = event?.project_id;
             this.createEventComponentIsVisible = true;
         },
         openEventsWithoutRoomComponent() {
@@ -607,8 +642,8 @@ export default {
             this.showEventsWithoutRoomComponent = false;
             Inertia.reload({
                 data: {
-                    startDate: this.dateValue[0],
-                    endDate: this.dateValue[1],
+                    start_date: this.dateValue[0],
+                    end_date: this.dateValue[1],
                 }
             })
         },

@@ -16,17 +16,24 @@
                                     <XIcon class="h-6 w-6" aria-hidden="true" />
                                 </button>
                             </div>
-                            <div class="relative z-40">
-                                <div class="font-black font-lexend text-primary text-3xl my-2">
+                            <div class="relative z-40 pl-4">
+                                <div class="font-black font-lexend text-primary text-3xl my-2 mb-6">
                                     {{ title }}
                                 </div>
                                 <p class="text-error subpixel-antialiased">{{ description }}</p>
                             </div>
-                            <div class="flex justify-between mt-5">
+                            <div class="flex justify-between mt-5 items-center pr-4" v-if="!is_budget">
                                 <AddButton mode="modal" @click="deleteElement(true)"
-                                           class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none"
+                                           class="!border-2 !border-buttonBlue text-white bg-buttonBlue hover:bg-buttonHover !hover:border-transparent resize-none"
                                            :text="buttonText"/>
                                 <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">Nein, doch nicht</p>
+                            </div>
+                            <div v-else class="flex justify-between mt-5 pl-4 items-center pr-4">
+                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">Weiter ohne zu speichern</p>
+                                <AddButton mode="modal" @click="deleteElement(true)"
+                                           class="!border-2 !border-buttonBlue text-white bg-buttonBlue hover:bg-buttonHover !hover:border-transparent resize-none"
+                                           :text="buttonText"/>
+
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -59,7 +66,7 @@ export default {
             buttonText: this.button ? this.button : 'Löschen'
         }
     },
-    props: ['title', 'description', 'button'],
+    props: ['title', 'description', 'button', 'is_budget'],
     emits: ['closed', 'delete'],
     methods: {
         closeModal(bool){

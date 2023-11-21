@@ -39,8 +39,7 @@
                              v-for="(calculation,index) in this.cell.calculations">
                             <div @mouseover="!cell.column.is_locked ? calculationHovered = calculation.id : null"
                                  @mouseout="calculationHovered = null">
-                                <div class="h-1.5 my-2 bg-silverGray"
-                                />
+                                <div class="h-1.5 my-2 bg-silverGray"/>
                                 <div class="flex space-x-4 mb-3">
                                     <div class="w-1/2">
                                         <input type="text"
@@ -50,34 +49,70 @@
                                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     </div>
                                     <div class="w-1/2">
-                                        <input type="text" @focusout="this.refreshSumKey++"
+                                        <input type="number" @focusout="this.refreshSumKey++"
                                                v-model="calculation.value"
                                                :disabled="cell.column.is_locked"
                                                placeholder="Wert"
                                                class="h-12 sDark text-right inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     </div>
-                                    <button v-show="calculationHovered === calculation.id" type="button"
-                                            :disabled="cell.column.is_locked"
-                                            @click="deleteCalculationFromCell(calculation)">
-                                        <span class="sr-only">Rechnung von Zelle entfernen</span>
-                                        <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
-                                    </button>
                                 </div>
                                 <textarea placeholder="Kommentar"
                                           v-model="calculation.description"
                                           :disabled="cell.column.is_locked"
                                           rows="4"
-                                          class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                          class="inputMain resize-none xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                            </div>
+                            <!-- add new Buttons with hover effect -->
+                            <div class="grid grid-cols-2 group h-2">
+                                <div class="hidden group-hover:block col-span-1">
+                                    <div class="w-full relative">
+                                        <div @click="addCalculation(cell.id, calculation.position)" v-if="!cell.column.is_locked" class="cursor-pointer h-1 border-dashed border-t-2 border-indigo-500">
+                                            <div class="flex flex-col justify-center absolute -top-7 left-1/2">
+                                                <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">Unterhalb hinzufügen</div>
+                                                <div class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 object-cover">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="hidden group-hover:block col-span-1">
+                                    <div class="w-full relative">
+                                        <div @click="deleteCalculationFromCell(calculation)" v-if="!cell.column.is_locked" class="cursor-pointer h-1 border-dashed border-t-2 border-red-500">
+                                            <div class="flex flex-col justify-center absolute -top-7 left-1/2">
+                                                <div class="uppercase text-red-500 text-xs font-semibold -ml-12">Oberhalb Löschen</div>
+                                                <div class="shadow-[0px_0px_5px_0px_#f56565] rounded-full text-white bg-red-300 w-fit ">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 object-cover">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div @click="addCalculation(cell.id)" v-if="!cell.column.is_locked"
-                             class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                            <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
-                                Position
-                                <PlusCircleIcon
-                                    class="h-6 w-6 ml-5 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+
+                        <!-- if no calculations are present -->
+                        <div class="group h-2" v-show="this.cell.calculations?.length < 0">
+                            <div class="hidden group-hover:block col-span-1">
+                                <div class="w-full relative">
+                                    <div @click="addCalculation(cell.id)" v-if="!cell.column.is_locked" class="cursor-pointer h-1 border-dashed border-t-2 border-indigo-500">
+                                        <div class="flex flex-col justify-center absolute -top-7 left-1/2">
+                                            <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">Unterhalb hinzufügen</div>
+                                            <div class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 object-cover">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
                         <div class="py-2 bg-silverGray flex justify-between mt-2">
                             <div class="ml-2 sDark">
                                 SUM
@@ -88,7 +123,7 @@
                         </div>
                         <div class="flex justify-center mt-6">
                             <AddButton @click="saveCalculation()" text="Speichern" :disabled="cell.column.is_locked"
-                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
+                                       class="text-sm ml-0 py-5 xsWhiteBold"></AddButton>
                         </div>
                     </div>
                     <!-- Commentary Tab -->
@@ -225,7 +260,7 @@
                             ></AddButton>
                         </div>
                     </div>
-                    <div v-if="isExcludeTab">
+                    <!--<div v-if="isExcludeTab">
                         <h2 class="xsLight mb-2 mt-4">
                             Ausgeklammerte Posten werden nicht in das Projektbudget gerechnet. So kannst du zB. internes
                             Personal, virtuelle Kosten wie Eigenleistungen oä. aufführen, ohne dass diese Einfluss auf
@@ -241,12 +276,22 @@
                             <AddButton @click="updateCommentedStatus()" :disabled="cell.column.is_locked"  text="Speichern"
                                        class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
                         </div>
-                    </div>
+                    </div>-->
                 </div>
             </div>
         </template>
     </jet-dialog-modal>
 
+
+    <ConfirmDeleteModal
+        v-if="showConfirmCalculationModal"
+        title="Kalkulation speichern"
+        description="Möchtest Du deine Kalkulation speichern? Die bisherige Zahl in der Budget-Tabelle wird dadurch mit der neuen Zahl unwiederufbar überschrieben."
+        button="Speichern"
+        @closed="closeConfirmCalculationModal()"
+        :is_budget="true"
+        @delete="saveAllCalculations()"
+    />
 </template>
 
 <script>
@@ -261,6 +306,9 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 const linkTypes = [
     {name: '+', type: 'EARNING'},
@@ -271,6 +319,9 @@ export default {
     name: 'CellDetailComponent',
     mixins: [Permissions],
     components: {
+        ConfirmDeleteModal,
+        ConfirmationComponent,
+        ConfirmationModal,
         NewUserToolTip,
         UserTooltip,
         AddButton,
@@ -310,6 +361,7 @@ export default {
             }),
             moneySource_query: '',
             moneySource_search_results: [],
+            showConfirmCalculationModal: false
         }
     },
 
@@ -318,9 +370,11 @@ export default {
     emits: ['closed'],
 
     mounted() {
-        this.$inertia.post(route('project.budget.cell-calculation.add', this.cell.id), {}, {
-            preserveScroll: true
-        })
+        if(this.cell.calculations.length === 0){
+            this.$inertia.post(route('project.budget.cell-calculation.add', this.cell.id), {}, {
+                preserveScroll: true
+            })
+        }
     },
 
     watch: {
@@ -343,7 +397,8 @@ export default {
                     return [
                         {name: 'Kalkulation', href: '#', current: this.isCalculateTab},
                         {name: 'Kommentar', href: '#', current: this.isCommentTab},
-                        {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
+                        //is commented out for now, maybe this functionality is used in future again, maybe its removed
+                        //{name: 'Ausklammern', href: '#', current: this.isExcludeTab},
                         {name: 'Verlinkung', href: '#', current: this.isLinkTab},
                     ]
             } else {
@@ -385,7 +440,16 @@ export default {
                 minute: '2-digit'
             });
         },
+        closeConfirmCalculationModal(){
+            this.showConfirmCalculationModal = false;
+            this.closeModal(true);
+        },
         openModal() {
+            if(this.cell.calculations.length === 0){
+                this.$inertia.post(route('project.budget.cell-calculation.add', this.cell.id), {}, {
+                    preserveScroll: true
+                })
+            }
         },
         selectMoneySource(moneySource){
           this.selectedMoneySource = moneySource;
@@ -400,8 +464,9 @@ export default {
                 this.isCalculateTab = true;
             } else if (selectedTab.name === 'Kommentar') {
                 this.isCommentTab = true;
-            } else if (selectedTab.name === 'Ausklammern') {
-                this.isExcludeTab = true;
+            //is commented out for now, maybe this functionality is used in future again, maybe its removed
+            // } else if (selectedTab.name === 'Ausklammern') {
+            //     this.isExcludeTab = true;
             } else {
                 this.isLinkTab = true;
             }
@@ -430,17 +495,33 @@ export default {
 
             this.closeModal(true);
         },
-        addCalculation(cellId) {
+        addCalculation(cellId, position) {
             if(this.cell.calculations?.length > 0){
                 this.$inertia.patch(route('project.budget.cell-calculation.update'), {
                     calculations: this.cell.calculations,
                 }, {preserveState: true, preserveScroll: true});
             }
-            this.$inertia.post(route('project.budget.cell-calculation.add', cellId), {}, {
+            this.$inertia.post(route('project.budget.cell-calculation.add', cellId), {
+                position: position
+            }, {
                 preserveScroll: true
             })
         },
         saveCalculation() {
+            let canClosed = false;
+            this.cell.calculations.forEach((calculation) => {
+                if(!canClosed){
+                    if(Number(calculation.value) !== 0){
+                        this.showConfirmCalculationModal = true;
+                        canClosed = true;
+                    }
+                }
+            })
+            if(!canClosed){
+                this.saveAllCalculations()
+            }
+        },
+        saveAllCalculations(){
             this.$inertia.patch(route('project.budget.cell-calculation.update'), {
                 calculations: this.cell.calculations,
             }, {preserveState: true, preserveScroll: true});

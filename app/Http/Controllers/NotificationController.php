@@ -7,10 +7,11 @@ use App\Enums\NotificationFrequency;
 use App\Enums\NotificationGroupEnum;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\ProjectShowResource;
+use App\Http\Resources\NotificationProjectResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\GlobalNotification;
 use App\Models\NotificationSetting;
 use App\Models\Project;
 use App\Models\User;
@@ -19,7 +20,6 @@ use App\Notifications\BudgetVerified;
 use App\Notifications\ConflictNotification;
 use App\Notifications\DeadlineNotification;
 use App\Notifications\EventNotification;
-use App\Notifications\MoneySource;
 use App\Notifications\MoneySourceNotification;
 use App\Notifications\ProjectNotification;
 use App\Notifications\RoomNotification;
@@ -30,6 +30,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Artwork\Modules\Room\Models\Room;
+use Illuminate\Support\Facades\Storage;
 
 class NotificationController extends Controller
 {
@@ -47,6 +48,19 @@ class NotificationController extends Controller
             if(request('historyType') === 'project'){
                 $project = Project::find(request('modelId'));
                 $historyComplete = $project->historyChanges()->all();
+                foreach ($historyComplete as $history){
+                    $historyObjects[] = [
+                        'changes' => json_decode($history->changes),
+                        'created_at' => $history->created_at->diffInHours() < 24
+                            ? $history->created_at->diffForHumans()
+                            : $history->created_at->format('d.m.Y, H:i'),
+                    ];
+                }
+            }
+
+            if(request('historyType') === 'event'){
+                $event = Event::find(request('modelId'));
+                $historyComplete = $event->historyChanges()->all();
                 foreach ($historyComplete as $history){
                     $historyObjects[] = [
                         'changes' => json_decode($history->changes),
@@ -95,7 +109,8 @@ class NotificationController extends Controller
             $event = Event::find(request('eventId'));
         }
 
-
+        $globalNotification = GlobalNotification::first();
+        $globalNotification['image_url'] = $globalNotification?->image_name ? Storage::disk('public')->url($globalNotification->image_name) : null;
 
 
         /** @var User $user */
@@ -121,9 +136,11 @@ class NotificationController extends Controller
             'roomCollisions',
             'notifications' => $output,
             'readNotifications' => $outputRead,
+            'globalNotification' => $globalNotification,
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-            'projects' => ProjectShowResource::collection(Project::all())->resolve(),
+            //'projects' => ProjectShowResource::collection(Project::all())->resolve(),
+            'projects' => NotificationProjectResource::collection(Project::all())->resolve(),
             'notificationSettings' => $user->notificationSettings()->get()->groupBy("group_type"),
             'notificationFrequencies' => array_map(fn (NotificationFrequency $frequency) => [
                 'title' => $frequency->title(),

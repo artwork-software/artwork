@@ -20,25 +20,26 @@
                 <!--    Form    -->
                 <div class="flex my-8 " v-for="event in this.computedEventsWithoutRoom">
                     <div class="flex w-full border border-2 border-gray-300">
-                        <button class="bg-buttonBlue w-6"
+                        <button v-if="this.computedEventsWithoutRoom.length > 1" class="bg-buttonBlue w-6"
                                 @click="event.opened = !event.opened">
                             <ChevronUpIcon v-if="event.opened"
                                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
                             <ChevronDownIcon v-else
                                              class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
                         </button>
-                        <div class="ml-2 w-11/12" v-if="event.opened && event.canEdit">
+                        <div class="mx-2 mt-2 w-full" v-if="(event.opened || this.computedEventsWithoutRoom.length === 1) && event.canEdit">
                             <div class="flex w-full justify-between">
-                                <div class="flex justify-start my-auto items-center mt-3.5 ml-1 text-error line-through">
+                                <div
+                                    class="flex justify-start my-auto items-center mt-3.5 ml-1 text-error line-through">
                                     {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }}
                                 </div>
                                 <div class="flex justify-end">
 
                                     <div v-if="event?.canDelete"
                                          class="flex  justify-end">
-                                        <!-- openDeleteEventModal(event) on CLick for this button to open Modal (but right now modal in modal doesnt work -> direct delete) -->
-                                        <div class="flex mt-1 mr-2 cursor-pointer" @click="deleteEvent(event)">
-                                            <img class="bg-buttonBlue hover:bg-buttonHover h-8 w-8 p-1 rounded-full" src="/Svgs/IconSvgs/icon_trash_white.svg"/>
+                                        <div class="flex mt-1 mr-2 cursor-pointer" @click="openDeleteEventModal(event)">
+                                            <img class="bg-buttonBlue hover:bg-buttonHover h-8 w-8 p-1 rounded-full"
+                                                 src="/Svgs/IconSvgs/icon_trash_white.svg"/>
                                         </div>
                                     </div>
                                     <div v-else>
@@ -137,165 +138,45 @@
                                 </div>
 
                             </div>
-                            <!-- Attribute Menu -->
-                            <Menu as="div" class="inline-block  text-left w-full">
-                                <div>
-                                    <MenuButton
-                                        class="h-12 border-2 border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
-                                    >
-                                        <span class="float-left flex xsLight subpixel-antialiased"><img src="/Svgs/IconSvgs/icon_adjustments.svg"
-                                                                                                   class="mr-2"
-                                                                                                   alt="attributeIcon"/>Termineigenschaften wählen</span>
-                                        <ChevronDownIcon
-                                            class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                                            aria-hidden="true"
-                                        />
-                                    </MenuButton>
-                                </div>
-                                <transition
-                                    enter-active-class="transition duration-50 ease-out"
-                                    enter-from-class="transform scale-100 opacity-100"
-                                    enter-to-class="transform scale-100 opacity-100"
-                                    leave-active-class="transition duration-75 ease-in"
-                                    leave-from-class="transform scale-100 opacity-100"
-                                    leave-to-class="transform scale-95 opacity-0"
-                                >
-                                    <MenuItems
-                                        class="absolute overflow-y-auto h-24 mt-2 w-[80%] origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                        <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
-                                            <div class="flex w-full mb-4">
-                                                <input v-model="event.audience"
-                                                       :disabled="!event.canEdit"
-                                                       type="checkbox"
-                                                       class="checkBoxOnDark"/>
-                                                <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
-                                                     alt="audienceIcon"/>
-
-                                                <div
-                                                    :class="[event.audience ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">
-                                                    Mit Publikum
-                                                </div>
-                                            </div>
-                                            <div class="flex w-full mb-2">
-                                                <input v-model="event.isLoud"
-                                                       :disabled="!event.canEdit"
-                                                       type="checkbox"
-                                                       class="checkBoxOnDark"/>
-                                                <div
-                                                    :class="[event.isLoud ? 'text-white' : 'text-secondary', 'subpixel-antialiased mx-2']">
-                                                    Es
-                                                    wird laut
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
                             <!--    Properties    -->
                             <div class="flex py-2">
                                 <div v-if="event.audience">
-                                    <TagComponent icon="audience" displayed-text="Mit Publikum" hideX="true"></TagComponent>
+                                    <TagComponent icon="audience" displayed-text="Mit Publikum"
+                                                  hideX="true"></TagComponent>
                                 </div>
                                 <div v-if="event.isLoud">
                                     <TagComponent displayed-text="es wird laut" hideX="true"></TagComponent>
                                 </div>
                             </div>
 
-                            <!--    Project    -->
-                            <div>
-
-                                <div class="xsLight flex" v-if="!event.creatingProject">
-                                    Aktuell zugeordnet zu:
-                                    <a v-if="event.projectId"
-                                       :href="route('projects.show.calendar', {project: event.projectId})"
-                                       class="ml-3 flex xsDark">
-                                        {{ event.project?.name }}
-                                    </a>
-                                    <div v-else class="xsDark ml-2">
-                                        {{ event.project?.name ?? 'Keinem Projekt' }}
-                                    </div>
-                                    <div v-if="event.project?.id && event.canEdit" class="flex items-center my-auto">
-                                        <button type="button"
-                                                @click="this.deleteProject(event)">
-                                            <XCircleIcon class="pl-2 h-6 w-6 hover:text-error text-primary"/>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="xsLight" v-if="event.creatingProject">
-                                    Das Projekt wird beim Abspeichern erstellt.
-                                </div>
-
-                                <div class="my-2" v-if="event.canEdit">
-                                    <div class="flex pb-2">
-                            <span class="mr-4 text-sm"
-                                  :class="[!event.creatingProject ? 'xsDark' : 'xsLight', '']">
-                                Bestehendes Projekt
-                            </span>
-                                        <label for="project-toggle"
-                                               class="inline-flex relative items-center cursor-pointer">
-                                            <input type="checkbox"
-                                                   v-model="event.creatingProject"
-                                                   :disabled="!event.canEdit"
-                                                   id="project-toggle"
-                                                   class="sr-only peer">
-                                            <div class="w-9 h-5 bg-gray-200 rounded-full
-                            peer-checked:after:translate-x-full peer-checked:after:border-white
-                            after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
-                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
-                                            </div>
-                                        </label>
-                                        <span class="ml-4 text-sm"
-                                              :class="[event.creatingProject ? 'xsDark' : 'xsLight', '']">
-                                Neues Projekt
-                            </span>
-                                        <div v-if="showHints" class="ml-3 flex">
-                                            <SvgCollection svgName="arrowLeft" class="mt-1"/>
-                                            <div class="hind text-secondary ml-1 my-auto text-sm">
-                                                Lege gleichzeitig ein neues Projekt an
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <input type="text"
-                                           id="projectName"
-                                           @focusin="event.showProjectSearchResults = true"
-                                           @change="this.projectName = event.projectName"
-                                           @focusout="this.projectName = '';"
-                                           v-model="event.projectName"
-                                           autocomplete="off"
-                                           :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
-                                           class="h-10 border-2 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-
-                                    <div
-                                        v-if="projectSearchResults.length > 0 && !event.creatingProject && event.showProjectSearchResults"
-                                        class="absolute bg-primary truncate sm:text-sm w-10/12">
-                                        <div v-for="(project, index) in projectSearchResults"
-                                             :key="index"
-                                             @click="event.projectId = project.id; event.project = project; event.projectName = ''; this.projectName = ''; event.showProjectSearchResults = false; this.projectSearchResults = [];"
-                                             class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
-                                            {{ project.name }}
-                                        </div>
-                                    </div>
-
-                                    <p class="text-xs text-red-800">{{ event.error?.projectId?.join('. ') }}</p>
-                                    <p class="text-xs text-red-800">{{ event.error?.projectName?.join('. ') }}</p>
-                                </div>
-                            </div>
-
                             <!--    Time    -->
+                            <SwitchGroup as="div" class="flex items-center">
+                                <Switch v-model="event.allDay"
+                                        :class="[event.allDay ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                                    <span aria-hidden="true"
+                                          :class="[event.allDay ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                                </Switch>
+                                <SwitchLabel as="span" class="ml-3 text-sm">
+                                    <span :class="[event.allDay ? 'xsDark' : 'xsLight', 'text-sm']">
+                                        Ganztägig
+                                    </span>
+                                </SwitchLabel>
+                            </SwitchGroup>
                             <div class="flex py-1 flex-col sm:flex-row align-baseline">
                                 <div class="sm:w-1/2">
                                     <label for="startDate" class="xsLight">Start</label>
                                     <div class="w-full flex">
                                         <input v-model="event.startDate"
                                                id="startDate"
-                                               @change="checkChanges()"
+                                               @change="checkChanges(event)"
                                                type="date"
                                                :disabled="!event.canEdit"
                                                required
                                                class="border-gray-300 border-2  disabled:border-none flex-grow"/>
                                         <input v-model="event.startTime"
+                                               v-if="!event.allDay"
                                                id="changeStartTime"
-                                               @change="checkChanges()"
+                                               @change="checkChanges(event)"
                                                type="time"
                                                :disabled="!event.canEdit"
                                                required
@@ -308,14 +189,15 @@
                                     <div class="w-full flex">
                                         <input v-model="event.endDate"
                                                id="endDate"
-                                               @change="checkChanges()"
+                                               @change="checkChanges(event)"
                                                type="date"
                                                required
                                                :disabled="!event.canEdit"
                                                class="border-gray-300 border-2 disabled:border-none flex-grow"/>
                                         <input v-model="event.endTime"
+                                               v-if="!event.allDay"
                                                id="changeEndTime"
-                                               @change="checkChanges()"
+                                               @change="checkChanges(event)"
                                                type="time"
                                                required
                                                :disabled="!event.canEdit"
@@ -323,9 +205,10 @@
                                     </div>
                                     <p class="text-xs text-red-800">{{ event.error?.end?.join('. ') }}</p>
                                 </div>
-
                             </div>
-
+                            <!-- Serien Termin -->
+                            <div v-if="event?.is_series" class="xsLight mt-2">Termin ist Teil eines Wiederholungstermines</div>
+                            <div v-if="event?.is_series" class="xsLight mb-2">Turnus: {{ event.selectedFrequencyName }} bis zum {{ convertDateFormat(event.series.end_date) }}</div>
                             <!--    Room    -->
                             <div class="py-1">
                                 <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!event.canEdit">
@@ -342,7 +225,8 @@
                                         </div>
                                         <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </ListboxButton>
-                                    <ListboxOptions class="w-[80%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                    <ListboxOptions
+                                        class="w-[80%] bg-primary max-h-32 overflow-y-auto text-sm absolute z-20">
                                         <ListboxOption v-for="room in rooms"
                                                        class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
                                                        :key="room.name"
@@ -357,18 +241,162 @@
                                 </Listbox>
                                 <p class="text-xs text-red-800">{{ event.error?.roomId?.join('. ') }}</p>
                             </div>
-                            <!--    Description    -->
-                            <div class="py-2">
-                            <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
-                              id="description"
-                              :disabled="!event.canEdit"
-                              v-model="event.description"
-                              rows="4"
-                              class="border-gray-300 border-2 resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                            <div class="bg-lightBackgroundGray pt-1 pb-4 px-3">
+                                <div class="my-3">
+                                    <input type="checkbox"
+                                           v-model="event.showProjectInfo"
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300">
+                                    <span :class="[event.showProjectInfo ? 'xsDark' : 'xsLight', 'text-sm ml-2']">Termin einem Projekt zuordnen</span>
+                                </div>
+                                <!--    Project    -->
+                                <div v-if="event.showProjectInfo">
+                                    <div class="xsLight flex" v-if="!event.creatingProject">
+                                        Aktuell zugeordnet zu:
+                                        <a v-if="event.projectId"
+                                           :href="route('projects.show.calendar', {project: event.projectId})"
+                                           class="ml-3 flex xsDark">
+                                            {{ event.project?.name }}
+                                        </a>
+                                        <div v-else class="xsDark ml-2">
+                                            {{ event.project?.name ?? 'Keinem Projekt' }}
+                                        </div>
+                                        <div v-if="event.project?.id && event.canEdit" class="flex items-center my-auto">
+                                            <button type="button"
+                                                    @click="this.deleteProject(event)">
+                                                <XCircleIcon class="pl-2 h-6 w-6 hover:text-error text-primary"/>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="xsLight" v-if="event.creatingProject">
+                                        Das Projekt wird beim Abspeichern erstellt.
+                                    </div>
+
+                                    <div class="my-2" v-if="event.canEdit">
+                                        <div class="flex pb-2">
+                                            <span class="mr-4 text-sm"
+                                                  :class="[!event.creatingProject ? 'xsDark' : 'xsLight', '']">
+                                                Bestehendes Projekt
+                                            </span>
+                                            <label for="project-toggle"
+                                                   class="inline-flex relative items-center cursor-pointer">
+                                                <input type="checkbox"
+                                                       v-model="event.creatingProject"
+                                                       :disabled="!event.canEdit"
+                                                       id="project-toggle"
+                                                       class="sr-only peer">
+                                                <div class="w-9 h-5 bg-gray-200 rounded-full
+                                peer-checked:after:translate-x-full peer-checked:after:border-white
+                                after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
+                                after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
+                                                </div>
+                                            </label>
+                                            <span class="ml-4 text-sm"
+                                                  :class="[event.creatingProject ? 'xsDark' : 'xsLight', '']">
+                                                Neues Projekt
+                                            </span>
+                                            <div v-if="showHints" class="ml-3 flex">
+                                                <SvgCollection svgName="arrowLeft" class="mt-1"/>
+                                                <div class="hind text-secondary ml-1 my-auto text-sm">
+                                                    Lege gleichzeitig ein neues Projekt an
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input type="text"
+                                               id="projectName"
+                                               @focusin="event.showProjectSearchResults = true"
+                                               @keyup="this.projectName = event.projectName"
+                                               v-model="event.projectName"
+                                               autocomplete="off"
+                                               :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
+                                               class="h-10 border-2 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+
+                                        <div
+                                            v-if="projectSearchResults.length > 0 && !event.creatingProject && event.showProjectSearchResults"
+                                            class="absolute bg-primary truncate sm:text-sm w-10/12">
+                                            <div v-for="(project, index) in projectSearchResults"
+                                                 :key="index"
+                                                 @click="onLinkingProject(project, event)"
+                                                 class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                                                {{ project.name }}
+                                            </div>
+                                        </div>
+
+                                        <p class="text-xs text-red-800">{{ event.error?.projectId?.join('. ') }}</p>
+                                        <p class="text-xs text-red-800">{{ event.error?.projectName?.join('. ') }}</p>
+                                    </div>
+                                </div>
+                                <!--    Description    -->
+                                <div class="py-2">
+                                <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
+                                          id="description"
+                                          :disabled="!event.canEdit"
+                                          v-model="event.description"
+                                          rows="4"
+                                          class="border-gray-300 border-2 resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                </div>
+                                <!-- Attribute Menu -->
+                                <Menu as="div" class="inline-block text-left w-full">
+                                    <div>
+                                        <MenuButton
+                                            class="h-12 border-2 border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
+                                        >
+                                            <span class="float-left flex xsLight subpixel-antialiased"><img
+                                                src="/Svgs/IconSvgs/icon_adjustments.svg"
+                                                class="mr-2"
+                                                alt="attributeIcon"/>Termineigenschaften wählen</span>
+                                            <ChevronDownIcon
+                                                class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
+                                                aria-hidden="true"
+                                            />
+                                        </MenuButton>
+                                    </div>
+                                    <transition
+                                        enter-active-class="transition duration-50 ease-out"
+                                        enter-from-class="transform scale-100 opacity-100"
+                                        enter-to-class="transform scale-100 opacity-100"
+                                        leave-active-class="transition duration-75 ease-in"
+                                        leave-from-class="transform scale-100 opacity-100"
+                                        leave-to-class="transform scale-95 opacity-0"
+                                    >
+                                        <MenuItems
+                                            class="absolute overflow-y-auto h-24 mt-2 w-[80%] origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                            <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
+                                                <div class="flex w-full mb-4">
+                                                    <input v-model="event.audience"
+                                                           :disabled="!event.canEdit"
+                                                           type="checkbox"
+                                                           class="checkBoxOnDark"/>
+                                                    <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
+                                                         alt="audienceIcon"/>
+
+                                                    <div
+                                                        :class="[event.audience ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">
+                                                        Mit Publikum
+                                                    </div>
+                                                </div>
+                                                <div class="flex w-full mb-2">
+                                                    <input v-model="event.isLoud"
+                                                           :disabled="!event.canEdit"
+                                                           type="checkbox"
+                                                           class="checkBoxOnDark"/>
+                                                    <div
+                                                        :class="[event.isLoud ? 'text-white' : 'text-secondary', 'subpixel-antialiased mx-2']">
+                                                        Es
+                                                        wird laut
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </MenuItems>
+                                    </transition>
+                                </Menu>
                             </div>
                             <div class="flex justify-center w-full py-4" v-if="event.canEdit">
-                                <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
-                                        @click="updateOrCreateEvent(event)">
+                                <button
+                                    :disabled="event.roomId === null || event.startDate === null || event.endDate === null || (event.startTime === null && !event.allDayEvent) || (event.endTime === null && !event.allDayEvent)"
+                                    :class="event.roomId === null || event.startDate === null || event.endDate === null || (event.startTime === null && !event.allDayEvent) || (event.endTime === null && !event.allDayEvent) ? 'bg-secondary hover:bg-secondary' : ''"
+                                    class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
+                                    @click="updateOrCreateEvent(event)"
+                                >
                                     {{
                                         (isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects) ? 'Speichern' : 'Belegung anfragen'
                                     }}
@@ -397,38 +425,44 @@
                                 </div>
                                 <div class="flex items-center w-1/2 mb-1">
                                     <div class="truncate flex xxsDark max-w-60 mt-1">
-                                        erstellt von <div class="xxsDarkBold ml-1"> {{ event.created_by.first_name }}
-                                    {{ event.created_by.last_name }}</div>
-                                    </div> <img
-                                    :data-tooltip-target="event.created_by.id" :src="event.created_by.profile_photo_url"
-                                    :alt="event.created_by.last_name"
-                                    class="ml-2 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                                        erstellt von
+                                        <div class="xxsDarkBold ml-1"> {{ event.created_by.first_name }}
+                                            {{ event.created_by.last_name }}
+                                        </div>
+                                    </div>
+                                    <img
+                                        :data-tooltip-target="event.created_by.id"
+                                        :src="event.created_by.profile_photo_url"
+                                        :alt="event.created_by.last_name"
+                                        class="ml-2 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
                                 </div>
                             </div>
                             <div class="my-2">
                                 <div class="flex" v-if="event.startDate === event.endDate">
                                     <div class="xsDark flex">
-                                        <p v-if="this.rooms.find(room => room.id === event.declinedRoomId)" class="text-error mr-1 line-through">
+                                        <p v-if="this.rooms.find(room => room.id === event.declinedRoomId)"
+                                           class="text-error mr-1 line-through">
                                             {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }},
                                         </p>
-                                    {{ event.startDate.toString().substring(10, 8) }}.{{ event.startDate.toString().substring(7, 5) }}.{{ event.startDate.toString().substring(4, 0) }},
-                                    {{ event.startTime }} - {{ event.endTime }}
+                                        {{ event.startDate.toString().substring(10, 8) }}.{{ event.startDate.toString().substring(7, 5) }}.{{ event.startDate.toString().substring(4, 0) }},
+                                        {{ event.allDay ? 'Ganztägig' : event.startTime + "-" + event.endTime }}
                                     </div>
                                 </div>
                                 <div v-else>
-                                    <p v-if="this.rooms.find(room => room.id === event.declinedRoomId)" class="text-error line-through">
+                                    <p v-if="this.rooms.find(room => room.id === event.declinedRoomId)"
+                                       class="text-error line-through">
                                         {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }},
                                     </p>
                                     <div class="xsDark">
                                     {{ event.startDate.toString().substring(10, 8) }}.{{ event.startDate.toString().substring(7, 5) }}.{{ event.startDate.toString().substring(4, 0) }},
-                                    {{ event.startTime }} -
+                                    {{ event.allDay ? 'Ganztägig' : event.startTime }} -
                                     {{ event.endDate.toString().substring(10, 8) }}.{{ event.endDate.toString().substring(7, 5) }}.{{ event.endDate.toString().substring(4, 0) }},
-                                    {{ event.endTime }}
+                                    {{ event.allDay ? 'Ganztägig' : event.endTime }}
                                     </div>
                                 </div>
                             </div>
                             <div v-if="event.opened && event.canEdit">
-                                {{event.description}}
+                                {{ event.description }}
                             </div>
                         </div>
                     </div>
@@ -460,7 +494,7 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems
+    MenuItems, Switch, SwitchGroup, SwitchLabel
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
@@ -468,11 +502,15 @@ import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import Permissions from "@/mixins/Permissions.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     name: 'EventsWithoutRoomComponent',
     mixins: [Permissions],
     components: {
+        Switch,
+        SwitchGroup,
+        SwitchLabel,
         Input,
         JetDialogModal,
         XIcon,
@@ -520,10 +558,32 @@ export default {
             canEdit: false,
             deleteComponentVisible: false,
             eventToDelete: null,
+            allDayEvent: false,
+            showProjectInfo: false,
+            firstCall: true,
+            isOption: false,
+            frequencies: [
+                {
+                    id: 1,
+                    name: 'Täglich'
+                },
+                {
+                    id: 2,
+                    name: 'Wöchentlich'
+                },
+                {
+                    id: 3,
+                    name: 'Alle 2 Wochen'
+                },
+                {
+                    id: 4,
+                    name: 'Monatlich'
+                }
+            ]
         }
     },
 
-    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'eventsWithoutRoom'],
+    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'eventsWithoutRoom', 'removeNotificationOnAction'],
 
     emits: ['closed'],
 
@@ -550,18 +610,57 @@ export default {
     computed: {
         computedEventsWithoutRoom: function () {
             this.eventsWithoutRoom.forEach((event) => {
-                event.startDate = new Date(event.start).format('YYYY-MM-DD');
-                event.startTime = new Date(event.start).format('HH:mm');
-                event.endDate = new Date(event.end).format('YYYY-MM-DD');
-                event.endTime = new Date(event.end).format('HH:mm');
+                const dateStart = new Date(event.start);
+                event.startDate = this.getDateOfDate(dateStart);
+                event.startTime = this.getTimeOfDate(dateStart);
+
+                const dateEnd = new Date(event.end);
+                event.endDate = this.getDateOfDate(dateEnd);
+                event.endTime = this.getTimeOfDate(dateEnd);
+
                 event.creatingProject = false;
+                //setting show project info for every event on first rendering
+                if (this.firstCall) {
+                    event.showProjectInfo = (event.projectId !== null);
+                    event.selectedFrequencyName = this.getFrequencyName(event.series?.frequency_id);
+                }
             })
+            this.firstCall = false;
             return this.eventsWithoutRoom;
         },
 
     },
 
     methods: {
+        getTimeOfDate(date) {
+            //returns hours and minutes in format HH:mm, if necessary with leading zeros, from given date object
+            return ('0' + date.getUTCHours()).slice(-2) + ":" + ('0' + date.getUTCMinutes()).slice(-2);
+        },
+        getDateOfDate(date) {
+            //returns date in format "YYYY-MM-DD" from given date object
+            return date.toISOString().split('T')[0];
+        },
+        convertDateFormat(dateString) {
+            const parts = dateString.split('-');
+            return parts[2] + "." + parts[1] + "." +parts[0];
+        },
+        getFrequencyName(frequencyId) {
+            const matchedFrequency = this.frequencies.find(frequency => frequency.id === frequencyId);
+
+            if (matchedFrequency) {
+                return matchedFrequency.name;
+            } else {
+                return 'Kein Turnus ausgewählt';
+            }
+        },
+        onLinkingProject(project, event) {
+            event.projectId = project.id;
+            event.project = project;
+            event.projectName = '';
+            this.projectName = '';
+            event.showProjectSearchResults = false;
+            this.projectSearchResults = [];
+        },
         openModal() {
         },
 
@@ -586,7 +685,6 @@ export default {
             this.checkCollisions(event)
         },
         checkTypeChange(event) {
-
             this.checkCollisions(event);
         },
 
@@ -660,6 +758,7 @@ export default {
         deleteProject(event) {
             event.project = null;
             event.projectId = null;
+            event.projectName = '';
         },
 
         /**
@@ -668,10 +767,12 @@ export default {
          * @returns {Promise<*>}
          */
         async updateOrCreateEvent(event) {
-
+            if (this.removeNotificationOnAction && (this.selectedRoom?.everyone_can_book || this.isAdmin)) {
+              this.isOption = true;
+            }
             return await axios
                 .put('/events/' + event?.id, this.eventData(event))
-                .then(() => this.closeModal())
+                .then(() => this.closeModal(this.removeNotificationOnAction === true))
                 .catch(error => event.error = error.response.data.errors);
         },
         openDeleteEventModal(event) {
@@ -681,16 +782,12 @@ export default {
         async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;
 
-            return await axios
-                .delete(`/events/${this.eventToDelete.id}`)
-                .then(() => this.closeModal());
+            Inertia.delete(`/events/${this.eventToDelete.id}`, {
+              onFinish: () => {
+                this.closeModal();
+              }
+            })
         },
-        async deleteEvent(eventToDelete){
-            return await axios
-                .delete(`/events/${eventToDelete.id}`)
-                .then(() => this.closeModal());
-        },
-
         eventData(event) {
             return {
                 title: event.title,
@@ -702,11 +799,14 @@ export default {
                 audience: event.audience,
                 isLoud: event.isLoud,
                 eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
-                projectId: event.projectId,
+                projectId: event.showProjectInfo ? event.projectId : null,
                 projectName: event.creatingProject ? event.projectName : '',
                 eventTypeId: event.eventTypeId,
                 projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
                 creatingProject: event.creatingProject,
+                isOption: this.isOption,
+                allDay: event.allDay,
+                is_series: event.series ? event.series : false
             };
         },
     },

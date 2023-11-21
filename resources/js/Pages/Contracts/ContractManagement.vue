@@ -29,7 +29,11 @@
                                     </div>
                                 </div>
                                 <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="contractsCopy.data.length !== 0">
-                                    <ContractListItem :contract="contract" class="mb-6"></ContractListItem>
+                                    <ContractListItem @open-delete-contract-modal="openContractDeleteModal" @open-edit-contract-modal="openContractEditModal" :contract="contract" class="mb-6"></ContractListItem>
+                                    <ContractDeleteModal :show="showContractDeleteModal === contract?.id"
+                                                         :close-modal="closeContractDeleteModal" :contract="contract"/>
+                                    <ContractEditModal :show="showContractEditModal === contract?.id"
+                                                       :close-modal="closeContractEditModal" :contract="contract"/>
                                     <hr class="text-secondary">
                                 </div>
                                 <div v-else class="text-secondary">
@@ -61,11 +65,15 @@ import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
 import Permissions from "@/mixins/Permissions.vue";
 import ContractUploadModal from "@/Layouts/Components/ContractUploadModal.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
+import ContractDeleteModal from "@/Layouts/Components/ContractDeleteModal.vue";
+import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue";
 
 export default {
     mixins: [Permissions],
     name: "ContractManagement",
     components: {
+        ContractEditModal,
+        ContractDeleteModal,
         AddButton,
         ContractUploadModal,
         BaseFilterTag,
@@ -91,6 +99,8 @@ export default {
             companyTypeNames: [],
             contractTypeNames: [],
             showContractUploadModal: false,
+            showContractDeleteModal: null,
+            showContractEditModal: null,
 
         }
     },
@@ -115,7 +125,6 @@ export default {
                     this.contractsCopy.data = res.data.contracts
                 }else{
                     res.data.contracts.forEach(contract => {
-                        console.log(contract);
                         if(contract.creator?.id === this.$page.props.user.id) {
                             this.contractsCopy.data.push(contract)
                         }else if(contract.accessibleUsers.map(user => user.id).includes(this.$page.props.user.id)) {
@@ -124,6 +133,18 @@ export default {
                     })
                 }
             })
+        },
+        openContractEditModal(contract) {
+            this.showContractEditModal = contract.id
+        },
+        closeContractEditModal() {
+            this.showContractEditModal = null
+        },
+        openContractDeleteModal(contract) {
+            this.showContractDeleteModal = contract.id
+        },
+        closeContractDeleteModal() {
+            this.showContractDeleteModal = null;
         },
         getArrayOfIds(array) {
             let ids = []

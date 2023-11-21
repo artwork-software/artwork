@@ -521,7 +521,6 @@ export default {
         // calculates if there is unneeded height for each event
         heightSubtraction(event) {
             let heightSubtraction = 0;
-            console.log(event);
             if (this.$page.props.user.calendar_settings.project_management && (!event.projectLeaders || event.projectLeaders?.length < 1)) {
                 heightSubtraction += 17;
             }
@@ -595,7 +594,7 @@ export default {
             } else {
                 this.type = type;
                 this.deleteTitle = 'Untertermin Löschen?';
-                this.deleteDescription = 'Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest?';
+                this.deleteDescription = 'Bist du sicher, dass du die ausgewählten Belegungen löschen möchtest?';
             }
             this.eventToDelete = eventId
             this.deleteComponentVisible = true;

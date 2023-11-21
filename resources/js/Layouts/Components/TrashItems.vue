@@ -2,7 +2,7 @@
     <div class="w-full">
         <div v-if="items.length > 0" v-for="(item,index) in items" :key="item.id" class="flex items-center justify-between border-b-2 border-gray-200">
             <div class="py-5 flex items-center">
-                <BaseFilterTag :filter="item.name" @remove-filter="forceDelete(item)" />
+                <BaseFilterTag :filter="item" @remove-filter="forceDelete(item)" />
                 <div class="ml-2">{{type}}</div>
             </div>
             <div class="w-1/12 flex justify-end">

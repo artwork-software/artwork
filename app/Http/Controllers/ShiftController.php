@@ -1183,17 +1183,19 @@ class ShiftController extends Controller
         }
         $shift->freelancer()->detach($freelancer->id);
 
-        if ($request->chooseData['onlyThisDay'] === false) {
-            $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
-                ->get();
+       if(!empty($request->chooseData)){
+           if ($request->chooseData['onlyThisDay'] === false) {
+               $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
+                   ->get();
 
 
-            foreach ($allShifts as $allShift) {
-                if($allShift->id !== $shift->id){
-                    $allShift->freelancer()->detach($freelancer->id);
-                }
-            }
-        }
+               foreach ($allShifts as $allShift) {
+                   if($allShift->id !== $shift->id){
+                       $allShift->freelancer()->detach($freelancer->id);
+                   }
+               }
+           }
+       }
 
         $eventIdsOfUserShifts = $freelancer->shifts()->get()->pluck('event.id')->all();
 
@@ -1221,15 +1223,16 @@ class ShiftController extends Controller
         }
         $shift->service_provider()->detach($serviceProvider->id);
 
+        if(!empty($request->chooseData)) {
+            if ($request->chooseData['onlyThisDay'] === false) {
+                $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
+                    ->get();
 
-        if ($request->chooseData['onlyThisDay'] === false) {
-            $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
-                ->get();
 
-
-            foreach ($allShifts as $allShift) {
-                if($allShift->id !== $shift->id){
-                    $allShift->service_provider()->detach($serviceProvider->id);
+                foreach ($allShifts as $allShift) {
+                    if ($allShift->id !== $shift->id) {
+                        $allShift->service_provider()->detach($serviceProvider->id);
+                    }
                 }
             }
         }

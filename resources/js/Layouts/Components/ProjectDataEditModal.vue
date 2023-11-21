@@ -118,7 +118,6 @@ export default {
         project: Object,
         groupProjects: Array,
         currentGroup: Object,
-        projectState: Number,
         states: Array
     },
     components: {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserCalendarFilter;
+use Carbon\Carbon;
 use DebugBar\DebugBar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -90,6 +91,28 @@ class UserCalendarFilterController extends Controller
             'room_attributes',
             'room_categories',
         ]));
+    }
+
+    public function updateDates(Request $request, User $user): void
+    {
+        $user->calendar_filter()->update([
+                'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
+                'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
+            ]);
+    }
+
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function singleValueUpdate(User $user, Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $user->calendar_filter()->update([
+            $request->key => $request->value
+        ]);
+
+        return redirect()->back();
     }
 
     /**

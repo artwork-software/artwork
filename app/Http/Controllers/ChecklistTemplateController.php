@@ -6,7 +6,6 @@ use App\Http\Requests\SearchRequest;
 use App\Http\Resources\ChecklistTemplateIndexResource;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
-use App\Models\Department;
 use App\Models\TaskTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;

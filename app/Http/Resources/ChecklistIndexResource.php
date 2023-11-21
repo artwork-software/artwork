@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Department;
 use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\MissingValue;

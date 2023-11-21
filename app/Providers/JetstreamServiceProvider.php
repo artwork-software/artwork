@@ -3,11 +3,11 @@
 namespace App\Providers;
 
 use App\Actions\Jetstream\DeleteUser;
-use App\Models\Department;
+use Artwork\Modules\Department\Models\Department;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Jetstream\Jetstream;
-use Illuminate\Support\Facades\Auth;
 
 class JetstreamServiceProvider extends ServiceProvider
 {

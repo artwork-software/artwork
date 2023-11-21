@@ -63,7 +63,7 @@
             </div>
         </div>
         <div
-            v-if="$can('view edit upload contracts') || this.project.access_budget.includes(this.$page.props.user.id)">
+            v-if="$can('view edit upload contracts') || this.hasBudgetAccess()">
             <hr class="my-10 border-darkGray">
 
             <div class="w-full flex items-center mb-4">
@@ -101,9 +101,8 @@
                 </div>
 
             </div>
-
             <div
-                v-if="$can('view edit add money_sources') || this.project.access_budget.includes(this.$page.props.user.id)">
+                v-if="this.$can('view edit add money_sources') || this.hasAdminRole() || this.hasBudgetAccess()">
                 <hr class="my-10 border-darkGray">
 
                 <div class="w-full flex items-center mb-4">
@@ -115,7 +114,11 @@
                     <div v-if="moneySources?.length > 0">
                         <div class="w-full flex items-center mb-2 text-secondary"
                              v-for="moneySource in moneySources">
-                            <div>{{ moneySource.name }}</div>
+                            <Link v-if="this.$can('view edit add money_sources') || this.hasAdminRole()"
+                                  :href="route('money_sources.show', {moneySource: moneySource.id})">
+                                {{moneySource.name}}
+                            </Link>
+                            <div v-else>{{moneySource.name}}</div>
                         </div>
                     </div>
                     <div v-else>
@@ -146,6 +149,7 @@ import ContractUploadModal from "@/Layouts/Components/ContractUploadModal";
 import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue";
 import ProjectCopyrightModal from "@/Layouts/Components/ProjectCopyrightModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import { Link } from '@inertiajs/inertia-vue3';
 
 export default {
     mixins: [Permissions],
@@ -164,7 +168,8 @@ export default {
         ContractModuleUploadModal,
         PencilAltIcon,
         ChevronDownIcon,
-        ProjectCopyrightModal
+        ProjectCopyrightModal,
+        Link
     },
     props: {
         project: Object,
@@ -173,7 +178,7 @@ export default {
         projectFiles: Array,
         contracts: Array,
         moneySources: Array,
-        budgetAccess: Object,
+        accessBudget: Object,
     },
     data() {
         return {
@@ -193,6 +198,9 @@ export default {
         }
     },
     methods: {
+        hasBudgetAccess() {
+          return this.accessBudget.filter((user) => user.id === this.$page.props.user.id).length > 0;
+        },
         downloadContract(contract) {
             let link = document.createElement('a');
             link.href = route('contracts.download', {contract: contract});

@@ -1,10 +1,19 @@
 <template>
     <app-layout>
-        <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds" :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
-                                    :states="states" :project-groups="projectGroups"
+        <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds"
+                                    :projectWriteIds="projectWriteIds"
+                                    :projectManagerIds="projectManagerIds"
+                                    :project="project"
+                                    :eventTypes="eventTypes"
+                                    :currentGroup="currentGroup"
+                                    :states="states"
+                                    :project-groups="projectGroups"
                                     :first-event-in-project="firstEventInProject"
-                                    :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience"
-                                    :group-projects="groupProjects" open-tab="budget">
+                                    :last-event-in-project="lastEventInProject"
+                                    :rooms-with-audience="RoomsWithAudience"
+                                    :group-projects="groupProjects"
+                                    :access_budget="access_budget"
+                                    open-tab="budget">
             <BudgetTab :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :budget="budget" :money-sources="moneySources"></BudgetTab>
         </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
@@ -15,7 +24,7 @@
                 :project-files="project.project_files"
                 :contracts="project.contracts"
                 :money-sources="projectMoneySources"
-                :budget-access="access_budget"
+                :access-budget="access_budget"
             />
         </BaseSidenav>
     </app-layout>

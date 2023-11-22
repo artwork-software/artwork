@@ -28,14 +28,21 @@ class BudgetService
         $columns[] = $this->budgetColumnService->createColumnInTable(table: $table, name: date('Y') . ' €', subName: '', type: 'empty');
 
 
-        $costMainPosition = $this->mainPositionService->createMainPosition($table, BudgetTypesEnum::BUDGET_TYPE_COST, 'Hauptpostion', $table->mainPositions()->where('type', BudgetTypesEnum::BUDGET_TYPE_COST)->max('position') + 1);
+        $costMainPosition = $this->mainPositionService->createMainPosition(
+            table: $table,
+            budgetTypesEnum: BudgetTypesEnum::BUDGET_TYPE_COST,
+            name: 'Hauptpostion',
+            position: $table->mainPositions()->where('type', BudgetTypesEnum::BUDGET_TYPE_COST)->max('position') + 1
+        );
 
-        $earningMainPosition = $table->mainPositions()->create([
-            'type' => BudgetTypesEnum::BUDGET_TYPE_EARNING,
-            'name' => 'Hauptpostion',
-            'position' => $table->mainPositions()
-                    ->where('type', BudgetTypesEnum::BUDGET_TYPE_EARNING)->max('position') + 1
-        ]);
+        $earningMainPosition = $this->mainPositionService->createMainPosition(
+            table: $table,
+            budgetTypesEnum: BudgetTypesEnum::BUDGET_TYPE_EARNING,
+            name: 'Hauptpostion',
+            position: $table->mainPositions()->where('type', BudgetTypesEnum::BUDGET_TYPE_EARNING)->max('position') + 1
+        );
+
+
 
         $costSubPosition = $costMainPosition->subPositions()->create([
             'name' => 'Unterposition',
@@ -44,7 +51,7 @@ class BudgetService
 
         $earningSubPosition = $earningMainPosition->subPositions()->create([
             'name' => 'Unterposition',
-            'position' => $costSubPosition->subPositionRows()->max('position') + 1
+            'position' => $earningMainPosition->subPositions()->max('position') + 1
         ]);
 
         $costSubPositionRow = $costSubPosition->subPositionRows()->create([

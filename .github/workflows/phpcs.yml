@@ -39,11 +39,11 @@ jobs:
           phpcs_path: php phpcs.phar
           standard: phpcs.xml
 
-      - name: Create Merge Request
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: fix-phpcs-violations
-          commit-message: 'Fix PHPCS violations'
-          title: 'Fix PHPCS Violations'
-          body: 'This pull request fixes PHPCS violations found in the codebase.'
+#      - name: Create Merge Request
+#        uses: peter-evans/create-pull-request@v3
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          branch: fix-phpcs-violations
+#          commit-message: 'Fix PHPCS violations'
+#          title: 'Fix PHPCS Violations'
+#          body: 'This pull request fixes PHPCS violations found in the codebase.'

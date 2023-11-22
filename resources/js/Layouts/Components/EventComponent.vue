@@ -582,6 +582,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div v-if="canEdit">
                     <div class="flex justify-center w-full py-4"
                          v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects || roomAdminIds.includes(this.$page.props.user.id)) || this.hasAdminRole()">
@@ -827,7 +828,7 @@ export default {
             return this.rooms.find(room => room.id === this.event?.roomId)?.admins.some(admin => admin.id === this.$page.props.user.id) || false;
         },
         isCreator() {
-            return this.event ? this.event?.user_id === this.$page.props.user.id : false
+            return this.event ? this.event.created_by.id === this.$page.props.user.id : false
         },
     },
     methods: {

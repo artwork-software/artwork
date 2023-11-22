@@ -5,16 +5,14 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Enums\NotificationFrequency;
 use App\Enums\NotificationGroupEnum;
-use App\Http\Resources\CalendarEventCollectionResource;
 use App\Http\Resources\CalendarEventResource;
-use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\ProjectIndexAdminResource;
+use App\Http\Resources\NotificationProjectResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
-use App\Http\Resources\TaskIndexResource;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\GlobalNotification;
 use App\Models\NotificationSetting;
 use App\Models\Project;
 use App\Models\Room;
@@ -24,20 +22,16 @@ use App\Notifications\BudgetVerified;
 use App\Notifications\ConflictNotification;
 use App\Notifications\DeadlineNotification;
 use App\Notifications\EventNotification;
-use App\Notifications\GlobalUserNotification;
-use App\Notifications\MoneySource;
 use App\Notifications\MoneySourceNotification;
 use App\Notifications\ProjectNotification;
 use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
-use App\Notifications\SimpleNotification;
 use App\Notifications\TaskNotification;
 use App\Notifications\TeamNotification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 
 class NotificationController extends Controller
 {
@@ -116,7 +110,8 @@ class NotificationController extends Controller
             $event = Event::find(request('eventId'));
         }
 
-
+        $globalNotification = GlobalNotification::first();
+        $globalNotification['image_url'] = $globalNotification?->image_name ? Storage::disk('public')->url($globalNotification->image_name) : null;
 
 
         /** @var User $user */
@@ -142,9 +137,11 @@ class NotificationController extends Controller
             'roomCollisions',
             'notifications' => $output,
             'readNotifications' => $outputRead,
+            'globalNotification' => $globalNotification,
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-            'projects' => ProjectShowResource::collection(Project::all())->resolve(),
+            //'projects' => ProjectShowResource::collection(Project::all())->resolve(),
+            'projects' => NotificationProjectResource::collection(Project::all())->resolve(),
             'notificationSettings' => $user->notificationSettings()->get()->groupBy("group_type"),
             'notificationFrequencies' => array_map(fn (NotificationFrequency $frequency) => [
                 'title' => $frequency->title(),

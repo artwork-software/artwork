@@ -1,4 +1,5 @@
 <template>
+
     <div class="bg-backgroundGray mt-6 pb-6">
         <div class=" ml-14 pt-3 pr-14">
             <div class="flex justify-between items-center mt-4">

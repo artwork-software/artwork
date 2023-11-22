@@ -22,7 +22,6 @@
                        class="border-gray-300 h-12 inputMain xsDark placeholder-secondary bg-transparent disabled:border-none"/>
             </div>
         </div>
-
         <div class="relative w-full">
             <input id="taskUserSearch" v-model="task_user_query" type="text" autocomplete="off"
                    placeholder="Wer ist zuständig für diese Aufgabe?*"
@@ -114,9 +113,7 @@ export default {
                     axios.get('/users/search', {
                         params: {query: this.task_user_query}
                     }).then(response => {
-                        this.task_user_search_results = response.data.filter(user => this.users.some(docUser => {
-                            return docUser.id === user.id
-                        }))
+                        this.task_user_search_results = response.data;
                     })
                 }
             },

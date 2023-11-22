@@ -1,9 +1,19 @@
 <template>
     <app-layout>
-    <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds" :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :eventTypes="eventTypes" :currentGroup="currentGroup"
-                                :states="states" :project-groups="projectGroups"
+    <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds"
+                                :projectWriteIds="projectWriteIds"
+                                :projectManagerIds="projectManagerIds"
+                                :project="project"
+                                :eventTypes="eventTypes"
+                                :currentGroup="currentGroup"
+                                :states="states"
+                                :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
-                                :last-event-in-project="lastEventInProject" :rooms-with-audience="RoomsWithAudience" :group-projects="groupProjects" open-tab="info">
+                                :last-event-in-project="lastEventInProject"
+                                :rooms-with-audience="RoomsWithAudience"
+                                :group-projects="groupProjects"
+                                :access_budget="access_budget"
+                                open-tab="info">
         <InfoTab :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project"></InfoTab>
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
@@ -67,7 +77,7 @@ export default {
         'projectManagerIds',
         'projectWriteIds',
         'projectDeleteIds',
-
+        'access_budget'
     ],
     data() {
         return {

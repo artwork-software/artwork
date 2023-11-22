@@ -361,8 +361,8 @@
                 <div class="justify-center flex w-full my-6">
                     <button
                         class="flex p-2 px-8 mt-1 items-center border border-transparent rounded-full shadow-sm  focus:outline-none"
-                        :class="(this.file === null || this.contractAmount === '' || this.contractPartner === '') || (this.projectId === null && this.selectedProject === null)? 'bg-secondary text-white' : 'text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover'"
-                        :disabled="this.file === null || this.contractAmount === '' || this.contractPartner === '' || (this.projectId === null && this.selectedProject === null)"
+                        :class="(this.file === null || this.contractAmount === '' || this.contractPartner === '') || (!this.projectId && this.selectedProject === null)? 'bg-secondary text-white' : 'text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover'"
+                        :disabled="this.file === null || this.contractAmount === '' || this.contractPartner === '' || (!this.projectId && this.selectedProject === null)"
                         @click="storeContract">Vertrag hochladen
                     </button>
                 </div>

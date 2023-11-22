@@ -1,5 +1,5 @@
 <template>
-    <div :class="table.is_template ? '' : 'bg-lightBackgroundGray'" class="mx-1 pr-10 pt-6 relative">
+    <div :class="[table.is_template ? '' : 'bg-lightBackgroundGray', hideProjectHeader ? '' : 'pt-6']" class="mx-1 pr-10 relative">
         <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
                 {{ table.name }}
@@ -89,6 +89,12 @@
             </div>
         </div>
         <div class="w-full flex flex-row-reverse mb-4">
+            <div>
+                <img alt="Fullscreen" @click="$emit('changeProjectHeaderVisualisation',true)" v-if="!hideProjectHeader"
+                     src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
+                <ZoomOutIcon @click="$emit('changeProjectHeaderVisualisation',false)"
+                             v-else class="h-7 w-7 mx-2 cursor-pointer"></ZoomOutIcon>
+            </div>
             <SwitchGroup as="div">
                 <Switch v-model="userExcludeCommentedBudgetItems"
                         :class="[userExcludeCommentedBudgetItems ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
@@ -101,7 +107,9 @@
                     </span>
                 </SwitchLabel>
             </SwitchGroup>
+
         </div>
+
         <div class="w-full flex stickyHeader" >
             <table class="w-full flex ml-6 py-5">
                 <thead>
@@ -131,7 +139,7 @@
                                             {{ column.subName }}
                                         </div>
 
-                                        <span v-if="columnCalculatedNames[column.id]" class="ml-1 truncate columnSubName text-white">
+                                        <span v-if="columnCalculatedNames ? columnCalculatedNames[column.id] : false" class="ml-1 truncate columnSubName text-white">
                                             ({{columnCalculatedNames[column.id]}})
                                         </span>
                                     </div>
@@ -212,7 +220,7 @@
                                                     Einfärben
                                                 </a>
                                             </MenuItem>
-                                            <MenuItem v-slot="{ active }" v-if="!column.is_locked">
+                                            <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="!column.is_locked">
                                                 <a @click="lockColumn(column.id)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
@@ -222,7 +230,7 @@
                                                     Sperren
                                                 </a>
                                             </MenuItem>
-                                            <MenuItem v-slot="{ active }" v-if="column.is_locked">
+                                            <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="column.is_locked">
                                                 <a @click="unlockColumn(column.id)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
@@ -767,7 +775,15 @@
 <script>
 
 
-import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
+import {
+    PencilAltIcon,
+    PlusCircleIcon,
+    TrashIcon,
+    XCircleIcon,
+    XIcon,
+    ZoomInIcon,
+    ZoomOutIcon
+} from '@heroicons/vue/outline';
 import {ChevronUpIcon, ChevronDownIcon,PlusIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
@@ -804,6 +820,7 @@ export default {
     name: 'BudgetComponent',
     mixins: [Permissions],
     components: {
+        ZoomInIcon, ZoomOutIcon,
         SwitchGroup,
         SwitchLabel,
         Switch,
@@ -910,8 +927,8 @@ export default {
         }
     },
 
-    props: ['selectedSumDetail','columnCalculatedNames','table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager', 'columns'],
-
+    props: ['hideProjectHeader','selectedSumDetail','columnCalculatedNames','table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager', 'columns'],
+    emits: ['changeProjectHeaderVisualisation'],
     computed: {
         tablesToShow: function () {
             let costTableArray = [];

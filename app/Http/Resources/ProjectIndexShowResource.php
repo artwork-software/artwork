@@ -47,23 +47,23 @@ class ProjectIndexShowResource extends JsonResource
             'curr_user_is_related' => $this->users->contains(Auth::id()),
             'key_visual' => $this->key_visual_path,
             'cost_center' => $this->cost_center,
-            'copyright' => new CopyrightResource($this->copyright),
+            //'copyright' => new CopyrightResource($this->copyright),
             'moneySources' => $this->money_sources,
 
-            'users' => UserIndexResource::collection($this->users)->resolve(),
+            'users' => UserResourceWithoutShifts::collection($this->users)->resolve(),
             'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
             'state' => ProjectStates::find($this->state),
-            'project_files' => ProjectFileResource::collection($this->project_files),
-            'contracts' => ContractResource::collection($this->contracts),
+            //'project_files' => ProjectFileResource::collection($this->project_files),
+            //'contracts' => ContractResource::collection($this->contracts),
             'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
 
-            'comments' => $this->comments->map(fn ($comment) => [
+            /*'comments' => $this->comments->map(fn ($comment) => [
                 'id' => $comment->id,
                 'text' => $comment->text,
                 'created_at' => $comment->created_at->format('d.m.Y, H:i'),
                 'user' => $comment->user
-            ])
+            ])*/
         ];
     }
 }

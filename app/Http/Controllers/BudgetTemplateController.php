@@ -41,6 +41,7 @@ class BudgetTemplateController extends Controller
 
         $templates = null;
 
+
         if (request('useTemplates')) {
             $templates = Table::where('is_template', true)->get();
         }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\UserCalendarSettings;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,6 +15,7 @@ class CalendarEventResource extends JsonResource
 {
     public static $wrap = null;
 
+    private UserCalendarSettings $userCalendarSettings;
     /**
      * Transform the resource into an array.
      *
@@ -22,13 +24,17 @@ class CalendarEventResource extends JsonResource
      */
     public function toArray($request)
     {
+
+        $this->userCalendarSettings = Auth::user()->calendar_settings;
+
         $classString = '';
         if($this->occupancy_option){
             $classString = $this->event_type->svg_name . ' ' . 'occupancy_option_' . $this->event_type->svg_name;
         }else{
             $classString = $this->event_type->svg_name;
         }
-        return [
+
+        $output = [
             'resource' => class_basename($this),
             'id' => $this->id,
             'start' => $this->start_time->utc()->toIso8601String(),
@@ -55,7 +61,8 @@ class CalendarEventResource extends JsonResource
             'created_by' => $this->creator,
             'occupancy_option' => $this->occupancy_option,
             'projectLeaders' => $this->project?->managerUsers,
-            'project' => new ProjectInEventResource($this->project),
+            //'project' => new ProjectInEventResource($this->project),
+            'project' => new ProjectInCalendarResource($this->project),
             'collisionCount'=> $this->collision_count,
             'is_series'=> $this->is_series,
             'series_id'=> $this->series_id,
@@ -75,5 +82,11 @@ class CalendarEventResource extends JsonResource
             'comments' => $this->comments,
             'shifts' => $this->shifts,
         ];
+
+        if(!$this->userCalendarSettings->work_shifts){
+            unset($output['shifts']);
+        }
+
+        return $output;
     }
 }

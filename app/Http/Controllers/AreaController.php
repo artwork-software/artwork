@@ -42,8 +42,6 @@ class AreaController extends Controller
             'room_categories' => RoomCategory::all(),
             'room_attributes' => RoomAttribute::all()
         ]);
-
-
     }
 
     /**
@@ -54,7 +52,6 @@ class AreaController extends Controller
      */
     public function store(Request $request)
     {
-
         $this->areaService->createByRequest($request);
         return Redirect::route('areas.management')->with('success', 'Area created.');
     }
@@ -107,21 +104,17 @@ class AreaController extends Controller
     public function forceDelete(int $id)
     {
         $area = Area::onlyTrashed()->findOrFail($id);
-
         $area->forceDelete();
-
         return Redirect::route('areas.trashed')->with('success', 'Room restored');
     }
 
     public function restore(int $id)
     {
         $area = Area::onlyTrashed()->findOrFail($id);
-
         $area->restore();
         foreach ($area->rooms() as $room) {
             $room->restore();
         }
-
         return Redirect::route('areas.trashed')->with('success', 'Room restored');
     }
 

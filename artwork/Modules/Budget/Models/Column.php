@@ -3,11 +3,12 @@
 namespace Artwork\Modules\Budget\Models;
 
 use App\Models\User;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 /**
  * @property int $project_id
@@ -51,7 +52,7 @@ class Column extends Model
 
     public function table(): BelongsTo
     {
-        return $this->belongsTo(Table::class);
+        return $this->belongsTo(Table::class, 'table_id', 'id', 'table');
     }
 
     public function cells(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -76,6 +77,6 @@ class Column extends Model
 
     public function locked_by(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'locked_by', 'id');
+        return $this->belongsTo(User::class, 'locked_by', 'id', 'locked_by');
     }
 }

@@ -2,9 +2,9 @@
 
 namespace Artwork\Modules\Budget\Models;
 
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 class Table extends Model
@@ -32,7 +32,7 @@ class Table extends Model
 
     public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(Project::class, 'project_id');
+        return $this->belongsTo(Project::class, 'project_id', 'id', 'project');
     }
 
     public function columns(): \Illuminate\Database\Eloquent\Relations\HasMany

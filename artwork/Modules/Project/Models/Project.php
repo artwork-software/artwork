@@ -15,11 +15,11 @@ use App\Models\Genre;
 use App\Models\MoneySource;
 use App\Models\Sector;
 use App\Models\User;
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
@@ -155,11 +155,6 @@ class Project extends Model
         return $this->belongsToMany(Department::class);
     }
 
-    public function project_histories()
-    {
-        return $this->hasMany(ProjectHistory::class);
-    }
-
     public function checklists()
     {
         return $this->hasMany(Checklist::class);
@@ -218,7 +213,7 @@ class Project extends Model
 
     public function state()
     {
-        return $this->belongsTo(ProjectStates::class);
+        return $this->belongsTo(ProjectStates::class, 'project_id', 'id', 'state');
     }
 
     public function toSearchableArray(): array

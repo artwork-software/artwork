@@ -19,7 +19,7 @@ class ProjectFile extends Model
     ];
 
     public function project() {
-        return $this->belongsTo(Project::class, 'project_id' , 'id', 'projects');
+        return $this->belongsTo(Project::class, 'project_id' , 'id', 'project');
     }
 
     public function accessing_users()

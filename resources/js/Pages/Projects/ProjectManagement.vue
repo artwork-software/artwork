@@ -76,13 +76,12 @@
                             </div>
                         </div>
 
-                        <!-- PERMISSION: Create Project -->
                         <div class="flex relative" v-if="$can('create and edit own project') || $role('artwork admin')">
                             <div v-if="$page.props.can.show_hints" class="flex mt-1 absolute w-40 right-32">
                                 <span class="hind ml-1 my-auto">Lege neue Projekte an</span>
                                 <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
                             </div>
-                            <AddButton @click="openAddProjectModal" text="Neu" mode="page"/>
+                            <AddButton @click="openCreateProjectModal" text="Neu" mode="page"/>
                         </div>
                     </div>
                     <div id="selectedFilter" class="mt-3">
@@ -351,450 +350,15 @@
             </div>
         </div>
         <!-- Projekt erstellen Modal-->
-        <jet-dialog-modal :show="addingProject" @close="closeAddProjectModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_project_new.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        Neues Projekt
-                    </div>
-                    <div class="mb-4">
-                        <div class="hidden sm:block">
-                            <div class="border-gray-200">
-                                <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
-                                     aria-label="Tabs">
-                                    <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                                       :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
-                                       :aria-current="tab.current ? 'page' : undefined">
-                                        {{ tab.name }}
-                                    </a>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-                    <XIcon @click="closeAddProjectModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div v-if="isSingleTab">
-                        <div class="mt-2">
-                            <div class="mb-2">
-                                <div class="relative flex w-full">
-                                    <input id="projectName" v-model="form.name" type="text" placeholder="Projektname*"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
-                            </div>
-                            <div class="mb-2">
-                                <Menu as="div" class="inline-block text-left w-full">
-                                    <div>
-                                        <MenuButton
-                                            class="h-12 border border-2 sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                                        >
-                                            <span class="float-left xsLight">Eigenschaften wählen</span>
-                                            <ChevronDownIcon
-                                                class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                                                aria-hidden="true"
-                                            />
-                                        </MenuButton>
-                                    </div>
-                                    <transition
-                                        enter-active-class="transition duration-50 ease-out"
-                                        enter-from-class="transform scale-100 opacity-100"
-                                        enter-to-class="transform scale-100 opacity-100"
-                                        leave-active-class="transition duration-75 ease-in"
-                                        leave-from-class="transform scale-100 opacity-100"
-                                        leave-to-class="transform scale-95 opacity-0"
-                                    >
-                                        <MenuItems
-                                            class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                            <div
-                                                class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
-                                                <Disclosure v-slot="{ open }">
-                                                    <DisclosureButton
-                                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                    >
-                                                    <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Kategorie</span>
-                                                        <ChevronDownIcon
-                                                            :class="open ? 'rotate-180 transform' : ''"
-                                                            class="h-4 w-4 mt-0.5 text-white"
-                                                        />
-                                                    </DisclosureButton>
-                                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                                        <div v-if="categories.length > 0"
-                                                             v-for="category in categories"
-                                                             :key="category.id"
-                                                             class="flex w-full mb-2">
-                                                            <input type="checkbox"
-                                                                   v-model="form.assignedCategoryIds"
-                                                                   :value="category.id"
-                                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                            <p :class="[form.assignedCategoryIds.includes(category.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                                {{ category.name }}
-                                                            </p>
-                                                        </div>
-                                                        <div v-else class="text-secondary">Noch keine Kategorien
-                                                            angelegt
-                                                        </div>
-                                                    </DisclosurePanel>
-                                                </Disclosure>
-                                                <hr class="border-gray-500 mt-2 mb-2">
-                                                <Disclosure v-slot="{ open }">
-                                                    <DisclosureButton
-                                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                    >
-                                                    <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Genre</span>
-                                                        <ChevronDownIcon
-                                                            :class="open ? 'rotate-180 transform' : ''"
-                                                            class="h-4 w-4 mt-0.5 text-white"
-                                                        />
-                                                    </DisclosureButton>
-                                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                                        <div v-if="genres.length > 0"
-                                                             v-for="genre in genres"
-                                                             :key="genre.id"
-                                                             class="flex w-full mb-2">
-                                                            <input type="checkbox"
-                                                                   v-model="form.assignedGenreIds"
-                                                                   :value="genre.id"
-                                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                            <p :class="[form.assignedGenreIds.includes(genre.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                                {{ genre.name }}
-                                                            </p>
-                                                        </div>
-                                                        <div v-else class="text-secondary">Noch keine Genres angelegt
-                                                        </div>
-                                                    </DisclosurePanel>
-                                                </Disclosure>
-                                                <hr class="border-gray-500 mt-2 mb-2">
-                                                <Disclosure v-slot="{ open }">
-                                                    <DisclosureButton
-                                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                    >
-                                                    <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Bereich</span>
-                                                        <ChevronDownIcon
-                                                            :class="open ? 'rotate-180 transform' : ''"
-                                                            class="h-4 w-4 mt-0.5 text-white"
-                                                        />
-                                                    </DisclosureButton>
-                                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                                        <div v-if="sectors.length > 0"
-                                                             v-for="sector in sectors"
-                                                             :key="sector.id"
-                                                             class="flex w-full mb-2">
-                                                            <input type="checkbox"
-                                                                   v-model="form.assignedSectorIds"
-                                                                   :value="sector.id"
-                                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                            <p :class="[form.assignedSectorIds.includes(sector.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                                {{ sector.name }}
-                                                            </p>
-                                                        </div>
-                                                        <div v-else class="text-secondary">Noch keine Bereiche angelegt
-                                                        </div>
-                                                    </DisclosurePanel>
-                                                </Disclosure>
-                                            </div>
-
-                                        </MenuItems>
-                                    </transition>
-                                </Menu>
-                            </div>
-                            <div class="flex mb-2">
-                                <div v-for="categoryId in form.assignedCategoryIds">
-                                    <TagComponent hide-x="true"
-                                                  :displayed-text="this.categories.find(category => category.id === categoryId).name"
-                                                  :property="this.categories.find(category => category.id === categoryId)"></TagComponent>
-                                </div>
-                                <div v-for="genreId in form.assignedGenreIds">
-                                    <TagComponent hide-x="true"
-                                                  :displayed-text="this.genres.find(genre => genre.id === genreId).name"
-                                                  :property="this.genres.find(genre => genre.id === genreId)"></TagComponent>
-                                </div>
-                                <div v-for="sectorId in form.assignedSectorIds">
-                                    <TagComponent hide-x="true"
-                                                  :displayed-text="this.sectors.find(sector => sector.id === sectorId).name"
-                                                  :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                            <textarea
-                                                placeholder="Kurzbeschreibung"
-                                                v-model="form.description" rows="4"
-                                                class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
-                            </div>
-                            <div class="flex items-center mb-2">
-                                <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
-                                       class="ml-2">
-                                    Gehört zu Projektgruppe
-                                </label>
-                            </div>
-                            <div v-if="this.hasGroup" class="mb-2">
-                                <Listbox as="div" v-model="this.selectedGroup" id="room">
-                                    <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
-                                        <div class="flex-grow flex text-left xsDark">
-                                            {{
-                                                this.selectedGroup ? this.selectedGroup.name : 'Projektgruppe suchen'
-                                            }}
-                                        </div>
-                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                    </ListboxButton>
-                                    <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                        <ListboxOption v-for="projectGroup in this.projectGroups"
-                                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
-                                                       :key="projectGroup.id"
-                                                       :value="projectGroup"
-                                                       v-slot="{ active, selected }">
-                                            <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                                {{ projectGroup.name }}
-                                            </div>
-                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </Listbox>
-                            </div>
-                            <div class="w-full items-center text-center">
-                                <AddButton
-                                    :class="[this.form.name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                    class="mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold
-                             text-xl shadow-sm text-secondaryHover"
-                                    @click="addProject"
-                                    :disabled="this.form.name === ''" text="Anlegen" mode="modal"/>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="isGroupTab">
-                        <div class="">
-                            <div class="mb-2 w-full">
-                                <input type="text"
-                                       v-model="form.name"
-                                       id="sourceName"
-                                       placeholder="Titel*"
-                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                            </div>
-                            <div class="mb-2">
-                                <Menu as="div" class="inline-block text-left w-full">
-                                    <div>
-                                        <MenuButton
-                                            class="h-12 border border-2 sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                                        >
-                                            <span
-                                                class="float-left subpixel-antialiased xsLight">Eigenschaften wählen</span>
-                                            <ChevronDownIcon
-                                                class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                                                aria-hidden="true"
-                                            />
-                                        </MenuButton>
-                                    </div>
-                                    <transition
-                                        enter-active-class="transition duration-50 ease-out"
-                                        enter-from-class="transform scale-100 opacity-100"
-                                        enter-to-class="transform scale-100 opacity-100"
-                                        leave-active-class="transition duration-75 ease-in"
-                                        leave-from-class="transform scale-100 opacity-100"
-                                        leave-to-class="transform scale-95 opacity-0"
-                                    >
-                                        <MenuItems
-                                            class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                            <div
-                                                class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
-                                                <Disclosure v-slot="{ open }">
-                                                    <DisclosureButton
-                                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                    >
-                                                    <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Kategorie</span>
-                                                        <ChevronDownIcon
-                                                            :class="open ? 'rotate-180 transform' : ''"
-                                                            class="h-4 w-4 mt-0.5 text-white"
-                                                        />
-                                                    </DisclosureButton>
-                                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                                        <div v-if="categories.length > 0"
-                                                             v-for="category in categories"
-                                                             :key="category.id"
-                                                             class="flex w-full mb-2">
-                                                            <input type="checkbox"
-                                                                   v-model="form.assignedCategoryIds"
-                                                                   :value="category.id"
-                                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                            <p :class="[form.assignedCategoryIds.includes(category.id)
-                                                            ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                                {{ category.name }}
-                                                            </p>
-                                                        </div>
-                                                        <div v-else class="text-secondary">Noch keine Kategorien
-                                                            angelegt
-                                                        </div>
-                                                    </DisclosurePanel>
-                                                </Disclosure>
-                                                <hr class="border-gray-500 mt-2 mb-2">
-                                                <Disclosure v-slot="{ open }">
-                                                    <DisclosureButton
-                                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                    >
-                                                    <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Genre</span>
-                                                        <ChevronDownIcon
-                                                            :class="open ? 'rotate-180 transform' : ''"
-                                                            class="h-4 w-4 mt-0.5 text-white"
-                                                        />
-                                                    </DisclosureButton>
-                                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                                        <div v-if="genres.length > 0"
-                                                             v-for="genre in genres"
-                                                             :key="genre.id"
-                                                             class="flex w-full mb-2">
-                                                            <input type="checkbox"
-                                                                   v-model="form.assignedGenreIds"
-                                                                   :value="genre.id"
-                                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                            <p :class="[form.assignedGenreIds.includes(genre.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                                {{ genre.name }}
-                                                            </p>
-                                                        </div>
-                                                        <div v-else class="text-secondary">Noch keine Genres angelegt
-                                                        </div>
-                                                    </DisclosurePanel>
-                                                </Disclosure>
-
-                                                <hr class="border-gray-500 mt-2 mb-2">
-                                                <Disclosure v-slot="{ open }">
-                                                    <DisclosureButton
-                                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                    >
-                                                    <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Bereich</span>
-                                                        <ChevronDownIcon
-                                                            :class="open ? 'rotate-180 transform' : ''"
-                                                            class="h-4 w-4 mt-0.5 text-white"
-                                                        />
-                                                    </DisclosureButton>
-                                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                                        <div v-if="sectors.length > 0"
-                                                             v-for="sector in sectors"
-                                                             :key="sector.id"
-                                                             class="flex w-full mb-2">
-                                                            <input type="checkbox"
-                                                                   v-model="form.assignedSectorIds"
-                                                                   :value="sector.id"
-                                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                            <p :class="[form.assignedSectorIds.includes(sector.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                                {{ sector.name }}
-                                                            </p>
-                                                        </div>
-                                                        <div v-else class="text-secondary">Noch keine Bereiche angelegt
-                                                        </div>
-                                                    </DisclosurePanel>
-                                                </Disclosure>
-                                            </div>
-
-                                        </MenuItems>
-                                    </transition>
-                                </Menu>
-                            </div>
-                            <div class="flex mb-2">
-                                <div v-for="categoryId in form.assignedCategoryIds">
-                                    <TagComponent hide-x="true"
-                                                  :displayed-text="this.categories.find(category => category.id === categoryId).name"
-                                                  :property="this.categories.find(category => category.id === categoryId)"></TagComponent>
-                                </div>
-                                <div v-for="genreId in form.assignedGenreIds">
-                                    <TagComponent hide-x="true"
-                                                  :displayed-text="this.genres.find(genre => genre.id === genreId).name"
-                                                  :property="this.genres.find(genre => genre.id === genreId)"></TagComponent>
-                                </div>
-                                <div v-for="sectorId in form.assignedSectorIds">
-                                    <TagComponent hide-x="true"
-                                                  :displayed-text="this.sectors.find(sector => sector.id === sectorId).name"
-                                                  :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
-                                </div>
-                            </div>
-                            <div class="mb-2">
-                                            <textarea
-                                                placeholder="Kurzbeschreibung"
-                                                v-model="form.description" rows="4"
-                                                class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
-                            </div>
-                            <div class="mb-2">
-                                <div class="relative w-full">
-                                    <div class="w-full">
-                                        <input id="userSearch" v-model="projectGroup_query" type="text"
-                                               autocomplete="off"
-                                               placeholder="Welche Projekte gehören zu dieser Gruppe?"
-                                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                    </div>
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100"
-                                                leave-to-class="opacity-0">
-                                        <div
-                                            v-if="projectGroup_search_results.length > 0 && projectGroup_query.length > 0"
-                                            class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
-                                            <div class="border-gray-200">
-                                                <div v-for="(projectGroup, index) in projectGroup_search_results"
-                                                     :key="index"
-                                                     class="flex items-center cursor-pointer">
-                                                    <div class="flex-1 text-sm py-4">
-                                                        <p @click="addProjectToGroup(projectGroup)"
-                                                           class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                            {{ projectGroup.name }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </transition>
-                                </div>
-                                <div v-if="subProjects.length > 0" class="mt-2 mb-4 flex items-center">
-                                        <span v-for="(subProjects,index) in subProjects"
-                                              class="flex rounded-full items-center font-bold text-primary">
-                                            <span
-                                                class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                                {{ subProjects.name }}
-                                                <button type="button"
-                                                        @click="this.deleteSubProjectFromGroup(index)">
-                                                    <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                                </button>
-                                            </span>
-                                        </span>
-                                </div>
-                            </div>
-                            <div class="w-full items-center text-center">
-                                <AddButton
-                                    :class="[this.form.name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                    class="mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold
-                             text-xl shadow-sm text-secondaryHover"
-                                    @click="addProject"
-                                    :disabled="this.form.name === ''" text="Anlegen" mode="modal"/>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-            </template>
-        </jet-dialog-modal>
+        <project-create-modal
+            v-if="createProject"
+            :show="createProject"
+            @close-create-project-modal="closeCreateProjectModal"
+            :categories="categories"
+            :genres="genres"
+            :sectors="sectors"
+            :project-groups="this.projectGroups"
+        />
         <!-- Delete Project Modal -->
         <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
             <template #content>
@@ -949,17 +513,11 @@ import Permissions from "@/mixins/Permissions.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
-
-const number_of_participants = [
-    {number: '1-10'},
-    {number: '10-50'},
-    {number: '50-100'},
-    {number: '100-500'},
-    {number: '>500'}
-]
+import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 
 export default defineComponent({
     components: {
+        ProjectCreateModal,
         ProjectDataEditModal,
         UserPopoverTooltip,
         Input,
@@ -1023,9 +581,6 @@ export default defineComponent({
             showProjectHistoryTab: true,
             showBudgetHistoryTab: false,
             projectBudgetAccess: {},
-            projectGroup_search_results: [],
-            projectGroup_query: '',
-            subProjects: [],
             projectFilters: [{'name': 'Alle Projekte'}, {'name': 'Meine Projekte'}],
             projectFilter: {'name': 'Alle Projekte'},
             isSingleTab: true,
@@ -1038,7 +593,6 @@ export default defineComponent({
             projectToDelete: null,
             showSuccessModal: false,
             showSuccessModal2: false,
-            selectedParticipantNumber: "",
             nameOfDeletedProject: "",
             showProjectHistory: false,
             projectHistoryToDisplay: [],
@@ -1050,29 +604,12 @@ export default defineComponent({
             showProjectStateFilter: false,
             projectStateFilter: [],
             openedMenu: false,
-            form: useForm({
-                name: "",
-                description: "",
-                cost_center: null,
-                number_of_participants: "",
-                assignedSectorIds: [],
-                assignedCategoryIds: [],
-                assignedGenreIds: [],
-                isGroup: false,
-                projects: [],
-                selectedGroup: null
-            }),
             editingProject: false,
             projectToEdit: null,
+            createProject: false
         }
     },
     computed: {
-        tabs() {
-            return [
-                {name: 'Projekt', href: '#', current: this.isSingleTab},
-                {name: 'Projektgruppe', href: '#', current: this.isGroupTab},
-            ]
-        },
         historyTabs() {
             return [
                 {name: 'Projekt', href: '#', current: this.showProjectHistoryTab},
@@ -1111,6 +648,15 @@ export default defineComponent({
         }
     },
     methods: {
+        openCreateProjectModal() {
+            this.createProject = true;
+        },
+        closeCreateProjectModal(showSuccessModal) {
+            this.createProject = false;
+            if (showSuccessModal) {
+                this.openSuccessModal2();
+            }
+        },
         openEditProjectModal(project) {
             this.projectToEdit = project;
             this.editingProject = true;
@@ -1118,13 +664,6 @@ export default defineComponent({
         closeEditProjectModal() {
             this.editingProject = false;
             this.projectToEdit = null;
-        },
-        openCloseMenu() {
-            if (this.openedMenu) {
-                this.openedMenu = false
-            } else {
-                this.openedMenu = true
-            }
         },
         addStateToFilter(state) {
             if (!state.clicked) {
@@ -1152,50 +691,9 @@ export default defineComponent({
                 this.showBudgetHistoryTab = true;
             }
         },
-        changeTab(selectedTab) {
-            this.usersToAdd = [];
-            this.isSingleTab = false;
-            this.isGroupTab = false;
-            if (selectedTab.name === 'Projekt') {
-                this.isSingleTab = true;
-                this.form.isGroup = false;
-            } else {
-                this.isGroupTab = true;
-                this.form.isGroup = true;
-            }
-        },
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;
             this.project_search = '';
-        },
-        openAddProjectModal() {
-            this.addingProject = true;
-        },
-        closeAddProjectModal() {
-            this.addingProject = false;
-            this.form.name = "";
-            this.form.description = "";
-            this.form.cost_center = "";
-            this.form.number_of_participants = "";
-            this.selectedParticipantNumber = "";
-            this.form.projects = [];
-            this.form.isGroup = false;
-            this.form.selectedGroup = null;
-            this.form.assignedSectorIds = [];
-            this.form.assignedCategoryIds = [];
-            this.form.assignedGenreIds = [];
-            this.hasGroup = false;
-            this.selectedGroup = null;
-        },
-        addProject() {
-            this.subProjects.forEach((projectToAdd) => {
-                this.form.projects.push(projectToAdd.id);
-            });
-            this.form.selectedGroup = this.selectedGroup;
-            this.form.number_of_participants = this.selectedParticipantNumber;
-            this.form.post(route('projects.store'), {})
-            this.closeAddProjectModal();
-            this.openSuccessModal2();
         },
         getEditHref(project) {
             return route('projects.show.info', {project: project.id});
@@ -1216,7 +714,6 @@ export default defineComponent({
             Inertia.delete(`/projects/${this.projectToDelete.id}`);
             this.closeDeleteProjectModal();
             this.openSuccessModal();
-
         },
         openSuccessModal() {
             this.showSuccessModal = true;
@@ -1244,30 +741,11 @@ export default defineComponent({
             this.showProjectHistory = false;
             this.projectHistoryToDisplay = [];
         },
-        isTeamMember(departments) {
-            departments.forEach((department) => {
-                department.users.forEach((user) => {
-                    if (user.id === this.$page.props.user.id) {
-                        return true;
-                    }
-                })
-            })
-            return false;
-        },
-        addProjectToGroup(project) {
-            this.subProjects.push(project);
-            this.projectGroup_query = '';
-        },
-        deleteSubProjectFromGroup(index) {
-            this.subProjects.splice(index, 1);
-        },
         checkPermission(project, type) {
             const writeAuth = [];
             const managerAuth = [];
             const deleteAuth = [];
             const viewAuth = [];
-
-            console.log(project)
 
             project.users.forEach((user) => {
                 viewAuth.push(user.id);
@@ -1304,26 +782,6 @@ export default defineComponent({
             const content = node.textContent;
             return content.length > length ? content.slice(0, length) + clamp : content;
         },
-    },
-    watch: {
-        projectGroup_query: {
-            handler() {
-                if (this.projectGroup_query.length > 0) {
-                    axios.get('/projects/search/single', {
-                        params: {query: this.projectGroup_query, type: this.searchType}
-                    }).then(response => {
-                        this.projectGroup_search_results = response.data
-                    })
-                }
-            },
-            deep: true
-        },
-    },
-
-    setup() {
-        return {
-            number_of_participants
-        }
     }
 })
 </script>

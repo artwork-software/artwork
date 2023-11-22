@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
+use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Shift\Models\ShiftPreset;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

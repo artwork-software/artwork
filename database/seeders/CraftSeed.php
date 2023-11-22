@@ -2,8 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Craft;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Artwork\Modules\Craft\Models\Craft;
 use Illuminate\Database\Seeder;
 
 class CraftSeed extends Seeder

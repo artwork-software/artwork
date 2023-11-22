@@ -26,7 +26,7 @@ class CraftStoreRequest extends FormRequest
         return [
             'name' => 'required|string|min:1|max:255',
             'abbreviation' => 'required|string|min:1|max:3',
-            'users' => 'array',
+            'users' => 'required|array',
             'assignable_by_all' => 'required|boolean',
         ];
     }

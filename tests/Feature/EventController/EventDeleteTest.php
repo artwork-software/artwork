@@ -15,7 +15,7 @@ class EventDeleteTest extends TestCase
 
         $this->actingAs($this->adminUser());
         $this->delete(route('events.delete', ['event' => $event]))
-            ->assertSuccessful();
+            ->assertRedirect();
 
         $this->assertSoftDeleted('events', ['id' => $event->id]);
     }

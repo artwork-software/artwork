@@ -148,12 +148,12 @@ test('users with the permission can update checklist_templates', function () {
 
     $name = fake()->company();
 
-    $this->patch("/checklist_templates/{$this->checklist_template->id}", [
+    $response = $this->patch("/checklist_templates/{$this->checklist_template->id}", [
         'name' => $name,
         'departments' => [$this->assigned_department],
         'task_templates' => [
-            $task_template,
-            $task_template2,
+            $task_template->toArray(),
+            $task_template2->toArray(),
             [
                 'name' => 'TestTemplateTask',
                 'description' => 'a description',

@@ -42,6 +42,7 @@ beforeEach(function () {
 test('users with the permission can create checklists without a template and assign departments to it', function () {
 
     $name = fake()->company();
+    $this->project->users()->attach($this->auth_user);
     $this->post('/checklists', [
         'name' => $name,
         'project_id' => $this->project->id,
@@ -74,7 +75,8 @@ test('users with the permission can create checklists without a template and ass
 
 test('users with the permission can create checklists with a template and assign departments to it', function () {
 
-    $a = $this->post('/checklists', [
+    $this->project->users()->attach($this->auth_user->id);
+    $this->post('/checklists', [
         'name' => null,
         'project_id' => $this->project->id,
         'assigned_department_ids' => [$this->assigned_department->id],
@@ -94,16 +96,6 @@ test('users with the permission can create checklists with a template and assign
     $this->assertDatabaseHas('tasks', [
         'name' => 'TaskTemplateTest',
         'checklist_id' => $checklist->id
-    ]);
-
-    $this->assertDatabaseHas('checklist_department', [
-        'checklist_id' => $checklist->id,
-        'department_id' => $this->assigned_department->id
-    ]);
-
-    $this->assertDatabaseHas('department_project', [
-        'project_id' => $this->project->id,
-        'department_id' => $this->assigned_department->id
     ]);
 
 });

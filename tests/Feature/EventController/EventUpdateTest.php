@@ -5,6 +5,7 @@ namespace Tests\Feature\EventController;
 use App\Models\Event;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use function Pest\Faker\faker;
 
 class EventUpdateTest extends TestCase
 {
@@ -21,7 +22,16 @@ class EventUpdateTest extends TestCase
                 'start' => $event->start_time,
                 'end' => $event->end_time,
                 'projectId' => $event->project_id,
-                'eventTypeId' => $event->event_type_id
+                'eventNameMandatory' => false,
+                'creatingProject' => false,
+                'is_series' => false,
+                'isOption' => false,
+                'isLoud' => false,
+                'allDay' => false,
+                'audience' => false,
+                'projectIdMandatory' => false,
+                'eventTypeId' => $event->event_type_id,
+                'projectName' => faker()->company()
             ])
             ->assertSuccessful();
 

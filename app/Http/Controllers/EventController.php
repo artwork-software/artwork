@@ -183,7 +183,6 @@ class EventController extends Controller
 
         foreach ($freelancers as $freelancer) {
             $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
-            //dd($freelancer->getShiftsAttribute());
             $freelancersWithPlannedWorkingHours[] = [
                 'freelancer' => [
                     'resource' => 'FreelancerShiftResource',
@@ -209,9 +208,6 @@ class EventController extends Controller
                 'plannedWorkingHours' => $plannedWorkingHours,
             ];
         }
-
-        //dd($showCalendar['user_filters']);
-
 
         return inertia('Shifts/ShiftPlan', [
             'events' => $events,

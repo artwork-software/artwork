@@ -67,6 +67,7 @@ import ContractUploadModal from "@/Layouts/Components/ContractUploadModal.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import ContractDeleteModal from "@/Layouts/Components/ContractDeleteModal.vue";
 import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     mixins: [Permissions],
@@ -138,7 +139,8 @@ export default {
             this.showContractEditModal = contract.id
         },
         closeContractEditModal() {
-            this.showContractEditModal = null
+            this.showContractEditModal = null;
+            Inertia.reload({only: ['contracts']})
         },
         openContractDeleteModal(contract) {
             this.showContractDeleteModal = contract.id
@@ -160,6 +162,7 @@ export default {
         },
         closeContractUploadModal() {
             this.showContractUploadModal = false
+            Inertia.reload({only: ['contracts']})
         },
         removeFilter(filter) {
             let costFilter = this.filters.costsFilter.filter((costFilter) => costFilter.name === filter);

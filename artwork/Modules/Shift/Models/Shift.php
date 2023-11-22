@@ -4,11 +4,11 @@ namespace Artwork\Modules\Shift\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Casts\TimeWithoutSeconds;
-use App\Models\Craft;
 use App\Models\Event;
 use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use App\Models\User;
+use Artwork\Modules\Craft\Models\Craft;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,7 +31,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $event_end_day
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * @property-read \App\Models\Craft $craft
+ * @property-read \Artwork\Modules\Craft\Models\Craft $craft
  * @property-read \App\Models\Event $event
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Freelancer[] $freelancer
  * @property-read int|null $freelancer_count

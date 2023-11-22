@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Shift\Models;
 
 use App\Casts\TimeWithoutSeconds;
-use App\Models\Craft;
+use Artwork\Modules\Craft\Models\Craft;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

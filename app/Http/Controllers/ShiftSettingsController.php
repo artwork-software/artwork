@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionNameEnum;
-use App\Models\Craft;
 use App\Models\EventType;
 use App\Models\User;
+use Artwork\Modules\Craft\Models\Craft;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 

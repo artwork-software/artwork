@@ -13,11 +13,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Models\RoomCategory;
+use Inertia\Inertia;
 
 class AreaController extends Controller
 {
 
-    public function __construct(private AreaService $areaService)
+    public function __construct(private readonly AreaService $areaService)
     {
         $this->authorizeResource(Area::class);
     }
@@ -41,6 +42,8 @@ class AreaController extends Controller
             'room_categories' => RoomCategory::all(),
             'room_attributes' => RoomAttribute::all()
         ]);
+
+
     }
 
     /**

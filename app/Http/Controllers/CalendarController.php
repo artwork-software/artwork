@@ -25,17 +25,17 @@ class CalendarController extends Controller
 {
     protected ?Carbon $startDate = null;
     protected ?Carbon $endDate = null;
-    private Authenticatable $user;
-    private UserCalendarFilter $userCalendarFilter;
-    private UserShiftCalendarFilter $userShiftCalendarFilter;
-    private UserCalendarSettings $calendarSettings;
+    private ?Authenticatable $user;
+    private ?UserCalendarFilter $userCalendarFilter;
+    private ?UserShiftCalendarFilter $userShiftCalendarFilter;
+    private ?UserCalendarSettings $calendarSettings;
 
     public function __construct(private readonly FilterProvider $filterProvider)
     {
         $this->user = Auth::user();
-        $this->userCalendarFilter = $this->user->calendar_filter;
-        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter;
-        $this->calendarSettings = $this->user->calendar_settings;
+        $this->userCalendarFilter = $this->user?->calendar_filter;
+        $this->userShiftCalendarFilter = $this->user?->shift_calendar_filter;
+        $this->calendarSettings = $this->user?->calendar_settings;
     }
 
     /**

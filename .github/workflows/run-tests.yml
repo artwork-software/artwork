@@ -31,7 +31,7 @@ jobs:
             php: 8.0
         operating-systems: [ubuntu-latest]
 
-    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.dependency-version }}
+    name: PHP Version ${{ matrix.php }} - Laravel Version ${{ matrix.laravel }} - ${{ matrix.dependency-version }}
 
     services:
       mysql:
@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2

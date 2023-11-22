@@ -22,8 +22,7 @@ jobs:
       - name: Install PHP and Composer
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.0' # Specify PHP version as needed
-          composer-cache: 'true'
+          php-version: '8.1'
 
       - name: Install Dependencies
         run: composer install --no-progress --no-suggest --no-interaction

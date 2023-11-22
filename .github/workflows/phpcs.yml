@@ -16,6 +16,7 @@ jobs:
           fetch-depth: 0 # important!
 
       - name: Install PHP_CodeSniffer
+        uses: php-actions/composer@v6
         run: |
           curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
           php phpcs.phar --version

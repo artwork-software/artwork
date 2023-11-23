@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\GlobalNotification;
+use Artwork\Modules\Notification\Models\GlobalNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -58,7 +58,7 @@ class GlobalNotificationController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\GlobalNotification  $globalNotification
+     * @param  \Artwork\Modules\Notification\Models\GlobalNotification  $globalNotification
      * @return \Illuminate\Http\JsonResponse
      */
     public function show(GlobalNotification $globalNotification)
@@ -71,7 +71,7 @@ class GlobalNotificationController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\GlobalNotification  $globalNotification
+     * @param  \Artwork\Modules\Notification\Models\GlobalNotification  $globalNotification
      * @return \Illuminate\Http\Response
      */
     public function edit(GlobalNotification $globalNotification)
@@ -83,7 +83,7 @@ class GlobalNotificationController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\GlobalNotification  $globalNotification
+     * @param  \Artwork\Modules\Notification\Models\GlobalNotification  $globalNotification
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, GlobalNotification $globalNotification)
@@ -94,7 +94,7 @@ class GlobalNotificationController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\GlobalNotification  $globalNotification
+     * @param  \Artwork\Modules\Notification\Models\GlobalNotification  $globalNotification
      * @return \Illuminate\Http\Response
      */
     public function destroy(GlobalNotification $globalNotification)

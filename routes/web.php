@@ -70,6 +70,10 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 
 Route::get('/reset-password', [UserController::class, 'reset_password'])->name('reset_user_password');
 
+
+
+
+
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
 

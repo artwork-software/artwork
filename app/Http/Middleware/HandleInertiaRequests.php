@@ -5,15 +5,10 @@ namespace App\Http\Middleware;
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
 use App\Models\GeneralSettings;
-use App\Models\GlobalNotification;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Inertia\Inertia;
 use Inertia\Middleware;
-use Spatie\Permission\Models\Role;
-use Tightenco\Ziggy\Ziggy;
 
 class HandleInertiaRequests extends Middleware
 {

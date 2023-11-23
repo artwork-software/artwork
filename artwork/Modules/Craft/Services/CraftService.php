@@ -53,6 +53,7 @@ class CraftService
     public function delete(Craft $craft): void
     {
         $this->craftRepository->detachUsers($craft);
-        $craft->delete();
+        $this->craftRepository->delete($craft);
+        //$craft->delete();
     }
 }

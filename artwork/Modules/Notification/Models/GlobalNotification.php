@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Notification\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 

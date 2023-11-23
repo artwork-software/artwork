@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Notification\Models;
 
 use App\Enums\NotificationConstEnum;
 use App\Enums\NotificationFrequency;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

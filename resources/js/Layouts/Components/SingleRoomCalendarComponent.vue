@@ -18,7 +18,7 @@
                 <tbody class="flex w-full flex-wrap">
                 <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex" v-for="day in days">
                     <th class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
-                        {{day.day_string}} {{ day.day }}
+                        {{day.day_string}} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-0.5">(KW{{ day.week_number }})</span>
                     </th>
                     <td :style="{ height: zoomFactor * 115 + 'px'}" class="cell flex-row w-full  flex overflow-y-auto border-t-2 border-dashed">
                         <div class="py-0.5 pr-2" v-for="event in calendarData[day.day].data">

@@ -529,6 +529,13 @@ class MoneySourceController extends Controller
                 $this->notificationService->createNotification();
             }
         }
+
+        $cells = ColumnCell::where('linked_money_source_id', $moneySource->id)->get();
+
+        $cells->each(function ($cell) {
+            $cell->update(['linked_money_source_id' => null]);
+        });
+
         $moneySource->delete();
         return Redirect::route('money_sources.index')->with('success', 'MoneySource deleted.');
     }

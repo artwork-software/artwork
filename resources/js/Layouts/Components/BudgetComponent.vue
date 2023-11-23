@@ -720,6 +720,7 @@
         :cell="selectedCell"
         :moneySources="moneySources"
         :project-id="project.id"
+        :openTab="cellDetailOpenTab"
         @closed="closeCellDetailModal()"
     />
 
@@ -921,6 +922,7 @@ export default {
                 project_title: this.project?.name,
                 table_id: this.table?.id
             }),
+            cellDetailOpenTab: 'calculation',
             userExcludeCommentedBudgetItems: this.$page.props.user.commented_budget_items_setting ?
                 this.$page.props.user.commented_budget_items_setting.exclude === 1 :
                 false
@@ -1227,13 +1229,14 @@ export default {
                 preserveState: true
             });
         },
-        openCellDetailModal(cell) {
+        openCellDetailModal(cell, type) {
             Inertia.get(route('projects.show.budget', {project: this.project.id}), {
                 selectedCell: cell.id,
             }, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
+                    this.cellDetailOpenTab = type;
                     this.showCellDetailModal = true;
                 }
             })

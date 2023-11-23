@@ -405,8 +405,8 @@ export default {
         openMainPositionSumDetailModal(mainPosition, column) {
             this.$emit('openMainPositionSumDetailModal', mainPosition, column)
         },
-        openCellDetailModal(column) {
-            this.$emit('openCellDetailModal',column)
+        openCellDetailModal(column, type) {
+            this.$emit('openCellDetailModal',column, type)
         },
         fixMainPosition(mainPositionId){
             this.$inertia.patch(this.route('project.budget.fix.main-position'), {

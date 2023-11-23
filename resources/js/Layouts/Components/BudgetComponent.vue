@@ -287,10 +287,10 @@
                     </th>
                     <th>
                         <div class="flex items-center">
-                    <div class="text-white hidden xl:block mt-3">
+                    <div class="text-white hidden xl:block ml-3 mt-3">
                         Neue Spalte
                     </div>
-                        <button @click="openAddColumnModal()" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="font-bold ml-2 text-xl hover:bg-buttonHover p-1 mt-3 bg-secondary border-white border-2 hover:border-buttonBlue rounded-full items-center uppercase shadow-sm text-secondaryHover">
+                        <button @click="openAddColumnModal()" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="font-bold mr-2 ml-2 text-xl hover:bg-buttonHover p-1 mt-3 bg-secondary border-white border-2 hover:border-buttonBlue rounded-full items-center uppercase shadow-sm text-secondaryHover">
                             <PlusIcon class="h-4 w-4"></PlusIcon>
                         </button>
                         </div>

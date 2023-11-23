@@ -9,21 +9,9 @@ use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Scout\Searchable;
 
-/**
- * @property int $id
- * @property string $name
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- * @property string $svg_name
- *
- * @property \Illuminate\Database\Eloquent\Collection<User> $users
- * @property \Illuminate\Database\Eloquent\Collection<Invitation> $invitations
- * @property \Illuminate\Database\Eloquent\Collection<Project> $projects
- * @property \Illuminate\Database\Eloquent\Collection<Checklist> $checklists
- * @property \Illuminate\Database\Eloquent\Collection<ChecklistTemplate> $checklist_templates
- */
 class Department extends Model
 {
     use HasFactory;
@@ -39,31 +27,49 @@ class Department extends Model
         'svg_name'
     ];
 
-    public function users()
+    /**
+     * @return BelongsToMany
+     */
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
     }
 
-    public function invitations()
+    /**
+     * @return BelongsToMany
+     */
+    public function invitations(): BelongsToMany
     {
         return $this->belongsToMany(Invitation::class);
     }
 
-    public function projects()
+    /**
+     * @return BelongsToMany
+     */
+    public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class);
     }
 
-    public function checklists()
+    /**
+     * @return BelongsToMany
+     */
+    public function checklists(): BelongsToMany
     {
         return $this->belongsToMany(Checklist::class);
     }
 
-    public function checklist_templates()
+    /**
+     * @return BelongsToMany
+     */
+    public function checklist_templates(): BelongsToMany
     {
         return $this->belongsToMany(ChecklistTemplate::class);
     }
 
+    /**
+     * @return array
+     */
     public function toSearchableArray(): array
     {
         return [

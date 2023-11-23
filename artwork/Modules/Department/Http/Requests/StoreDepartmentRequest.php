@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace Artwork\Modules\Department\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -11,7 +11,7 @@ class StoreDepartmentRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize()
+    public function authorize(): bool
     {
         return true;
     }
@@ -21,11 +21,12 @@ class StoreDepartmentRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'name' => 'required|string|max:255',
-            'svg_name' => 'required|string|max:255'
+            'svg_name' => 'required|string|max:255',
+            'assigned_users' => 'array'
         ];
     }
 }

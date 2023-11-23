@@ -19,7 +19,7 @@
                                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                             </div>
                             <div v-else class="flex items-center w-full w-64 mr-2">
-                                <inputComponent v-model="department_query" placeholder="Suche nach Teams" />
+                                <input v-model="department_query" placeholder="Suche nach Teams" type="text" />
                                 <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                             </div>
                         </div>
@@ -594,7 +594,7 @@ export default defineComponent({
     methods: {
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;
-            this.department_query = ''
+            this.department_query = '';
         },
         openAddTeamModal() {
             this.addingTeam = true;
@@ -633,14 +633,10 @@ export default defineComponent({
         deleteUserFromTeam(index) {
             this.form.assigned_users.splice(index, 1);
         },
-        deleteUserFromAssignedUsersArray(index) {
-            this.form.assigned_users.splice(index, 1);
-        },
         addTeam() {
             this.form.post(route('departments.store'))
             this.closeAddTeamModal();
             this.showSuccessModal('add');
-
         },
         openDeleteAllTeamMembersModal(team) {
             this.teamToDeleteAllMembers = team;

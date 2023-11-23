@@ -27,10 +27,9 @@ class UserPolicy
      * Determine whether the user can view the model.
      *
      * @param User $user
-     * @param User $model
-     * @return Response|bool
+     * @return bool
      */
-    public function view(User $user, User $model)
+    public function view(User $user): bool
     {
         return true;
     }
@@ -39,10 +38,9 @@ class UserPolicy
      * Determine whether the user can update the model.
      *
      * @param User $user
-     * @param User $model
-     * @return Response|bool
+     * @return bool
      */
-    public function update(User $user, User $model)
+    public function update(User $user): bool
     {
         return $user->can(PermissionNameEnum::USER_UPDATE->value) || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value);
     }
@@ -52,21 +50,21 @@ class UserPolicy
      *
      * @param User $user
      * @param User $model
-     * @return Response|bool
+     * @return bool
      */
-    public function delete(User $user, User $model)
+    public function delete(User $user, User $model): bool
     {
-        return $user->can(PermissionNameEnum::USER_UPDATE->value) || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) || $user->id == $model->id;
+        return $user->can(PermissionNameEnum::USER_UPDATE->value) ||
+            $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) || $user->id == $model->id;
     }
 
     /**
      * Determine whether the user can restore the model.
      *
      * @param User $user
-     * @param User $model
-     * @return Response|bool
+     * @return void
      */
-    public function restore(User $user, User $model)
+    public function restore(User $user): void
     {
         //
     }
@@ -75,10 +73,9 @@ class UserPolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param User $user
-     * @param User $model
-     * @return Response|bool
+     * @return void
      */
-    public function forceDelete(User $user, User $model)
+    public function forceDelete(User $user): void
     {
         //
     }

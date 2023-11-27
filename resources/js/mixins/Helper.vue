@@ -22,18 +22,18 @@ export default {
                 0.833: '⅚',
             };
 
-            const wholePart = Math.floor(decimal);
+            const wholePart = Math?.floor(decimal);
             const fractionPart = decimal - wholePart;
 
             // Finde den nächstgelegenen Bruch für den Bruchteil
-            let closestFraction = Object.keys(commonFractions).reduce((prev, curr) => {
-                return (Math.abs(curr - fractionPart) < Math.abs(prev - fractionPart) ? curr : prev);
+            let closestFraction = Object?.keys(commonFractions)?.reduce((prev, curr) => {
+                return (Math?.abs(curr - fractionPart) < Math?.abs(prev - fractionPart) ? curr : prev);
             });
 
             // Prüfen, ob der Bruchteil innerhalb der Toleranzgrenze liegt
             const tolerance = 0.01;
             let fractionSymbol = '';
-            if (Math.abs(closestFraction - fractionPart) <= tolerance) {
+            if (Math?.abs(closestFraction - fractionPart) <= tolerance) {
                 fractionSymbol = commonFractions[closestFraction];
             }
 

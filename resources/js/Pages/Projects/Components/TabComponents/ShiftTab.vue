@@ -151,6 +151,7 @@
             <div class="xsDark" v-if="eventsWithRelevant.length === 0">
                 Bisher gibt es für dieses Projekt keine schichtrelevanten Termine.
             </div>
+
             <SingleRelevantEvent v-for="event in eventsWithRelevant" :crafts="crafts" :event="event" :event-types="eventTypes"/>
         </div>
         </div>

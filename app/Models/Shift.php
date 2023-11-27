@@ -132,7 +132,8 @@ class Shift extends Model
 
     public function getEmptyMasterCountAttribute(): float
     {
-        return $this->number_masters - $this->getWorkerCount(true);
+        $masterCount = $this->number_masters - $this->getWorkerCount(true);
+        return $masterCount;
     }
 
     public function getEmptyUserCountAttribute(): float
@@ -142,21 +143,32 @@ class Shift extends Model
 
     protected function getWorkerCount($is_master = false): float
     {
-        $relations = ['users', 'service_provider', 'freelancer'];
 
-        $this->load($relations, [
-            'pivot' => function ($query) use ($is_master) {
-                $query->where('is_master', $is_master);
-            }
-        ]);
+        $users = $this->users()
+            ->wherePivot('is_master', $is_master)
+            ->without(['calender_settings'])
+            ->get();
+
+        $serviceProviders = $this->service_provider()
+            ->wherePivot('is_master', $is_master)
+            ->get();
+
+        $freelancers = $this->freelancer()
+            ->wherePivot('is_master', $is_master)
+            ->get();
 
         $totalCount = 0;
 
-        // Iterieren über jede Beziehung
-        foreach ($relations as $relation) {
-            foreach ($this->$relation as $entity) {
-                $totalCount += 1 / $entity->pivot->shift_count;
-            }
+        foreach ($users as $user) {
+            $totalCount += 1 / $user->pivot->shift_count;
+        }
+
+        foreach ($serviceProviders as $serviceProvider) {
+            $totalCount += 1 / $serviceProvider->pivot->shift_count;
+        }
+
+        foreach ($freelancers as $freelancer) {
+            $totalCount += 1 / $freelancer->pivot->shift_count;
         }
 
         return $totalCount;
@@ -173,47 +185,19 @@ class Shift extends Model
         return $this->historyChanges();
     }
 
-    public function getMastersAttribute(): \Illuminate\Database\Eloquent\Collection
+    public function getMastersAttribute(): \Illuminate\Support\Collection
     {
-        // Eager Loading für alle Meister-Beziehungen mit 'is_master' true
-        $relations = ['users', 'freelancer', 'service_provider'];
+        $masterUsers = $this->users()->wherePivot('is_master', true)->without(['calender_settings'])->get();
+        $masterFreelancers = $this->freelancer()->wherePivot('is_master', true)->get();
+        $masterServiceProviders = $this->service_provider()->wherePivot('is_master', true)->get();
 
-        $this->load($relations, [
-            'pivot' => function ($query) {
-                $query->where('is_master', true);
-            }
-        ]);
-
-        $masterCollection = collect();
-
-        // Fügen Sie alle Meister-Entitäten in eine einzige Collection ein
-        foreach ($relations as $relation) {
-            $masterCollection = $masterCollection->concat($this->$relation);
-        }
-
-        return $masterCollection;
+        return $masterUsers->concat((array)$masterFreelancers)->concat((array)$masterServiceProviders);
     }
 
 
-    public function getEmployeesAttribute(): \Illuminate\Database\Eloquent\Collection
+    public function getEmployeesAttribute(): \Illuminate\Support\Collection
     {
-        // Eager Loading für alle Mitarbeiter-Beziehungen mit 'is_master' false
-        $relations = ['users', 'freelancer', 'service_provider'];
-
-        $this->load($relations, [
-            'pivot' => function ($query) {
-                $query->where('is_master', false);
-            }
-        ]);
-
-        $employeeCollection = collect();
-
-        // Fügen Sie alle Mitarbeiter-Entitäten in eine einzige Collection ein
-        foreach ($relations as $relation) {
-            $employeeCollection = $employeeCollection->merge($this->$relation);
-        }
-
-        return $employeeCollection;
+        return $this->users()->wherePivot('is_master', false)->without(['calender_settings'])->get()->merge($this->freelancer()->wherePivot('is_master', false)->get())->merge($this->service_provider()->wherePivot('is_master', false)->get());
     }
 
     public function getBreakFormattedAttribute(): string

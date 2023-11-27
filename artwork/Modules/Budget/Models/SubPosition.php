@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class SubPosition extends Model
 {
     use HasFactory;
+use BelongsToMainPosition;
 
     protected $fillable = [
         'main_position_id',
@@ -33,11 +35,6 @@ class SubPosition extends Model
     ];
 
     protected $appends = ['columnSums'];
-
-    public function mainPosition(): BelongsTo
-    {
-        return $this->belongsTo(MainPosition::class);
-    }
 
     public function subPositionRows(): HasMany
     {
@@ -70,7 +67,7 @@ class SubPosition extends Model
             ]);
     }
 
-    public function verified()
+    public function verified(): HasOne
     {
         return $this->hasOne(SubPositionVerified::class);
     }
@@ -87,6 +84,4 @@ class SubPosition extends Model
     {
         return $this->hasMany(SubpositionSumDetail::class);
     }
-
-
 }

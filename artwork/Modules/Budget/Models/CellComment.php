@@ -17,6 +17,7 @@ class CellComment extends Model
         'description'
     ];
 
+    //@todo switch with belongsToUserTrait once it's merged
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

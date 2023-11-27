@@ -3,13 +3,26 @@
 namespace Artwork\Modules\Budget\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Project\Models\BelongsToProject;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property bool $is_template
+ * @property int $project_id
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ *
+ * @property-read Project $project
+ */
 class Table extends Model
 {
     use HasFactory;
+    use BelongsToProject;
 
     protected $fillable = [
         'project_id',
@@ -29,11 +42,6 @@ class Table extends Model
         'costSumDetails',
         'earningSumDetails'
     ];
-
-    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-    {
-        return $this->belongsTo(Project::class, 'project_id', 'id', 'project');
-    }
 
     public function columns(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

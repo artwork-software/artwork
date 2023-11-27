@@ -17,4 +17,9 @@ abstract class BaseRepository
         return $model->delete();
     }
 
+    public function deleteByReference(Model $model, string $referenceName): void
+    {
+        $model->${$referenceName}()->delete();
+    }
+
 }

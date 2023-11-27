@@ -13,11 +13,13 @@ class ProjectService
 
 
     public function __construct(
-        private readonly ProjectFileRepository $projectFileRepository,
-        private readonly  ProjectHeadlineRepository $projectHeadlineRepository,
-        private readonly  ProjectStateRepository $projectStateRepository,
-        private readonly  ProjectRepository $projectRepository,
-    ){}
+        private readonly ProjectFileRepository     $projectFileRepository,
+        private readonly ProjectHeadlineRepository $projectHeadlineRepository,
+        private readonly ProjectStateRepository    $projectStateRepository,
+        private readonly ProjectRepository         $projectRepository,
+    )
+    {
+    }
 
 
     public function storeByRequest(ProjectStoreRequest $projectStoreRequest): void

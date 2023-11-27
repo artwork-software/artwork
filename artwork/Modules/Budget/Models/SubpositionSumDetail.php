@@ -12,17 +12,13 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 class SubpositionSumDetail extends Model
 {
     use HasFactory;
+    use BelongsToSubPosition;
 
     protected $guarded = [];
 
     public function comments(): MorphMany
     {
         return $this->morphMany(SumComment::class, 'commentable');
-    }
-
-    public function subPosition(): BelongsTo
-    {
-        return $this->belongsTo(SubPosition::class);
     }
 
     public function sumMoneySource(): MorphOne

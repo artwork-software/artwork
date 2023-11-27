@@ -12,7 +12,9 @@ class MainPositionService
 {
     public function __construct(
         private readonly MainPositionRepository $mainPositionRepository,
-    ){}
+    )
+    {
+    }
 
     public function createMainPosition(Table $table, BudgetTypesEnum $budgetTypesEnum, string $name, int $position): MainPosition|Model
     {

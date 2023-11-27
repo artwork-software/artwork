@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class MainPosition extends Model
 {
     use HasFactory;
+    use BelongsToTable;
 
     protected $fillable = [
         'table_id',
@@ -36,11 +37,6 @@ class MainPosition extends Model
     ];
 
     protected $appends = ['columnSums', 'columnVerifiedChanges'];
-
-    public function table(): BelongsTo
-    {
-        return $this->belongsTo(Table::class, 'table_id', 'id', 'table');
-    }
 
     public function subPositions(): HasMany
     {

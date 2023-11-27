@@ -9,7 +9,9 @@ class ProjectGroupService
 {
     public function __construct(
         private readonly ProjectRepository $projectRepository,
-    ){}
+    )
+    {
+    }
 
     public function storeByRequest(ProjectGroupStoreRequest $projectStoreRequest): void
     {

@@ -12,9 +12,12 @@ class ColumnService
 
     public function __construct(
         private readonly ColumnRepository $columnRepository,
-    ){}
+    )
+    {
+    }
 
 
+    //@Timo unused param type?
     public function createColumnInTable(Table $table, string $name, string $subName, string $type, int $linked_first_column = 0, int $linked_second_column = 0): Column|Model
     {
         $column = new Column();

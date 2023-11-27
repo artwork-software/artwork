@@ -2,8 +2,9 @@
 
 namespace Artwork\Modules\Budget\Models;
 
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CellCalculations extends Model
 {
@@ -17,8 +18,8 @@ class CellCalculations extends Model
         'position'
     ];
 
-    public function cell()
+    public function cell(): BelongsTo
     {
-        return $this->belongsTo(ColumnCell::class);
+        return $this->belongsTo(ColumnCell::class, 'cell_id', 'id', 'cell');
     }
 }

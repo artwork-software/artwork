@@ -4,6 +4,7 @@ namespace Artwork\Modules\Room\Models;
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Area\Models\BelongsToArea;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -32,7 +33,11 @@ use Illuminate\Support\Collection;
  */
 class Room extends Model
 {
-    use HasFactory, SoftDeletes, Prunable, HasChangesHistory;
+    use HasFactory;
+    use SoftDeletes;
+    use Prunable;
+    use HasChangesHistory;
+    use BelongsToArea;
 
     protected $fillable = [
         'name',
@@ -56,11 +61,6 @@ class Room extends Model
         'end_date' => 'datetime',
         'temporary' => 'boolean'
     ];
-
-    public function area()
-    {
-        return $this->belongsTo(Area::class, 'area_id', 'id', 'areas' );
-    }
 
     public function creator()
     {

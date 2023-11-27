@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class ColumnCell extends Model
 {
     use HasFactory;
+    use BelongsToColumn;
 
     protected $fillable = [
         'column_id',
@@ -33,10 +34,6 @@ class ColumnCell extends Model
         return $this->belongsToMany(SubPositionRow::class);
     }
 
-    public function column(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-    {
-        return $this->belongsTo(Column::class);
-    }
 
     public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

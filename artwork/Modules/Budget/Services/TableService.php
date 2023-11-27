@@ -15,7 +15,9 @@ class TableService
      */
     public function __construct(
         private readonly TableRepository $tableRepository,
-    ){}
+    )
+    {
+    }
 
 
     /**

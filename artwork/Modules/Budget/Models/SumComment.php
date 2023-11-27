@@ -19,6 +19,7 @@ class SumComment extends Model
         return $this->morphTo();
     }
 
+    //@todo belongs to user trait
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -9,17 +9,10 @@ use Artwork\Modules\Craft\Repositories\CraftRepository;
 
 class CraftService
 {
-    /**
-     * @param CraftRepository $craftRepository
-     */
     public function __construct(private readonly CraftRepository $craftRepository)
     {
     }
 
-    /**
-     * @param CraftStoreRequest $craftStoreRequest
-     * @return void
-     */
     public function storeByRequest(CraftStoreRequest $craftStoreRequest): void
     {
         $craft = new Craft();
@@ -31,11 +24,6 @@ class CraftService
         }
     }
 
-    /**
-     * @param CraftUpdateRequest $craftUpdateRequest
-     * @param Craft $craft
-     * @return void
-     */
     public function updateByRequest(CraftUpdateRequest $craftUpdateRequest, Craft $craft): void
     {
         $craft->update($craftUpdateRequest->only(['name', 'abbreviation', 'assignable_by_all']));
@@ -46,14 +34,9 @@ class CraftService
         }
     }
 
-    /**
-     * @param Craft $craft
-     * @return void
-     */
     public function delete(Craft $craft): void
     {
         $this->craftRepository->detachUsers($craft);
         $this->craftRepository->delete($craft);
-        //$craft->delete();
     }
 }

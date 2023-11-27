@@ -12,18 +12,17 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 class MainPositionDetails extends Model
 {
     use HasFactory;
+    use BelongsToMainPosition;
 
     protected $guarded = [];
+
+    protected $table = 'main_position_details';
 
     public function comments(): MorphMany
     {
         return $this->morphMany(SumComment::class, 'commentable');
     }
 
-    public function mainPosition(): BelongsTo
-    {
-        return $this->belongsTo(MainPosition::class);
-    }
 
     public function sumMoneySource(): MorphOne
     {

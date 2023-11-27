@@ -6,6 +6,7 @@ use App\Enums\NotificationConstEnum;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Illuminate\Http\Request;
@@ -16,24 +17,32 @@ class RoomService
 
     public function __construct(private readonly RoomRepository $roomRepository, private readonly NotificationService $notificationService)
     {
-        $this->history = new NewHistoryService('Room');
+        $this->history = new NewHistoryService(Room::class);
     }
 
-    public function delete($room)
+    public function delete(Room $room): bool
     {
         return $this->roomRepository->delete($room);
     }
 
-    public function duplicateByRoomModel($room)
+    public function duplicateByRoomModel(Room $room): Room
+    {
+        $new_room = $this->duplicateByRoomModelWithoutArea($room);
+        $room->area->rooms()->save($new_room);
+
+        return $new_room;
+    }
+
+    public function duplicateByRoomModelWithoutArea(Room $room): Room
     {
         $new_room = $room->replicate();
         $new_room->name = '(Kopie) ' . $room->name;
-        $room->area->rooms()->save($new_room);
         $this->roomRepository->save($new_room);
+
+        return $new_room;
     }
 
-
-    public function createByRequest(Request $request)
+    public function createByRequest(Request $request): Room
     {
         $room = new Room();
         $room->fill($request->only('name', 'description', 'area_id', 'room_type_id'));
@@ -247,5 +256,10 @@ class RoomService
                 $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin entfernt');
             }
         }
+    }
+
+    public function deleteAllByArea(Area $area): void
+    {
+        $this->roomRepository->deleteByReference($area, 'rooms');
     }
 }

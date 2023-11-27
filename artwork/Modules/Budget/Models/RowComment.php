@@ -17,6 +17,7 @@ class RowComment extends Model
         'description'
     ];
 
+    //@todo use belongstouser trait
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -9,7 +9,7 @@ class CraftRepository extends BaseRepository
 {
     /**
      * @param Craft $craft
-     * @param array<int, int> $userIds
+     * @param int[] $userIds
      * @return array
      */
     public function syncUsers(Craft $craft, array $userIds): array

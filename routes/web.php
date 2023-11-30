@@ -142,6 +142,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects/users_departments/search', [ProjectController::class, 'search_departments_and_users'])->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+    Route::get('/projects/export/budget/{startBudgetDeadline}/{endBudgetDeadline}', [ProjectController::class, 'projectsBudgetByBudgetDeadlineExport'])->name('projects.export.budgetByBudgetDeadline');
     Route::post('/projects/{project}/updateKeyVisual', [ProjectController::class, 'updateKeyVisual'])->name('projects_key_visual.update');
     Route::post('/projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
@@ -156,13 +157,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
 
-
     //ProjectTabs
     Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])->name('projects.show.info');
     Route::get('/projects/{project}/calendar', [ProjectController::class, 'projectCalendarTab'])->name('projects.show.calendar');
     Route::get('/projects/{project}/checklist', [ProjectController::class, 'projectChecklistTab'])->name('projects.show.checklist');
     Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])->name('projects.show.shift');
     Route::get('/projects/{project}/budget', [ProjectController::class, 'projectBudgetTab'])->name('projects.show.budget');
+    Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])->name('projects.export.budget');
     Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])->name('projects.show.comment');
 
     //Project Entrance & registration

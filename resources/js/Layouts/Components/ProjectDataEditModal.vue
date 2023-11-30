@@ -95,7 +95,18 @@
                         </Listbox>
                     </div>
                 </div>
-
+                <div class="mt-4">
+                    <div>
+                        <span>Budget Stichtag:</span>
+                    </div>
+                    <div class="flex mt-1">
+                        <input v-model="this.budgetDeadline"
+                               id="budgetDeadline"
+                               type="date"
+                               required
+                               class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                    </div>
+                </div>
             </div>
             <div class="justify-center flex w-full my-6">
                 <AddButton text="Speichern" mode="modal" class="px-6 py-3" :disabled="name.length < 1"
@@ -114,6 +125,7 @@ import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
+import Input from "@/Jetstream/Input.vue";
 
 export default {
     mixins: [Permissions],
@@ -126,6 +138,7 @@ export default {
         states: Array
     },
     components: {
+        Input,
         ListboxOption,
         ListboxOptions,
         ListboxButton,
@@ -159,14 +172,16 @@ export default {
             hasGroup: !!this.currentGroup,
             selectedGroup: this.currentGroup,
             selectedState: this.project?.state?.id,
-            openColor: false
+            openColor: false,
+            budgetDeadline: this.project.budget_deadline
         }
     },
     methods: {
         updateProjectData() {
             this.$inertia.patch(route('projects.update', {project: this.project.id}), {
                 name: this.name,
-                selectedGroup: this.selectedGroup
+                selectedGroup: this.selectedGroup,
+                budget_deadline: this.budgetDeadline
             }, {
                 preserveState: true,
                 preserveScroll: true
@@ -181,25 +196,6 @@ export default {
                 this.selectedGroup = null;
             }
         },
-        updateTrait(trait, array) {
-            if (typeof trait == "string") {
-                trait = array.find(sect => sect.name === trait)
-            }
-            if(!array.includes(trait)) {
-                trait.included = true
-                array.push(trait)
-            }
-            else {
-                trait.included = false
-                array = array.filter(item => item.id !== trait.id)
-            }
-            return array
-        },
-        createIdArray(array) {
-            let idArray = []
-            array.forEach(item => idArray.push(item.id))
-            return idArray
-        },
         updateProjectState(state) {
             this.$inertia.patch(route('update.project.state', this.project.id), {
                 state_id: state.id
@@ -207,7 +203,7 @@ export default {
                 preserveState: true,
                 preserveScroll: true
             })
-        },
+        }
     }
 }
 </script>

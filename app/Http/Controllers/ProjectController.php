@@ -6,11 +6,11 @@ use App\Enums\BudgetTypesEnum;
 use App\Enums\NotificationConstEnum;
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
+use App\Exports\ProjectBudgetExport;
+use App\Exports\ProjectBudgetsByBudgetDeadlineExport;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
-use App\Http\Resources\CalendarEventCollectionResource;
-use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\ChecklistTemplateIndexResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\FreelancerDropResource;
@@ -24,7 +24,6 @@ use App\Http\Resources\ProjectResources\ProjectChecklistResource;
 use App\Http\Resources\ProjectResources\ProjectCommentResource;
 use App\Http\Resources\ProjectResources\ProjectInfoResource;
 use App\Http\Resources\ProjectResources\ProjectShiftResource;
-use App\Http\Resources\ProjectShowResource;
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderDropResource;
 use App\Http\Resources\UserDropResource;
@@ -50,7 +49,6 @@ use App\Models\MainPosition;
 use App\Models\MainPositionDetails;
 use App\Models\MoneySource;
 use App\Models\Project;
-use App\Models\ProjectGroups;
 use App\Models\ProjectStates;
 use App\Models\Sector;
 use App\Models\ServiceProvider;
@@ -80,6 +78,7 @@ use Inertia\Response;
 use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
 use stdClass;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProjectController extends Controller
 {
@@ -230,6 +229,7 @@ class ProjectController extends Controller
             'description' => $request->description,
             'number_of_participants' => $request->number_of_participants,
             'cost_center' => $request->cost_center,
+            'budget_deadline' => $request->budgetDeadline
         ]);
 
         $project->users()->save(Auth::user(), ['access_budget' => true, 'is_manager' => false, 'can_write' => true, 'delete_permission' => true]);
@@ -2217,7 +2217,7 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
     {
-        $update_properties = $request->only('name');
+        $update_properties = $request->only('name', 'budget_deadline');
 
         if ($request->selectedGroup === null) {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
@@ -2226,14 +2226,19 @@ class ProjectController extends Controller
             $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
         }
-        $oldProjectName = $project->name;
-        $project->fill($update_properties);
 
+        $oldProjectName = $project->name;
+        $oldProjectBudgetDeadline = $project->budget_deadline;
+
+        $project->fill($update_properties);
         $project->save();
+
         $newProjectName = $project->name;
+        $newProjectBudgetDeadline = $project->budget_deadline;
 
         // history functions
         $this->checkProjectNameChanges($project->id, $oldProjectName, $newProjectName);
+        $this->checkProjectBudgetDeadlineChanges($project->id, $oldProjectBudgetDeadline, $newProjectBudgetDeadline);
 
         $projectId = $project->id;
         foreach ($project->users->all() as $user) {
@@ -2424,8 +2429,30 @@ class ProjectController extends Controller
         }
     }
 
+    /**
+     * @param int $projectId
+     * @param string|null $oldProjectBudgetDeadline
+     * @param string $newProjectBudgetDeadline
+     * @return void
+     */
+    private function checkProjectBudgetDeadlineChanges(
+        int $projectId,
+        string|null $oldProjectBudgetDeadline,
+        string $newProjectBudgetDeadline
+    ): void
+    {
+        if ($oldProjectBudgetDeadline !== $newProjectBudgetDeadline) {
+            $this->history->createHistory($projectId, 'Projekt Stichtag Budget geändert', 'public_changes');
+            $this->setPublicChangesNotification($projectId);
+        }
+    }
 
-    public function setPublicChangesNotification($projectId){
+    /**
+     * @param $projectId
+     * @return void
+     */
+    public function setPublicChangesNotification($projectId): void
+    {
         $project = Project::find($projectId);
         $projectUsers = $project->users()->get();
         foreach ($projectUsers as $projectUser){
@@ -2970,5 +2997,42 @@ class ProjectController extends Controller
     {
         $validated = $request->validate(['commented' => 'required|boolean']);
         $column->update(['commented' => $validated['commented']]);
+    }
+
+    /**
+     * @param Project $project
+     * @return BinaryFileResponse
+     */
+    public function projectBudgetExport(Project $project): BinaryFileResponse
+    {
+        return (new ProjectBudgetExport($project))
+            ->download(
+                sprintf(
+                    '%s_budget_stand_%s.xlsx',
+                    Str::snake($project->name),
+                    Carbon::now()->format('d-m-Y_H_i_s')
+                )
+            );
+    }
+
+    /**
+     * @param string $startBudgetDeadline
+     * @param string $endBudgetDeadline
+     * @return BinaryFileResponse
+     */
+    public function projectsBudgetByBudgetDeadlineExport(
+        string $startBudgetDeadline,
+        string $endBudgetDeadline
+    ): BinaryFileResponse
+    {
+        return (new ProjectBudgetsByBudgetDeadlineExport($startBudgetDeadline, $endBudgetDeadline))
+            ->download(
+                sprintf(
+                    'budgets_export_%s-%s_stand_%s.xlsx',
+                    $startBudgetDeadline,
+                    $endBudgetDeadline,
+                    Carbon::now()->format('d-m-Y_H_i_s')
+                )
+            );
     }
 }

@@ -1,3 +1,4 @@
+@inject("formulaService", "App\Support\Services\ProjectBudgetExportFormulaService")
 <table>
     <thead>
     <tr>
@@ -16,6 +17,7 @@
     <tr>
         <td colspan="{{ $columnCount }}"></td>
     </tr>
+    @php $currentRowCount = 3; @endphp
     @foreach($data['budgetTypeCost'] as $mainPosition)
         <tr>
             <td style="color:#FFFFFF; background-color: #27233C;"
@@ -23,6 +25,7 @@
                 {{ $mainPosition->name }}
             </td>
         </tr>
+        @php $currentRowCount++; @endphp
         @foreach($mainPosition->subPositions as $subPosition)
             <tr>
                 <td style="background-color: #CECDD8;"
@@ -30,6 +33,7 @@
                     {{ $subPosition->name }}
                 </td>
             </tr>
+            @php $currentRowCount++; @endphp
             @foreach($subPosition->subPositionRows as $subPositionRow)
                 <tr>
                     <td></td>
@@ -41,10 +45,23 @@
                                     'color: #A7A6B1;'
                                     : ''
                             }}">
-                            {{ $columnCell->value }}
+                            @if($columnCell->column->type === "empty")
+                                {{ $columnCell->value }}
+                            @else
+                                {{
+                                    $formulaService->createFormula(
+                                        $data['budgetTable']->columns,
+                                        $currentRowCount,
+                                        $columnCell->column->linked_first_column,
+                                        $columnCell->column->type === "sum" ? "+" : "-",
+                                        $columnCell->column->linked_second_column
+                                    )
+                                }}
+                            @endif
                         </td>
                     @endforeach
                 </tr>
+                @php $currentRowCount++; @endphp
             @endforeach
             <tr>
                 <td style="background-color: #CECDD8;" colspan="3"></td>
@@ -59,6 +76,7 @@
                     </td>
                 @endforeach
             </tr>
+            @php $currentRowCount++; @endphp
         @endforeach
         <tr>
             <td style="color:#FFFFFF; background-color: #27233C;" colspan="3"></td>
@@ -73,6 +91,7 @@
                 </td>
             @endforeach
         </tr>
+        @php $currentRowCount++; @endphp
     @endforeach
     <tr>
         <td colspan="3"></td>
@@ -83,6 +102,7 @@
             </td>
         @endforeach
     </tr>
+    @php $currentRowCount++; @endphp
     <tr>
         <td colspan="3"></td>
         <td align="right">SUM ausgeklammerte Posten</td>
@@ -90,13 +110,17 @@
             <td>{{ $commentedCostSum }}</td>
         @endforeach
     </tr>
+    @php $currentRowCount++; @endphp
+
     {{-- Budget Type Earning --}}
     <tr>
         <td rowspan="2" colspan="{{ $columnCount }}">Einnahmen</td>
     </tr>
+    @php $currentRowCount++; @endphp
     <tr>
         <td colspan="{{ $columnCount }}"></td>
     </tr>
+    @php $currentRowCount++; @endphp
     @foreach($data['budgetTypeEarning'] as $mainPosition)
         <tr>
             <td style="color:#FFFFFF; background-color: #27233C;"
@@ -104,6 +128,7 @@
                 {{ $mainPosition->name }}
             </td>
         </tr>
+        @php $currentRowCount++; @endphp
         @foreach($mainPosition->subPositions as $subPosition)
             <tr>
                 <td style="background-color: #CECDD8;"
@@ -111,6 +136,7 @@
                     {{ $subPosition->name }}
                 </td>
             </tr>
+            @php $currentRowCount++; @endphp
             @foreach($subPosition->subPositionRows as $subPositionRow)
                 <tr>
                     <td></td>
@@ -122,10 +148,23 @@
                                     'color: #A7A6B1;'
                                     : ''
                             }}">
-                            {{ $columnCell->value }}
+                            @if($columnCell->column->type === "empty")
+                                {{ $columnCell->value }}
+                            @else
+                                {{
+                                    $formulaService->createFormula(
+                                        $data['budgetTable']->columns,
+                                        $currentRowCount,
+                                        $columnCell->column->linked_first_column,
+                                        $columnCell->column->type === "sum" ? "+" : "-",
+                                        $columnCell->column->linked_second_column
+                                    )
+                                }}
+                            @endif
                         </td>
                     @endforeach
                 </tr>
+                @php $currentRowCount++; @endphp
             @endforeach
             <tr>
                 <td style="background-color: #CECDD8;" colspan="3"></td>
@@ -140,6 +179,7 @@
                     </td>
                 @endforeach
             </tr>
+            @php $currentRowCount++; @endphp
         @endforeach
         <tr>
             <td style="color:#FFFFFF; background-color: #27233C;" colspan="3"></td>
@@ -154,6 +194,7 @@
                 </td>
             @endforeach
         </tr>
+        @php $currentRowCount++; @endphp
     @endforeach
     <tr>
         <td colspan="3"></td>
@@ -164,6 +205,7 @@
             </td>
         @endforeach
     </tr>
+    @php $currentRowCount++; @endphp
     <tr>
         <td colspan="3"></td>
         <td align="right">SUM ausgeklammerte Posten</td>
@@ -171,6 +213,7 @@
             <td>{{ $commentedEarningSum }}</td>
         @endforeach
     </tr>
+    @php $currentRowCount++; @endphp
     {{-- Earnings minus costs --}}
     <tr>
         <td colspan="{{ $columnCount }}"></td>

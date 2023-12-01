@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Vacation\Models\GoesOnVacation;
+use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -36,10 +38,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Collection|Shift[] $shifts
  * @property-read int|null $shifts_count
  */
-class Freelancer extends Model
+class Freelancer extends Model implements Vacationer
 {
     use HasFactory;
-
+    use GoesOnVacation;
 
     protected $fillable = [
         'position',
@@ -87,10 +89,10 @@ class Freelancer extends Model
         return $this->last_name . ', ' . $this->first_name;
     }
 
-    public function vacations(): HasMany
-    {
-        return $this->hasMany(FreelancerVacation::class);
-    }
+//    public function vacations(): HasMany
+//    {
+//        return $this->hasMany(FreelancerVacation::class);
+//    }
 
     public function getShiftsAttribute(): Collection
     {

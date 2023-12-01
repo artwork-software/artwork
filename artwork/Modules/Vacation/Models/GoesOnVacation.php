@@ -1,0 +1,48 @@
+<?php
+
+namespace Artwork\Modules\Vacation\Models;
+
+use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Support\Carbon;
+
+trait GoesOnVacation
+{
+    public function vacations(): MorphMany
+    {
+        return $this->morphMany(Vacation::class, 'vacations');
+    }
+
+    public function hasVacationDays(){
+        $vacations = $this->vacations()->get();
+        $returnInterval = [];
+        foreach ($vacations as $vacation) {
+            $start = Carbon::parse($vacation->from);
+            $end = Carbon::parse($vacation->until);
+
+            $interval = CarbonPeriod::create($start, $end);
+
+            foreach ($interval as $date) {
+                $returnInterval[] = $date->format('Y-m-d');
+            }
+        }
+        return $returnInterval;
+    }
+
+    public function hasVacation(){
+        $vacations = $this->vacations()->get();
+        $returnInterval = [];
+        foreach ($vacations as $vacation) {
+            $start = Carbon::parse($vacation->from);
+            $end = Carbon::parse($vacation->until);
+
+            $interval = CarbonPeriod::create($start, $end);
+
+            foreach ($interval as $date) {
+                $returnInterval[$date->format('d.m.Y')] = $date->format('Y-m-d');
+            }
+        }
+        return $returnInterval;
+    }
+}

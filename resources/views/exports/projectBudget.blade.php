@@ -3,7 +3,7 @@
     <tr>
         <th style="background-color: #CECDD8;"></th>
         @foreach($data['budgetTable']->columns as $column)
-            <th style="background-color: #CECDD8;">{{$column->name}}</th>
+            <th style="background-color: #CECDD8;">{{ $column->name }}</th>
         @endforeach
     </tr>
     </thead>
@@ -20,21 +20,29 @@
         <tr>
             <td style="color:#FFFFFF; background-color: #27233C;"
                 colspan="{{ $columnCount }}">
-                {{$mainPosition->name}}
+                {{ $mainPosition->name }}
             </td>
         </tr>
         @foreach($mainPosition->subPositions as $subPosition)
             <tr>
                 <td style="background-color: #CECDD8;"
                     colspan="{{ $columnCount }}">
-                    {{$subPosition->name}}
+                    {{ $subPosition->name }}
                 </td>
             </tr>
             @foreach($subPosition->subPositionRows as $subPositionRow)
                 <tr>
                     <td></td>
                     @foreach($subPositionRow->cells as $columnCell)
-                        <td>{{$columnCell->value}}</td>
+                        <td style="{{
+                                $subPositionRow->commented ||
+                                $columnCell->commented ||
+                                $columnCell->column->commented ?
+                                    'color: #A7A6B1;'
+                                    : ''
+                            }}">
+                            {{ $columnCell->value }}
+                        </td>
                     @endforeach
                 </tr>
             @endforeach
@@ -79,7 +87,7 @@
         <td colspan="3"></td>
         <td align="right">SUM ausgeklammerte Posten</td>
         @foreach($data['budgetTable']->commentedCostSums as $commentedCostSum)
-            <td>{{$commentedCostSum}}</td>
+            <td>{{ $commentedCostSum }}</td>
         @endforeach
     </tr>
     {{-- Budget Type Earning --}}
@@ -93,21 +101,29 @@
         <tr>
             <td style="color:#FFFFFF; background-color: #27233C;"
                 colspan="{{ $columnCount }}">
-                {{$mainPosition->name}}
+                {{ $mainPosition->name }}
             </td>
         </tr>
         @foreach($mainPosition->subPositions as $subPosition)
             <tr>
                 <td style="background-color: #CECDD8;"
                     colspan="{{ $columnCount }}">
-                    {{$subPosition->name}}
+                    {{ $subPosition->name }}
                 </td>
             </tr>
             @foreach($subPosition->subPositionRows as $subPositionRow)
                 <tr>
                     <td></td>
                     @foreach($subPositionRow->cells as $columnCell)
-                        <td>{{$columnCell->value}}</td>
+                        <td style="{{
+                                $subPositionRow->commented ||
+                                $columnCell->commented ||
+                                $columnCell->column->commented ?
+                                    'color: #A7A6B1;'
+                                    : ''
+                            }}">
+                            {{ $columnCell->value }}
+                        </td>
                     @endforeach
                 </tr>
             @endforeach
@@ -152,7 +168,7 @@
         <td colspan="3"></td>
         <td align="right">SUM ausgeklammerte Posten</td>
         @foreach($data['budgetTable']->commentedEarningSums as $commentedEarningSum)
-            <td>{{$commentedEarningSum}}</td>
+            <td>{{ $commentedEarningSum }}</td>
         @endforeach
     </tr>
     {{-- Earnings minus costs --}}

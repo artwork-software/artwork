@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Support\Services\NewHistoryService;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
@@ -11,11 +10,8 @@ use Illuminate\Http\Request;
 
 class VacationController extends Controller
 {
-    protected ?NewHistoryService $history = null;
-
     public function __construct(private readonly VacationService $vacationService)
     {
-        $this->history = new NewHistoryService(Vacation::class);
     }
 
     public function store(Request $request, User $user): void

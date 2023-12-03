@@ -89,11 +89,6 @@ class Freelancer extends Model implements Vacationer
         return $this->last_name . ', ' . $this->first_name;
     }
 
-//    public function vacations(): HasMany
-//    {
-//        return $this->hasMany(FreelancerVacation::class);
-//    }
-
     public function getShiftsAttribute(): Collection
     {
         return $this->shifts()

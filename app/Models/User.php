@@ -193,11 +193,6 @@ class User extends Authenticatable implements Vacationer
         return $this->hasOne(UserCalendarSettings::class);
     }
 
-//    public function vacations(): HasMany
-//    {
-//        return $this->hasMany(UserVacations::class);
-//    }
-
     public function getFormattedVacationDaysAttribute(){
         $vacations = $this->vacations;
         $returnInterval = [];

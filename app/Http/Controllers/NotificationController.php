@@ -12,7 +12,6 @@ use App\Http\Resources\RoomIndexWithoutEventsResource;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\User;
-use App\Models\UserVacations;
 use App\Notifications\BudgetVerified;
 use App\Notifications\ConflictNotification;
 use App\Notifications\DeadlineNotification;
@@ -27,6 +26,7 @@ use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
@@ -34,6 +34,9 @@ use Illuminate\Support\Facades\Storage;
 
 class NotificationController extends Controller
 {
+    public function __construct(private readonly VacationService $vacationService) {
+        parent::__construct();
+    }
     /**
      * Display a listing of the resource.
      *
@@ -72,12 +75,10 @@ class NotificationController extends Controller
             }
 
             if(request('historyType') === 'vacations'){
-                $userVacations = UserVacations::where('user_id', request('modelId'))->get();
+                $vacations = $this->vacationService->findVacationsByUserId(request('modelId'));
 
-                //dd($userVacations);
-
-                foreach ($userVacations as $userVacation){
-                    $historyComplete = $userVacation->historyChanges()->all();
+                foreach ($vacations as $vacation){
+                    $historyComplete = $vacation->historyChanges()->all();
                     foreach ($historyComplete as $history){
                         $historyObjects[] = [
                             'changes' => json_decode($history->changes),

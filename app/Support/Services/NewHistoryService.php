@@ -32,9 +32,19 @@ class NewHistoryService
 {
     /**
      * NewHistoryService constructor.
-     * @param string $modelObject
+     * @param string|null $modelObject
      */
-    public function __construct(protected string $modelObject){}
+    public function __construct(protected ?string $modelObject){}
+
+    public function setModel(mixed $modelObject): void
+    {
+        if(is_object($modelObject)) {
+            $this->modelObject = $modelObject::class;
+            return;
+        }
+
+        $this->modelObject = (string)$modelObject;
+    }
 
 
     protected int $modelId;

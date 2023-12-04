@@ -17,7 +17,11 @@
     <tr>
         <td colspan="{{ $columnCount }}"></td>
     </tr>
-    @php $currentRowCount = 3; @endphp
+    @php
+        $currentRowCount = 3;
+        $mainPositionSumCellsCollection = [];
+        $budgetTypeCostDeterminedCellsCollection = [];
+    @endphp
     @foreach($data['budgetTypeCost'] as $mainPosition)
         <tr>
             <td style="color:#FFFFFF; background-color: #27233C;"
@@ -25,8 +29,12 @@
                 {{ $mainPosition->name }}
             </td>
         </tr>
-        @php $currentRowCount++; @endphp
+        @php
+            $currentRowCount++;
+            $subPositionSumCellsCollection = [];
+        @endphp
         @foreach($mainPosition->subPositions as $subPosition)
+            @php $subPositionRowSumCellsCollection = []; @endphp
             <tr>
                 <td style="background-color: #CECDD8;"
                     colspan="{{ $columnCount }}">
@@ -38,13 +46,15 @@
                 <tr>
                     <td></td>
                     @foreach($subPositionRow->cells as $columnCell)
-                        <td style="{{
-                                $subPositionRow->commented ||
-                                $columnCell->commented ||
-                                $columnCell->column->commented ?
-                                    'color: #A7A6B1;'
-                                    : ''
-                            }}">
+                        <td>
+                            @php
+                                $subPositionRowSumCellsCollection[$columnCell->column->id][] = $formulaService
+                                    ->determineExcelColumn(
+                                        $data['budgetTable']->columns,
+                                        $columnCell->column->id,
+                                        $currentRowCount
+                                    );
+                            @endphp
                             @if($columnCell->column->type === "empty")
                                 {{ $columnCell->value }}
                             @else
@@ -66,28 +76,35 @@
             <tr>
                 <td style="background-color: #CECDD8;" colspan="3"></td>
                 <td style="background-color: #CECDD8;" align="right">SUM</td>
-                @foreach($data['budgetTable']->columns->skip(3) as $column)
-                    <td style="background-color: #CECDD8;">
-                        {{
-                            isset($subPosition->columnSums[$column->id]) ?
-                                $subPosition->columnSums[$column->id]['sum']
-                                : ''
-                        }}
-                    </td>
-                @endforeach
+                    @foreach($subPositionRowSumCellsCollection as $columnId => $subPositionRowSumCells)
+                        @continue($loop->index <= 2)
+                            @php
+                                $subPositionSumCellsCollection[$columnId][] = $formulaService->determineExcelColumn(
+                                      $data['budgetTable']->columns,
+                                      $columnId,
+                                      $currentRowCount,
+                                );
+                            @endphp
+                            <td style="background-color: #CECDD8;">
+                                {{ $formulaService->createColumnSumRangeFormula($subPositionRowSumCells) }}
+                            </td>
+                    @endforeach
             </tr>
             @php $currentRowCount++; @endphp
         @endforeach
         <tr>
             <td style="color:#FFFFFF; background-color: #27233C;" colspan="3"></td>
             <td style="color:#FFFFFF; background-color: #27233C;" align="right">SUM</td>
-            @foreach($data['budgetTable']->columns->skip(3) as $column)
+            @foreach($subPositionSumCellsCollection as $columnId => $subPositionSumCells)
+                @php
+                    $mainPositionSumCellsCollection[$columnId][] = $formulaService->determineExcelColumn(
+                          $data['budgetTable']->columns,
+                          $columnId,
+                          $currentRowCount,
+                    );
+                @endphp
                 <td style="color:#FFFFFF; background-color: #27233C;">
-                    {{
-                        isset($mainPosition->columnSums[$column->id]) ?
-                            $mainPosition->columnSums[$column->id]['sum'] :
-                            ''
-                    }}
+                    {{ $formulaService->createColumnSumSeparatedFormula($subPositionSumCells) }}
                 </td>
             @endforeach
         </tr>
@@ -96,22 +113,20 @@
     <tr>
         <td colspan="3"></td>
         <td align="right">SUM</td>
-        @foreach($data['budgetTable']->columns->skip(3) as $column)
+        @foreach($mainPositionSumCellsCollection as $columnId => $mainPositionSumCells)
+            @php
+                $budgetTypeCostDeterminedCellsCollection[$columnId] = $formulaService->determineExcelColumn(
+                      $data['budgetTable']->columns,
+                      $columnId,
+                      $currentRowCount,
+                );
+            @endphp
             <td>
-                {{ $data['budgetTable']->costSums[$column->id] ?? '' }}
+                {{ $formulaService->createColumnSumSeparatedFormula($mainPositionSumCells) }}
             </td>
         @endforeach
     </tr>
     @php $currentRowCount++; @endphp
-    <tr>
-        <td colspan="3"></td>
-        <td align="right">SUM ausgeklammerte Posten</td>
-        @foreach($data['budgetTable']->commentedCostSums as $commentedCostSum)
-            <td>{{ $commentedCostSum }}</td>
-        @endforeach
-    </tr>
-    @php $currentRowCount++; @endphp
-
     {{-- Budget Type Earning --}}
     <tr>
         <td rowspan="2" colspan="{{ $columnCount }}">Einnahmen</td>
@@ -120,7 +135,11 @@
     <tr>
         <td colspan="{{ $columnCount }}"></td>
     </tr>
-    @php $currentRowCount++; @endphp
+    @php
+        $currentRowCount++;
+        $mainPositionSumCellsCollection = [];
+        $budgetTypeEarningDeterminedCellsCollection = [];
+    @endphp
     @foreach($data['budgetTypeEarning'] as $mainPosition)
         <tr>
             <td style="color:#FFFFFF; background-color: #27233C;"
@@ -128,8 +147,12 @@
                 {{ $mainPosition->name }}
             </td>
         </tr>
-        @php $currentRowCount++; @endphp
+        @php
+            $currentRowCount++;
+            $subPositionSumCellsCollection = [];
+        @endphp
         @foreach($mainPosition->subPositions as $subPosition)
+            @php $subPositionRowSumCellsCollection = []; @endphp
             <tr>
                 <td style="background-color: #CECDD8;"
                     colspan="{{ $columnCount }}">
@@ -141,13 +164,15 @@
                 <tr>
                     <td></td>
                     @foreach($subPositionRow->cells as $columnCell)
-                        <td style="{{
-                                $subPositionRow->commented ||
-                                $columnCell->commented ||
-                                $columnCell->column->commented ?
-                                    'color: #A7A6B1;'
-                                    : ''
-                            }}">
+                        <td>
+                            @php
+                                $subPositionRowSumCellsCollection[$columnCell->column->id][] = $formulaService
+                                    ->determineExcelColumn(
+                                        $data['budgetTable']->columns,
+                                        $columnCell->column->id,
+                                        $currentRowCount
+                                    );
+                            @endphp
                             @if($columnCell->column->type === "empty")
                                 {{ $columnCell->value }}
                             @else
@@ -169,13 +194,17 @@
             <tr>
                 <td style="background-color: #CECDD8;" colspan="3"></td>
                 <td style="background-color: #CECDD8;" align="right">SUM</td>
-                @foreach($data['budgetTable']->columns->skip(3) as $column)
+                @foreach($subPositionRowSumCellsCollection as $columnId => $subPositionRowSumCells)
+                    @continue($loop->index <= 2)
+                    @php
+                        $subPositionSumCellsCollection[$columnId][] = $formulaService->determineExcelColumn(
+                              $data['budgetTable']->columns,
+                              $columnId,
+                              $currentRowCount,
+                        );
+                    @endphp
                     <td style="background-color: #CECDD8;">
-                        {{
-                            isset($subPosition->columnSums[$column->id]) ?
-                                $subPosition->columnSums[$column->id]['sum'] :
-                                ''
-                        }}
+                        {{ $formulaService->createColumnSumRangeFormula($subPositionRowSumCells) }}
                     </td>
                 @endforeach
             </tr>
@@ -184,13 +213,16 @@
         <tr>
             <td style="color:#FFFFFF; background-color: #27233C;" colspan="3"></td>
             <td style="color:#FFFFFF; background-color: #27233C;" align="right">SUM</td>
-            @foreach($data['budgetTable']->columns->skip(3) as $column)
+            @foreach($subPositionSumCellsCollection as $columnId => $subPositionSumCells)
+                @php
+                    $mainPositionSumCellsCollection[$columnId][] = $formulaService->determineExcelColumn(
+                          $data['budgetTable']->columns,
+                          $columnId,
+                          $currentRowCount,
+                    );
+                @endphp
                 <td style="color:#FFFFFF; background-color: #27233C;">
-                    {{
-                        isset($mainPosition->columnSums[$column->id]) ?
-                            $mainPosition->columnSums[$column->id]['sum'] :
-                            ''
-                    }}
+                    {{ $formulaService->createColumnSumSeparatedFormula($subPositionSumCells) }}
                 </td>
             @endforeach
         </tr>
@@ -199,18 +231,17 @@
     <tr>
         <td colspan="3"></td>
         <td align="right">SUM</td>
-        @foreach($data['budgetTable']->columns->skip(3) as $column)
+        @foreach($mainPositionSumCellsCollection as $columnId => $mainPositionSumCells)
+            @php
+                $budgetTypeEarningDeterminedCellsCollection[$columnId] = $formulaService->determineExcelColumn(
+                      $data['budgetTable']->columns,
+                      $columnId,
+                      $currentRowCount,
+                );
+            @endphp
             <td>
-                {{ $data['budgetTable']->earningSums[$column->id] ?? '' }}
+                {{ $formulaService->createColumnSumSeparatedFormula($mainPositionSumCells) }}
             </td>
-        @endforeach
-    </tr>
-    @php $currentRowCount++; @endphp
-    <tr>
-        <td colspan="3"></td>
-        <td align="right">SUM ausgeklammerte Posten</td>
-        @foreach($data['budgetTable']->commentedEarningSums as $commentedEarningSum)
-            <td>{{ $commentedEarningSum }}</td>
         @endforeach
     </tr>
     @php $currentRowCount++; @endphp
@@ -221,11 +252,17 @@
     <tr>
         <td colspan="3" align="center">Einnahmen - Ausgaben</td>
         <td align="right">SUM</td>
-        @foreach($data['budgetTable']->columns->skip(3) as $column)
+        @foreach($budgetTypeCostDeterminedCellsCollection as $columnId => $budgetTypeCostDeterminedCell)
             <td>
-                {{ $data['allOverSums'][$column->id] ?? '' }}
+                {{
+                    $formulaService->createSubtractionFormula(
+                        $budgetTypeEarningDeterminedCellsCollection[$columnId],
+                        $budgetTypeCostDeterminedCell
+                    )
+                }}
             </td>
         @endforeach
     </tr>
+    @php $currentRowCount++; @endphp
     </tbody>
 </table>

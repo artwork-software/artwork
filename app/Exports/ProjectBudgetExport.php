@@ -61,8 +61,7 @@ class ProjectBudgetExport implements FromView, ShouldAutoSize, WithStyles
             'budgetTypeEarning' => $this->getMainPositionsByBudgetType(
                 $budgetTable,
                 BudgetTypesEnum::BUDGET_TYPE_EARNING
-            ),
-            'allOverSums' => $this->getAllOverSums($budgetTable)
+            )
         ];
     }
 
@@ -79,22 +78,6 @@ class ProjectBudgetExport implements FromView, ShouldAutoSize, WithStyles
         return $budgetTable->mainPositions->filter(
             fn($mainPosition) => $mainPosition->type === $mainPositionBudgetType->value
         );
-    }
-
-    /**
-     * @param Model $budgetTable
-     * @return array
-     */
-    private function getAllOverSums(Model $budgetTable): array
-    {
-        $earningSums = $budgetTable->earningSums;
-
-        $alloverSums = [];
-        foreach ($budgetTable->costSums as $columnId => $costSum) {
-            $alloverSums[$columnId] = $earningSums[$columnId] - $costSum;
-        }
-
-        return $alloverSums;
     }
 
     /**

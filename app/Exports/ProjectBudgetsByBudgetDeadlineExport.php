@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\Project;
 use App\Models\ProjectStates;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromView;
@@ -54,7 +55,8 @@ class ProjectBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, 
             $earningSumOfLastColumn = $projectBudgetTable->earningSums[$lastColumnId];
 
             $rows[] = [
-                'premiere' => 'To Be Clarified',
+                'premiere' => Carbon::createFromFormat('Y-m-d', $project->budget_deadline)
+                    ->format('d.m.Y'),
                 'project_name' => $project->name,
                 'artist_or_group' => 'To Be Clarified',
                 'cost_center' => $project->cost_center?->name,

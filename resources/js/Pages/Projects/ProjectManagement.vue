@@ -7,8 +7,7 @@
                         <p class="items-center flex mr-2 headline1 mb-11">Projekte</p>
                     </div>
                     <div class="w-full flex items-center justify-between">
-
-                        <div class="w-full flex">
+                        <div class="w-full flex items-center">
                             <div class="w-48">
                                 <BaseFilter :left="true">
                                     <div class="w-full">
@@ -74,8 +73,13 @@
                                     <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                                 </div>
                             </div>
+                            <button @click="openProjectExportBudgetsByBudgetDeadlineModal()"
+                                    type="button"
+                                    class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton focus:outline-none bg-buttonBlue hover:bg-buttonHover">
+                                <DocumentReportIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
+                                <p class="text-sm">Excel-Export</p>
+                            </button>
                         </div>
-
                         <div class="flex relative" v-if="$can('create and edit own project') || $role('artwork admin')">
                             <div v-if="$page.props.can.show_hints" class="flex mt-1 absolute w-40 right-32">
                                 <span class="hind ml-1 my-auto">Lege neue Projekte an</span>
@@ -85,13 +89,13 @@
                         </div>
                     </div>
                     <div id="selectedFilter" class="mt-3">
-                                <span v-if="enabled"
-                                      class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                    Meine Projekte
-                                    <button type="button" @click="enabled = !enabled">
-                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                    </button>
-                                </span>
+                        <span v-if="enabled"
+                              class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                            Meine Projekte
+                            <button type="button" @click="enabled = !enabled">
+                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                            </button>
+                        </span>
                         <span v-if="showProjectGroups"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                     Projektgruppen
@@ -457,6 +461,11 @@
             :access_budget="projectBudgetAccess"
         ></project-history-component>
 
+        <project-export-budgets-by-budget-deadline-modal
+            v-if="showProjectExportBudgetsByBudgetDeadlineModal"
+            :show="showProjectExportBudgetsByBudgetDeadlineModal"
+            @closeProjectExportBudgetsByBudgetDeadlineModal="closeProjectExportBudgetsByBudgetDeadlineModal"
+        />
     </app-layout>
 </template>
 
@@ -471,7 +480,8 @@ import {
     XIcon,
     PencilAltIcon,
     TrashIcon,
-    DuplicateIcon
+    DuplicateIcon,
+    DocumentReportIcon
 } from '@heroicons/vue/outline'
 import {ChevronUpIcon, PlusSmIcon, CheckIcon, SelectorIcon, XCircleIcon, ChevronRightIcon} from '@heroicons/vue/solid'
 import {SearchIcon} from "@heroicons/vue/outline";
@@ -493,7 +503,6 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import Checkbox from "@/Layouts/Components/Checkbox";
-import {useForm} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection";
@@ -514,9 +523,12 @@ import Input from "@/Layouts/Components/InputComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
+import ProjectExportBudgetsByBudgetDeadlineModal from "@/Layouts/Components/ProjectExportBudgetsByBudgetDeadlineModal.vue";
 
 export default defineComponent({
     components: {
+        ProjectExportBudgetsByBudgetDeadlineModal,
+        DocumentReportIcon,
         ProjectCreateModal,
         ProjectDataEditModal,
         UserPopoverTooltip,
@@ -606,7 +618,8 @@ export default defineComponent({
             openedMenu: false,
             editingProject: false,
             projectToEdit: null,
-            createProject: false
+            createProject: false,
+            showProjectExportBudgetsByBudgetDeadlineModal: false
         }
     },
     computed: {
@@ -782,6 +795,12 @@ export default defineComponent({
             const content = node.textContent;
             return content.length > length ? content.slice(0, length) + clamp : content;
         },
+        openProjectExportBudgetsByBudgetDeadlineModal() {
+            this.showProjectExportBudgetsByBudgetDeadlineModal = true;
+        },
+        closeProjectExportBudgetsByBudgetDeadlineModal() {
+            this.showProjectExportBudgetsByBudgetDeadlineModal = false;
+        }
     }
 })
 </script>

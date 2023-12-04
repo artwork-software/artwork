@@ -219,6 +219,18 @@
                                 </ListboxOptions>
                             </Listbox>
                         </div>
+                        <div class="mt-4">
+                            <div>
+                                <span>Budget Stichtag:</span>
+                            </div>
+                            <div class="flex mt-1">
+                                <input v-model="this.createProjectForm.budgetDeadline"
+                                       id="budgetDeadline"
+                                       type="date"
+                                       required
+                                       class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                            </div>
+                        </div>
                         <div class="w-full items-center text-center">
                             <AddButton
                                 :class="[this.createProjectForm.name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
@@ -508,7 +520,8 @@ export default {
                 assignedGenreIds: [],
                 isGroup: false,
                 projects: [],
-                selectedGroup: null
+                selectedGroup: null,
+                budgetDeadline: null
             }),
             projectGroupProjects: [],
             projectGroupSearchResults: [],

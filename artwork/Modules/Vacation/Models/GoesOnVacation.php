@@ -14,7 +14,8 @@ trait GoesOnVacation
         return $this->morphMany(Vacation::class, 'vacations');
     }
 
-    public function hasVacationDays(){
+    public function hasVacationDays(): array
+    {
         $vacations = $this->vacations()->get();
         $returnInterval = [];
         foreach ($vacations as $vacation) {
@@ -25,22 +26,6 @@ trait GoesOnVacation
 
             foreach ($interval as $date) {
                 $returnInterval[] = $date->format('Y-m-d');
-            }
-        }
-        return $returnInterval;
-    }
-
-    public function hasVacation(){
-        $vacations = $this->vacations()->get();
-        $returnInterval = [];
-        foreach ($vacations as $vacation) {
-            $start = Carbon::parse($vacation->from);
-            $end = Carbon::parse($vacation->until);
-
-            $interval = CarbonPeriod::create($start, $end);
-
-            foreach ($interval as $date) {
-                $returnInterval[$date->format('d.m.Y')] = $date->format('Y-m-d');
             }
         }
         return $returnInterval;

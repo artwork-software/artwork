@@ -28,7 +28,7 @@ class BudgetTemplateController extends Controller
      * Display a listing of the resource.
      *
      */
-    public function index()
+    public function index(): \Inertia\Response
     {
         $selectedCell = request('selectedCell')
             ? ColumnCell::find(request('selectedCell'))

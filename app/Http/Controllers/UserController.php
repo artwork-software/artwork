@@ -39,30 +39,33 @@ class UserController extends Controller
         $this->authorizeResource(User::class, 'user');
     }
 
-    public function search(SearchRequest $request) {
+    public function search(SearchRequest $request)
+    {
 
-       $this->authorize('viewAny',User::class);
+        $this->authorize('viewAny', User::class);
 
         return UserIndexResource::collection(User::search($request->input('query'))->get())->resolve();
     }
 
-    public function money_source_search(SearchRequest $request) {
+    public function money_source_search(SearchRequest $request)
+    {
 
         //$this->authorize('viewAny',User::class);
         $wantedUserArray = [];
 
         $wantedUsers = User::search($request->input('query'))->get();
-        foreach ($wantedUsers as $user){
+        foreach ($wantedUsers as $user) {
             $wantedUserArray[] = $user;
         }
         return $wantedUserArray;
     }
 
-    public function reset_user_password(Request $request) {
+    public function reset_user_password(Request $request)
+    {
 
         //$user = Auth::user();
 
-        $this->authorize('update',User::class);
+        $this->authorize('update', User::class);
 
         $request->validate([Fortify::email() => 'required|email']);
 
@@ -79,7 +82,8 @@ class UserController extends Controller
             : app(FailedPasswordResetLinkRequestResponse::class, ['status' => $status]);
     }
 
-    public function reset_password(){
+    public function reset_password()
+    {
         $token = request('token');
         $email = request('email');
 
@@ -152,7 +156,7 @@ class UserController extends Controller
             'dateToShow' => $availabilityData['dateToShow'],
             'vacations' => $user->vacations()->orderBy('from', 'ASC')->get(),
             //needed for UserShiftPlan
-            'dateValue'=> $showCalendar['dateValue'],
+            'dateValue' => $showCalendar['dateValue'],
             'daysWithEvents' => $showCalendar['daysWithEvents'],
             'totalPlannedWorkingHours' => $showCalendar['totalPlannedWorkingHours'],
             'rooms' => Room::all(),
@@ -182,7 +186,7 @@ class UserController extends Controller
         ]);
     }
 
-    public function updateUserPhoto( User $user,Request $request): void
+    public function updateUserPhoto(User $user, Request $request): void
     {
         if (isset($request['photo'])) {
             $user->updateProfilePhoto($request['photo']);
@@ -209,7 +213,7 @@ class UserController extends Controller
             $onVacation = false;
             $weekNumber = $currentDate->weekOfYear;
             $day = $currentDate->day;
-            foreach ($vacationDays as $vacationDay){
+            foreach ($vacationDays as $vacationDay) {
                 $vacationStart = Carbon::parse($vacationDay->from);
                 $vacationEnd = Carbon::parse($vacationDay->until);
                 // TODO: Check Performance
@@ -217,7 +221,7 @@ class UserController extends Controller
                     $onVacation = false;
                     continue;
                 }*/
-                if($vacationStart <= $currentDate && $vacationEnd >= $currentDate){
+                if ($vacationStart <= $currentDate && $vacationEnd >= $currentDate) {
                     $onVacation = true;
                 }
             }
@@ -257,7 +261,7 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user): RedirectResponse
     {
-        $user->update($request->only('first_name','last_name', 'phone_number', 'position', 'description','email'));
+        $user->update($request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email'));
 
         $user->departments()->sync(
             collect($request->departments)
@@ -340,7 +344,8 @@ class UserController extends Controller
         return Redirect::route('users')->with('success', 'Benutzer gelöscht');
     }
 
-    public function temporaryUserUpdate(User $user, Request $request){
+    public function temporaryUserUpdate(User $user, Request $request)
+    {
         $user->update($request->only([
             'temporary',
             'employStart',
@@ -348,7 +353,8 @@ class UserController extends Controller
         ]));
     }
 
-    public function updateUserTerms(User $user, Request $request){
+    public function updateUserTerms(User $user, Request $request)
+    {
         $user->update($request->only([
             'can_master',
             'weekly_working_hours',
@@ -358,7 +364,8 @@ class UserController extends Controller
 
     }
 
-    public function updateCalendarSettings(User $user, Request $request){
+    public function updateCalendarSettings(User $user, Request $request)
+    {
         $user->calendar_settings()->update($request->only([
             'project_status',
             'options',

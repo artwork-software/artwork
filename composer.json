@@ -19,6 +19,7 @@
         "laravel/sanctum": "^v2.15.1",
         "laravel/scout": "^v9.4.12",
         "laravel/tinker": "^v2.7.3",
+        "maatwebsite/excel": "^3.1",
         "meilisearch/meilisearch-php": "^v0.23.3",
         "pestphp/pest": "^v1.22.2",
         "pestphp/pest-plugin-laravel": "^v1.3.0",

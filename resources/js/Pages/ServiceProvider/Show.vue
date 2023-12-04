@@ -66,116 +66,116 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="mt-10">
-                <div v-if="currentTab === 1">
-                    <UserShiftPlan :total-planned-working-hours="totalPlannedWorkingHours" type="service_provider" :date-value="dateValue"
-                                   :days-with-events="daysWithEvents"
-                                   :projects="projects" :event-types="eventTypes" :rooms="rooms"
-                                   :vacations="vacations"></UserShiftPlan>
-                </div>
-                <div v-if="currentTab === 2">
-                    <UserTermsTab user_type="service_provider" :user_to_edit="serviceProvider"></UserTermsTab>
-                </div>
-                <!-- Persönliche Daten -->
-                <div v-if="currentTab === 3">
-                    <!-- Profilbild, Name, Nachname -->
-                    <div class="grid grid-cols-1 sm:grid-cols-8 gap-4 flex items-center">
-                        <div class="col-span-1">
-                            <input
-                                ref="photoInput"
-                                type="file"
-                                class="hidden"
-                                @change="updatePhotoPreview"
-                            >
+        <div class="mt-12 ml-14 mr-40">
+            <div v-if="currentTab === 1">
+                <UserShiftPlan :total-planned-working-hours="totalPlannedWorkingHours" type="service_provider" :date-value="dateValue"
+                               :days-with-events="daysWithEvents"
+                               :projects="projects" :event-types="eventTypes" :rooms="rooms"
+                               :vacations="vacations"></UserShiftPlan>
+            </div>
+            <div v-if="currentTab === 2" class="max-w-screen-lg">
+                <UserTermsTab user_type="service_provider" :user_to_edit="serviceProvider"></UserTermsTab>
+            </div>
+            <!-- Persönliche Daten -->
+            <div v-if="currentTab === 3" class="max-w-screen-lg">
+                <!-- Profilbild, Name, Nachname -->
+                <div class="grid grid-cols-1 sm:grid-cols-8 gap-4 flex items-center">
+                    <div class="col-span-1">
+                        <input
+                            ref="photoInput"
+                            type="file"
+                            class="hidden"
+                            @change="updatePhotoPreview"
+                        >
 
-                            <!-- Current Profile Photo -->
-                            <div v-show="! photoPreview" class="mt-2">
-                                <img :src="serviceProvider.profile_image" :alt="serviceProvider.provider_name" @click="selectNewPhoto" class="rounded-full h-20 w-20 object-cover cursor-pointer">
-                            </div>
+                        <!-- Current Profile Photo -->
+                        <div v-show="! photoPreview" class="mt-2">
+                            <img :src="serviceProvider.profile_image" :alt="serviceProvider.provider_name" @click="selectNewPhoto" class="rounded-full h-20 w-20 object-cover cursor-pointer">
+                        </div>
 
-                            <!-- New Profile Photo Preview -->
-                            <div v-show="photoPreview" class="mt-2" @click="selectNewPhoto">
+                        <!-- New Profile Photo Preview -->
+                        <div v-show="photoPreview" class="mt-2" @click="selectNewPhoto">
                                 <span
                                     class="block rounded-full w-20 h-20 bg-cover bg-no-repeat bg-center"
                                     :style="'background-image: url(\'' + photoPreview + '\');'"
                                 />
-                            </div>
-
                         </div>
-                        <div class="col-span-7">
-                            <label for="first_name" class="xxsLight">Unternehmensname</label>
-                            <div>
-                                <input type="text" v-model="providerData.provider_name" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Vorname" />
-                            </div>
+
+                    </div>
+                    <div class="col-span-7">
+                        <label for="first_name" class="xxsLight">Unternehmensname</label>
+                        <div>
+                            <input type="text" v-model="providerData.provider_name" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Vorname" />
                         </div>
                     </div>
+                </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
-                        <div class="col-span-1">
-                            <input type="text" readonly class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8 bg-gray-200" placeholder="Dienstleister" disabled value="Dienstleister (extern)" />
-                        </div>
-                        <div class="col-span-1">
-                            <input type="email" v-model="providerData.street" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Straße" />
-                        </div>
-                        <div class="col-span-1">
-                            <input type="email" v-model="providerData.zip_code" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="PLZ" />
-                        </div>
-                        <div class="col-span-1">
-                            <input type="email" v-model="providerData.location" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Ort" />
-                        </div>
-                        <div class="col-span-1">
-                            <input type="email" v-model="providerData.email" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Email" />
-                        </div>
-                        <div class="col-span-1">
-                            <input type="email" v-model="providerData.phone_number" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Telefonnummer" />
-                        </div>
-                        <div class="col-span-full">
-                            <textarea rows="4" v-model="providerData.note" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Notiz" :class="checkCanEdit ? 'bg-gray-200' : ''" />
-                        </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+                    <div class="col-span-1">
+                        <input type="text" readonly class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8 bg-gray-200" placeholder="Dienstleister" disabled value="Dienstleister (extern)" />
                     </div>
+                    <div class="col-span-1">
+                        <input type="email" v-model="providerData.street" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Straße" />
+                    </div>
+                    <div class="col-span-1">
+                        <input type="email" v-model="providerData.zip_code" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="PLZ" />
+                    </div>
+                    <div class="col-span-1">
+                        <input type="email" v-model="providerData.location" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Ort" />
+                    </div>
+                    <div class="col-span-1">
+                        <input type="email" v-model="providerData.email" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Email" />
+                    </div>
+                    <div class="col-span-1">
+                        <input type="email" v-model="providerData.phone_number" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Telefonnummer" />
+                    </div>
+                    <div class="col-span-full">
+                        <textarea rows="4" v-model="providerData.note" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Notiz" :class="checkCanEdit ? 'bg-gray-200' : ''" />
+                    </div>
+                </div>
 
-                    <AddButton class="mt-5 !ml-0" text="Änderung Speichern" type="secondary" @click="saveFreelancer" />
+                <AddButton class="mt-5 !ml-0" text="Änderung Speichern" type="secondary" @click="saveFreelancer" />
 
 
-                    <div class="mt-10 mb-10">
-                        <h3 class="headline3">
-                            Ansprechpartner
-                        </h3>
+                <div class="mt-10 mb-10">
+                    <h3 class="headline3">
+                        Ansprechpartner
+                    </h3>
 
-                        <ul role="list" class="divide-y divide-gray-100 mt-5" v-if="checkCanEdit">
-                            <li v-for="contact in serviceProvider.contacts" :key="contact.email" class="flex justify-between gap-x-6 py-5">
-                                <div class="flex gap-x-4">
-                                    <div class="min-w-0 flex">
-                                        <p class="text-sm font-semibold leading-6 text-gray-900">{{ contact.first_name }} {{ contact.last_name }}</p>
-                                    </div>
+                    <ul role="list" class="divide-y divide-gray-100 mt-5" v-if="checkCanEdit">
+                        <li v-for="contact in serviceProvider.contacts" :key="contact.email" class="flex justify-between gap-x-6 py-5">
+                            <div class="flex gap-x-4">
+                                <div class="min-w-0 flex">
+                                    <p class="text-sm font-semibold leading-6 text-gray-900">{{ contact.first_name }} {{ contact.last_name }}</p>
                                 </div>
-                                <div class="flex items-center gap-4">
+                            </div>
+                            <div class="flex items-center gap-4">
                                     <span class="w-fit">
                                         {{ contact.phone_number }}
                                     </span>
-                                    |
-                                    <span class="w-52">
+                                |
+                                <span class="w-52">
                                         {{ contact.email }}
                                     </span>
-                                </div>
-                            </li>
-                        </ul>
-                        <div v-else class="mt-10">
-                            <div v-for="contact in serviceProvider.contacts">
-                                <SingleContact :contact="contact"/>
                             </div>
-                            <div>
-                                <PlusCircleIcon class="w-5 h-5" @click="addContact" />
-                            </div>
+                        </li>
+                    </ul>
+                    <div v-else class="mt-10">
+                        <div v-for="contact in serviceProvider.contacts">
+                            <SingleContact :contact="contact"/>
+                        </div>
+                        <div>
+                            <PlusCircleIcon class="w-5 h-5" @click="addContact" />
                         </div>
                     </div>
                 </div>
             </div>
-            <BaseSidenav :show="showSidebar" @toggle="this.showSidebar =! this.showSidebar" >
-                <UserSidebar :user="serviceProvider" type="serviceProvider"  />
-            </BaseSidenav>
         </div>
+        <BaseSidenav :show="showSidebar" @toggle="this.showSidebar =! this.showSidebar" >
+            <UserSidebar :user="serviceProvider" type="serviceProvider"  />
+        </BaseSidenav>
 
     </AppLayout>
 </template>

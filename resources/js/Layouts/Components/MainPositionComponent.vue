@@ -20,7 +20,7 @@
             <div class="flex items-center justify-end">
                 <div class="text-white items-center" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && mainPosition.verified?.requested !== this.$page.props.user.id">
                     <div class="xsWhiteBold flex w-44">
-                        <img alt="Gesperrt" src="/Svgs/IconSvgs/verify.svg" class="-ml-20"/>
+                        <img alt="Gesperrt" src="/Svgs/IconSvgs/icon_verify.svg" class="-ml-20"/>
                         <p class="ml-2">wird verifiziert</p>
                     </div>
                 </div>
@@ -405,8 +405,8 @@ export default {
         openMainPositionSumDetailModal(mainPosition, column) {
             this.$emit('openMainPositionSumDetailModal', mainPosition, column)
         },
-        openCellDetailModal(column) {
-            this.$emit('openCellDetailModal',column)
+        openCellDetailModal(column, type) {
+            this.$emit('openCellDetailModal',column, type)
         },
         fixMainPosition(mainPositionId){
             this.$inertia.patch(this.route('project.budget.fix.main-position'), {

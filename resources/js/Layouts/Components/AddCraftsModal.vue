@@ -75,7 +75,7 @@
                                         </div>
                                     </Listbox>
                                     <div class="mt-3">
-                                        <div v-for="user in users">
+                                        <div v-for="user in users" class="my-2">
                                             <div class="flex col-span-2">
                                                 <div class="flex items-center">
                                                     <img class="flex h-11 w-11 rounded-full"
@@ -146,14 +146,20 @@ export default defineComponent({
             users: this.craftToEdit ? this.craftToEdit.users : []
         }
     },
+    unmounted() {
+        this.craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
+    },
     emits: ['closed'],
     methods: {
         closeModal(bool){
+            this.craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
             this.$emit('closed', bool)
         },
         addOrRemoveFormUserList(user){
-            if(this.users.includes(user)){
-                this.users.splice(this.users.indexOf(user), 1)
+            const userIds = this.users.map(user => user.id);
+            console.log(user)
+            if(userIds.includes(user.id)){
+                this.users = this.users.filter(u => u.id !== user.id)
             } else {
                 this.users.push(user)
             }
@@ -173,6 +179,7 @@ export default defineComponent({
                     preserveState: true,
                     preserveScroll: true,
                     onFinish: () => {
+                        this.craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
                         this.closeModal(true)
                     }
                 })
@@ -181,6 +188,7 @@ export default defineComponent({
                     preserveState: true,
                     preserveScroll: true,
                     onFinish: () => {
+                        this.craft.reset('name', 'abbreviation', 'users', 'assignable_by_all')
                         this.closeModal(true)
                     }
                 })

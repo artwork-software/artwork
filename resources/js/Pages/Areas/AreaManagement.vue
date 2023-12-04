@@ -1350,6 +1350,8 @@ export default defineComponent({
             this.editRoomForm.end_date = null;
             this.editRoomForm.start_date_dt_local = null;
             this.editRoomForm.end_date_dt_local = null;
+            this.editRoomForm.adjoining_roomsToDisplay = [];
+            this.editRoomForm.room_categoriesToDisplay = [];
         },
         openSoftDeleteRoomModal(room) {
             this.roomToSoftDelete = room;
@@ -1375,6 +1377,7 @@ export default defineComponent({
             }
         },
         editRoom() {
+            console.log(this.editRoomForm.room_categories)
             this.editRoomForm.start_date = this.editRoomForm.start_date_dt_local;
             this.editRoomForm.end_date = this.editRoomForm.end_date_dt_local;
 

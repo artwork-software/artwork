@@ -131,7 +131,7 @@
 
         </div>
 
-        <AddCraftsModal @closed="openAddCraftsModal = false" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" />
+        <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" />
 
         <ConfirmDeleteModal title="Gewerk löschen" description="Bist du sicher, dass du das ausgewählte Gewerk löschen möchtest?" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
     </AppLayout>
@@ -198,6 +198,10 @@ export default defineComponent({
         }
     },
     methods: {
+        closeAddCraftModal(){
+            this.openAddCraftsModal = false;
+            this.craftToEdit = null;
+        },
         addRelevantEventType(type){
             this.$inertia.patch(route('event-type.update.relevant', type), {
                 relevant_for_shift: true

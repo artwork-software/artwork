@@ -79,17 +79,18 @@
                             <div
                                 :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
                                 class="my-4 h-6 flex items-center"
-                                @click="handleCellClick(cell)"
                                 v-if="!cell.clicked">
                                 <div class=" flex items-center">
-                                    <div v-if="cell.comments_count > 0">
+                                    <div class="cursor-pointer" @click="handleCellClick(cell, 'comment')" v-if="cell.comments_count > 0">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-1">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
                                         </svg>
                                     </div>
-                                    <img v-else-if="cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
-                                    <img v-else-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
+                                    <img @click="handleCellClick(cell, 'calculation')" v-if="cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
+                                    <img @click="handleCellClick(cell, 'moneysource')" v-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
+                                    <div @click="handleCellClick(cell)">
                                     {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex items-center" :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'" v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
@@ -98,8 +99,8 @@
                             </div>
                             <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']" class="my-4 h-6 flex items-center justify-end" @click="cell.clicked = !cell.clicked && cell.column.is_locked" v-else>
                                 <img v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)" src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg" class="h-6 w-6 mr-1"/>
-                                <img v-else-if="cell.comments_count > 0 || cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
-                                <img v-else-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
+                                <img v-if="cell.comments_count > 0 || cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
+                                <img v-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
                                 {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
                                 <PlusCircleIcon v-if="index > 2 && cell.clicked" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
                             </div>
@@ -514,10 +515,16 @@ export default {
             }
 
         },
-        async handleCellClick(cell) {
+        async handleCellClick(cell, type = '') {
 
-            if(cell.calculations_count > 0){
-                this.$emit('openCellDetailModal', cell)
+            if(type === 'comment'){
+                this.$emit('openCellDetailModal', cell, 'comment');
+            } else if(type === 'moneysource'){
+                this.$emit('openCellDetailModal', cell, 'moneySource');
+            } else if(type === 'calculation'){
+                this.$emit('openCellDetailModal', cell, 'calculation');
+            } else if(cell.calculations_count > 0){
+                this.$emit('openCellDetailModal', cell, 'calculation')
             } else {
                 cell.clicked = !cell.clicked
 

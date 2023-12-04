@@ -88,7 +88,13 @@
 
             </div>
         </div>
-        <div class="w-full flex flex-row-reverse mb-4">
+        <div class="w-full flex flex-row-reverse mb-4 items-center">
+            <button @click="downloadBudgetExport(project.id)"
+                    type="button"
+                    class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton focus:outline-none bg-buttonBlue hover:bg-buttonHover">
+                <DocumentReportIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
+                <p class="text-sm">Excel-Export</p>
+            </button>
             <div>
                 <img alt="Fullscreen" @click="$emit('changeProjectHeaderVisualisation',true)" v-if="!hideProjectHeader"
                      src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
@@ -107,7 +113,6 @@
                     </span>
                 </SwitchLabel>
             </SwitchGroup>
-
         </div>
 
         <div class="w-full flex stickyHeader" >
@@ -783,7 +788,8 @@ import {
     XCircleIcon,
     XIcon,
     ZoomInIcon,
-    ZoomOutIcon
+    ZoomOutIcon,
+    DocumentReportIcon
 } from '@heroicons/vue/outline';
 import {ChevronUpIcon, ChevronDownIcon,PlusIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
@@ -857,6 +863,7 @@ export default {
         PlusIcon,
         RenameTableComponent,
         ErrorComponent,
+        DocumentReportIcon
     },
 
     data() {
@@ -1463,6 +1470,15 @@ export default {
             this.errorDescription = description
             this.showErrorModal = true;
         },
+        downloadBudgetExport(projectId) {
+            window.open(route(
+                'projects.export.budget',
+                {
+                    project: projectId
+                }
+            ));
+
+        }
     },
 }
 </script>

@@ -58,7 +58,8 @@ class Project extends Model
         'registration_required',
         'register_by',
         'registration_deadline',
-        'closed_society'
+        'closed_society',
+        'budget_deadline'
     ];
 
     protected $casts = [

@@ -115,7 +115,7 @@
                         <div class="w-full flex items-center mb-2 text-secondary"
                              v-for="moneySource in moneySources">
                             <Link v-if="this.$can('view edit add money_sources') || this.hasAdminRole()"
-                                  :href="route('money_sources.show', {moneySource: moneySource.id})">
+                                  class="cursor-pointer hover:text-secondaryHover underline" :href="route('money_sources.show', {moneySource: moneySource.id})">
                                 {{moneySource.name}}
                             </Link>
                             <div v-else>{{moneySource.name}}</div>

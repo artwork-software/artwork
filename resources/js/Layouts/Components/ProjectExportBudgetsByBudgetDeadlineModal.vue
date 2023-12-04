@@ -84,7 +84,6 @@ export default {
                 if (this.showMandatoryFieldsErrorText) {
                     this.showMandatoryFieldsErrorText = false;
                 }
-                this.showMandatoryFieldsErrorText = false;
 
                 window.open(
                     route(

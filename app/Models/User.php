@@ -10,6 +10,8 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Vacation\Models\GoesOnVacation;
+use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -65,7 +67,7 @@ use Spatie\Permission\Traits\HasRoles;
  * What is this sorcery?
  * @property string $profile_photo_url
  */
-class User extends Authenticatable
+class User extends Authenticatable implements Vacationer
 {
     use HasApiTokens;
     use HasFactory;
@@ -75,6 +77,7 @@ class User extends Authenticatable
     use Notifiable;
     use TwoFactorAuthenticatable;
     use Searchable;
+    use GoesOnVacation;
 
 
     /**
@@ -188,11 +191,6 @@ class User extends Authenticatable
     public function calendar_settings(): HasOne
     {
         return $this->hasOne(UserCalendarSettings::class);
-    }
-
-    public function vacations(): HasMany
-    {
-        return $this->hasMany(UserVacations::class);
     }
 
     public function getFormattedVacationDaysAttribute(){
@@ -356,38 +354,5 @@ class User extends Authenticatable
         }
 
         return $plannedWorkingHours;
-    }
-
-    public function hasVacationDays(){
-        $vacations = $this->vacations()->get();
-        $returnInterval = [];
-        foreach ($vacations as $vacation) {
-            $start = Carbon::parse($vacation->from);
-            $end = Carbon::parse($vacation->until);
-
-            $interval = CarbonPeriod::create($start, $end);
-
-            foreach ($interval as $date) {
-                $returnInterval[] = $date->format('Y-m-d');
-            }
-        }
-        return $returnInterval;
-    }
-
-
-    public function hasVacation(){
-        $vacations = $this->vacations()->get();
-        $returnInterval = [];
-        foreach ($vacations as $vacation) {
-            $start = Carbon::parse($vacation->from);
-            $end = Carbon::parse($vacation->until);
-
-            $interval = CarbonPeriod::create($start, $end);
-
-            foreach ($interval as $date) {
-                $returnInterval[$date->format('d.m.Y')] = $date->format('Y-m-d');
-            }
-        }
-        return $returnInterval;
     }
 }

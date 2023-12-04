@@ -13,27 +13,11 @@ class InvitationCreated extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $invitation;
-    public $user;
-    public $token;
-    /**
-     * Create a new message instance.
-     *
-     * @return void
-     */
-    public function __construct(Invitation $invitation, Authenticatable $user, $token)
+    public function __construct(public Invitation $invitation, public Authenticatable $user, mixed $token)
     {
-        $this->invitation = $invitation;
-        $this->user = $user;
-        $this->token = $token;
     }
 
-    /**
-     * Build the message.
-     *
-     * @return $this
-     */
-    public function build()
+    public function build(): static
     {
         return $this->from("einladung@test.de", $this->user->first_name)
             ->replyTo($this->user->email)

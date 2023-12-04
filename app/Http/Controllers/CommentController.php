@@ -19,7 +19,7 @@ class CommentController extends Controller
     public function __construct()
     {
         $this->authorizeResource(Comment::class);
-        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
+        $this->history = new NewHistoryService(Project::class);
     }
 
     /**

@@ -33,19 +33,6 @@ class SchedulingController extends Controller
         $this->notificationData->room = new stdClass();
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create($userId, $type, $model, $modelId): bool
     {
         $scheduling = Scheduling::where('user_id', $userId)
@@ -68,66 +55,12 @@ class SchedulingController extends Controller
         return true;
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param Request $request
-     * @return Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param Scheduling $scheduling
-     * @return Response
-     */
-    public function show(Scheduling $scheduling)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param Scheduling $scheduling
-     * @return Response
-     */
-    public function edit(Scheduling $scheduling)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param Scheduling $scheduling
-     * @return Response
-     */
-    public function update(Request $request, Scheduling $scheduling)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param Scheduling $scheduling
-     * @return Response
-     */
-    public function destroy(Scheduling $scheduling)
+    public function destroy(Scheduling $scheduling): void
     {
         $scheduling->delete();
     }
 
-    /**
-     * @throws \Exception
-     */
-    public function sendDeadlineNotification()
+    public function sendDeadlineNotification(): void
     {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_REMINDER;
         // Deadline Notification
@@ -396,7 +329,7 @@ class SchedulingController extends Controller
                     $user = User::find($schedule->model_id);
                     $notificationTitle = 'Verfügbarkeit geändert';
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => random_int(1, 1000000),
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];
@@ -427,11 +360,8 @@ class SchedulingController extends Controller
         }
     }
 
-    /**
-     * Deletes notifications that were archived 7 or more days ago
-     * @return void
-     */
-    public function deleteOldNotifications() {
+    public function deleteOldNotifications(): void
+    {
         $users = User::all();
         foreach($users as $user) {
             foreach($user->notifications as $notification) {
@@ -444,7 +374,8 @@ class SchedulingController extends Controller
 
     }
 
-    public function deleteExpiredNotificationForAll(){
+    public function deleteExpiredNotificationForAll(): void
+    {
         $notificationForAll = GlobalNotification::all();
         foreach ($notificationForAll as $notification){
             if ($notification->expiration_date <= now()){

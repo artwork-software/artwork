@@ -168,7 +168,7 @@
                     <div v-if="isLinkTab">
                         <h2 class="xsLight mb-2 mt-4">
                             Behalte den Überblick über deine Finanzierungsquellen. Du kannst den Wert zur
-                            Quelle entweder addieren oder subtrahieren.
+                            Quelle addieren.
                         </h2>
                         <div class="flex items-center justify-start my-6">
                             <input v-model="isLinked" type="checkbox" :disabled="cell.column.is_locked"

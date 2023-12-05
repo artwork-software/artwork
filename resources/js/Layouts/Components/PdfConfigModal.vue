@@ -109,7 +109,8 @@ import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot, Listb
 import {XIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm, usePage} from "@inertiajs/inertia-vue3";
+import {Inertia} from "@inertiajs/inertia";
 export default {
     name: "PdfConfigModal",
     mixins: [Permissions],
@@ -155,23 +156,21 @@ export default {
         closeModal(bool){
             this.$emit('closed', bool)
         },
-        createPdf(){
-            this.pdf.paperSize = this.selectedPaperSize.id
-            this.pdf.paperOrientation = this.selectedPaperOrientation.id
+        createPdf() {
+            this.pdf.paperSize = this.selectedPaperSize.id;
+            this.pdf.paperOrientation = this.selectedPaperOrientation.id;
 
-            if(this.project){
-                this.pdf.project = this.project.id
+            if (this.project) {
+                this.pdf.project = this.project.id;
             }
 
-            console.log(this.pdf)
-
-
-            this.pdf.post(route('calendar.export.pdf'), {
+            // Senden der Anfrage an den Server
+            Inertia.post(route('calendar.export.pdf'), this.pdf, {
                 preserveScroll: true,
                 onSuccess: () => {
                     this.closeModal(true)
                 },
-            })
+            });
         },
         changePaperOrientation(orientation){
             this.selectedPaperOrientation = orientation

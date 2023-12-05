@@ -59,10 +59,27 @@ class ExportPDFController extends Controller
                 filter: new Collection(),
             ),
         ])->setPaper($request->input('paperSize'), $request->input('paperOrientation'))->setOptions(['dpi' => $request->input('dpi'), 'defaultFont' => 'sans-serif']);
-        $pdfName = Carbon::now()->format('Y-m-d_H-i-s') . '-' . $request->input('paperOrientation') .'.pdf';
+        $pdfName = Carbon::now()->format('Y-m-d_H-i-s') . '_' . $request->input('paperOrientation') . '_'. str_replace(' ', '_', $request->title ) .'_dpi' . $request->input('dpi') . '.pdf';
         $pdf->save(storage_path('app/pdf/' . $pdfName));
-        return Storage::download('/pdf/' . $pdfName);
+
+        // Rückgabe des Pfads zur heruntergeladenen Datei statt direktem Download
+        $downloadUrl = Storage::url('pdf/' . $pdfName);
+
+        return Inertia::location(\route('calendar.export.pdf.download', ['filename' => $pdfName]));
     }
 
+    public function download($filename){
+        return Storage::download('pdf/'. $filename, $filename, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        ]);
+    }
+
+
+    private function deleteFileAfterDownload($filename): void
+    {
+        Storage::delete('pdf/'. $filename);
+    }
 
 }

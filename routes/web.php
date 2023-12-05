@@ -645,5 +645,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
 
     Route::post('/calendar/export/pdf', [\App\Http\Controllers\ExportPDFController::class, 'createPDF'])->name('calendar.export.pdf');
+    Route::get('/calendar/export/pdf/{filename}/download', [\App\Http\Controllers\ExportPDFController::class, 'download'])->name('calendar.export.pdf.download');
 });
 

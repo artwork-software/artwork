@@ -164,6 +164,10 @@
         </div>
     </div>
 
+    <pre>
+        {{ usePage() }}
+    </pre>
+
 
     <PdfConfigModal v-if="showPDFConfigModal" @closed="showPDFConfigModal = false" :project="project" :pdf-title="project ? project.name : 'Raumbelegung'"/>
 </template>
@@ -178,7 +182,7 @@ import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import Permissions from "@/mixins/Permissions.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm, usePage} from "@inertiajs/inertia-vue3";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {Inertia} from "@inertiajs/inertia";
 import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
@@ -239,6 +243,7 @@ export default {
         }
     },
     methods: {
+        usePage,
         changeAtAGlance() {
             this.$emit('changeAtAGlance')
         },

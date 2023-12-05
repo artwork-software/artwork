@@ -26,7 +26,7 @@ test('invitations requests are validated', function () {
 
     $user = User::factory()->create();
 
-    $user->assignRole('admin');
+    $user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
 
     $this->actingAs($user);
 
@@ -46,7 +46,7 @@ test('admins can invite users', function () {
 
     $department = Department::factory()->create();
 
-    $admin_user->assignRole('admin');
+    $admin_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
 
     $this->actingAs($admin_user);
 
@@ -54,7 +54,7 @@ test('admins can invite users', function () {
         'user_emails' => ['user@example.de', 'user2@example.de'],
         'permissions' => ['invite users', 'view users'],
         'departments' => [$department],
-        'role' => null
+        'roles' => []
     ]);
 
     Mail::assertSent(InvitationCreated::class, function ($mail) use ($admin_user) {
@@ -64,12 +64,10 @@ test('admins can invite users', function () {
 
     $this->assertDatabaseHas('invitations', [
         "email" => "user@example.de",
-        "role" => null
     ]);
 
     $this->assertDatabaseHas('invitations', [
         "email" => "user2@example.de",
-        "role" => null
     ]);
 
     $invitation = Invitation::where('email', 'user@example.de')->first();
@@ -118,7 +116,7 @@ test('admins can view invitations', function () {
         Invitation::factory()->create();
     }
 
-    $admin_user->assignRole('admin');
+    $admin_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
 
     $this->actingAs($admin_user);
 
@@ -141,7 +139,7 @@ test('admins and can update invitations', function () {
 
     $admin_user = User::factory()->create();
 
-    $admin_user->assignRole('admin');
+    $admin_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
 
     $this->actingAs($admin_user);
 
@@ -164,8 +162,7 @@ test('admins can edit invitations', function () {
 
     $invitation = Invitation::factory()->create();
 
-    $admin_user->assignRole('admin');
-
+    $admin_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
     $this->actingAs($admin_user);
 
     $response = $this->get("/users/invitations/{$invitation->id}/edit")
@@ -184,7 +181,7 @@ test('admins can delete invitations', function () {
 
     $admin_user = User::factory()->create();
 
-    $admin_user->assignRole('admin');
+    $admin_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
 
     $this->actingAs($admin_user);
 

@@ -14,77 +14,21 @@ class CollectingSocietyController extends Controller
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function index()
+    public function index(): \Illuminate\Database\Eloquent\Collection
     {
         return CollectingSociety::all();
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        CollectingSociety::create([
-            'name' => $request->name
-        ]);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\CollectingSociety  $collectingSociety
-     * @return \Illuminate\Http\Response
-     */
-    public function show(CollectingSociety $collectingSociety)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\CollectingSociety  $collectingSociety
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(CollectingSociety $collectingSociety)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\CollectingSociety  $collectingSociety
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, CollectingSociety $collectingSociety)
-    {
-        //
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\CollectingSociety  $collectingSociety
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(CollectingSociety $collectingSociety)
+    public function destroy(CollectingSociety $collectingSociety): \Illuminate\Http\RedirectResponse
     {
         $collectingSociety->delete();
+        return Redirect::back()->with('success', 'CollectingSociety deleted');
     }
 
     public function forceDelete(int $id)

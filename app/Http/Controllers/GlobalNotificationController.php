@@ -5,41 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\GlobalNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 
 class GlobalNotificationController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $oldGlobalNotifications = GlobalNotification::all();
-        foreach ($oldGlobalNotifications as $globalNotification){
-            if($globalNotification->image_name) {
+        foreach ($oldGlobalNotifications as $globalNotification) {
+            if ($globalNotification->image_name) {
                 Storage::disk('public')->delete($globalNotification->image_name);
             }
             $globalNotification->delete();
@@ -53,6 +34,7 @@ class GlobalNotificationController extends Controller
             'image_name' => $image?->storePublicly('notificationImage', ['disk' => 'public']),
             'expiration_date' => new \DateTime($request->notificationDeadlineDate . ' ' . $request->notificationDeadlineTime)
         ]);
+        return Redirect::back();
     }
 
     /**
@@ -61,7 +43,7 @@ class GlobalNotificationController extends Controller
      * @param  \App\Models\GlobalNotification  $globalNotification
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show(GlobalNotification $globalNotification)
+    public function show(GlobalNotification $globalNotification): \Illuminate\Http\JsonResponse
     {
         $notification = $globalNotification->first();
 
@@ -69,36 +51,14 @@ class GlobalNotificationController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\GlobalNotification  $globalNotification
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(GlobalNotification $globalNotification)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\GlobalNotification  $globalNotification
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, GlobalNotification $globalNotification)
-    {
-        //
-    }
-
-    /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\GlobalNotification  $globalNotification
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(GlobalNotification $globalNotification)
+    public function destroy(GlobalNotification $globalNotification): \Illuminate\Http\RedirectResponse
     {
         $globalNotification->delete();
+        return Redirect::back()->with('success', 'Notification deleted');
     }
 }

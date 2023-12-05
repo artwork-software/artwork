@@ -11,7 +11,7 @@ use Tests\TestCase;
 
 class CreateAdminTest extends TestCase
 {
-    use RefreshDatabase;
+
 
     public function testAbortsInvalidTokens()
     {

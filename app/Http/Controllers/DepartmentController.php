@@ -25,7 +25,6 @@ class DepartmentController extends Controller
     protected ?NotificationService $notificationService = null;
     protected ?\stdClass $notificationData = null;
 
-
     public function __construct()
     {
         $this->authorizeResource(Department::class);

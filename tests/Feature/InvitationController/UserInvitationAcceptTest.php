@@ -15,7 +15,7 @@ use Tests\TestCase;
 
 class UserInvitationAcceptTest extends TestCase
 {
-    use RefreshDatabase;
+
 
     public function testAbortsInvalidTokens()
     {
@@ -66,7 +66,7 @@ class UserInvitationAcceptTest extends TestCase
     public function testUsersCanAcceptTtheInvitation()
     {
         $validPlainToken = 'validToken0123456789';
-        Role::firstOrCreate(['name' => RoleNameEnum::USER]);
+        Role::firstOrCreate(['name' => RoleNameEnum::USER->value]);
         Permission::firstOrCreate(['name' => PermissionNameEnum::SETTINGS_UPDATE->value]);
 
         $department = Department::factory()->create();
@@ -74,8 +74,9 @@ class UserInvitationAcceptTest extends TestCase
         $invitation = Invitation::factory()->create([
             'email' => 'user@example.com',
             'token' => Hash::make($validPlainToken),
-            'role' => RoleNameEnum::USER,
-            'permissions' => json_encode([PermissionNameEnum::SETTINGS_UPDATE->value])]);
+            'roles' => [RoleNameEnum::USER->value],
+            'permissions' => [PermissionNameEnum::SETTINGS_UPDATE->value]
+        ]);
 
         $department->invitations()->attach($invitation->id);
         $invitation->departments()->attach($department->id);
@@ -108,7 +109,7 @@ class UserInvitationAcceptTest extends TestCase
         ]);
 
         $this->assertTrue(Hash::check($password, $user->password));
-        $this->assertTrue($user->hasRole(RoleNameEnum::USER));
+        $this->assertTrue($user->hasRole(RoleNameEnum::USER->value));
         $this->assertTrue($user->can(PermissionNameEnum::SETTINGS_UPDATE->value));
         $this->assertModelMissing($invitation);
         $this->assertAuthenticated();

@@ -8,27 +8,34 @@ use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Room;
 use App\Models\RoomAttribute;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class EventIndexTest extends TestCase
 {
-    use RefreshDatabase;
+    protected User $adminUser;
 
-    public function testEventIndex()
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->adminUser = $this->adminUser();
+        $this->actingAs($this->adminUser);
+    }
+
+    public function testEventIndex(): void
     {
         Event::factory()->create([
             'start_time' => now(),
             'end_time' => now()->addHour(),
         ]);
 
-        $this->actingAs($this->adminUser())
-            ->json('GET', route('events.index'), [
-                'start' => now()->subDay(),
-                'end' => now()->addDay(),
-            ])
-            ->assertSuccessful()
-            ->assertJsonCount(1, 'events');
+        $response = $this->getJson(route('events.index', [
+            'start' => now()->subDay(),
+            'end' => now()->addDay(),
+        ]));
+        $response->assertSuccessful();
+        $response->assertJsonCount(1, 'events');
     }
 
     public function testEventIndexWithProjectId()

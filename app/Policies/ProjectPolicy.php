@@ -78,7 +78,7 @@ class ProjectPolicy
         return $user->can('create_and_edit_projects')
             || $project->users->contains($user->id)
             || $isTeamMember
-            || $user->projects()->find($project->id)->pivot->is_manager == 1
+            || (bool)$user->projects()?->find($project->id)?->pivot?->is_manager === true
             || $isCreator;
     }
 

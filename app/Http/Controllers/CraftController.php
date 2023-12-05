@@ -4,64 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Models\Craft;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class CraftController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $craft = Craft::create($request->only(['name', 'abbreviation']));
-        if(!$request->assignable_by_all){
+        if (!$request->assignable_by_all) {
             $craft->update(['assignable_by_all' => false]);
             $craft->users()->sync($request->users);
         }
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Craft  $craft
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Craft $craft)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Craft  $craft
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Craft $craft)
-    {
-        //
+        return Redirect::back();
     }
 
     /**
@@ -69,29 +29,31 @@ class CraftController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Craft  $craft
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Craft $craft)
+    public function update(Request $request, Craft $craft): \Illuminate\Http\RedirectResponse
     {
         $craft->update($request->only(['name', 'abbreviation']));
-        if(!$request->assignable_by_all){
+        if (!$request->assignable_by_all) {
             $craft->update(['assignable_by_all' => false]);
             $craft->users()->sync($request->users);
         } else {
             $craft->update(['assignable_by_all' => true]);
             $craft->users()->detach();
         }
+        return Redirect::back();
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Craft  $craft
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Craft $craft)
+    public function destroy(Craft $craft): \Illuminate\Http\RedirectResponse
     {
         $craft->users()->detach();
         $craft->delete();
+        return Redirect::back()->with('success', 'Craft deleted');
     }
 }

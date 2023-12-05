@@ -200,8 +200,8 @@ class WalidRaadSeeder extends Seeder
          */
 
         ProjectHeadline::create([
-           'name' => 'Website-Text',
-           'order' => 1
+            'name' => 'Website-Text',
+            'order' => 1
         ]);
 
         ProjectHeadline::create([
@@ -216,7 +216,7 @@ class WalidRaadSeeder extends Seeder
 
         $projects = Project::all();
 
-        foreach ($projects as $project){
+        foreach ($projects as $project) {
             $project->headlines()->attach(1, ['text' => '']);
             $project->headlines()->attach(2, ['text' => 'Hallo']);
         }
@@ -284,7 +284,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->subDays(10)->endOfDay(),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 3,
             'room_id' => 1,
             'user_id' => 1,
@@ -301,7 +301,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->subDays(9)->endOfDay(),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 3,
             'room_id' => 1,
             'user_id' => 1,
@@ -318,7 +318,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->subDays(8)->endOfDay(),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 3,
             'room_id' => 1,
             'user_id' => 1,
@@ -340,7 +340,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->subDays(10)->addHour()->format('Y-m-d H:i:s'),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 2,
             'room_id' => 3,
             'user_id' => 1,
@@ -355,7 +355,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->subDays(7)->addHour()->format('Y-m-d H:i:s'),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 7,
             'room_id' => 2,
             'user_id' => 1,
@@ -370,7 +370,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->addDays(10)->addHour()->format('Y-m-d H:i:s'),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 5,
             'room_id' => 2,
             'user_id' => 1,
@@ -385,7 +385,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->subDays(4)->endOfDay(),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 5,
             'room_id' => 3,
             'user_id' => 1,
@@ -400,7 +400,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->addDays(4)->endOfDay(),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 5,
             'room_id' => 3,
             'user_id' => 1,
@@ -415,7 +415,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->addDays(10)->endOfDay(),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 8,
             'room_id' => 3,
             'user_id' => 1,
@@ -430,7 +430,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->subDays(7)->endOfDay(),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 5,
             'room_id' => 4,
             'user_id' => 1,
@@ -445,7 +445,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->subDays(6)->endOfDay(),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 8,
             'room_id' => 4,
             'user_id' => 1,
@@ -460,7 +460,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->endOfDay()->subMinutes(59),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 4,
             'room_id' => 4,
             'user_id' => 1,
@@ -475,7 +475,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->subDays(10)->addHour()->format('Y-m-d H:i:s'),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 7,
             'room_id' => 5,
             'user_id' => 1,
@@ -490,7 +490,7 @@ class WalidRaadSeeder extends Seeder
             'end_time' => Carbon::now()->subDays(10)->addHour()->format('Y-m-d H:i:s'),
             'occupancy_option' => false,
             'audience' => false,
-            'is_loud'   => false,
+            'is_loud' => false,
             'event_type_id' => 2,
             'room_id' => 5,
             'user_id' => 1,
@@ -521,7 +521,6 @@ class WalidRaadSeeder extends Seeder
             'event_start_day' => $eventWithManyShifts->start_time->format('Y-m-d'),
             'event_end_day' => $eventWithManyShifts->end_time->format('Y-m-d'),
         ]);
-
 
 
         $eventWithManyShifts->shifts()->create([
@@ -573,10 +572,6 @@ class WalidRaadSeeder extends Seeder
             'event_start_day' => $eventWithManyShifts->start_time->format('Y-m-d'),
             'event_end_day' => $eventWithManyShifts->end_time->format('Y-m-d'),
         ]);
-
-
-
-
 
 
         $firstArea = Area::find(1);
@@ -876,7 +871,6 @@ class WalidRaadSeeder extends Seeder
         ]);
 
 
-
         $costSubPosition3 = $costMainPosition->subPositions()->create([
             'name' => 'Transporte / Zoll',
             'position' => $costMainPosition->subPositions()->max('position') + 1
@@ -923,7 +917,6 @@ class WalidRaadSeeder extends Seeder
             'linked_type' => 'COST',
             'verified_value' => ''
         ]);
-
 
 
         $costMainPosition2 = $table->mainPositions()->create([
@@ -1081,8 +1074,6 @@ class WalidRaadSeeder extends Seeder
             'verified_value' => '',
             'commented' => true
         ]);
-
-
 
 
         // EARNING TABLE

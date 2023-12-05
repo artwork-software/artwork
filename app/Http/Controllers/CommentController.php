@@ -27,7 +27,7 @@ class CommentController extends Controller
      *
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
-    public function create()
+    public function create(): \Inertia\Response|\Inertia\ResponseFactory
     {
         return inertia('Comments/Create');
     }
@@ -48,7 +48,7 @@ class CommentController extends Controller
                 'user_id' => $request->user_id,
                 'project_id' => $request->project_id,
             ]);
-        } else if ($user->projects()->find($request->project_id) != null) {
+        } elseif ($user->projects()->find($request->project_id) != null) {
             if ($user->projects()->find($request->project_id)->pivot->is_manager == 1) {
                 Comment::create([
                     'text' => $request->text,
@@ -70,11 +70,12 @@ class CommentController extends Controller
      *
      * @param \Illuminate\Http\Request $request
      * @param \App\Models\Comment $comment
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Comment $comment)
+    public function update(Request $request, Comment $comment): \Illuminate\Http\RedirectResponse
     {
         $comment->update($request->only('text'));
+        return Redirect::back()->with('success', 'Comment updated');
     }
 
     /**
@@ -83,7 +84,7 @@ class CommentController extends Controller
      * @param \App\Models\Comment $comment
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Comment $comment)
+    public function destroy(Comment $comment): \Illuminate\Http\RedirectResponse
     {
         $project = $comment->project()->first();
         $this->history->createHistory($project->id, 'Kommentar gelöscht');

@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Redirect;
 
 class AreaController extends Controller
 {
-
     public function __construct()
     {
         $this->authorizeResource(Area::class);
@@ -26,7 +25,7 @@ class AreaController extends Controller
      *
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
-    public function index()
+    public function index(): \Inertia\Response|\Inertia\ResponseFactory
     {
         return inertia('Areas/AreaManagement', [
             'areas' => Area::all()->map(fn ($area) => [
@@ -48,7 +47,7 @@ class AreaController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         Area::create([
             'name' => $request->name
@@ -58,24 +57,13 @@ class AreaController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Area  $area
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Area $area)
-    {
-        //not needed
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Area  $area
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Area $area)
+    public function update(Request $request, Area $area): \Illuminate\Http\RedirectResponse
     {
         $area->update($request->only('name'));
 
@@ -108,10 +96,10 @@ class AreaController extends Controller
      * @param  \App\Models\Area  $area
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Area $area)
+    public function destroy(Area $area): \Illuminate\Http\RedirectResponse
     {
         $rooms = $area->rooms()->get();
-        foreach ($rooms as $room){
+        foreach ($rooms as $room) {
             $room->delete();
         }
 

@@ -31,6 +31,7 @@ use App\Http\Resources\UserIndexResource;
 use App\Models\BudgetSumDetails;
 use App\Models\Category;
 use App\Models\CellCalculations;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\CollectingSociety;
 use App\Models\Column;
@@ -221,8 +222,9 @@ class ProjectController extends Controller
         }
 
         $departments = collect($request->assigned_departments)
-            ->map(fn($department) => Department::query()->findOrFail($department['id']))
-            ->map(fn(Department $department) => $this->authorize('update', $department));
+            ->map(fn($department) => Department::query()->findOrFail($department['id']));
+        //@todo how did this line ever work?
+        //->map(fn(Department $department) => $this->authorize('update', $department));
 
         $project = Project::create([
             'name' => $request->name,

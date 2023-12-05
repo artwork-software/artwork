@@ -84,7 +84,11 @@ class CalendarEventResource extends JsonResource
         ];
 
         if(!$this->userCalendarSettings->work_shifts){
-            unset($output['shifts']);
+            if(isset($output['shifts'])){
+                if(array_key_exists('shifts', $output)){
+                    unset($output['shifts']);
+                }
+            }
         }
 
         return $output;

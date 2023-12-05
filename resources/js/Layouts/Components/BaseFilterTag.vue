@@ -1,6 +1,5 @@
 <template>
-    <span class="flex rounded-full items-center font-medium text-tagText
-              border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
+    <div class="flex rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1 min-w-fit">
         <div v-if="filter.name">
             {{ filter.name }}
         </div>
@@ -12,7 +11,7 @@
                 type="button">
                 <XIcon v-if="type !== 'calendar'" class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
-    </span>
+    </div>
 </template>
 
 <script>

@@ -21,26 +21,6 @@ use Inertia\Response;
 class FreelancerController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param Request $request
@@ -73,7 +53,7 @@ class FreelancerController extends Controller
             $onVacation = false;
             $weekNumber = $currentDate->weekOfYear;
             $day = $currentDate->day;
-            foreach ($vacationDays as $vacationDay){
+            foreach ($vacationDays as $vacationDay) {
                 $vacationStart = Carbon::parse($vacationDay->from);
                 $vacationEnd = Carbon::parse($vacationDay->until);
                 // TODO: Check Performance
@@ -81,7 +61,7 @@ class FreelancerController extends Controller
                     $onVacation = false;
                     continue;
                 }*/
-                if($vacationStart <= $currentDate && $vacationEnd >= $currentDate){
+                if ($vacationStart <= $currentDate && $vacationEnd >= $currentDate) {
                     $onVacation = true;
                 }
             }
@@ -131,7 +111,7 @@ class FreelancerController extends Controller
             'dateToShow' => $availabilityData['dateToShow'],
             'vacations' => $freelancer->vacations()->orderBy('from', 'ASC')->get(),
             //needed for UserShiftPlan
-            'dateValue'=> $showCalendar['dateValue'],
+            'dateValue' => $showCalendar['dateValue'],
             'daysWithEvents' => $showCalendar['daysWithEvents'],
             'totalPlannedWorkingHours' => $showCalendar['totalPlannedWorkingHours'],
             'rooms' => Room::all(),
@@ -139,17 +119,6 @@ class FreelancerController extends Controller
             'projects' => Project::all(),
             'shifts' => $freelancer->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),
         ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Freelancer  $freelancer
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Freelancer $freelancer)
-    {
-        //
     }
 
     /**
@@ -173,8 +142,7 @@ class FreelancerController extends Controller
                 'salary_per_hour',
                 'salary_description',
                 'can_master'
-            ])
-        );
+            ]));
     }
 
     public function update_freelancer_can_master(Freelancer $freelancer, Request $request): RedirectResponse
@@ -204,22 +172,10 @@ class FreelancerController extends Controller
 
         $file = $request->file('profileImage');
         $original_name = $file->getClientOriginalName();
-        $basename = Str::random(20).$original_name;
+        $basename = Str::random(20) . $original_name;
 
         Storage::putFileAs('public/profile-photos', $file, $basename);
 
         $freelancer->update(['profile_image' => Storage::url('public/profile-photos/' . $basename)]);
-
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Freelancer  $freelancer
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Freelancer $freelancer)
-    {
-        //
     }
 }

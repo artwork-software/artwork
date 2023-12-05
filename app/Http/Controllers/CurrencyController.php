@@ -10,81 +10,29 @@ use Illuminate\Support\Facades\Redirect;
 class CurrencyController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
-    public function index()
-    {
-        return Currency::all();
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         Currency::create([
             'name' => $request->get('name')
         ]);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Currency  $currency
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Currency $currency)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Currency  $currency
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Currency $currency)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Currency  $currency
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Currency $currency)
-    {
-        //
+        return Redirect::back();
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Currency  $currency
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Currency $currency)
+    public function destroy(Currency $currency): \Illuminate\Http\RedirectResponse
     {
         $currency->delete();
+        return Redirect::back()->with('success', 'Currency deleted');
     }
 
     public function forceDelete(int $id)

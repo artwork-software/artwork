@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Redirect;
 
 class GenreController extends Controller
 {
-
     public function __construct()
     {
         $this->authorizeResource(Genre::class);
@@ -20,7 +19,7 @@ class GenreController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         Genre::create([
             'name' => $request->name,
@@ -33,9 +32,9 @@ class GenreController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Genre  $genre
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Genre $genre)
+    public function update(Request $request, Genre $genre): \Illuminate\Http\RedirectResponse
     {
         $genre->update($request->only('name'));
 
@@ -51,6 +50,7 @@ class GenreController extends Controller
             return response()->json(['error' => 'Not authorized to assign projects to a genre.'], 403);
         }
         */
+        return Redirect::back()->with('success', 'Genre updated');
     }
 
     /**
@@ -59,7 +59,7 @@ class GenreController extends Controller
      * @param  \App\Models\Genre  $genre
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Genre $genre)
+    public function destroy(Genre $genre): \Illuminate\Http\RedirectResponse
     {
         $genre->delete();
         return Redirect::back()->with('success', 'Genre deleted');

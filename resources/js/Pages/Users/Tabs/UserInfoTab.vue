@@ -197,7 +197,7 @@
 
     </jet-dialog-modal>
 
-    <!-- Success Modal -->
+    <!-- Success Modal
     <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
         <template #content>
             <div class="mx-4">
@@ -221,7 +221,7 @@
 
         </template>
     </jet-dialog-modal>
-    <!-- Change Profile Picture Modal -->
+     Change Profile Picture Modal -->
 
     <jet-dialog-modal :show="showChangePictureModal" @close="closeChangePictureModal">
         <template #content>
@@ -273,6 +273,9 @@
         </template>
 
     </jet-dialog-modal>
+
+
+    <SuccessModal v-if="showSuccessModal" @close-modal="closeSuccessModal" title="Nutzer*in erfolgreich bearbeitet" description="Die Änderungen wurden erfolgreich gespeichert." button="Ok" />
 </template>
 
 
@@ -287,9 +290,11 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 
 export default {
     components: {
+        SuccessModal,
         CheckIcon,
         JetDialogModal, XIcon,
         PencilAltIcon,
@@ -338,6 +343,11 @@ export default {
             resetPasswordForm: this.$inertia.form({
                 email: this.user_to_edit.email
             }),
+            statusbar: {
+                show: true,
+                status: "success",
+                text: "Nutzer wurde erfolgreich bearbeitet"
+            }
         }
     },
     methods: {
@@ -368,10 +378,12 @@ export default {
                 this.hasNameError = true;
                 return; // Exit the function without making the API call
             }
-            this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
+            this.userForm.patch(route('user.update', {user: this.user_to_edit.id}, {
+                preserveScroll: true,
+            }));
             this.nameError = '';
             this.hasNameError = false;
-            this.openSuccessModal();
+            this.openSuccessModal()
         },
         resetPassword() {
             this.resetPasswordForm.post(route('user.reset.password'));

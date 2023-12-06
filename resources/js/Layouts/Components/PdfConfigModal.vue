@@ -164,11 +164,12 @@ export default {
                 this.pdf.project = this.project.id;
             }
 
-            // Senden der Anfrage an den Server
-            Inertia.post(route('calendar.export.pdf'), this.pdf, {
+
+            this.pdf.post(route('calendar.export.pdf'), {
                 preserveScroll: true,
+
                 onSuccess: () => {
-                    this.closeModal(true)
+                    this.closeModal(true);
                 },
             });
         },

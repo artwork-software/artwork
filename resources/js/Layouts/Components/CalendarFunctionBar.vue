@@ -164,11 +164,6 @@
         </div>
     </div>
 
-    <pre>
-        {{ usePage() }}
-    </pre>
-
-
     <PdfConfigModal v-if="showPDFConfigModal" @closed="showPDFConfigModal = false" :project="project" :pdf-title="project ? project.name : 'Raumbelegung'"/>
 </template>
 

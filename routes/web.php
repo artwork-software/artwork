@@ -19,6 +19,8 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\FilterController;
+use App\Http\Controllers\FreelancerController;
+use App\Http\Controllers\FreelancerVacationController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
@@ -35,6 +37,7 @@ use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\SectorController;
+use App\Http\Controllers\ServiceProviderContactsController;
 use App\Http\Controllers\ServiceProviderController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\ShiftFilterController;
@@ -111,6 +114,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/users/{user}/shiftplan', [UserController::class, 'editUserShiftplan'])->name('user.edit.shiftplan');
     Route::get('/users/{user}/terms', [UserController::class, 'editUserTerms'])->name('user.edit.terms');
     Route::get('/users/{user}/permissions', [UserController::class, 'editUserPermissions'])->name('user.edit.permissions');
+    Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->name('user.edit.workProfile');
     Route::patch('/users/{user}/edit', [UserController::class, 'update'])->name('user.update');
     Route::patch('/users/{user}/checklists', [UserController::class, 'update_checklist_status'])->name('user.checklists.update');
     Route::patch('/users/{user}/areas', [UserController::class, 'update_area_status'])->name('user.areas.update');
@@ -120,9 +124,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/users/{user}/photo', [UserController::class, 'updateUserPhoto'])->name('user.update.photo');
 
     Route::post('/users/reset-password', [UserController::class, 'reset_user_password'])->name('user.reset.password');
+    Route::post('/users/{user}/updateCraftSettings', [UserController::class, 'updateUserCraftSettings'])->name('user.update.craftSettings');
     Route::post('/users/{user}/masters', [UserController::class, 'update_user_can_master'])->name('user.update.can_master');
     Route::post('/users/{user}/canWorkShifts', [UserController::class, 'update_user_can_work_shifts'])->name('user.update.can_work_shifts');
     Route::post('/users/{user}/workings', [UserController::class, 'update_work_data'])->name('user.update.work_data');
+    Route::post('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])->name('user.update.workProfile');
+    Route::post('/users/{user}/assignCraft', [UserController::class, 'assignCraft'])->name('user.assign.craft');
+    Route::delete('/users/{user}/removeCraft/{craft}', [UserController::class, 'removeCraft'])->name('user.remove.craft');
 
     //Departments
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');
@@ -584,29 +592,29 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/calendars/filters', [CalendarController::class, 'getFilters'])->name('calendar.filters');
 
     // Freelancer
-    Route::get('/freelancer/{freelancer}', [\App\Http\Controllers\FreelancerController::class, 'show'])->name('freelancer.show');
-    Route::patch('/freelancer/update/{freelancer}', [\App\Http\Controllers\FreelancerController::class, 'update'])->name('freelancer.update');
-    Route::post('/freelancer/profile-image/{freelancer}', [\App\Http\Controllers\FreelancerController::class, 'updateProfileImage'])->name('freelancer.change.profile-image');
-    Route::post('freelancer/add', [\App\Http\Controllers\FreelancerController::class, 'store'])->name('freelancer.add');
+    Route::get('/freelancer/{freelancer}', [FreelancerController::class, 'show'])->name('freelancer.show');
+    Route::patch('/freelancer/update/{freelancer}', [FreelancerController::class, 'update'])->name('freelancer.update');
+    Route::post('/freelancer/profile-image/{freelancer}', [FreelancerController::class, 'updateProfileImage'])->name('freelancer.change.profile-image');
+    Route::post('freelancer/add', [FreelancerController::class, 'store'])->name('freelancer.add');
     // Vacation
-    Route::post('/freelancer/vacation/{freelancer}/add', [\App\Http\Controllers\FreelancerVacationController::class, 'store'])->name('freelancer.vacation.add');
-    Route::patch('/freelancer/vacation/{freelancerVacation}/update', [\App\Http\Controllers\FreelancerVacationController::class, 'update'])->name('freelancer.vacation.update');
-    Route::post('/freelancer/{freelancer}/masters', [\App\Http\Controllers\FreelancerController::class, 'update_freelancer_can_master'])->name('freelancer.update.can_master');
-    Route::post('/freelancer/{freelancer}/workings', [\App\Http\Controllers\FreelancerController::class, 'update_work_data'])->name('freelancer.update.work_data');
-    Route::delete('/freelancer/vacation/{freelancerVacation}/delete', [\App\Http\Controllers\FreelancerVacationController::class, 'destroy'])->name('freelancer.vacation.delete');
+    Route::post('/freelancer/vacation/{freelancer}/add', [FreelancerVacationController::class, 'store'])->name('freelancer.vacation.add');
+    Route::patch('/freelancer/vacation/{freelancerVacation}/update', [FreelancerVacationController::class, 'update'])->name('freelancer.vacation.update');
+    Route::post('/freelancer/{freelancer}/masters', [FreelancerController::class, 'update_freelancer_can_master'])->name('freelancer.update.can_master');
+    Route::post('/freelancer/{freelancer}/workings', [FreelancerController::class, 'update_work_data'])->name('freelancer.update.work_data');
+    Route::delete('/freelancer/vacation/{freelancerVacation}/delete', [FreelancerVacationController::class, 'destroy'])->name('freelancer.vacation.delete');
 
     // Service Provider
-    Route::get('/service-provider/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'show'])->name('service_provider.show');
-    Route::patch('/service-provider/update/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'update'])->name('service_provider.update');
-    Route::post('/service-provider/profile-image/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'updateProfileImage'])->name('service_provider.change.profile-image');
-    Route::post('service-provider/add', [\App\Http\Controllers\ServiceProviderController::class, 'store'])->name('service_provider.add');
-    Route::post('/service-provider/{serviceProvider}/masters', [\App\Http\Controllers\ServiceProviderController::class, 'update_provider_can_master'])->name('service_provider.update.can_master');
+    Route::get('/service-provider/{serviceProvider}', [ServiceProviderController::class, 'show'])->name('service_provider.show');
+    Route::patch('/service-provider/update/{serviceProvider}', [ServiceProviderController::class, 'update'])->name('service_provider.update');
+    Route::post('/service-provider/profile-image/{serviceProvider}', [ServiceProviderController::class, 'updateProfileImage'])->name('service_provider.change.profile-image');
+    Route::post('service-provider/add', [ServiceProviderController::class, 'store'])->name('service_provider.add');
+    Route::post('/service-provider/{serviceProvider}/masters', [ServiceProviderController::class, 'update_provider_can_master'])->name('service_provider.update.can_master');
     Route::post('/service-provider/{serviceProvider}/workings', [ServiceProviderController::class, 'update_work_data'])->name('service_provider.update.work_data');
 
 
-    Route::delete('/service-provider/contact/{serviceProviderContacts}/delete/', [\App\Http\Controllers\ServiceProviderContactsController::class, 'destroy'])->name('service-provider.contact.delete');
-    Route::post('/service-provider/contact/{serviceProvider}/add/', [\App\Http\Controllers\ServiceProviderContactsController::class, 'store'])->name('service-provider.contact.store');
-    Route::patch('/service-provider/contact/{serviceProviderContacts}/update/', [\App\Http\Controllers\ServiceProviderContactsController::class, 'update'])->name('service-provider.contact.update');
+    Route::delete('/service-provider/contact/{serviceProviderContacts}/delete/', [ServiceProviderContactsController::class, 'destroy'])->name('service-provider.contact.delete');
+    Route::post('/service-provider/contact/{serviceProvider}/add/', [ServiceProviderContactsController::class, 'store'])->name('service-provider.contact.store');
+    Route::patch('/service-provider/contact/{serviceProviderContacts}/update/', [ServiceProviderContactsController::class, 'update'])->name('service-provider.contact.update');
 
     // Vacation
     Route::post('/user/vacation/{user}/add', [\App\Http\Controllers\UserVacationsController::class, 'store'])->name('user.vacation.add');

@@ -7,9 +7,6 @@
         <Availability type="user" :calendar-data="calendarData" :date-to-show="dateToShow"
                       :user="user_to_edit" :vacations="vacations"/>
     </UserEditHeader>
-    <BaseSidenav :show="show" @toggle="this.show =! this.show">
-        <UserSidebar :user="user_to_edit" type="user" />
-    </BaseSidenav>
 </template>
 
 <script>

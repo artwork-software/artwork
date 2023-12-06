@@ -3,9 +3,6 @@
         <UserInfoTab :user_to_edit="user_to_edit" :password_reset_status="password_reset_status"
                      :departments="departments"></UserInfoTab>
     </UserEditHeader>
-    <BaseSidenav :show="show" @toggle="this.show =! this.show">
-        <UserSidebar :user="user_to_edit" type="user" />
-    </BaseSidenav>
 </template>
 
 <script>

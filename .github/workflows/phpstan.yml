@@ -25,3 +25,4 @@ jobs:
         uses: php-actions/phpstan@v3
         with:
           path: app/ artwork/
+          php_extensions: gd

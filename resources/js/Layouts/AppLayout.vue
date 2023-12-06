@@ -261,12 +261,14 @@ export default {
                     href: route('areas.management'),
                     route: ['/areas']
                 },
+                /*
                 {
                     name: 'Anfragen',
                     has_permission: this.$can('read details room request') || this.hasAdminRole(),
                     href: route('events.requests'),
                     route: ['/events/requests']
                 },
+                */
                 {
                     name: 'Projekte',
                     has_permission: this.$can('change project settings') || this.hasAdminRole(),

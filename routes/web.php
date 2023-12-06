@@ -70,6 +70,9 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 
 Route::get('/reset-password', [UserController::class, 'reset_password'])->name('reset_user_password');
 
+
+
+
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
 
@@ -640,5 +643,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/preset/{shiftPreset}/add', [\App\Http\Controllers\PresetTimeLineController::class, 'store'])->name('preset.add.timeline.row');
 
     Route::patch('/user/{user}/check/vacation', [\App\Http\Controllers\UserVacationsController::class, 'checkVacation'])->name('user.check.vacation');
+
+
+    Route::post('/calendar/export/pdf', [\App\Http\Controllers\ExportPDFController::class, 'createPDF'])->name('calendar.export.pdf');
+    Route::get('/calendar/export/pdf/{filename}/download', [\App\Http\Controllers\ExportPDFController::class, 'download'])->name('calendar.export.pdf.download');
 });
 

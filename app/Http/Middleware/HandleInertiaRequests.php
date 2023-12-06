@@ -146,7 +146,7 @@ class HandleInertiaRequests extends Middleware
             'emailFooter' => app(GeneralSettings::class)->email_footer,
             //'globalNotification' => $globalNotification,
             'myMoneySources' => Auth::guest() ? false : Auth::user()->accessMoneySources()->get(['money_source_id']),
-            'urlParameters' => $request->query()
+            'urlParameters' => $request->query(),
         ]);
     }
 }

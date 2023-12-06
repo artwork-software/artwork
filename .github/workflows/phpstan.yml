@@ -31,3 +31,6 @@ jobs:
         uses: php-actions/phpstan@v3
         with:
           path: app/ artwork/
+          extensions: gd zip
+          php_version: 8.1
+          php_extensions: gd zip

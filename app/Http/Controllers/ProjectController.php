@@ -31,7 +31,6 @@ use App\Http\Resources\UserIndexResource;
 use App\Models\BudgetSumDetails;
 use App\Models\Category;
 use App\Models\CellCalculations;
-use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\CollectingSociety;
 use App\Models\Column;
@@ -1901,9 +1900,7 @@ class ProjectController extends Controller
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
-
         rsort($eventsWithRelevant);
-
 
         return inertia('Projects/SingleProjectShifts', [
             'project' => new ProjectShiftResource($project),
@@ -2859,6 +2856,7 @@ class ProjectController extends Controller
 
         return back()->with('success');
     }
+
     public function updateCommentedStatusOfCell(Request $request, ColumnCell $columnCell): RedirectResponse
     {
         $columnCell->update(['commented' => $request->commented]);
@@ -2918,13 +2916,16 @@ class ProjectController extends Controller
         Storage::delete('public/keyVisual/'. $project->key_visual_path);
         $project->update(['key_visual_path' => null]);
     }
+
     public function updateShiftDescription(Request $request, Project $project){
         $project->shift_description = $request->shiftDescription;
         $project->save();
     }
+
     public function updateShiftContacts(Request $request, Project $project){
         $project->shift_contact()->sync(collect($request->contactIds));
     }
+
     public function updateShiftRelevantEventTypes(Request $request, Project $project){
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }

@@ -1,5 +1,4 @@
 <template>
-
     <div class="bg-backgroundGray mt-6 pb-6">
         <div class=" ml-14 pt-3 pr-14">
             <div class="flex justify-between items-center mt-4">
@@ -58,7 +57,6 @@
                         </g>
                     </svg>
                 </div>
-
                 <transition
                     enter-active-class="transition ease-out duration-100"
                     enter-from-class="transform opacity-0 scale-95"
@@ -69,7 +67,6 @@
                     <div
                         class="z-40 origin-top-right absolute right-10 px-4 py-2 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none"
                         v-show="userWindow" ref="containerRef">
-
                         <div class="flex items-center justify-between">
                             <div class="flex gap-4 items-center" @click="openFilter = !openFilter">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="21.496" height="19.496"
@@ -104,7 +101,6 @@
                                 <XIcon class="h-6 w-6 text-white" @click="userWindow = !userWindow"/>
                             </div>
                         </div>
-
                         <div class="" v-if="openFilter">
                             <div class="my-5">
                                 <div class="flex w-full mb-3">
@@ -123,7 +119,7 @@
                                         Externe Mitarbeiter*innen
                                     </div>
                                 </div>
-                                <div class="flex w-full">
+                                <div class="flex w-full mb-3">
                                     <input v-model="showProvider"
                                            type="checkbox"
                                            class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
@@ -131,12 +127,21 @@
                                         Dienstleister
                                     </div>
                                 </div>
+                                <div class="flex w-full mb-3" v-for="craft in crafts" :key="craft.id">
+                                    <input type="checkbox"
+                                           class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"
+                                           v-model="activeCraftFilters"
+                                           :id="'craft-' + craft.id"
+                                           :value="craft.id"
+                                    />
+                                    <div :class="[false ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                        {{craft.name}}
+                                    </div>
+                                </div>
                             </div>
                             <div class="my-2 h-0.5 w-full bg-[#3A374D]">
-
                             </div>
                         </div>
-
                         <div @mousedown="preventContainerDrag" class="max-h-72 shiftUserWindow">
                             <div v-for="user in filteredUsers">
                                 <DragElement :item="user.element" :plannedHours="user.plannedWorkingHours" :expected-hours="user.expectedWorkingHours" :type="user.type"/>
@@ -146,17 +151,14 @@
                 </transition>
             </div>
         </div>
-
         <div class="mt-5">
             <div class="xsDark" v-if="eventsWithRelevant.length === 0">
                 Bisher gibt es für dieses Projekt keine schichtrelevanten Termine.
             </div>
-
             <SingleRelevantEvent v-for="event in eventsWithRelevant" :crafts="crafts" :event="event" :event-types="eventTypes"/>
         </div>
         </div>
     </div>
-
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -180,8 +182,17 @@ export default defineComponent({
         SingleRelevantEvent,
         DragElement,
         SingleShiftEvent,
-        PencilAltIcon, TrashIcon, DuplicateIcon, DotsVerticalIcon,
-        Switch, SwitchGroup, SwitchLabel, Menu, MenuItems, MenuItem, MenuButton,
+        PencilAltIcon,
+        TrashIcon,
+        DuplicateIcon,
+        DotsVerticalIcon,
+        Switch,
+        SwitchGroup,
+        SwitchLabel,
+        Menu,
+        MenuItems,
+        MenuItem,
+        MenuButton,
         XIcon,
     },
     data() {
@@ -192,7 +203,7 @@ export default defineComponent({
             showIntern: false,
             showExtern: false,
             showProvider: false,
-
+            activeCraftFilters: []
         }
     },
     computed: {
@@ -210,7 +221,7 @@ export default defineComponent({
             return conflicts;
         },
         filteredUsers() {
-            if (!this.showExtern && !this.showIntern && !this.showProvider) {
+            if (!this.showExtern && !this.showIntern && !this.showProvider && this.activeCraftFilters.length === 0) {
                 return this.dropUsers;
             }
             let users = [];
@@ -223,14 +234,22 @@ export default defineComponent({
             if (this.showProvider) {
                 users = users.concat(this.dropUsers.filter(user => user.type === 2));
             }
-            return users
+            if (this.activeCraftFilters.length > 0) {
+                this.activeCraftFilters.forEach((craftId) => {
+                    users = users.concat(
+                        this.dropUsers.filter(user => user.element.assigned_crafts_ids.includes(craftId))
+                    );
+                });
+                //remove duplicates from users
+                users = Array.from(new Set(users));
+            }
+            return users;
         },
         hasUncommittedShift() {
             return this.eventsWithRelevant.some(event => event.shifts.find(shift => shift.is_committed === false));
         }
     },
     mounted() {
-        console.log(this.eventsWithRelevant)
         this.makeContainerDraggable();
     },
     methods: {
@@ -271,6 +290,9 @@ export default defineComponent({
         preventContainerDrag(event) {
             event.stopPropagation();
         },
+        handleActiveCraftFilters(craftId, event) {
+            console.debug(craftId, event);
+        }
     },
 })
 </script>

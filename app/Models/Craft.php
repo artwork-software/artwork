@@ -46,4 +46,20 @@ class Craft extends Model
     {
         return $this->belongsToMany(User::class, 'users_assigned_crafts');
     }
+
+    /**
+     * @return BelongsToMany
+     */
+    public function assigned_freelancers(): BelongsToMany
+    {
+        return $this->belongsToMany(Freelancer::class, 'freelancer_assigned_crafts');
+    }
+
+    /**
+     * @return BelongsToMany
+     */
+    public function assigned_service_providers(): BelongsToMany
+    {
+        return $this->belongsToMany(ServiceProvider::class, 'service_provider_assigned_crafts');
+    }
 }

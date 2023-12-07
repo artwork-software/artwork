@@ -2,18 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Casts\GermanTimeCast;
-use App\Enums\PermissionNameEnum;
 use App\Events\UserUpdated;
 use App\Http\Requests\SearchRequest;
-use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
 use App\Http\Resources\UserWorkProfileResource;
 use App\Models\Craft;
 use App\Models\Department;
-use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Freelancer;
 use App\Models\Project;
@@ -21,7 +17,6 @@ use App\Models\Room;
 use App\Models\ServiceProvider;
 use App\Models\User;
 use Carbon\Carbon;
-use Carbon\CarbonInterval;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +27,6 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
-use Laravel\Fortify\Contracts\SuccessfulPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Fortify;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -56,7 +50,6 @@ class UserController extends Controller
      */
     public function search(SearchRequest $request): array
     {
-
        $this->authorize('viewAny',User::class);
 
         return UserIndexResource::collection(User::search($request->input('query'))->get())->resolve();
@@ -68,7 +61,6 @@ class UserController extends Controller
      */
     public function money_source_search(SearchRequest $request): array
     {
-
         //$this->authorize('viewAny',User::class);
         $wantedUserArray = [];
 
@@ -86,7 +78,6 @@ class UserController extends Controller
      */
     public function reset_user_password(Request $request): mixed
     {
-
         //$user = Auth::user();
 
         $this->authorize('update',User::class);
@@ -161,27 +152,8 @@ class UserController extends Controller
      */
     public function editUserShiftplan(User $user, CalendarController $shiftPlan): Response|ResponseFactory
     {
-
         $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
         $availabilityData = $this->getAvailabilityData($user, request('month'));
-
-        /*if(\request('startDate') && \request('endDate')){
-
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
-
-        }else{
-
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
-
-        }
-
-        $events = Event::with(['shifts','event_type'])
-            ->whereHas('shifts', function ($query) {
-                $query->whereNotNull('shifts.id');
-            })
-            ->get();*/
 
         return inertia('Users/UserShiftPlanPage', [
             //needed for UserEditHeader
@@ -198,9 +170,11 @@ class UserController extends Controller
             'rooms' => Room::all(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => Project::all(),
-            'shifts' => $user->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),
-
-
+            'shifts' => $user
+                ->shifts()
+                ->with(['event', 'event.project', 'event.room'])
+                ->orderBy('start', 'ASC')
+                ->get(),
         ]);
     }
 
@@ -426,7 +400,22 @@ class UserController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function updateUserCraftSettings(User $user, Request $request): RedirectResponse
+    public function updateWorkProfile(User $user, Request $request): RedirectResponse
+    {
+        $user->update([
+            'work_name' => $request->get('workName'),
+            'work_description' => $request->get('workDescription')
+        ]);
+
+        return Redirect::back()->with('success', ['workProfile' => 'Arbeitsprofil erfolgreich aktualisiert']);
+    }
+
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function updateCraftSettings(User $user, Request $request): RedirectResponse
     {
         $user->update([
             'can_work_shifts' => $request->boolean('canBeAssignedToShifts'),
@@ -443,7 +432,15 @@ class UserController extends Controller
      */
     public function assignCraft(User $user, Request $request): RedirectResponse
     {
-        $user->assigned_crafts()->attach(Craft::find($request->get('craftId')));
+        $craftToAssign = Craft::find($request->get('craftId'));
+
+        if (is_null($craftToAssign)) {
+            return Redirect::back();
+        }
+
+        if (!$user->assigned_crafts->contains($craftToAssign)) {
+            $user->assigned_crafts()->attach(Craft::find($request->get('craftId')));
+        }
 
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
     }
@@ -458,21 +455,6 @@ class UserController extends Controller
         $user->assigned_crafts()->detach($craft);
 
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
-    }
-
-    /**
-     * @param User $user
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function updateWorkProfile(User $user, Request $request): RedirectResponse
-    {
-        $user->update([
-            'work_name' => $request->get('workName'),
-            'work_description' => $request->get('workDescription')
-        ]);
-
-        return Redirect::back()->with('success', ['workProfile' => 'Arbeitsprofil erfolgreich aktualisiert']);
     }
 
     /**

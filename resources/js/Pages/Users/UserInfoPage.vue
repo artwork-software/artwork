@@ -11,11 +11,9 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import UserEditHeader from "@/Pages/Users/Components/UserEditHeader.vue";
 import UserInfoTab from "@/Pages/Users/Tabs/UserInfoTab.vue";
-import UserSidebar from "@/Pages/Users/Components/UserSidebar.vue";
 
 export default {
     components: {
-        UserSidebar,
         UserInfoTab,
         UserEditHeader,
         BaseSidenav,

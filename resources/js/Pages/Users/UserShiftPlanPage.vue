@@ -18,11 +18,9 @@ import UserInfoTab from "@/Pages/Users/Tabs/UserInfoTab.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 import UserAvailabilityCalendar from "@/Pages/Users/Components/UserAvailabilityCalendar.vue";
-import UserSidebar from "@/Pages/Users/Components/UserSidebar.vue";
 
 export default {
     components: {
-        UserSidebar,
         UserAvailabilityCalendar,
         UserShiftPlan,
         Availability,

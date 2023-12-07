@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Freelancer">
-        <div class="max-w-screen-lg mt-12 ml-14 mr-40">
+        <div class="w-full mt-12 ml-14 mr-40">
             <div class="flex justify-between w-full items-center">
                 <div class="group block flex-shrink-0">
                     <div class="flex items-center">
@@ -80,7 +80,7 @@
                               :user="freelancer" :vacations="vacations"/>
             </div>
             <!-- Persönliche Daten -->
-            <div v-if="currentTab === 2" class="max-w-screen-lg ">
+            <div v-if="currentTab === 2">
                 <!-- Profilbild, Name, Nachname -->
                 <div class="grid grid-cols-1 sm:grid-cols-8 gap-4 flex items-center">
                     <div class="col-span-1">
@@ -149,15 +149,13 @@
 
                 <AddButton class="mt-5 !ml-0" text="Änderung Speichern" :disabled="checkCanEdit" :readonly="checkCanEdit" type="secondary" @click="saveFreelancer" />
             </div>
-            <div v-if="currentTab === 3" class="max-w-screen-lg ">
+            <div v-if="currentTab === 3">
                 <UserTermsTab user_type="freelancer" :user_to_edit="freelancer"></UserTermsTab>
             </div>
-
+            <div v-if="currentTab === 4">
+                <WorkProfileTab user-type="freelancer" :user="freelancer"/>
+            </div>
         </div>
-        <BaseSidenav :show="showSidebar" @toggle="this.showSidebar =! this.showSidebar" >
-            <UserSidebar :user="freelancer" type="freelancer"  />
-        </BaseSidenav>
-
     </AppLayout>
 </template>
 
@@ -175,18 +173,26 @@ import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
-import UserSidebar from "@/Pages/Users/Components/UserSidebar.vue";
+import WorkProfileTab from "@/Pages/Components/WorkProfileTab.vue";
 
 export default {
     name: "Show",
     mixins: [Permissions],
     components: {
-        UserSidebar, BaseSidenav,
-        UserShiftPlan, Availability,
+        WorkProfileTab,
+        BaseSidenav,
+        UserShiftPlan,
+        Availability,
         UserTermsTab,
         AddButton,
-        PencilAltIcon, DotsVerticalIcon, TrashIcon,
-        AppLayout, Menu, MenuButton, MenuItems, MenuItem
+        PencilAltIcon,
+        DotsVerticalIcon,
+        TrashIcon,
+        AppLayout,
+        Menu,
+        MenuButton,
+        MenuItems,
+        MenuItem
     },
     props: [
         'freelancer',
@@ -213,7 +219,7 @@ export default {
                 { id: 1, name: 'Einsatzplan', href: '#', current: false, has_permission: this.$can('can plan shifts') || this.hasAdminRole() },
                 { id: 2, name: 'Persönliche Daten', href: '#', current: true, has_permission: true },
                 { id: 3, name: 'Konditionen', href: '#', current: false, has_permission: this.$can('can edit external users conditions') || this.hasAdminRole() },
-
+                { id: 4, name: 'Arbeitsprofil', href: '#', current: false, has_permission: this.$can('can edit external users conditions') || this.hasAdminRole() },
             ],
             currentTab: 2,
             freelancerData: useForm({
@@ -234,7 +240,6 @@ export default {
     computed: {
         checkCanEdit(){
             return !(this.$can('can manage workers') || this.hasAdminRole());
-
         },
     },
     methods: {

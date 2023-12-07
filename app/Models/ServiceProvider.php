@@ -6,37 +6,16 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * App\Models\ServiceProvider
- * @property int $id
- * @property string|null $profile_image
- * @property string $provider_name
- * @property string|null $email
- * @property string|null $phone_number
- * @property string|null $street
- * @property string|null $zip_code
- * @property string|null $location
- * @property bool $can_master
- * @property string|null $note
- * @property float|null $salary_per_hour
- * @property string|null $salary_description
- * @property string|null $work_name
- * @property string|null $work_description
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @property-read string $name
- * @property-read string $type
- * @property-read string $profile_photo_url
- * @property-read Collection|ServiceProviderContacts[] $contacts
- * @property-read int|null $contacts_count
- * @property-read Collection|Shift[] $shifts
- * @property-read int|null $shifts_count
- */
 class ServiceProvider extends Model
 {
     use HasFactory;
 
+    /**
+     * @var string[]
+     */
     protected $fillable = [
         'profile_image',
         'provider_name',
@@ -51,27 +30,61 @@ class ServiceProvider extends Model
         'salary_description',
         'work_name',
         'work_description',
+        'can_work_shifts'
     ];
 
-
+    /**
+     * @var string[]
+     */
     protected $with = ['contacts'];
 
+    /**
+     * @var string[]
+     */
     protected $appends = ['name', 'type', 'profile_photo_url'];
 
-    public function contacts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    /**
+     * @return HasMany
+     */
+    public function contacts(): HasMany
     {
         return $this->hasMany(ServiceProviderContacts::class);
     }
 
-    public function shifts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    /**
+     * @return BelongsToMany
+     */
+    public function shifts(): BelongsToMany
     {
-        return $this->belongsToMany(Shift::class, 'shifts_service_providers', 'service_provider_id', 'shift_id')->withPivot(['is_master'])->orderByPivot('is_master', 'desc')->withCasts(['is_master' => 'boolean']);
+        return $this->belongsToMany(
+            Shift::class,
+            'shifts_service_providers',
+            'service_provider_id',
+            'shift_id'
+        )->withPivot(['is_master'])
+            ->orderByPivot('is_master', 'desc')
+            ->withCasts(['is_master' => 'boolean']);
     }
 
-    public function getNameAttribute(){
+    /**
+     * @return BelongsToMany
+     */
+    public function assigned_crafts(): BelongsToMany
+    {
+        return $this->belongsToMany(Craft::class, 'service_provider_assigned_crafts');
+    }
+
+    /**
+     * @return string
+     */
+    public function getNameAttribute(): string
+    {
         return $this->provider_name;
     }
 
+    /**
+     * @return Collection
+     */
     public function getShiftsAttribute(): Collection
     {
         return $this->shifts()
@@ -85,16 +98,29 @@ class ServiceProvider extends Model
     }
 
 
+    /**
+     * @return string
+     */
     public function getTypeAttribute(): string
     {
         return 'service_provider';
     }
 
+    /**
+     * @return string
+     */
     public function getProfilePhotoUrlAttribute(): string
     {
-        return $this->profile_image ? $this->profile_image : 'https://ui-avatars.com/api/?name=' . $this->provider_name[0] . '&color=7F9CF5&background=EBF4FF';
+        return $this->profile_image ?
+            $this->profile_image :
+            'https://ui-avatars.com/api/?name=' . $this->provider_name[0] . '&color=7F9CF5&background=EBF4FF';
     }
 
+    /**
+     * @param $startDate
+     * @param $endDate
+     * @return float|int
+     */
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
         $shiftsInDateRange = $this->shifts()

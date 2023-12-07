@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\EventTypeResource;
+use App\Http\Resources\FreelancerShowResource;
+use App\Models\Craft;
 use App\Models\EventType;
 use App\Models\Freelancer;
 use App\Models\Project;
 use App\Models\Room;
-use App\Models\ServiceProvider;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,9 +23,9 @@ class FreelancerController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return void
      */
-    public function index()
+    public function index(): void
     {
         //
     }
@@ -33,9 +33,9 @@ class FreelancerController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return void
      */
-    public function create()
+    public function create(): void
     {
         //
     }
@@ -43,16 +43,22 @@ class FreelancerController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function store(Request $request): \Symfony\Component\HttpFoundation\Response
+    public function store(): \Symfony\Component\HttpFoundation\Response
     {
-        $freelancer = Freelancer::create(['profile_image' => 'https://ui-avatars.com/api/?name=NEU&color=7F9CF5&background=EBF4FF']);
+        $freelancer = Freelancer::create(
+            ['profile_image' => 'https://ui-avatars.com/api/?name=NEU&color=7F9CF5&background=EBF4FF']
+        );
 
         return Inertia::location(route('freelancer.show', $freelancer->id));
     }
 
+    /**
+     * @param Freelancer $freelancer
+     * @param $month
+     * @return array
+     */
     function getAvailabilityData(Freelancer $freelancer, $month = null): array
     {
         $vacationDays = $freelancer->vacations()->orderBy('from', 'ASC')->get();
@@ -116,16 +122,16 @@ class FreelancerController extends Controller
      * Display the specified resource.
      *
      * @param Freelancer $freelancer
+     * @param CalendarController $shiftPlan
      * @return Response
      */
     public function show(Freelancer $freelancer, CalendarController $shiftPlan): Response
     {
-
         $showCalendar = $shiftPlan->createCalendarDataForFreelancerShiftPlan($freelancer);
         $availabilityData = $this->getAvailabilityData($freelancer, request('month'));
 
         return inertia('Freelancer/Show', [
-            'freelancer' => $freelancer,
+            'freelancer' => new FreelancerShowResource($freelancer),
             //needed for availability calendar
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
@@ -137,17 +143,20 @@ class FreelancerController extends Controller
             'rooms' => Room::all(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => Project::all(),
-            'shifts' => $freelancer->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),
+            'shifts' => $freelancer
+                ->shifts()
+                ->with(['event', 'event.project', 'event.room'])
+                ->orderBy('start', 'ASC')
+                ->get(),
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Freelancer  $freelancer
-     * @return \Illuminate\Http\Response
+     * @return void
      */
-    public function edit(Freelancer $freelancer)
+    public function edit(): void
     {
         //
     }
@@ -155,8 +164,8 @@ class FreelancerController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Freelancer  $freelancer
+     * @param Request $request
+     * @param Freelancer $freelancer
      */
     public function update(Request $request, Freelancer $freelancer): void
     {
@@ -177,25 +186,73 @@ class FreelancerController extends Controller
         );
     }
 
-    public function update_freelancer_can_master(Freelancer $freelancer, Request $request): RedirectResponse
+    /**
+     * @param Freelancer $freelancer
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function updateWorkProfile(Freelancer $freelancer, Request $request): RedirectResponse
     {
         $freelancer->update([
-            'can_master' => $request->can_master
+            'work_name' => $request->get('workName'),
+            'work_description' => $request->get('workDescription')
         ]);
 
-        return Redirect::back()->with('success', 'Freelancer updated');
+        return Redirect::back()->with('success', ['workProfile' => 'Arbeitsprofil erfolgreich aktualisiert']);
     }
 
-    public function update_work_data(Freelancer $freelancer, Request $request): RedirectResponse
+    /**
+     * @param Freelancer $freelancer
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function updateCraftSettings(Freelancer $freelancer, Request $request): RedirectResponse
     {
         $freelancer->update([
-            'work_name' => $request->work_name,
-            'work_description' => $request->work_description
+            'can_work_shifts' => $request->boolean('canBeAssignedToShifts'),
+            'can_master' => $request->boolean('canBeUsedAsMasterCraftsman')
         ]);
 
-        return Redirect::back()->with('success', 'Freelancer updated');
+        return Redirect::back();
     }
 
+    /**
+     * @param Freelancer $freelancer
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function assignCraft(Freelancer $freelancer, Request $request): RedirectResponse
+    {
+        $craftToAssign = Craft::find($request->get('craftId'));
+
+        if (is_null($craftToAssign)) {
+            return Redirect::back();
+        }
+
+        if (!$freelancer->assigned_crafts->contains($craftToAssign)) {
+            $freelancer->assigned_crafts()->attach(Craft::find($request->get('craftId')));
+        }
+
+        return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
+    }
+
+    /**
+     * @param Freelancer $freelancer
+     * @param Craft $craft
+     * @return RedirectResponse
+     */
+    public function removeCraft(Freelancer $freelancer, Craft $craft): RedirectResponse
+    {
+        $freelancer->assigned_crafts()->detach($craft);
+
+        return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
+    }
+
+    /**
+     * @param Request $request
+     * @param Freelancer $freelancer
+     * @return void
+     */
     public function updateProfileImage(Request $request, Freelancer $freelancer): void
     {
         if (!Storage::exists("public/profile-photos")) {
@@ -215,10 +272,9 @@ class FreelancerController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Freelancer  $freelancer
-     * @return \Illuminate\Http\Response
+     * @return void
      */
-    public function destroy(Freelancer $freelancer)
+    public function destroy(): void
     {
         //
     }

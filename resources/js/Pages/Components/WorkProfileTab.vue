@@ -2,45 +2,48 @@
     <div class="headline3 mb-2">
         Arbeitsprofil
     </div>
-    <div class="headline6Light">
-        Bearbeite das Arbeitsprofil der Nutzer*in hier.
-    </div>
-    <hr class="mb-2">
-    <div v-if="this.$page.props.flash.success?.workProfile" class="w-2/3 font-bold text-sm border-1 border-green-600 rounded bg-green-600  p-2 text-white mb-1">
-        {{ this.$page.props.flash.success?.workProfile }}
-    </div>
-    <div class="w-2/3 mb-2">
-        <label for="jobTitle" class="text-sm subpixel-antialiased text-secondary">
-            Arbeitsbezeichnung
-        </label>
-        <input id="jobTitle"
-               v-model="workProfileForm.workName"
-               placeholder="Noch keine Bezeichnung angegeben"
-               type="text"
-               class="w-full text-base font-normal mt-1 inputMain focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"/>
-    </div>
-    <div class="w-2/3 mb-2">
-        <label for="jobDescription" class="text-sm subpixel-antialiased text-secondary">
-            Arbeitsbeschreibung
-        </label>
-        <textarea
-            id="jobDescription"
-            v-model="workProfileForm.workDescription"
-            placeholder="Noch keine Beschreibung angegeben"
-            rows="4"
-            class="w-full text-base font-normal mt-1 inputMain resize-none xsDark focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"/>
-    </div>
-    <div class="w-2/3 flex flex-row justify-center mb-2">
-        <AddButton mode="secondary" text="Speichern" @click="updateWorkProfile()"/>
+    <div class="mb-2">
+        <div class="headline6Light">
+            Bearbeite das Arbeitsprofil der Nutzer*in hier.
+        </div>
+        <hr class="mb-2">
+        <div v-if="this.$page.props.flash.success?.workProfile"
+             class="w-2/3 font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-1">
+            {{ this.$page.props.flash.success?.workProfile }}
+        </div>
+        <div class="w-2/3 mb-2">
+            <label for="jobTitle" class="text-sm subpixel-antialiased text-secondary">
+                Arbeitsbezeichnung
+            </label>
+            <input id="jobTitle"
+                   v-model="workProfileForm.workName"
+                   placeholder="Noch keine Bezeichnung angegeben"
+                   type="text"
+                   class="w-full text-base font-normal mt-1 inputMain focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"/>
+        </div>
+        <div class="w-2/3 mb-2">
+            <label for="jobDescription" class="text-sm subpixel-antialiased text-secondary">
+                Arbeitsbeschreibung
+            </label>
+            <textarea
+                id="jobDescription"
+                v-model="workProfileForm.workDescription"
+                placeholder="Noch keine Beschreibung angegeben"
+                rows="4"
+                class="w-full text-base font-normal mt-1 inputMain resize-none xsDark focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"/>
+        </div>
+        <div class="w-2/3 flex flex-row justify-center">
+            <AddButton mode="secondary" text="Speichern" @click="updateWorkProfile()"/>
+        </div>
     </div>
     <div class="headline3 mb-2">
         Gewerke
     </div>
-    <div class="headline6Light">
-        Gewerkseinstellungen
-    </div>
-    <hr class="mb-2">
     <div class="mb-2">
+        <div class="headline6Light">
+            Gewerkseinstellungen
+        </div>
+        <hr class="mb-2">
         <SwitchGroup as="div" class="flex items-center">
             <Switch v-model="craftSettingsForm.canBeAssignedToShifts"
                     :class="[craftSettingsForm.canBeAssignedToShifts ? 'bg-indigo-600' : 'bg-secondary', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
@@ -62,23 +65,29 @@
             </SwitchLabel>
         </SwitchGroup>
     </div>
-    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" class="mb-2">
+    <div v-if="userType === 'user'" class="mb-2">
         <div class="headline6Light">
             Schichtplaner für
         </div>
         <hr class="mb-2">
-        <div class="flex">
-            <TagComponent v-for="craft in this.user.accessibleCrafts" :tag="craft" :key="craft.id"
+        <div class="flex flex-row">
+            <TagComponent v-if="this.user.accessibleCrafts?.length > 0"
+                          v-for="craft in this.user.accessibleCrafts"
+                          :tag="craft"
+                          :key="craft.id"
                           :displayed-text="craft.name" hide-x="true"/>
+            <span v-else class="text-xs text-gray-500">
+                Nicht als Schichtplaner zugeteilt.
+            </span>
         </div>
     </div>
-    <div v-if="this.craftSettingsForm.canBeAssignedToShifts && this.hasAdminRole()" class="mb-2">
+    <div v-if="this.craftSettingsForm.canBeAssignedToShifts" class="mb-2">
         <div class="headline6Light">
             In folgenden Gewerken einsetzbar
         </div>
         <hr class="mb-2">
         <div v-if="this.$page.props.flash.success?.craft"
-             class="w-2/3 font-bold text-sm border-1 border-green-600 rounded bg-green-600  p-2 text-white mb-1">
+             class="w-2/3 font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-1">
             {{ this.$page.props.flash.success?.craft }}
         </div>
         <label for="selectedCraftToAdd" class="text-sm subpixel-antialiased text-secondary">
@@ -120,7 +129,7 @@
             </Listbox>
             <AddButton :disabled="this.selectedCraftToAssign === null" style="margin-top: 0;" mode="secondary" text="Gewerk zuordnen" @click="assignCraft()"/>
         </div>
-        <div class="flex">
+        <div class="w-2/3 flex flex-row flex-wrap">
             <TagComponent v-for="craft in user.assignedCrafts" :tag="craft" :key="craft.id" :displayed-text="craft.name" :method="removeCraft" :property="craft.id"/>
         </div>
     </div>
@@ -170,63 +179,120 @@ export default {
         'craftSettingsForm.isDirty': {
             handler(craftSettingsFormIsDirty) {
                 if (craftSettingsFormIsDirty) {
-                    this.craftSettingsForm.post(
-                        route(
-                            'user.update.craftSettings',
+                    let desiredRoute = null,
+                        routeParameter = null;
+
+                    switch (this.userType) {
+                        case 'user':
+                            desiredRoute = 'user.update.craftSettings';
+                            routeParameter = {user: this.user.id};
+                            break;
+                        case 'freelancer':
+                            desiredRoute = 'freelancer.update.craftSettings';
+                            routeParameter = {freelancer: this.user.id};
+                            break;
+                        case 'serviceProvider':
+                            desiredRoute = 'service_provider.update.craftSettings';
+                            routeParameter = {serviceProvider: this.user.id};
+                            break;
+                    }
+
+                    if (desiredRoute) {
+                        this.craftSettingsForm.post(
+                            route(desiredRoute, routeParameter),
                             {
-                                user: this.user.id
+                                preserveScroll:true,
+                                preserveState:true
                             }
-                        ),
-                        {
-                            preserveScroll:true,
-                            preserveState:true
-                        }
-                    );
+                        );
+                    }
                 }
             }
         }
     },
     methods: {
         updateWorkProfile() {
-            this.workProfileForm.post(
-                route(
-                    'user.edit.workProfile',
-                    {
-                        user: this.user.id
-                    }
-                )
-            );
+            let desiredRoute = null,
+                routeParameter = null;
+
+            switch (this.userType) {
+                case 'user':
+                    desiredRoute = 'user.update.workProfile';
+                    routeParameter = {user: this.user.id};
+                    break;
+                case 'freelancer':
+                    desiredRoute = 'freelancer.update.workProfile';
+                    routeParameter = {freelancer: this.user.id};
+                    break;
+                case 'serviceProvider':
+                    desiredRoute = 'service_provider.update.workProfile';
+                    routeParameter = {serviceProvider: this.user.id};
+                    break;
+            }
+
+            if (desiredRoute) {
+                this.workProfileForm.post(route(desiredRoute, routeParameter));
+            }
         },
         assignCraft() {
-            Inertia.post(
-                route(
-                    'user.assign.craft',
+            let desiredRoute = null,
+                routeParameter = null;
+
+            switch (this.userType) {
+                case 'user':
+                    desiredRoute = 'user.assign.craft';
+                    routeParameter = {user: this.user.id};
+                    break;
+                case 'freelancer':
+                    desiredRoute = 'freelancer.assign.craft';
+                    routeParameter = {freelancer: this.user.id};
+                    break;
+                case 'serviceProvider':
+                    desiredRoute = 'service_provider.assign.craft';
+                    routeParameter = {serviceProvider: this.user.id};
+                    break;
+            }
+
+            if (desiredRoute) {
+                Inertia.post(
+                    route(desiredRoute, routeParameter),
                     {
-                        user: this.user.id,
+                        craftId: this.selectedCraftToAssign
+                    },
+                    {
+                        preserveScroll: true,
+                        onSuccess: () => this.selectedCraftToAssign = null
                     }
-                ),
-                {
-                    craftId: this.selectedCraftToAssign
-                },
-                {
-                    preserveScroll: true,
-                    onSuccess: () => this.selectedCraftToAssign = null
-                }
-            );
+                );
+            }
         },
         removeCraft(craftId) {
-            Inertia.delete(
-                route(
-                    'user.remove.craft',
+            let desiredRoute = null,
+                routeParameter = null;
+
+            switch (this.userType) {
+                case 'user':
+                    desiredRoute = 'user.remove.craft';
+                    routeParameter = {user: this.user.id, craft: craftId};
+                    break;
+                case 'freelancer':
+                    desiredRoute = 'freelancer.remove.craft';
+                    routeParameter = {freelancer: this.user.id, craft: craftId};
+                    break;
+                case 'serviceProvider':
+                    desiredRoute = 'service_provider.remove.craft';
+                    routeParameter = {serviceProvider: this.user.id, craft: craftId};
+                    break;
+            }
+
+            if (desiredRoute) {
+                Inertia.delete(
+                    route(desiredRoute, routeParameter),
                     {
-                        user: this.user.id,
-                        craft: craftId
+                        preserveScroll: true
                     }
-                ),
-                {
-                    preserveScroll: true
-                }
-            );
+                );
+            }
         }
     }
 }

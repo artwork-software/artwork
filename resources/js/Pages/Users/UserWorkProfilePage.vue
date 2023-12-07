@@ -1,16 +1,16 @@
 <template>
     <UserEditHeader :current-tab="currentTab" :user_to_edit="userToEdit">
-        <UserWorkProfileTab :user="userToEdit"/>
+        <WorkProfileTab user-type="user" :user="userToEdit"/>
     </UserEditHeader>
 </template>
 
 <script>
 import UserEditHeader from "@/Pages/Users/Components/UserEditHeader.vue";
-import UserWorkProfileTab from "@/Pages/Users/Tabs/UserWorkProfileTab.vue";
+import WorkProfileTab from "@/Pages/Components/WorkProfileTab.vue";
 
 export default {
     components: {
-        UserWorkProfileTab,
+        WorkProfileTab,
         UserEditHeader
     },
     props: ['userToEdit', 'currentTab']

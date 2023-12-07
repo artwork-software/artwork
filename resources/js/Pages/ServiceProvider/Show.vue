@@ -1,6 +1,6 @@
 <template>
     <AppLayout title="Freelancer">
-        <div class="max-w-screen-lg mt-12 ml-14 mr-40">
+        <div class="w-full mt-12 ml-14 mr-40">
             <div class="flex justify-between w-full items-center">
                 <div class="group block flex-shrink-0">
                     <div class="flex items-center">
@@ -61,7 +61,7 @@
                 <div class="hidden sm:block">
                     <div class="">
                         <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
-                            <div v-for="tab in tabs" :key="tab.name" @click="changeTab(tab.id)" :class="[tab.current ? 'border-indigo-500 text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']" :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}</div>
+                            <div v-for="tab in tabs" v-show="tab.has_permission" :key="tab.name" @click="changeTab(tab.id)" :class="[tab.current ? 'border-indigo-500 text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']" :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}</div>
                         </nav>
                     </div>
                 </div>
@@ -75,11 +75,11 @@
                                :projects="projects" :event-types="eventTypes" :rooms="rooms"
                                :vacations="vacations"></UserShiftPlan>
             </div>
-            <div v-if="currentTab === 2" class="max-w-screen-lg">
+            <div v-if="currentTab === 2">
                 <UserTermsTab user_type="service_provider" :user_to_edit="serviceProvider"></UserTermsTab>
             </div>
             <!-- Persönliche Daten -->
-            <div v-if="currentTab === 3" class="max-w-screen-lg">
+            <div v-if="currentTab === 3">
                 <!-- Profilbild, Name, Nachname -->
                 <div class="grid grid-cols-1 sm:grid-cols-8 gap-4 flex items-center">
                     <div class="col-span-1">
@@ -172,11 +172,10 @@
                     </div>
                 </div>
             </div>
+            <div v-if="currentTab === 4">
+                <WorkProfileTab user-type="serviceProvider" :user="serviceProvider"/>
+            </div>
         </div>
-        <BaseSidenav :show="showSidebar" @toggle="this.showSidebar =! this.showSidebar" >
-            <UserSidebar :user="serviceProvider" type="serviceProvider"  />
-        </BaseSidenav>
-
     </AppLayout>
 </template>
 
@@ -194,20 +193,26 @@ import SingleContact from "@/Pages/ServiceProvider/Components/SingleContact.vue"
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
-import UserSidebar from "@/Pages/Users/Components/UserSidebar.vue";
+import WorkProfileTab from "@/Pages/Components/WorkProfileTab.vue";
 
 export default defineComponent({
     name: "Show",
     mixins: [Permissions],
     components: {
-        UserSidebar,
+        WorkProfileTab,
         BaseSidenav,
         UserShiftPlan,
         UserTermsTab,
         SingleContact,
         AddButton,
-        PencilAltIcon, DotsVerticalIcon, TrashIcon,
-        AppLayout, Menu, MenuButton, MenuItems, MenuItem,
+        PencilAltIcon,
+        DotsVerticalIcon,
+        TrashIcon,
+        AppLayout,
+        Menu,
+        MenuButton,
+        MenuItems,
+        MenuItem,
         PlusCircleIcon
     },
     props: [
@@ -219,7 +224,6 @@ export default defineComponent({
         'eventTypes',
         'projects',
         'totalPlannedWorkingHours',
-
     ],
     mounted() {
         this.showSidebar = true;
@@ -230,9 +234,10 @@ export default defineComponent({
     data(){
         return {
             tabs: [
-                { id: 1, name: 'Einsatzplan', href: '#', current: false },
-                { id: 2, name: 'Konditionen', href: '#', current: false },
-                { id: 3, name: 'Unternehmensdaten', href: '#', current: true },
+                { id: 1, name: 'Einsatzplan', href: '#', current: false, has_permission: this.hasAdminRole() },
+                { id: 2, name: 'Konditionen', href: '#', current: false, has_permission: this.hasAdminRole() },
+                { id: 3, name: 'Unternehmensdaten', href: '#', current: true, has_permission: true },
+                { id: 4, name: 'Arbeitsprofil', href: '#', current: false, has_permission: this.hasAdminRole() },
             ],
             currentTab: 3,
             providerData: useForm({

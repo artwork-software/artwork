@@ -148,7 +148,8 @@ class HandleInertiaRequests extends Middleware
             'myMoneySources' => Auth::guest() ? false : Auth::user()->accessMoneySources()->get(['money_source_id']),
             'urlParameters' => $request->query(),
             'flash' => [
-                'success' => fn() => $request->session()->get('success')
+                'success' => fn() => $request->session()->get('success'),
+                'error' => fn() => $request->session()->get('error')
             ]
         ]);
     }

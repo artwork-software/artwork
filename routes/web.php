@@ -2,8 +2,11 @@
 
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\BudgetTemplateController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CellCalculationsController;
+use App\Http\Controllers\CellCommentsController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChecklistTemplateController;
 use App\Http\Controllers\CollectingSocietyController;
@@ -14,6 +17,7 @@ use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\ContractTypeController;
 use App\Http\Controllers\CopyrightController;
 use App\Http\Controllers\CostCenterController;
+use App\Http\Controllers\CraftController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
@@ -28,6 +32,8 @@ use App\Http\Controllers\MoneySourceController;
 use App\Http\Controllers\MoneySourceFileController;
 use App\Http\Controllers\MoneySourceTaskController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PresetShiftController;
+use App\Http\Controllers\PresetTimeLineController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectStatesController;
@@ -36,17 +42,24 @@ use App\Http\Controllers\RoomAttributeController;
 use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomFileController;
+use App\Http\Controllers\RowCommentController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\ServiceProviderContactsController;
 use App\Http\Controllers\ServiceProviderController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\ShiftFilterController;
+use App\Http\Controllers\ShiftPresetController;
+use App\Http\Controllers\ShiftSettingsController;
+use App\Http\Controllers\SubEventsController;
 use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\SumDetailsController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTemplateController;
+use App\Http\Controllers\UserCalendarFilterController;
 use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserShiftCalendarFilterController;
+use App\Http\Controllers\UserVacationsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -74,16 +87,12 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 Route::get('/reset-password', [UserController::class, 'reset_password'])->name('reset_user_password');
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
-
-
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function(){
         Route::get('/settings', function () { return Inertia::render('Settings/ToolSettings'); })->name('tool.settings');
         Route::put('/settings',             [AppController::class, 'updateTool'])->name('tool.update');
         Route::put('/settings/email',       [AppController::class, 'updateEmailSettings'])->name('tool.updateMail');
     });
-
-
 
     //Hints
     Route::post('/toggle/hints', [AppController::class, 'toggle_hints'])->name('toggle.hints');
@@ -124,10 +133,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/users/{user}/photo', [UserController::class, 'updateUserPhoto'])->name('user.update.photo');
 
     Route::post('/users/reset-password', [UserController::class, 'reset_user_password'])->name('user.reset.password');
-    Route::post('/users/{user}/updateCraftSettings', [UserController::class, 'updateUserCraftSettings'])->name('user.update.craftSettings');
+    Route::post('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])->name('user.update.craftSettings');
     Route::post('/users/{user}/masters', [UserController::class, 'update_user_can_master'])->name('user.update.can_master');
     Route::post('/users/{user}/canWorkShifts', [UserController::class, 'update_user_can_work_shifts'])->name('user.update.can_work_shifts');
-    Route::post('/users/{user}/workings', [UserController::class, 'update_work_data'])->name('user.update.work_data');
     Route::post('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])->name('user.update.workProfile');
     Route::post('/users/{user}/assignCraft', [UserController::class, 'assignCraft'])->name('user.assign.craft');
     Route::delete('/users/{user}/removeCraft/{craft}', [UserController::class, 'removeCraft'])->name('user.remove.craft');
@@ -257,8 +265,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/sum/comments', [SumCommentController::class, 'store'])->name('sum.comments.store');
     Route::delete('/sum/comments/{comment}', [SumCommentController::class, 'destroy'])->name('sum.comments.delete');
 
-
-
     //Areas
     Route::get('/areas', [AreaController::class, 'index'])->name('areas.management');
     Route::get('/areas/trashed', [AreaController::class, 'getTrashed'])->name('areas.trashed');
@@ -266,6 +272,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/areas/{area}/duplicate', [AreaController::class, 'duplicate'])->name('areas.duplicate');
     Route::patch('/areas/{area}', [AreaController::class, 'update'])->name('areas.update');
     Route::delete('/areas/{area}', [AreaController::class, 'destroy']);
+
     //Trash
     Route::delete('/areas/{id}/force', [AreaController::class, 'forceDelete'])->name('areas.force');
     Route::patch('/areas/{id}/restore', [AreaController::class, 'restore'])->name('areas.restore');
@@ -326,20 +333,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
     Route::post('/events/{event}/by/notification', [EventController::class, 'destroyByNotification'])->name('events.delete.by.notification');
     Route::delete('/events/{event}/shifts', [EventController::class, 'destroy_shifts'])->name('events.shifts.delete');
-
     Route::put('/event/requests/{event}',[EventController::class, 'acceptEvent'])->name('events.accept');
     Route::put('/event/requests/{event}',[EventController::class, 'declineEvent'])->name('events.decline');
     Route::post('/event/answer/{event}', [EventController::class, 'answerOnEvent'])->name('event.answer');
+
     //Trash
     Route::delete('/events/{id}/force', [EventController::class, 'forceDelete'])->name('events.force');
     Route::patch('/events/{id}/restore', [EventController::class, 'restore'])->name('events.restore');
 
-
     //Shifts
     Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])->name('shifts.plan');
-    Route::get('/shifts/presets', [\App\Http\Controllers\ShiftPresetController::class, 'index'])->name('shifts.presets');
-    Route::post('/shift/{shiftPreset}/preset/store', [\App\Http\Controllers\ShiftPresetController::class, 'addNewShift'])->name('shift.preset.store');
-
+    Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])->name('shifts.presets');
+    Route::post('/shift/{shiftPreset}/preset/store', [ShiftPresetController::class, 'addNewShift'])->name('shift.preset.store');
     Route::post('/shifts/commit', [EventController::class, 'commit_shifts'])->name('shifts.commit');
 
     //EventTypes
@@ -351,10 +356,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // notification
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-
-
     Route::post('/collision/room', [RoomController::class, 'collisionsCount'])->name('collisions.room');
-
     Route::patch('/notifications', [NotificationController::class, 'setOnRead'])->name('notifications.setReadAt');
     Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
     Route::patch('/user/settings/{setting}', [NotificationController::class, 'updateSetting'])->name('notifications.settings');
@@ -379,7 +381,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Contracts
     Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');
-
     Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.index');
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
@@ -395,20 +396,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
     //MoneySourceTasks
-    Route::patch('money_source/task/{moneySourceTask}/done', [\App\Http\Controllers\MoneySourceTaskController::class, 'markAsDone'])->name('money_source.task.done');
-    Route::patch('money_source/task/{moneySourceTask}/undone', [\App\Http\Controllers\MoneySourceTaskController::class, 'markAsUnDone'])->name('money_source.task.undone');
-    Route::post('/money_source/task', [\App\Http\Controllers\MoneySourceTaskController::class, 'store'])->name('money_source.task.add');
-
-    Route::post('/{event}/shift/preset/store', [\App\Http\Controllers\ShiftPresetController::class, 'store'])->name('shift-presets.store');
-
-    Route::delete('/user/{user}/calendar/filter/reset', [\App\Http\Controllers\UserCalendarFilterController::class, 'reset'])->name('reset.user.calendar.filter');
-    Route::delete('/user/{user}/calendar/shift/filter/reset', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'reset'])->name('reset.user.shift.calendar.filter');
-    Route::patch('/user/{user}/calendar/filter/update', [\App\Http\Controllers\UserCalendarFilterController::class, 'update'])->name('update.user.calendar.filter');
-    Route::patch('/user/{user}/shift/calendar/filter/update', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'update'])->name('update.user.shift.calendar.filter');
-    Route::patch('/user/{user}/calendar/filter/date/update', [\App\Http\Controllers\UserCalendarFilterController::class, 'updateDates'])->name('update.user.calendar.filter.dates');
-    Route::patch('/user/{user}/calendar/filter/single/update/calendar', [\App\Http\Controllers\UserCalendarFilterController::class, 'singleValueUpdate'])->name('user.calendar.filter.single.value.update');
-    Route::patch('/user/{user}/calendar/filter/single/update/shift', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'singleValueUpdate'])->name('user.shift.calendar.filter.single.value.update');
-    Route::patch('/user/{user}/shift/calendar/filter/date/update', [\App\Http\Controllers\UserShiftCalendarFilterController::class, 'updateDates'])->name('update.user.shift.calendar.filter.dates');
+    Route::patch('money_source/task/{moneySourceTask}/done', [MoneySourceTaskController::class, 'markAsDone'])->name('money_source.task.done');
+    Route::patch('money_source/task/{moneySourceTask}/undone', [MoneySourceTaskController::class, 'markAsUnDone'])->name('money_source.task.undone');
+    Route::post('/money_source/task', [MoneySourceTaskController::class, 'store'])->name('money_source.task.add');
+    Route::post('/{event}/shift/preset/store', [ShiftPresetController::class, 'store'])->name('shift-presets.store');
+    Route::delete('/user/{user}/calendar/filter/reset', [UserCalendarFilterController::class, 'reset'])->name('reset.user.calendar.filter');
+    Route::delete('/user/{user}/calendar/shift/filter/reset', [UserShiftCalendarFilterController::class, 'reset'])->name('reset.user.shift.calendar.filter');
+    Route::patch('/user/{user}/calendar/filter/update', [UserCalendarFilterController::class, 'update'])->name('update.user.calendar.filter');
+    Route::patch('/user/{user}/shift/calendar/filter/update', [UserShiftCalendarFilterController::class, 'update'])->name('update.user.shift.calendar.filter');
+    Route::patch('/user/{user}/calendar/filter/date/update', [UserCalendarFilterController::class, 'updateDates'])->name('update.user.calendar.filter.dates');
+    Route::patch('/user/{user}/calendar/filter/single/update/calendar', [UserCalendarFilterController::class, 'singleValueUpdate'])->name('user.calendar.filter.single.value.update');
+    Route::patch('/user/{user}/calendar/filter/single/update/shift', [UserShiftCalendarFilterController::class, 'singleValueUpdate'])->name('user.shift.calendar.filter.single.value.update');
+    Route::patch('/user/{user}/shift/calendar/filter/date/update', [UserShiftCalendarFilterController::class, 'updateDates'])->name('update.user.shift.calendar.filter.dates');
 
     Route::resource(
         'user.commentedBudgetItemsSettings',
@@ -417,45 +416,41 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // Project Routes
     Route::group(['prefix' => 'project'], function (){
-
         // GET
         Route::get('/user/search', [ProjectController::class, 'projectUserSearch'])->name('project.user.search');
         Route::get('/{project}/download/keyVisual', [ProjectController::class, 'downloadKeyVisual'])->name('project.download.keyVisual');
 
         // POST
         Route::post('/{shift}/add/user/{user}', [ShiftController::class, 'addShiftUser'])->name('add.shift.user');
-        Route::post('/{shift}/add/{user}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftMaster'])->name('add.shift.master');
-        Route::post('/{shift}/add/freelancer/{freelancer}', [\App\Http\Controllers\ShiftController::class, 'addShiftFreelancer'])->name('add.shift.freelancer');
-        Route::post('/{shift}/add/freelancer/{freelancer}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftFreelancerMaster'])->name('add.shift.freelancer.master');
-        Route::post('/{shift}/add/provider/{serviceProvider}', [\App\Http\Controllers\ShiftController::class, 'addShiftProvider'])->name('add.shift.provider');
-        Route::post('/{shift}/add/provider/{serviceProvider}/master', [\App\Http\Controllers\ShiftController::class, 'addShiftProviderMaster'])->name('add.shift.provider.master');
+        Route::post('/{shift}/add/{user}/master', [ShiftController::class, 'addShiftMaster'])->name('add.shift.master');
+        Route::post('/{shift}/add/freelancer/{freelancer}', [ShiftController::class, 'addShiftFreelancer'])->name('add.shift.freelancer');
+        Route::post('/{shift}/add/freelancer/{freelancer}/master', [ShiftController::class, 'addShiftFreelancerMaster'])->name('add.shift.freelancer.master');
+        Route::post('/{shift}/add/provider/{serviceProvider}', [ShiftController::class, 'addShiftProvider'])->name('add.shift.provider');
+        Route::post('/{shift}/add/provider/{serviceProvider}/master', [ShiftController::class, 'addShiftProviderMaster'])->name('add.shift.provider.master');
         Route::post('/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
-        Route::post('/{event}/shift/store', [\App\Http\Controllers\ShiftController::class, 'store'])->name('event.shift.store');
+        Route::post('/{event}/shift/store', [ShiftController::class, 'store'])->name('event.shift.store');
         Route::post('/sums/money-source', [SumDetailsController::class, 'store'])->name('project.sum.money.source.store');
 
         // PATCH
         Route::patch('/timelines/update', [ProjectController::class, 'updateTimeLines'])->name('update.timelines');
-        Route::patch('/shifts/commit', [\App\Http\Controllers\ShiftController::class, 'updateCommitments'])->name('update.shift.commitment');
-        Route::patch('/{shift}/update', [\App\Http\Controllers\ShiftController::class, 'updateShift'])->name('event.shift.update');
+        Route::patch('/shifts/commit', [ShiftController::class, 'updateCommitments'])->name('update.shift.commitment');
+        Route::patch('/{shift}/update', [ShiftController::class, 'updateShift'])->name('event.shift.update');
         Route::patch('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'update'])->name('project.sum.money.source.update');
 
         // DELETE
-        Route::delete('/{shift}/remove/user/{user}', [\App\Http\Controllers\ShiftController::class, 'removeUser'])->name('shifts.removeUser');
-        Route::delete('/{shift}/remove/freelancer/{freelancer}', [\App\Http\Controllers\ShiftController::class, 'removeFreelancer'])->name('shifts.removeFreelancer');
-        Route::delete('/{shift}/remove/provider/{serviceProvider}', [\App\Http\Controllers\ShiftController::class, 'removeProvider'])->name('shifts.removeProvider');
-        Route::delete('/{shift}/remove/employees/master', [\App\Http\Controllers\ShiftController::class, 'clearEmployeesAndMaster'])->name('shifts.clearEmployeesAndMaster');
-        Route::delete('/{shift}/destroy', [\App\Http\Controllers\ShiftController::class, 'destroy'])->name('shifts.destroy');
+        Route::delete('/{shift}/remove/user/{user}', [ShiftController::class, 'removeUser'])->name('shifts.removeUser');
+        Route::delete('/{shift}/remove/freelancer/{freelancer}', [ShiftController::class, 'removeFreelancer'])->name('shifts.removeFreelancer');
+        Route::delete('/{shift}/remove/provider/{serviceProvider}', [ShiftController::class, 'removeProvider'])->name('shifts.removeProvider');
+        Route::delete('/{shift}/remove/employees/master', [ShiftController::class, 'clearEmployeesAndMaster'])->name('shifts.clearEmployeesAndMaster');
+        Route::delete('/{shift}/destroy', [ShiftController::class, 'destroy'])->name('shifts.destroy');
         Route::delete('/timeline/delete/{timeLine}', [ProjectController::class, 'deleteTimeLineRow'])->name('delete.timeline.row');
         Route::delete('/sums/money-source/{sumMoneySource}', [SumDetailsController::class, 'destroy'])->name('project.sum.money.source.destroy');
         Route::delete('/group', [ProjectController::class, 'deleteProjectFromGroup'])->name('projects.group.delete');
         Route::delete('/{project}/delete/keyVisual', [ProjectController::class, 'deleteKeyVisual'])->name('project.delete.keyVisual');
 
-
-
         Route::group(['prefix' => 'budget'], function (){
-
             // GET
-            Route::get('/cell/comments', [\App\Http\Controllers\CellCommentsController::class, 'get'])->name('project.budget.cell.comment.get');
+            Route::get('/cell/comments', [CellCommentsController::class, 'get'])->name('project.budget.cell.comment.get');
 
             // POST
             Route::post('/column/add', [ProjectController::class, 'addColumn'])->name('project.budget.column.add');
@@ -463,8 +458,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
             Route::post('/sub-position/add', [ProjectController::class, 'addSubPosition'])->name('project.budget.sub-position.add');
             Route::post('/main-position/add', [ProjectController::class, 'addMainPosition'])->name('project.budget.main-position.add');
             Route::post('/sub-position-row/add', [ProjectController::class, 'addSubPositionRow'])->name('project.budget.sub-position-row.add');
-            Route::post('/cell/{columnCell}/comment/add', [\App\Http\Controllers\CellCommentsController::class, 'store'])->name('project.budget.cell.comment.store');
-            Route::post('/row/{row}/comment/add', [\App\Http\Controllers\RowCommentController::class, 'store'])->name('project.budget.row.comment.store');
+            Route::post('/cell/{columnCell}/comment/add', [CellCommentsController::class, 'store'])->name('project.budget.cell.comment.store');
+            Route::post('/row/{row}/comment/add', [RowCommentController::class, 'store'])->name('project.budget.row.comment.store');
             Route::post('/duplicate/{column}/column', [ProjectController::class, 'duplicateColumn'])->name('project.budget.column.duplicate');
             Route::post('/duplicate/{subPosition}/subpostion', [ProjectController::class, 'duplicateSubPosition'])->name('project.budget.sub-position.duplicate');
             Route::post('/duplicate/{mainPosition}/mainPosition', [ProjectController::class, 'duplicateMainPosition'])->name('project.budget.main-position.duplicate');
@@ -472,10 +467,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
             Route::post('/verified/sub-position/request', [ProjectController::class, 'verifiedRequestSubPosition'])->name('project.budget.verified.sub-position.request');
             Route::post('/verified/take-back/position', [ProjectController::class, 'takeBackVerification'])->name('project.budget.take-back.verification');
             Route::post('/verified/remove/position', [ProjectController::class, 'removeVerification'])->name('project.budget.remove.verification');
-            Route::post('/template/{table}/create', [\App\Http\Controllers\BudgetTemplateController::class, 'store'])->name('project.budget.template.create');
-            Route::post('/template/{table}/use', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplate'])->name('project.budget.template.use');
-            Route::post('/template/use/project', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplateFromProject'])->name('project.budget.template.project');
+            Route::post('/template/{table}/create', [BudgetTemplateController::class, 'store'])->name('project.budget.template.create');
+            Route::post('/template/{table}/use', [BudgetTemplateController::class, 'useTemplate'])->name('project.budget.template.use');
+            Route::post('/template/use/project', [BudgetTemplateController::class, 'useTemplateFromProject'])->name('project.budget.template.project');
             Route::post('/subposition/row/{subPositionRow}/duplicate', [ProjectController::class, 'duplicateRow'])->name('project.budget.sub-position.duplicate.row');
+
             // PATCH
             Route::patch('/cell', [ProjectController::class, 'updateCellValue'])->name('project.budget.cell.update');
             Route::patch('/column/update-name', [ProjectController::class, 'updateColumnName'])->name('project.budget.column.update-name');
@@ -499,32 +495,20 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
             // DELETE
             Route::delete('/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])->name('project.budget.sub-position-row.delete');
-            Route::delete('/cell/comment/{cellComment}', [\App\Http\Controllers\CellCommentsController::class, 'destroy'])->name('project.budget.cell.comment.delete');
-            Route::delete('/cell/calculation/{cellCalculation}', [\App\Http\Controllers\CellCalculationsController::class, 'destroy'])->name('project.budget.cell.calculation.delete');
-            Route::delete('/row/comment/{rowComment}', [\App\Http\Controllers\RowCommentController::class, 'destroy'])->name('project.budget.row.comment.delete');
+            Route::delete('/cell/comment/{cellComment}', [CellCommentsController::class, 'destroy'])->name('project.budget.cell.comment.delete');
+            Route::delete('/cell/calculation/{cellCalculation}', [CellCalculationsController::class, 'destroy'])->name('project.budget.cell.calculation.delete');
+            Route::delete('/row/comment/{rowComment}', [RowCommentController::class, 'destroy'])->name('project.budget.row.comment.delete');
             Route::delete('/column/{column}/delete', [ProjectController::class, 'columnDelete'])->name('project.budget.column.delete');
             Route::delete('/main-position/{mainPosition}', [ProjectController::class, 'deleteMainPosition'])->name('project.budget.main-position.delete');
             Route::delete('/sub-position/{subPosition}', [ProjectController::class, 'deleteSubPosition'])->name('project.budget.sub-position.delete');
             Route::delete('/table/{table}', [ProjectController::class, 'deleteTable'])->name('project.budget.table.delete');
-
         });
-
     });
 
-    //Budget
-
-
-    // Lock
-
-
-    // fixed
-
-
-
-    Route::patch('/project/{project}/budget/reset', [\App\Http\Controllers\ProjectController::class, 'resetTable'])->name('project.budget.reset.table');
+    Route::patch('/project/{project}/budget/reset', [ProjectController::class, 'resetTable'])->name('project.budget.reset.table');
 
     // Templates
-    Route::get('/templates/index', [\App\Http\Controllers\BudgetTemplateController::class, 'index'])->name('templates.view.index');
+    Route::get('/templates/index', [BudgetTemplateController::class, 'index'])->name('templates.view.index');
 
     //CopyRight
     Route::post('/copyright', [CopyrightController::class, 'store'])->name('copyright.store');
@@ -580,13 +564,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('projects/settings/trashed', [ProjectController::class, 'getTrashedSettings'])->name('projects.settings.trashed');
 
     // Sub Event
-    Route::post('/sub-event/add', [\App\Http\Controllers\SubEventsController::class, 'store'])->name('subEvent.add');
-    Route::delete('/sub-event/{subEvents}', [\App\Http\Controllers\SubEventsController::class, 'destroy'])->name('subEvent.delete');
-    Route::patch('/sub-event/{subEvents}', [\App\Http\Controllers\SubEventsController::class, 'update'])->name('subEvent.update');
+    Route::post('/sub-event/add', [SubEventsController::class, 'store'])->name('subEvent.add');
+    Route::delete('/sub-event/{subEvents}', [SubEventsController::class, 'destroy'])->name('subEvent.delete');
+    Route::patch('/sub-event/{subEvents}', [SubEventsController::class, 'update'])->name('subEvent.update');
 
     // MultiEdit
-    Route::patch('/multi-edit', [\App\Http\Controllers\EventController::class, 'updateMultiEdit'])->name('multi-edit.save');
-    Route::post('/multi-edit', [\App\Http\Controllers\EventController::class, 'deleteMultiEdit'])->name('multi-edit.delete');
+    Route::patch('/multi-edit', [EventController::class, 'updateMultiEdit'])->name('multi-edit.save');
+    Route::post('/multi-edit', [EventController::class, 'deleteMultiEdit'])->name('multi-edit.delete');
 
     // Calendar
     Route::get('/calendars/filters', [CalendarController::class, 'getFilters'])->name('calendar.filters');
@@ -596,11 +580,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/freelancer/update/{freelancer}', [FreelancerController::class, 'update'])->name('freelancer.update');
     Route::post('/freelancer/profile-image/{freelancer}', [FreelancerController::class, 'updateProfileImage'])->name('freelancer.change.profile-image');
     Route::post('freelancer/add', [FreelancerController::class, 'store'])->name('freelancer.add');
+    Route::post('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])->name('freelancer.update.workProfile');
+    Route::post('/freelancer/{freelancer}/updateCraftSettings', [FreelancerController::class, 'updateCraftSettings'])->name('freelancer.update.craftSettings');
+    Route::post('/freelancer/{freelancer}/assignCraft', [FreelancerController::class, 'assignCraft'])->name('freelancer.assign.craft');
+    Route::delete('/freelancer/{freelancer}/removeCraft/{craft}', [FreelancerController::class, 'removeCraft'])->name('freelancer.remove.craft');
+
     // Vacation
     Route::post('/freelancer/vacation/{freelancer}/add', [FreelancerVacationController::class, 'store'])->name('freelancer.vacation.add');
     Route::patch('/freelancer/vacation/{freelancerVacation}/update', [FreelancerVacationController::class, 'update'])->name('freelancer.vacation.update');
-    Route::post('/freelancer/{freelancer}/masters', [FreelancerController::class, 'update_freelancer_can_master'])->name('freelancer.update.can_master');
-    Route::post('/freelancer/{freelancer}/workings', [FreelancerController::class, 'update_work_data'])->name('freelancer.update.work_data');
     Route::delete('/freelancer/vacation/{freelancerVacation}/delete', [FreelancerVacationController::class, 'destroy'])->name('freelancer.vacation.delete');
 
     // Service Provider
@@ -608,45 +595,37 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/service-provider/update/{serviceProvider}', [ServiceProviderController::class, 'update'])->name('service_provider.update');
     Route::post('/service-provider/profile-image/{serviceProvider}', [ServiceProviderController::class, 'updateProfileImage'])->name('service_provider.change.profile-image');
     Route::post('service-provider/add', [ServiceProviderController::class, 'store'])->name('service_provider.add');
-    Route::post('/service-provider/{serviceProvider}/masters', [ServiceProviderController::class, 'update_provider_can_master'])->name('service_provider.update.can_master');
-    Route::post('/service-provider/{serviceProvider}/workings', [ServiceProviderController::class, 'update_work_data'])->name('service_provider.update.work_data');
-
-
+    Route::post('/service-provider/{serviceProvider}/workProfile', [ServiceProviderController::class, 'updateWorkProfile'])->name('service_provider.update.workProfile');
+    Route::post('/service-provider/{serviceProvider}/updateCraftSettings', [ServiceProviderController::class, 'updateCraftSettings'])->name('service_provider.update.craftSettings');
+    Route::post('/service-provider/{serviceProvider}/assignCraft', [ServiceProviderController::class, 'assignCraft'])->name('service_provider.assign.craft');
+    Route::delete('/service-provider/{serviceProvider}/removeCraft/{craft}', [ServiceProviderController::class, 'removeCraft'])->name('service_provider.remove.craft');
     Route::delete('/service-provider/contact/{serviceProviderContacts}/delete/', [ServiceProviderContactsController::class, 'destroy'])->name('service-provider.contact.delete');
     Route::post('/service-provider/contact/{serviceProvider}/add/', [ServiceProviderContactsController::class, 'store'])->name('service-provider.contact.store');
     Route::patch('/service-provider/contact/{serviceProviderContacts}/update/', [ServiceProviderContactsController::class, 'update'])->name('service-provider.contact.update');
 
     // Vacation
-    Route::post('/user/vacation/{user}/add', [\App\Http\Controllers\UserVacationsController::class, 'store'])->name('user.vacation.add');
-    Route::patch('/user/vacation/{userVacations}/update', [\App\Http\Controllers\UserVacationsController::class, 'update'])->name('user.vacation.update');
-    Route::delete('/user/vacation/{userVacations}/delete', [\App\Http\Controllers\UserVacationsController::class, 'destroy'])->name('user.vacation.delete');
+    Route::post('/user/vacation/{user}/add', [UserVacationsController::class, 'store'])->name('user.vacation.add');
+    Route::patch('/user/vacation/{userVacations}/update', [UserVacationsController::class, 'update'])->name('user.vacation.update');
+    Route::delete('/user/vacation/{userVacations}/delete', [UserVacationsController::class, 'destroy'])->name('user.vacation.delete');
 
     Route::group(['prefix' => 'settings'], function (){
-        Route::get('shift', [\App\Http\Controllers\ShiftSettingsController::class, 'index'])->name('shift.settings');
-        Route::post('shift/add/craft', [\App\Http\Controllers\CraftController::class, 'store'])->name('craft.store');
-        Route::patch('shift/update/craft/{craft}', [\App\Http\Controllers\CraftController::class, 'update'])->name('craft.update');
-        Route::delete('shift/delete/craft/{craft}', [\App\Http\Controllers\CraftController::class, 'destroy'])->name('craft.delete');
-        Route::patch('shift/update/relevant/event-type/{eventType}', [\App\Http\Controllers\EventTypeController::class, 'updateRelevant'])->name('event-type.update.relevant');
+        Route::get('shift', [ShiftSettingsController::class, 'index'])->name('shift.settings');
+        Route::post('shift/add/craft', [CraftController::class, 'store'])->name('craft.store');
+        Route::patch('shift/update/craft/{craft}', [CraftController::class, 'update'])->name('craft.update');
+        Route::delete('shift/delete/craft/{craft}', [CraftController::class, 'destroy'])->name('craft.delete');
+        Route::patch('shift/update/relevant/event-type/{eventType}', [EventTypeController::class, 'updateRelevant'])->name('event-type.update.relevant');
     });
 
-
-
-    Route::post('/empty/preset/store', [\App\Http\Controllers\ShiftPresetController::class, 'storeEmpty'])->name('empty.presets.store');
-    Route::delete('/preset/{presetShift}/shift/delete', [\App\Http\Controllers\PresetShiftController::class, 'destroy'])->name('preset.shift.destroy');
-    Route::patch('/preset/{presetShift}/shift/update', [\App\Http\Controllers\PresetShiftController::class, 'update'])->name('shift.preset.update');
-
-    Route::delete('/shift/preset/{shiftPreset}/destroy', [\App\Http\Controllers\ShiftPresetController::class, 'destroy'])->name('destroy.shift.preset');
-    Route::post('/shift/preset/{shiftPreset}/duplicate', [\App\Http\Controllers\ShiftPresetController::class, 'duplicate'])->name('duplicate.shift.preset');
-    Route::patch('/shift/preset/{shiftPreset}/update', [\App\Http\Controllers\ShiftPresetController::class, 'update'])->name('update.shift.preset');
-
-    Route::get('/shift/template/search', [\App\Http\Controllers\ShiftPresetController::class, 'search'])->name('shift.template.search');
-
-    Route::post('/shift/{event}/{shiftPreset}/import/preset/', [\App\Http\Controllers\ShiftPresetController::class, 'import'])->name('shift.preset.import');
-
-    Route::patch('/preset/timeline/update', [\App\Http\Controllers\PresetTimeLineController::class, 'update'])->name('preset.timeline.update');
-    Route::delete('/preset/timeline/{presetTimeLine}/delete', [\App\Http\Controllers\PresetTimeLineController::class, 'destroy'])->name('preset.delete.timeline.row');
-    Route::post('/preset/{shiftPreset}/add', [\App\Http\Controllers\PresetTimeLineController::class, 'store'])->name('preset.add.timeline.row');
-
-    Route::patch('/user/{user}/check/vacation', [\App\Http\Controllers\UserVacationsController::class, 'checkVacation'])->name('user.check.vacation');
+    Route::post('/empty/preset/store', [ShiftPresetController::class, 'storeEmpty'])->name('empty.presets.store');
+    Route::delete('/preset/{presetShift}/shift/delete', [PresetShiftController::class, 'destroy'])->name('preset.shift.destroy');
+    Route::patch('/preset/{presetShift}/shift/update', [PresetShiftController::class, 'update'])->name('shift.preset.update');
+    Route::delete('/shift/preset/{shiftPreset}/destroy', [ShiftPresetController::class, 'destroy'])->name('destroy.shift.preset');
+    Route::post('/shift/preset/{shiftPreset}/duplicate', [ShiftPresetController::class, 'duplicate'])->name('duplicate.shift.preset');
+    Route::patch('/shift/preset/{shiftPreset}/update', [ShiftPresetController::class, 'update'])->name('update.shift.preset');
+    Route::get('/shift/template/search', [ShiftPresetController::class, 'search'])->name('shift.template.search');
+    Route::post('/shift/{event}/{shiftPreset}/import/preset/', [ShiftPresetController::class, 'import'])->name('shift.preset.import');
+    Route::patch('/preset/timeline/update', [PresetTimeLineController::class, 'update'])->name('preset.timeline.update');
+    Route::delete('/preset/timeline/{presetTimeLine}/delete', [PresetTimeLineController::class, 'destroy'])->name('preset.delete.timeline.row');
+    Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])->name('preset.add.timeline.row');
+    Route::patch('/user/{user}/check/vacation', [UserVacationsController::class, 'checkVacation'])->name('user.check.vacation');
 });
-

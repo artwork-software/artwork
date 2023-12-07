@@ -4,36 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Copyright;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class CopyrightController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
 
         $collecting_society = (object) $request->collectingSociety;
@@ -45,28 +26,7 @@ class CopyrightController extends Controller
             'law_size' => $request->lawSize,
             'project_id' => $request->project_id,
         ]);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Copyright  $copyright
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Copyright $copyright)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Copyright  $copyright
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Copyright $copyright)
-    {
-        //
+        return Redirect::back();
     }
 
     /**
@@ -74,9 +34,9 @@ class CopyrightController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Copyright  $copyright
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Copyright $copyright)
+    public function update(Request $request, Copyright $copyright): \Illuminate\Http\RedirectResponse
     {
 
         $collecting_society = (object) $request->collectingSociety;
@@ -87,16 +47,6 @@ class CopyrightController extends Controller
             'collecting_society_id' => $collecting_society->id,
             'law_size' => $request->lawSize,
         ]);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Copyright  $copyright
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Copyright $copyright)
-    {
-        //
+        return Redirect::back();
     }
 }

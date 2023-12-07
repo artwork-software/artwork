@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Enums\NotificationConstEnum;
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
-use App\Models\Checklist;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\Department;
 use App\Models\GeneralSettings;
 use App\Models\Project;

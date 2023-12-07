@@ -86,6 +86,9 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 
 Route::get('/reset-password', [UserController::class, 'reset_password'])->name('reset_user_password');
 
+
+
+
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function(){
@@ -628,4 +631,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/preset/timeline/{presetTimeLine}/delete', [PresetTimeLineController::class, 'destroy'])->name('preset.delete.timeline.row');
     Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])->name('preset.add.timeline.row');
     Route::patch('/user/{user}/check/vacation', [UserVacationsController::class, 'checkVacation'])->name('user.check.vacation');
+
+    Route::post('/calendar/export/pdf', [\App\Http\Controllers\ExportPDFController::class, 'createPDF'])->name('calendar.export.pdf');
+    Route::get('/calendar/export/pdf/{filename}/download', [\App\Http\Controllers\ExportPDFController::class, 'download'])->name('calendar.export.pdf.download');
 });

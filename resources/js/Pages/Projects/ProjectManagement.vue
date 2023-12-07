@@ -209,7 +209,7 @@
                                 </div>
                                 <div class="flex w-1/12 ml-4">
                                     <Menu
-                                        v-if="this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || $role('artwork admin')"
+                                        v-if="this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || $role('artwork admin') || $can('delete projects') || $can('write projects')"
                                         as="div" class="relative">
                                         <div class="flex bg-tagBg p-0.5 rounded-full">
                                             <div v-if="$page.props.can.show_hints && index === 0"

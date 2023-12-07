@@ -32,6 +32,7 @@ class CalendarController extends Controller
 
     public function __construct(private readonly FilterProvider $filterProvider)
     {
+        //@todo This will break if no user present
         $this->user = Auth::user();
         $this->userCalendarFilter = $this->user->calendar_filter;
         $this->userShiftCalendarFilter = $this->user->shift_calendar_filter;

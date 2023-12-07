@@ -7,15 +7,12 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 
 beforeEach(function() {
-    $this->user = User::factory()->create();
+    $this->user = $this->adminUser();
+    $this->actingAs($this->user);
     $this->contract_module = ContractModule::factory()->create();
 });
 
 test('contract modules can be created when a file is provided', function () {
-
-    $this->user->assignRole('admin');
-
-    $this->actingAs($this->user);
 
     $this->post("/contract_modules", [
         'module' => UploadedFile::fake()->create('document.pdf', 100),
@@ -29,10 +26,6 @@ test('contract modules can be created when a file is provided', function () {
 
 test('contract modules cannot be created when a file is missing', function () {
 
-    $this->user->assignRole('admin');
-
-    $this->actingAs($this->user);
-
     $response = $this->post("/contract_modules", [
         'module' => null
     ]);
@@ -44,10 +37,6 @@ test('contract modules cannot be created when a file is missing', function () {
 
 
 test('contract modules can be deleted', function() {
-
-    $this->user->assignRole('admin');
-
-    $this->actingAs($this->user);
 
     $this->delete("/contract_modules/{$this->contract_module->id}");
 

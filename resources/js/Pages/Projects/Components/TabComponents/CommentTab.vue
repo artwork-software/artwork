@@ -34,7 +34,7 @@
                                 {{ comment.created_at }}
                             </div>
                         </div>
-                        <button v-show="commentHovered === comment.id" type="button"
+                        <button v-show="commentHovered === comment.id && ($role('artwork admin') || $can('write projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.user.id)" type="button"
                                 @click="deleteCommentFromProject(comment)">
                             <span class="sr-only">Kommentar von Projekt entfernen</span>
                             <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>

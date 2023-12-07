@@ -7,19 +7,18 @@ use App\Notifications\RoomRequestNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Notification;
 
-test('notifications that were archived more than 7 days ago are getting deleted', function() {
+test('notifications that were archived more than 7 days ago are getting deleted', function () {
 
     $auth_user = User::factory()->create();
     $event = Event::factory()->create();
 
-    $notificationBody = [
-        'groupType' => 'EVENTS',
-        'type' => 'ROOM_REQUEST',
-        'title' => 'New room request',
-        'event' => $event,
-        'accepted' => true,
-        'created_by' => $auth_user
-    ];
+    $notificationBody = new \stdClass();
+    $notificationBody->groupType = 'EVENTS';
+    $notificationBody->type = 'ROOM_REQUEST';
+    $notificationBody->title = 'new room request';
+    $notificationBody->event = $event;
+    $notificationBody->accepted = true;
+    $notificationBody->created_by = $auth_user;
     Notification::send($auth_user, new RoomRequestNotification($notificationBody));
 
     $notification = $auth_user->notifications->first();
@@ -36,19 +35,18 @@ test('notifications that were archived more than 7 days ago are getting deleted'
 
 });
 
-test('notifications that were archived less than 7 days ago arent getting deleted', function() {
+test('notifications that were archived less than 7 days ago arent getting deleted', function () {
 
     $auth_user = User::factory()->create();
     $event = Event::factory()->create();
 
-    $notificationBody = [
-        'groupType' => 'EVENTS',
-        'type' => 'ROOM_REQUEST',
-        'title' => 'New room request',
-        'event' => $event,
-        'accepted' => true,
-        'created_by' => $auth_user,
-    ];
+    $notificationBody = new \stdClass();
+    $notificationBody->groupType = 'EVENTS';
+    $notificationBody->type = 'ROOM_REQUEST';
+    $notificationBody->title = 'new room request';
+    $notificationBody->event = $event;
+    $notificationBody->accepted = true;
+    $notificationBody->created_by = $auth_user;
     Notification::send($auth_user, new RoomRequestNotification($notificationBody));
 
     $notification = $auth_user->notifications->first();

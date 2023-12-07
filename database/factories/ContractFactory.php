@@ -25,8 +25,6 @@ class ContractFactory extends Factory
             'description' => $this->faker->paragraph,
             'ksk_liable' => false,
             'resident_abroad' => false,
-            'legal_form' => 'GbR',
-            'type' => 'Dienstvertrag'
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Checklist\Models\Checklist;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

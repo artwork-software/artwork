@@ -13,77 +13,35 @@ class ContractTypeController extends Controller
      *
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function index()
+    public function index(): \Illuminate\Database\Eloquent\Collection
     {
         return ContractType::all();
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
     }
 
     /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         ContractType::create([
             'name' => $request->name
         ]);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\ContractType  $contractType
-     * @return \Illuminate\Http\Response
-     */
-    public function show(ContractType $contractType)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\ContractType  $contractType
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(ContractType $contractType)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\ContractType  $contractType
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, ContractType $contractType)
-    {
-        //
+        return Redirect::back();
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\ContractType  $contractType
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(ContractType $contractType)
+    public function destroy(ContractType $contractType): \Illuminate\Http\RedirectResponse
     {
         $contractType->delete();
+        return Redirect::back()->with('success', 'ContractType deleted');
     }
 
     public function forceDelete(int $id)

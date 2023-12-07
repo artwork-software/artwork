@@ -26,6 +26,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+
 use function Pest\Laravel\json;
 
 class ContractController extends Controller
@@ -43,14 +44,13 @@ class ContractController extends Controller
      *
      * @return Response|ResponseFactory
      */
-    public function viewIndex()
+    public function viewIndex(): Response|ResponseFactory
     {
         $contracts = Contract::all();
         return inertia('Contracts/ContractManagement', [
             'contracts' => ContractResource::collection($contracts),
             'contract_modules' => ContractModuleResource::collection(ContractModule::all())
         ]);
-
     }
 
     public function index(Request $request)
@@ -93,7 +93,7 @@ class ContractController extends Controller
      * @param Contract $contract
      * @return Response|ResponseFactory
      */
-    public function show(Contract $contract)
+    public function show(Contract $contract): Response|ResponseFactory
     {
         return inertia('Contracts/Contracts', [
             'contract' => new ContractResource($contract),
@@ -106,7 +106,7 @@ class ContractController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function store(Request $request, Project $project)
+    public function store(Request $request, Project $project): RedirectResponse
     {
         if (!Storage::exists("contracts")) {
             Storage::makeDirectory("contracts");
@@ -138,7 +138,7 @@ class ContractController extends Controller
         $this->store_contract_tasks_and_comment($request, $contract);
 
         $contract->accessing_users()->sync(collect($request->accessibleUsers));
-        if(!in_array(Auth::id(), $request->accessibleUsers??[])) {
+        if (!in_array(Auth::id(), $request->accessibleUsers ?? [])) {
             $contract->accessing_users()->save(Auth::user());
         }
 
@@ -171,7 +171,7 @@ class ContractController extends Controller
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
 
-        foreach ($contractUsers as $contractUser){
+        foreach ($contractUsers as $contractUser) {
             $this->notificationService->setNotificationTo($contractUser);
             $this->notificationService->createNotification();
         }
@@ -201,18 +201,18 @@ class ContractController extends Controller
      * @param Contract $contract
      * @return RedirectResponse
      */
-    public function update(Contract $contract, ContractUpdateRequest $request)
+    public function update(Contract $contract, ContractUpdateRequest $request): RedirectResponse
     {
         $original_name = '';
         if ($request->get('accessibleUsers')) {
             $contract->accessing_users()->sync(collect($request->accessibleUsers));
         }
 
-        if($request->file('file')) {
-            Storage::delete('contracts/'. $contract->basename);
+        if ($request->file('file')) {
+            Storage::delete('contracts/' . $contract->basename);
             $file = $request->file('file');
             $original_name = $file->getClientOriginalName();
-            $basename = Str::random(20).$original_name;
+            $basename = Str::random(20) . $original_name;
 
             $contract->basename = $basename;
             $contract->name = $original_name;
@@ -255,16 +255,14 @@ class ContractController extends Controller
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
 
-        foreach ($contractUsers as $contractUser){
+        foreach ($contractUsers as $contractUser) {
             $this->notificationService->setNotificationTo($contractUser);
             $this->notificationService->createNotification();
         }
         return Redirect::back();
-
-
     }
 
-    public function storeFile(Request $request)
+    public function storeFile(Request $request): void
     {
 
         if (!Storage::exists("contracts")) {
@@ -281,16 +279,15 @@ class ContractController extends Controller
         $contract->basename = $basename;
         $contract->name = $original_name;
         $contract->save();
-
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param Contract $contract
-     * @return \Illuminate\Http\Response
+     * @return RedirectResponse
      */
-    public function destroy(Contract $contract)
+    public function destroy(Contract $contract): RedirectResponse
     {
         $project = $contract->project()->first();
         $contractUsers =  $contract->accessing_users()->get();
@@ -326,12 +323,12 @@ class ContractController extends Controller
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
 
-        foreach ($contractUsers as $contractUser){
+        foreach ($contractUsers as $contractUser) {
             $this->notificationService->setNotificationTo($contractUser);
             $this->notificationService->createNotification();
         }
         $contract->delete();
-        Redirect::back();
+        return Redirect::back();
     }
 
     /**

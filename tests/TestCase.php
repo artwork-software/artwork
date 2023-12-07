@@ -4,13 +4,14 @@ namespace Tests;
 
 use App\Enums\RoleNameEnum;
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Spatie\Permission\Models\Role;
 
 abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
-
+    use DatabaseTransactions;
 
     /**
      * @return \App\Models\User

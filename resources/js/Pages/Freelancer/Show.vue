@@ -156,6 +156,7 @@
                 <WorkProfileTab user-type="freelancer" :user="freelancer"/>
             </div>
         </div>
+        <SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" title="Freelancer*in erfolgreich bearbeitet" description="Die Änderungen wurden erfolgreich gespeichert." button="Ok" />
     </AppLayout>
 </template>
 
@@ -172,15 +173,15 @@ import Permissions from "@/mixins/Permissions.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
-import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import WorkProfileTab from "@/Pages/Components/WorkProfileTab.vue";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 
 export default {
     name: "Show",
     mixins: [Permissions],
     components: {
+        SuccessModal,
         WorkProfileTab,
-        BaseSidenav,
         UserShiftPlan,
         Availability,
         UserTermsTab,
@@ -221,6 +222,7 @@ export default {
                 { id: 3, name: 'Konditionen', href: '#', current: false, has_permission: this.$can('can edit external users conditions') || this.hasAdminRole() },
                 { id: 4, name: 'Arbeitsprofil', href: '#', current: false, has_permission: this.$can('can edit external users conditions') || this.hasAdminRole() },
             ],
+            showSuccessModal: false,
             currentTab: 2,
             freelancerData: useForm({
                 first_name: this.freelancer.first_name,
@@ -252,8 +254,19 @@ export default {
         saveFreelancer(){
             this.freelancerData.patch(route('freelancer.update', this.freelancer.id), {
                 preserveState: true,
-                preserveScroll: true
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.openSuccessModal();
+
+                }
             })
+        },
+        openSuccessModal() {
+            this.showSuccessModal = true;
+            setTimeout(() => this.closeSuccessModal(), 2000)
+        },
+        closeSuccessModal() {
+            this.showSuccessModal = false;
         },
         selectNewPhoto(){
             if( this.$can('can manage workers') || this.hasAdminRole()){
@@ -278,7 +291,11 @@ export default {
                 profileImage: photo,
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => {
+                    this.openSuccessModal();
+
+                }
             })
         },
     }

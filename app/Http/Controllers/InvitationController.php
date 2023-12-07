@@ -187,9 +187,8 @@ class InvitationController extends Controller
 
         $user->departments()->sync($invitation->departments->pluck('id'));
 
-
-        $user->assignRole(json_decode($invitation->roles));
-        $user->givePermissionTo(json_decode($invitation->permissions));
+        $user->assignRole(...$invitation->roles);
+        $user->givePermissionTo(...$invitation->permissions);
         $user->calendar_settings()->create();
         $user->calendar_filter()->create();
         $user->shift_calendar_filter()->create();

@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Requests;
+namespace Artwork\Modules\Checklist\Http\Requests;
 
 use App\Enums\PermissionNameEnum;
+use App\Http\Requests\EventStoreOrUpdateRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 

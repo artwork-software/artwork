@@ -169,7 +169,8 @@ class User extends Authenticatable
             });
     }
 
-    public function getFullNameAttribute(){
+    public function getFullNameAttribute()
+    {
         return $this->first_name . ' ' . $this->last_name;
     }
 
@@ -188,7 +189,8 @@ class User extends Authenticatable
         return $this->hasMany(UserVacations::class);
     }
 
-    public function getFormattedVacationDaysAttribute(){
+    public function getFormattedVacationDaysAttribute()
+    {
         $vacations = $this->vacations;
         $returnInterval = [];
         foreach ($vacations as $vacation) {
@@ -202,7 +204,6 @@ class User extends Authenticatable
             }
         }
         return $returnInterval;
-
     }
 
     public function project_files()
@@ -210,7 +211,8 @@ class User extends Authenticatable
         return $this->hasMany(ProjectFile::class);
     }
 
-    public function notificationSettings(): HasMany {
+    public function notificationSettings(): HasMany
+    {
         return $this->hasMany(NotificationSetting::class);
     }
 
@@ -268,7 +270,8 @@ class User extends Authenticatable
         return $this->hasOne(GlobalNotification::class, 'created_by');
     }
 
-    public function money_sources(){
+    public function money_sources()
+    {
         return $this->hasMany(MoneySource::class, 'creator_id');
     }
 
@@ -282,7 +285,8 @@ class User extends Authenticatable
         return $this->hasMany(Task::class, 'user_id');
     }
 
-    public function accessMoneySources(){
+    public function accessMoneySources()
+    {
         return $this->belongsToMany(MoneySource::class, 'money_source_users')->withPivot(['competent', 'write_access'])->using(MoneySourceUserPivot::class);
     }
 
@@ -351,7 +355,8 @@ class User extends Authenticatable
         return $plannedWorkingHours;
     }
 
-    public function hasVacationDays(){
+    public function hasVacationDays()
+    {
         $vacations = $this->vacations()->get();
         $returnInterval = [];
         foreach ($vacations as $vacation) {
@@ -368,7 +373,8 @@ class User extends Authenticatable
     }
 
 
-    public function hasVacation(){
+    public function hasVacation()
+    {
         $vacations = $this->vacations()->get();
         $returnInterval = [];
         foreach ($vacations as $vacation) {

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -122,6 +123,23 @@ class Freelancer extends Model
         }
 
         return $plannedWorkingHours;
+    }
+
+    public function hasVacationDays()
+    {
+        $vacations = $this->vacations()->get();
+        $returnInterval = [];
+        foreach ($vacations as $vacation) {
+            $start = \Illuminate\Support\Carbon::parse($vacation->from);
+            $end = Carbon::parse($vacation->until);
+
+            $interval = CarbonPeriod::create($start, $end);
+
+            foreach ($interval as $date) {
+                $returnInterval[] = $date->format('Y-m-d');
+            }
+        }
+        return $returnInterval;
     }
 
 }

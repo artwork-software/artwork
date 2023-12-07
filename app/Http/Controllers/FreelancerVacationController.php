@@ -13,9 +13,9 @@ class FreelancerVacationController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request, Freelancer $freelancer): \Illuminate\Http\Response
+    public function store(Request $request, Freelancer $freelancer): \Illuminate\Http\RedirectResponse
     {
         $freelancer->vacations()->create($request->only(['from', 'until']));
         return Redirect::back();

@@ -28,6 +28,8 @@
            </div>
         </div>
     </div>
+
+    <SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" title="Dienstleister Kontakt erfolgreich gespeichert" description="Die Änderungen wurden erfolgreich gespeichert." button="Ok" />
 </template>
 
 <script>
@@ -35,11 +37,13 @@ import {defineComponent} from 'vue'
 import {CheckIcon, XIcon} from "@heroicons/vue/solid";
 import {Inertia} from "@inertiajs/inertia";
 import {useForm} from "@inertiajs/inertia-vue3";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 
 export default defineComponent({
     name: "SingleContact",
     props: ['contact'],
     components: {
+        SuccessModal,
         XIcon, CheckIcon
     },
     data(){
@@ -49,20 +53,28 @@ export default defineComponent({
                 last_name: this.contact.last_name,
                 email: this.contact.email,
                 phone_number: this.contact.phone_number
-            })
+            }),
+           showSuccessModal: false
        }
     },
     methods: {
         deleteContact(){
             Inertia.delete(route('service-provider.contact.delete', this.contact.id), {
-                preserveState: true, preserveScroll: true
+                preserveState: true, preserveScroll: true, onSuccess: () => this.openSuccessModal()
             });
         },
         updateContact(){
             this.contactData.patch(route('service-provider.contact.update', this.contact.id), {
-                preserveScroll: true, preserveState: true
+                preserveScroll: true, preserveState: true, onSuccess: () => this.openSuccessModal()
             })
-        }
+        },
+        openSuccessModal() {
+            this.showSuccessModal = true;
+            setTimeout(() => this.closeSuccessModal(), 2000)
+        },
+        closeSuccessModal() {
+            this.showSuccessModal = false;
+        },
     }
 
 })

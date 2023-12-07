@@ -136,7 +136,7 @@
                     </div>
                 </div>
 
-                <AddButton class="mt-5 !ml-0" text="Änderung Speichern" type="secondary" @click="saveFreelancer" />
+                <AddButton class="mt-5 !ml-0" text="Änderung Speichern" type="secondary" @click="saveProvider" />
 
 
                 <div class="mt-10 mb-10">
@@ -177,6 +177,8 @@
             <UserSidebar :user="serviceProvider" type="serviceProvider"  />
         </BaseSidenav>
 
+
+        <SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" title="Dienstleister erfolgreich bearbeitet" description="Die Änderungen wurden erfolgreich gespeichert." button="Ok" />
     </AppLayout>
 </template>
 
@@ -195,11 +197,13 @@ import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import UserSidebar from "@/Pages/Users/Components/UserSidebar.vue";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 
 export default defineComponent({
     name: "Show",
     mixins: [Permissions],
     components: {
+        SuccessModal,
         UserSidebar,
         BaseSidenav,
         UserShiftPlan,
@@ -229,6 +233,7 @@ export default defineComponent({
     },
     data(){
         return {
+            showSuccessModal: false,
             tabs: [
                 { id: 1, name: 'Einsatzplan', href: '#', current: false },
                 { id: 2, name: 'Konditionen', href: '#', current: false },
@@ -267,11 +272,21 @@ export default defineComponent({
                 this.currentTab = tabId;
             })
         },
-        saveFreelancer(){
-            this.providerData.patch(route('service-provider.update', this.serviceProvider.id), {
+        saveProvider(){
+            this.providerData.patch(route('service_provider.update', this.serviceProvider.id), {
                 preserveState: true,
-                preserveScroll: true
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.openSuccessModal()
+                }
             })
+        },
+        openSuccessModal() {
+            this.showSuccessModal = true;
+            setTimeout(() => this.closeSuccessModal(), 2000)
+        },
+        closeSuccessModal() {
+            this.showSuccessModal = false;
         },
         selectNewPhoto(){
             if( this.$can('can manage workers') || this.hasAdminRole()){
@@ -292,11 +307,14 @@ export default defineComponent({
 
             reader.readAsDataURL(photo);
 
-            Inertia.post(route('service-provider.change.profile-image', this.serviceProvider.id),{
+            Inertia.post(route('service_provider.change.profile-image', this.serviceProvider.id),{
                 profileImage: photo,
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => {
+                    this.openSuccessModal()
+                }
             })
         },
     }

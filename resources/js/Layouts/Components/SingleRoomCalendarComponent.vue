@@ -3,7 +3,10 @@
         <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
             <CalendarFunctionBar :personal-filters="personalFilters" :filter-options="filterOptions" :roomMode="true" :project="project" @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
                                  @change-at-a-glance="changeAtAGlance"
-                                 :at-a-glance="atAGlance" :user_filters="user_filters"></CalendarFunctionBar>
+                                 :at-a-glance="atAGlance" :user_filters="user_filters"
+                                 @previousTimeRange="previousTimeRange"
+                                 @next-time-range="nextTimeRange"
+            ></CalendarFunctionBar>
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48"
                  @click="openEventsWithoutRoomComponent()"
                  v-if="filteredEvents?.length > 0">
@@ -117,6 +120,52 @@ export default {
         }
     },
     methods: {
+        calculateDateDifference() {
+            const date1 = new Date(this.dateValue[0]);
+            const date2 = new Date(this.dateValue[1]);
+            const timeDifference = date2.getTime() - date1.getTime();
+            return timeDifference / (1000 * 3600 * 24);
+        },
+        previousTimeRange() {
+            const dayDifference = this.calculateDateDifference();
+            this.dateValue[1] = this.getPreviousDay(this.dateValue[0]);
+            const newDate = new Date(this.dateValue[1]);
+            newDate.setDate(newDate.getDate() - dayDifference);
+            this.dateValue[0] = newDate.toISOString().slice(0, 10);
+            this.updateTimes();
+        },
+        nextTimeRange() {
+            const dayDifference = this.calculateDateDifference();
+            this.dateValue[0] = this.getNextDay(this.dateValue[1]);
+            const newDate = new Date(this.dateValue[1]);
+            newDate.setDate(newDate.getDate() + dayDifference + 1);
+            this.dateValue[1] = newDate.toISOString().slice(0, 10);
+            this.updateTimes();
+        },
+        getNextDay(dateString) {
+            const date = new Date(dateString);
+            date.setDate(date.getDate() + 1);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        },
+        getPreviousDay(dateString) {
+            const date = new Date(dateString);
+            date.setDate(date.getDate() - 1);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        },
+        updateTimes() {
+            Inertia.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+                start_date:  this.dateValue[0],
+                end_date: this.dateValue[1],
+            },{
+                preserveScroll: true
+            })
+        },
         changeAtAGlance() {
             this.$emit('changeAtAGlance')
         },

@@ -52,6 +52,9 @@
     <ContractUploadModal
         :show="showContractUploadModal"
         :close-modal="closeContractUploadModal"
+        :company-types="company_types"
+        :contract-types="contract_types"
+        :currencies="currencies"
     />
 </template>
 
@@ -86,7 +89,10 @@ export default {
     },
     props: [
         'contracts',
-        'contract_modules'
+        'contract_modules',
+        'company_types',
+        'contract_types',
+        'currencies'
     ],
     mounted() {
         this.filterContracts()

@@ -44,6 +44,7 @@ class ProjectBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, 
 
         foreach (Project::query()
                      ->whereBetween('budget_deadline', [$this->startBudgetDeadline, $this->endBudgetDeadline])
+                     ->orderBy('budget_deadline')
                      ->get() as $project) {
             $projectBudgetTable = $project->table()->with(['columns'])->first();
 

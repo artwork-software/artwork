@@ -183,6 +183,7 @@ class EventController extends Controller
 
         foreach ($freelancers as $freelancer) {
             $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
+            $vacations = $freelancer->hasVacationDays();
             $freelancersWithPlannedWorkingHours[] = [
                 'freelancer' => [
                     'resource' => 'FreelancerShiftResource',
@@ -192,6 +193,7 @@ class EventController extends Controller
                     'profile_photo_url' => $freelancer->profile_image,
                     'shifts' => $freelancer->getShiftsAttribute(),
                 ],
+                'vacations' => $vacations,
                 'plannedWorkingHours' => $plannedWorkingHours,
             ];
         }

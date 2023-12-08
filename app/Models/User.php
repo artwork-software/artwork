@@ -128,7 +128,14 @@ class User extends Authenticatable
      */
     public function shifts(): BelongsToMany
     {
-        return $this->belongsToMany(Shift::class, 'shift_user', 'user_id', 'shift_id')->withPivot(['is_master'])->orderByPivot('is_master', 'desc')->withCasts(['is_master' => 'boolean']);
+        return $this->belongsToMany(
+            Shift::class,
+            'shift_user',
+            'user_id',
+            'shift_id'
+        )->withPivot(['is_master'])
+            ->orderByPivot('is_master', 'desc')
+            ->withCasts(['is_master' => 'boolean']);
     }
 
     /**
@@ -179,7 +186,7 @@ class User extends Authenticatable
     }
 
     /**
-     * @return array
+     * @return string[]
      */
     public function getFormattedVacationDaysAttribute(): array
     {
@@ -369,7 +376,7 @@ class User extends Authenticatable
     }
 
     /**
-     * @return array
+     * @return string[]
      */
     public function getAllPermissionsAttribute(): array
     {
@@ -383,7 +390,7 @@ class User extends Authenticatable
     }
 
     /**
-     * @return array
+     * @return string[]
      */
     public function getAllRolesAttribute(): array
     {
@@ -397,7 +404,7 @@ class User extends Authenticatable
     }
 
     /**
-     * @return array
+     * @return array<string, mixed>
      */
     public function toSearchableArray(): array
     {
@@ -434,9 +441,9 @@ class User extends Authenticatable
     }
 
     /**
-     * @return array
+     * @return string[]
      */
-    public function hasVacationDays()
+    public function hasVacationDays(): array
     {
         $vacations = $this->vacations()->get();
         $returnInterval = [];
@@ -454,9 +461,9 @@ class User extends Authenticatable
     }
 
     /**
-     * @return array
+     * @return array<string, string>
      */
-    public function hasVacation()
+    public function hasVacation(): array
     {
         $vacations = $this->vacations()->get();
         $returnInterval = [];

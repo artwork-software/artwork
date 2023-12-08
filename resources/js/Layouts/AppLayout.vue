@@ -26,12 +26,10 @@
                     <a v-for="item in navigation" :key="item.name" :href="item.href"
                        :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight  hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center', item.has_permission ? 'block': 'hidden']">
                         <div class="flex items-center">
-                            <div :class="fullSidenav ? 'flex items-center w-6' : '' ">
                             <img :src="isCurrent(item.route) ? item.svgSrc_active : item.svgSrc"
                                  alt="menu-item"
                                  :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'xxsLight group-hover:text-secondaryHover', 'mb-1']"
                                  aria-hidden="true"/>
-                            </div>
                             <div class="ml-4 w-32" v-if="fullSidenav">
                                 {{ item.name }}
                             </div>

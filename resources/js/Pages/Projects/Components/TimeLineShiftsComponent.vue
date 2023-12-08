@@ -2,14 +2,19 @@
     <div class="flex h-full gap-2">
         <Timeline :time-line="timeLine" :event="event"/>
         <div class="w-[175px]" v-for="shift in shifts">
-            <SingleShift :shift="shift" :crafts="crafts" :event="event"/>
+            <SingleShift :shift="shift" :crafts="crafts" :event="event" :currentUserCrafts="currentUserCrafts"/>
         </div>
         <!-- Empty -->
         <div class="w-[175px] flex items-center justify-center border-2 border-dashed" @click="checkWhichModal">
             <PlusCircleIcon class="h-4 w-4 rounded-full bg-backgroundBlue" />
         </div>
     </div>
-    <AddShiftModal :crafts="crafts" :event="event" v-if="showAddShiftModal" @closed="closeAddShiftModal" :buffer="buffer"/>
+    <AddShiftModal v-if="showAddShiftModal"
+                   :crafts="crafts"
+                   :event="event"
+                   :currentUserCrafts="currentUserCrafts"
+                   @closed="closeAddShiftModal"
+                   :buffer="buffer"/>
     <ChooseShiftSeries :event="event" v-if="showChooseShiftSeriesModal" @close-modal="showChooseShiftSeriesModal = false" @returnBuffer="updateBuffer" />
 </template>
 <script>
@@ -26,7 +31,7 @@ import ChooseShiftSeries from "@/Pages/Projects/Components/ChooseShiftSeries.vue
 export default defineComponent({
     name: "TimeLineShiftsComponent",
 
-    props: ['timeLine', 'shifts', 'event', 'crafts'],
+    props: ['timeLine', 'shifts', 'event', 'crafts', 'currentUserCrafts'],
     components: {
         SingleShift,
         DropElement,

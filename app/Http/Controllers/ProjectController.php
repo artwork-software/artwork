@@ -1753,7 +1753,6 @@ class ProjectController extends Controller
         ]);
     }
 
-
     public function projectShiftTab(Project $project, Request $request)
     {
         $project->load([
@@ -1922,6 +1921,9 @@ class ProjectController extends Controller
             'eventsWithRelevant' => $eventsWithRelevant,
             'crafts' => Craft::all(),
             'access_budget' => $project->access_budget,
+            'currentUserCrafts' => Auth::user()
+                ->crafts
+                ->merge(Craft::query()->where('assignable_by_all', '=', true)->get())
         ]);
     }
 

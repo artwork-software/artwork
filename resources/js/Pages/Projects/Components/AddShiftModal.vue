@@ -1,12 +1,9 @@
-
-
 <template>
     <TransitionRoot as="template" :show="open">
         <Dialog as="div" class="relative z-50" @close="closeModal">
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
             </TransitionChild>
-
             <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
@@ -25,20 +22,18 @@
                                 <p class="xsLight subpixel-antialiased">
                                     Lege fest wie lange deine Schicht dauert und wie viele Personen in deiner Schicht arbeiten sollen.
                                 </p>
-
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-                                       <div>
-                                           <input type="text" onfocus="(this.type='time')"
-                                                  placeholder="Schicht Start"
-                                                  v-model="shiftForm.start"
-                                                  class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                                  required
-                                                  @change="checkInfringement"
-                                           />
-                                            <span class="text-xs text-red-500" v-show="helpTexts.start.length > 0">{{ helpTexts.start }}</span>
-
-                                       </div>
+                                        <div>
+                                            <input type="text" onfocus="(this.type='time')"
+                                                   placeholder="Schicht Start"
+                                                   v-model="shiftForm.start"
+                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                   required
+                                                   @change="checkInfringement"
+                                            />
+                                             <span class="text-xs text-red-500" v-show="helpTexts.start.length > 0">{{ helpTexts.start }}</span>
+                                        </div>
                                         <div>
                                             <input type="text" onfocus="(this.type='time')"
                                                    placeholder="Schicht Ende"
@@ -49,19 +44,17 @@
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                             <span class="text-xs text-red-500" v-show="helpTexts.end.length > 0">{{ helpTexts.end }}</span>
                                             <span class="text-xs text-red-500" v-show="helpTexts.time.length > 0">{{ helpTexts.time }}</span>
-
                                         </div>
-                                       <div>
-                                           <input type="number"
-                                                  placeholder="Pausenlänge in Minuten*"
-                                                  v-model="shiftForm.break_minutes"
-                                                  @change="checkInfringement"
-                                                  class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                                  required
-                                           />
-                                           <span class="text-xs text-red-500" v-show="helpTexts.breakText.length > 0">{{ helpTexts.breakText }}</span>
-                                       </div>
-
+                                        <div>
+                                            <input type="number"
+                                                   placeholder="Pausenlänge in Minuten*"
+                                                   v-model="shiftForm.break_minutes"
+                                                   @change="checkInfringement"
+                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                   required
+                                            />
+                                            <span class="text-xs text-red-500" v-show="helpTexts.breakText.length > 0">{{ helpTexts.breakText }}</span>
+                                        </div>
                                         <div>
                                             <Listbox as="div" v-model="selectedCraft">
                                                 <div class="relative">
@@ -71,10 +64,9 @@
                                                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                                         </span>
                                                     </ListboxButton>
-
                                                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                                         <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                                                            <ListboxOption as="template" v-for="craft in crafts" :key="craft.id" :value="craft" v-slot="{ active, selected }">
+                                                            <ListboxOption as="template" v-for="craft in selectableCrafts" :key="craft.id" :value="craft" v-slot="{ active, selected }">
                                                                 <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                                     <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ craft.name }} ({{ craft.abbreviation }})</span>
 
@@ -146,16 +138,23 @@ export default defineComponent({
     components: {
         ChangeAllSubmitModal,
         ConfirmationModal,
-        CheckIcon, ChevronDownIcon,
+        CheckIcon,
+        ChevronDownIcon,
         Input,
         AddButton,
         Dialog,
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel, PlusCircleIcon, ListboxButton, ListboxOption, ListboxOptions, Listbox
+        XIcon,
+        DialogPanel,
+        PlusCircleIcon,
+        ListboxButton,
+        ListboxOption,
+        ListboxOptions,
+        Listbox
     },
-    props: ['event', 'crafts', 'shift', 'edit', 'buffer'],
+    props: ['event', 'crafts', 'shift', 'edit', 'buffer', 'currentUserCrafts'],
     data(){
         return {
             open: true,
@@ -184,7 +183,7 @@ export default defineComponent({
                 employeeText:'',
                 masterText:'',
             },
-            showChangeAllModal: false
+            showChangeAllModal: false,
         }
     },
     emits: ['closed'],
@@ -219,22 +218,6 @@ export default defineComponent({
                 }
             }
         },
-        /*saveAllEvents(){
-            this.shiftForm.changeAll = true;
-            this.shiftForm.seriesId = this.event.series_id;
-            this.saveShift();
-        },
-        checkSeriesEvent(){
-            if(this.edit === true){
-                this.saveShift()
-            } else {
-                if(this.event.is_series){
-                    this.showChangeAllModal = true;
-                } else {
-                    this.saveShift();
-                }
-            }
-        },*/
         checkUserCount(){
             if(this.shift?.user_count > 0){
                 this.helpTexts.employeeText = 'Es sind bereits Mitarbeiter*innen eingetragen. Die Anzahl kann nicht verändert werden. Bitte entferne erst alle Mitarbeiter*innen. Eingabe wurde zurückgesetzt!';
@@ -252,8 +235,6 @@ export default defineComponent({
             }
         },
         saveShift(){
-
-
             if(this.event.is_series){
                 if(!this.buffer?.onlyThisDay){
                     this.shiftForm.changeAll = true;
@@ -262,7 +243,6 @@ export default defineComponent({
                     this.shiftForm.changes_end = this.buffer?.end;
                 }
             }
-
 
             this.shiftForm.craft_id = this.selectedCraft?.id;
 
@@ -318,7 +298,6 @@ export default defineComponent({
             // set the craft id
             this.shiftForm.craft_id = this.selectedCraft.id;
 
-
             if(this.shiftForm.number_employees === '' || this.shiftForm.number_employees === null){
                 this.shiftForm.number_employees = 0;
             }
@@ -366,9 +345,25 @@ export default defineComponent({
                 })
             }
         }
+    },
+    computed: {
+        selectableCrafts() {
+            let crafts = [];
+            if (this.selectedCraft) {
+                let selectedCraftIncluded = false;
+
+                this.currentUserCrafts.forEach((userCraft) => {
+                    if (userCraft.id === this.selectedCraft.id) {
+                       selectedCraftIncluded = true;
+                    }
+                });
+
+                if (!selectedCraftIncluded) {
+                    crafts.push(this.selectedCraft);
+                }
+            }
+            return crafts.concat(this.currentUserCrafts);
+        }
     }
 })
 </script>
-<style scoped>
-
-</style>

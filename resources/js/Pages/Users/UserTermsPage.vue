@@ -2,9 +2,6 @@
     <UserEditHeader :current-tab="currentTab" :user_to_edit="user_to_edit">
         <UserTermsTab user_type="user" :user_to_edit="user_to_edit"></UserTermsTab>
     </UserEditHeader>
-    <BaseSidenav :show="show" @toggle="this.show =! this.show">
-        <UserSidebar :user="user_to_edit" type="user" />
-    </BaseSidenav>
 </template>
 
 <script>
@@ -14,11 +11,9 @@ import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import UserEditHeader from "@/Pages/Users/Components/UserEditHeader.vue";
 import UserInfoTab from "@/Pages/Users/Tabs/UserInfoTab.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
-import UserSidebar from "@/Pages/Users/Components/UserSidebar.vue";
 
 export default {
     components: {
-        UserSidebar,
         UserTermsTab,
         UserEditHeader,
         BaseSidenav,

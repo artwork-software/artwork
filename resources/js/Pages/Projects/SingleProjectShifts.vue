@@ -14,7 +14,14 @@
                                 :group-projects="groupProjects"
                                 :access_budget="access_budget"
                                 open-tab="shift">
-        <ShiftTab :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" :drop-users="dropUsers" :users="project.users" :event-types="eventTypes" />
+        <ShiftTab :projectWriteIds="projectWriteIds"
+                  :projectManagerIds="projectManagerIds"
+                  :eventsWithRelevant="eventsWithRelevant"
+                  :crafts="crafts"
+                  :currentUserCrafts="currentUserCrafts"
+                  :drop-users="dropUsers"
+                  :users="project.users"
+                  :event-types="eventTypes" />
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectShiftSidenav
@@ -67,7 +74,8 @@ export default {
         'projectWriteIds',
         'projectManagerIds',
         'projectDeleteIds',
-        'access_budget'
+        'access_budget',
+        'currentUserCrafts'
     ],
     data() {
         return {

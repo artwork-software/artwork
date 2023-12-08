@@ -7,9 +7,6 @@
         <Availability type="user" :calendar-data="calendarData" :date-to-show="dateToShow"
                       :user="user_to_edit" :vacations="vacations"/>
     </UserEditHeader>
-    <BaseSidenav :show="show" @toggle="this.show =! this.show">
-        <UserSidebar :user="user_to_edit" type="user" />
-    </BaseSidenav>
 </template>
 
 <script>
@@ -21,11 +18,9 @@ import UserInfoTab from "@/Pages/Users/Tabs/UserInfoTab.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 import UserAvailabilityCalendar from "@/Pages/Users/Components/UserAvailabilityCalendar.vue";
-import UserSidebar from "@/Pages/Users/Components/UserSidebar.vue";
 
 export default {
     components: {
-        UserSidebar,
         UserAvailabilityCalendar,
         UserShiftPlan,
         Availability,

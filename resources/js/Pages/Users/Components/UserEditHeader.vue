@@ -80,6 +80,7 @@ export default {
                 {id: 2, name: 'Konditionen', href: '#', current: this.currentTab === 'terms', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
                 {id: 3, name: 'Persönliche Daten', href: '#', current: this.currentTab === 'info', has_permission: true},
                 {id: 4, name: 'Nutzerrechte', href: '#', current: this.currentTab === 'permissions', has_permission: this.hasAdminRole()},
+                {id: 5, name: 'Arbeitsprofil', href: '#', current: this.currentTab === 'workProfile', has_permission: this.hasAdminRole()},
             ],
             currentTab: 1,
         }
@@ -94,6 +95,8 @@ export default {
                 Inertia.get(route('user.edit.info', {user: this.user_to_edit.id}));
             } else if (selectedTab === 4) {
                 Inertia.get(route('user.edit.permissions', {user: this.user_to_edit.id}));
+            } else if (selectedTab === 5) {
+                Inertia.get(route('user.edit.workProfile', {user: this.user_to_edit.id}));
             } else {
                 Inertia.get(route('user.edit.shiftplan', {user: this.user_to_edit.id}));
             }

@@ -159,8 +159,13 @@
     </div>
     </div>
 
-    <AddShiftModal :shift="shift" :event="event" :crafts="crafts" v-if="openEditShiftModal"
-                   @closed="openEditShiftModal = false" :edit="true"/>
+    <AddShiftModal v-if="openEditShiftModal"
+                   :shift="shift"
+                   :event="event"
+                   :crafts="crafts"
+                   @closed="openEditShiftModal = false"
+                   :currentUserCrafts="currentUserCrafts"
+                   :edit="true"/>
 
     <ChooseDeleteUserShiftModal :buffer="buffer" :event="event" v-if="showDeleteUserModal"
                                 @close-modal="showDeleteUserModal = false" @returnBuffer="deleteUser"/>
@@ -186,11 +191,20 @@ export default defineComponent({
         EmployeeDropElement,
         ChooseDeleteUserShiftModal,
         AddShiftModal,
-        DotsVerticalIcon, SvgCollection, TrashIcon, DuplicateIcon, PencilAltIcon, DropElement, XIcon,
-        Menu, MenuButton, MenuItem, MenuItems
+        DotsVerticalIcon,
+        SvgCollection,
+        TrashIcon,
+        DuplicateIcon,
+        PencilAltIcon,
+        DropElement,
+        XIcon,
+        Menu,
+        MenuButton,
+        MenuItem,
+        MenuItems
     },
     mixins: [Helper],
-    props: ['shift', 'crafts', 'event'],
+    props: ['shift', 'crafts', 'event', 'currentUserCrafts'],
     data() {
         return {
             openEditShiftModal: false,

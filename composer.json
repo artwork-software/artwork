@@ -78,6 +78,15 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
+        ],
+        "phpstan": [
+            "php vendor/bin/phpstan analyse ./app ./artwork --memory-limit='1G'"
+        ],
+        "phpcs": [
+            "php vendor/bin/phpcs ./app ./artwork"
+        ],
+        "phpcbf": [
+            "php vendor/bin/phpcbf ./app ./artwork"
         ]
     },
     "extra": {

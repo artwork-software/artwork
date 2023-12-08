@@ -196,7 +196,6 @@ class User extends Authenticatable
             }
         }
         return $returnInterval;
-
     }
 
     /**

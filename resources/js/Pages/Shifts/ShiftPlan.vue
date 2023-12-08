@@ -188,6 +188,7 @@ export default {
                     element: freelancer.freelancer,
                     type: 1,
                     plannedWorkingHours: freelancer.plannedWorkingHours,
+                    vacations: freelancer.vacations,
                 })
             })
             this.serviceProvidersForShifts.forEach((service_provider) => {

@@ -83,7 +83,7 @@
                                                             class="h-10 w-10 rounded-full ring-2 ring-white"
                                                             :iconName="department.svg_name"/>
                                         <div :id="department.id" role="tooltip"
-                                             class="inline-block absolute invisible z-10 py-2 px-3 bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
+                                             class="inline-block absolute invisible py-2 px-3 bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
                                             {{ department.name }}
                                             <div class="tooltip-arrow" data-popper-arrow></div>
                                         </div>
@@ -103,7 +103,7 @@
                                                         leave-from-class="transform opacity-100 scale-100"
                                                         leave-to-class="transform opacity-0 scale-95">
                                                 <MenuItems
-                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                     <MenuItem v-for="department in user.departments"
                                                               v-slot="{ active }">
                                                         <Link href="#"
@@ -120,7 +120,7 @@
                                         </Menu>
                                     </div>
                                 </div>
-                                <Menu as="div" class="my-auto relative">
+                                <Menu as="div" class="my-auto relative"  v-if="hasAdminRole()">
                                     <div>
                                         <div class="flex">
                                             <MenuButton
@@ -147,8 +147,7 @@
                                                 leave-active-class="transition ease-in duration-75"
                                                 leave-from-class="transform opacity-100 scale-100"
                                                 leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems
-                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
+                                        <MenuItems class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
                                             <div class="py-1">
                                                 <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a :href="checkLink(user)"
@@ -198,7 +197,7 @@
                                                             class="h-10 w-10 rounded-full ring-2 ring-white"
                                                             :iconName="department.svg_name"/>
                                         <div :id="department.id" role="tooltip"
-                                             class="inline-block absolute invisible z-10 py-2 px-3 bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
+                                             class="inline-block absolute invisible py-2 px-3 bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
                                             {{ department.name }}
                                             <div class="tooltip-arrow" data-popper-arrow></div>
                                         </div>
@@ -218,7 +217,7 @@
                                                         leave-from-class="transform opacity-100 scale-100"
                                                         leave-to-class="transform opacity-0 scale-95">
                                                 <MenuItems
-                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                     <MenuItem v-for="department in user.departments"
                                                               v-slot="{ active }">
                                                         <Link href="#"
@@ -235,7 +234,7 @@
                                         </Menu>
                                     </div>
                                 </div>
-                                <Menu as="div" class="my-auto relative">
+                                <Menu as="div" class="my-auto relative"  v-if="hasAdminRole()">
                                     <div>
                                         <div class="flex">
                                             <MenuButton

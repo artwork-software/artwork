@@ -4,18 +4,19 @@
             <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
             <div v-if="!project">
                 <div v-if="dateValue && dateValue[0] === dateValue[1]">
-                    <button  class="ml-2 -mt-2 text-black" @click="previousDay">
+                    <button  class="ml-2 -mt-2 text-black previousDay" @click="previousDay">
+
                         <ChevronLeftIcon class="h-5 w-5 text-primary"/>
                     </button>
-                    <button class="ml-2 -mt-2 text-black" @click="nextDay">
+                    <button class="ml-2 -mt-2 text-black nextDay" @click="nextDay">
                         <ChevronRightIcon class="h-5 w-5 text-primary"/>
                     </button>
                 </div>
                 <div v-else>
-                    <button  class="ml-2 -mt-2 text-black" @click="previousTimeRange">
+                    <button  class="ml-2 -mt-2 text-black previousTimeRange" @click="previousTimeRange">
                         <ChevronLeftIcon class="h-5 w-5 text-primary"/>
                     </button>
-                    <button class="ml-2 -mt-2 text-black" @click="nextTimeRange">
+                    <button class="ml-2 -mt-2 text-black nextTimeRange" @click="nextTimeRange">
                         <ChevronRightIcon class="h-5 w-5 text-primary"/>
                     </button>
                 </div>
@@ -268,6 +269,7 @@ export default {
             this.$emit('previousTimeRange')
         },
         nextTimeRange(){
+            //console.log('nextTimeRange')
             this.$emit('nextTimeRange')
         },
         filtersChanged(activeFilters) {

@@ -167,11 +167,8 @@ export default {
 
             this.pdf.post(route('calendar.export.pdf'), {
                 preserveScroll: true,
-
-                onSuccess: () => {
-                    this.closeModal(true);
-                },
             });
+            this.closeModal(true);
         },
         changePaperOrientation(orientation){
             this.selectedPaperOrientation = orientation

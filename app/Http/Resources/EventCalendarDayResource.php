@@ -4,11 +4,9 @@ namespace App\Http\Resources;
 
 use App\Models\Event;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @mixin \App\Models\Event
- */
 class EventCalendarDayResource extends JsonResource
 {
     public static $wrap = null;
@@ -16,10 +14,10 @@ class EventCalendarDayResource extends JsonResource
     /**
      * Transform the resource collection into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @param  Request  $request
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         /** @var Carbon $date */
         $date = $this->metaDate;

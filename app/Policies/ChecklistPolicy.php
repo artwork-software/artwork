@@ -1,48 +1,69 @@
 <?php
 
-/**********
- * @todo These permission checks dont seem right to me
- **********/
-
-
 namespace App\Policies;
 
 use App\Enums\PermissionNameEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Auth\Access\Response;
 
 class ChecklistPolicy
 {
     use HandlesAuthorization;
 
-    public function view(User $user, Checklist $checklist): Response|bool
+    /**
+     * @param User $user
+     * @param Checklist $checklist
+     * @return bool
+     */
+    public function view(User $user, Checklist $checklist): bool
     {
-        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value) || $checklist->departments->users->contains($user->id);
+        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value) ||
+            $checklist->departments->users->contains($user->id);
     }
 
-    public function create(User $user)
+    /**
+     * @return bool
+     */
+    public function create(): bool
     {
         return true;
     }
 
-    public function update(User $user, Checklist $checklist)
+    /**
+     * @param User $user
+     * @return bool
+     */
+    public function update(User $user): bool
     {
         return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
     }
 
-    public function delete(User $user, Checklist $checklist)
+    /**
+     * @param User $user
+     * @return bool
+     */
+    public function delete(User $user): bool
     {
         return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
     }
 
-    public function restore(User $user, Checklist $checklist)
+    /**
+     * @param User $user
+     * @param Checklist $checklist
+     * @return void
+     */
+    public function restore(User $user, Checklist $checklist): void
     {
         //
     }
 
-    public function forceDelete(User $user, Checklist $checklist)
+    /**
+     * @param User $user
+     * @param Checklist $checklist
+     * @return void
+     */
+    public function forceDelete(User $user, Checklist $checklist): void
     {
         //
     }

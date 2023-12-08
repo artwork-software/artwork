@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\PermissionNameEnum;
-use App\Enums\RoleNameEnum;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use App\Http\Resources\ChecklistShowResource;
 use Artwork\Modules\Checklist\Models\Checklist;
@@ -14,28 +12,42 @@ use App\Models\Task;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Response;
 use Inertia\ResponseFactory;
 
 class ChecklistController extends Controller
 {
+    /**
+     * @var NewHistoryService|null
+     */
     protected ?NewHistoryService $history = null;
 
+    /**
+     * @param ChecklistService $checklistService
+     */
     public function __construct(protected readonly ChecklistService $checklistService)
     {
         $this->authorizeResource(Checklist::class);
     }
 
+    /**
+     * @return ResponseFactory
+     */
     public function create(): ResponseFactory
     {
         return inertia('Checklists/Create');
     }
 
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     * @throws AuthorizationException
+     */
     public function store(Request $request): RedirectResponse
     {
         $this->authorize('createProperties', Project::find($request->project_id));
@@ -47,8 +59,7 @@ class ChecklistController extends Controller
         }
 
         $this->history = new NewHistoryService('App\Models\Project');
-        $this->history->createHistory($request->project_id, 'Checkliste ' . $request->name. ' hinzugefügt');
-
+        $this->history->createHistory($request->project_id, 'Checkliste ' . $request->name . ' hinzugefügt');
 
         ProjectHistory::create([
             "user_id" => Auth::id(),
@@ -63,10 +74,9 @@ class ChecklistController extends Controller
      * Creates a checklist on basis of a ChecklistTemplate
      * @param  Request  $request
      */
-    protected function createFromTemplate(Request $request)
+    protected function createFromTemplate(Request $request): void
     {
         $template = ChecklistTemplate::where('id', $request->template_id)->first();
-        $project = Project::where('id', $request->project_id)->first();
 
         $checklist = Checklist::create([
             'name' => $template->name,
@@ -84,20 +94,20 @@ class ChecklistController extends Controller
             ]);
         }
 
-            $checklist->users()->sync(
-                collect($template->users)
-                    ->map(function ($user) {
-                        return $user['id'];
-                    })
-            );
+        $checklist->users()->sync(
+            collect($template->users)
+                ->map(function ($user) {
+                    return $user['id'];
+                })
+        );
     }
 
     /**
      * Default creation of a checklist without a template
      * @param  Request  $request
-     * @return \Illuminate\Http\JsonResponse|void
+     * @return void
      */
-    protected function createWithoutTemplate(Request $request)
+    protected function createWithoutTemplate(Request $request): void
     {
         $checklist = Checklist::create([
             'name' => $request->name,
@@ -120,10 +130,10 @@ class ChecklistController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Checklist  $checklist
-     * @return \Inertia\Response|\Inertia\ResponseFactory
+     * @param Checklist $checklist
+     * @return Response|ResponseFactory
      */
-    public function show(Checklist $checklist)
+    public function show(Checklist $checklist): Response|ResponseFactory
     {
         return inertia('Checklists/Show', [
             'checklist' => new ChecklistShowResource($checklist),
@@ -133,17 +143,22 @@ class ChecklistController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Checklist  $checklist
-     * @return \Inertia\Response|\Inertia\ResponseFactory
+     * @param Checklist $checklist
+     * @return Response|ResponseFactory
      */
-    public function edit(Checklist $checklist)
+    public function edit(Checklist $checklist): Response|ResponseFactory
     {
         return inertia('Checklists/Edit', [
             'checklist' => new ChecklistShowResource($checklist),
         ]);
     }
 
-    public function update(ChecklistUpdateRequest $request, Checklist $checklist)
+    /**
+     * @param ChecklistUpdateRequest $request
+     * @param Checklist $checklist
+     * @return RedirectResponse
+     */
+    public function update(ChecklistUpdateRequest $request, Checklist $checklist): RedirectResponse
     {
         $this->checklistService->updateByRequest($checklist, $request);
 
@@ -159,6 +174,11 @@ class ChecklistController extends Controller
         return Redirect::back()->with('success', 'Checklist updated');
     }
 
+    /**
+     * @param Checklist $checklist
+     * @param HistoryService $historyService
+     * @return RedirectResponse
+     */
     public function destroy(Checklist $checklist, HistoryService $historyService): RedirectResponse
     {
         $this->history = new NewHistoryService(Project::class);

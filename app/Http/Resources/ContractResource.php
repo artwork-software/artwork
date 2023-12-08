@@ -4,33 +4,37 @@ namespace App\Http\Resources;
 
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Request;
 
 class ContractResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<int, User>
      */
-
-    public function getAccessibleUsers(): array|\JsonSerializable|\Illuminate\Contracts\Support\Arrayable
+    public function getAccessibleUsers(): array
     {
-
         $usersWithAccess = $this->accessing_users->all();
         $project = Project::where('id', $this->project_id)->with(['users'])->first();
-        foreach($project->users as $user) {
-            if($user->pivot->is_manager) {
-                if(!in_array($user, $usersWithAccess)) {
+        foreach ($project->users as $user) {
+            if ($user->pivot->is_manager) {
+                if (!in_array($user, $usersWithAccess)) {
                     $usersWithAccess[] = $user;
                 }
             }
         }
+
         return $usersWithAccess;
     }
 
-    public function toArray($request)
+    /**
+     * @param Request $request
+     * @return array<string, mixed>
+     */
+    public function toArray($request): array
     {
         return [
             'id' => $this->id,

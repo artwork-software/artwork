@@ -99,6 +99,7 @@ test('authorized users can update a departments name and assigned users', functi
 
     $response = $this->patch("departments/{$department->id}", [
         'name' => 'NewName',
+        'svg_name' => 'lel',
         'users' => [
             $user_2
         ]

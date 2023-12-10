@@ -8,7 +8,7 @@ use App\Enums\RoleNameEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\Department;
 use App\Models\GeneralSettings;
-use App\Models\Project;
+use Artwork\Modules\Project\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;

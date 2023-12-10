@@ -3,7 +3,22 @@
 namespace Artwork\Modules\Project\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use App\Models\Category;
+use App\Models\Comment;
+use App\Models\Contract;
+use App\Models\Copyright;
+use App\Models\CostCenter;
+use App\Models\Event;
+use App\Models\EventType;
+use App\Models\Genre;
+use App\Models\MoneySource;
+use App\Models\Sector;
+use App\Models\User;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -73,7 +88,7 @@ class Project extends Model
     protected $with = ['shiftRelevantEventTypes', 'state'];
 
 
-    public function cost_center()
+    public function cost_center(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(CostCenter::class);
     }
@@ -93,13 +108,13 @@ class Project extends Model
         return $this->hasOne(Copyright::class);
     }
 
-    public function users()
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
             ->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission');
     }
 
-    public function headlines()
+    public function headlines(): BelongsToMany
     {
         return $this->belongsToMany(ProjectHeadline::class, 'project_project_headlines', 'project_id')
             ->withPivot('text');

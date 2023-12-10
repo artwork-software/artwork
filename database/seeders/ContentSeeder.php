@@ -337,7 +337,7 @@ class ContentSeeder extends Seeder
             'number_of_participants' => null,
         ]);
 
-        $projectController = new ProjectController();
+        $projectController = app()->get(ProjectController::class);
         $projectController->generateBasicBudgetValues($project);
 
 

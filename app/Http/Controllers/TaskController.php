@@ -7,7 +7,7 @@ use App\Enums\RoleNameEnum;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\TaskShowResource;
-use App\Models\Project;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\MoneySourceTask;
 use App\Models\Task;

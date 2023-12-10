@@ -6,8 +6,6 @@ use App\Enums\PermissionNameEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class ChecklistControllerTest extends TestCase

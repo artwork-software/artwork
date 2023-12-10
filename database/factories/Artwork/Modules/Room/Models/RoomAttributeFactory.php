@@ -1,9 +1,9 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Room\Models;
 
+use Artwork\Modules\Room\Models\RoomAttribute;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use RoomAttribute;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Room>

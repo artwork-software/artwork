@@ -11,7 +11,7 @@ trait GoesOnVacation
 {
     public function vacations(): MorphMany
     {
-        return $this->morphMany(Vacation::class, 'vacations');
+        return $this->morphMany(Vacation::class, 'vacationer');
     }
 
     public function hasVacationDays(): array

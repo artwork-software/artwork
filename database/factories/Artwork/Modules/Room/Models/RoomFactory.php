@@ -1,7 +1,8 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Room\Models;
 
+use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -9,12 +10,13 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class RoomFactory extends Factory
 {
+    protected $model = Room::class;
     /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'name' => $this->faker->colorName,

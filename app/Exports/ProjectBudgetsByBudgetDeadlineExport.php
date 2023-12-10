@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\Project;
+use Artwork\Modules\Project\Models\Project;
 use App\Models\ProjectStates;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;

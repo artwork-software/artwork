@@ -1,21 +1,20 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Project\Models;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Artwork\Modules\Project\Models\ProjectFile>
- */
 class ProjectFileFactory extends Factory
 {
+    protected $model = ProjectFileFactory::class;
+
     /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             "name" => "Datei.pdf",

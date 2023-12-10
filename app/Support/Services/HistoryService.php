@@ -3,8 +3,6 @@
 namespace App\Support\Services;
 
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\Project;
-use App\Models\ProjectHistory;
 use App\Models\Task;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHistory;

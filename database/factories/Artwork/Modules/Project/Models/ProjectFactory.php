@@ -1,20 +1,19 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Project\Models;
 
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Artwork\Modules\Project\Models\project>
- */
 class ProjectFactory extends Factory
 {
+    protected $model = Project::class;
     /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'name' => 'Project ' . $this->faker->firstNameFemale,

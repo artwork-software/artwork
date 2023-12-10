@@ -32,6 +32,7 @@ use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Barryvdh\Debugbar\Facades\Debugbar;
@@ -59,7 +60,8 @@ class EventController extends Controller
 
     public function __construct(
         private readonly CollisionService $collisionService,
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
+        private readonly ProjectService $projectService
     )
     {
         $this->notificationData = new \stdClass();
@@ -751,71 +753,6 @@ class EventController extends Controller
             if (!empty($project)) {
                 $projectManagers = $project->managerUsers()->get();
             }
-            //dd($request->all());
-            /*if($request->accept || $request->optionAccept){
-                $event->update(['occupancy_option' => false]);
-
-                if($request->accept){
-                    $event->update(['accepted' => true]);
-                }
-
-                if($request->optionAccept){
-                    $event->update(['accepted' => true, 'option_string' => $request->optionString]);
-                }
-
-                $notificationTitle = 'Raumanfrage bestätigt';
-                $this->history->createHistory($event->id, 'Raum bestätigt');
-                $broadcastMessage = [
-                    'id' => rand(1, 1000000),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-
-                $event->save();
-                $notificationDescription = [
-                    1 => [
-                        'type' => 'link',
-                        'title' => $room->name,
-                        'href' => route('rooms.show', $room->id)
-                    ],
-                    2 => [
-                        'type' => 'string',
-                        'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
-                        'href' => null
-                    ],
-                    3 => [
-                        'type' => 'link',
-                        'title' => $project ? $project->name : '',
-                        'href' => $project ? route('projects.show.calendar', $project->id) : null
-                    ],
-                    4 => [
-                        'type' => 'string',
-                        'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
-                        'href' => null
-                    ],
-                    5 => [
-                        'type' => 'comment',
-                        'title' => $request->adminComment,
-                        'href' => null
-                    ]
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
-                $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setDescription($notificationDescription);
-                foreach ($projectManagers as $projectManager){
-                    if($projectManager->id === $event->creator){
-                        continue;
-                    }
-                    $this->notificationService->setNotificationTo($projectManager);
-                    $this->notificationService->createNotification();
-                }
-                $this->notificationService->setNotificationTo($event->creator);
-                $this->notificationService->createNotification();
-
-            } else {*/
             if (!empty($request->adminComment)) {
                 $projectManagers = [];
                 $this->notificationService->setNotificationKey($this->notificationKey);
@@ -971,7 +908,7 @@ class EventController extends Controller
 
         if (!empty($event->project_id)) {
             $eventProject = $event->project()->first();
-            $projectHistory = new NewHistoryService('Artwork\Modules\Project\Models\Project');
+            $projectHistory = new NewHistoryService(Project::class);
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan geändert');
         }
 

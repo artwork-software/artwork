@@ -4,12 +4,9 @@ namespace Tests\Feature\EventController;
 
 use App\Models\Event;
 use App\Models\EventType;
-use Area;
 use Artwork\Modules\Project\Models\Project;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Room;
-use RoomAttribute;
+use Artwork\Modules\Room\Models\Room;
 use Tests\TestCase;
 
 class EventIndexTest extends TestCase

@@ -30,6 +30,7 @@
     "dependencies": {
         "@headlessui/vue": "^1.7.12",
         "@heroicons/vue": "^1.0.6",
+        "@tabler/icons-vue": "^2.43.0",
         "@vuepic/vue-datepicker": "^3.2.2",
         "dayjs": "^1.11.7",
         "laravel-permission-to-vuejs": "^3.0.1",

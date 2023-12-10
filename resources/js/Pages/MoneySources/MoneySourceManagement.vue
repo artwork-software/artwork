@@ -94,6 +94,11 @@
                                     </div>
                                 </div>
 
+                                <div v-if="moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.user.id)"
+                                     class="flex items-center xxsLight subpixel-antialiased ml-14 mt-1">
+                                    <IconPin class="h-5 w-5 mr-4 text-primary"/>
+                                </div>
+
                                 <div class="flex">
                                     <Menu as="div" class="my-auto relative">
                                         <div class="flex">
@@ -113,7 +118,7 @@
                                             <MenuItems
                                                 class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                 <div class="py-1">
-                                                    <MenuItem v-slot="{ active }">
+                                                    <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                         <a :href="getEditHref(moneySource)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <PencilAltIcon
@@ -122,7 +127,7 @@
                                                             Bearbeiten
                                                         </a>
                                                     </MenuItem>
-                                                    <MenuItem v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
+                                                    <MenuItem class="cursor-pointer" v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                                         <a @click="duplicateMoneySource(moneySource)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <DuplicateIcon
@@ -132,7 +137,17 @@
                                                         </a>
                                                     </MenuItem>
 
-                                                    <MenuItem v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('can edit and delete money sources') || $role('artwork admin')">
+                                                    <MenuItem class="cursor-pointer" v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
+                                                        <a @click="pinMoneySource(moneySource)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <IconPin
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Anpinnen
+                                                        </a>
+                                                    </MenuItem>
+
+                                                    <MenuItem class="cursor-pointer" v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('can edit and delete money sources') || $role('artwork admin')">
                                                         <a @click="openDeleteSourceModal(moneySource)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <TrashIcon
@@ -192,6 +207,7 @@ import {Link} from "@inertiajs/inertia-vue3";
 import Permissions from "@/mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
+import { IconPin } from '@tabler/icons-vue';
 
 
 export default defineComponent({
@@ -221,6 +237,7 @@ export default defineComponent({
         Link,
         DuplicateIcon,
         TrashIcon,
+        IconPin
     },
     props: ['moneySources', 'moneySourceGroups'],
     created() {
@@ -229,9 +246,22 @@ export default defineComponent({
     computed: {
         filteredMoneySources() {
             const allMoneySources = this.sourcesToShow();
-            return allMoneySources.filter(moneySource => {
+            const filteredMoneySources = allMoneySources.filter(moneySource => {
                 return moneySource.name.toLowerCase().includes(this.moneySource_query.toLowerCase());
             });
+
+            // sorts by name but pin is always on top. Accounts for pinned_by_users being null
+            filteredMoneySources.sort((a, b) => {
+                if (a.pinned_by_users && a.pinned_by_users.includes(this.$page.props.user.id)) {
+                    return -1;
+                } else if (b.pinned_by_users && b.pinned_by_users.includes(this.$page.props.user.id)) {
+                    return 1;
+                } else {
+                    return a.name.localeCompare(b.name);
+                }
+            });
+
+            return filteredMoneySources;
         },
     },
     methods: {
@@ -274,6 +304,9 @@ export default defineComponent({
         },
         duplicateMoneySource(moneySource) {
             this.$inertia.post(`/money_sources/${moneySource.id}/duplicate`);
+        },
+        pinMoneySource(moneySource) {
+            this.$inertia.post(`/money_sources/${moneySource.id}/pin`);
         },
         deleteMoneySource(moneySource) {
             this.$inertia.delete(`/money_sources/${moneySource.id}`);

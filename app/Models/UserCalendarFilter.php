@@ -29,7 +29,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 class UserCalendarFilter extends Model
 {
-    use HasFactory;
 
     protected $fillable = [
         'start_date',

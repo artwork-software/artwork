@@ -145,22 +145,27 @@
             </div>
         </div>
         <div v-for="user in Math.floor(shift.empty_master_count)">
-            <DropElement :users="shift.users" :shift-id="shift.id" :currentCount="shift.currentCount"
+            <MasterDropElement :users="shift.users" :shift-id="shift.id" :currentCount="shift.currentCount"
                          :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count"
                          :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="true"
                          :is_series="event.is_series"/>
         </div>
         <div v-for="user in Math.floor(shift.empty_user_count) ? Math.floor(shift.empty_user_count) : 0">
-            <DropElement :users="shift.allUsers" :shift-id="shift.id" :currentCount="shift.currentCount"
-                         :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count"
-                         :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="false"
-                         :is_series="event.is_series"/>
+            <EmployeeDropElement :users="shift.allUsers" :shift-id="shift.id" :currentCount="shift.currentCount"
+                                 :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count"
+                                 :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="false"
+                                 :is_series="event.is_series"/>
         </div>
     </div>
     </div>
 
-    <AddShiftModal :shift="shift" :event="event" :crafts="crafts" v-if="openEditShiftModal"
-                   @closed="openEditShiftModal = false" :edit="true"/>
+    <AddShiftModal v-if="openEditShiftModal"
+                   :shift="shift"
+                   :event="event"
+                   :crafts="crafts"
+                   @closed="openEditShiftModal = false"
+                   :currentUserCrafts="currentUserCrafts"
+                   :edit="true"/>
 
     <ChooseDeleteUserShiftModal :buffer="buffer" :event="event" v-if="showDeleteUserModal"
                                 @close-modal="showDeleteUserModal = false" @returnBuffer="deleteUser"/>
@@ -176,17 +181,30 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import ChooseDeleteUserShiftModal from "@/Pages/Projects/Components/ChooseDeleteUserShiftModal.vue";
 import Helper from "@/mixins/Helper.vue";
+import EmployeeDropElement from "@/Pages/Projects/Components/EmployeeDropElement.vue";
+import MasterDropElement from "@/Pages/Projects/Components/MasterDropElement.vue";
 
 export default defineComponent({
     name: "SingleShift",
     components: {
+        MasterDropElement,
+        EmployeeDropElement,
         ChooseDeleteUserShiftModal,
         AddShiftModal,
-        DotsVerticalIcon, SvgCollection, TrashIcon, DuplicateIcon, PencilAltIcon, DropElement, XIcon,
-        Menu, MenuButton, MenuItem, MenuItems
+        DotsVerticalIcon,
+        SvgCollection,
+        TrashIcon,
+        DuplicateIcon,
+        PencilAltIcon,
+        DropElement,
+        XIcon,
+        Menu,
+        MenuButton,
+        MenuItem,
+        MenuItems
     },
     mixins: [Helper],
-    props: ['shift', 'crafts', 'event'],
+    props: ['shift', 'crafts', 'event', 'currentUserCrafts'],
     data() {
         return {
             openEditShiftModal: false,

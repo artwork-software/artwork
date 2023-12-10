@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Artwork\Modules\User\Models\BelongsToUser;
 use Artwork\Modules\Department\Models\Department;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,7 @@ use Laravel\Scout\Searchable;
 class ChecklistTemplate extends Model
 {
     use HasFactory;
+    use BelongsToUser;
     use Searchable;
 
     protected $fillable = [
@@ -31,11 +33,6 @@ class ChecklistTemplate extends Model
     public function task_templates()
     {
         return $this->hasMany(TaskTemplate::class);
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function users()

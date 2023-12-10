@@ -7,7 +7,8 @@ use App\Enums\RoleNameEnum;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\TaskShowResource;
-use App\Models\Checklist;
+use App\Models\Project;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\MoneySourceTask;
 use App\Models\Task;
 use App\Models\User;
@@ -26,17 +27,16 @@ use stdClass;
 
 class TaskController extends Controller
 {
-    protected ?NotificationService $notificationService = null;
     protected ?stdClass $notificationData = null;
     protected ?NewHistoryService $history = null;
 
-    public function __construct()
+    public function __construct(protected NotificationService $notificationService)
     {
-        $this->notificationService = new NotificationService();
         $this->notificationData = new stdClass();
         $this->notificationData->event = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_CHANGED;
     }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -51,43 +51,37 @@ class TaskController extends Controller
     {
         $tasks = Task::query()
             ->with(['checklist.project', 'checklist.users'])
-            ->whereHas('checklist', fn (Builder $checklistBuilder) => $checklistBuilder
+            ->whereHas('checklist', fn(Builder $checklistBuilder) => $checklistBuilder
                 ->where('user_id', Auth::id())
             )
             ->orWhereHas('task_users', function ($q) {
-               $q->where('user_id',  Auth::id());
-        })->get();
+                $q->where('user_id', Auth::id());
+            })->get();
 
         return inertia('Tasks/OwnTasksManagement', [
             'tasks' => TaskShowResource::collection($tasks),
-            'money_source_task' => MoneySourceTask::with(['money_source_task_users' => function($query){
+            'money_source_task' => MoneySourceTask::with(['money_source_task_users' => function ($query) {
                 return $query->where('user_id', Auth::id());
             }])->where('done', false)->get()
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param Request $request
-     */
+
     public function store(StoreTaskRequest $request)
     {
         $checklist = Checklist::where('id', $request->checklist_id)->first();
         $authorized = false;
         $created = false;
         $user = User::where('id', Auth::id())->first();
-
-
-        if (Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)
-            || $user->projects()->find($checklist->project->id)->pivot->is_manager == 1
-        ) {
+        $isManager = $user->projects()->find($checklist->project->id)?->pivot?->is_manager === 1;
+        $isAdmin = Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value);
+        if ($isAdmin || $isManager) {
             $authorized = true;
             $this->createTask($request);
         } else {
             foreach ($checklist->users()->get() as $user) {
                 if ($user->id === Auth::id()) {
-                    if ($created == false) {
+                    if ($created === false) {
                         $authorized = true;
                         $this->createTask($request);
                         $created = true;
@@ -96,16 +90,14 @@ class TaskController extends Controller
             }
         }
 
-        if ($authorized == true) {
-            $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-            $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $request->name . ' zu ' . $checklist->name . ' hinzugefügt');
-            $this->createNotificationForAllChecklistUser($checklist);
-            return Redirect::back()->with('success', 'Task created.');
-        } else {
+        if (!$authorized) {
             return response()->json(['error' => 'Not authorized to create tasks on this checklist.'], 403);
         }
 
-
+        $this->history = new NewHistoryService(Project::class);
+        $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $request->name . ' zu ' . $checklist->name . ' hinzugefügt');
+        $this->createNotificationForAllChecklistUser($checklist);
+        return Redirect::back()->with('success', 'Task created.');
     }
 
     /**
@@ -116,12 +108,12 @@ class TaskController extends Controller
     {
         $taskScheduling = new SchedulingController();
         $uniqueTaskUsers = [];
-        if($checklist->user_id === null){
+        if ($checklist->user_id === null) {
             $checklistUsers = $checklist->users()->get();
-            foreach ($checklistUsers as $checklistUser){
+            foreach ($checklistUsers as $checklistUser) {
                 $uniqueTaskUsers[$checklistUser->id] = $checklistUser->id;
             }
-            foreach ($uniqueTaskUsers as $uniqueTaskUser){
+            foreach ($uniqueTaskUsers as $uniqueTaskUser) {
                 $taskScheduling->create($uniqueTaskUser, 'TASK_ADDED', 'TASKS', $checklist->id);
             }
         } else {
@@ -140,8 +132,8 @@ class TaskController extends Controller
             'checklist_id' => $request->checklist_id
         ]);
 
-        if(!$request->private){
-            if(!empty($request->users)){
+        if (!$request->private) {
+            if (!empty($request->users)) {
                 $task->task_users()->sync(collect($request->users));
             }
         }
@@ -175,31 +167,24 @@ class TaskController extends Controller
     public function update(Request $request, Task $task)
     {
         $update_properties = $request->only('name', 'description', 'deadline', 'done', 'checklist_id');
-
-        if(!empty($request->done)){
-            if ($request->done == true) {
+        $task->user_id = null;
+        $task->done_at = null;
+        if (!empty($request->done)) {
+            if ($request->done === true) {
                 $task->user_who_done()->associate(Auth::user());
                 $task->done_at = Date::now();
             }
-            if ($request->done == false) {
-                $task->user_id = null;
-                $task->done_at = null;
-            }
         }
-
 
         $task->fill($update_properties);
 
         $task->save();
 
-        if(!$request->private){
-            if(!empty($request->users)){
-                $task->task_users()->sync(collect($request->users));
-            }
+        if (!$request->private && !empty($request->users)) {
+            $task->task_users()->sync(collect($request->users));
         }
 
-        $checklist = $task->checklist()->first();
-        if($checklist !== null){
+        if ($checklist = $task->checklist()->first()) {
             $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
             $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert');
 
@@ -220,11 +205,11 @@ class TaskController extends Controller
         $users = $task->task_users()->get();
         $taskScheduling = new SchedulingController();
         $uniqueTaskUsers = [];
-        if($taskUser === null){
-            foreach ($users as $user){
+        if ($taskUser === null) {
+            foreach ($users as $user) {
                 $uniqueTaskUsers[$user->id] = $user->id;
             }
-            foreach ($uniqueTaskUsers as $uniqueTaskUser){
+            foreach ($uniqueTaskUsers as $uniqueTaskUser) {
                 $taskScheduling->create($uniqueTaskUser, 'TASK_CHANGES', 'TASKS', $task->id);
             }
         } else {

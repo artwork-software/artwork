@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
-use App\Models\Checklist;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\Event;
 use App\Models\Scheduling;
 use App\Models\Task;

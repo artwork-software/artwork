@@ -25,14 +25,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
+use function Clue\StreamFilter\fun;
+
+use JetBrains\PhpStorm\NoReturn;
+
 class RoomController extends Controller
 {
     // init notification system
-    //protected ?RoomService $roomService = null;
-
-    public function __construct(private readonly RoomService $roomService)
+    public function __construct(protected RoomService $roomService)
     {
-        //$this->roomService = new RoomService();
     }
 
     /**
@@ -92,7 +93,7 @@ class RoomController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $room = Room::create([
             'name' => $request->name,
@@ -106,7 +107,7 @@ class RoomController extends Controller
             'order' => Room::max('order') + 1,
         ]);
 
-        if(!is_null($request->adjoining_rooms) && !is_null($request->room_attributes) && !is_null($request->room_categories)) {
+        if (!is_null($request->adjoining_rooms) && !is_null($request->room_attributes) && !is_null($request->room_categories)) {
             $room->adjoining_rooms()->sync($request->adjoining_rooms);
             $room->attributes()->sync($request->room_attributes);
             $room->categories()->sync($request->room_categories);
@@ -121,12 +122,13 @@ class RoomController extends Controller
      * @param Room $room
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
-    public function show(Room $room, Request $request, CalendarController $calendarController)
+    public function show(Room $room, Request $request, CalendarController $calendarController): \Inertia\Response|\Inertia\ResponseFactory
     {
         $room->load('creator');
         $projects = Project::query()->with(['access_budget', 'managerUsers'])->get();
 
-        $showCalendar = $calendarController->createCalendarData('',null,$room);
+        $showCalendar = $calendarController->createCalendarData('', null, $room);
+        //dd($showCalendar['dateValue']);
         //dd($showCalendar['user_filters']);
         return inertia('Rooms/Show', [
             'room' => new RoomCalendarResource($room),
@@ -150,7 +152,7 @@ class RoomController extends Controller
             'days' => $showCalendar['days'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'filterOptions' => $showCalendar['filterOptions'],
-            'dateValue'=> $showCalendar['dateValue'],
+            'dateValue' => $showCalendar['dateValue'],
             'personalFilters' => $showCalendar['personalFilters'],
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
@@ -180,8 +182,7 @@ class RoomController extends Controller
 
         $room->update($request->only('name', 'description', 'temporary', 'start_date', 'end_date', 'everyone_can_book'));
 
-        if(!is_null($request->room_admins) && !is_null($request->requestable_by)) {
-
+        if (!is_null($request->room_admins) && !is_null($request->requestable_by)) {
             $room_admins_ids = [];
             foreach ($request->room_admins as $room_admin) {
                 $room_admins_ids[$room_admin['id']] = ['is_admin' => true];
@@ -197,7 +198,7 @@ class RoomController extends Controller
             $room->users()->sync($new_users);
         }
 
-        if(!is_null($request->adjoining_rooms) && !is_null($request->room_attributes) && !is_null($request->room_categories)) {
+        if (!is_null($request->adjoining_rooms) && !is_null($request->room_attributes) && !is_null($request->room_categories)) {
             $room->adjoining_rooms()->sync($request->adjoining_rooms);
             $room->attributes()->sync($request->room_attributes);
             $room->categories()->sync($request->room_categories);
@@ -328,5 +329,4 @@ class RoomController extends Controller
 
         return $collisions;
     }
-
 }

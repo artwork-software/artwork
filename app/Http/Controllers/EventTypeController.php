@@ -14,21 +14,11 @@ class EventTypeController extends Controller
      *
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
-    public function index()
+    public function index(): \Inertia\Response|\Inertia\ResponseFactory
     {
         return inertia('Settings/EventSettings', [
             'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -37,7 +27,7 @@ class EventTypeController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $event_type = EventType::create([
             'name' => $request->name,
@@ -56,22 +46,11 @@ class EventTypeController extends Controller
      * @param  \App\Models\EventType  $eventType
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
-    public function show(EventType $eventType)
+    public function show(EventType $eventType): \Inertia\Response|\Inertia\ResponseFactory
     {
         return inertia('Events/EventType', [
             'event_type' => new EventTypeResource($eventType),
         ]);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\EventType  $eventType
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(EventType $eventType)
-    {
-        //
     }
 
     /**
@@ -81,7 +60,7 @@ class EventTypeController extends Controller
      * @param  \App\Models\EventType  $eventType
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, EventType $eventType)
+    public function update(Request $request, EventType $eventType): \Illuminate\Http\RedirectResponse
     {
         $eventType->update($request->only(
             'name',
@@ -102,10 +81,9 @@ class EventTypeController extends Controller
     public function destroy(EventType $eventType)
     {
         if ($eventType->name !== 'undefiniert') {
-
             $events = $eventType->events()->get();
 
-            foreach ($events as $event){
+            foreach ($events as $event) {
                 $event->update(['event_type_id' => 1]);
             }
             $eventType->delete();
@@ -116,7 +94,8 @@ class EventTypeController extends Controller
         }
     }
 
-    public function updateRelevant(Request $request, EventType $eventType) {
+    public function updateRelevant(Request $request, EventType $eventType): void
+    {
         $eventType->update(['relevant_for_shift' => $request->relevant_for_shift]);
     }
 }

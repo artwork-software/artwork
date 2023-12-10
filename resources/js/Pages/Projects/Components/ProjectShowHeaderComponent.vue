@@ -10,13 +10,15 @@
                     {{ currentGroup?.name }}</a>
                 </div>
             </div>
-            <div class="flex z-10" v-if="this.project.key_visual_path !== null">
-                <img :src="'/storage/keyVisual/header_' + this.project.key_visual_path" alt="Aktuelles Key-Visual"
-                     class="rounded-md mx-auto h-[200px]">
-            </div>
-            <div v-else class="w-full h-40 bg-gray-200 flex justify-center items-center">
-                <img src="/images/place.png" alt="Aktuelles Key-Visual"
-                     class="rounded-md h-[200px]">
+            <div v-if="openTab === 'info'">
+                <div class="flex z-10" v-if="this.project.key_visual_path !== null">
+                    <img :src="'/storage/keyVisual/header_' + this.project.key_visual_path" alt="Aktuelles Key-Visual"
+                         class="rounded-md mx-auto h-[200px]">
+                </div>
+                <div v-else class="w-full h-40 bg-gray-200 flex justify-center items-center">
+                    <img src="/images/place.png" alt="Aktuelles Key-Visual"
+                         class="rounded-md h-[200px]">
+                </div>
             </div>
             <div class="flex justify-between items-center mt-4">
                 <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl items-center">
@@ -107,7 +109,9 @@
                 <div>
                     zuletzt geändert:
                 </div>
-                <UserPopoverTooltip :user="project.project_history[0]?.changes[0]?.changed_by" :id="project.project_history[0]?.changes[0]?.changed_by.id" height="4" width="4" class="ml-2"/>
+                <UserPopoverTooltip :user="project.project_history[0]?.changes[0]?.changed_by"
+                                    :id="project.project_history[0]?.changes[0]?.changed_by.id" height="4" width="4"
+                                    class="ml-2"/>
                 <span class="ml-2 subpixel-antialiased">
                         {{ project.project_history[0]?.created_at }}
                     </span>
@@ -251,8 +255,18 @@ export default {
                 {name: 'Projektinformationen', href: '#', current: this.openTab === 'info', show: true},
                 {name: 'Ablaufplan', href: '#', current: this.openTab === 'calendar', show: true},
                 {name: 'Checklisten', href: '#', current: this.openTab === 'checklist', show: true},
-                {name: 'Schichten', href: '#', current: this.openTab === 'shift', show: this.hasAdminRole() || this.$can('can plan shifts')},
-                {name: 'Budget', href: '#', current: this.openTab === 'budget', show: this.hasAdminRole() || this.hasBudgetAccess() || this.projectManagerIds.includes(this.$page.props.user.id) || this.$canAny(['can manage global project budgets', 'access project budgets'])},
+                {
+                    name: 'Schichten',
+                    href: '#',
+                    current: this.openTab === 'shift',
+                    show: this.hasAdminRole() || this.$can('can plan shifts')
+                },
+                {
+                    name: 'Budget',
+                    href: '#',
+                    current: this.openTab === 'budget',
+                    show: this.hasAdminRole() || this.hasBudgetAccess() || this.projectManagerIds.includes(this.$page.props.user.id) || this.$canAny(['can manage global project budgets', 'access project budgets'])
+                },
                 {name: 'Kommentare', href: '#', current: this.openTab === 'comment', show: true},
             ]
         },
@@ -313,9 +327,9 @@ export default {
                 Inertia.get(route('projects.show.comment', {project: this.project.id}));
             } else if (selectedTab.name === 'Schichten') {
                 Inertia.get(route('projects.show.shift', {project: this.project.id}));
-            } else if(selectedTab.name === 'Budget') {
+            } else if (selectedTab.name === 'Budget') {
                 Inertia.get(route('projects.show.budget', {project: this.project.id}));
-            }else{
+            } else {
                 Inertia.get(route('projects.show.info', {project: this.project.id}));
             }
         },

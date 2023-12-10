@@ -17,12 +17,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RoomFileController extends Controller
 {
-
     protected ?NewHistoryService $historyController = null;
 
     public function __construct()
     {
-        $this->historyController = new NewHistoryService('Room');
+        $this->historyController = new NewHistoryService(Room::class);
     }
 
     /**

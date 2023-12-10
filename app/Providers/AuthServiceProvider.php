@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use App\Enums\RoleNameEnum;
 use App\Models\Category;
-use App\Models\Checklist;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Comment;
 use App\Models\Contract;

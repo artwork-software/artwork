@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Redirect;
 
 class GenreController extends Controller
 {
-
     public function __construct()
     {
         $this->authorizeResource(Genre::class);
@@ -23,7 +22,14 @@ class GenreController extends Controller
         return Redirect::back()->with('success', 'Genre created');
     }
 
-    public function update(Request $request, Genre $genre): void
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Genre  $genre
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function update(Request $request, Genre $genre): \Illuminate\Http\RedirectResponse
     {
         $genre->update($request->only('name'));
 
@@ -39,6 +45,7 @@ class GenreController extends Controller
             return response()->json(['error' => 'Not authorized to assign projects to a genre.'], 403);
         }
         */
+        return Redirect::back()->with('success', 'Genre updated');
     }
 
     public function destroy(Genre $genre): RedirectResponse

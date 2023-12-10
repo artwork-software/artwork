@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use Artwork\Modules\Checklist\Models\Checklist;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,7 +23,7 @@ class TaskFactory extends Factory
             'deadline' => $this->faker->date,
             'done' => $this->faker->boolean(50),
             'order' => 1,
-            'checklist_id' => 1,
+            'checklist_id' => Checklist::factory(),
         ];
     }
 }

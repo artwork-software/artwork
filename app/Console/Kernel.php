@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\DailyDeleteCalendarExportPDFs;
 use App\Console\Commands\DeadLine;
 use App\Console\Commands\DeleteExpiredNotificationForAll;
 use App\Console\Commands\DeleteNotifications;
@@ -27,6 +28,7 @@ class Kernel extends ConsoleKernel
         $schedule->command(RemoveTempRooms::class)->dailyAt('08:00')->runInBackground();
         $schedule->command(DeleteNotifications::class)->dailyAt('07:00');
         $schedule->command(DeleteExpiredNotificationForAll::class)->everyFiveMinutes()->runInBackground();
+        $schedule->command(DailyDeleteCalendarExportPDFs::class)->dailyAt('01:00')->runInBackground();
 
         $schedule->command(SendNotificationEmailSummaries::class, ['daily'])
             ->dailyAt('9:00');

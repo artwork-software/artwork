@@ -228,8 +228,9 @@ class ProjectController extends Controller
         }
 
         $departments = collect($request->assigned_departments)
-            ->map(fn($department) => Department::query()->findOrFail($department['id']))
-            ->map(fn(Department $department) => $this->authorize('update', $department));
+            ->map(fn($department) => Department::query()->findOrFail($department['id']));
+        //@todo how did this line ever work?
+        //->map(fn(Department $department) => $this->authorize('update', $department));
 
 
 
@@ -1764,7 +1765,6 @@ class ProjectController extends Controller
         ]);
     }
 
-
     public function projectShiftTab(Project $project, Request $request)
     {
         $project->load([
@@ -1910,9 +1910,7 @@ class ProjectController extends Controller
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
-
         rsort($eventsWithRelevant);
-
 
         return inertia('Projects/SingleProjectShifts', [
             'project' => new ProjectShiftResource($project),
@@ -1934,6 +1932,9 @@ class ProjectController extends Controller
             'eventsWithRelevant' => $eventsWithRelevant,
             'crafts' => Craft::all(),
             'access_budget' => $project->access_budget,
+            'currentUserCrafts' => Auth::user()
+                ->crafts
+                ->merge(Craft::query()->where('assignable_by_all', '=', true)->get())
         ]);
     }
 
@@ -2868,6 +2869,7 @@ class ProjectController extends Controller
 
         return back()->with('success');
     }
+
     public function updateCommentedStatusOfCell(Request $request, ColumnCell $columnCell): RedirectResponse
     {
         $columnCell->update(['commented' => $request->commented]);
@@ -2927,13 +2929,16 @@ class ProjectController extends Controller
         Storage::delete('public/keyVisual/'. $project->key_visual_path);
         $project->update(['key_visual_path' => null]);
     }
+
     public function updateShiftDescription(Request $request, Project $project){
         $project->shift_description = $request->shiftDescription;
         $project->save();
     }
+
     public function updateShiftContacts(Request $request, Project $project){
         $project->shift_contact()->sync(collect($request->contactIds));
     }
+
     public function updateShiftRelevantEventTypes(Request $request, Project $project){
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }

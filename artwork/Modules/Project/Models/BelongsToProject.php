@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Project\Models;
 
-use Artwork\Modules\Budget\Models\MainPosition;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 trait BelongsToProject

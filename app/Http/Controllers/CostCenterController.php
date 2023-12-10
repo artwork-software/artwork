@@ -6,10 +6,10 @@ use App\Models\CostCenter;
 use App\Support\Services\NewHistoryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Redirect;
 
 class CostCenterController extends Controller
 {
-
     protected ?NewHistoryService $history = null;
 
 
@@ -19,64 +19,20 @@ class CostCenterController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         CostCenter::create([
             'project_id' => $request->project_id,
             'name' => $request->name,
             'description' => $request->description
         ]);
-
-
-    }
-
-
-
-    /**
-     * Display the specified resource.
-     *
-     * @param CostCenter $costCenter
-     * @return Response
-     */
-    public function show(CostCenter $costCenter)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param CostCenter $costCenter
-     * @return Response
-     */
-    public function edit(CostCenter $costCenter)
-    {
-        //
+        $this->history->createHistory($request->project_id, 'Kostenträger hinzugefügt');
+        return Redirect::back();
     }
 
     /**
@@ -84,9 +40,9 @@ class CostCenterController extends Controller
      *
      * @param Request $request
      * @param CostCenter $costCenter
-     * @return Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, CostCenter $costCenter)
+    public function update(Request $request, CostCenter $costCenter): \Illuminate\Http\RedirectResponse
     {
         $oldCostCenter = $costCenter->name;
         $costCenter->update([
@@ -96,10 +52,11 @@ class CostCenterController extends Controller
         $newCostCenter = $costCenter->name;
 
         $this->checkProjectCostCenterChanges($costCenter->project_id, $oldCostCenter, $newCostCenter);
+        return Redirect::back();
     }
 
 
-    private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter)
+    private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter): void
     {
         if ($newCostCenter === null && $oldCostCenter !== null) {
             $this->history->createHistory($projectId, 'Kostenträger gelöscht');
@@ -110,16 +67,5 @@ class CostCenterController extends Controller
         if ($oldCostCenter !== $newCostCenter && $oldCostCenter !== null && $newCostCenter !== null) {
             $this->history->createHistory($projectId, 'Kostenträger geändert');
         }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param CostCenter $costCenter
-     * @return Response
-     */
-    public function destroy(CostCenter $costCenter)
-    {
-        //
     }
 }

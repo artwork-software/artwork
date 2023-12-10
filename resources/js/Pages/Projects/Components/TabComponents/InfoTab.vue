@@ -184,21 +184,24 @@ export default{
     },
     methods:{
         async handleDescriptionClick() {
+            if(this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id) || this.project.isMemberOfADepartment){
+                this.descriptionClicked = true;
 
-            this.descriptionClicked = true;
+                await nextTick()
 
-            await nextTick()
-
-            this.$refs[`description-${this.project.id}`].select();
+                this.$refs[`description-${this.project.id}`].select();
+            }
         },
         async handleTextClick(headline) {
 
-            headline.clicked = !headline.clicked
+            if(this.$can('write projects') || this.$role('artwork admin') || this.$can('admin projects') || this.projectWriteIds.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id) || this.project.isMemberOfADepartment) {
+                headline.clicked = !headline.clicked
 
-            if (headline.clicked) {
-                await nextTick()
+                if (headline.clicked) {
+                    await nextTick()
 
-                this.$refs[`text-${headline.id}`][0].select();
+                    this.$refs[`text-${headline.id}`][0].select();
+                }
             }
         },
         changeHeadlineText(headline) {

@@ -2,20 +2,16 @@
 
 namespace App\Support\Services;
 
-use App\Enums\NotificationConstEnum;
-use App\Models\User;
-use Room;
+use Artwork\Modules\Room\Models\Room;
 
 class RoomService
 {
-    protected ?NotificationService $notificationService = null;
     protected ?\stdClass $notificationData = null;
     protected NewHistoryService $history;
 
-    public function __construct()
+    public function __construct(protected readonly NotificationService $notificationService)
     {
-        $this->notificationService = new NotificationService();
-        $this->history = new NewHistoryService('Room');
+        $this->history = new NewHistoryService(Room::class);
     }
 
 

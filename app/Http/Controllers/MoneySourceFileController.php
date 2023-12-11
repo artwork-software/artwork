@@ -6,7 +6,6 @@ use App\Models\Comment;
 use App\Models\MoneySource;
 use App\Models\MoneySourceFile;
 use App\Support\Services\NewHistoryService;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,11 +15,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-
 class MoneySourceFileController extends Controller
 {
-
     protected ?NewHistoryService $history = null;
+
     public function __construct()
     {
         $this->history = new NewHistoryService('App\Models\MoneySource');
@@ -29,25 +27,24 @@ class MoneySourceFileController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function store(Request $request, MoneySource $moneySource): \Illuminate\Http\RedirectResponse
+    public function store(Request $request, MoneySource $moneySource): RedirectResponse
     {
-
         if (!Storage::exists("money_source_files")) {
             Storage::makeDirectory("money_source_files");
         }
 
         $file = $request->file('file');
         $original_name = $file->getClientOriginalName();
-        $basename = Str::random(20).$original_name;
+        $basename = Str::random(20) . $original_name;
 
         Storage::putFileAs('money_source_files', $file, $basename);
 
-        $moneySourceFile =$moneySource->money_source_files()->create([
+        $moneySourceFile = $moneySource->money_source_files()->create([
             'name' => $original_name,
             'basename' => $basename,
         ]);
 
-        if($request->comment){
+        if ($request->comment) {
             $comment = Comment::create([
                 'text' => $request->comment,
                 'user_id' => Auth::id(),
@@ -55,36 +52,22 @@ class MoneySourceFileController extends Controller
             ]);
             $moneySourceFile->comments()->save($comment);
         }
-        $this->history->createHistory($moneySource->id, 'Dokument '. $original_name .' hochgeladen');
+        $this->history->createHistory($moneySource->id, 'Dokument ' . $original_name . ' hochgeladen');
         return Redirect::back();
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param MoneySourceFile $moneySourceFile
-     * @return StreamedResponse
-     * @throws AuthorizationException
-     */
     public function download(MoneySourceFile $moneySourceFile): StreamedResponse
     {
-        return Storage::download('money_source_files/'. $moneySourceFile->basename, $moneySourceFile->name);
+        return Storage::download('money_source_files/' . $moneySourceFile->basename, $moneySourceFile->name);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param MoneySourceFile $moneySourceFile
-     * @return RedirectResponse
-     */
     public function update(Request $request, MoneySourceFile $moneySourceFile): RedirectResponse
     {
-        if($request->file('file')) {
-            Storage::delete('money_source_files/'. $moneySourceFile->basename);
+        if ($request->file('file')) {
+            Storage::delete('money_source_files/' . $moneySourceFile->basename);
             $file = $request->file('file');
             $original_name = $file->getClientOriginalName();
-            $basename = Str::random(20).$original_name;
+            $basename = Str::random(20) . $original_name;
 
             $moneySourceFile->basename = $basename;
             $moneySourceFile->name = $original_name;
@@ -92,7 +75,7 @@ class MoneySourceFileController extends Controller
             Storage::putFileAs('money_source_files', $file, $basename);
         }
 
-        if($request->get('comment')) {
+        if ($request->get('comment')) {
             $comment = Comment::create([
                 'text' => $request->comment,
                 'user_id' => Auth::id(),
@@ -104,20 +87,11 @@ class MoneySourceFileController extends Controller
         $moneySourceFile->save();
 
         return Redirect::back();
-
-
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param MoneySourceFile $moneySourceFile
-     * @return RedirectResponse
-     * @throws AuthorizationException
-     */
-    public function destroy(MoneySource $moneySource, MoneySourceFile $moneySourceFile)
+    public function destroy(MoneySource $moneySource, MoneySourceFile $moneySourceFile): RedirectResponse
     {
-        $this->history->createHistory($moneySource->id, 'Dokument '. $moneySourceFile->name .' gelöscht');
+        $this->history->createHistory($moneySource->id, 'Dokument ' . $moneySourceFile->name . ' gelöscht');
         $moneySourceFile->delete();
 
         return Redirect::back();

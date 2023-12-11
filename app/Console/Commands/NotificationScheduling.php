@@ -7,26 +7,11 @@ use Illuminate\Console\Command;
 
 class NotificationScheduling extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'app:schedule-notification';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Send User Task Notification if task older than 30 minutes';
 
-    /**
-     * Execute the console command.
-     *
-     * @return int
-     */
-    public function handle()
+    public function handle(): int
     {
         $taskScheduling = new SchedulingController();
         $taskScheduling->sendNotification();

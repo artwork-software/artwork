@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use stdClass;
 
 class NotificationService
 {
@@ -28,6 +29,7 @@ class NotificationService
     public string $title;
 
     public array|null $description = [];
+
     public ?NotificationConstEnum $notificationConstEnum = null;
 
     public string $icon = 'green';
@@ -56,6 +58,10 @@ class NotificationService
 
     public int $priority = 0;
 
+    protected string $notificationKey = '';
+
+    public object|null $budgetData = null;
+
     public function getPriority(): int
     {
         return $this->priority;
@@ -66,7 +72,6 @@ class NotificationService
         $this->priority = $priority;
     }
 
-
     public function getShiftId(): ?int
     {
         return $this->shiftId;
@@ -76,8 +81,6 @@ class NotificationService
     {
         $this->shiftId = $shiftId;
     }
-
-    public object|null $budgetData = null;
 
     public function getNotificationTo(): User
     {
@@ -99,6 +102,9 @@ class NotificationService
         $this->title = $title;
     }
 
+    /**
+     * @return null|array<int, array<string, mixed>>
+     */
     public function getDescription(): ?array
     {
         return $this->description;
@@ -129,6 +135,9 @@ class NotificationService
         $this->icon = $icon;
     }
 
+    /**
+     * @return string[]
+     */
     public function getButtons(): array
     {
         return $this->buttons;
@@ -169,6 +178,9 @@ class NotificationService
         $this->modelId = $modelId;
     }
 
+    /**
+     * @return null|array<string,mixed>
+     */
     public function getBroadcastMessage(): ?array
     {
         return $this->broadcastMessage;
@@ -239,28 +251,18 @@ class NotificationService
         $this->budgetData = $budgetData;
     }
 
-
-    protected string $notificationKey = '';
-
-    /**
-     * @return string
-     */
     public function getNotificationKey(): string
     {
         return $this->notificationKey;
     }
 
-    /**
-     * @param string $notificationKey
-     */
     public function setNotificationKey(string $notificationKey): void
     {
         $this->notificationKey = $notificationKey;
     }
 
-    public function clearNotificationData()
+    public function clearNotificationData(): void
     {
-        //$this->setNotificationTo(null);
         $this->setTitle('');
         $this->setDescription([]);
         $this->setNotificationConstEnum(null);
@@ -280,28 +282,14 @@ class NotificationService
         $this->setShiftId(null);
     }
 
-    /**
-     * show the form for creating a new resource.
-     *
-     * @param $user
-     * @param object $notificationData
-     * @param array|null $broadcastMessage
-     * @return void
-     */
-    public function create($user, object $notificationData, ?array $broadcastMessage = []): void
-    {
-    }
-
-    /**
-     * this function creates room notifications
-     * @return void
-     */
+    //@todo: needs to be refactored, complexity is way too high
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function createNotification(): void
     {
         if (!$this->getNotificationTo()) {
             return;
         }
-        $body = new \stdClass();
+        $body = new stdClass();
         $body->icon = $this->getIcon();
         $body->priority = $this->getPriority();
         $body->groupType = $this->getNotificationConstEnum()->groupType();
@@ -327,57 +315,87 @@ class NotificationService
             case NotificationConstEnum::NOTIFICATION_ROOM_REQUEST:
             case NotificationConstEnum::NOTIFICATION_ROOM_ANSWER:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
-                    Notification::send($this->getNotificationTo(), new RoomRequestNotification($body, $this->getBroadcastMessage()));
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new RoomRequestNotification($body, $this->getBroadcastMessage())
+                    );
                     break;
                 }
             case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:
                 if ($this->getNotificationTo() !== Auth::id()) {
-                    Notification::send($this->getNotificationTo(), new EventNotification($body, $this->getBroadcastMessage()));
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new EventNotification($body, $this->getBroadcastMessage())
+                    );
                 }
                 break;
             case NotificationConstEnum::NOTIFICATION_NEW_TASK:
             case NotificationConstEnum::NOTIFICATION_TASK_CHANGED:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
-                    Notification::send($this->getNotificationTo(), new TaskNotification($body, $this->getBroadcastMessage()));
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new TaskNotification($body, $this->getBroadcastMessage())
+                    );
                 }
                 break;
             case NotificationConstEnum::NOTIFICATION_PROJECT:
             case NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
-                    Notification::send($this->getNotificationTo(), new ProjectNotification($body, $this->getBroadcastMessage()));
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new ProjectNotification($body, $this->getBroadcastMessage())
+                    );
                 }
                 break;
             case NotificationConstEnum::NOTIFICATION_TEAM:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
-                    Notification::send($this->getNotificationTo(), new TeamNotification($body, $this->getBroadcastMessage()));
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new TeamNotification($body, $this->getBroadcastMessage())
+                    );
                 }
                 break;
             case NotificationConstEnum::NOTIFICATION_ROOM_CHANGED:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
-                    Notification::send($this->getNotificationTo(), new RoomNotification($body, $this->getBroadcastMessage()));
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new RoomNotification($body, $this->getBroadcastMessage())
+                    );
                 }
                 break;
             case NotificationConstEnum::NOTIFICATION_CONFLICT:
             case NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
-                    Notification::send($this->getNotificationTo(), new ConflictNotification($body, $this->getBroadcastMessage()));
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new ConflictNotification($body, $this->getBroadcastMessage())
+                    );
                 }
                 break;
             case NotificationConstEnum::NOTIFICATION_TASK_REMINDER:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
-                    Notification::send($this->getNotificationTo(), new DeadlineNotification($body, $this->getBroadcastMessage()));
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new DeadlineNotification($body, $this->getBroadcastMessage())
+                    );
                 }
                 break;
             case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
             case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
-                    Notification::send($this->getNotificationTo(), new MoneySourceNotification($body, $this->getBroadcastMessage()));
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new MoneySourceNotification($body, $this->getBroadcastMessage())
+                    );
                 }
                 break;
             case NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
             case NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
-                    Notification::send($this->getNotificationTo(), new BudgetVerified($body, $this->getBroadcastMessage()));
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new BudgetVerified($body, $this->getBroadcastMessage())
+                    );
                 }
                 break;
             case NotificationConstEnum::NOTIFICATION_SHIFT_LOCKED:
@@ -387,19 +405,28 @@ class NotificationService
             case NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT:
             case NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
-                    Notification::send($this->getNotificationTo(), new ShiftNotification($body, $this->getBroadcastMessage()));
+                    Notification::send(
+                        $this->getNotificationTo(),
+                        new ShiftNotification($body, $this->getBroadcastMessage())
+                    );
                 }
                 break;
         }
     }
 
-    public function checkIfUserInMoreThanTeenShifts(User $user, Shift $shift): \stdClass
+    public function checkIfUserInMoreThanTeenShifts(User $user, Shift $shift): stdClass
     {
         $shifts = $user->shifts()
-            ->whereBetween('event_start_day', [Carbon::parse($shift->event_start_day)->subDays(10), Carbon::parse($shift->event_start_day)->addDays(10)])
+            ->whereBetween(
+                'event_start_day',
+                [
+                    Carbon::parse($shift->event_start_day)->subDays(10),
+                    Carbon::parse($shift->event_start_day)->addDays(10)
+                ]
+            )
             ->get()->groupBy('event_start_day');
 
-        $notificationObj = new \stdClass();
+        $notificationObj = new stdClass();
         $notificationObj->moreThanTenShifts = false;
 
         if ($shifts->count() > 10) {
@@ -409,20 +436,25 @@ class NotificationService
         }
 
         return $notificationObj;
-
     }
 
-    public function checkIfShortBreakBetweenTwoShifts(User $user, Shift $shift)
+    public function checkIfShortBreakBetweenTwoShifts(User $user, Shift $shift): stdClass
     {
         $minDurationHours = 12;
         $formattedEndTime = Carbon::parse($shift->event_end_day . ' ' . $shift->end);
 
         $shifts = $user->shifts()
-            ->whereBetween('event_start_day', [Carbon::parse($shift->event_start_day)->subDay(), Carbon::parse($shift->event_start_day)->addDay()])
+            ->whereBetween(
+                'event_start_day',
+                [
+                    Carbon::parse($shift->event_start_day)->subDay(),
+                    Carbon::parse($shift->event_start_day)->addDay()
+                ]
+            )
             ->without(['craft'])
             ->get();
 
-        $notificationObj = new \stdClass();
+        $notificationObj = new stdClass();
         $notificationObj->shortBreak = false;
 
         foreach ($shifts as $shift) {

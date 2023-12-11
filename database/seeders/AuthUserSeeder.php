@@ -23,14 +23,20 @@ class AuthUserSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
-        Storage::put('/public/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
-            File::get(public_path('/profile-photos/photo-1499996860823-5214fcc65f8f.jpg')), 'public');
+        Storage::put(
+            '/public/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
+            File::get(public_path('/profile-photos/photo-1499996860823-5214fcc65f8f.jpg')),
+            'public'
+        );
         $this->command->info("Profile Photo 1 set");
 
-        Storage::put('/public/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg',
-            File::get(public_path('/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg')), 'public');
+        Storage::put(
+            '/public/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg',
+            File::get(public_path('/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg')),
+            'public'
+        );
         $this->command->info("Profile Photo 2 set");
 
         $user = User::create([
@@ -49,14 +55,12 @@ class AuthUserSeeder extends Seeder
         ]);
 
         foreach (NotificationConstEnum::cases() as $notificationType) {
-
             $user->notificationSettings()->create([
                 'group_type' => $notificationType->groupType(),
                 'type' => $notificationType->value,
                 'title' => $notificationType->title(),
                 'description' => $notificationType->description()
             ]);
-
         }
 
         $user->calendar_settings()->create();
@@ -91,14 +95,12 @@ class AuthUserSeeder extends Seeder
         ]);
 
         foreach (NotificationConstEnum::cases() as $notificationType) {
-
             $user->notificationSettings()->create([
                 'group_type' => $notificationType->groupType(),
                 'type' => $notificationType->value,
                 'title' => $notificationType->title(),
                 'description' => $notificationType->description()
             ]);
-
         }
 
 
@@ -122,14 +124,12 @@ class AuthUserSeeder extends Seeder
         $user->shift_calendar_filter()->create();
         $user->calendar_settings()->create();
         foreach (NotificationConstEnum::cases() as $notificationType) {
-
             $user->notificationSettings()->create([
                 'group_type' => $notificationType->groupType(),
                 'type' => $notificationType->value,
                 'title' => $notificationType->title(),
                 'description' => $notificationType->description()
             ]);
-
         }
 
 

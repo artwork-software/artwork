@@ -22,6 +22,7 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->json('users')->nullable();
+            $table->json('pinned_by_users')->nullable();
             $table->bigInteger('group_id')->nullable();
             $table->text('description')->nullable();
             $table->boolean('is_group')->default(false);

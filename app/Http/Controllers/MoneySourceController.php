@@ -519,6 +519,23 @@ class MoneySourceController extends Controller
         return Redirect::route('money_sources.index')->with('success', 'MoneySource duplicated.');
     }
 
+    public function pin(MoneySource $moneySource): \Illuminate\Http\RedirectResponse
+    {
+        $user = Auth::user();
+        $pinnedByUsers = $moneySource->pinned_by_users;
+
+        if (is_null($pinnedByUsers)) {
+            $pinnedByUsers = [];
+        }
+        if (in_array($user->id, $pinnedByUsers)) {
+            $pinnedByUsers = array_diff($pinnedByUsers, [$user->id]);
+        } else {
+            $pinnedByUsers[] = $user->id;
+        }
+        $moneySource->update(['pinned_by_users' => $pinnedByUsers]);
+        return Redirect::route('money_sources.index')->with('success', 'MoneySource pinned.');
+    }
+
     private function checkUserChanges($moneySource, $oldUsers, $newUsers): void
     {
         $oldUserIds = [];

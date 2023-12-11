@@ -41,11 +41,13 @@ class MoneySource extends Model
         'is_group',
         'users',
         'group_id',
-        'sub_money_source_ids'
+        'sub_money_source_ids',
+        'pinned_by_users'
     ];
 
     protected $casts = [
         'is_group' => 'boolean',
+        'pinned_by_users' => 'array',
     ];
 
     public function users()
@@ -54,6 +56,11 @@ class MoneySource extends Model
             'competent',
             'write_access'
         )->using(MoneySourceUserPivot::class);
+    }
+
+    public function pinnedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'money_source_user_pinned')->using(MoneySourceUserPinned::class);
     }
 
     public function competent(): BelongsToMany

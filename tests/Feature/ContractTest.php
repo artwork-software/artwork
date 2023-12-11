@@ -40,7 +40,7 @@ test('contracts can be updated', function (): void {
     $this->actingAs($this->user);
 
     $this->patch("/contracts/{$this->contract->id}", [
-        'contract' => UploadedFile::fake()->create('document2.pdf', 100),
+        'file' => UploadedFile::fake()->create('document2.pdf', 100),
         'contract_partner' => 'Agentur Hamburg',
         'amount' => 2000,
         'description' => 'Test description',
@@ -51,7 +51,7 @@ test('contracts can be updated', function (): void {
         'project_id' => $this->project->id,
         'contract_partner' => 'Agentur Hamburg',
         'amount' => 2000,
-       'description' => 'Test description',
+        'description' => 'Test description',
     ]);
 });
 

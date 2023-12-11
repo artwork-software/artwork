@@ -24,39 +24,18 @@ use Illuminate\Support\Facades\Auth;
 
 class CalendarController extends Controller
 {
-    /**
-     * @var Carbon|null
-     */
     protected ?Carbon $startDate = null;
 
-    /**
-     * @var Carbon|null
-     */
     protected ?Carbon $endDate = null;
 
-    /**
-     * @var Authenticatable|null
-     */
     private ?Authenticatable $user;
 
-    /**
-     * @var UserCalendarFilter
-     */
     private UserCalendarFilter $userCalendarFilter;
 
-    /**
-     * @var UserShiftCalendarFilter
-     */
     private UserShiftCalendarFilter $userShiftCalendarFilter;
 
-    /**
-     * @var UserCalendarSettings
-     */
     private UserCalendarSettings $calendarSettings;
 
-    /**
-     * @param FilterProvider $filterProvider
-     */
     public function __construct(private readonly FilterProvider $filterProvider)
     {
         //@todo This will break if no user present
@@ -66,19 +45,12 @@ class CalendarController extends Controller
         $this->calendarSettings = $this->user->calendar_settings;
     }
 
-    /**
-     * Returns all fields that can be filtered by in the calendar
-     * @return array<string, mixed>
-     */
     public function getFilters(): array
     {
         return $this->filterProvider->provide();
     }
 
     /**
-     * @param $date_of_day
-     * @param $room
-     * @param $projectId
      * @return array<int, Event>
      */
     private function get_events_of_day($date_of_day, $room, $projectId = null): array
@@ -101,8 +73,6 @@ class CalendarController extends Controller
     }
 
     /**
-     * @param $date_of_day
-     * @param $userId
      * @return array<int, Event>
      */
     private function get_events_per_day($date_of_day, $userId = null): array
@@ -125,8 +95,6 @@ class CalendarController extends Controller
     }
 
     /**
-     * @param $date_of_day
-     * @param $freelancerId
      * @return array<int, Event>
      */
     private function get_events_per_day_for_freelancer($date_of_day, $freelancerId = null): array
@@ -153,8 +121,6 @@ class CalendarController extends Controller
     }
 
     /**
-     * @param $date_of_day
-     * @param $serviceProviderId
      * @return array<int, Event>
      */
     private function get_events_per_day_for_service_provider($date_of_day, $serviceProviderId = null): array
@@ -181,11 +147,6 @@ class CalendarController extends Controller
     }
 
     /**
-     * @param $type
-     * @param Project|null $project
-     * @param Room|null $room
-     * @param $startDate
-     * @param $endDate
      * @return array<string, mixed>
      */
     public function createCalendarData(
@@ -329,7 +290,6 @@ class CalendarController extends Controller
     }
 
     /**
-     * @param User|null $user
      * @return array<string, mixed>
      */
     public function createCalendarDataForUserShiftPlan(?User $user = null): array
@@ -403,7 +363,6 @@ class CalendarController extends Controller
     }
 
     /**
-     * @param Freelancer|null $freelancer
      * @return array<string, mixed>
      */
     public function createCalendarDataForFreelancerShiftPlan(?Freelancer $freelancer = null): array
@@ -478,7 +437,6 @@ class CalendarController extends Controller
     }
 
     /**
-     * @param ServiceProvider|null $serviceProvider
      * @return array<string, mixed>
      */
     public function createCalendarDataForServiceProviderShiftPlan(?ServiceProvider $serviceProvider = null): array
@@ -533,8 +491,6 @@ class CalendarController extends Controller
     }
 
     /**
-     * @param Project|null $project
-     * @param Room|null $room
      * @return array<string, mixed>
      */
     public function createCalendarDataForShiftPlan(?Project $project = null, ?Room $room = null): array
@@ -621,9 +577,6 @@ class CalendarController extends Controller
         ];
     }
 
-    /**
-     * @return mixed
-     */
     public function getEventsOfDay(): Collection
     {
         $all_events = Event::query();
@@ -631,11 +584,6 @@ class CalendarController extends Controller
         return $filteredEvents->get();
     }
 
-    /**
-     * @param $startDate
-     * @param $endDate
-     * @return Collection
-     */
     public function getEventsAtAGlance($startDate, $endDate): Collection
     {
         $initialEventQuery = Event::query();
@@ -649,15 +597,6 @@ class CalendarController extends Controller
         return CalendarEventResource::collection($eventsByRoom)->collection->groupBy('room.id');
     }
 
-    /**
-     * @param $query
-     * @param $startDate
-     * @param $endDate
-     * @param Room|null $room
-     * @param Project|null $project
-     * @param $shiftPlan
-     * @return mixed
-     */
     public function filterEvents(
         $query,
         $startDate,
@@ -734,12 +673,6 @@ class CalendarController extends Controller
                 }));
     }
 
-    /**
-     * @param $startDate
-     * @param $endDate
-     * @param $shiftPlan
-     * @return Builder
-     */
     public function filterRooms($startDate, $endDate, $shiftPlan = false): Builder
     {
         $user = Auth::user();
@@ -846,11 +779,6 @@ class CalendarController extends Controller
             );
     }
 
-    /**
-     * @param $startDate
-     * @param $endDate
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
     private function checkIfDayWithoutEventsExists($startDate, $endDate): \Illuminate\Database\Eloquent\Collection
     {
         return Event::query()->selectRaw('COUNT(DISTINCT DATE(start_time)) as num_event_days')
@@ -864,9 +792,6 @@ class CalendarController extends Controller
             ->get();
     }
 
-    /**
-     * @return void
-     */
     private function setDefaultDates(): void
     {
         if (!is_null($this->userCalendarFilter->start_date)) {

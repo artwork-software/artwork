@@ -25,18 +25,11 @@ class AppController extends Controller
 {
     use PasswordValidationRules;
 
-    /**
-     * @param Request $request
-     * @return int
-     */
     public function getPasswordScore(Request $request): int
     {
         return (new Zxcvbn())->passwordStrength($request->input('password'))['score'];
     }
 
-    /**
-     * @return RedirectResponse
-     */
     public function toggle_hints(): RedirectResponse
     {
         $user = Auth::user();
@@ -48,9 +41,6 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Hilfe umgeschaltet');
     }
 
-    /**
-     * @return RedirectResponse
-     */
     public function toggle_calendar_settings_project_status(): RedirectResponse
     {
         $user = Auth::user();
@@ -64,9 +54,6 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
 
-    /**
-     * @return RedirectResponse
-     */
     public function toggle_calendar_settings_options(): RedirectResponse
     {
         $user = Auth::user();
@@ -80,9 +67,6 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
 
-    /**
-     * @return RedirectResponse
-     */
     public function toggle_calendar_settings_project_management(): RedirectResponse
     {
         $user = Auth::user();
@@ -96,9 +80,6 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
 
-    /**
-     * @return RedirectResponse
-     */
     public function toggle_calendar_settings_repeating_events(): RedirectResponse
     {
         $user = Auth::user();
@@ -112,9 +93,6 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
 
-    /**
-     * @return RedirectResponse
-     */
     public function toggle_calendar_settings_work_shifts(): RedirectResponse
     {
         $user = Auth::user();
@@ -128,31 +106,18 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
 
-    /**
-     * @param GeneralSettings $settings
-     * @return RedirectResponse
-     */
     public function index(GeneralSettings $settings): RedirectResponse
     {
         //setup process finished
         return $settings->setup_finished ? Redirect::route('login') : Redirect::route('setup');
     }
 
-    /**
-     * @param GeneralSettings $settings
-     * @return RedirectResponse|Response|ResponseFactory
-     */
     public function showSetupPage(GeneralSettings $settings): RedirectResponse|Response|ResponseFactory
     {
         //setup process finished
         return $settings->setup_finished ? Redirect::route('login') : inertia('Auth/Register');
     }
 
-    /**
-     * @param Request $request
-     * @param GeneralSettings $settings
-     * @return RedirectResponse
-     */
     public function updateTool(Request $request, GeneralSettings $settings): RedirectResponse
     {
         if (!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
@@ -183,16 +148,10 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Fotos hinzugefügt');
     }
 
-    /**
-     * @param UserCreateRequest $request
-     * @param GeneralSettings $settings
-     * @param StatefulGuard $guard
-     * @return Redirector|Application|RedirectResponse
-     */
     public function createAdmin(
         UserCreateRequest $request,
-        GeneralSettings   $settings,
-        StatefulGuard     $guard
+        GeneralSettings $settings,
+        StatefulGuard $guard
     ): Redirector|Application|RedirectResponse {
         /** @var User $user */
         $user = User::create($request->userData());
@@ -217,11 +176,6 @@ class AppController extends Controller
         return redirect(RouteServiceProvider::HOME);
     }
 
-    /**
-     * @param Request $request
-     * @param GeneralSettings $settings
-     * @return RedirectResponse
-     */
     public function updateEmailSettings(Request $request, GeneralSettings $settings): RedirectResponse
     {
         if (!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {

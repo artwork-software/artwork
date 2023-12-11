@@ -2,23 +2,16 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserDropResource extends JsonResource
 {
-
-    /**
-     * @var null
-     */
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  Request  $request
-     * @return array
+     * @return array<string, mixed>
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
         return [

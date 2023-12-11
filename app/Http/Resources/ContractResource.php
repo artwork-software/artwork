@@ -6,14 +6,11 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Http\Request;
 
 class ContractResource extends JsonResource
 {
     /**
-     * Transform the resource into an array.
-     *
-     * @return array<int, User>
+     * @return User[]
      */
     public function getAccessibleUsers(): array
     {
@@ -31,9 +28,9 @@ class ContractResource extends JsonResource
     }
 
     /**
-     * @param Request $request
      * @return array<string, mixed>
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
         return [

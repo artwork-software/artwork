@@ -9,11 +9,6 @@ use Illuminate\Database\Eloquent\Builder;
 
 class CollisionService
 {
-    /**
-     * @param $request
-     * @param Event|null $event
-     * @return Builder
-     */
     public function getCollision($request, ?Event $event = null): Builder
     {
         $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
@@ -64,19 +59,11 @@ class CollisionService
         return $return;
     }
 
-    /**
-     * @param $request
-     * @return int
-     */
     public function getCollisionCount($request): int
     {
         return $this->getCollision($request)->count();
     }
 
-    /**
-     * @param $request
-     * @return array<string, mixed>
-     */
     public function getConflictEvents($request): array
     {
         $conflictEvents = self::getCollision($request)->get();
@@ -93,10 +80,6 @@ class CollisionService
         return $conflictObj;
     }
 
-    /**
-     * @param $request
-     * @return array<int, Event>
-     */
     public function adjoiningCollision($request): array
     {
         $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));

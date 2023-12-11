@@ -3,28 +3,19 @@
 namespace App\Http\Resources;
 
 use App\Models\UserCalendarSettings;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
 class CalendarEventResource extends JsonResource
 {
-    /**
-     * @var null
-     */
     public static $wrap = null;
 
-    /**
-     * @var UserCalendarSettings
-     */
     private UserCalendarSettings $userCalendarSettings;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param Request $request
      * @return array<string, mixed>
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
         $this->userCalendarSettings = Auth::user()->calendar_settings;
@@ -62,7 +53,6 @@ class CalendarEventResource extends JsonResource
             'created_by' => $this->creator,
             'occupancy_option' => $this->occupancy_option,
             'projectLeaders' => $this->project?->managerUsers,
-            //'project' => new ProjectInEventResource($this->project),
             'project' => new ProjectInCalendarResource($this->project),
             'collisionCount' => $this->collision_count,
             'is_series' => $this->is_series,
@@ -83,14 +73,18 @@ class CalendarEventResource extends JsonResource
             'shifts' => $this->shifts,
         ];
 
-        if (!$this->userCalendarSettings->work_shifts) {
-            if (isset($output['shifts'])) {
-                if (array_key_exists('shifts', $output)) {
-                    unset($output['shifts']);
-                }
-            }
-        }
+        return $this->handleNoUserCalendarWorkShifts($output);
+    }
 
+    /**
+     * @param array $output
+     * @return array<string, mixed>
+     */
+    private function handleNoUserCalendarWorkShifts(array $output): array
+    {
+        if (!$this->userCalendarSettings->work_shifts && array_key_exists('shifts', $output)) {
+            unset($output['shifts']);
+        }
         return $output;
     }
 }

@@ -5,31 +5,26 @@ namespace App\Http\Resources;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @mixin \App\Models\Task
- */
 class TaskIndexResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
             'name' => $this->name,
             'checklist' => $this->checklist,
-            'project' => @$this->checklist->project,
+            'project' => $this->checklist->project,
             'description' => $this->description,
             'deadline' => $this->deadline ? Carbon::parse($this->deadline)->format('d.m.Y, H:i') : null,
             'deadlineDate' => $this->deadline ? Carbon::parse($this->deadline)->format('Y-m-d') : null,
-            'deadlineTime' => $this->deadline ? Carbon::parse($this->deadline)->format('H:i'): null,
+            'deadlineTime' => $this->deadline ? Carbon::parse($this->deadline)->format('H:i') : null,
             'deadline_dt_local' => $this->deadline ? Carbon::parse($this->deadline)->toDateTimeLocalString() : null,
             'order' => $this->order,
             'done' => $this->done,

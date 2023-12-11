@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use App\Models\Task;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ChecklistShowResource extends JsonResource
@@ -12,11 +11,9 @@ class ChecklistShowResource extends JsonResource
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  Request  $request
      * @return array<string, mixed>
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
         return [

@@ -2,19 +2,36 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $basename
+ * @property string $contract_partner
+ * @property int $amount
+ * @property int $creator_id
+ * @property int $project_id
+ * @property string $description
+ * @property string $contract_type_id
+ * @property string $company_type_id
+ * @property string $currency_id
+ * @property bool $ksk_liable
+ * @property bool $resident_abroad
+ * @property bool $is_freed
+ * @property bool $has_power_of_attorney
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class Contract extends Model
 {
     use HasFactory;
 
-    /**
-     * @var string[]
-     */
     protected $fillable = [
         'name',
         'basename',
@@ -32,16 +49,10 @@ class Contract extends Model
         'resident_abroad',
     ];
 
-    /**
-     * @var string[]
-     */
     protected $guarded = [
         'id'
     ];
 
-    /**
-     * @var string[]
-     */
     protected $casts = [
         'ksk_liable' => 'boolean',
         'resident_abroad' => 'boolean',
@@ -49,65 +60,41 @@ class Contract extends Model
         'has_power_of_attorney' => 'boolean',
     ];
 
-    /**
-     * @return BelongsTo
-     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id');
     }
 
-    /**
-     * @return BelongsTo
-     */
     public function company_type(): BelongsTo
     {
         return $this->belongsTo(CompanyType::class, 'company_type_id');
     }
 
-    /**
-     * @return BelongsTo
-     */
     public function contract_type(): BelongsTo
     {
         return $this->belongsTo(ContractType::class, 'contract_type_id');
     }
 
-    /**
-     * @return BelongsTo
-     */
     public function currency(): BelongsTo
     {
         return $this->belongsTo(Currency::class, 'currency_id');
     }
 
-    /**
-     * @return BelongsToMany
-     */
     public function accessing_users(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
     }
 
-    /**
-     * @return BelongsTo
-     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creator_id');
     }
 
-    /**
-     * @return BelongsToMany
-     */
     public function tasks(): BelongsToMany
     {
         return $this->belongsToMany(Task::class);
     }
 
-    /**
-     * @return HasMany
-     */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);

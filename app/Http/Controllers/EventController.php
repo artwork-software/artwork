@@ -49,40 +49,18 @@ use Inertia\ResponseFactory;
 
 class EventController extends Controller
 {
-    /**
-     * @var \stdClass|null
-     */
     protected ?\stdClass $notificationData = null;
 
-    /**
-     * @var NewHistoryService|null
-     */
     protected ?NewHistoryService $history = null;
 
-    /**
-     * @var string|null
-     */
     protected ?string $notificationKey = '';
 
-    /**
-     * @var
-     */
     private $user;
 
-    /**
-     * @var UserShiftCalendarFilter
-     */
     private UserShiftCalendarFilter $userShiftCalendarFilter;
 
-    /**
-     * @var UserCalendarFilter
-     */
     private UserCalendarFilter $userCalendarFilter;
 
-    /**
-     * @param CollisionService $collisionService
-     * @param NotificationService $notificationService
-     */
     public function __construct(
         private readonly CollisionService $collisionService,
         private readonly NotificationService $notificationService
@@ -95,10 +73,6 @@ class EventController extends Controller
         $this->notificationKey = Str::random(15);
     }
 
-    /**
-     * @param CalendarController $calendarController
-     * @return Response
-     */
     public function viewEventIndex(CalendarController $calendarController): Response
     {
         $this->user = Auth::user();
@@ -158,10 +132,6 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * @param CalendarController $shiftPlan
-     * @return Response
-     */
     public function viewShiftPlan(CalendarController $shiftPlan): Response
     {
         $this->user = Auth::user();
@@ -265,9 +235,6 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * @return Response
-     */
     public function showDashboardPage(): Response
     {
         $event = null;
@@ -332,9 +299,6 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * @return Response
-     */
     public function viewRequestIndex(): Response
     {
         // Todo: filter room for visible for authenticated user
@@ -348,11 +312,6 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * @param EventStoreRequest $request
-     * @return CalendarEventResource
-     * @throws AuthorizationException
-     */
     public function storeEvent(EventStoreRequest $request): CalendarEventResource
     {
         $firstEvent = Event::create($request->data());
@@ -444,14 +403,6 @@ class EventController extends Controller
         return new CalendarEventResource($firstEvent);
     }
 
-    /**
-     * @param $startDate
-     * @param $endDate
-     * @param $request
-     * @param $series
-     * @param $projectId
-     * @return void
-     */
     private function createSeriesEvent($startDate, $endDate, $request, $series, $projectId): void
     {
         $event = Event::create([
@@ -473,10 +424,6 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * @param Request $request
-     * @return void
-     */
     public function commit_shifts(Request $request): void
     {
         foreach ($request->events as $event) {
@@ -538,12 +485,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param EventStoreRequest $request
-     * @param $event
-     * @return void
-     * @throws AuthorizationException
-     */
     private function adjoiningRoomsCheck(EventStoreRequest $request, $event): void
     {
         $joiningEvents = $this->collisionService->adjoiningCollision($request);
@@ -573,12 +514,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param $conflict
-     * @param User $user
-     * @param Event $event
-     * @return void
-     */
     private function createAdjoiningAudienceNotification($conflict, User $user, Event $event): void
     {
         $notificationTitle = 'Termin mit Publikum im Nebenraum';
@@ -623,12 +558,6 @@ class EventController extends Controller
         $this->notificationService->createNotification();
     }
 
-    /**
-     * @param $conflict
-     * @param User $user
-     * @param Event $event
-     * @return void
-     */
     private function createAdjoiningLoudNotification($conflict, User $user, Event $event): void
     {
         $notificationTitle = 'Lauter Termin im Nebenraum';
@@ -673,11 +602,6 @@ class EventController extends Controller
         $this->notificationService->createNotification();
     }
 
-    /**
-     * @param $collision
-     * @param Event $event
-     * @return void
-     */
     private function createConflictNotification($collision, Event $event): void
     {
         $notificationTitle = 'Terminkonflikt';
@@ -733,11 +657,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param $request
-     * @param $event
-     * @return void
-     */
     private function associateProject($request, $event): void
     {
         $project = Project::create(['name' => $request->get('projectName')]);
@@ -748,11 +667,6 @@ class EventController extends Controller
         $event->save();
     }
 
-    /**
-     * @param $request
-     * @param Event $event
-     * @return void
-     */
     private function createRequestNotification($request, Event $event): void
     {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
@@ -812,12 +726,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param EventUpdateRequest $request
-     * @param Event $event
-     * @return CalendarEventResource
-     * @throws AuthorizationException
-     */
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
         if (!$request->noNotifications) {
@@ -1063,10 +971,6 @@ class EventController extends Controller
         return new CalendarEventResource($event);
     }
 
-    /**
-     * @param Event $event
-     * @return void
-     */
     private function createEventScheduleNotification(Event $event): void
     {
         $schedule = new SchedulingController();
@@ -1079,11 +983,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param Event $event
-     * @param Request $request
-     * @return void
-     */
     public function answerOnEvent(Event $event, Request $request): void
     {
         $event->comments()->create([
@@ -1158,10 +1057,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param Request $request
-     * @return void
-     */
     public function deleteOldNotifications(Request $request): void
     {
         $notifications = DatabaseNotification::query()
@@ -1173,11 +1068,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param Request $request
-     * @param Event $event
-     * @return RedirectResponse
-     */
     public function acceptEvent(Request $request, Event $event): RedirectResponse
     {
         $event->occupancy_option = false;
@@ -1246,11 +1136,6 @@ class EventController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * @param Request $request
-     * @param Event $event
-     * @return void
-     */
     public function declineEvent(Request $request, Event $event): void
     {
         $projectManagers = [];
@@ -1389,10 +1274,6 @@ class EventController extends Controller
         $this->notificationService->createNotification();
     }
 
-    /**
-     * @param Request $request
-     * @return int
-     */
     public function getCollisionCount(Request $request): int
     {
         $start = Carbon::parse($request->query('start'))->setTimezone(config('app.timezone'));
@@ -1405,10 +1286,6 @@ class EventController extends Controller
             ->count();
     }
 
-    /**
-     * @param EventIndexRequest $request
-     * @return CalendarEventCollectionResource[]
-     */
     public function eventIndex(EventIndexRequest $request): array
     {
         $calendarFilters = json_decode($request->input('calendarFilters'));
@@ -1478,9 +1355,6 @@ class EventController extends Controller
         ];
     }
 
-    /**
-     * @return Response|ResponseFactory
-     */
     public function getTrashed(): Response|ResponseFactory
     {
         return inertia('Trash/Events', [
@@ -1496,11 +1370,6 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * Deletes all shifts of an event
-     * @param Event $event
-     * @return RedirectResponse
-     */
     public function destroy_shifts(Event $event): RedirectResponse
     {
         Debugbar::info("Deleting shifts of event $event->id");
@@ -1511,13 +1380,6 @@ class EventController extends Controller
         return redirect()->back();
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param Event $event
-     * @return RedirectResponse
-     * @throws AuthorizationException
-     */
     public function destroy(Event $event): RedirectResponse
     {
         $this->authorize('delete', $event);
@@ -1591,12 +1453,6 @@ class EventController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * @param Event $event
-     * @param Request $request
-     * @return void
-     * @throws AuthorizationException
-     */
     public function destroyByNotification(Event $event, Request $request): void
     {
         $this->authorize('delete', $event);
@@ -1677,11 +1533,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param int $id
-     * @return RedirectResponse
-     * @throws AuthorizationException
-     */
     public function forceDelete(int $id): RedirectResponse
     {
         $event = Event::onlyTrashed()->findOrFail($id);
@@ -1692,10 +1543,6 @@ class EventController extends Controller
         return Redirect::route('events.trashed')->with('success', 'Event deleted');
     }
 
-    /**
-     * @param int $id
-     * @return RedirectResponse
-     */
     public function restore(int $id): RedirectResponse
     {
         $event = Event::onlyTrashed()->findOrFail($id);
@@ -1705,14 +1552,6 @@ class EventController extends Controller
         return Redirect::route('events.trashed')->with('success', 'Event restored');
     }
 
-    /**
-     * @param $eventId
-     * @param $oldEventStartDate
-     * @param $newEventStartDate
-     * @param $oldEventEndDate
-     * @param $newEventEndDate
-     * @return void
-     */
     private function checkDateChanges(
         $eventId,
         $oldEventStartDate,
@@ -1727,12 +1566,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param $eventId
-     * @param $oldType
-     * @param $newType
-     * @return void
-     */
     private function checkEventTypeChanges($eventId, $oldType, $newType): void
     {
         if ($oldType !== $newType) {
@@ -1740,12 +1573,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param $eventId
-     * @param $oldName
-     * @param $newName
-     * @return void
-     */
     private function checkEventNameChanges($eventId, $oldName, $newName): void
     {
         if ($oldName === null && $newName !== null) {
@@ -1761,12 +1588,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param $eventId
-     * @param $oldProject
-     * @param $newProject
-     * @return void
-     */
     private function checkProjectChanges($eventId, $oldProject, $newProject): void
     {
         if ($newProject !== null && $oldProject === null) {
@@ -1782,12 +1603,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param $eventId
-     * @param $oldRoom
-     * @param $newRoom
-     * @return void
-     */
     private function checkRoomChanges($eventId, $oldRoom, $newRoom): void
     {
         if ($oldRoom !== $newRoom) {
@@ -1797,12 +1612,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param int $eventId
-     * @param $oldDescription
-     * @param $newDescription
-     * @return void
-     */
     private function checkShortDescriptionChanges(int $eventId, $oldDescription, $newDescription): void
     {
         if ($newDescription === null && $oldDescription !== null) {
@@ -1816,14 +1625,6 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * @param int $eventId
-     * @param $isLoudOld
-     * @param $isLoudNew
-     * @param $audienceOld
-     * @param $audienceNew
-     * @return void
-     */
     private function checkEventOptionChanges(int $eventId, $isLoudOld, $isLoudNew, $audienceOld, $audienceNew): void
     {
         if ($isLoudOld !== $isLoudNew || $audienceOld !== $audienceNew) {
@@ -1831,11 +1632,6 @@ class EventController extends Controller
         }
     }
 
-
-    /**
-     * @param Request $request
-     * @return void
-     */
     public function deleteMultiEdit(Request $request): void
     {
         $eventIds = $request->events;
@@ -1845,11 +1641,6 @@ class EventController extends Controller
         }
     }
 
-
-    /**
-     * @param Request $request
-     * @return void
-     */
     public function updateMultiEdit(Request $request): void
     {
         $eventIds = $request->events;

@@ -80,13 +80,13 @@
             "@php artisan key:generate --ansi"
         ],
         "phpstan": [
-            "php vendor/bin/phpstan analyse ./app ./artwork --memory-limit='1G'"
+            "php vendor/bin/phpstan analyse ./app ./artwork ./config ./database ./routes --memory-limit='1G'"
         ],
         "phpcs": [
-            "php vendor/bin/phpcs ./app ./artwork"
+            "php vendor/bin/phpcs"
         ],
         "phpcbf": [
-            "php vendor/bin/phpcbf ./app ./artwork"
+            "php vendor/bin/phpcbf"
         ]
     },
     "extra": {

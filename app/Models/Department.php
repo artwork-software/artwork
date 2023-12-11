@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Artwork\Modules\Checklist\Models\Checklist;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -16,11 +15,6 @@ use Laravel\Scout\Searchable;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property string $svg_name
- * @property Collection<User> $users
- * @property Collection<Invitation> $invitations
- * @property Collection<Project> $projects
- * @property Collection<Checklist> $checklists
- * @property Collection<ChecklistTemplate> $checklist_templates
  */
 class Department extends Model
 {

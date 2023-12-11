@@ -14,9 +14,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $name
  * @property string $description
  * @property int $project_id
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @property Carbon $deleted_at
+ * @property string $created_at
+ * @property string $updated_at
+ * @property string $deleted_at
  */
 class CostCenter extends Model
 {

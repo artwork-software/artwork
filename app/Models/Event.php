@@ -18,31 +18,27 @@ use Illuminate\Support\Collection;
 
 /**
  * @property int $id
- * @property ?string $name
- * @property ?string $eventName
- * @property ?string $description
- * @property ?string $option_string
- * @property ?Carbon $start_time
- * @property ?Carbon $end_time
- * @property ?bool $occupancy_option
- * @property ?bool $audience
- * @property ?bool $is_loud
- * @property ?int $event_type_id
- * @property ?int $room_id
- * @property ?int $declined_room_id
+ * @property string $name
+ * @property string $eventName
+ * @property string $description
+ * @property Carbon $start_time
+ * @property Carbon $end_time
+ * @property bool $occupancy_option
+ * @property bool $audience
+ * @property bool $is_loud
+ * @property bool $allDay
+ * @property int $event_type_id
+ * @property int $room_id
+ * @property int $declined_room_id
  * @property int $user_id
- * @property ?int $project_id
+ * @property int $project_id
+ * @property bool $is_series
  * @property int $series_id
- * @property int $is_series
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @property Carbon $deleted_at
- * @property EventType $event_type
- * @property Room $room
- * @property Project $project
- * @property User $creator
- * @property \Illuminate\Database\Eloquent\Collection<Event> $sameRoomEvents
- * @property \Illuminate\Database\Eloquent\Collection<Event> $adjoiningEvents
+ * @property string $created_at
+ * @property string $updated_at
+ * @property string $deleted_at
+ * @property bool $accepted
+ * @property string $option_string
  */
 class Event extends Model
 {
@@ -233,7 +229,7 @@ class Event extends Model
             return false;
         }
 
-        return $this->start_time->isBetween($event->start_time, $event->end_time)
-            || $this->end_time->isBetween($event->start_time, $event->end_time);
+        return $this->start_time->isBetween($event->start_time, $event->end_time) ||
+            $this->end_time->isBetween($event->start_time, $event->end_time);
     }
 }

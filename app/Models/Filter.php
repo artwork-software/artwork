@@ -2,9 +2,25 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property int $user_id
+ * @property bool $isLoud
+ * @property bool $isNotLoud
+ * @property bool $hasAudience
+ * @property bool $hasNoAudience
+ * @property bool $adjoiningNoAudience
+ * @property bool $adjoiningNotLoud
+ * @property bool $allDayFree
+ * @property bool $showAdjoiningRooms
+ * @property string $created_at
+ * @property string $updated_at
+ */
 class Filter extends Model
 {
     use HasFactory;
@@ -62,6 +78,4 @@ class Filter extends Model
     {
         return $this->belongsToMany(EventType::class, 'event_type_filter');
     }
-
-
 }

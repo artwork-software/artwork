@@ -3,27 +3,25 @@
 namespace App\Models;
 
 use Artwork\Modules\Checklist\Models\BelongsToChecklist;
-use Artwork\Modules\Checklist\Models\Checklist;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Carbon;
 
 /**
- * @property  int $id
- * @property  string $name
- * @property  string $description
- * @property  bool $done
- * @property  \Illuminate\Support\Carbon $done_at
- * @property  string $order
- * @property  int $checklist_id
- * @property  int $user_id
- * @property  \Illuminate\Support\Carbon $deadline
- * @property  \Illuminate\Support\Carbon $created_at
- * @property  \Illuminate\Support\Carbon $updated_at
- *
- * @property-read Checklist $checklist
- * @property User $user_who_done
+ * @property int $id
+ * @property string $name
+ * @property string $description
+ * @property bool $done
+ * @property Carbon $deadline
+ * @property Carbon $done_at
+ * @property int $order
+ * @property int $checklist_id
+ * @property int $user_id
+ * @property int $contract_id
+ * @property string $created_at
+ * @property string $updated_at
  */
 class Task extends Model
 {
@@ -68,10 +66,17 @@ class Task extends Model
 
     public function checklistDepartments(): BelongsToMany
     {
-        return $this->belongsToMany(Department::class, 'checklist_department', 'checklist_id', 'department_id', 'checklist_id');
+        return $this->belongsToMany(
+            Department::class,
+            'checklist_department',
+            'checklist_id',
+            'department_id',
+            'checklist_id'
+        );
     }
 
-    public function money_source_task(){
+    public function money_source_task()
+    {
         return $this->belongsToMany(MoneySourceTask::class);
     }
 }

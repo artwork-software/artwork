@@ -10,13 +10,31 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $position
+ * @property string $profile_image
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $work_name
+ * @property string $work_description
+ * @property string $email
+ * @property string $phone_number
+ * @property string $street
+ * @property string $zip_code
+ * @property string $location
+ * @property string $note
+ * @property int $salary_per_hour
+ * @property string $salary_description
+ * @property int $can_master
+ * @property string $created_at
+ * @property string $updated_at
+ * @property int $can_work_shifts
+ */
 class Freelancer extends Model
 {
     use HasFactory;
 
-    /**
-     * @var string[]
-     */
     protected $fillable = [
         'position',
         'profile_image',
@@ -36,16 +54,10 @@ class Freelancer extends Model
         'can_work_shifts'
     ];
 
-    /**
-     * @var string[]
-     */
     protected $appends = [
         'name', 'display_name', 'type', 'profile_photo_url'
     ];
 
-    /**
-     * @return BelongsToMany
-     */
     public function shifts(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -59,9 +71,6 @@ class Freelancer extends Model
             ->without(['users', 'freelancer']);
     }
 
-    /**
-     * @return string
-     */
     public function getProfilePhotoUrlAttribute(): string
     {
         return $this->profile_image ?
@@ -69,49 +78,31 @@ class Freelancer extends Model
             'https://ui-avatars.com/api/?name=' . $this->name . '&color=7F9CF5&background=EBF4FF';
     }
 
-    /**
-     * @return string
-     */
     public function getNameAttribute(): string
     {
         return $this->first_name . ' ' . $this->last_name;
     }
 
-    /**
-     * @return string
-     */
     public function getTypeAttribute(): string
     {
         return 'freelancer';
     }
 
-    /**
-     * @return string
-     */
     public function getDisplayNameAttribute(): string
     {
         return $this->last_name . ', ' . $this->first_name;
     }
 
-    /**
-     * @return HasMany
-     */
     public function vacations(): HasMany
     {
         return $this->hasMany(FreelancerVacation::class);
     }
 
-    /**
-     * @return BelongsToMany
-     */
     public function assigned_crafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'freelancer_assigned_crafts');
     }
 
-    /**
-     * @return Collection
-     */
     public function getShiftsAttribute(): Collection
     {
         return $this->shifts()
@@ -124,11 +115,6 @@ class Freelancer extends Model
             });
     }
 
-    /**
-     * @param $startDate
-     * @param $endDate
-     * @return float|int
-     */
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
         $shiftsInDateRange = $this->shifts()
@@ -149,12 +135,15 @@ class Freelancer extends Model
         return $plannedWorkingHours;
     }
 
-    public function hasVacationDays()
+    /**
+     * @return string[]
+     */
+    public function hasVacationDays(): array
     {
         $vacations = $this->vacations()->get();
         $returnInterval = [];
         foreach ($vacations as $vacation) {
-            $start = \Illuminate\Support\Carbon::parse($vacation->from);
+            $start = Carbon::parse($vacation->from);
             $end = Carbon::parse($vacation->until);
 
             $interval = CarbonPeriod::create($start, $end);
@@ -165,5 +154,4 @@ class Freelancer extends Model
         }
         return $returnInterval;
     }
-
 }

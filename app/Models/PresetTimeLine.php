@@ -5,7 +5,17 @@ namespace App\Models;
 use App\Casts\TimeWithoutSeconds;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $shift_preset_id
+ * @property string $start
+ * @property string $end
+ * @property string $description
+ * @property string $created_at
+ * @property string $updated_at
+ */
 class PresetTimeLine extends Model
 {
     use HasFactory;
@@ -22,9 +32,8 @@ class PresetTimeLine extends Model
         'end' => TimeWithoutSeconds::class,
     ];
 
-    public function shift_preset(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function shift_preset(): BelongsTo
     {
         return $this->belongsTo(ShiftPreset::class);
     }
-
 }

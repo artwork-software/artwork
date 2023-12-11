@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,8 +14,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $money_source_file_id
  * @property int $contract_id
  * @property int $user_id
- * @property Carbon $created_at
- * @property Carbon $updated_at
+ * @property string $created_at
+ * @property string $updated_at
  */
 class Comment extends Model
 {

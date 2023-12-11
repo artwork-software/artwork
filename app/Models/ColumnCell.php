@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,8 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $linked_money_source_id
  * @property string $linked_type
  * @property string $verified_value
- * @property Carbon $created_at
- * @property Carbon $updated_at
+ * @property string $created_at
+ * @property string $updated_at
  */
 class ColumnCell extends Model
 {

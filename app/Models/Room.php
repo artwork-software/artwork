@@ -14,25 +14,23 @@ use Illuminate\Support\Collection;
  * @property int $id
  * @property string $name
  * @property string $description
- * @property string $order
- * @property string $temporary
+ * @property int $order
+ * @property bool $temporary
+ * @property bool $everyone_can_book
  * @property Carbon $start_date
  * @property Carbon $end_date
  * @property int $area_id
  * @property int $user_id
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- * @property \Illuminate\Support\Carbon $deleted_at
- *
- * @property Area $area
- * @property User $creator
- * @property \Illuminate\Support\Collection<User> $room_admins
- * @property \Illuminate\Support\Collection<RoomFile> $room_files
- * @property \Illuminate\Support\Collection<Event> $events
+ * @property string $created_at
+ * @property string $updated_at
+ * @property string $deleted_at
  */
 class Room extends Model
 {
-    use HasFactory, SoftDeletes, Prunable, HasChangesHistory;
+    use HasFactory;
+    use SoftDeletes;
+    use Prunable;
+    use HasChangesHistory;
 
     protected $fillable = [
         'name',
@@ -116,7 +114,8 @@ class Room extends Model
             ->where('end_date', '<=', now());
     }
 
-    public function pruning() {
+    public function pruning()
+    {
         return $this->room_files()->delete();
     }
 

@@ -2,9 +2,14 @@
 <ruleset name="artwork-rules">
     <description>Ruleset for the artwork project</description>
 
+    <!-- Files/Directories to check -->
+    <file>app</file>
+    <file>artwork</file>
+    <file>config</file>
+    <file>database</file>
+    <file>routes</file>
+
     <!-- PSR standards -->
-    <rule ref="PSR1"/>
-    <rule ref="PSR2"/>
     <rule ref="PSR12"/>
 
     <!-- Laravel coding style -->

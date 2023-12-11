@@ -5,7 +5,6 @@ namespace App\Notifications;
 use App\Enums\NotificationFrequency;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -14,16 +13,31 @@ use stdClass;
 class EventNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
+
+    /**
+     * @var stdClass|null
+     */
     protected ?stdClass $notificationData = null;
+
+    /**
+     * @var array|mixed
+     */
     protected array $broadcastMessage = [];
 
+    /**
+     * @param $notificationData
+     * @param $broadcastMessage
+     */
     public function __construct($notificationData, $broadcastMessage = [])
     {
         $this->notificationData = $notificationData;
         $this->broadcastMessage = $broadcastMessage;
     }
 
-    public function toBroadcast($notifiable): BroadcastMessage
+    /**
+     * @return BroadcastMessage
+     */
+    public function toBroadcast(): BroadcastMessage
     {
         return new BroadcastMessage([
             'message' => $this->broadcastMessage
@@ -34,9 +48,9 @@ class EventNotification extends Notification implements ShouldBroadcast
      * Get the notification's delivery channels.
      *
      * @param $user
-     * @return array
+     * @return array<int, string>
      */
-    public function via($user)
+    public function via($user): array
     {
         $channels = ['database'];
 
@@ -44,12 +58,11 @@ class EventNotification extends Notification implements ShouldBroadcast
             ->where('type', $this->notificationData->type)
             ->first();
 
-        if($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequency::IMMEDIATELY) {
+        if ($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequency::IMMEDIATELY) {
             $channels[] = 'mail';
         }
 
-
-        if($typeSettings?->enabled_push && !empty($this->broadcastMessage)) {
+        if ($typeSettings?->enabled_push && !empty($this->broadcastMessage)) {
             $channels[] = 'broadcast';
         }
 
@@ -59,12 +72,11 @@ class EventNotification extends Notification implements ShouldBroadcast
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
-     * @return \Illuminate\Notifications\Messages\MailMessage
+     * @return MailMessage
      */
-    public function toMail($notifiable)
+    public function toMail(): MailMessage
     {
-        return (new MailMessage)
+        return (new MailMessage())
             ->subject($this->notificationData->title)
             ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
     }
@@ -72,10 +84,9 @@ class EventNotification extends Notification implements ShouldBroadcast
     /**
      * Get the array representation of the notification.
      *
-     * @param  mixed  $notifiable
      * @return stdClass
      */
-    public function toArray($notifiable)
+    public function toArray(): stdClass
     {
         return $this->notificationData;
     }

@@ -15,15 +15,24 @@ use App\Models\User;
 use App\Support\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use stdClass;
 
 class DepartmentController extends Controller
 {
+    /**
+     * @var NotificationService|null
+     */
     protected ?NotificationService $notificationService = null;
-    protected ?\stdClass $notificationData = null;
+
+    /**
+     * @var stdClass|null
+     */
+    protected ?stdClass $notificationData = null;
 
     public function __construct()
     {
@@ -31,14 +40,18 @@ class DepartmentController extends Controller
 
         // init notification system
         $this->notificationService = new NotificationService();
-        $this->notificationData = new \stdClass();
-        $this->notificationData->team = new \stdClass();
+        $this->notificationData = new stdClass();
+        $this->notificationData->team = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TEAM;
     }
 
-    public function search(SearchRequest $request)
+    /**
+     * @param SearchRequest $request
+     * @return bool|Collection
+     */
+    public function search(SearchRequest $request): bool|Collection
     {
-        if(!Auth::user()->can(PermissionNameEnum::PROJECT_UPDATE->value)){
+        if (!Auth::user()->can(PermissionNameEnum::PROJECT_UPDATE->value)) {
             return false;
         }
 
@@ -55,7 +68,7 @@ class DepartmentController extends Controller
      *
      * @return Response|ResponseFactory
      */
-    public function index()
+    public function index(): Response|ResponseFactory
     {
         return inertia('Departments/DepartmentManagement', [
             'departments' => DepartmentIndexResource::collection(Department::all())->resolve(),
@@ -68,7 +81,7 @@ class DepartmentController extends Controller
      *
      * @return Response|ResponseFactory
      */
-    public function create()
+    public function create(): Response|ResponseFactory
     {
         return inertia('Departments/Create');
     }
@@ -79,7 +92,7 @@ class DepartmentController extends Controller
      * @param  StoreDepartmentRequest  $request
      * @return RedirectResponse
      */
-    public function store(StoreDepartmentRequest $request)
+    public function store(StoreDepartmentRequest $request): RedirectResponse
     {
         $department = Department::create([
             'name' => $request->name,
@@ -107,13 +120,11 @@ class DepartmentController extends Controller
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TEAM);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
 
-
         $users = $department->users()->get();
-        foreach ($users as $user){
+        foreach ($users as $user) {
             $this->notificationService->setNotificationTo($user);
             $this->notificationService->createNotification();
         }
-        //$this->notificationService->create($department->users->all(), $this->notificationData, $broadcastMesssage);
 
         broadcast(new DepartmentUpdated())->toOthers();
 
@@ -126,7 +137,7 @@ class DepartmentController extends Controller
      * @param  Department  $department
      * @return Response|ResponseFactory
      */
-    public function show(Department $department)
+    public function show(Department $department): Response|ResponseFactory
     {
         return inertia('Departments/Show', [
             'department' => new DepartmentShowResource($department)
@@ -139,7 +150,7 @@ class DepartmentController extends Controller
      * @param  Department  $department
      * @return Response|ResponseFactory
      */
-    public function edit(Department $department)
+    public function edit(Department $department): Response|ResponseFactory
     {
         return inertia('Departments/Edit', [
             'department' => new DepartmentShowResource($department),
@@ -154,12 +165,12 @@ class DepartmentController extends Controller
      * @param  Department  $department
      * @return RedirectResponse
      */
-    public function update(Request $request, Department $department)
+    public function update(Request $request, Department $department): RedirectResponse
     {
         // get team member before update
         $teamIdsBefore = [];
         $teamMemberBefore = $department->users()->get();
-        foreach ($teamMemberBefore as $memberBefore){
+        foreach ($teamMemberBefore as $memberBefore) {
             $teamIdsBefore[] = $memberBefore->id;
         }
 
@@ -181,7 +192,7 @@ class DepartmentController extends Controller
         foreach ($teamMemberAfter as $memberAfter) {
             $teamIdsAfter[] = $memberAfter->id;
             // send notification to new team member
-            if(!in_array($memberAfter->id, $teamIdsBefore)){
+            if (!in_array($memberAfter->id, $teamIdsBefore)) {
                 $notificationTitle = 'Du wurdest zu Team "' . $department->name . '" hinzugefügt';
                 $broadcastMessage = [
                     'id' => rand(10, 1000000),
@@ -199,9 +210,9 @@ class DepartmentController extends Controller
             }
         }
 
-        foreach ($teamIdsBefore as $teamMemberBefore){
+        foreach ($teamIdsBefore as $teamMemberBefore) {
             // send notification to removed team member
-            if(!in_array($teamMemberBefore, $teamIdsAfter)){
+            if (!in_array($teamMemberBefore, $teamIdsAfter)) {
                 $user = User::find($teamMemberBefore);
                 $notificationTitle = 'Du wurdest aus Team ' . $department->name . ' gelöscht';
                 $broadcastMessage = [
@@ -232,7 +243,7 @@ class DepartmentController extends Controller
      * @param  Department  $department
      * @return RedirectResponse
      */
-    public function destroy(Department $department)
+    public function destroy(Department $department): RedirectResponse
     {
         $notificationTitle = 'Team "' . $department->name . '" wurde gelöscht';
         $broadcastMessage = [
@@ -248,7 +259,7 @@ class DepartmentController extends Controller
         $this->notificationService->setBroadcastMessage($broadcastMessage);
 
         $users = $department->users()->get();
-        foreach ($users as $user){
+        foreach ($users as $user) {
             $this->notificationService->setNotificationTo($user);
             $this->notificationService->createNotification();
         }

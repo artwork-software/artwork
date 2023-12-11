@@ -4,18 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\CellComment;
 use App\Models\ColumnCell;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CellCommentsController extends Controller
 {
-
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
+     * @param ColumnCell $columnCell
+     * @return RedirectResponse
      */
-    public function store(Request $request, ColumnCell $columnCell): \Illuminate\Http\RedirectResponse
+    public function store(Request $request, ColumnCell $columnCell): RedirectResponse
     {
         $columnCell->comments()->create([
             'user_id' => Auth::id(),
@@ -28,9 +30,10 @@ class CellCommentsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\CellComment  $cellComments
+     * @param CellComment $cellComment
+     * @return RedirectResponse
      */
-    public function destroy(CellComment $cellComment): \Illuminate\Http\RedirectResponse
+    public function destroy(CellComment $cellComment): RedirectResponse
     {
         $cellComment->delete();
         return back();

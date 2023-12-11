@@ -6,7 +6,15 @@ use Illuminate\Support\Collection;
 
 class CalendarEventCollectionResourceModel
 {
-
+    /**
+     * @param Collection $areas
+     * @param Collection $projects
+     * @param Collection $eventTypes
+     * @param Collection $roomCategories
+     * @param Collection $roomAttributes
+     * @param Collection $events
+     * @param Collection $filter
+     */
     public function __construct(
         public readonly Collection $areas,
         public readonly Collection $projects,
@@ -15,7 +23,6 @@ class CalendarEventCollectionResourceModel
         public readonly Collection $roomAttributes,
         public readonly Collection $events,
         public readonly Collection $filter,
-    )
-    {
+    ) {
     }
 }

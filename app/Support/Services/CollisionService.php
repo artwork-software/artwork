@@ -4,41 +4,36 @@ namespace App\Support\Services;
 
 use App\Models\Event;
 use App\Models\Room;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Database\Eloquent\Builder;
 
 class CollisionService
 {
-    public function __construct()
-    {
-
-    }
-
     /**
      * @param $request
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param Event|null $event
+     * @return Builder
      */
-    public function getCollision($request, ?Event $event = null): \Illuminate\Database\Eloquent\Builder
+    public function getCollision($request, ?Event $event = null): Builder
     {
         $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
         $endDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));
 
         $return = [];
-        if(empty($event)){
+        if (empty($event)) {
             $return = Event::query()
                 ->whereBetween('start_time', [$startDate, $endDate])
                 ->where('room_id', $request->roomId)
-                ->orWhere(function($query) use ($request, $endDate, $startDate) {
+                ->orWhere(function ($query) use ($request, $endDate, $startDate): void {
                     $query->whereBetween('end_time', [$startDate, $endDate])
                         ->where('room_id', $request->roomId);
                 })
-                ->orWhere(function($query) use ($request, $endDate, $startDate) {
+                ->orWhere(function ($query) use ($request, $endDate, $startDate): void {
                     $query->where('start_time', '>=', $startDate)
                         ->where('end_time', '<=', $endDate)
                         ->where('room_id', $request->roomId);
                 })
-                ->orWhere(function($query) use ($request, $endDate, $startDate) {
+                ->orWhere(function ($query) use ($request, $endDate, $startDate): void {
                     $query->where('start_time', '<=', $startDate)
                         ->where('end_time', '>=', $endDate)
                         ->where('room_id', $request->roomId);
@@ -48,18 +43,18 @@ class CollisionService
                 ->whereNotIn('id', [$event->id])
                 ->whereBetween('start_time', [$startDate, $endDate])
                 ->where('room_id', $request->roomId)
-                ->orWhere(function($query) use ($event, $request, $endDate, $startDate) {
+                ->orWhere(function ($query) use ($event, $request, $endDate, $startDate): void {
                     $query->whereBetween('end_time', [$startDate, $endDate])
                         ->where('room_id', $request->roomId)
                         ->whereNotIn('id', [$event->id]);
                 })
-                ->orWhere(function($query) use ($event, $request, $endDate, $startDate) {
+                ->orWhere(function ($query) use ($event, $request, $endDate, $startDate): void {
                     $query->where('start_time', '>=', $startDate)
                         ->where('end_time', '<=', $endDate)
                         ->where('room_id', $request->roomId)
                         ->whereNotIn('id', [$event->id]);
                 })
-                ->orWhere(function($query) use ($event, $request, $endDate, $startDate) {
+                ->orWhere(function ($query) use ($event, $request, $endDate, $startDate): void {
                     $query->where('start_time', '<=', $startDate)
                         ->where('end_time', '>=', $endDate)
                         ->where('room_id', $request->roomId)
@@ -67,9 +62,7 @@ class CollisionService
                 });
         }
         return $return;
-
     }
-
 
     /**
      * @param $request
@@ -82,13 +75,13 @@ class CollisionService
 
     /**
      * @param $request
-     * @return array
+     * @return array<string, mixed>
      */
     public function getConflictEvents($request): array
     {
         $conflictEvents = self::getCollision($request)->get();
         $conflictObj = [];
-        foreach ($conflictEvents as $event){
+        foreach ($conflictEvents as $event) {
             $conflictObj[] = [
                 'id' => $event->id,
                 'title' => $event->eventName,
@@ -100,6 +93,10 @@ class CollisionService
         return $conflictObj;
     }
 
+    /**
+     * @param $request
+     * @return array<int, Event>
+     */
     public function adjoiningCollision($request): array
     {
         $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
@@ -107,11 +104,12 @@ class CollisionService
 
         $joiningRooms = Room::find($request->roomId)->adjoining_rooms()->get();
         $events = [];
-        foreach ($joiningRooms as $joiningRoom){
+        foreach ($joiningRooms as $joiningRoom) {
             $events[] = Event::query()
                 ->whereDate('start_time', '>=', $startDate)
                 ->whereDate('end_time', '<=', $endDate)
-                ->where('room_id', $joiningRoom->id)->get();
+                ->where('room_id', $joiningRoom->id)
+                ->get();
         }
         return $events;
     }

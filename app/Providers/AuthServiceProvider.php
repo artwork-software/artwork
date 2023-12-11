@@ -14,7 +14,6 @@ use App\Models\Genre;
 use App\Models\Invitation;
 use App\Models\Project;
 use App\Models\Sector;
-use App\Models\Task;
 use App\Models\TaskTemplate;
 use App\Models\User;
 use App\Policies\AreaPolicy;
@@ -28,7 +27,6 @@ use App\Policies\GenrePolicy;
 use App\Policies\InvitationPolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\SectorPolicy;
-use App\Policies\TaskPolicy;
 use App\Policies\TaskTemplatePolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -42,7 +40,6 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        // 'App\Models\Model' => 'App\Policies\ModelPolicy',
         Invitation::class => InvitationPolicy::class,
         User::class => UserPolicy::class,
         Department::class => DepartmentPolicy::class,
@@ -63,13 +60,13 @@ class AuthServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->registerPolicies();
 
         // Implicitly grant "admin" role all permissions
         // This works in the app by using gate-related functions like auth()->user->can() and @can()
-        Gate::before(function ($user, $ability) {
+        Gate::before(function ($user) {
             return $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) ? true : null;
         });
     }

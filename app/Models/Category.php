@@ -5,25 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-/**
- * @property int	$id
- * @property string	$name
- * @property \Carbon\Carbon	$created_at
- * @property \Carbon\Carbon	$updated_at
- *
- * @property \Illuminate\Support\Collection<\App\Models\Project> $projects
- */
 class Category extends Model
 {
-    use HasFactory, SoftDeletes, Prunable;
+    use HasFactory;
+    use SoftDeletes;
+    use Prunable;
 
+    /**
+     * @var string[]
+     */
     protected $fillable = [
         'name'
     ];
 
-    public function projects()
+    /**
+     * @return BelongsToMany
+     */
+    public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class);
     }

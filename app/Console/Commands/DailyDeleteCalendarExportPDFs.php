@@ -26,11 +26,11 @@ class DailyDeleteCalendarExportPDFs extends Command
      *
      * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         $path = storage_path('app/pdf/');
         $files = glob($path . '*'); // get all file names
-        foreach($files as $file){ // iterate files
+        foreach ($files as $file) { // iterate files
             unlink($file);
         }
 

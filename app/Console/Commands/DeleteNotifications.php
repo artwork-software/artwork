@@ -26,7 +26,7 @@ class DeleteNotifications extends Command
      *
      * @return int
      */
-    public function handle()
+    public function handle(): int
     {
         $taskScheduling = new SchedulingController();
         $taskScheduling->deleteOldNotifications();

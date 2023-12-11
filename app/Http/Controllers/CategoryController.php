@@ -11,13 +11,14 @@ use App\Models\Genre;
 use App\Models\ProjectHeadline;
 use App\Models\ProjectStates;
 use App\Models\Sector;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Response;
+use Inertia\ResponseFactory;
 
 class CategoryController extends Controller
 {
-
     public function __construct()
     {
         $this->authorizeResource(Category::class);
@@ -26,9 +27,9 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Inertia\Response|\Inertia\ResponseFactory
+     * @return Response|ResponseFactory
      */
-    public function index()
+    public function index(): Response|ResponseFactory
     {
         return inertia('Settings/ProjectSettings', [
             'categories' => Category::all()->map(fn($category) => [
@@ -77,10 +78,10 @@ class CategoryController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request
+     * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         Category::create([
             'name' => $request->name,
@@ -91,41 +92,34 @@ class CategoryController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Category  $category
+     * @param Request $request
+     * @param Category $category
+     * @return RedirectResponse
      */
-    public function update(Request $request, Category $category)
+    public function update(Request $request, Category $category): RedirectResponse
     {
         $category->update($request->only('name'));
 
-        /*
-        if (Auth::user()->can('update projects')) {
-            $category->projects()->sync(
-                collect($request->assigned_project_ids)
-                    ->map(function ($project_id) {
-                        return $project_id;
-                    })
-            );
-        } else {
-            return response()->json(['error' => 'Not authorized to assign projects to a category.'], 403);
-        }
-        */
         return Redirect::back()->with('success', 'Category edited');
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Category  $category
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Category $category
+     * @return RedirectResponse
      */
-    public function destroy(Category $category)
+    public function destroy(Category $category): RedirectResponse
     {
         $category->delete();
         return Redirect::back()->with('success', 'Category deleted');
     }
 
-    public function forceDelete(int $id)
+    /**
+     * @param int $id
+     * @return RedirectResponse
+     */
+    public function forceDelete(int $id): RedirectResponse
     {
         $category = Category::onlyTrashed()->findOrFail($id);
 
@@ -134,7 +128,11 @@ class CategoryController extends Controller
         return Redirect::route('projects.settings.trashed')->with('success', 'Category deleted');
     }
 
-    public function restore(int $id)
+    /**
+     * @param int $id
+     * @return RedirectResponse
+     */
+    public function restore(int $id): RedirectResponse
     {
         $category = Category::onlyTrashed()->findOrFail($id);
 

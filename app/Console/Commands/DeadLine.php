@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\SchedulingController;
+use Exception;
 use Illuminate\Console\Command;
 
 class DeadLine extends Command
@@ -25,8 +26,9 @@ class DeadLine extends Command
      * Execute the console command.
      *
      * @return int
+     * @throws Exception
      */
-    public function handle()
+    public function handle(): int
     {
         $scheduling = new SchedulingController();
         $scheduling->sendDeadlineNotification();

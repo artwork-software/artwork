@@ -24,9 +24,9 @@ class ContractModuleController extends Controller
 
         $file = $request->file('module');
 
-        if($file) {
+        if ($file) {
             $original_name = $file->getClientOriginalName();
-            $basename = Str::random(20).$original_name;
+            $basename = Str::random(20) . $original_name;
 
             Storage::putFileAs('contract_modules', $file, $basename);
 
@@ -36,8 +36,7 @@ class ContractModuleController extends Controller
             ]);
 
             return Redirect::back();
-        }
-        else {
+        } else {
             abort(400, "File missing");
         }
     }
@@ -50,7 +49,7 @@ class ContractModuleController extends Controller
      */
     public function download(ContractModule $module): StreamedResponse
     {
-        return Storage::download('contract_modules/'. $module->basename, $module->name);
+        return Storage::download('contract_modules/' . $module->basename, $module->name);
     }
 
     /**
@@ -59,7 +58,7 @@ class ContractModuleController extends Controller
      * @param ContractModule $module
      * @return RedirectResponse
      */
-    public function destroy(ContractModule $module)
+    public function destroy(ContractModule $module): RedirectResponse
     {
         $module->delete();
         return Redirect::route('contracts.view.index')->with('success', 'Contract module deleted.');

@@ -7,29 +7,27 @@ use App\Models\Filter;
 use App\Models\Room;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-/**
- * @mixin \App\Models\Event
- */
 class CalendarEventCollectionResource extends ResourceCollection
 {
+    /**
+     * @var null
+     */
     public static $wrap = null;
 
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @param $request
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
-
         /** @var CalendarEventCollectionResourceModel $resource */
         $resource = $this->resource;
 
         return [
             'resource' => class_basename($this),
             'events' => ProjectCalendarShowEventResource::collection($resource->events),
-
             'calendarFilters' => $resource->filter->map(fn(Filter $filter) => [
                 'id' => $filter->id,
                 'name' => $filter->name,
@@ -52,11 +50,8 @@ class CalendarEventCollectionResource extends ResourceCollection
                 'roomAttributes' => $filter->room_attributes,
                 'eventTypes' => $filter->event_types,
             ]),
-
             'types' => $resource->eventTypes,
-
             'projects' => $resource->projects,
-
             'rooms' => Room::with('adjoining_rooms', 'main_rooms')->get()->map(fn(Room $room) => [
                 'id' => $room->id,
                 'name' => $room->name,
@@ -75,13 +70,9 @@ class CalendarEventCollectionResource extends ResourceCollection
                 'categories' => $room->categories,
                 'attributes' => $room->attributes
             ]),
-
             'roomCategories' => $resource->roomCategories,
-
             'roomAttributes' =>  $resource->roomAttributes,
-
             'eventTypes' => $resource->eventTypes,
-
             'areas' => $resource->areas,
         ];
     }

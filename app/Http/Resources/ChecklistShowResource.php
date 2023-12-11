@@ -2,14 +2,11 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Department;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @mixin \App\Models\Checklist
- */
 class ChecklistShowResource extends JsonResource
 {
     public static $wrap = null;
@@ -17,10 +14,10 @@ class ChecklistShowResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @param  Request  $request
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    public function toArray($request): array
     {
         return [
             'resource' => class_basename($this),

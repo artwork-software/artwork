@@ -380,6 +380,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/money_sources/{moneySource}/projects',[MoneySourceController::class, 'updateProjects'])->name('money_sources.update_projects');
     Route::post('/money_sources', [MoneySourceController::class, 'store'])->name('money_sources.store');
     Route::post('/money_sources/{moneySource}/duplicate', [MoneySourceController::class, 'duplicate'])->name('money_sources.duplicate');
+    Route::post('/money_sources/{moneySource}/pin', [MoneySourceController::class, 'pin'])->name('money_sources.pin');
     Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
 
     //Contracts

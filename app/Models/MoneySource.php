@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Date;
 use Laravel\Scout\Searchable;
 
-
 /**
  * @property int $id
  * @property string $name
@@ -39,19 +38,27 @@ class MoneySource extends Model
         'is_group',
         'users',
         'group_id',
-        'sub_money_source_ids'
+        'sub_money_source_ids',
+        'pinned_by_users'
     ];
 
     protected $casts = [
         'is_group' => 'boolean',
+        'pinned_by_users' => 'array',
     ];
 
 
     public function users()
     {
         return $this->belongsToMany(User::class, 'money_source_users')->withPivot(
-            'competent', 'write_access'
+            'competent',
+            'write_access'
         )->using(MoneySourceUserPivot::class);
+    }
+
+    public function pinnedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'money_source_user_pinned')->using(MoneySourceUserPinned::class);
     }
 
     public function competent(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -62,7 +69,6 @@ class MoneySource extends Model
     public function money_source_tasks(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(MoneySourceTask::class, 'money_source_id');
-
     }
 
     public function projects()
@@ -86,5 +92,4 @@ class MoneySource extends Model
     {
         return $this->hasMany(SumMoneySource::class);
     }
-
 }

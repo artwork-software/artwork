@@ -5,22 +5,20 @@ namespace App\Mail;
 use App\Models\Invitation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
 class InvitationCreated extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
     public $invitation;
+
     public $user;
+
     public $token;
-    /**
-     * Create a new message instance.
-     *
-     * @return void
-     */
+
     public function __construct(Invitation $invitation, Authenticatable $user, $token)
     {
         $this->invitation = $invitation;
@@ -28,12 +26,7 @@ class InvitationCreated extends Mailable
         $this->token = $token;
     }
 
-    /**
-     * Build the message.
-     *
-     * @return $this
-     */
-    public function build()
+    public function build(): InvitationCreated
     {
         return $this->from("einladung@test.de", $this->user->first_name)
             ->replyTo($this->user->email)

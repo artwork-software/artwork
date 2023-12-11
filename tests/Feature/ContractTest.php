@@ -48,11 +48,11 @@ test('contracts can be updated', function() {
    ]);
    //assures that only the fields that were updated changed, and that the rest stays the same.
    $this->assertDatabaseHas('contracts', [
-        'name' => 'document2.pdf',
+        'contract' => 'document2.pdf',
         'project_id' => $this->project->id,
         'contract_partner' => 'Agentur Hamburg',
         'amount' => 2000,
-       'resident_abroad' => false
+       'description' => 'Test description',
     ]);
 
 });

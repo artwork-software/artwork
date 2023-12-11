@@ -389,7 +389,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
-    Route::post('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
+    Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
     Route::post('/contract', [ContractController::class, 'storeFile'])->name('contracts.store.file');
 

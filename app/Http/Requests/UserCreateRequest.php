@@ -11,11 +11,9 @@ class UserCreateRequest extends FormRequest
     use PasswordValidationRules;
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'first_name' => ['required', 'string', 'max:255'],
@@ -29,7 +27,10 @@ class UserCreateRequest extends FormRequest
         ];
     }
 
-    public function userData()
+    /**
+     * @return array<string, mixed>
+     */
+    public function userData(): array
     {
         return [
             'first_name' => $this->input('first_name'),

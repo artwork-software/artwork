@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 
 class SumDetailsController extends Controller
 {
-
     public function store(Request $request): RedirectResponse
     {
         SumMoneySource::create([
@@ -36,5 +35,4 @@ class SumDetailsController extends Controller
         $sumMoneySource->delete();
         return back();
     }
-
 }

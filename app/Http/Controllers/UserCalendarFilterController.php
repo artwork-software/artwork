@@ -5,74 +5,31 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
 use Carbon\Carbon;
-use DebugBar\DebugBar;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 class UserCalendarFilterController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(): void
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function store(): void
     {
-        //
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\UserCalendarFilter  $userCalendarFilter
-     * @return \Illuminate\Http\Response
-     */
-    public function show(UserCalendarFilter $userCalendarFilter)
+    public function show(): void
     {
-        //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\UserCalendarFilter  $userCalendarFilter
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(UserCalendarFilter $userCalendarFilter)
+    public function edit(): void
     {
-        //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\UserCalendarFilter  $userCalendarFilter
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, User $user): void
     {
         $user->calendar_filter()->update($request->only([
@@ -96,17 +53,12 @@ class UserCalendarFilterController extends Controller
     public function updateDates(Request $request, User $user): void
     {
         $user->calendar_filter()->update([
-                'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
-                'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
-            ]);
+            'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
+            'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
+        ]);
     }
 
-    /**
-     * @param User $user
-     * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function singleValueUpdate(User $user, Request $request): \Illuminate\Http\RedirectResponse
+    public function singleValueUpdate(User $user, Request $request): RedirectResponse
     {
         $user->calendar_filter()->update([
             $request->key => $request->value
@@ -115,18 +67,11 @@ class UserCalendarFilterController extends Controller
         return redirect()->back();
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\UserCalendarFilter  $userCalendarFilter
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(UserCalendarFilter $userCalendarFilter)
+    public function destroy(): void
     {
-        //
     }
 
-    public function reset(User $user): \Illuminate\Http\RedirectResponse
+    public function reset(User $user): RedirectResponse
     {
         $user->calendar_filter()->update([
             'is_loud' => false,
@@ -145,7 +90,6 @@ class UserCalendarFilterController extends Controller
             'room_categories' => null,
         ]);
 
-        // reload page
         return redirect()->back();
     }
 }

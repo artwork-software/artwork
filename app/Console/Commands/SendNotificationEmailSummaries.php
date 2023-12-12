@@ -2,12 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\NotificationConstEnum;
 use App\Enums\NotificationFrequency;
 use App\Enums\NotificationGroupEnum;
 use App\Mail\NotificationSummary;
 use App\Models\User;
-use App\Notifications\ConflictNotification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
@@ -19,7 +17,6 @@ class SendNotificationEmailSummaries extends Command
 
     public function handle(): int
     {
-
         $frequency = $this->argument('frequency');
 
         if (is_null(NotificationFrequency::tryFrom($frequency))) {
@@ -39,7 +36,7 @@ class SendNotificationEmailSummaries extends Command
             ->where('enabled_email', true)
             ->pluck("type");
 
-        $notificationClasses = $typesOfUser->map( function($type) {
+        $notificationClasses = $typesOfUser->map(function ($type) {
             return $type->notificationClass();
         });
 
@@ -49,29 +46,27 @@ class SendNotificationEmailSummaries extends Command
             ->whereDate('created_at', '>=', now()->subWeeks(2))
             ->get()
             ->groupBy(function ($notification) {
-               return $notification['data']['groupType'];
+                return $notification['data']['groupType'];
             });
 
 
         $notificationArray = [];
-        foreach ($notifications as $notification){
+        foreach ($notifications as $notification) {
             $count = 1;
-            foreach ($notification as $notificationBody){
+            foreach ($notification as $notificationBody) {
                 $notificationArray[$notificationBody->data['groupType']] = [
                     'title' => NotificationGroupEnum::from($notificationBody->data['groupType'])->title(),
                     'count' => $count++,
                 ];
             }
-            foreach ($notification as $notificationBody){
+            foreach ($notification as $notificationBody) {
                 $notificationArray[$notificationBody->data['groupType']]['notifications'][] = [
                     'body' => $notificationBody->data
                 ];
             }
         }
-        if(!empty($notificationArray)){
+        if (!empty($notificationArray)) {
             Mail::to($user)->send(new NotificationSummary($notificationArray, $user->first_name));
         }
-
     }
-
 }

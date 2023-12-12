@@ -5,70 +5,32 @@ namespace App\Http\Controllers;
 use App\Models\ServiceProvider;
 use App\Models\ServiceProviderContacts;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class ServiceProviderContactsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(): void
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request, ServiceProvider $serviceProvider)
+    public function store(ServiceProvider $serviceProvider): void
     {
         $serviceProvider->contacts()->create();
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\ServiceProviderContacts  $serviceProviderContacts
-     * @return \Illuminate\Http\Response
-     */
-    public function show(ServiceProviderContacts $serviceProviderContacts)
+    public function show(): void
     {
-        //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\ServiceProviderContacts  $serviceProviderContacts
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(ServiceProviderContacts $serviceProviderContacts)
+    public function edit(): void
     {
-        //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\ServiceProviderContacts  $serviceProviderContacts
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, ServiceProviderContacts $serviceProviderContacts)
+    public function update(Request $request, ServiceProviderContacts $serviceProviderContacts): void
     {
         $serviceProviderContacts->update($request->only([
             'first_name',
@@ -78,13 +40,7 @@ class ServiceProviderContactsController extends Controller
         ]));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\ServiceProviderContacts  $serviceProviderContacts
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(ServiceProviderContacts $serviceProviderContacts)
+    public function destroy(ServiceProviderContacts $serviceProviderContacts): void
     {
         $serviceProviderContacts->delete();
     }

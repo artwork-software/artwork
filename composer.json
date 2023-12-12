@@ -35,7 +35,8 @@
         "symfony/http-client": "^v6.1.7",
         "symfony/mailgun-mailer": "^v6.1.0",
         "symfony/event-dispatcher": "^v6.1.0",
-        "tightenco/ziggy": "^v1.5.0"
+        "tightenco/ziggy": "^v1.5.0",
+      "ext-pdo": "*"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest",

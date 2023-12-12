@@ -35,7 +35,6 @@ use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -141,7 +140,8 @@ class EventController extends Controller
         $shiftFilterController = new ShiftFilterController();
         $shiftFilters = $shiftFilterController->index();
 
-        if (!is_null($this->userShiftCalendarFilter->start_date) &&
+        if (
+            !is_null($this->userShiftCalendarFilter->start_date) &&
             !is_null($this->userShiftCalendarFilter->end_date)
         ) {
             $startDate = Carbon::create($this->userShiftCalendarFilter->start_date)->startOfDay();
@@ -424,7 +424,7 @@ class EventController extends Controller
         ]);
     }
 
-    public function commit_shifts(Request $request): void
+    public function commitShifts(Request $request): void
     {
         foreach ($request->events as $event) {
             $shiftIds = [];
@@ -904,7 +904,6 @@ class EventController extends Controller
         $newIsLoud = $event->is_loud;
         $newAudience = $event->audience;
 
-
         $this->checkShortDescriptionChanges($event->id, $oldEventDescription, $newEventDescription);
         $this->checkRoomChanges($event->id, $oldEventRoom, $newEventRoom);
         $this->checkProjectChanges($event->id, $oldEventProject, $newEventProject);
@@ -1286,6 +1285,9 @@ class EventController extends Controller
             ->count();
     }
 
+    /**
+     * @return CalendarEventCollectionResource[]
+     */
     public function eventIndex(EventIndexRequest $request): array
     {
         $calendarFilters = json_decode($request->input('calendarFilters'));
@@ -1370,7 +1372,7 @@ class EventController extends Controller
         ]);
     }
 
-    public function destroy_shifts(Event $event): RedirectResponse
+    public function destroyShifts(Event $event): RedirectResponse
     {
         Debugbar::info("Deleting shifts of event $event->id");
 
@@ -1559,7 +1561,8 @@ class EventController extends Controller
         $oldEventEndDate,
         $newEventEndDate
     ): void {
-        if (strtotime($oldEventStartDate) !== strtotime($newEventStartDate) ||
+        if (
+            strtotime($oldEventStartDate) !== strtotime($newEventStartDate) ||
             strtotime($oldEventEndDate) !== strtotime($newEventEndDate)
         ) {
             $this->history->createHistory($eventId, 'Datum/Uhrzeit geändert');

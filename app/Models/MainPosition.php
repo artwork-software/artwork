@@ -70,21 +70,19 @@ class MainPosition extends Model
             ->mapWithKeys(fn ($cells, $column_id) => [
                     $column_id => [
                         'sum' => $cells->sum('value'),
-                        'hasComments' => @$sumDetails[$column_id]->comments_count > 0,
-                        'hasMoneySource' => @$sumDetails[$column_id]->sum_money_source_count > 0,
+                        'hasComments' => isset($sumDetails[$column_id]) && $sumDetails[$column_id]->comments_count > 0,
+                        'hasMoneySource' => isset($sumDetails[$column_id]) &&
+                            $sumDetails[$column_id]->sum_money_source_count > 0,
                     ]
                 ]);
     }
 
     public function getColumnVerifiedChangesAttribute()
     {
-        $subPositionRowIds = SubPositionRow::whereIn('sub_position_id', $this->subPositions()->pluck('id'))->pluck('id');
-        $changes = ColumnCell::whereIn('sub_position_row_id', $subPositionRowIds)
-            ->whereColumn('verified_value', '!=', 'value')
-            ->where('verified_value', '!=', '')
-            ->exists();
-
-        return $changes;
+        return ColumnCell::whereIn(
+            'sub_position_row_id',
+            SubPositionRow::whereIn('sub_position_id', $this->subPositions()->pluck('id'))->pluck('id')
+        )->whereColumn('verified_value', '!=', 'value')->where('verified_value', '!=', '')->exists();
     }
 
 

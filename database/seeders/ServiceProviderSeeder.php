@@ -2,27 +2,22 @@
 
 namespace Database\Seeders;
 
-use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use Faker\Factory;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ServiceProviderSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
+    public function run(): void
     {
         $fakeFreelancer = Factory::create('de_DE');
 
-        for ($i = 0; $i < 10; $i++){
+        for ($i = 0; $i < 10; $i++) {
             $companyName = $fakeFreelancer->company;
             $provider = ServiceProvider::create([
-                'profile_image' => 'https://ui-avatars.com/api/?name='. $companyName[0] .'&color=7F9CF5&background=EBF4FF',
+                'profile_image' => 'https://ui-avatars.com/api/?name=' .
+                    $companyName[0] .
+                    '&color=7F9CF5&background=EBF4FF',
                 'provider_name' => $companyName,
                 'email' => $fakeFreelancer->companyEmail,
                 'phone_number' => $fakeFreelancer->phoneNumber,
@@ -31,7 +26,6 @@ class ServiceProviderSeeder extends Seeder
                 'location' => $fakeFreelancer->city,
                 'note' => $fakeFreelancer->realText(250),
             ]);
-
             $provider->contacts()->create([
                 'first_name' => $fakeFreelancer->firstName,
                 'last_name' => $fakeFreelancer->lastName,

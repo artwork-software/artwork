@@ -47,7 +47,7 @@ class SubPosition extends Model
         return $this->hasMany(SubPositionRow::class);
     }
 
-    public function getColumnSumsAttribute(): Collection
+    public function getColumnSumsAttribute(): \Illuminate\Support\Collection
     {
         $subPositionRowIds = $this->subPositionRows()
             ->where('commented', false)
@@ -66,8 +66,10 @@ class SubPosition extends Model
             ->mapWithKeys(fn ($cells, $column_id) => [
                 $column_id => [
                     'sum' => $cells->sum('value'),
-                    'hasComments' => $sumDetails[$column_id]?->comments_count > 0,
-                    'hasMoneySource' => $sumDetails[$column_id]?->sum_money_source_count > 0,
+                    'hasComments' => isset($sumDetails[$column_id]) &&
+                        $sumDetails[$column_id]->comments_count > 0,
+                    'hasMoneySource' => isset($sumDetails[$column_id]) &&
+                        $sumDetails[$column_id]->sum_money_source_count > 0,
                 ]
             ]);
     }

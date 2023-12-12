@@ -54,7 +54,7 @@ class Table extends Model
         return $this->hasMany(MainPosition::class, 'table_id', 'id');
     }
 
-    protected function calculateCommentedSums($mainPositionIds): \Illuminate\Database\Eloquent\Collection
+    protected function calculateCommentedSums($mainPositionIds): Collection
     {
         $subPositionIds =  SubPosition::query()
             ->whereIntegerInRaw('main_position_id', $mainPositionIds)
@@ -76,7 +76,7 @@ class Table extends Model
             });
     }
 
-    protected function calculateSums($mainPositionIds): \Illuminate\Database\Eloquent\Collection
+    protected function calculateSums($mainPositionIds): Collection
     {
         $subPositionIds =  SubPosition::query()
             ->whereIntegerInRaw('main_position_id', $mainPositionIds)
@@ -124,21 +124,21 @@ class Table extends Model
         return $this->sumDetails("EARNING");
     }
 
-    public function getCostSumsAttribute(): \Illuminate\Database\Eloquent\Collection
+    public function getCostSumsAttribute(): Collection
     {
         $mainPositionIds = $this->mainPositions()->where('type', 'BUDGET_TYPE_COST')->pluck('id');
 
         return $this->calculateSums($mainPositionIds);
     }
 
-    public function getEarningSumsAttribute(): \Illuminate\Database\Eloquent\Collection
+    public function getEarningSumsAttribute(): Collection
     {
         $mainPositionIds = $this->mainPositions()->where('type', 'BUDGET_TYPE_EARNING')->pluck('id');
 
         return $this->calculateSums($mainPositionIds);
     }
 
-    public function getCommentedCostSumsAttribute(): \Illuminate\Database\Eloquent\Collection
+    public function getCommentedCostSumsAttribute(): Collection
     {
         $mainPositionIds = $this
             ->mainPositions()
@@ -148,13 +148,12 @@ class Table extends Model
         return $this->calculateCommentedSums($mainPositionIds);
     }
 
-    public function getCommentedEarningSumsAttribute(): \Illuminate\Database\Eloquent\Collection
+    public function getCommentedEarningSumsAttribute(): Collection
     {
         $mainPositionIds = $this
             ->mainPositions()
             ->where('type', 'BUDGET_TYPE_EARNING')
             ->pluck('id');
-
 
         return $this->calculateCommentedSums($mainPositionIds);
     }

@@ -10,19 +10,12 @@ use Laravel\Jetstream\Features;
 
 class UserFactory extends Factory
 {
-    /**
-     * The name of the factory's corresponding model.
-     *
-     * @var string
-     */
     protected $model = User::class;
 
     /**
-     * Define the model's default state.
-     *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'first_name' => $this->faker->firstName(),
@@ -38,26 +31,16 @@ class UserFactory extends Factory
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     *
-     * @return \Illuminate\Database\Eloquent\Factories\Factory
-     */
-    public function unverified()
+    public function unverified(): Factory
     {
-        return $this->state(function (array $attributes) {
+        return $this->state(function () {
             return [
                 'email_verified_at' => null,
             ];
         });
     }
 
-    /**
-     * Indicate that the user should have a personal team.
-     *
-     * @return $this
-     */
-    public function withPersonalTeam()
+    public function withPersonalTeam(): static
     {
         if (! Features::hasTeamFeatures()) {
             return $this->state([]);
@@ -65,8 +48,12 @@ class UserFactory extends Factory
 
         return $this->has(
             Team::factory()
+                //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassBeforeLastUsed
                 ->state(function (array $attributes, User $user) {
-                    return ['first_name' => $user->first_name.'\'s Team', 'user_id' => $user->id, 'personal_team' => true];
+                    return [
+                        'first_name' => $user->first_name . '\'s Team',
+                        'user_id' => $user->id, 'personal_team' => true
+                    ];
                 }),
             'ownedTeams'
         );

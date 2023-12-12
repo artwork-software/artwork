@@ -188,7 +188,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])
         ->name('projects.search.single');
     Route::get('/projects/trashed', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
-    Route::get('/projects/users_departments/search', [ProjectController::class, 'search_departments_and_users'])
+    Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
         ->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
@@ -394,7 +394,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
     Route::post('/events/{event}/by/notification', [EventController::class, 'destroyByNotification'])
         ->name('events.delete.by.notification');
-    Route::delete('/events/{event}/shifts', [EventController::class, 'destroy_shifts'])->name('events.shifts.delete');
+    Route::delete('/events/{event}/shifts', [EventController::class, 'destroyShifts'])->name('events.shifts.delete');
     Route::put('/event/requests/{event}', [EventController::class, 'acceptEvent'])->name('events.accept');
     Route::put('/event/requests/{event}', [EventController::class, 'declineEvent'])->name('events.decline');
     Route::post('/event/answer/{event}', [EventController::class, 'answerOnEvent'])->name('event.answer');
@@ -408,7 +408,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])->name('shifts.presets');
     Route::post('/shift/{shiftPreset}/preset/store', [ShiftPresetController::class, 'addNewShift'])
         ->name('shift.preset.store');
-    Route::post('/shifts/commit', [EventController::class, 'commit_shifts'])->name('shifts.commit');
+    Route::post('/shifts/commit', [EventController::class, 'commitShifts'])->name('shifts.commit');
 
     //EventTypes
     Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management');

@@ -25,5 +25,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('main_position_details');
     }
-
 };

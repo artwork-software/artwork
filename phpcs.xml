@@ -9,7 +9,7 @@
     <file>database</file>
     <file>routes</file>
 
-    <!-- PSR standards -->
+    <!-- PSR standard -->
     <rule ref="PSR12"/>
 
     <!-- Laravel coding style -->

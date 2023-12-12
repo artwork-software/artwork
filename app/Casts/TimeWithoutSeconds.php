@@ -7,7 +7,8 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
 class TimeWithoutSeconds implements CastsAttributes
 {
-    public function get($model, string $key, mixed $value, array $attributes): mixed
+    //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceAfterLastUsed, Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceBeforeLastUsed
+    public function get($model, string $key, mixed $value, array $attributes): ?string
     {
         if (is_null($value)) {
             return null;

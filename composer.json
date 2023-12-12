@@ -58,6 +58,7 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
+            "Database\\Settings\\": "database/settings/",
             "Artwork\\": "artwork/"
         }
     },

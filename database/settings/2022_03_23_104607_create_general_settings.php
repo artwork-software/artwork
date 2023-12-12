@@ -1,5 +1,7 @@
 <?php
 
+namespace Database\Settings;
+
 use Spatie\LaravelSettings\Exceptions\SettingAlreadyExists;
 use Spatie\LaravelSettings\Migrations\SettingsMigration;
 

@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('contract_user', function (Blueprint $table) {
+        Schema::create('contract_user', function (Blueprint $table): void {
             $table->id();
             $table->bigInteger('contract_id');
             $table->bigInteger('user_id');
@@ -26,7 +26,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('contract_user');
     }

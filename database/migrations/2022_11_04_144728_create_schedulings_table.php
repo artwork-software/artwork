@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('schedulings', function (Blueprint $table) {
+        Schema::create('schedulings', function (Blueprint $table): void {
             $table->id();
             $table->integer('count')->nullable()->default(0);
             $table->integer('user_id');
@@ -29,7 +29,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('schedulings');
     }

@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('room_user', function (Blueprint $table) {
+        Schema::create('room_user', function (Blueprint $table): void {
             $table->id();
             $table->integer('room_id');
             $table->integer('user_id');
@@ -28,7 +28,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('room_user');
     }

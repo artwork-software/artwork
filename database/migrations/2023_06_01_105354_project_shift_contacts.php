@@ -11,10 +11,10 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         //project_shift_contacts
-        Schema::create('project_shift_contacts', function (Blueprint $table) {
+        Schema::create('project_shift_contacts', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('project_id');
             $table->unsignedBigInteger('user_id');
@@ -27,7 +27,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('project_shift_contacts');
     }

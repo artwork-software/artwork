@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('time_lines', function (Blueprint $table) {
+        Schema::create('time_lines', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('event_id');
             $table->time('start')->nullable();
@@ -28,7 +28,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('time_lines');
     }

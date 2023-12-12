@@ -602,7 +602,7 @@ class CalendarController extends Controller
                     $date->format('d.m.') => [
                         'roomName' => $room->name,
                         'events' => CalendarShowEventResource::collection(
-                            $this->get_events_of_day($date, $room, $project->id)
+                            $this->get_events_of_day($date, $room, $project?->id)
                         )
                     ]
                 ]));

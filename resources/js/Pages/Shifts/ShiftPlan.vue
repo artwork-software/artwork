@@ -72,23 +72,25 @@
                     <table class="w-full text-white overflow-y-scroll">
                         <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                         <div>
-                            <tr class="flex w-full">
+                            <tr class="flex w-full py-1">
                                 <th class="w-56"></th>
-                                <th v-for="day in days" class="flex w-[12.5rem] p-5 h-16 items-center">
-                                    <div class="flex calendarRoomHeader font-semibold">
-                                        {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
-                                    </div>
+                                <th>
+                                    <LightBulbIcon @click="toggleHighlightMode" class="h-12 w-12 cursor-pointer"></LightBulbIcon>
+
                                 </th>
                             </tr>
                             <tbody class="w-full pt-3">
                             <tr v-for="(user,index) in dropUsers" class="w-full flex">
                                 <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1 w-56"
                                     :class="index % 2 === 0 ? '' : ''">
-                                    <DragElement :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                    <DragElement v-if="!highlightMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
                                                  :planned-hours="user.plannedWorkingHours" :type="user.type"/>
+                                    <HighlightUserCell v-else :highlighted-user="userIdToHighlight ? userIdToHighlight === user.element.id : false" :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                                       :planned-hours="user.plannedWorkingHours" :type="user.type"
+                                                       @highlightShiftsOfUser="highlightShiftsOfUser"/>
                                 </th>
                                 <td v-for="day in days">
-                                    <div
+                                    <div :class="highlightMode ? userIdToHighlight ? userIdToHighlight === user.element.id ? '' : 'opacity-30' : 'opacity-30' : ''"
                                         class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
                                         @click="openShowUserShiftModal(user, day)">
                                         <span v-for="shift in user.element?.shifts[day.full_day]" v-if="!user.vacations?.includes(day.without_format)">
@@ -119,7 +121,7 @@
 
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Permissions from "@/mixins/Permissions.vue";
-import {CheckIcon, ExclamationIcon} from "@heroicons/vue/outline";
+import {LightBulbIcon} from "@heroicons/vue/outline";
 import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
@@ -133,6 +135,7 @@ import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import ShiftHistoryModal from "@/Pages/Shifts/Components/ShiftHistoryModal.vue";
 import ShowUserShiftsModal from "@/Pages/Shifts/Components/showUserShiftsModal.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
+import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
 
 export default {
     name: "ShiftPlan",
@@ -143,11 +146,12 @@ export default {
         ShiftHeader,
         ShiftTabs,
         ShiftPlanUserOverview,
-        Link, CalendarFunctionBar, SingleCalendarEvent, ExclamationIcon, EventComponent,
+        Link, CalendarFunctionBar, SingleCalendarEvent, EventComponent,
         SingleShiftPlanEvent,
-        CheckIcon,
+        LightBulbIcon,
         AppLayout,
-        ShiftPlanFunctionBar
+        ShiftPlanFunctionBar,
+        HighlightUserCell
     },
     props: [
         'events',
@@ -306,6 +310,13 @@ export default {
             this.userToShow = user
             this.dayToShow = day
             this.showUserShifts = true
+        },
+        toggleHighlightMode() {
+            this.highlightMode = !this.highlightMode;
+        },
+        highlightShiftsOfUser(userId) {
+            console.log(userId);
+            this.userIdToHighlight = userId;
         }
     },
     data() {
@@ -316,6 +327,8 @@ export default {
             showUserShifts: false,
             userToShow: null,
             dayToShow: null,
+            highlightMode: false,
+            userIdToHighlight: null,
         }
     },
     beforeDestroy() {

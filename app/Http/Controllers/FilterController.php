@@ -42,7 +42,7 @@ class FilterController extends Controller
         ]);
     }
 
-    //@todo: Refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function store(Request $request): RedirectResponse
     {

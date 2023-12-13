@@ -278,7 +278,7 @@ class ProjectController extends Controller
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
 
-    //@todo: Refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function updateEntranceData(Project $project, Request $request)
     {
@@ -1816,7 +1816,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    //@todo: Refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function projectShiftTab(Project $project): Response|ResponseFactory
     {
@@ -1987,7 +1987,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    //@todo: Refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function projectBudgetTab(Project $project): Response|ResponseFactory
     {
@@ -2552,7 +2552,7 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($projectId);
     }
 
-    //@todo: Refactor function because complexity exceeds allowed maximum
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     private function createNotificationProjectMemberChanges(
         Project $project,

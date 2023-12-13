@@ -282,7 +282,7 @@ class NotificationService
         $this->setShiftId(null);
     }
 
-    //@todo: needs to be refactored, complexity is way too high
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function createNotification(): void
     {

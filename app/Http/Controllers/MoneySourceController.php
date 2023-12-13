@@ -145,7 +145,7 @@ class MoneySourceController extends Controller
         return back();
     }
 
-    //@todo: will be refactored while domain-driven-design is applied
+    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function show(MoneySource $moneySource): Response|ResponseFactory
     {

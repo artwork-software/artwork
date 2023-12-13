@@ -407,7 +407,7 @@ class ShiftController extends Controller
             ->pluck('id');
     }
 
-    //@todo: Refactor function because complexity exceeds allowed maximum
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function addShiftUser(Shift $shift, User $user, Request $request): void
     {
@@ -692,7 +692,7 @@ class ShiftController extends Controller
         }
     }
 
-    //@todo: Refactor function because complexity exceeds allowed maximum
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function addShiftMaster(Request $request, Shift $shift, User $user): void
     {

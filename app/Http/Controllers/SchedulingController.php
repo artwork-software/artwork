@@ -82,7 +82,7 @@ class SchedulingController extends Controller
     /**
      * @throws Exception
      */
-    //@todo: Refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function sendDeadlineNotification(): void
     {
@@ -212,7 +212,7 @@ class SchedulingController extends Controller
         }
     }
 
-    //@todo: Refactor function because nesting level and complexity is too high
+    //@todo: fix phpcs error - refactor function because nesting level and complexity is too high
     //phpcs:ignore Generic.Metrics.NestingLevel.TooHigh, Generic.Metrics.CyclomaticComplexity.TooHigh
     public function sendNotification(): void
     {

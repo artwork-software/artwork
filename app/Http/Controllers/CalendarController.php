@@ -152,7 +152,7 @@ class CalendarController extends Controller
     /**
      * @return array<string, mixed>
      */
-    //@todo: Refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createCalendarData(
         $type = '',
@@ -602,7 +602,7 @@ class CalendarController extends Controller
         return CalendarEventResource::collection($eventsByRoom)->collection->groupBy('room.id');
     }
 
-    //@todo: Refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function filterEvents(
         $query,

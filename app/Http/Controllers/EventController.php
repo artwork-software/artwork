@@ -311,7 +311,7 @@ class EventController extends Controller
         ]);
     }
 
-    //@todo: Refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function storeEvent(EventStoreRequest $request): CalendarEventResource
     {
@@ -727,7 +727,7 @@ class EventController extends Controller
         }
     }
 
-    //@todo: Refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
@@ -1138,7 +1138,7 @@ class EventController extends Controller
         return Redirect::back();
     }
 
-    //@todo: Refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function declineEvent(Request $request, Event $event): void
     {
@@ -1649,7 +1649,7 @@ class EventController extends Controller
         }
     }
 
-    //@todo: Refactor function because complexity is rising
+    //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function updateMultiEdit(Request $request): void
     {

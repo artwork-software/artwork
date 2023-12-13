@@ -37,8 +37,7 @@ class SubPositionRow extends Model
 
     public function columns(): BelongsToMany
     {
-        return $this->belongsToMany(Column::class)
-            ->withTimestamps();
+        return $this->belongsToMany(Column::class)->withTimestamps();
     }
 
     public function cells(): HasMany

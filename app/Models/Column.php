@@ -40,7 +40,7 @@ class Column extends Model
     ];
 
     protected $with = [
-        'locked_by'
+        'lockedBy'
     ];
 
     public function subPositionRows(): BelongsToMany

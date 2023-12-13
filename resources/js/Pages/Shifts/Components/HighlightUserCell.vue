@@ -1,11 +1,11 @@
 
 <template>
-    <div :style="divStyle" @click="$emit('highlightShiftsOfUser', item.id)" class="w-full p-2 my-2 bg-gray-50/10 text-white text-xs rounded-lg flex items-center gap-2">
+    <div :style="divStyle" @click="$emit('highlightShiftsOfUser', item.id, type)" class="w-full p-2 my-2 bg-gray-50/10 text-white text-xs rounded-lg flex items-center gap-2">
         <div>
             <img :src="item.profile_photo_url" alt="" class="h-6 w-6 rounded-full object-cover">
         </div>
         <div class="text-left h-8 cursor-pointer">
-            <div v-if="type === 0" class="text-ellipsis w-40">
+            <div v-if="type === 0" class="text-ellipsis w-32">
                 <div class="flex">
                 <div class="truncate">
                     {{ item.first_name }} {{ item.last_name }}
@@ -14,7 +14,7 @@
                 </div>
                 <div class="text-xs w-full flex"> {{plannedHours.toFixed(1)}}  {{expectedHours ? ' | ' + expectedHours.toFixed(1) : ''}}</div>
             </div>
-            <div v-else-if="type === 1" class="text-ellipsis w-40">
+            <div v-else-if="type === 1" class="text-ellipsis w-32">
                 <div class="flex">
                     <div class="truncate">
                         {{ item.first_name }} {{ item.last_name }}
@@ -23,7 +23,7 @@
                 </div>
                 <div class="text-xs w-full">{{plannedHours.toFixed(1)}}</div>
             </div>
-            <div v-else class="text-ellipsis w-40">
+            <div v-else class="text-ellipsis w-32">
                 <div class="flex">
                     <div class="truncate">
                 {{ item.provider_name }}</div>

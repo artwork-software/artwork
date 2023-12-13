@@ -37,7 +37,7 @@
                             <td v-for="day in days" :style="{minWidth: 200 + 'px'}"
                                 class="max-h-28 overflow-y-auto cell">
                                 <div v-for="event in room[day.day].events.data" class="mb-1">
-                                    <SingleShiftPlanEvent :eventType="this.findEventTypeById(event.eventTypeId)"
+                                    <SingleShiftPlanEvent :highlightMode="highlightMode" :highlighted-id="idToHighlight" :highlighted-type="typeToHighlight" :eventType="this.findEventTypeById(event.eventTypeId)"
                                                           :project="this.findProjectById(event.projectId)"
                                                           :event="event" v-if="event.shifts.length > 0"/>
                                 </div>
@@ -73,24 +73,33 @@
                         <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                         <div>
                             <tr class="flex w-full py-1">
-                                <th class="w-56"></th>
-                                <th>
-                                    <LightBulbIcon @click="toggleHighlightMode" class="h-12 w-12 cursor-pointer"></LightBulbIcon>
-
+                                <th class="w-44"></th>
+                                <th class="flex items-center pl-2 py-1">
+                                    <Switch @click="toggleHighlightMode"
+                                            :class="[highlightMode ?
+                                        'bg-indigo-500' :
+                                        'bg-gray-300',
+                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
+                                    <span aria-hidden="true"
+                                          :class="[highlightMode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
+                                    </Switch>
+                                    <div :class="[highlightMode ? 'xsLight text-secondaryHover' : 'xsLight','ml-1']">
+                                        Schichten hervorheben
+                                    </div>
                                 </th>
                             </tr>
                             <tbody class="w-full pt-3">
                             <tr v-for="(user,index) in dropUsers" class="w-full flex">
-                                <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1 w-56"
+                                <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1 w-44"
                                     :class="index % 2 === 0 ? '' : ''">
                                     <DragElement v-if="!highlightMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
                                                  :planned-hours="user.plannedWorkingHours" :type="user.type"/>
-                                    <HighlightUserCell v-else :highlighted-user="userIdToHighlight ? userIdToHighlight === user.element.id : false" :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                    <HighlightUserCell v-else :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false" :item="user.element" :expected-hours="user.expectedWorkingHours"
                                                        :planned-hours="user.plannedWorkingHours" :type="user.type"
                                                        @highlightShiftsOfUser="highlightShiftsOfUser"/>
                                 </th>
                                 <td v-for="day in days">
-                                    <div :class="highlightMode ? userIdToHighlight ? userIdToHighlight === user.element.id ? '' : 'opacity-30' : 'opacity-30' : ''"
+                                    <div :class="highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : ''"
                                         class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
                                         @click="openShowUserShiftModal(user, day)">
                                         <span v-for="shift in user.element?.shifts[day.full_day]" v-if="!user.vacations?.includes(day.without_format)">
@@ -136,11 +145,13 @@ import ShiftHistoryModal from "@/Pages/Shifts/Components/ShiftHistoryModal.vue";
 import ShowUserShiftsModal from "@/Pages/Shifts/Components/showUserShiftsModal.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
+import {Switch} from "@headlessui/vue";
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        Switch,
         DragElement, ShowUserShiftsModal,
         ShiftHistoryModal,
         ShiftHeader,
@@ -314,9 +325,9 @@ export default {
         toggleHighlightMode() {
             this.highlightMode = !this.highlightMode;
         },
-        highlightShiftsOfUser(userId) {
-            console.log(userId);
-            this.userIdToHighlight = userId;
+        highlightShiftsOfUser(id, type) {
+            this.idToHighlight = id;
+            this.typeToHighlight = type;
         }
     },
     data() {
@@ -328,7 +339,8 @@ export default {
             userToShow: null,
             dayToShow: null,
             highlightMode: false,
-            userIdToHighlight: null,
+            idToHighlight: null,
+            typeToHighlight: null,
         }
     },
     beforeDestroy() {

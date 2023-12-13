@@ -8,27 +8,24 @@ import Helper from "../../../mixins/Helper.vue";
 export default defineComponent({
     name: "ShiftDropElement",
     components: {ChooseUserSeriesShift, CheckIcon, VueMathjax},
-    props: ['shift', 'users','showRoom','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount'],
+    props: ['shift','showRoom','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount','highlightMode','highlightedId','highlightedType'],
     mixins: [Helper],
     computed: {
-        userIds(){
-            return this.users.map(user => user.id)
-        },
         shiftUserIds(){
             const ids = {
                 userIds: [],
                 freelancerIds: [],
                 providerIds: []
             }
-            this.shift.users.forEach(user => {
+            this.shift.allUsers.users.forEach(user => {
                 ids.userIds.push(user.id)
             })
 
-            this.shift.freelancer?.forEach((freelancer) => {
+            this.shift.allUsers.freelancers?.forEach((freelancer) => {
                 ids.freelancerIds.push(freelancer.id)
             })
 
-            this.shift.service_provider?.forEach((provider) => {
+            this.shift.allUsers.service_providers?.forEach((provider) => {
                 ids.providerIds.push(provider.id)
             })
 
@@ -150,6 +147,26 @@ export default defineComponent({
                 return `${numerator}/${denominator}`;
             }
         },
+        isIdHighlighted(highlightedId, highlightedType) {
+            // Map the highlightedType to the correct property in shiftUserIds
+            const typeMap = {
+                0: 'userIds',
+                1: 'freelancerIds',
+                2: 'providerIds'
+            };
+
+
+            if(highlightedId){
+                // Get the correct array from shiftUserIds based on the highlightedType
+                const arrayToCheck = this.shiftUserIds[typeMap[highlightedType]];
+
+                // Check if the array contains the highlightedId
+                return arrayToCheck.includes(highlightedId);
+            }else{
+                return false;
+            }
+
+        },
         saveUser(){
             let dropElement = this.selectedUser;
             dropElement = JSON.parse(dropElement)[0];
@@ -247,11 +264,10 @@ export default defineComponent({
 </script>
 
 <template>
-    <div class="flex items-center xsLight text-shiftText subpixel-antialiased" @dragover="onDragOver" @drop="onDrop">
+    <div :class="highlightMode && !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30' : ''" class="flex items-center xsLight text-shiftText subpixel-antialiased" @dragover="onDragOver" @drop="onDrop">
         <div>
             {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
         </div>
-
         <div v-if="!showRoom" class="ml-0.5 text-xs">
              ({{ decimalToCommonFraction(shift.user_count) }}/{{ shift.number_employees }}
             <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)

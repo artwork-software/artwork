@@ -10,7 +10,7 @@
             <div class="bg-backgroundGray">
                 <div v-for="shift in event.shifts" class="flex justify-between px-1">
                     <!-- Drop Element --->
-                    <ShiftDropElement :users="shift.users" :shift="shift" :show-room="showRoom" :room="room" :event="event"  :currentCount="shift.currentCount" :maxCount="shift.maxCount"  :free-employee-count="shift.empty_user_count" :free-master-count="shift.empty_master_count"/>
+                    <ShiftDropElement :highlight-mode="highlightMode" :highlighted-id="highlightedId" :highlighted-type="highlightedType" :shift="shift" :show-room="showRoom" :room="room" :event="event"  :currentCount="shift.currentCount" :maxCount="shift.maxCount"  :free-employee-count="shift.empty_user_count" :free-master-count="shift.empty_master_count"/>
                 </div>
             </div>
         </div>
@@ -38,6 +38,9 @@ export default defineComponent({
         'eventType',
         'showRoom',
         'room',
+        'highlightMode',
+        'highlightedId',
+        'highlightedType'
     ],
     computed: {
 

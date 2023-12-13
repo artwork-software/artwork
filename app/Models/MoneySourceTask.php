@@ -36,11 +36,15 @@ class MoneySourceTask extends Model
         'deadline' => 'datetime: d. F Y H:i:s'
     ];
 
+    //@todo: fix phpcs error - refactor function name to moneySource
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function money_source(): BelongsTo
     {
         return $this->belongsTo(MoneySource::class);
     }
 
+    //@todo: fix phpcs error - refactor function name to moneySourceTaskUsers
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function money_source_task_users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'money_source_task_user', 'task_id');

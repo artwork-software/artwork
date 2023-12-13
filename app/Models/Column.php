@@ -73,7 +73,7 @@ class Column extends Model
         return $this->hasMany(BudgetSumDetails::class);
     }
 
-    public function locked_by(): BelongsTo
+    public function lockedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'locked_by', 'id');
     }

@@ -70,7 +70,8 @@ class Project extends Model
 
     protected $with = ['shiftRelevantEventTypes', 'state'];
 
-
+    //@todo: fix phpcs error - refactor function name to costCenter
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function cost_center(): HasOne
     {
         return $this->hasOne(CostCenter::class);
@@ -81,6 +82,8 @@ class Project extends Model
         return $this->belongsToMany(EventType::class, 'project_shift_relevant_event_types');
     }
 
+    //@todo: fix phpcs error - refactor function name to shiftContact
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function shift_contact(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_shift_contacts');
@@ -103,6 +106,8 @@ class Project extends Model
             ->withPivot('text');
     }
 
+    //@todo: fix phpcs error - refactor function name to accessBudget
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function access_budget(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
@@ -115,6 +120,8 @@ class Project extends Model
             ->wherePivot('can_write', true);
     }
 
+    //@todo: fix phpcs error - refactor function name to deletePermissionUsers
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function delete_permission_users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
@@ -142,6 +149,8 @@ class Project extends Model
         return $this->belongsToMany(Department::class);
     }
 
+    //@todo: fix phpcs error - refactor function name to projectHistories
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function project_histories(): HasMany
     {
         return $this->hasMany(ProjectHistory::class);
@@ -152,6 +161,8 @@ class Project extends Model
         return $this->hasMany(Checklist::class);
     }
 
+    //@todo: fix phpcs error - refactor function name to projectFiles
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function project_files(): HasMany
     {
         return $this->hasMany(ProjectFile::class);
@@ -191,7 +202,6 @@ class Project extends Model
     {
         return $this->belongsToMany(__CLASS__, 'project_groups', 'group_id');
     }
-
 
     public function table(): HasOne
     {

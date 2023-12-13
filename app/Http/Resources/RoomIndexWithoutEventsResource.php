@@ -25,8 +25,9 @@ class RoomIndexWithoutEventsResource extends JsonResource
             'end_date' => $this->end_date?->format('d.m.Y'),
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
             'created_by' => User::where('id', $this->user_id)->first(),
-            'room_admins' => UserIndexResource::collection($this->users()->wherePivot('is_admin', true)->get())
-                ->resolve(),
+            'room_admins' => UserIndexResource::collection(
+                $this->users()->wherePivot('is_admin', true)->get()
+            )->resolve(),
         ];
     }
 }

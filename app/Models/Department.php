@@ -46,6 +46,8 @@ class Department extends Model
         return $this->belongsToMany(Checklist::class);
     }
 
+    //@todo: fix phpcs error - refactor function name to checklistTemplates
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function checklist_templates(): BelongsToMany
     {
         return $this->belongsToMany(ChecklistTemplate::class);

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Providers\RouteServiceProvider;
 use Closure;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -15,7 +16,7 @@ class RedirectIfAuthenticated
         Request $request,
         Closure $next,
         ?string ...$guards
-    ): Response|RedirectResponse {
+    ): Response|RedirectResponse|JsonResponse {
         $guards = empty($guards) ? [null] : $guards;
 
         foreach ($guards as $guard) {

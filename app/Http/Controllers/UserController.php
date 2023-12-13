@@ -329,8 +329,8 @@ class UserController extends Controller
             return Redirect::back();
         }
 
-        if (!$user->assigned_crafts->contains($craftToAssign)) {
-            $user->assigned_crafts()->attach(Craft::find($request->get('craftId')));
+        if (!$user->assignedCrafts->contains($craftToAssign)) {
+            $user->assignedCrafts()->attach(Craft::find($request->get('craftId')));
         }
 
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
@@ -338,7 +338,7 @@ class UserController extends Controller
 
     public function removeCraft(User $user, Craft $craft): RedirectResponse
     {
-        $user->assigned_crafts()->detach($craft);
+        $user->assignedCrafts()->detach($craft);
 
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
     }

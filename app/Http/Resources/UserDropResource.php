@@ -22,7 +22,7 @@ class UserDropResource extends JsonResource
             'profile_photo_url' => $this->profile_photo_url,
             'can_master' => $this->can_master,
             'can_work_shifts' => $this->can_work_shifts,
-            'assigned_crafts_ids' => $this->assigned_crafts->pluck('id'),
+            'assigned_crafts_ids' => $this->assignedCrafts->pluck('id'),
         ];
     }
 }

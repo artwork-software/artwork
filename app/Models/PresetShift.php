@@ -45,7 +45,7 @@ class PresetShift extends Model
 
     protected $with = ['craft'];
 
-    public function shift_preset(): BelongsTo
+    public function shiftPreset(): BelongsTo
     {
         return $this->belongsTo(ShiftPreset::class);
     }

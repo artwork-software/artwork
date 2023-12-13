@@ -22,7 +22,7 @@ class MoneySourceTaskController extends Controller
     public function store(Request $request): Response
     {
         $moneySource = MoneySource::find($request->money_source);
-        $task = $moneySource->money_source_tasks()->create([
+        $task = $moneySource->moneySourceTasks()->create([
             'name' => $request->name,
             'description' => $request->description,
             'deadline' => $request->deadline,

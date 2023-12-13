@@ -14,7 +14,7 @@ class ContractResource extends JsonResource
      */
     public function getAccessibleUsers(): array
     {
-        $usersWithAccess = $this->accessing_users->all();
+        $usersWithAccess = $this->accessingUsers->all();
         $project = Project::where('id', $this->project_id)->with(['users'])->first();
         foreach ($project->users as $user) {
             if ($user->pivot->is_manager) {

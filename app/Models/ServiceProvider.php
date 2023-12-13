@@ -70,7 +70,7 @@ class ServiceProvider extends Model
             ->withCasts(['is_master' => 'boolean']);
     }
 
-    public function assigned_crafts(): BelongsToMany
+    public function assignedCrafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'service_provider_assigned_crafts');
     }

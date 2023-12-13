@@ -3,20 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Copyright;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
 class CopyrightController extends Controller
 {
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-
         $collecting_society = (object) $request->collectingSociety;
 
         Copyright::create([
@@ -29,16 +23,8 @@ class CopyrightController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Copyright  $copyright
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(Request $request, Copyright $copyright): \Illuminate\Http\RedirectResponse
+    public function update(Request $request, Copyright $copyright): RedirectResponse
     {
-
         $collecting_society = (object) $request->collectingSociety;
 
         Copyright::where('id', $copyright->id)->update([

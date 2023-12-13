@@ -35,9 +35,9 @@ class FreelancerShowResource extends JsonResource
             'work_name' => $this->work_name,
             'work_description' => $this->work_description,
             'can_work_shifts' => $this->can_work_shifts,
-            'assignedCrafts' => $this->assigned_crafts,
+            'assignedCrafts' => $this->assignedCrafts,
             'assignableCrafts' => Craft::query()->get()->filter(
-                fn($craft) => !$this->assigned_crafts->pluck('id')->contains($craft->id)
+                fn($craft) => !$this->assignedCrafts->pluck('id')->contains($craft->id)
             )->toArray()
         ];
     }

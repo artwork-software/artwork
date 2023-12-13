@@ -39,7 +39,7 @@ class MoneySourceFileController extends Controller
 
         Storage::putFileAs('money_source_files', $file, $basename);
 
-        $moneySourceFile = $moneySource->money_source_files()->create([
+        $moneySourceFile = $moneySource->moneySourceFiles()->create([
             'name' => $original_name,
             'basename' => $basename,
         ]);

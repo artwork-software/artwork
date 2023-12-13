@@ -9,6 +9,9 @@
     <file>database</file>
     <file>routes</file>
 
+    <!-- Excluded files/directories -->
+    <exclude-pattern>./config/debugbar.php</exclude-pattern>
+
     <!-- PSR standard -->
     <rule ref="PSR12"/>
 

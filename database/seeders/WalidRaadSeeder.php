@@ -42,7 +42,7 @@ class WalidRaadSeeder extends Seeder
         /**
          * Create Task for Money Source
          */
-        $task = $moneySourceSuperQuelle->money_source_tasks()->create([
+        $task = $moneySourceSuperQuelle->moneySourceTasks()->create([
             'name' => 'Verwendungsnachweise',
             'description' => 'cxvxcvxvc',
             'deadline' => Carbon::now()->addDays(10),

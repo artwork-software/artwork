@@ -30,6 +30,8 @@ class AppController extends Controller
         return (new Zxcvbn())->passwordStrength($request->input('password'))['score'];
     }
 
+    //@todo: fix phpcs error - refactor function name to toggleHints
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function toggle_hints(): RedirectResponse
     {
         $user = Auth::user();
@@ -41,6 +43,8 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Hilfe umgeschaltet');
     }
 
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsProjectStatus
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function toggle_calendar_settings_project_status(): RedirectResponse
     {
         $user = Auth::user();
@@ -54,6 +58,8 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
 
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsOptions
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function toggle_calendar_settings_options(): RedirectResponse
     {
         $user = Auth::user();
@@ -67,6 +73,8 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
 
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsProjectManagement
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function toggle_calendar_settings_project_management(): RedirectResponse
     {
         $user = Auth::user();
@@ -80,6 +88,8 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
 
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsRepeatingEvents
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function toggle_calendar_settings_repeating_events(): RedirectResponse
     {
         $user = Auth::user();
@@ -93,6 +103,8 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
 
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsWorkShifts
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function toggle_calendar_settings_work_shifts(): RedirectResponse
     {
         $user = Auth::user();

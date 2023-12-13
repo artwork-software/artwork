@@ -20,7 +20,7 @@ class ProjectFileResource extends JsonResource
             "project_id" => $this->project_id,
             "created_at" => $this->created_at,
             "comments" => CommentResource::collection($this->comments),
-            "accessibleUsers" => $this->accessing_users
+            "accessibleUsers" => $this->accessingUsers
         ];
     }
 }

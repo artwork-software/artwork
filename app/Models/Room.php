@@ -77,6 +77,8 @@ class Room extends Model
             ->wherePivot('is_admin', true);
     }
 
+    //@todo: fix phpcs error - refactor function name to roomFiles
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function room_files()
     {
         return $this->hasMany(RoomFile::class);
@@ -87,11 +89,15 @@ class Room extends Model
         return $this->hasMany(Event::class);
     }
 
+    //@todo: fix phpcs error - refactor function name to adjoiningRooms
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function adjoining_rooms()
     {
         return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'main_room_id', 'adjoining_room_id');
     }
 
+    //@todo: fix phpcs error - refactor function name to mainRooms
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function main_rooms()
     {
         return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'adjoining_room_id', 'main_room_id');
@@ -121,7 +127,11 @@ class Room extends Model
 
     public function getEventsAt(Carbon $dateTime): Collection
     {
-        return $this->events
-            ->filter(fn (Event $event) => $dateTime->between(Carbon::parse($event->start_time), Carbon::parse($event->end_time)));
+        return $this->events->filter(
+            fn (Event $event) => $dateTime->between(
+                Carbon::parse($event->start_time),
+                Carbon::parse($event->end_time)
+            )
+        );
     }
 }

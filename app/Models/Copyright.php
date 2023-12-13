@@ -38,7 +38,7 @@ class Copyright extends Model
         return $this->belongsTo(Project::class, 'project_id');
     }
 
-    public function collecting_society(): BelongsTo
+    public function collectingSociety(): BelongsTo
     {
         return $this->belongsTo(CollectingSociety::class, 'collecting_society_id');
     }

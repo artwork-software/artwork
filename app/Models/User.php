@@ -159,6 +159,8 @@ class User extends Authenticatable
         return $this->last_name . ', ' . $this->first_name;
     }
 
+    //@todo: fix phpcs error - refactor function name to calendarSettings
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function calendar_settings(): HasOne
     {
         return $this->hasOne(UserCalendarSettings::class);
@@ -189,6 +191,8 @@ class User extends Authenticatable
         return $returnInterval;
     }
 
+    //@todo: fix phpcs error - refactor function name to projectFiles
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function project_files(): HasMany
     {
         return $this->hasMany(ProjectFile::class);
@@ -214,22 +218,24 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
+    //@todo: fix phpcs error - refactor function name to privateChecklists
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function private_checklists(): HasMany
     {
         return $this->hasMany(Checklist::class);
     }
 
-    public function created_rooms(): HasMany
+    public function createdRppms(): HasMany
     {
         return $this->hasMany(Room::class);
     }
 
-    public function admin_rooms(): BelongsToMany
+    public function adminRooms(): BelongsToMany
     {
         return $this->belongsToMany(Room::class, 'room_user');
     }
 
-    public function done_tasks(): HasMany
+    public function doneTasks(): HasMany
     {
         return $this->hasMany(Task::class);
     }
@@ -254,12 +260,14 @@ class User extends Authenticatable
         return $this->hasOne(GlobalNotification::class, 'created_by');
     }
 
+    //@todo: fix phpcs error - refactor function name to moneySources
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function money_sources(): HasMany
     {
         return $this->hasMany(MoneySource::class, 'creator_id');
     }
 
-    public function money_source_tasks(): HasMany
+    public function moneySourceTasks(): HasMany
     {
         return $this->hasMany(MoneySourceTask::class, 'user_id');
     }
@@ -276,26 +284,34 @@ class User extends Authenticatable
             ->using(MoneySourceUserPivot::class);
     }
 
+    //@todo: fix phpcs error - refactor function name to calendarFilter
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function calendar_filter(): HasOne
     {
         return $this->hasOne(UserCalendarFilter::class);
     }
 
+    //@todo: fix phpcs error - refactor function name to shiftCalendarFilter
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function shift_calendar_filter(): HasOne
     {
         return $this->hasOne(UserShiftCalendarFilter::class);
     }
 
-    public function commented_budget_items_setting(): HasOne
+    public function commentedBudgetItemsSetting(): HasOne
     {
         return $this->hasOne(UserCommentedBudgetItemsSetting::class);
     }
 
-    public function assigned_crafts(): BelongsToMany
+    public function assignedCrafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'users_assigned_crafts');
     }
 
+
+    /**
+     * @return string[]
+     */
     public function getAllPermissionsAttribute(): array
     {
         $permissions = [];

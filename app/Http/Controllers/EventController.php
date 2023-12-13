@@ -169,7 +169,6 @@ class EventController extends Controller
             $vacations = $user->hasVacationDays();
             $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
 
-
             $usersWithPlannedWorkingHours[] = [
                 'user' => UserIndexResource::make($user),
                 'plannedWorkingHours' => $plannedWorkingHours,
@@ -312,6 +311,8 @@ class EventController extends Controller
         ]);
     }
 
+    //@todo: Refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function storeEvent(EventStoreRequest $request): CalendarEventResource
     {
         $firstEvent = Event::create($request->data());
@@ -405,7 +406,7 @@ class EventController extends Controller
 
     private function createSeriesEvent($startDate, $endDate, $request, $series, $projectId): void
     {
-        $event = Event::create([
+        Event::create([
             'name' => $request->title,
             'eventName' => $request->eventName,
             'description' => $request->description,
@@ -726,6 +727,8 @@ class EventController extends Controller
         }
     }
 
+    //@todo: Refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
         if (!$request->noNotifications) {
@@ -1135,6 +1138,8 @@ class EventController extends Controller
         return Redirect::back();
     }
 
+    //@todo: Refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function declineEvent(Request $request, Event $event): void
     {
         $projectManagers = [];
@@ -1644,6 +1649,8 @@ class EventController extends Controller
         }
     }
 
+    //@todo: Refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function updateMultiEdit(Request $request): void
     {
         $eventIds = $request->events;

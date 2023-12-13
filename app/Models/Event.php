@@ -133,6 +133,8 @@ class Event extends Model
         return $date->format('Y-m-d H:i:s');
     }
 
+    //@todo: fix phpcs error - refactor function name to eventType
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function event_type(): BelongsTo
     {
         return $this->belongsTo(EventType::class, 'event_type_id');

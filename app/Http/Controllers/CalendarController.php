@@ -45,6 +45,9 @@ class CalendarController extends Controller
         $this->calendarSettings = $this->user->calendar_settings;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getFilters(): array
     {
         return $this->filterProvider->provide();
@@ -53,7 +56,7 @@ class CalendarController extends Controller
     /**
      * @return array<int, Event>
      */
-    private function get_events_of_day($date_of_day, $room, $projectId = null): array
+    private function getEventsByDate($date_of_day, $room, $projectId = null): array
     {
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
@@ -75,7 +78,7 @@ class CalendarController extends Controller
     /**
      * @return array<int, Event>
      */
-    private function get_events_per_day($date_of_day, $userId = null): array
+    private function getEventsPerDay($date_of_day, $userId = null): array
     {
         $today = $date_of_day->format('d.m.Y');
 
@@ -97,7 +100,7 @@ class CalendarController extends Controller
     /**
      * @return array<int, Event>
      */
-    private function get_events_per_day_for_freelancer($date_of_day, $freelancerId = null): array
+    private function getEventsPerDayForFreelancer($date_of_day, $freelancerId = null): array
     {
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
@@ -123,7 +126,7 @@ class CalendarController extends Controller
     /**
      * @return array<int, Event>
      */
-    private function get_events_per_day_for_service_provider($date_of_day, $serviceProviderId = null): array
+    private function getEventsPerDayForServiceProvider($date_of_day, $serviceProviderId = null): array
     {
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
@@ -149,6 +152,8 @@ class CalendarController extends Controller
     /**
      * @return array<string, mixed>
      */
+    //@todo: Refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createCalendarData(
         $type = '',
         ?Project $project = null,
@@ -222,7 +227,7 @@ class CalendarController extends Controller
             $better = collect($calendarPeriod)
                 ->mapWithKeys(fn($date) => [
                     $date->format('d.m.') => CalendarEventResource::collection(
-                        $this->get_events_of_day($date, $room, $project?->id)
+                        $this->getEventsByDate($date, $room, $project?->id)
                     )
                 ]);
         } else {
@@ -265,7 +270,7 @@ class CalendarController extends Controller
                 ->map(fn($room) => collect($calendarPeriod)
                     ->mapWithKeys(fn($date) => [
                         $date->format('d.m.') => CalendarEventResource::collection(
-                            $this->get_events_of_day($date, $room, $project?->id)
+                            $this->getEventsByDate($date, $room, $project?->id)
                         )
                     ]));
 
@@ -307,7 +312,7 @@ class CalendarController extends Controller
         $totalPlannedWorkingHours = 0;
 
         foreach ($calendarPeriod as $date) {
-            $events = $this->get_events_per_day($date, $user->id);
+            $events = $this->getEventsPerDay($date, $user->id);
 
             // Calculate planned working hours for this day
             $plannedWorkingHours = 0;
@@ -381,7 +386,7 @@ class CalendarController extends Controller
         $totalPlannedWorkingHours = 0;
 
         foreach ($calendarPeriod as $date) {
-            $events = $this->get_events_per_day_for_freelancer($date, $freelancer->id);
+            $events = $this->getEventsPerDayForFreelancer($date, $freelancer->id);
             // Calculate planned working hours for this day
             $plannedWorkingHours = 0;
             $earliestStart = null;
@@ -455,7 +460,7 @@ class CalendarController extends Controller
         $totalPlannedWorkingHours = 0;
 
         foreach ($calendarPeriod as $date) {
-            $events = $this->get_events_per_day_for_service_provider($date, $serviceProvider->id);
+            $events = $this->getEventsPerDayForServiceProvider($date, $serviceProvider->id);
             // Calculate planned working hours for this day
             $plannedWorkingHours = 0;
 
@@ -558,7 +563,7 @@ class CalendarController extends Controller
                     $date->format('d.m.') => [
                         'roomName' => $room->name,
                         'events' => CalendarShowEventResource::collection(
-                            $this->get_events_of_day($date, $room, $project?->id)
+                            $this->getEventsByDate($date, $room, $project?->id)
                         )
                     ]
                 ]));
@@ -597,6 +602,8 @@ class CalendarController extends Controller
         return CalendarEventResource::collection($eventsByRoom)->collection->groupBy('room.id');
     }
 
+    //@todo: Refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function filterEvents(
         $query,
         $startDate,

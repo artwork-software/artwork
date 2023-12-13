@@ -31,7 +31,7 @@ class Area extends Model
         return $this->hasMany(Room::class);
     }
 
-    public function trashed_rooms(): HasMany
+    public function trashedRooms(): HasMany
     {
         return $this->rooms()->onlyTrashed();
     }

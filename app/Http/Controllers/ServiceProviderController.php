@@ -104,8 +104,8 @@ class ServiceProviderController extends Controller
             return Redirect::back();
         }
 
-        if (!$serviceProvider->assigned_crafts->contains($craftToAssign)) {
-            $serviceProvider->assigned_crafts()->attach(Craft::find($request->get('craftId')));
+        if (!$serviceProvider->assignedCrafts->contains($craftToAssign)) {
+            $serviceProvider->assignedCrafts()->attach(Craft::find($request->get('craftId')));
         }
 
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
@@ -113,7 +113,7 @@ class ServiceProviderController extends Controller
 
     public function removeCraft(ServiceProvider $serviceProvider, Craft $craft): RedirectResponse
     {
-        $serviceProvider->assigned_crafts()->detach($craft);
+        $serviceProvider->assignedCrafts()->detach($craft);
 
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
     }

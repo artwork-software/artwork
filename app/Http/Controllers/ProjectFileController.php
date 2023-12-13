@@ -49,14 +49,14 @@ class ProjectFileController extends Controller
             'basename' => $basename,
         ]);
 
-        $projectFile->accessing_users()->sync(collect($request->accessibleUsers));
+        $projectFile->accessingUsers()->sync(collect($request->accessibleUsers));
 
         if (is_array($request->accessibleUsers)) {
             if (!in_array(Auth::id(), $request->accessibleUsers)) {
-                $projectFile->accessing_users()->save(Auth::user());
+                $projectFile->accessingUsers()->save(Auth::user());
             }
         } else {
-            $projectFile->accessing_users()->save(Auth::user());
+            $projectFile->accessingUsers()->save(Auth::user());
         }
 
         if ($request->comment) {
@@ -72,7 +72,7 @@ class ProjectFileController extends Controller
         $projectController = new ProjectController();
         $projectController->setPublicChangesNotification($project->id);
 
-        $projectFileUsers =  $projectFile->accessing_users()->get();
+        $projectFileUsers =  $projectFile->accessingUsers()->get();
         $notificationTitle = 'Ein Dokument wurde für dich freigegeben';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
@@ -122,7 +122,7 @@ class ProjectFileController extends Controller
         $original_name = '';
 
         if ($request->get('accessibleUsers')) {
-            $projectFile->accessing_users()->sync(collect($request->accessibleUsers));
+            $projectFile->accessingUsers()->sync(collect($request->accessibleUsers));
         }
 
         if ($request->file('file')) {
@@ -149,7 +149,7 @@ class ProjectFileController extends Controller
         $projectFile->save();
 
         $project = $projectFile->project()->first();
-        $projectFileUsers =  $projectFile->accessing_users()->get();
+        $projectFileUsers =  $projectFile->accessingUsers()->get();
         $notificationTitle = 'Ein Dokument wurde geändert';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
@@ -194,7 +194,7 @@ class ProjectFileController extends Controller
         $projectController = new ProjectController();
         $projectController->setPublicChangesNotification($project->id);
 
-        $projectFileUsers =  $projectFile->accessing_users()->get();
+        $projectFileUsers =  $projectFile->accessingUsers()->get();
         $notificationTitle = 'Ein Dokument wurde gelöscht';
         $broadcastMessage = [
             'id' => rand(1, 1000000),

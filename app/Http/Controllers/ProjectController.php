@@ -278,6 +278,8 @@ class ProjectController extends Controller
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
 
+    //@todo: Refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function updateEntranceData(Project $project, Request $request)
     {
         $oldNumOfGuest = $project->num_of_guests;
@@ -1814,6 +1816,8 @@ class ProjectController extends Controller
         ]);
     }
 
+    //@todo: Refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function projectShiftTab(Project $project): Response|ResponseFactory
     {
         $project->load([
@@ -1983,6 +1987,8 @@ class ProjectController extends Controller
         ]);
     }
 
+    //@todo: Refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function projectBudgetTab(Project $project): Response|ResponseFactory
     {
         $project->load([
@@ -2086,7 +2092,7 @@ class ProjectController extends Controller
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
         //load commented budget items setting for given user
-        Auth::user()->load(['commented_budget_items_setting']);
+        Auth::user()->load(['commentedBudgetItemsSetting']);
 
         return inertia('Projects/SingleProjectBudget', [
             'project' => new ProjectBudgetResource($project),
@@ -2546,6 +2552,8 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($projectId);
     }
 
+    //@todo: Refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     private function createNotificationProjectMemberChanges(
         Project $project,
         $projectManagerBefore,

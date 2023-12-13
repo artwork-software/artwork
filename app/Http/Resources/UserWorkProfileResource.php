@@ -34,9 +34,9 @@ class UserWorkProfileResource extends JsonResource
                 ->get()
                 ->merge($this->crafts)
                 ->toArray(),
-            'assignedCrafts' => $this->assigned_crafts,
+            'assignedCrafts' => $this->assignedCrafts,
             'assignableCrafts' => Craft::query()->get()->filter(
-                fn($craft) => !$this->assigned_crafts->pluck('id')->contains($craft->id)
+                fn($craft) => !$this->assignedCrafts->pluck('id')->contains($craft->id)
             )->toArray()
         ];
     }

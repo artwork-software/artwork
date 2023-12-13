@@ -319,8 +319,8 @@ class NotificationService
                         $this->getNotificationTo(),
                         new RoomRequestNotification($body, $this->getBroadcastMessage())
                     );
-                    break;
                 }
+                break;
             case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:
                 if ($this->getNotificationTo() !== Auth::id()) {
                     Notification::send(

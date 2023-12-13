@@ -17,7 +17,7 @@ class ContractPolicy
 
     public function view(User $user, Contract $contract): bool
     {
-        return $contract->accessing_users->contains($user->id) || $contract->project->managerUsers->contains($user->id);
+        return $contract->accessingUsers->contains($user->id) || $contract->project->managerUsers->contains($user->id);
     }
 
     public function create(): bool
@@ -27,12 +27,12 @@ class ContractPolicy
 
     public function update(User $user, contract $contract): bool
     {
-        return $contract->accessing_users->contains($user->id) || $contract->project->managerUsers->contains($user->id);
+        return $contract->accessingUsers->contains($user->id) || $contract->project->managerUsers->contains($user->id);
     }
 
     public function delete(User $user, Contract $contract): bool
     {
-        return $contract->accessing_users->contains($user->id) || $contract->project->managerUsers->contains($user->id);
+        return $contract->accessingUsers->contains($user->id) || $contract->project->managerUsers->contains($user->id);
     }
 
     public function restore(): void

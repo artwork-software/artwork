@@ -64,11 +64,15 @@ class Contract extends Model
         return $this->belongsTo(Project::class, 'project_id');
     }
 
+    //@todo: fix phpcs error - refactor function name to companyType
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function company_type(): BelongsTo
     {
         return $this->belongsTo(CompanyType::class, 'company_type_id');
     }
 
+    //@todo: fix phpcs error - refactor function name to contractType
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function contract_type(): BelongsTo
     {
         return $this->belongsTo(ContractType::class, 'contract_type_id');
@@ -79,7 +83,7 @@ class Contract extends Model
         return $this->belongsTo(Currency::class, 'currency_id');
     }
 
-    public function accessing_users(): BelongsToMany
+    public function accessingUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
     }

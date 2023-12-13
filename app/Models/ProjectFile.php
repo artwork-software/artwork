@@ -32,7 +32,7 @@ class ProjectFile extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function accessing_users(): BelongsToMany
+    public function accessingUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
     }

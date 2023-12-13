@@ -98,7 +98,7 @@ class Freelancer extends Model
         return $this->hasMany(FreelancerVacation::class);
     }
 
-    public function assigned_crafts(): BelongsToMany
+    public function assignedCrafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'freelancer_assigned_crafts');
     }

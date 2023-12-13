@@ -9,6 +9,9 @@ use Illuminate\Validation\Rule;
 
 class ChecklistUpdateRequest extends EventStoreOrUpdateRequest
 {
+    /**
+     * @return string[][]
+     */
     public function rules(): array
     {
         return [
@@ -30,6 +33,9 @@ class ChecklistUpdateRequest extends EventStoreOrUpdateRequest
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function data(): array
     {
         return $this->only(['user_id', 'name']);

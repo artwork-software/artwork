@@ -24,6 +24,8 @@ class SubPositionVerified extends Model
         'requested'
     ];
 
+    //@todo: fix phpcs error - refactor function name to subPosition
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function sub_position(): BelongsTo
     {
         return $this->belongsTo(SubPosition::class);

@@ -95,6 +95,8 @@ class Shift extends Model
             ->withCasts(['is_master' => 'boolean']);
     }
 
+    //@todo: fix phpcs error - refactor function name to serviceProvider
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function service_provider(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -102,8 +104,7 @@ class Shift extends Model
             'shifts_service_providers',
             'shift_id',
             'service_provider_id'
-        )
-            ->withPivot(['is_master', 'shift_count'])
+        )->withPivot(['is_master', 'shift_count'])
             ->orderByPivot('is_master', 'desc')
             ->withCasts(['is_master' => 'boolean'])
             ->without(['contacts']);

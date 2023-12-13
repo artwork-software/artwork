@@ -35,6 +35,8 @@ class ShiftPreset extends Model
         return $this->hasMany(PresetShift::class);
     }
 
+    //@todo: fix phpcs error - refactor function name to eventType
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function event_type(): BelongsTo
     {
         return $this->belongsTo(EventType::class);

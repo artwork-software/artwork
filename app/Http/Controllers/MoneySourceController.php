@@ -150,7 +150,7 @@ class MoneySourceController extends Controller
     public function show(MoneySource $moneySource): Response|ResponseFactory
     {
         $moneySource->load([
-            'money_source_files'
+            'moneySourceFiles'
         ]);
         $amount = $moneySource->amount;
         $subMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
@@ -342,7 +342,7 @@ class MoneySourceController extends Controller
                 'end_date' => $moneySource->end_date,
                 'users' => $moneySource->users()->get(),
                 'group_id' => $moneySource->group_id,
-                'money_source_files' => MoneySourceFileResource::collection($moneySource->money_source_files),
+                'money_source_files' => MoneySourceFileResource::collection($moneySource->moneySourceFiles),
                 'moneySourceGroup' => MoneySource::find($moneySource->group_id),
                 'subMoneySources' => $subMoneySources->map(fn($source) => [
                     'id' => $source->id,
@@ -458,7 +458,7 @@ class MoneySourceController extends Controller
     public function updateUsers(Request $request, MoneySource $moneySource): void
     {
         $moneySource->users()->sync(collect($request->users));
-        $tasks = $moneySource->money_source_tasks()->get();
+        $tasks = $moneySource->moneySourceTasks()->get();
         foreach ($tasks as $task) {
             $task->money_source_task_users()->sync($moneySource->competent()->get());
         }

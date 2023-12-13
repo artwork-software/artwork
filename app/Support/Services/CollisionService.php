@@ -64,6 +64,9 @@ class CollisionService
         return $this->getCollision($request)->count();
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getConflictEvents($request): array
     {
         $conflictEvents = self::getCollision($request)->get();
@@ -80,6 +83,9 @@ class CollisionService
         return $conflictObj;
     }
 
+    /**
+     * @return Event[]
+     */
     public function adjoiningCollision($request): array
     {
         $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));

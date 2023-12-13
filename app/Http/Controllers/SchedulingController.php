@@ -15,8 +15,6 @@ use App\Support\Services\NotificationService;
 use Carbon\Carbon;
 use DateTime;
 use Exception;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use stdClass;
 
 class SchedulingController extends Controller
@@ -84,6 +82,8 @@ class SchedulingController extends Controller
     /**
      * @throws Exception
      */
+    //@todo: Refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function sendDeadlineNotification(): void
     {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_REMINDER;
@@ -212,6 +212,8 @@ class SchedulingController extends Controller
         }
     }
 
+    //@todo: Refactor function because nesting level and complexity is too high
+    //phpcs:ignore Generic.Metrics.NestingLevel.TooHigh, Generic.Metrics.CyclomaticComplexity.TooHigh
     public function sendNotification(): void
     {
         $scheduleToNotify = Scheduling::where(

@@ -50,7 +50,7 @@ class MoneySource extends Model
         'pinned_by_users' => 'array',
     ];
 
-    public function users()
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'money_source_users')->withPivot(
             'competent',
@@ -58,17 +58,19 @@ class MoneySource extends Model
         )->using(MoneySourceUserPivot::class);
     }
 
-    public function pinnedByUsers()
+    public function pinnedByUsers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'money_source_user_pinned')->using(MoneySourceUserPinned::class);
+        return $this->belongsToMany(User::class, 'money_source_user_pinned')
+            ->using(MoneySourceUserPinned::class);
     }
 
     public function competent(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'money_source_users')->wherePivot('competent', true)->using(MoneySourceUserPivot::class);
+        return $this->belongsToMany(User::class, 'money_source_users')
+            ->wherePivot('competent', true)->using(MoneySourceUserPivot::class);
     }
 
-    public function money_source_tasks(): HasMany
+    public function moneySourceTasks(): HasMany
     {
         return $this->hasMany(MoneySourceTask::class, 'money_source_id');
     }
@@ -88,7 +90,7 @@ class MoneySource extends Model
             'is_group' => $this->is_group
         ];
     }
-    public function money_source_files(): HasMany
+    public function moneySourceFiles(): HasMany
     {
         return $this->hasMany(MoneySourceFile::class);
     }

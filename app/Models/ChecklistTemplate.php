@@ -25,6 +25,8 @@ class ChecklistTemplate extends Model
         'user_id',
     ];
 
+    //@todo: fix phpcs error - refactor function name to taskTemplate
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function task_templates()
     {
         return $this->hasMany(TaskTemplate::class);
@@ -35,6 +37,9 @@ class ChecklistTemplate extends Model
         return $this->belongsToMany(User::class);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toSearchableArray(): array
     {
         return [

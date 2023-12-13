@@ -20,7 +20,7 @@ class ServiceProviderDropResource extends JsonResource
             'id' => $this->id,
             'provider_name' => $this->provider_name,
             'profile_photo_url' => $this->profile_image,
-            'assigned_crafts_ids' => $this->assigned_crafts->pluck('id'),
+            'assigned_crafts_ids' => $this->assignedCrafts->pluck('id'),
         ];
     }
 }

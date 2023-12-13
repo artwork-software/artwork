@@ -24,7 +24,7 @@ class MainPositionVerified extends Model
         'requested'
     ];
 
-    public function main_position(): BelongsTo
+    public function mainPosition(): BelongsTo
     {
         return $this->belongsTo(MainPosition::class);
     }

@@ -14,6 +14,7 @@
                                       @openHistoryModal="openHistoryModal"
                                       :user_filters="user_filters"
                 ></ShiftPlanFunctionBar>
+
                 <table class="w-full bg-white">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                     <div>
@@ -28,7 +29,7 @@
                         </tr>
                         <tbody class="w-full pt-3">
                         <tr v-for="(room,index) in shiftPlan" class="w-full flex">
-                            <th class="xsDark flex items-center -mt-2 h-28 w-40"
+                            <th class="xsDark flex items-center -mt-2 h-28 w-44"
                                 :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
                                 <Link class="flex font-semibold items-center ml-4">
                                     {{ room[days[0].day].roomName }}
@@ -37,7 +38,7 @@
                             <td v-for="day in days" :style="{minWidth: 200 + 'px'}"
                                 class="max-h-28 overflow-y-auto cell">
                                 <div v-for="event in room[day.day].events.data" class="mb-1">
-                                    <SingleShiftPlanEvent :highlightMode="highlightMode" :highlighted-id="idToHighlight" :highlighted-type="typeToHighlight" :eventType="this.findEventTypeById(event.eventTypeId)"
+                                    <SingleShiftPlanEvent :multiEditMode="multiEditMode" :highlightMode="highlightMode" :highlighted-id="idToHighlight" :highlighted-type="typeToHighlight" :eventType="this.findEventTypeById(event.eventTypeId)"
                                                           :project="this.findProjectById(event.projectId)"
                                                           :event="event" v-if="event.shifts.length > 0"/>
                                 </div>
@@ -87,13 +88,27 @@
                                         Schichten hervorheben
                                     </div>
                                 </th>
+                                <th class="flex items-center pl-2 py-1">
+                                    <Switch @click="toggleMultiEditMode"
+                                            :class="[multiEditMode ?
+                                        'bg-indigo-500' :
+                                        'bg-gray-300',
+                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
+                                    <span aria-hidden="true"
+                                          :class="[multiEditMode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
+                                    </Switch>
+                                    <div :class="[multiEditMode ? 'xsLight text-secondaryHover' : 'xsLight','ml-1']">
+                                        Multi-Edit
+                                    </div>
+                                </th>
                             </tr>
                             <tbody class="w-full pt-3">
                             <tr v-for="(user,index) in dropUsers" class="w-full flex">
-                                <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1 w-44"
-                                    :class="index % 2 === 0 ? '' : ''">
-                                    <DragElement v-if="!highlightMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
+                                    <DragElement v-if="!highlightMode && !multiEditMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
                                                  :planned-hours="user.plannedWorkingHours" :type="user.type"/>
+                                    <MultiEditUserCell v-else-if="multiEditMode && !highlightMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                                       :planned-hours="user.plannedWorkingHours" :type="user.type" @addUserToMultiEdit="addUserToMultiEdit" :userForMultiEdit="userForMultiEdit" :multiEditMode="multiEditMode" />
                                     <HighlightUserCell v-else :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false" :item="user.element" :expected-hours="user.expectedWorkingHours"
                                                        :planned-hours="user.plannedWorkingHours" :type="user.type"
                                                        @highlightShiftsOfUser="highlightShiftsOfUser"/>
@@ -118,11 +133,33 @@
                     </table>
                 </div>
             </div>
+
+
+
             <show-user-shifts-modal v-if="showUserShifts" @closed="showUserShifts = false" :user="userToShow"
                                     :day="dayToShow" :projects="projects" />
             <ShiftHistoryModal :history="history[0]" v-if="showHistoryModal" @closed="showHistoryModal = false"/>
 
         </ShiftHeader>
+
+        <div class="fixed bottom-1 w-full" v-if="multiEditMode">
+            <div v-show="multiEditFeedback" class="flex items-center justify-center text-red-500 my-2">
+                {{ multiEditFeedback }}
+            </div>
+            <div class="flex items-center justify-center gap-4">
+                <div>
+                    <button type="button" @click="multiEditMode = false" class="rounded-full bg-gray-100 px-14 py-3 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        Abbrechen
+                    </button>
+                </div>
+                <div>
+                    <button type="button" @click="saveMultiEdit" class="rounded-full bg-indigo-900 px-14 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        Speichern
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
 </template>
@@ -146,11 +183,13 @@ import ShowUserShiftsModal from "@/Pages/Shifts/Components/showUserShiftsModal.v
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
 import {Switch} from "@headlessui/vue";
+import MultiEditUserCell from "@/Pages/Shifts/Components/MultiEditUserCell.vue";
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        MultiEditUserCell,
         Switch,
         DragElement, ShowUserShiftsModal,
         ShiftHistoryModal,
@@ -323,11 +362,42 @@ export default {
             this.showUserShifts = true
         },
         toggleHighlightMode() {
+            this.multiEditMode = false;
             this.highlightMode = !this.highlightMode;
+        },
+        toggleMultiEditMode() {
+            this.highlightMode = false;
+            this.multiEditMode = !this.multiEditMode;
         },
         highlightShiftsOfUser(id, type) {
             this.idToHighlight = id;
             this.typeToHighlight = type;
+        },
+        addUserToMultiEdit(item){
+            this.userForMultiEdit = item;
+        },
+        saveMultiEdit(){
+            this.multiEditFeedback = '';
+            if(this.userForMultiEdit === null){
+                this.multiEditFeedback = 'Bitte wähle einen Nutzer*in aus!';
+                return;
+            }
+            if(this.checkedShiftsForMultiEdit.length === 0){
+                this.multiEditFeedback = 'Bitte wähle mindestens eine Schicht aus!';
+                return;
+            }
+
+
+            Inertia.post(route('shift.multi.edit.save'), {
+                shifts: this.checkedShiftsForMultiEdit,
+                user: this.userForMultiEdit
+            }, {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => {
+                    this.multiEditMode = false;
+                }
+            })
         }
     },
     data() {
@@ -341,6 +411,10 @@ export default {
             highlightMode: false,
             idToHighlight: null,
             typeToHighlight: null,
+            multiEditMode: false,
+            checkedShiftsForMultiEdit: [],
+            userForMultiEdit: null,
+            multiEditFeedback: null,
         }
     },
     beforeDestroy() {
@@ -348,6 +422,37 @@ export default {
         this.$refs.shiftPlan.removeEventListener('scroll', this.syncScrollShiftPlan);
         this.$refs.userOverview.removeEventListener('scroll', this.syncScrollUserOverview);
     },
+
+    watch: {
+        shiftPlan: {
+            handler() {
+                this.checkedShiftsForMultiEdit = [];
+                this.shiftPlan.forEach((room) => {
+                    this.days.forEach((day) => {
+                        room[day.day].events.data.forEach((event) => {
+                            event.shifts.forEach((shift) => {
+                                if (shift.isCheckedForMultiEdit) {
+                                    this.checkedShiftsForMultiEdit.push(shift.id)
+                                }
+                            })
+                        })
+                    })
+                })
+            },
+            deep: true
+        },
+        multiEditMode: {
+            handler() {
+                if (!this.multiEditMode) {
+                    this.userForMultiEdit = null;
+                    this.dropUsers.forEach((user) => {
+                        user.element.checkedForMultiEdit = false
+                    })
+                }
+            },
+            deep: true
+        }
+    }
 
 }
 

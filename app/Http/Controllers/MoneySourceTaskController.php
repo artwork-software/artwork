@@ -19,7 +19,7 @@ class MoneySourceTaskController extends Controller
     {
     }
 
-    public function store(Request $request): Response
+    public function store(Request $request): void
     {
         $moneySource = MoneySource::find($request->money_source);
         $task = $moneySource->moneySourceTasks()->create([
@@ -40,7 +40,7 @@ class MoneySourceTaskController extends Controller
     {
     }
 
-    public function markAsDone(MoneySourceTask $moneySourceTask): Response
+    public function markAsDone(MoneySourceTask $moneySourceTask): void
     {
         $moneySourceTask->update(['done' => true]);
     }
@@ -50,7 +50,7 @@ class MoneySourceTaskController extends Controller
         $moneySourceTask->update(['done' => false]);
     }
 
-    public function destroy(MoneySourceTask $moneySourceTask): Response
+    public function destroy(MoneySourceTask $moneySourceTask): void
     {
         $moneySourceTask->delete();
     }

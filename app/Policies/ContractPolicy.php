@@ -37,11 +37,9 @@ class ContractPolicy
 
     public function restore(): void
     {
-        //
     }
 
-    public function forceDelete(): bool
+    public function forceDelete(): void
     {
-        //
     }
 }

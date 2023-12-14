@@ -78,7 +78,7 @@ class ProjectHeadlineController extends Controller
         $projectController->setPublicChangesNotification($project->id);
     }
 
-    public function updateOrder(Request $request)
+    public function updateOrder(Request $request): RedirectResponse
     {
         foreach ($request->headlines as $headline) {
             ProjectHeadline::findOrFail($headline['id'])->update(['order' => $headline['order']]);
@@ -87,7 +87,7 @@ class ProjectHeadlineController extends Controller
         return Redirect::back();
     }
 
-    public function destroy(ProjectHeadline $projectHeadline): Response
+    public function destroy(ProjectHeadline $projectHeadline): void
     {
         $projectHeadline->delete();
 

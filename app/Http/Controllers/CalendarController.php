@@ -260,7 +260,7 @@ class CalendarController extends Controller
 
             // Überprüfe, ob work_shifts false ist und entferne 'events.shifts' aus dem Array
             if (!$this->calendarSettings->work_shifts) {
-                unset($relations['events.shifts']);
+                unset($relations[array_search('events.shifts', $relations)]);
             }
 
             // Führe die Abfrage mit den vorbereiteten Beziehungen aus

@@ -93,8 +93,8 @@
     },
     "scripts-descriptions": {
         "phpstan": "Run PHPStan static analysis against your application.",
-        "phpcs": "Run PHP-CS static analysis against your application.",
-        "phpcbf": "Run PHPStan static analysis against your application."
+        "phpcs": "Detect violations of the defined coding standard.",
+        "phpcbf": "Automatically correct coding standard violations."
     },
     "extra": {
         "laravel": {

@@ -435,7 +435,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Money Sources
     Route::get('/money_sources', [MoneySourceController::class, 'index'])->name('money_sources.index');
-    Route::get('/money_sources/settings', [MoneySourceController::class, 'showSettings'])->name('money_sources.settings');
+    Route::get('/money_sources/settings', [MoneySourceController::class, 'showSettings'])
+        ->name('money_sources.settings');
     Route::get('/money_sources/search', [MoneySourceController::class, 'search'])->name('money_sources.search');
     Route::get('/money_sources/{moneySource}', [MoneySourceController::class, 'show'])->name('money_sources.show');
     Route::patch('/money_sources/{moneySource}', [MoneySourceController::class, 'update'])
@@ -451,7 +452,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
 
     // MoneySourceCategories
-    Route::post('/money_source/categories', [MoneySourceCategoryController::class, 'store'])->name('money_source_categories.store');
+    Route::post('/money_source/categories', [MoneySourceCategoryController::class, 'store'])
+        ->name('money_source_categories.store');
     Route::delete('/money_source/categories/{moneySourceCategory}', [MoneySourceCategoryController::class, 'destroy']);
 
     //Contracts

@@ -3,22 +3,16 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Http\Resources\MissingValue;
 
-/**
- * @mixin \App\Models\Project
- */
 class ProjectIndexAdminResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         return [
             'resource' => class_basename($this),

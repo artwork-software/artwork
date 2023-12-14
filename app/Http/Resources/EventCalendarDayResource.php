@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use App\Models\Event;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class EventCalendarDayResource extends JsonResource
@@ -12,11 +11,9 @@ class EventCalendarDayResource extends JsonResource
     public static $wrap = null;
 
     /**
-     * Transform the resource collection into an array.
-     *
-     * @param  Request  $request
      * @return array<string, mixed>
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
         /** @var Carbon $date */

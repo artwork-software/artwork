@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Department;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Department>
+ * @extends Factory<Department>
  */
 class DepartmentFactory extends Factory
 {
@@ -14,7 +15,7 @@ class DepartmentFactory extends Factory
      *
      * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'name' => 'Team ' . $this->faker->domainName,

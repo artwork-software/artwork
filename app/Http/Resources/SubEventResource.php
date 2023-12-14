@@ -6,17 +6,14 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class SubEventResource extends JsonResource
 {
-
     public static $wrap = null;
-    /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
-     */
-    public function toArray($request)
-    {
 
+    /**
+     * @return array<string, mixed>
+     */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
+    {
         return [
             'id' => $this->id,
             'title' => $this->eventName,
@@ -29,7 +26,7 @@ class SubEventResource extends JsonResource
             'eventTypeName' => $this->type->name,
             'eventTypeId' => $this->type->id,
             'eventType' => $this->type,
-            'eventTypeAbbreviation' =>$this->type->abbreviation,
+            'eventTypeAbbreviation' => $this->type->abbreviation,
             'allDay' => $this->allDay,
         ];
     }

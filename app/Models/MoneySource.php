@@ -5,28 +5,31 @@ namespace App\Models;
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Date;
 use Laravel\Scout\Searchable;
 
 /**
  * @property int $id
+ * @property int $creator_id
  * @property string $name
  * @property float $amount
- * @property Date $start_date
- * @property Date $end_date
  * @property string $source_name
- * @property string $description
- * @property boolean $is_group
+ * @property string $start_date
+ * @property string $end_date
  * @property array $users
  * @property int $group_id
+ * @property string $description
+ * @property int $is_group
+ * @property string $created_at
+ * @property string $updated_at
  */
 class MoneySource extends Model
 {
     use HasFactory;
     use Searchable;
     use HasChangesHistory;
-
 
     protected $fillable = [
         'name',
@@ -49,8 +52,7 @@ class MoneySource extends Model
         'pinned_by_users' => 'array',
     ];
 
-
-    public function users()
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'money_source_users')->withPivot(
             'competent',
@@ -58,26 +60,30 @@ class MoneySource extends Model
         )->using(MoneySourceUserPivot::class);
     }
 
-    public function pinnedByUsers()
+    public function pinnedByUsers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'money_source_user_pinned')->using(MoneySourceUserPinned::class);
+        return $this->belongsToMany(User::class, 'money_source_user_pinned');
     }
 
-    public function competent(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function competent(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'money_source_users')->wherePivot('competent', true)->using(MoneySourceUserPivot::class);
+        return $this->belongsToMany(User::class, 'money_source_users')
+            ->wherePivot('competent', true)->using(MoneySourceUserPivot::class);
     }
 
-    public function money_source_tasks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function moneySourceTasks(): HasMany
     {
         return $this->hasMany(MoneySourceTask::class, 'money_source_id');
     }
 
-    public function projects()
+    public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'money_source_project');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toSearchableArray(): array
     {
         return [
@@ -85,7 +91,7 @@ class MoneySource extends Model
             'is_group' => $this->is_group
         ];
     }
-    public function money_source_files()
+    public function moneySourceFiles(): HasMany
     {
         return $this->hasMany(MoneySourceFile::class);
     }

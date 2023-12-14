@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('area_filter', function (Blueprint $table) {
+        Schema::create('area_filter', function (Blueprint $table): void {
             $table->id();
             $table->integer('area_id');
             $table->integer('filter_id');
@@ -26,7 +26,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('area_filter');
     }

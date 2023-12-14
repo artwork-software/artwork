@@ -9,17 +9,12 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class CalendarEventCollectionResource extends ResourceCollection
 {
-    /**
-     * @var null
-     */
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param $request
      * @return array<string, mixed>
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
         /** @var CalendarEventCollectionResourceModel $resource */

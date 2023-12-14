@@ -2,9 +2,17 @@
 <ruleset name="artwork-rules">
     <description>Ruleset for the artwork project</description>
 
-    <!-- PSR standards -->
-    <rule ref="PSR1"/>
-    <rule ref="PSR2"/>
+    <!-- Files/Directories to check -->
+    <file>app</file>
+    <file>artwork</file>
+    <file>config</file>
+    <file>database</file>
+    <file>routes</file>
+
+    <!-- Excluded files/directories -->
+    <exclude-pattern>./config/debugbar.php</exclude-pattern>
+
+    <!-- PSR standard -->
     <rule ref="PSR12"/>
 
     <!-- Laravel coding style -->

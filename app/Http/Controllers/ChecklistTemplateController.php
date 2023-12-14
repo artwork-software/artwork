@@ -20,11 +20,6 @@ class ChecklistTemplateController extends Controller
         $this->authorizeResource(ChecklistTemplate::class);
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return Response|ResponseFactory
-     */
     public function index(): Response|ResponseFactory
     {
         return inertia('ChecklistTemplates/ChecklistTemplateManagement', [
@@ -43,22 +38,11 @@ class ChecklistTemplateController extends Controller
         )->resolve();
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return Response|ResponseFactory
-     */
     public function create(): Response|ResponseFactory
     {
         return inertia('ChecklistTemplates/Create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param Request $request
-     * @return RedirectResponse
-     */
     public function store(Request $request): RedirectResponse
     {
         if ($request->checklist_id) {
@@ -70,10 +54,6 @@ class ChecklistTemplateController extends Controller
         return Redirect::route('checklist_templates.management')->with('success', 'ChecklistTemplate created.');
     }
 
-    /**
-     * @param Request $request
-     * @return void
-     */
     protected function createFromChecklist(Request $request): void
     {
         $checklist = Checklist::where('id', $request->checklist_id)->first();
@@ -95,10 +75,6 @@ class ChecklistTemplateController extends Controller
         $checklist_template->users()->sync(collect($checklist->users)->pluck('id'));
     }
 
-    /**
-     * @param Request $request
-     * @return void
-     */
     protected function createFromScratch(Request $request): void
     {
         $checklist_template = ChecklistTemplate::create([
@@ -115,12 +91,6 @@ class ChecklistTemplateController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param ChecklistTemplate $checklistTemplate
-     * @return Response|ResponseFactory
-     */
     public function show(ChecklistTemplate $checklistTemplate): Response|ResponseFactory
     {
         return inertia('ChecklistTemplates/Show', [
@@ -128,12 +98,6 @@ class ChecklistTemplateController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param ChecklistTemplate $checklistTemplate
-     * @return Response|ResponseFactory
-     */
     public function edit(ChecklistTemplate $checklistTemplate): Response|ResponseFactory
     {
         return inertia('ChecklistTemplates/Edit', [
@@ -141,11 +105,6 @@ class ChecklistTemplateController extends Controller
         ]);
     }
 
-    /**
-     * @param Request $request
-     * @param ChecklistTemplate $checklistTemplate
-     * @return RedirectResponse
-     */
     public function update(Request $request, ChecklistTemplate $checklistTemplate): RedirectResponse
     {
         $checklistTemplate->update($request->only('name'));
@@ -166,12 +125,6 @@ class ChecklistTemplateController extends Controller
             ->with('success', 'ChecklistTemplate updated');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param ChecklistTemplate $checklistTemplate
-     * @return RedirectResponse
-     */
     public function destroy(ChecklistTemplate $checklistTemplate): RedirectResponse
     {
         $checklistTemplate->delete();

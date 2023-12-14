@@ -10,11 +10,6 @@ use Illuminate\Database\Eloquent\Builder;
 
 class EventBuilder extends Builder
 {
-    /**
-     * @param Carbon $dateTime
-     * @param bool $respectiveToTime
-     * @return self
-     */
     public function occursAt(Carbon $dateTime, bool $respectiveToTime = false): self
     {
         if (! $respectiveToTime) {
@@ -26,12 +21,6 @@ class EventBuilder extends Builder
             ->where('end_time', '<=', $dateTime);
     }
 
-    /**
-     * @param CarbonInterface $start
-     * @param CarbonInterface $end
-     * @param bool $respectiveToTime
-     * @return self
-     */
     public function whereOccursBetween(
         CarbonInterface $start,
         CarbonInterface $end,
@@ -56,10 +45,6 @@ class EventBuilder extends Builder
                 ->where('end_time', '<=', $end)));
     }
 
-    /**
-     * @param User $user
-     * @return self
-     */
     public function visibleForUser(User $user): self
     {
         if ($user->can("admin rooms") || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
@@ -70,9 +55,6 @@ class EventBuilder extends Builder
             ->whereHas('roomAdministrators', fn (Builder $builder) => $builder->where('id', $user->id));
     }
 
-    /**
-     * @return self
-     */
     public function withCollisionCount(): self
     {
         return $this->withCount([
@@ -82,9 +64,6 @@ class EventBuilder extends Builder
         ]);
     }
 
-    /**
-     * @return self
-     */
     public function whereHasCollision(): self
     {
         return $this->where(fn (EventBuilder $sameTimeBuilder) => $sameTimeBuilder
@@ -96,10 +75,6 @@ class EventBuilder extends Builder
                 ->whereColumn('end_time', '<=', 'events.end_time')));
     }
 
-    /**
-     * @param array $filter
-     * @return self
-     */
     public function applyFilter(array $filter): self
     {
         if (!(empty($filter['roomIds']) && empty($filter['areaIds']) && empty($filter['roomAttributeIds']))) {

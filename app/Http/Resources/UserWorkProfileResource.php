@@ -3,17 +3,20 @@
 namespace App\Http\Resources;
 
 use App\Models\Craft;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin User
+ */
 class UserWorkProfileResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * @param Request $request
-     * @return array
+     * @return array<string, mixed>
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
         return [
@@ -31,9 +34,9 @@ class UserWorkProfileResource extends JsonResource
                 ->get()
                 ->merge($this->crafts)
                 ->toArray(),
-            'assignedCrafts' => $this->assigned_crafts,
+            'assignedCrafts' => $this->assignedCrafts,
             'assignableCrafts' => Craft::query()->get()->filter(
-                fn($craft) => !$this->assigned_crafts->pluck('id')->contains($craft->id)
+                fn($craft) => !$this->assignedCrafts->pluck('id')->contains($craft->id)
             )->toArray()
         ];
     }

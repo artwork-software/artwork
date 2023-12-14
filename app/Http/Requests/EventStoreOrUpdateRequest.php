@@ -7,14 +7,14 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class EventStoreOrUpdateRequest extends FormRequest
 {
-
     use DryRunnable;
+
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return array<string, array<int, string>>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'title' => ['sometimes','nullable', 'string'],

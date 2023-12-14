@@ -14,54 +14,32 @@ use App\Support\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 
-use function React\Promise\reject;
-
 class ShiftController extends Controller
 {
     protected ?NewHistoryService $history = null;
+
     protected ?NotificationService $notificationService = null;
-    /**
-     * ShiftController constructor.
-     */
+
     public function __construct()
     {
         $this->history = new NewHistoryService('App\Models\Shift');
         $this->notificationService = new NotificationService();
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return Response
-     */
-    public function index(): Response
+    public function index(): void
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return Response
-     */
-    public function create(): Response
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param Request $request
-     * @return Response
-     */
-    public function store(Request $request, Event $event): Response
+    public function store(Request $request, Event $event): void
     {
         $shift = $event->shifts()->create($request->only([
             'start',
@@ -128,7 +106,10 @@ class ShiftController extends Controller
             $notificationDescription = [
                 1 => [
                     'type' => 'string',
-                    'title' => 'Betrifft: ' . $shift->event()->first()->project()->first()->name . ' , ' . $shift->craft()->first()->abbreviation . ' ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    'title' => 'Betrifft: ' . $shift->event()->first()->project()->first()->name . ' , ' .
+                        $shift->craft()->first()->abbreviation . ' ' .
+                        Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
+                        Carbon::parse($shift->end)->format('d.m.Y H:i'),
                     'href' => null
                 ],
             ];
@@ -136,7 +117,8 @@ class ShiftController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('blue');
             $this->notificationService->setPriority(1);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setButtons(['change_shift', 'delete_shift_notification']);
@@ -149,43 +131,24 @@ class ShiftController extends Controller
             }
         }
 
-        $this->history->createHistory($shift->id, 'Schicht von Event ' . $event->eventName . ' wurde erstellt', 'shift');
+        $this->history
+            ->createHistory($shift->id, 'Schicht von Event ' . $event->eventName . ' wurde erstellt', 'shift');
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param Shift $shift
-     * @return Response
-     */
-    public function show(Shift $shift): Response
+    public function show(): void
     {
-        //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param Shift $shift
-     * @return Response
-     */
-    public function edit(Shift $shift): Response
+    public function edit(): void
     {
-        //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param Shift $shift
-     * @return RedirectResponse
-     */
     public function update(Request $request, Shift $shift): RedirectResponse
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Schicht von Event ' . $event->eventName . ' wurde bearbeitet', 'shift');
+            $this->history
+                ->createHistory($shift->id, 'Schicht von Event ' . $event->eventName . ' wurde bearbeitet', 'shift');
         }
         $shift->update($request->only([
             'start',
@@ -200,20 +163,15 @@ class ShiftController extends Controller
         return Redirect::route('shifts.plan')->with('success', 'Shift updated');
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param Shift $shift
-     * @return RedirectResponse
-     */
     public function updateShift(Request $request, Shift $shift): RedirectResponse
     {
         $projectId =  $shift->event()->first()->project()->first()->id;
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Schicht von Event ' . $event->eventName . ' wurde bearbeitet', 'shift');
-            $notificationTitle = 'Schichtänderung trotz Festschreibung ' . $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
+            $this->history
+                ->createHistory($shift->id, 'Schicht von Event ' . $event->eventName . ' wurde bearbeitet', 'shift');
+            $notificationTitle = 'Schichtänderung trotz Festschreibung ' .
+                $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'error',
@@ -222,11 +180,11 @@ class ShiftController extends Controller
             $notificationDescription = [
                 1 => [
                     'type' => 'string',
-                    'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
+                        Carbon::parse($shift->end)->format('d.m.Y H:i'),
                     'href' => null
                 ],
             ];
-
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
@@ -248,7 +206,8 @@ class ShiftController extends Controller
                 }
             }
         } else {
-            $notificationTitle = 'Schichtänderung ' . $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
+            $notificationTitle = 'Schichtänderung ' . $shift->event()->first()->project()->first()->name . ' ' .
+                $shift->craft()->first()->abbreviation;
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -257,7 +216,8 @@ class ShiftController extends Controller
             $notificationDescription = [
                 1 => [
                     'type' => 'string',
-                    'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
+                        Carbon::parse($shift->end)->format('d.m.Y H:i'),
                     'href' => null
                 ],
             ];
@@ -273,7 +233,6 @@ class ShiftController extends Controller
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
             }
-
 
             $craft = $shift->craft()->first();
 
@@ -297,7 +256,7 @@ class ShiftController extends Controller
         return Redirect::route('projects.show.shift', $projectId)->with('success', 'Shift updated');
     }
 
-    public function updateCommitments(Request $request)
+    public function updateCommitments(Request $request): RedirectResponse
     {
         $projectId = $request->input('project_id');
         $shiftIds = $request->input('shifts');
@@ -309,19 +268,15 @@ class ShiftController extends Controller
         return Redirect::route('projects.show.shift', $projectId)->with('success', 'Shift updated');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param Shift $shift
-     * @return void
-     */
     public function destroy(Shift $shift): void
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Schicht von Event ' . $event->eventName . ' wurde gelöscht', 'shift');
+            $this->history
+                ->createHistory($shift->id, 'Schicht von Event ' . $event->eventName . ' wurde gelöscht', 'shift');
 
-            $notificationTitle = 'Schicht gelöscht trotz Festschreibung ' . $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
+            $notificationTitle = 'Schicht gelöscht trotz Festschreibung ' .
+                $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'error',
@@ -330,7 +285,8 @@ class ShiftController extends Controller
             $notificationDescription = [
                 1 => [
                     'type' => 'string',
-                    'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
+                        Carbon::parse($shift->end)->format('d.m.Y H:i'),
                     'href' => null
                 ],
             ];
@@ -358,7 +314,8 @@ class ShiftController extends Controller
                 }
             }
         } else {
-            $notificationTitle = 'Schicht gelöscht  ' . $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
+            $notificationTitle = 'Schicht gelöscht  ' . $shift->event()->first()->project()->first()->name . ' ' .
+                $shift->craft()->first()->abbreviation;
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -367,7 +324,8 @@ class ShiftController extends Controller
             $notificationDescription = [
                 1 => [
                     'type' => 'string',
-                    'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                    'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
+                        Carbon::parse($shift->end)->format('d.m.Y H:i'),
                     'href' => null
                 ],
             ];
@@ -399,17 +357,13 @@ class ShiftController extends Controller
         $shift->delete();
     }
 
-
-    /**
-     * @param Shift $shift
-     * @param array $eventIds
-     * @param int|null $user_id
-     * @param int|null $freelancer_id
-     * @param int|null $service_provider_id
-     * @return Collection
-     */
-    protected function calculateShiftCollision(Shift $shift, array $eventIds, int $user_id = null, int $freelancer_id = null, int $service_provider_id = null): Collection
-    {
+    protected function calculateShiftCollision(
+        Shift $shift,
+        array $eventIds,
+        int $user_id = null,
+        int $freelancer_id = null,
+        int $service_provider_id = null
+    ): Collection {
         $shift->load('event');
 
         /** @var Event $event */
@@ -440,9 +394,12 @@ class ShiftController extends Controller
             ->flatten()
             ->reject(
                 fn(Shift $currentShift) =>
-                    $currentShift->id === $shift->id // remove the shift I am attaching to
-                    || $currentShift->start > $shift->end //remove shifts that start after the shift I am attaching to has ended
-                    || $currentShift->end < $shift->start//remove shifts ended before the shift I am attaching to has started
+                    // remove the shift I am attaching to
+                    $currentShift->id === $shift->id
+                    // remove shifts that start after the shift I am attaching to has ended
+                    || $currentShift->start > $shift->end
+                    // remove shifts ended before the shift I am attaching to has started
+                    || $currentShift->end < $shift->start
                     || $user_id && $currentShift->users->doesntContain($user_id)
                     || $freelancer_id && $currentShift->freelancer->doesntContain($freelancer_id)
                     || $service_provider_id && $currentShift->service_provider->doesntContain($service_provider_id)
@@ -450,12 +407,8 @@ class ShiftController extends Controller
             ->pluck('id');
     }
 
-    /**
-     * @param Shift $shift
-     * @param User $user
-     * @param Request $request
-     * @return void
-     */
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
     public function addShiftUser(Shift $shift, User $user, Request $request): void
     {
         $this->notificationService->setProjectId($shift->event()->first()->project()->first()->id);
@@ -464,7 +417,12 @@ class ShiftController extends Controller
 
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde zur Schicht (' . $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') hinzugefügt', 'shift');
+            $this->history->createHistory(
+                $shift->id,
+                'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde zur Schicht (' .
+                    $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') hinzugefügt',
+                'shift'
+            );
         }
 
         $eventIdsOfUserShifts = $user->shifts()->get()->pluck('event.id')->all();
@@ -478,14 +436,15 @@ class ShiftController extends Controller
             );
         }
 
-        //add user to the project team of the project of the event of the shift, if the user is not already in the project team
+        //add user to the project team of the project of the event of the shift,
+        //if the user is not already in the project team
         $event = $shift->event;
         $project = $event->project;
         if (!$project->users->contains($user->id)) {
             $project->users()->attach($user->id);
         }
 
-        if(isset($request->chooseData)) {
+        if (isset($request->chooseData)) {
             if ($request->chooseData['onlyThisDay'] === false) {
                 $start = Carbon::parse($request->chooseData['start'])->startOfDay();
                 $end = Carbon::parse($request->chooseData['end'])->endOfDay();
@@ -498,7 +457,10 @@ class ShiftController extends Controller
                 foreach ($allShifts as $allShift) {
                     if ($allShift->id !== $shift->id) {
                         if ($request->chooseData['dayOfWeek'] !== 'all') {
-                            if (Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']) {
+                            if (
+                                Carbon::parse($allShift->event_start_day)->dayOfWeek !==
+                                $request->chooseData['dayOfWeek']
+                            ) {
                                 continue;
                             }
                         }
@@ -510,17 +472,20 @@ class ShiftController extends Controller
                     }
                 }
             }
-
         }
 
         $shift->users()->attach($user->id, ['shift_count' => $collideCount + 1]);
 
         // if shift longer when 10h send notification
-        $vacations = $user->vacations()->where('from', '<=', $shift->event_start_day)->where('until', '>=', $shift->event_end_day)->get();
-
+        $vacations = $user
+            ->vacations()
+            ->where('from', '<=', $shift->event_start_day)
+            ->where('until', '>=', $shift->event_end_day)
+            ->get();
 
         if ($vacations->count() > 0) {
-            $notificationTitle = 'Schichtkonflikt ' . Carbon::parse($shift->event_start_day)->format('d.m.Y') . ' ' . $project->name . ' ' . $shift->craft()->first()->abbreviation;
+            $notificationTitle = 'Schichtkonflikt ' . Carbon::parse($shift->event_start_day)->format('d.m.Y') .
+                ' ' . $project->name . ' ' . $shift->craft()->first()->abbreviation;
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -556,8 +521,6 @@ class ShiftController extends Controller
             $this->notificationService->clearNotificationData();
         }
 
-
-
         $notificationTitle = 'Neue Schichtbesetzung ' . $project->name . ' ' . $shift->craft()->first()->abbreviation;
         $broadcastMessage = [
             'id' => rand(1, 1000000),
@@ -567,7 +530,8 @@ class ShiftController extends Controller
         $notificationDescription = [
             1 => [
                 'type' => 'string',
-                'title' => 'Deine Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                'title' => 'Deine Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
+                    Carbon::parse($shift->end)->format('d.m.Y H:i'),
                 'href' => null
             ],
         ];
@@ -585,8 +549,6 @@ class ShiftController extends Controller
         $shiftCheck = $this->notificationService->checkIfUserInMoreThanTeenShifts($user, $shift);
         $shiftBreakCheck = $this->notificationService->checkIfShortBreakBetweenTwoShifts($user, $shift);
 
-        //dd($shiftBreakCheck);
-
         if ($shiftBreakCheck->shortBreak) {
             $notificationTitle = 'Du wurdest mit zu kurzer Ruhepause geplant';
             $broadcastMessage = [
@@ -602,7 +564,9 @@ class ShiftController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => 'Zeitraum: ' . Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
+                    'title' => 'Zeitraum: ' .
+                        Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' .
+                        Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
                     'href' => null
                 ],
             ];
@@ -610,7 +574,8 @@ class ShiftController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('blue');
             $this->notificationService->setPriority(1);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($user);
@@ -620,7 +585,8 @@ class ShiftController extends Controller
             $notificationTitle = 'Mitarbeiter*in mit zu kurzer Ruhepause geplant';
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setPriority(1);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
             $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
             foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $authUser) {
@@ -661,7 +627,9 @@ class ShiftController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => 'Zeitraum: ' . Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
+                    'title' => 'Zeitraum: ' .
+                        Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y') .
+                        ' - ' . Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
                     'href' => null
                 ],
             ];
@@ -669,7 +637,8 @@ class ShiftController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($user);
@@ -691,7 +660,9 @@ class ShiftController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => 'Zeitraum: ' . Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
+                    'title' => 'Zeitraum: ' .
+                        Carbon::parse($shiftCheck->firstShift->first()->event_start_day)->format('d.m.Y') .
+                        ' - ' . Carbon::parse($shiftCheck->lastShift->first()->event_start_day)->format('d.m.Y'),
                     'href' => null
                 ],
             ];
@@ -699,7 +670,8 @@ class ShiftController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('blue');
             $this->notificationService->setPriority(1);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
@@ -723,17 +695,18 @@ class ShiftController extends Controller
         }
     }
 
-    /**
-     * @param Request $request
-     * @param Shift $shift
-     * @param User $user
-     * @return void
-     */
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
     public function addShiftMaster(Request $request, Shift $shift, User $user): void
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde  zur Schicht (' . $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') als Meister hinzugefügt', 'shift');
+            $this->history->createHistory(
+                $shift->id,
+                'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde  zur Schicht (' .
+                    $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') als Meister hinzugefügt',
+                'shift'
+            );
         }
 
         $eventIdsOfUserShifts = $user->shifts()->get()->pluck('event.id')->all();
@@ -749,14 +722,15 @@ class ShiftController extends Controller
             );
         }
 
-        //add user to the project team of the project of the event of the shift, if the user is not already in the project team
+        //add user to the project team of the project of the event of the shift,
+        //if the user is not already in the project team
         $event = $shift->event;
         $project = $event->project;
         if (!$project->users->contains($user->id)) {
             $project->users()->attach($user->id);
         }
 
-        if(isset($request->chooseData)) {
+        if (isset($request->chooseData)) {
             if ($request->chooseData['onlyThisDay'] === false) {
                 $start = Carbon::parse($request->chooseData['start'])->startOfDay();
                 $end = Carbon::parse($request->chooseData['end'])->endOfDay();
@@ -769,13 +743,19 @@ class ShiftController extends Controller
                 foreach ($allShifts as $allShift) {
                     if ($allShift->id !== $shift->id) {
                         if ($request->chooseData['dayOfWeek'] !== 'all') {
-                            if (Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']) {
+                            if (
+                                Carbon::parse($allShift->event_start_day)->dayOfWeek !==
+                                $request->chooseData['dayOfWeek']
+                            ) {
                                 continue;
                             }
                         }
                         if ($allShift->getEmptyMasterCountAttribute() > 0) {
                             if (!$allShift->users->contains($user->id)) {
-                                $allShift->users()->attach($user->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
+                                $allShift->users()->attach(
+                                    $user->id,
+                                    ['is_master' => true, 'shift_count' => $collideCount + 1]
+                                );
                             }
                         }
                     }
@@ -792,7 +772,9 @@ class ShiftController extends Controller
         $notificationDescription = [
             1 => [
                 'type' => 'string',
-                'title' => 'Deine Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                'title' => 'Deine Schicht: ' .
+                    Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
+                    Carbon::parse($shift->end)->format('d.m.Y H:i'),
                 'href' => null
             ],
         ];
@@ -825,7 +807,9 @@ class ShiftController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => 'Zeitraum: ' . Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
+                    'title' => 'Zeitraum: ' .
+                        Carbon::parse($shiftBreakCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' .
+                        Carbon::parse($shiftBreakCheck->lastShift->event_start_day)->format('d.m.Y'),
                     'href' => null
                 ],
             ];
@@ -833,7 +817,8 @@ class ShiftController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('blue');
             $this->notificationService->setPriority(1);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($user);
@@ -843,7 +828,8 @@ class ShiftController extends Controller
             $notificationTitle = 'Mitarbeiter*in mit zu kurzer Ruhepause geplant';
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setPriority(1);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
             $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
             foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $authUser) {
@@ -863,7 +849,6 @@ class ShiftController extends Controller
             }
         }
 
-
         if ($shiftCheck->moreThanTenShifts) {
             $notificationTitle = 'Du wurdest mehr als 10 Tage am Stück eingeplant';
             $broadcastMessage = [
@@ -879,7 +864,9 @@ class ShiftController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => 'Zeitraum: ' . Carbon::parse($shiftCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftCheck->lastShift->event_start_day)->format('d.m.Y'),
+                    'title' => 'Zeitraum: ' .
+                        Carbon::parse($shiftCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' .
+                        Carbon::parse($shiftCheck->lastShift->event_start_day)->format('d.m.Y'),
                     'href' => null
                 ],
             ];
@@ -887,15 +874,14 @@ class ShiftController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_OWN_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($user);
             $this->notificationService->createNotification();
 
             // send same notification to admin
-
-
             $notificationTitle = 'Mitarbeiter*in mehr als 10 Tage am Stück eingeplant';
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
@@ -910,7 +896,9 @@ class ShiftController extends Controller
                 ],
                 2 => [
                     'type' => 'string',
-                    'title' => 'Zeitraum: ' . Carbon::parse($shiftCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' . Carbon::parse($shiftCheck->lastShift->event_start_day)->format('d.m.Y'),
+                    'title' => 'Zeitraum: ' .
+                        Carbon::parse($shiftCheck->firstShift->event_start_day)->format('d.m.Y') . ' - ' .
+                        Carbon::parse($shiftCheck->lastShift->event_start_day)->format('d.m.Y'),
                     'href' => null
                 ],
             ];
@@ -918,7 +906,8 @@ class ShiftController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('blue');
             $this->notificationService->setPriority(1);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_INFRINGEMENT);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setButtons(['change_shift', 'delete_shift_notification']);
@@ -943,22 +932,22 @@ class ShiftController extends Controller
         $shift->users()->attach($user->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
     }
 
-
-    /**
-     * add freelancer to shift
-     * @param Shift $shift
-     * @param Freelancer $freelancer
-     * @param Request $request
-     * @return void
-     */
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function addShiftFreelancer(Shift $shift, Freelancer $freelancer, Request $request): void
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Freelancer ' . $freelancer->getNameAttribute() . ' wurde zur Schicht (' . $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') hinzugefügt', 'shift');
+            $this->history->createHistory(
+                $shift->id,
+                'Freelancer ' . $freelancer->getNameAttribute() . ' wurde zur Schicht (' .
+                    $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') hinzugefügt',
+                'shift'
+            );
         }
         $eventIdsOfUserShifts = $freelancer->shifts()->get()->pluck('event.id')->all();
-        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, freelancer_id: $freelancer->id);
+        $collidingShiftIds = $this
+            ->calculateShiftCollision($shift, $eventIdsOfUserShifts, freelancer_id: $freelancer->id);
         $collideCount = $collidingShiftIds->count();
 
         if ($collideCount > 0) {
@@ -968,7 +957,7 @@ class ShiftController extends Controller
             );
         }
 
-        if(isset($request->chooseData)) {
+        if (isset($request->chooseData)) {
             if ($request->chooseData['onlyThisDay'] === false) {
                 $start = Carbon::parse($request->chooseData['start'])->startOfDay();
                 $end = Carbon::parse($request->chooseData['end'])->endOfDay();
@@ -981,7 +970,10 @@ class ShiftController extends Controller
 
                 foreach ($allShifts as $allShift) {
                     if ($request->chooseData['dayOfWeek'] !== 'all') {
-                        if (Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']) {
+                        if (
+                            Carbon::parse($allShift->event_start_day)->dayOfWeek !==
+                            $request->chooseData['dayOfWeek']
+                        ) {
                             continue;
                         }
                     }
@@ -999,21 +991,23 @@ class ShiftController extends Controller
         $shift->freelancer()->attach($freelancer->id, ['shift_count' => $collideCount + 1]);
     }
 
-    /**
-     * @param Request $request
-     * @param Shift $shift
-     * @param Freelancer $freelancer
-     * @return void
-     */
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function addShiftFreelancerMaster(Request $request, Shift $shift, Freelancer $freelancer): void
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Freelancer ' . $freelancer->getNameAttribute() . ' wurde zur Schicht (' . $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') als Meister hinzugefügt', 'shift');
+            $this->history->createHistory(
+                $shift->id,
+                'Freelancer ' . $freelancer->getNameAttribute() . ' wurde zur Schicht (' .
+                    $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') als Meister hinzugefügt',
+                'shift'
+            );
         }
 
         $eventIdsOfUserShifts = $freelancer->shifts()->get()->pluck('event.id')->all();
-        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, freelancer_id: $freelancer->id);
+        $collidingShiftIds = $this
+            ->calculateShiftCollision($shift, $eventIdsOfUserShifts, freelancer_id: $freelancer->id);
         $collideCount = $collidingShiftIds->count();
 
         if ($collideCount > 0) {
@@ -1023,7 +1017,7 @@ class ShiftController extends Controller
             );
         }
 
-        if(isset($request->chooseData)) {
+        if (isset($request->chooseData)) {
             if ($request->chooseData['onlyThisDay'] === false) {
                 $start = Carbon::parse($request->chooseData['start'])->startOfDay();
                 $end = Carbon::parse($request->chooseData['end'])->endOfDay();
@@ -1036,13 +1030,19 @@ class ShiftController extends Controller
                 foreach ($allShifts as $allShift) {
                     if ($allShift->id !== $shift->id) {
                         if ($request->chooseData['dayOfWeek'] !== 'all') {
-                            if (Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']) {
+                            if (
+                                Carbon::parse($allShift->event_start_day)->dayOfWeek !==
+                                $request->chooseData['dayOfWeek']
+                            ) {
                                 continue;
                             }
                         }
                         if ($allShift->getEmptyMasterCountAttribute() > 0) {
                             if (!$allShift->freelancer->contains($freelancer->id)) {
-                                $allShift->freelancer()->attach($freelancer->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
+                                $allShift->freelancer()->attach(
+                                    $freelancer->id,
+                                    ['is_master' => true, 'shift_count' => $collideCount + 1]
+                                );
                             }
                         }
                     }
@@ -1052,22 +1052,23 @@ class ShiftController extends Controller
         $shift->freelancer()->attach($freelancer->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
     }
 
-
-    /**
-     * @param Request $request
-     * @param Shift $shift
-     * @param ServiceProvider $serviceProvider
-     * @return void
-     */
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function addShiftProviderMaster(Request $request, Shift $shift, ServiceProvider $serviceProvider): void
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Dienstleister ' . $serviceProvider->getNameAttribute() . ' wurde zur Schicht (' . $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') als Meister hinzugefügt', 'shift');
+            $this->history->createHistory(
+                $shift->id,
+                'Dienstleister ' . $serviceProvider->getNameAttribute() . ' wurde zur Schicht (' .
+                    $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') als Meister hinzugefügt',
+                'shift'
+            );
         }
 
         $eventIdsOfUserShifts = $serviceProvider->shifts()->get()->pluck('event.id')->all();
-        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, service_provider_id: $serviceProvider->id);
+        $collidingShiftIds = $this
+            ->calculateShiftCollision($shift, $eventIdsOfUserShifts, service_provider_id: $serviceProvider->id);
         $collideCount = $collidingShiftIds->count();
 
         if ($collideCount > 0) {
@@ -1077,7 +1078,7 @@ class ShiftController extends Controller
             );
         }
 
-        if(isset($request->chooseData)) {
+        if (isset($request->chooseData)) {
             if ($request->chooseData['onlyThisDay'] === false) {
                 $start = Carbon::parse($request->chooseData['start'])->startOfDay();
                 $end = Carbon::parse($request->chooseData['end'])->endOfDay();
@@ -1090,20 +1091,29 @@ class ShiftController extends Controller
                 foreach ($allShifts as $allShift) {
                     if ($allShift->id !== $shift->id) {
                         if ($request->chooseData['dayOfWeek'] !== 'all') {
-                            if (Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']) {
+                            if (
+                                Carbon::parse($allShift->event_start_day)->dayOfWeek !==
+                                $request->chooseData['dayOfWeek']
+                            ) {
                                 continue;
                             }
                         }
                         if ($allShift->getEmptyMasterCountAttribute() > 0) {
                             if (!$allShift->service_provider->contains($serviceProvider->id)) {
-                                $allShift->service_provider()->attach($serviceProvider->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
+                                $allShift->service_provider()->attach(
+                                    $serviceProvider->id,
+                                    ['is_master' => true, 'shift_count' => $collideCount + 1]
+                                );
                             }
                         }
                     }
                 }
             }
         }
-        $shift->service_provider()->attach($serviceProvider->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
+        $shift->service_provider()->attach(
+            $serviceProvider->id,
+            ['is_master' => true, 'shift_count' => $collideCount + 1]
+        );
     }
 
     /**
@@ -1115,7 +1125,12 @@ class ShiftController extends Controller
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde von Schicht (' . $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') entfernt', 'shift');
+            $this->history->createHistory(
+                $shift->id,
+                'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde von Schicht (' .
+                    $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') entfernt',
+                'shift'
+            );
         }
         $shift->users()->detach($user->id);
 
@@ -1146,7 +1161,8 @@ class ShiftController extends Controller
             ]
         );
 
-        $notificationTitle = 'Schichtbesetzung gelöscht  ' . $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
+        $notificationTitle = 'Schichtbesetzung gelöscht  ' . $shift->event()->first()->project()->first()->name . ' ' .
+            $shift->craft()->first()->abbreviation;
         $broadcastMessage = [
             'id' => rand(1, 1000000),
             'type' => 'success',
@@ -1155,7 +1171,9 @@ class ShiftController extends Controller
         $notificationDescription = [
             1 => [
                 'type' => 'string',
-                'title' => 'Betrifft Schicht: ' . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' . Carbon::parse($shift->end)->format('d.m.Y H:i'),
+                'title' => 'Betrifft Schicht: ' .
+                    Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
+                    Carbon::parse($shift->end)->format('d.m.Y H:i'),
                 'href' => null
             ],
         ];
@@ -1170,16 +1188,16 @@ class ShiftController extends Controller
         $this->notificationService->createNotification();
     }
 
-    /**
-     * @param Shift $shift
-     * @param Freelancer $freelancer
-     * @return void
-     */
     public function removeFreelancer(Shift $shift, Freelancer $freelancer, Request $request): void
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Freelancer ' . $freelancer->getNameAttribute() . ' wurde von Schicht (' . $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') entfernt', 'shift');
+            $this->history->createHistory(
+                $shift->id,
+                'Freelancer ' . $freelancer->getNameAttribute() . ' wurde von Schicht (' .
+                $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') entfernt',
+                'shift'
+            );
         }
         $shift->freelancer()->detach($freelancer->id);
 
@@ -1199,7 +1217,8 @@ class ShiftController extends Controller
 
         $eventIdsOfUserShifts = $freelancer->shifts()->get()->pluck('event.id')->all();
 
-        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, freelancer_id: $freelancer->id);
+        $collidingShiftIds = $this
+            ->calculateShiftCollision($shift, $eventIdsOfUserShifts, freelancer_id: $freelancer->id);
         $collideCount = $collidingShiftIds->count();
 
         $freelancer->shifts()->updateExistingPivot(
@@ -1210,16 +1229,16 @@ class ShiftController extends Controller
         );
     }
 
-    /**
-     * @param Shift $shift
-     * @param ServiceProvider $serviceProvider
-     * @return void
-     */
     public function removeProvider(Shift $shift, ServiceProvider $serviceProvider, Request $request): void
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Dienstleister ' . $serviceProvider->getNameAttribute() . ' wurde von Schicht (' . $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') entfernt', 'shift');
+            $this->history->createHistory(
+                $shift->id,
+                'Dienstleister ' . $serviceProvider->getNameAttribute() . ' wurde von Schicht (' .
+                    $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') entfernt',
+                'shift'
+            );
         }
         $shift->service_provider()->detach($serviceProvider->id);
 
@@ -1227,7 +1246,6 @@ class ShiftController extends Controller
             if ($request->chooseData['onlyThisDay'] === false) {
                 $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
                     ->get();
-
 
                 foreach ($allShifts as $allShift) {
                     if ($allShift->id !== $shift->id) {
@@ -1239,7 +1257,8 @@ class ShiftController extends Controller
 
         $eventIdsOfUserShifts = $serviceProvider->shifts()->get()->pluck('event.id')->all();
 
-        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, service_provider_id: $serviceProvider->id);
+        $collidingShiftIds = $this
+            ->calculateShiftCollision($shift, $eventIdsOfUserShifts, service_provider_id: $serviceProvider->id);
         $collideCount = $collidingShiftIds->count();
 
         $serviceProvider->shifts()->updateExistingPivot(
@@ -1250,20 +1269,22 @@ class ShiftController extends Controller
         );
     }
 
-    /**
-     * @param Shift $shift
-     * @param ServiceProvider $serviceProvider
-     * @param Request $request
-     * @return void
-     */
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function addShiftProvider(Shift $shift, ServiceProvider $serviceProvider, Request $request): void
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Dienstleister ' . $serviceProvider->getNameAttribute() . ' wurde zur Schicht (' . $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') hinzugefügt', 'shift');
+            $this->history->createHistory(
+                $shift->id,
+                'Dienstleister ' . $serviceProvider->getNameAttribute() . ' wurde zur Schicht (' .
+                $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') hinzugefügt',
+                'shift'
+            );
         }
         $eventIdsOfUserShifts = $serviceProvider->shifts()->get()->pluck('event.id')->all();
-        $collidingShiftIds = $this->calculateShiftCollision($shift, $eventIdsOfUserShifts, service_provider_id: $serviceProvider->id);
+        $collidingShiftIds = $this
+            ->calculateShiftCollision($shift, $eventIdsOfUserShifts, service_provider_id: $serviceProvider->id);
         $collideCount = $collidingShiftIds->count();
 
         if ($collideCount > 0) {
@@ -1273,7 +1294,7 @@ class ShiftController extends Controller
             );
         }
 
-        if(isset($request->chooseData)) {
+        if (isset($request->chooseData)) {
             if ($request->chooseData['onlyThisDay'] === false) {
                 $start = Carbon::parse($request->chooseData['start'])->startOfDay();
                 $end = Carbon::parse($request->chooseData['end'])->endOfDay();
@@ -1286,13 +1307,19 @@ class ShiftController extends Controller
                 foreach ($allShifts as $allShift) {
                     if ($allShift->id !== $shift->id) {
                         if ($request->chooseData['dayOfWeek'] !== 'all') {
-                            if (Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']) {
+                            if (
+                                Carbon::parse($allShift->event_start_day)->dayOfWeek !==
+                                $request->chooseData['dayOfWeek']
+                            ) {
                                 continue;
                             }
                         }
                         if ($allShift->getEmptyUserCountAttribute() > 0) {
                             if (!$allShift->service_provider->contains($serviceProvider->id)) {
-                                $allShift->service_provider()->attach($serviceProvider->id, ['shift_count' => $collideCount + 1]);
+                                $allShift->service_provider()->attach(
+                                    $serviceProvider->id,
+                                    ['shift_count' => $collideCount + 1]
+                                );
                             }
                         }
                     }
@@ -1303,10 +1330,6 @@ class ShiftController extends Controller
         $shift->service_provider()->attach($serviceProvider->id, ['shift_count' => $collideCount + 1]);
     }
 
-    /**
-     * @param Shift $shift
-     * @return void
-     */
     public function clearEmployeesAndMaster(Shift $shift, Request $request): void
     {
         $users = $shift->users()->get();
@@ -1323,7 +1346,12 @@ class ShiftController extends Controller
         }
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory($shift->id, 'Alle eingeplanten Mitarbeiter wurde von Schicht (' . $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') entfernt', 'shift');
+            $this->history->createHistory(
+                $shift->id,
+                'Alle eingeplanten Mitarbeiter wurde von Schicht (' . $shift->craft()->first()->abbreviation .
+                    ' - ' . $event->eventName . ') entfernt',
+                'shift'
+            );
         }
     }
 

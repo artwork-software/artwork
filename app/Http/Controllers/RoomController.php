@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Antonrom\ModelChangesHistory\Models\Change;
-use App\Enums\NotificationConstEnum;
 use App\Http\Resources\AdjoiningRoomIndexResource;
 use App\Http\Resources\AttributeIndexResource;
 use App\Http\Resources\CategoryIndexResource;
@@ -18,8 +16,6 @@ use App\Models\Project;
 use App\Models\Room;
 use App\Models\RoomAttribute;
 use App\Models\RoomCategory;
-use App\Models\User;
-use App\Support\Services\CollisionService;
 use App\Support\Services\RoomService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
@@ -28,26 +24,24 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-
-use function Clue\StreamFilter\fun;
-
-use JetBrains\PhpStorm\NoReturn;
+use Inertia\Response;
+use Inertia\ResponseFactory;
 
 class RoomController extends Controller
 {
-    // init notification system
     public function __construct(protected RoomService $roomService)
     {
     }
 
     /**
-     * @param Request $request
-     * @return array
+     * @return array<string, mixed>
      */
     public function getAllDayFree(Request $request): array
     {
-
-        $period = CarbonPeriod::create(Carbon::parse($request->get('start'))->addHours(2), Carbon::parse($request->get('end')));
+        $period = CarbonPeriod::create(
+            Carbon::parse($request->get('start'))->addHours(2),
+            Carbon::parse($request->get('end'))
+        );
 
         // Convert the period to an array of dates
         $dates = $period->toArray();
@@ -69,34 +63,33 @@ class RoomController extends Controller
             }
         }
 
-        $rooms = Room::with('adjoining_rooms', 'main_rooms')->whereNotIn('id', $rooms_with_events_everyDay)->get()->map(fn(Room $room) => [
-            'id' => $room->id,
-            'name' => $room->name,
-            'area' => $room->area,
-            'label' => $room->name,
-            'adjoining_rooms' => $room->adjoining_rooms->map(fn(Room $adjoining_room) => [
-                'id' => $adjoining_room->id,
-                'label' => $adjoining_room->name
-            ]),
-            'main_rooms' => $room->main_rooms->map(fn(Room $main_room) => [
-                'id' => $main_room->id,
-                'label' => $main_room->name
-            ]),
-            'categories' => $room->categories,
-            'attributes' => $room->attributes
-        ]);
+        $rooms = Room::with('adjoining_rooms', 'main_rooms')
+            ->whereNotIn('id', $rooms_with_events_everyDay)
+            ->get()
+            ->map(
+                fn(Room $room) => [
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'area' => $room->area,
+                    'label' => $room->name,
+                    'adjoining_rooms' => $room->adjoining_rooms->map(fn(Room $adjoining_room) => [
+                        'id' => $adjoining_room->id,
+                        'label' => $adjoining_room->name
+                    ]),
+                    'main_rooms' => $room->main_rooms->map(fn(Room $main_room) => [
+                        'id' => $main_room->id,
+                        'label' => $main_room->name
+                    ]),
+                    'categories' => $room->categories,
+                    'attributes' => $room->attributes
+                ]
+            );
 
         return [
             'rooms' => $rooms
         ];
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param Request $request
-     * @return RedirectResponse
-     */
     public function store(Request $request): RedirectResponse
     {
         $room = Room::create([
@@ -111,7 +104,11 @@ class RoomController extends Controller
             'order' => Room::max('order') + 1,
         ]);
 
-        if (!is_null($request->adjoining_rooms) && !is_null($request->room_attributes) && !is_null($request->room_categories)) {
+        if (
+            !is_null($request->adjoining_rooms) &&
+            !is_null($request->room_attributes) &&
+            !is_null($request->room_categories)
+        ) {
             $room->adjoining_rooms()->sync($request->adjoining_rooms);
             $room->attributes()->sync($request->room_attributes);
             $room->categories()->sync($request->room_categories);
@@ -120,24 +117,18 @@ class RoomController extends Controller
         return Redirect::route('areas.management')->with('success', 'Room created.');
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param Room $room
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function show(Room $room, Request $request, CalendarController $calendarController): \Inertia\Response|\Inertia\ResponseFactory
+    public function show(Room $room, CalendarController $calendarController): Response|ResponseFactory
     {
         $room->load('creator');
         $projects = Project::query()->with(['access_budget', 'managerUsers'])->get();
 
         $showCalendar = $calendarController->createCalendarData('', null, $room);
-        //dd($showCalendar['dateValue']);
-        //dd($showCalendar['user_filters']);
         return inertia('Rooms/Show', [
             'room' => new RoomCalendarResource($room),
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
-            'is_room_admin' => $room->users()->wherePivot('is_admin', true)->get()->contains(Auth::id()),
+            'is_room_admin' => $room->users()
+                ->wherePivot('is_admin', true)
+                ->wherePivot('user_id', '=', Auth::id())->count() > 0,
             'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
 
@@ -164,13 +155,6 @@ class RoomController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param Room $room
-     * @return RedirectResponse
-     */
     public function update(Request $request, Room $room): RedirectResponse
     {
 
@@ -184,7 +168,16 @@ class RoomController extends Controller
         $oldStartDate = $room->start_date;
         $oldEndDate = $room->end_date;
 
-        $room->update($request->only('name', 'description', 'temporary', 'start_date', 'end_date', 'everyone_can_book'));
+        $room->update(
+            $request->only(
+                'name',
+                'description',
+                'temporary',
+                'start_date',
+                'end_date',
+                'everyone_can_book'
+            )
+        );
 
         if (!is_null($request->room_admins) && !is_null($request->requestable_by)) {
             $room_admins_ids = [];
@@ -202,7 +195,11 @@ class RoomController extends Controller
             $room->users()->sync($new_users);
         }
 
-        if (!is_null($request->adjoining_rooms) && !is_null($request->room_attributes) && !is_null($request->room_categories)) {
+        if (
+            !is_null($request->adjoining_rooms) &&
+            !is_null($request->room_attributes) &&
+            !is_null($request->room_categories)
+        ) {
             $room->adjoining_rooms()->sync($request->adjoining_rooms);
             $room->attributes()->sync($request->room_attributes);
             $room->categories()->sync($request->room_categories);
@@ -224,8 +221,15 @@ class RoomController extends Controller
         $this->roomService->checkTitleChanges($room->id, $oldRoomTitle, $newRoomTitle);
         $this->roomService->checkAttributeChanges($room->id, $oldRoomAttributes, $newRoomAttributes);
         $this->roomService->checkCategoryChanges($room->id, $oldRoomCategories, $newRoomCategories);
-        $this->roomService->checkTemporaryChanges($room->id, $oldTemporary, $newRoomTemporary, $oldStartDate, $newStartDate, $oldEndDate, $newEndDate);
-
+        $this->roomService->checkTemporaryChanges(
+            $room->id,
+            $oldTemporary,
+            $newRoomTemporary,
+            $oldStartDate,
+            $newStartDate,
+            $oldEndDate,
+            $newEndDate
+        );
 
         $scheduling = new SchedulingController();
         $roomId = $room->id;
@@ -236,9 +240,6 @@ class RoomController extends Controller
         return Redirect::back()->with('success', 'Room updated');
     }
 
-    /**
-     * Duplicates the room whose id is passed in the request
-     */
     public function duplicate(Room $room): RedirectResponse
     {
         Room::create([
@@ -255,13 +256,6 @@ class RoomController extends Controller
         return Redirect::route('areas.management')->with('success', 'Room created.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param Room $room
-     * @return RedirectResponse
-     */
     public function updateOrder(Request $request): RedirectResponse
     {
         foreach ($request->rooms as $room) {
@@ -271,38 +265,24 @@ class RoomController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function getTrashed(): \Inertia\Response|\Inertia\ResponseFactory
+    public function getTrashed(): Response|ResponseFactory
     {
         return inertia('Trash/Rooms', [
             'trashed_rooms' => Area::all()->map(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
-                'rooms' => RoomIndexWithoutEventsResource::collection($area->trashed_rooms)->resolve(),
+                'rooms' => RoomIndexWithoutEventsResource::collection($area->trashedRooms)->resolve(),
             ])
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param Room $room
-     * @return RedirectResponse
-     */
     public function destroy(Room $room): RedirectResponse
     {
-
         $room->delete();
 
         return Redirect::route('areas.management')->with('success', 'Room moved to trash');
     }
 
-    /**
-     * @param int $id
-     * @return RedirectResponse
-     */
     public function forceDelete(int $id): RedirectResponse
     {
         $room = Room::onlyTrashed()->findOrFail($id);
@@ -311,10 +291,6 @@ class RoomController extends Controller
         return Redirect::route('rooms.trashed')->with('success', 'Room restored');
     }
 
-    /**
-     * @param int $id
-     * @return RedirectResponse
-     */
     public function restore(int $id): RedirectResponse
     {
         $room = Room::onlyTrashed()->findOrFail($id);
@@ -323,7 +299,9 @@ class RoomController extends Controller
         return Redirect::route('rooms.trashed')->with('success', 'Room restored');
     }
 
-
+    /**
+     * @return array<int, int>
+     */
     public function collisionsCount(Request $request): array
     {
         $startDate = Carbon::parse($request['params']['start'])->setTimezone(config('app.timezone'));
@@ -338,7 +316,6 @@ class RoomController extends Controller
                     ->where('room_id', $room->id)->count()
             ];
         }
-
 
         return $collisions;
     }

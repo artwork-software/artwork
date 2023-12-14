@@ -6,20 +6,15 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-/**
- * @mixin \App\Models\Project
- */
 class ProjectInEventResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         return [
             'id' => $this->id,
@@ -31,8 +26,8 @@ class ProjectInEventResource extends JsonResource
             'state' => $this->state()->first(),
             'users' => UserIndexResource::collection($this->users)->resolve(),
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
-
-            'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
+            'isMemberOfADepartment' => $this->departments
+                ->contains(fn ($department) => $department->users->contains(Auth::user())),
         ];
     }
 }

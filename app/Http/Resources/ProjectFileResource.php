@@ -8,12 +8,10 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class ProjectFileResource extends JsonResource
 {
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         return [
             "id" => $this->id,
@@ -22,7 +20,7 @@ class ProjectFileResource extends JsonResource
             "project_id" => $this->project_id,
             "created_at" => $this->created_at,
             "comments" => CommentResource::collection($this->comments),
-            "accessibleUsers" => $this->accessing_users
+            "accessibleUsers" => $this->accessingUsers
         ];
     }
 }

@@ -12,9 +12,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContractModuleController extends Controller
 {
-    /**
-     * store a contract module
-     */
     public function store(Request $request): RedirectResponse
     {
 
@@ -41,23 +38,11 @@ class ContractModuleController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param ContractModule $module
-     * @return StreamedResponse
-     */
     public function download(ContractModule $module): StreamedResponse
     {
         return Storage::download('contract_modules/' . $module->basename, $module->name);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param ContractModule $module
-     * @return RedirectResponse
-     */
     public function destroy(ContractModule $module): RedirectResponse
     {
         $module->delete();

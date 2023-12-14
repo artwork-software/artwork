@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int $exclude
+ */
 class UserCommentedBudgetItemsSetting extends Model
 {
     use HasFactory;
@@ -17,7 +22,8 @@ class UserCommentedBudgetItemsSetting extends Model
         'exclude'
     ];
 
-    public function user(): HasOne {
+    public function user(): HasOne
+    {
         return $this->hasOne(User::class);
     }
 }

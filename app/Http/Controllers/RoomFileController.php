@@ -3,19 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\FileUpload;
-use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\Room;
 use App\Models\RoomFile;
 use App\Support\Services\NewHistoryService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-
 
 class RoomFileController extends Controller
 {
@@ -29,7 +26,7 @@ class RoomFileController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function store(FileUpload $request, Room $room): \Illuminate\Http\RedirectResponse
+    public function store(FileUpload $request, Room $room): RedirectResponse
     {
         $this->authorize('view', $room->area);
 
@@ -39,7 +36,7 @@ class RoomFileController extends Controller
 
         $file = $request->file('file');
         $original_name = $file->getClientOriginalName();
-        $basename = Str::random(20).$original_name;
+        $basename = Str::random(20) . $original_name;
 
         Storage::putFileAs('room_files', $file, $basename);
 
@@ -53,48 +50,35 @@ class RoomFileController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param ProjectFile $projectFile
-     * @return StreamedResponse
-     * @throws AuthorizationException
-     */
     public function download(RoomFile $roomFile): StreamedResponse
     {
         $this->authorize('view projects');
 
-        $this->historyController->createHistory($roomFile->room_id, 'Dokument ' . $roomFile->name . ' wurde heruntergeladen');
+        $this->historyController
+            ->createHistory($roomFile->room_id, 'Dokument ' . $roomFile->name . ' wurde heruntergeladen');
 
-        return Storage::download('room_files/'. $roomFile->basename, $roomFile->name);
+        return Storage::download('room_files/' . $roomFile->basename, $roomFile->name);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param ProjectFile $projectFile
-     * @return RedirectResponse
-     * @throws AuthorizationException
-     */
-    public function destroy(RoomFile $roomFile)
+    public function destroy(RoomFile $roomFile): RedirectResponse
     {
         //dd($roomFile);
         $this->authorize('view', $roomFile->room->area);
 
-        $this->historyController->createHistory($roomFile->room_id, 'Dokument ' . $roomFile->name . ' wurde entfernt');
+        $this->historyController
+            ->createHistory($roomFile->room_id, 'Dokument ' . $roomFile->name . ' wurde entfernt');
 
         $roomFile->delete();
 
         return Redirect::back();
     }
 
-    public function force_delete(int $id): \Illuminate\Http\RedirectResponse
+    public function forceDelete(int $id): RedirectResponse
     {
-
         $roomFile = RoomFile::onlyTrashed()->findOrFail($id);
         $this->authorize('view', $roomFile->room->area);
 
-        Storage::delete('room_files/'. $roomFile->basename);
+        Storage::delete('room_files/' . $roomFile->basename);
 
         $roomFile->forceDelete();
         return Redirect::back();

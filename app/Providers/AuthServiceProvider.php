@@ -34,11 +34,6 @@ use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    /**
-     * The policy mappings for the application.
-     *
-     * @var array<class-string, class-string>
-     */
     protected $policies = [
         Invitation::class => InvitationPolicy::class,
         User::class => UserPolicy::class,
@@ -55,11 +50,6 @@ class AuthServiceProvider extends ServiceProvider
         Contract::class => ContractPolicy::class
     ];
 
-    /**
-     * Register any authentication / authorization services.
-     *
-     * @return void
-     */
     public function boot(): void
     {
         $this->registerPolicies();

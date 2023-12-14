@@ -11,21 +11,12 @@ use Artwork\Modules\Tasks\Services\TaskService;
 
 class ChecklistService
 {
-    /**
-     * @param ChecklistRepository $checklistRepository
-     * @param TaskService $taskService
-     */
     public function __construct(
         private readonly ChecklistRepository $checklistRepository,
         private readonly TaskService $taskService
     ) {
     }
 
-    /**
-     * @param Checklist $checklist
-     * @param ChecklistUpdateRequest $request
-     * @return Checklist|Model
-     */
     public function updateByRequest(Checklist $checklist, ChecklistUpdateRequest $request): Checklist|Model
     {
         $checklist->fill($request->data());
@@ -39,11 +30,6 @@ class ChecklistService
         return $this->checklistRepository->save($checklist);
     }
 
-    /**
-     * @param Checklist $checklist
-     * @param array $ids
-     * @return void
-     */
     public function assignUsersById(Checklist $checklist, array $ids): void
     {
         $checklist->users()->sync($ids);

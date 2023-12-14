@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('column_sub_position_row', function (Blueprint $table) {
+        Schema::create('column_sub_position_row', function (Blueprint $table): void {
             $table->id();
             $table->bigInteger('column_id');
             $table->bigInteger('sub_position_row_id');
@@ -31,7 +31,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('column_subposition_row');
     }

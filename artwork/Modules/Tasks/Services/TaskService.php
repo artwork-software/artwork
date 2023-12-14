@@ -3,9 +3,7 @@
 namespace Artwork\Modules\Tasks\Services;
 
 use App\Models\Task;
-use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use Artwork\Modules\Checklist\Models\Checklist;
-use Artwork\Modules\Checklist\Repositories\ChecklistRepository;
 use Artwork\Modules\Tasks\Repositories\TaskRepository;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -13,7 +11,6 @@ class TaskService
 {
     public function __construct(private readonly TaskRepository $taskRepository)
     {
-
     }
 
     public function deleteByChecklist(Checklist $checklist): void

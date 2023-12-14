@@ -4,18 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * @property integer $id
- * @property Event $event_id
+ * @property int $id
+ * @property int $event_id
  * @property string $eventName
  * @property string $description
- * @property \DateTime $start_time
- * @property \DateTime $end_time
- * @property EventType $event_type_id
- * @property User $user_id
- * @property boolean $audience
- * @property boolean $is_loud
+ * @property string $start_time
+ * @property string $end_time
+ * @property bool $audience
+ * @property bool $is_loud
+ * @property bool $allDay
+ * @property int $event_type_id
+ * @property int $user_id
+ * @property string $created_at
+ * @property string $updated_at
  */
 class SubEvents extends Model
 {
@@ -34,7 +38,6 @@ class SubEvents extends Model
         'allDay'
     ];
 
-
     protected $casts = [
         'audience' => 'boolean',
         'is_loud' => 'boolean',
@@ -43,17 +46,17 @@ class SubEvents extends Model
 
     protected $with = ['type', 'creator'];
 
-    public function type(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function type(): BelongsTo
     {
         return $this->belongsTo(EventType::class, 'event_type_id');
     }
 
-    public function event(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
     }
 
-    public function creator(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }

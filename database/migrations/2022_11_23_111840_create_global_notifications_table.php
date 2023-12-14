@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('global_notifications', function (Blueprint $table) {
+        Schema::create('global_notifications', function (Blueprint $table): void {
             $table->id();
             $table->string('title');
             $table->longText('description');
@@ -29,7 +29,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('global_notifications');
     }

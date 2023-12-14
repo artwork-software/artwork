@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('project_user', function (Blueprint $table) {
+        Schema::create('project_user', function (Blueprint $table): void {
             $table->id();
             $table->integer('project_id');
             $table->integer('user_id');
@@ -30,7 +30,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('project_user');
     }

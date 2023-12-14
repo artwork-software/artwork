@@ -293,9 +293,6 @@ export default defineComponent({
         },
         preventContainerDrag(event) {
             event.stopPropagation();
-        },
-        handleActiveCraftFilters(craftId, event) {
-            console.debug(craftId, event);
         }
     },
 })

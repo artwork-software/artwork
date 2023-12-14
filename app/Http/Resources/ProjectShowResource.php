@@ -6,27 +6,21 @@ use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
-/**
- * @mixin \App\Models\Project
- */
 class ProjectShowResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         $historyArray = [];
         $historyComplete = $this->historyChanges()->all();
 
-        foreach ($historyComplete as $history){
+        foreach ($historyComplete as $history) {
             $historyArray[] = [
                 'changes' => json_decode($history->changes),
                 'created_at' => $history->created_at->diffInHours() < 24
@@ -59,24 +53,20 @@ class ProjectShowResource extends JsonResource
             'register_by' => $this->register_by,
             'registration_deadline' => $this->registration_deadline,
             'closed_society' => $this->closed_society,
-
             'cost_center' => $this->cost_center,
             'copyright' => new CopyrightResource($this->copyright),
             'moneySources' => $this->money_sources,
-            //'users' => UserResourceWithoutShifts::collection($this->users()->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission'))->resolve(),
             'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
-
             'project_headlines' => ProjectHeadlineResource::collection($this->headlines->sortBy('order'))->resolve(),
-
             'project_files' => ProjectFileResource::collection($this->project_files),
             'contracts' => ContractResource::collection($this->contracts),
-
-            'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
-
-            'public_checklists' => ChecklistIndexResource::collection($this->checklists->whereNull('user_id'))->resolve(),
-            'private_checklists' => ChecklistIndexResource::collection($this->checklists->where('user_id', Auth::id()))->resolve(),
-
+            'isMemberOfADepartment' => $this->departments
+                ->contains(fn ($department) => $department->users->contains(Auth::user())),
+            'public_checklists' => ChecklistIndexResource::collection($this->checklists->whereNull('user_id'))
+                ->resolve(),
+            'private_checklists' => ChecklistIndexResource::collection($this->checklists->where('user_id', Auth::id()))
+                ->resolve(),
             'comments' => $this->comments->map(fn ($comment) => [
                 'id' => $comment->id,
                 'text' => $comment->text,

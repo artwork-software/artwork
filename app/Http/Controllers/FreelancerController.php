@@ -37,9 +37,9 @@ class FreelancerController extends Controller
     /**
      * @param Freelancer $freelancer
      * @param $month
-     * @return array
+     * @return array<string, mixed>
      */
-    function getAvailabilityData(Freelancer $freelancer, $month = null): array
+    private function getAvailabilityData(Freelancer $freelancer, $month = null): array
     {
         $vacationDays = $freelancer->vacations()->orderBy('from', 'ASC')->get();
 
@@ -198,8 +198,8 @@ class FreelancerController extends Controller
             return Redirect::back();
         }
 
-        if (!$freelancer->assigned_crafts->contains($craftToAssign)) {
-            $freelancer->assigned_crafts()->attach(Craft::find($request->get('craftId')));
+        if (!$freelancer->assignedCrafts->contains($craftToAssign)) {
+            $freelancer->assignedCrafts()->attach(Craft::find($request->get('craftId')));
         }
 
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
@@ -212,7 +212,7 @@ class FreelancerController extends Controller
      */
     public function removeCraft(Freelancer $freelancer, Craft $craft): RedirectResponse
     {
-        $freelancer->assigned_crafts()->detach($craft);
+        $freelancer->assignedCrafts()->detach($craft);
 
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
     }

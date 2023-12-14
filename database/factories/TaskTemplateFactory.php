@@ -11,11 +11,9 @@ class TaskTemplateFactory extends Factory
     protected $model = TaskTemplate::class;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'name' => $this->faker->name,

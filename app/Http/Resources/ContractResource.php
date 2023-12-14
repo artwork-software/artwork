@@ -6,18 +6,15 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Http\Request;
 
 class ContractResource extends JsonResource
 {
     /**
-     * Transform the resource into an array.
-     *
-     * @return array<int, User>
+     * @return User[]
      */
     public function getAccessibleUsers(): array
     {
-        $usersWithAccess = $this->accessing_users->all();
+        $usersWithAccess = $this->accessingUsers->all();
         $project = Project::where('id', $this->project_id)->with(['users'])->first();
         foreach ($project->users as $user) {
             if ($user->pivot->is_manager) {
@@ -31,9 +28,9 @@ class ContractResource extends JsonResource
     }
 
     /**
-     * @param Request $request
      * @return array<string, mixed>
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
         return [

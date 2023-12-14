@@ -16,22 +16,25 @@ use App\Models\Project;
 use App\Models\SubPosition;
 use App\Models\SubPositionRow;
 use App\Models\SubpositionSumDetail;
-use App\Models\SumMoneySource;
 use App\Models\Table;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Response;
+use Inertia\ResponseFactory;
 use stdClass;
-use function Clue\StreamFilter\fun;
 
 class MoneySourceController extends Controller
 {
     protected ?NotificationService $notificationService = null;
+
     protected ?stdClass $notificationData = null;
+
     protected ?NewHistoryService $history = null;
 
     public function __construct()
@@ -41,12 +44,7 @@ class MoneySourceController extends Controller
         $this->history = new NewHistoryService('App\Models\MoneySource');
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function index()
+    public function index(): Response|ResponseFactory
     {
         return inertia('MoneySources/MoneySourceManagement', [
             'moneySources' => MoneySource::with(['users'])->get(),
@@ -54,14 +52,18 @@ class MoneySourceController extends Controller
         ]);
     }
 
-    public function showSettings()
+    public function showSettings(): Response|ResponseFactory
     {
         return inertia('MoneySources/MoneySourceSettings', [
             'moneySourceCategories' => MoneySourceCategory::all(),
         ]);
     }
 
-    public function search(SearchRequest $request)
+    /**
+     * @return MoneySource[]
+     * @throws AuthorizationException
+     */
+    public function search(SearchRequest $request): array
     {
         $filteredObjects = [];
         $this->authorize('viewAny', User::class);
@@ -74,8 +76,7 @@ class MoneySourceController extends Controller
                 $filteredObjects[] = $moneySource;
             }
             return $filteredObjects;
-
-        } else if ($request->input('type') === 'group') {
+        } elseif ($request->input('type') === 'group') {
             $moneySources = MoneySource::search($request->input('query'))->get();
             foreach ($moneySources as $moneySource) {
                 if ($moneySource->is_group === 1 || $moneySource->is_group === true) {
@@ -94,23 +95,11 @@ class MoneySourceController extends Controller
         }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         foreach ($request->users as $requestUser) {
             $notificationTitle = 'Du hast Zugriff auf "' . $request->name . '" erhalten';
@@ -125,12 +114,13 @@ class MoneySourceController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
+            $this->notificationService->setNotificationConstEnum(
+                NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
+            );
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setNotificationTo($user);
             $this->notificationService->createNotification();
         }
-
 
         if (!empty($request->amount)) {
             $amount = str_replace(',', '.', $request->amount);
@@ -165,21 +155,19 @@ class MoneySourceController extends Controller
         return back();
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param \App\Models\MoneySource $moneySource
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function show(MoneySource $moneySource): \Inertia\Response|\Inertia\ResponseFactory
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    public function show(MoneySource $moneySource): Response|ResponseFactory
     {
         $moneySource->load([
-            'money_source_files'
+            'moneySourceFiles'
         ]);
         $amount = $moneySource->amount;
         $subMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
-        $columns = ColumnCell::where('linked_money_source_id', $moneySource->id)->latest('column_id')->get()->unique('sub_position_row_id');
-
+        $columns = ColumnCell::where('linked_money_source_id', $moneySource->id)
+            ->latest('column_id')
+            ->get()
+            ->unique('sub_position_row_id');
 
         $subPositionSumDetails = SubpositionSumDetail::with('subPosition.mainPosition.table.project', 'sumMoneySource')
             ->whereRelation('sumMoneySource', 'money_source_id', $moneySource->id)
@@ -199,7 +187,10 @@ class MoneySourceController extends Controller
         $usersWithAccess = [];
         if ($moneySource->is_group) {
             foreach ($subMoneySources as $subMoneySource) {
-                $columns = ColumnCell::where('linked_money_source_id', $subMoneySource->id)->latest('column_id')->get()->unique('sub_position_row_id');
+                $columns = ColumnCell::where('linked_money_source_id', $subMoneySource->id)
+                    ->latest('column_id')
+                    ->get()
+                    ->unique('sub_position_row_id');
                 foreach ($columns as $column) {
                     $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
                     $subPosition = SubPosition::find($subPositionRow->sub_position_id);
@@ -235,11 +226,8 @@ class MoneySourceController extends Controller
                 }
             }
         } else {
-
             foreach ($budgetSumDetails as $detail) {
-
                 foreach ($detail->column->table->costSums as $costSum) {
-
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
                         'value' => $costSum,
@@ -251,11 +239,9 @@ class MoneySourceController extends Controller
                         ],
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
-
                 }
 
                 foreach ($detail->column->table->earningSums as $costSum) {
-
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
                         'value' => $costSum,
@@ -267,15 +253,11 @@ class MoneySourceController extends Controller
                         ],
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
-
                 }
-
             }
 
             foreach ($subPositionSumDetails as $detail) {
-
                 foreach ($detail->subPosition->columnSums as $columnSum) {
-
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
                         'value' => $columnSum['sum'],
@@ -288,20 +270,16 @@ class MoneySourceController extends Controller
                         'is_sum' => true,
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
-
                 }
-
             }
 
             foreach ($mainPositionSumDetails as $detail) {
-
                 foreach ($detail->mainPosition->columnSums as $columnSum) {
-
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
                         'value' => $columnSum['sum'],
                         'subPositionName' => "",
-                        'mainPositionName' => "Summe von " .$detail->mainPosition->name,
+                        'mainPositionName' => "Summe von " . $detail->mainPosition->name,
                         'project' => [
                             'id' => $detail->mainPosition->table->project->id,
                             'name' => $detail->mainPosition->table->project->name,
@@ -309,9 +287,7 @@ class MoneySourceController extends Controller
                         'is_sum' => true,
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
-
                 }
-
             }
 
             foreach ($columns as $column) {
@@ -378,7 +354,7 @@ class MoneySourceController extends Controller
                 'funding_end_date' => $moneySource->funding_end_date,
                 'users' => $moneySource->users()->get(),
                 'group_id' => $moneySource->group_id,
-                'money_source_files' => MoneySourceFileResource::collection($moneySource->money_source_files),
+                'money_source_files' => MoneySourceFileResource::collection($moneySource->moneySourceFiles),
                 'moneySourceGroup' => MoneySource::find($moneySource->group_id),
                 'subMoneySources' => $subMoneySources->map(fn($source) => [
                     'id' => $source->id,
@@ -388,16 +364,21 @@ class MoneySourceController extends Controller
                 'is_group' => $moneySource->is_group,
                 'created_at' => $moneySource->created_at,
                 'updated_at' => $moneySource->updated_at,
-                'tasks' => MoneySourceTask::with('money_source_task_users')->where('money_source_id', $moneySource->id)->get()->map(fn($task) => [
-                    'id' => $task->id,
-                    'money_source_id' => $task->money_source_id,
-                    'name' => $task->name,
-                    'description' => $task->description,
-                    'deadline' => $task->deadline,
-                    'done' => (bool)$task->done,
-                    'money_source_task_users' => $task->money_source_task_users,
-                    'pivot' => $task->pivot
-                ]),
+                'tasks' => MoneySourceTask::with('money_source_task_users')
+                    ->where('money_source_id', $moneySource->id)
+                    ->get()
+                    ->map(
+                        fn($task) => [
+                            'id' => $task->id,
+                            'money_source_id' => $task->money_source_id,
+                            'name' => $task->name,
+                            'description' => $task->description,
+                            'deadline' => $task->deadline,
+                            'done' => (bool)$task->done,
+                            'money_source_task_users' => $task->money_source_task_users,
+                            'pivot' => $task->pivot
+                        ]
+                    ),
                 'positions' => $positions,
                 'subMoneySourcePositions' => $subMoneySourcePositions,
                 'linked_projects' => array_unique($linked_projects, SORT_REGULAR),
@@ -412,34 +393,19 @@ class MoneySourceController extends Controller
             ]),
             'linkedProjects' => $moneySource->projects()->get()
         ]);
-
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param \App\Models\MoneySource $moneySource
-     */
-    public function edit(MoneySource $moneySource)
+    public function edit(): void
     {
-
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\MoneySource $moneySource
-     */
-    public function update(Request $request, MoneySource $moneySource)
+    public function update(Request $request, MoneySource $moneySource): void
     {
-
         $oldName = $moneySource->name;
         $oldDescription = $moneySource->description;
 
         $oldUsers = $moneySource->users()->get();
         $oldAmount = $moneySource->amount;
-
 
         if (!empty($request->amount)) {
             $amount = str_replace(',', '.', $request->amount);
@@ -473,7 +439,6 @@ class MoneySourceController extends Controller
 
         $newAmount = $moneySource->amount;
 
-
         if ($oldName !== $newName) {
             $this->history->createHistory($moneySource->id, 'Finanzierungsquellenname geändert');
         }
@@ -485,11 +450,12 @@ class MoneySourceController extends Controller
         if (empty($oldDescription) && !empty($newDescription)) {
             $this->history->createHistory($moneySource->id, 'Beschreibung hinzugefügt');
         }
+
         if (!empty($oldDescription) && empty($newDescription)) {
             $this->history->createHistory($moneySource->id, 'Beschreibung gelöscht');
         }
 
-        if($oldAmount !== $newAmount){
+        if ($oldAmount !== $newAmount) {
             $this->history->createHistory($moneySource->id, 'Ursprungsvolumen geändert');
         }
 
@@ -499,25 +465,18 @@ class MoneySourceController extends Controller
                 $money_source->update(['group_id' => $moneySource->id]);
             }
         }
-
     }
 
-    public function updateUsers(Request $request, MoneySource $moneySource)
+    public function updateUsers(Request $request, MoneySource $moneySource): void
     {
         $moneySource->users()->sync(collect($request->users));
-        $tasks = $moneySource->money_source_tasks()->get();
-        foreach ($tasks as $task){
+        $tasks = $moneySource->moneySourceTasks()->get();
+        foreach ($tasks as $task) {
             $task->money_source_task_users()->sync($moneySource->competent()->get());
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param \App\Models\MoneySource $moneySource
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(MoneySource $moneySource): \Illuminate\Http\RedirectResponse
+    public function destroy(MoneySource $moneySource): RedirectResponse
     {
         $beforeSubMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
         foreach ($beforeSubMoneySources as $beforeSubMoneySource) {
@@ -535,7 +494,9 @@ class MoneySourceController extends Controller
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('red');
                 $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
+                $this->notificationService->setNotificationConstEnum(
+                    NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
+                );
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo(User::find($user->id));
                 $this->notificationService->createNotification();
@@ -544,7 +505,7 @@ class MoneySourceController extends Controller
 
         $cells = ColumnCell::where('linked_money_source_id', $moneySource->id)->get();
 
-        $cells->each(function ($cell) {
+        $cells->each(function ($cell): void {
             $cell->update(['linked_money_source_id' => null]);
         });
 
@@ -552,7 +513,7 @@ class MoneySourceController extends Controller
         return Redirect::route('money_sources.index')->with('success', 'MoneySource deleted.');
     }
 
-    public function duplicate(MoneySource $moneySource): \Illuminate\Http\RedirectResponse
+    public function duplicate(MoneySource $moneySource): RedirectResponse
     {
         $user = Auth::user();
         $newMoneySource = $user->money_sources()->create([
@@ -587,8 +548,7 @@ class MoneySourceController extends Controller
         return Redirect::route('money_sources.index')->with('success', 'MoneySource pinned.');
     }
 
-
-    private function checkUserChanges($moneySource, $oldUsers, $newUsers)
+    private function checkUserChanges($moneySource, $oldUsers, $newUsers): void
     {
         $oldUserIds = [];
         $newUserIds = [];
@@ -609,7 +569,9 @@ class MoneySourceController extends Controller
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('green');
                 $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
+                $this->notificationService->setNotificationConstEnum(
+                    NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
+                );
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo(User::find($newUser->id));
                 $this->notificationService->createNotification();
@@ -628,19 +590,19 @@ class MoneySourceController extends Controller
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setIcon('red');
                 $this->notificationService->setPriority(2);
-                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED);
+                $this->notificationService->setNotificationConstEnum(
+                    NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
+                );
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo(User::find($newUser->id));
                 $this->notificationService->createNotification();
                 $this->history->createHistory($moneySource->id, 'Nutzerzugriff zu Finanzierungsquelle entfernt');
             }
-
         }
     }
 
-    public function updateProjects(MoneySource $moneySource, Request $request)
+    public function updateProjects(MoneySource $moneySource, Request $request): void
     {
         $moneySource->projects()->sync($request->linkedProjectIds);
     }
-
 }

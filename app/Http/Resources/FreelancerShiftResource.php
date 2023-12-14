@@ -11,25 +11,19 @@ class FreelancerShiftResource extends JsonResource
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
-
-        if(\request('startDate') && \request('endDate')){
-
+        if (\request('startDate') && \request('endDate')) {
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
-
-        }else{
-
+        } else {
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
-
         }
+
         return [
             'resource' => class_basename($this),
             'id' => $this->id,

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @property int id
@@ -13,8 +14,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property array roles
  * @property string created_at
  * @property string updated_at
- *
- * @property \Illuminate\Database\Eloquent\Collection<\App\Models\Department> $departments
  */
 class Invitation extends Model
 {
@@ -32,7 +31,8 @@ class Invitation extends Model
         'roles' => 'array'
     ];
 
-    public function departments() {
+    public function departments(): BelongsToMany
+    {
         return $this->belongsToMany(Department::class);
     }
 }

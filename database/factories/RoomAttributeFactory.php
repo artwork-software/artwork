@@ -2,22 +2,21 @@
 
 namespace Database\Factories;
 
+use App\Models\Room;
 use App\Models\RoomAttribute;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Room>
+ * @extends Factory<Room>
  */
 class RoomAttributeFactory extends Factory
 {
     protected $model = RoomAttribute::class;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'name' => $this->faker->randomElement([

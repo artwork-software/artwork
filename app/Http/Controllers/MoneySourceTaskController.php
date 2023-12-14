@@ -4,41 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Models\MoneySource;
 use App\Models\MoneySourceTask;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Response;
 
 class MoneySourceTaskController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         return response()->json(MoneySourceTask::where('money_source_id', $request->money_source_id)->get());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function store(Request $request): void
     {
         $moneySource = MoneySource::find($request->money_source);
-        $task = $moneySource->money_source_tasks()->create([
+        $task = $moneySource->moneySourceTasks()->create([
             'name' => $request->name,
             'description' => $request->description,
             'deadline' => $request->deadline,
@@ -48,52 +32,25 @@ class MoneySourceTaskController extends Controller
         $task->money_source_task_users()->sync($moneySource->competent()->get());
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\MoneySourceTask  $moneySourceTask
-     * @return \Illuminate\Http\Response
-     */
-    public function show(MoneySourceTask $moneySourceTask)
+    public function show(MoneySourceTask $moneySourceTask): void
     {
-
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\MoneySourceTask  $moneySourceTask
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(MoneySourceTask $moneySourceTask)
+    public function edit(MoneySourceTask $moneySourceTask): void
     {
-        //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\MoneySourceTask  $moneySourceTask
-     * @return \Illuminate\Http\Response
-     */
-    public function markAsDone(MoneySourceTask $moneySourceTask)
+    public function markAsDone(MoneySourceTask $moneySourceTask): void
     {
         $moneySourceTask->update(['done' => true]);
     }
 
-    public function markAsUnDone(MoneySourceTask $moneySourceTask)
+    public function markAsUnDone(MoneySourceTask $moneySourceTask): void
     {
         $moneySourceTask->update(['done' => false]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\MoneySourceTask  $moneySourceTask
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(MoneySourceTask $moneySourceTask)
+    public function destroy(MoneySourceTask $moneySourceTask): void
     {
         $moneySourceTask->delete();
     }

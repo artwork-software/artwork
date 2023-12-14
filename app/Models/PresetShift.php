@@ -6,7 +6,21 @@ use App\Casts\TimeWithoutSeconds;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $shift_preset_id
+ * @property string $start
+ * @property string $end
+ * @property int $break_minutes
+ * @property int $craft_id
+ * @property int $number_employees
+ * @property int $number_masters
+ * @property string $description
+ * @property string $created_at
+ * @property string $updated_at
+ */
 class PresetShift extends Model
 {
     use HasFactory;
@@ -30,7 +44,8 @@ class PresetShift extends Model
     protected $appends = ['break_formatted'];
 
     protected $with = ['craft'];
-    public function shift_preset(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+
+    public function shiftPreset(): BelongsTo
     {
         return $this->belongsTo(ShiftPreset::class);
     }
@@ -41,7 +56,8 @@ class PresetShift extends Model
         return Carbon::parse($hours)->format('H:i');
     }
 
-    public function craft(){
+    public function craft(): BelongsTo
+    {
         return $this->belongsTo(Craft::class)->without(['users']);
     }
 }

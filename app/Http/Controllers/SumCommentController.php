@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class SumCommentController extends Controller
 {
-
     public function store(Request $request): RedirectResponse
     {
         SumComment::create([
@@ -27,5 +26,4 @@ class SumCommentController extends Controller
         $comment->delete();
         return back();
     }
-
 }

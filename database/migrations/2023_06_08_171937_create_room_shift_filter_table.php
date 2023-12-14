@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('room_shift_filter', function (Blueprint $table) {
+        Schema::create('room_shift_filter', function (Blueprint $table): void {
             $table->id();
             $table->integer('shift_filter_id');
             $table->integer('room_id');
@@ -26,7 +26,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('room_shift_filter');
     }

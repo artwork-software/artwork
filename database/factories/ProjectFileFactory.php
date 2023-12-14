@@ -2,11 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\ProjectFile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ProjectFile>
+ * @extends Factory<ProjectFile>
  */
 class ProjectFileFactory extends Factory
 {
@@ -15,11 +16,11 @@ class ProjectFileFactory extends Factory
      *
      * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             "name" => "Datei.pdf",
-            "basename" => Str::random(20)."Datei.pdf",
+            "basename" => Str::random(20) . "Datei.pdf",
             "project_id" => 1
         ];
     }

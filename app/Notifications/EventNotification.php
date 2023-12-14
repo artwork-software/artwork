@@ -14,29 +14,16 @@ class EventNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
-    /**
-     * @var stdClass|null
-     */
     protected ?stdClass $notificationData = null;
 
-    /**
-     * @var array|mixed
-     */
     protected array $broadcastMessage = [];
 
-    /**
-     * @param $notificationData
-     * @param $broadcastMessage
-     */
     public function __construct($notificationData, $broadcastMessage = [])
     {
         $this->notificationData = $notificationData;
         $this->broadcastMessage = $broadcastMessage;
     }
 
-    /**
-     * @return BroadcastMessage
-     */
     public function toBroadcast(): BroadcastMessage
     {
         return new BroadcastMessage([
@@ -45,10 +32,7 @@ class EventNotification extends Notification implements ShouldBroadcast
     }
 
     /**
-     * Get the notification's delivery channels.
-     *
-     * @param $user
-     * @return array<int, string>
+     * @return string[]
      */
     public function via($user): array
     {
@@ -69,11 +53,6 @@ class EventNotification extends Notification implements ShouldBroadcast
         return $channels;
     }
 
-    /**
-     * Get the mail representation of the notification.
-     *
-     * @return MailMessage
-     */
     public function toMail(): MailMessage
     {
         return (new MailMessage())
@@ -81,11 +60,6 @@ class EventNotification extends Notification implements ShouldBroadcast
             ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
     }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return stdClass
-     */
     public function toArray(): stdClass
     {
         return $this->notificationData;

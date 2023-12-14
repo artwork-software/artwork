@@ -4,16 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int $user_id
- * @property \Illuminate\Support\Carbon $start_date
- * @property \Illuminate\Support\Carbon $end_date
+ * @property string $start_date
+ * @property string $end_date
  * @property array $event_types
  * @property array $rooms
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
+ * @property string $created_at
+ * @property string $updated_at
  */
 class UserShiftCalendarFilter extends Model
 {
@@ -32,7 +34,7 @@ class UserShiftCalendarFilter extends Model
         'rooms' => 'array'
     ];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

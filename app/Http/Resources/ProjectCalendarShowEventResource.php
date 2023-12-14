@@ -7,20 +7,18 @@ use Illuminate\Support\Facades\Auth;
 
 class ProjectCalendarShowEventResource extends JsonResource
 {
-
     public static $wrap = null;
+
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         $classString = '';
-        if($this->occupancy_option){
+        if ($this->occupancy_option) {
             $classString = $this->event_type->svg_name . ' ' . 'occupancy_option_' . $this->event_type->svg_name;
-        }else{
+        } else {
             $classString = $this->event_type->svg_name;
         }
         return [
@@ -29,7 +27,7 @@ class ProjectCalendarShowEventResource extends JsonResource
             'start' => $this->start_time->utc()->toIso8601String(),
             'startTime' => $this->start_time,
             'end' => $this->end_time->utc()->toIso8601String(),
-            'title' => $this->project?->name ?: $this->eventName? : $this->event_type->name,
+            'title' => $this->project?->name ?: $this->eventName ? : $this->event_type->name,
             'alwaysEventName' => $this->eventName,
             'eventName' => $this->eventName,
             'description' => $this->description,
@@ -42,7 +40,7 @@ class ProjectCalendarShowEventResource extends JsonResource
             'declinedRoomId' => $this->declined_room_id,
             'eventTypeId' => $this->event_type_id,
             'eventTypeName' => $this->event_type->name,
-            'eventTypeAbbreviation' =>$this->event_type->abbreviation,
+            'eventTypeAbbreviation' => $this->event_type->abbreviation,
             'class' => $classString,
             'areaId' => $this->room?->area_id,
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
@@ -50,10 +48,10 @@ class ProjectCalendarShowEventResource extends JsonResource
             'occupancy_option' => $this->occupancy_option,
             'projectLeaders' => $this->project?->managerUsers,
             //'project' => new ProjectInEventResource($this->project),
-            'collisionCount'=> $this->collision_count,
-            'is_series'=> $this->is_series,
-            'series_id'=> $this->series_id,
-            'option_string'=>$this->option_string,
+            'collisionCount' => $this->collision_count,
+            'is_series' => $this->is_series,
+            'series_id' => $this->series_id,
+            'option_string' => $this->option_string,
             'series' => $this->series,
             'allDay' => $this->allDay,
             // to display rooms as split
@@ -61,7 +59,6 @@ class ProjectCalendarShowEventResource extends JsonResource
             // Todo Add Authorization
             'resizable' => true,
             'draggable' => true,
-
             'canEdit' => Auth::user()->can('update', $this->resource),
             'canAccept' => Auth::user()->can('update', $this->resource),
             'canDelete' => Auth::user()->can('delete', $this->resource),

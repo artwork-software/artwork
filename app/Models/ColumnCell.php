@@ -8,13 +8,22 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $column_id
+ * @property int $sub_position_row_id
+ * @property string $value
+ * @property bool $commented
+ * @property int $linked_money_source_id
+ * @property string $linked_type
+ * @property string $verified_value
+ * @property string $created_at
+ * @property string $updated_at
+ */
 class ColumnCell extends Model
 {
     use HasFactory;
 
-    /**
-     * @var string[]
-     */
     protected $fillable = [
         'column_id',
         'sub_position_row_id',
@@ -25,50 +34,29 @@ class ColumnCell extends Model
         'commented'
     ];
 
-    /**
-     * @var string[]
-     */
     protected $casts = [
         'commented' => 'boolean'
     ];
 
-    /**
-     * @var string
-     */
     protected $primaryKey = 'id';
 
-    /**
-     * @var string
-     */
     protected $table = 'column_sub_position_row';
 
-    /**
-     * @return BelongsToMany
-     */
     public function subPositionRows(): BelongsToMany
     {
         return $this->belongsToMany(SubPositionRow::class);
     }
 
-    /**
-     * @return BelongsTo
-     */
     public function column(): BelongsTo
     {
         return $this->belongsTo(Column::class);
     }
 
-    /**
-     * @return HasMany
-     */
     public function comments(): HasMany
     {
         return $this->hasMany(CellComment::class);
     }
 
-    /**
-     * @return HasMany
-     */
     public function calculations(): HasMany
     {
         return $this->hasMany(CellCalculations::class, 'cell_id');

@@ -408,7 +408,7 @@ class ShiftController extends Controller
     }
 
     //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
     public function addShiftUser(Shift $shift, User $user, Request $request): void
     {
         $this->notificationService->setProjectId($shift->event()->first()->project()->first()->id);
@@ -696,7 +696,7 @@ class ShiftController extends Controller
     }
 
     //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded, Generic.Metrics.NestingLevel.TooHigh
     public function addShiftMaster(Request $request, Shift $shift, User $user): void
     {
         if ($shift->is_committed) {
@@ -932,6 +932,8 @@ class ShiftController extends Controller
         $shift->users()->attach($user->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
     }
 
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function addShiftFreelancer(Shift $shift, Freelancer $freelancer, Request $request): void
     {
         if ($shift->is_committed) {
@@ -989,6 +991,8 @@ class ShiftController extends Controller
         $shift->freelancer()->attach($freelancer->id, ['shift_count' => $collideCount + 1]);
     }
 
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function addShiftFreelancerMaster(Request $request, Shift $shift, Freelancer $freelancer): void
     {
         if ($shift->is_committed) {
@@ -1048,6 +1052,8 @@ class ShiftController extends Controller
         $shift->freelancer()->attach($freelancer->id, ['is_master' => true, 'shift_count' => $collideCount + 1]);
     }
 
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function addShiftProviderMaster(Request $request, Shift $shift, ServiceProvider $serviceProvider): void
     {
         if ($shift->is_committed) {
@@ -1263,6 +1269,8 @@ class ShiftController extends Controller
         );
     }
 
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function addShiftProvider(Shift $shift, ServiceProvider $serviceProvider, Request $request): void
     {
         if ($shift->is_committed) {

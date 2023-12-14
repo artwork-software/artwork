@@ -62,8 +62,7 @@ class MoneySource extends Model
 
     public function pinnedByUsers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'money_source_user_pinned')
-            ->using(MoneySourceUserPinned::class);
+        return $this->belongsToMany(User::class, 'money_source_user_pinned');
     }
 
     public function competent(): BelongsToMany

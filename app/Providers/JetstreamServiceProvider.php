@@ -21,7 +21,7 @@ class JetstreamServiceProvider extends ServiceProvider
 
         Jetstream::inertia()->whenRendering(
             'Profile/Show',
-            //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassBeforeLastUsed
+            //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
             function (Request $request, array $data) {
                 return array_merge($data, [
                     "all_departments" => Department::all(),

@@ -126,7 +126,9 @@ class RoomController extends Controller
         return inertia('Rooms/Show', [
             'room' => new RoomCalendarResource($room),
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
-            'is_room_admin' => $room->users()->wherePivot('is_admin', true)->get()->contains(Auth::id()),
+            'is_room_admin' => $room->users()
+                ->wherePivot('is_admin', true)
+                ->wherePivot('user_id', '=', Auth::id())->count() > 0,
             'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
 

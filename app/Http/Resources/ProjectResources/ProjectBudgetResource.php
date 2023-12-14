@@ -51,7 +51,7 @@ class ProjectBudgetResource extends JsonResource
             'key_visual_path' => $this->key_visual_path,
             'cost_center' => $this->cost_center,
             'copyright' => new CopyrightResource($this->copyright),
-            'moneySources' => $this->money_sources,
+            'moneySources' => $this->moneySources,
             'project_files' => ProjectFileResource::collection($this->project_files),
             'contracts' => ContractResource::collection($this->contracts),
             'access_budget' => $this->access_budget,

@@ -48,7 +48,7 @@ class UserFactory extends Factory
 
         return $this->has(
             Team::factory()
-                //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassBeforeLastUsed
+                //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
                 ->state(function (array $attributes, User $user) {
                     return [
                         'first_name' => $user->first_name . '\'s Team',

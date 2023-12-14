@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -55,23 +59,23 @@ class Room extends Model
         'temporary' => 'boolean'
     ];
 
-    public function area()
+    public function area(): BelongsTo
     {
         return $this->belongsTo(Area::class, 'area_id');
     }
 
-    public function creator()
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function users()
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'room_user', 'room_id')
             ->withPivot('is_admin', 'can_request');
     }
 
-    public function admins(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function admins(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'room_user', 'room_id')
             ->wherePivot('is_admin', true);
@@ -79,48 +83,48 @@ class Room extends Model
 
     //@todo: fix phpcs error - refactor function name to roomFiles
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    public function room_files()
+    public function room_files(): HasMany
     {
         return $this->hasMany(RoomFile::class);
     }
 
-    public function events()
+    public function events(): HasMany
     {
         return $this->hasMany(Event::class);
     }
 
     //@todo: fix phpcs error - refactor function name to adjoiningRooms
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    public function adjoining_rooms()
+    public function adjoining_rooms(): BelongsToMany
     {
         return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'main_room_id', 'adjoining_room_id');
     }
 
     //@todo: fix phpcs error - refactor function name to mainRooms
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    public function main_rooms()
+    public function main_rooms(): BelongsToMany
     {
         return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'adjoining_room_id', 'main_room_id');
     }
 
-    public function categories()
+    public function categories(): BelongsToMany
     {
         return $this->belongsToMany(RoomCategory::class);
     }
 
-    public function attributes()
+    public function attributes(): BelongsToMany
     {
         return $this->belongsToMany(RoomAttribute::class);
     }
 
-    public function prunable()
+    public function prunable(): Builder
     {
         return static::where('deleted_at', '<=', now()->subMonth())
             ->orWhere('temporary', true)
             ->where('end_date', '<=', now());
     }
 
-    public function pruning()
+    public function pruning(): int
     {
         return $this->room_files()->delete();
     }

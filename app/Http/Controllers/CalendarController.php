@@ -261,7 +261,7 @@ class CalendarController extends Controller
             $better = collect($calendarPeriod)
                 ->mapWithKeys(fn($date) => [
                     $date->format('d.m.') => CalendarEventResource::collection(
-                        $this->get_events_of_day($date, $room, $project->id)
+                        $this->get_events_of_day($date, $room, $project?->id)
                     )
                 ]);
         } else {
@@ -685,7 +685,7 @@ class CalendarController extends Controller
         $roomCategoryIds = $calendarFilter->room_categories ?? null;
 
         return $query
-            ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project->id))
+            ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project?->id))
             ->when($room, fn(EventBuilder $builder) => $builder->where('room_id', $room->id))
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),

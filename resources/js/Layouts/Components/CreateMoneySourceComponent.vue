@@ -71,6 +71,22 @@
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                             </div>
+                            <div class="flex mb-2 space-x-2">
+                                <div class="w-1/2">
+                                    <input type="text" onfocus="(this.type='date')"
+                                           v-model="this.createSingleSourceForm.funding_start_date"
+                                           id="sourceStartDate"
+                                           placeholder="Förderzeitraum Start"
+                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                </div>
+                                <div class="w-1/2">
+                                    <input type="text" onfocus="(this.type='date')"
+                                           v-model="this.createSingleSourceForm.funding_end_date"
+                                           id="sourceEndDate"
+                                           placeholder="Förderzeitraum Ende"
+                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                </div>
+                            </div>
                             <div class="mb-2">
                                 <div class="relative w-full">
                                     <div class="w-full">
@@ -366,6 +382,8 @@ export default {
                 amount: null,
                 start_date: null,
                 end_date: null,
+                funding_start_date: null,
+                funding_end_date: null,
                 source_name: null,
                 description: null,
                 is_group: false,

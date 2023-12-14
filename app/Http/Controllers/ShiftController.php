@@ -444,27 +444,30 @@ class ShiftController extends Controller
             $project->users()->attach($user->id);
         }
 
-        if ($request->chooseData['onlyThisDay'] === false) {
-            $start = Carbon::parse($request->chooseData['start'])->startOfDay();
-            $end = Carbon::parse($request->chooseData['end'])->endOfDay();
-            $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
-                ->where(function ($query) use ($start, $end): void {
-                    $query->whereBetween('event_start_day', [$start, $end])
-                        ->orWhereBetween('event_end_day', [$start, $end]);
-                })
-                ->get();
-            foreach ($allShifts as $allShift) {
-                if ($allShift->id !== $shift->id) {
-                    if ($request->chooseData['dayOfWeek'] !== 'all') {
-                        if (
-                            Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']
-                        ) {
-                            continue;
+        if (isset($request->chooseData)) {
+            if ($request->chooseData['onlyThisDay'] === false) {
+                $start = Carbon::parse($request->chooseData['start'])->startOfDay();
+                $end = Carbon::parse($request->chooseData['end'])->endOfDay();
+                $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
+                    ->where(function ($query) use ($start, $end): void {
+                        $query->whereBetween('event_start_day', [$start, $end])
+                            ->orWhereBetween('event_end_day', [$start, $end]);
+                    })
+                    ->get();
+                foreach ($allShifts as $allShift) {
+                    if ($allShift->id !== $shift->id) {
+                        if ($request->chooseData['dayOfWeek'] !== 'all') {
+                            if (
+                                Carbon::parse($allShift->event_start_day)->dayOfWeek !==
+                                $request->chooseData['dayOfWeek']
+                            ) {
+                                continue;
+                            }
                         }
-                    }
-                    if ($allShift->getEmptyUserCountAttribute() > 0) {
-                        if (!$allShift->users->contains($user->id)) {
-                            $allShift->users()->attach($user->id, ['shift_count' => $collideCount + 1]);
+                        if ($allShift->getEmptyUserCountAttribute() > 0) {
+                            if (!$allShift->users->contains($user->id)) {
+                                $allShift->users()->attach($user->id, ['shift_count' => $collideCount + 1]);
+                            }
                         }
                     }
                 }
@@ -727,30 +730,33 @@ class ShiftController extends Controller
             $project->users()->attach($user->id);
         }
 
-        if ($request->chooseData['onlyThisDay'] === false) {
-            $start = Carbon::parse($request->chooseData['start'])->startOfDay();
-            $end = Carbon::parse($request->chooseData['end'])->endOfDay();
-            $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
-                ->where(function ($query) use ($start, $end): void {
-                    $query->whereBetween('event_start_day', [$start, $end])
-                        ->orWhereBetween('event_end_day', [$start, $end]);
-                })
-                ->get();
-            foreach ($allShifts as $allShift) {
-                if ($allShift->id !== $shift->id) {
-                    if ($request->chooseData['dayOfWeek'] !== 'all') {
-                        if (
-                            Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']
-                        ) {
-                            continue;
+        if (isset($request->chooseData)) {
+            if ($request->chooseData['onlyThisDay'] === false) {
+                $start = Carbon::parse($request->chooseData['start'])->startOfDay();
+                $end = Carbon::parse($request->chooseData['end'])->endOfDay();
+                $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
+                    ->where(function ($query) use ($start, $end): void {
+                        $query->whereBetween('event_start_day', [$start, $end])
+                            ->orWhereBetween('event_end_day', [$start, $end]);
+                    })
+                    ->get();
+                foreach ($allShifts as $allShift) {
+                    if ($allShift->id !== $shift->id) {
+                        if ($request->chooseData['dayOfWeek'] !== 'all') {
+                            if (
+                                Carbon::parse($allShift->event_start_day)->dayOfWeek !==
+                                $request->chooseData['dayOfWeek']
+                            ) {
+                                continue;
+                            }
                         }
-                    }
-                    if ($allShift->getEmptyMasterCountAttribute() > 0) {
-                        if (!$allShift->users->contains($user->id)) {
-                            $allShift->users()->attach(
-                                $user->id,
-                                ['is_master' => true,'shift_count' => $collideCount + 1]
-                            );
+                        if ($allShift->getEmptyMasterCountAttribute() > 0) {
+                            if (!$allShift->users->contains($user->id)) {
+                                $allShift->users()->attach(
+                                    $user->id,
+                                    ['is_master' => true, 'shift_count' => $collideCount + 1]
+                                );
+                            }
                         }
                     }
                 }
@@ -949,26 +955,31 @@ class ShiftController extends Controller
             );
         }
 
-        if ($request->chooseData['onlyThisDay'] === false) {
-            $start = Carbon::parse($request->chooseData['start'])->startOfDay();
-            $end = Carbon::parse($request->chooseData['end'])->endOfDay();
-            $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
-                ->where(function ($query) use ($start, $end): void {
-                    $query->whereBetween('event_start_day', [$start, $end])
-                        ->orWhereBetween('event_end_day', [$start, $end]);
-                })
-                ->get();
+        if (isset($request->chooseData)) {
+            if ($request->chooseData['onlyThisDay'] === false) {
+                $start = Carbon::parse($request->chooseData['start'])->startOfDay();
+                $end = Carbon::parse($request->chooseData['end'])->endOfDay();
+                $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
+                    ->where(function ($query) use ($start, $end): void {
+                        $query->whereBetween('event_start_day', [$start, $end])
+                            ->orWhereBetween('event_end_day', [$start, $end]);
+                    })
+                    ->get();
 
-            foreach ($allShifts as $allShift) {
-                if ($request->chooseData['dayOfWeek'] !== 'all') {
-                    if (Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']) {
-                        continue;
+                foreach ($allShifts as $allShift) {
+                    if ($request->chooseData['dayOfWeek'] !== 'all') {
+                        if (
+                            Carbon::parse($allShift->event_start_day)->dayOfWeek !==
+                            $request->chooseData['dayOfWeek']
+                        ) {
+                            continue;
+                        }
                     }
-                }
-                if ($allShift->id !== $shift->id) {
-                    if ($allShift->getEmptyUserCountAttribute() > 0) {
-                        if (!$allShift->freelancer->contains($freelancer->id)) {
-                            $allShift->freelancer()->attach($freelancer->id, ['shift_count' => $collideCount + 1]);
+                    if ($allShift->id !== $shift->id) {
+                        if ($allShift->getEmptyUserCountAttribute() > 0) {
+                            if (!$allShift->freelancer->contains($freelancer->id)) {
+                                $allShift->freelancer()->attach($freelancer->id, ['shift_count' => $collideCount + 1]);
+                            }
                         }
                     }
                 }
@@ -1002,30 +1013,33 @@ class ShiftController extends Controller
             );
         }
 
-        if ($request->chooseData['onlyThisDay'] === false) {
-            $start = Carbon::parse($request->chooseData['start'])->startOfDay();
-            $end = Carbon::parse($request->chooseData['end'])->endOfDay();
-            $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
-                ->where(function ($query) use ($start, $end): void {
-                    $query->whereBetween('event_start_day', [$start, $end])
-                        ->orWhereBetween('event_end_day', [$start, $end]);
-                })
-                ->get();
-            foreach ($allShifts as $allShift) {
-                if ($allShift->id !== $shift->id) {
-                    if ($request->chooseData['dayOfWeek'] !== 'all') {
-                        if (
-                            Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']
-                        ) {
-                            continue;
+        if (isset($request->chooseData)) {
+            if ($request->chooseData['onlyThisDay'] === false) {
+                $start = Carbon::parse($request->chooseData['start'])->startOfDay();
+                $end = Carbon::parse($request->chooseData['end'])->endOfDay();
+                $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
+                    ->where(function ($query) use ($start, $end): void {
+                        $query->whereBetween('event_start_day', [$start, $end])
+                            ->orWhereBetween('event_end_day', [$start, $end]);
+                    })
+                    ->get();
+                foreach ($allShifts as $allShift) {
+                    if ($allShift->id !== $shift->id) {
+                        if ($request->chooseData['dayOfWeek'] !== 'all') {
+                            if (
+                                Carbon::parse($allShift->event_start_day)->dayOfWeek !==
+                                $request->chooseData['dayOfWeek']
+                            ) {
+                                continue;
+                            }
                         }
-                    }
-                    if ($allShift->getEmptyMasterCountAttribute() > 0) {
-                        if (!$allShift->freelancer->contains($freelancer->id)) {
-                            $allShift->freelancer()->attach(
-                                $freelancer->id,
-                                ['is_master' => true, 'shift_count' => $collideCount + 1]
-                            );
+                        if ($allShift->getEmptyMasterCountAttribute() > 0) {
+                            if (!$allShift->freelancer->contains($freelancer->id)) {
+                                $allShift->freelancer()->attach(
+                                    $freelancer->id,
+                                    ['is_master' => true, 'shift_count' => $collideCount + 1]
+                                );
+                            }
                         }
                     }
                 }
@@ -1058,30 +1072,33 @@ class ShiftController extends Controller
             );
         }
 
-        if ($request->chooseData['onlyThisDay'] === false) {
-            $start = Carbon::parse($request->chooseData['start'])->startOfDay();
-            $end = Carbon::parse($request->chooseData['end'])->endOfDay();
-            $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
-                ->where(function ($query) use ($start, $end): void {
-                    $query->whereBetween('event_start_day', [$start, $end])
-                        ->orWhereBetween('event_end_day', [$start, $end]);
-                })
-                ->get();
-            foreach ($allShifts as $allShift) {
-                if ($allShift->id !== $shift->id) {
-                    if ($request->chooseData['dayOfWeek'] !== 'all') {
-                        if (
-                            Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']
-                        ) {
-                            continue;
+        if (isset($request->chooseData)) {
+            if ($request->chooseData['onlyThisDay'] === false) {
+                $start = Carbon::parse($request->chooseData['start'])->startOfDay();
+                $end = Carbon::parse($request->chooseData['end'])->endOfDay();
+                $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
+                    ->where(function ($query) use ($start, $end): void {
+                        $query->whereBetween('event_start_day', [$start, $end])
+                            ->orWhereBetween('event_end_day', [$start, $end]);
+                    })
+                    ->get();
+                foreach ($allShifts as $allShift) {
+                    if ($allShift->id !== $shift->id) {
+                        if ($request->chooseData['dayOfWeek'] !== 'all') {
+                            if (
+                                Carbon::parse($allShift->event_start_day)->dayOfWeek !==
+                                $request->chooseData['dayOfWeek']
+                            ) {
+                                continue;
+                            }
                         }
-                    }
-                    if ($allShift->getEmptyMasterCountAttribute() > 0) {
-                        if (!$allShift->service_provider->contains($serviceProvider->id)) {
-                            $allShift->service_provider()->attach(
-                                $serviceProvider->id,
-                                ['is_master' => true, 'shift_count' => $collideCount + 1]
-                            );
+                        if ($allShift->getEmptyMasterCountAttribute() > 0) {
+                            if (!$allShift->service_provider->contains($serviceProvider->id)) {
+                                $allShift->service_provider()->attach(
+                                    $serviceProvider->id,
+                                    ['is_master' => true, 'shift_count' => $collideCount + 1]
+                                );
+                            }
                         }
                     }
                 }
@@ -1269,30 +1286,33 @@ class ShiftController extends Controller
             );
         }
 
-        if ($request->chooseData['onlyThisDay'] === false) {
-            $start = Carbon::parse($request->chooseData['start'])->startOfDay();
-            $end = Carbon::parse($request->chooseData['end'])->endOfDay();
-            $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
-                ->where(function ($query) use ($start, $end): void {
-                    $query->whereBetween('event_start_day', [$start, $end])
-                        ->orWhereBetween('event_end_day', [$start, $end]);
-                })
-                ->get();
-            foreach ($allShifts as $allShift) {
-                if ($allShift->id !== $shift->id) {
-                    if ($request->chooseData['dayOfWeek'] !== 'all') {
-                        if (
-                            Carbon::parse($allShift->event_start_day)->dayOfWeek !== $request->chooseData['dayOfWeek']
-                        ) {
-                            continue;
+        if (isset($request->chooseData)) {
+            if ($request->chooseData['onlyThisDay'] === false) {
+                $start = Carbon::parse($request->chooseData['start'])->startOfDay();
+                $end = Carbon::parse($request->chooseData['end'])->endOfDay();
+                $allShifts = Shift::where('shift_uuid', $shift->shift_uuid)
+                    ->where(function ($query) use ($start, $end): void {
+                        $query->whereBetween('event_start_day', [$start, $end])
+                            ->orWhereBetween('event_end_day', [$start, $end]);
+                    })
+                    ->get();
+                foreach ($allShifts as $allShift) {
+                    if ($allShift->id !== $shift->id) {
+                        if ($request->chooseData['dayOfWeek'] !== 'all') {
+                            if (
+                                Carbon::parse($allShift->event_start_day)->dayOfWeek !==
+                                $request->chooseData['dayOfWeek']
+                            ) {
+                                continue;
+                            }
                         }
-                    }
-                    if ($allShift->getEmptyUserCountAttribute() > 0) {
-                        if (!$allShift->service_provider->contains($serviceProvider->id)) {
-                            $allShift->service_provider()->attach(
-                                $serviceProvider->id,
-                                ['shift_count' => $collideCount + 1]
-                            );
+                        if ($allShift->getEmptyUserCountAttribute() > 0) {
+                            if (!$allShift->service_provider->contains($serviceProvider->id)) {
+                                $allShift->service_provider()->attach(
+                                    $serviceProvider->id,
+                                    ['shift_count' => $collideCount + 1]
+                                );
+                            }
                         }
                     }
                 }
@@ -1324,6 +1344,41 @@ class ShiftController extends Controller
                     ' - ' . $event->eventName . ') entfernt',
                 'shift'
             );
+        }
+    }
+
+    public function saveMultiEdit(Request $request): void
+    {
+        $shifts = $request->shifts;
+        $user = null;
+        $freelancer = null;
+        $serviceProvider = null;
+
+        if ($request->user['type'] === 0) {
+            $user = User::find($request->user['id']);
+        }
+
+        if ($request->user['type'] === 1) {
+            $freelancer = Freelancer::find($request->user['id']);
+        }
+
+        if ($request->user['type'] === 2) {
+            $serviceProvider = ServiceProvider::find($request->user['id']);
+        }
+
+        //dd($request->user['type']);
+        foreach ($shifts as $shift => $key) {
+            $shift = Shift::find($key);
+            if ($request->user['type'] === 0) {
+                $this->addShiftUser(shift: $shift, user: $user, request: $request);
+            }
+            if ($request->user['type'] === 1) {
+                $this->addShiftFreelancer(shift: $shift, freelancer: $freelancer, request: $request);
+            }
+
+            if ($request->user['type'] === 2) {
+                $this->addShiftProvider(shift: $shift, serviceProvider: $serviceProvider, request: $request);
+            }
         }
     }
 }

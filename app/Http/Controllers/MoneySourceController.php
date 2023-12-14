@@ -136,6 +136,8 @@ class MoneySourceController extends Controller
             'amount' => $amount,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
+            'funding_start_date' => $request->funding_start_date,
+            'funding_end_date' => $request->funding_end_date,
             'source_name' => $request->source_name,
             'description' => $request->description,
             'is_group' => $request->is_group
@@ -364,6 +366,8 @@ class MoneySourceController extends Controller
                 'source_name' => $moneySource->source_name,
                 'start_date' => $moneySource->start_date,
                 'end_date' => $moneySource->end_date,
+                'funding_start_date' => $moneySource->funding_start_date,
+                'funding_end_date' => $moneySource->funding_end_date,
                 'users' => $moneySource->users()->get(),
                 'group_id' => $moneySource->group_id,
                 'money_source_files' => MoneySourceFileResource::collection($moneySource->money_source_files),

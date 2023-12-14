@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('source_name')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
+            $table->date('funding_start_date')->nullable();
+            $table->date('funding_end_date')->nullable();
             $table->json('users')->nullable();
             $table->json('pinned_by_users')->nullable();
             $table->bigInteger('group_id')->nullable();

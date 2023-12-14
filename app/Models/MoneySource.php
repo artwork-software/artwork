@@ -33,6 +33,8 @@ class MoneySource extends Model
         'amount',
         'start_date',
         'end_date',
+        'funding_start_date',
+        'funding_end_date',
         'source_name',
         'description',
         'is_group',

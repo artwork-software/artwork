@@ -96,6 +96,9 @@
                 <div class="mt-3 xsDark" v-if="moneySource.start_date && moneySource.end_date">
                     Laufzeit: {{ formatDate(moneySource.start_date) }} - {{ formatDate(moneySource.end_date) }}
                 </div>
+                <div class="mt-3 xsDark" v-if="moneySource.funding_start_date && moneySource.funding_end_date">
+                    Förderzeitraum: {{ formatDate(moneySource.funding_start_date) }} - {{ formatDate(moneySource.funding_end_date) }}
+                </div>
                 <div class="mt-2 xsDark" v-if="moneySource.source_name">
                     Quelle: {{ moneySource.source_name }}
                 </div>

@@ -8,7 +8,7 @@ import Helper from "../../../mixins/Helper.vue";
 export default defineComponent({
     name: "ShiftDropElement",
     components: {ChooseUserSeriesShift, CheckIcon, VueMathjax},
-    props: ['shift','showRoom','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount','highlightMode','highlightedId','highlightedType'],
+    props: ['shift','showRoom','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount','highlightMode','highlightedId','highlightedType', 'multiEditMode'],
     mixins: [Helper],
     computed: {
         shiftUserIds(){
@@ -30,6 +30,17 @@ export default defineComponent({
             })
 
             return ids;
+        }
+    },
+    watch: {
+        multiEditMode: {
+            handler() {
+                if(!this.multiEditMode){
+                    this.shift.isCheckedForMultiEdit = false;
+                }
+            },
+            deep: true
+
         }
     },
     data(){
@@ -264,20 +275,28 @@ export default defineComponent({
 </script>
 
 <template>
-    <div :class="highlightMode && !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30' : ''" class="flex items-center xsLight text-shiftText subpixel-antialiased" @dragover="onDragOver" @drop="onDrop">
-        <div>
-            {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
+    <div :class="[highlightMode && !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30' : '', shift.empty_user_count === 0 && shift.empty_master_count === 0 && multiEditMode ? 'hidden' : '', multiEditMode ? 'text-[10px] my-1' : '']" class="flex items-center xsLight text-shiftText subpixel-antialiased" @dragover="onDragOver" @drop="onDrop">
+        <div :class="shift.empty_user_count === 0 && shift.empty_master_count === 0 ? 'hidden' : 'block'"  v-if="multiEditMode">
+            <input v-model="shift.isCheckedForMultiEdit" id="comments" aria-describedby="comments-description" name="comments" type="checkbox" class="h-5 w-5 border-gray-300 text-green-600 focus:ring-green-600 mr-1" />
         </div>
-        <div v-if="!showRoom" class="ml-0.5 text-xs">
-             ({{ decimalToCommonFraction(shift.user_count) }}/{{ shift.number_employees }}
-            <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div>
+                    {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
+                </div>
+                <div v-if="!showRoom" class="ml-0.5 " :class="multiEditMode ? 'text-[10px]' : 'text-xs'">
+                    ({{ decimalToCommonFraction(shift.user_count) }}/{{ shift.number_employees }}
+                    <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)
+                </div>
+                <div v-else-if="room" class="truncate">
+                    , {{room?.name}}
+                </div>
+            </div>
+            <div v-if="shift.empty_user_count === 0 && shift.empty_master_count === 0">
+                <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
+            </div>
         </div>
-        <div v-else-if="room" class="truncate">
-            , {{room?.name}}
-        </div>
-        <div v-if="shift.empty_employee_count === 0 && shift.empty_master_count === 0">
-            <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
-        </div>
+
     </div>
 
 

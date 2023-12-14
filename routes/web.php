@@ -86,7 +86,7 @@ Route::post('/setup', [AppController::class, 'createAdmin'])->name('setup.create
 Route::get('/users/invitations/accept', [InvitationController::class, 'accept']);
 Route::post('/users/invitations/accept', [InvitationController::class, 'createUser'])->name('invitation.accept');
 
-Route::get('/reset-password', [UserController::class, 'reset_password'])->name('reset_user_password');
+Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // TOOL SETTING ROUTE
@@ -149,20 +149,20 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])
         ->name('user.edit.workProfile');
     Route::patch('/users/{user}/edit', [UserController::class, 'update'])->name('user.update');
-    Route::patch('/users/{user}/checklists', [UserController::class, 'update_checklist_status'])
+    Route::patch('/users/{user}/checklists', [UserController::class, 'updateChecklistStatus'])
         ->name('user.checklists.update');
-    Route::patch('/users/{user}/areas', [UserController::class, 'update_area_status'])->name('user.areas.update');
+    Route::patch('/users/{user}/areas', [UserController::class, 'updateAreaStatus'])->name('user.areas.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
     Route::patch('/users/{user}', [UserController::class, 'temporaryUserUpdate'])->name('update.user.temporary');
     Route::patch('/users/{user}/conditions', [UserController::class, 'updateUserTerms'])->name('user.update.terms');
     Route::post('/users/{user}/photo', [UserController::class, 'updateUserPhoto'])->name('user.update.photo');
 
-    Route::post('/users/reset-password', [UserController::class, 'reset_user_password'])->name('user.reset.password');
+    Route::post('/users/reset-password', [UserController::class, 'resetUserPassword'])->name('user.reset.password');
     Route::post('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])
         ->name('user.update.craftSettings');
-    Route::post('/users/{user}/masters', [UserController::class, 'update_user_can_master'])
+    Route::post('/users/{user}/masters', [UserController::class, 'updateUserCanMaster'])
         ->name('user.update.can_master');
-    Route::post('/users/{user}/canWorkShifts', [UserController::class, 'update_user_can_work_shifts'])
+    Route::post('/users/{user}/canWorkShifts', [UserController::class, 'updateUserCanWorkShifts'])
         ->name('user.update.can_work_shifts');
     Route::post('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])
         ->name('user.update.workProfile');

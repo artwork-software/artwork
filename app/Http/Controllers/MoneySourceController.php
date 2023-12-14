@@ -52,7 +52,7 @@ class MoneySourceController extends Controller
         ]);
     }
 
-    public function showSettings()
+    public function showSettings(): Response|ResponseFactory
     {
         return inertia('MoneySources/MoneySourceSettings', [
             'moneySourceCategories' => MoneySourceCategory::all(),

@@ -94,4 +94,9 @@ class MoneySource extends Model
     {
         return $this->hasMany(SumMoneySource::class);
     }
+
+    public function categories()
+    {
+        return $this->belongsToMany(MoneySourceCategory::class);
+    }
 }

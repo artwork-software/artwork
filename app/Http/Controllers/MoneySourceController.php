@@ -10,6 +10,7 @@ use App\Models\ColumnCell;
 use App\Models\MainPosition;
 use App\Models\MainPositionDetails;
 use App\Models\MoneySource;
+use App\Models\MoneySourceCategory;
 use App\Models\MoneySourceTask;
 use App\Models\Project;
 use App\Models\SubPosition;
@@ -50,6 +51,13 @@ class MoneySourceController extends Controller
         return inertia('MoneySources/MoneySourceManagement', [
             'moneySources' => MoneySource::with(['users'])->get(),
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
+        ]);
+    }
+
+    public function showSettings()
+    {
+        return inertia('MoneySources/MoneySourceSettings', [
+            'moneySourceCategories' => MoneySourceCategory::all(),
         ]);
     }
 

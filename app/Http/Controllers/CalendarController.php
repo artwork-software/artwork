@@ -304,7 +304,7 @@ class CalendarController extends Controller
                 ->map(fn($room) => collect($calendarPeriod)
                     ->mapWithKeys(fn($date) => [
                         $date->format('d.m.') => CalendarEventResource::collection(
-                            $this->get_events_of_day($date, $room, $project->id)
+                            $this->get_events_of_day($date, $room, $project?->id)
                         )
                     ]));
 

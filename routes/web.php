@@ -29,6 +29,7 @@ use App\Http\Controllers\FreelancerVacationController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\MoneySourceCategoryController;
 use App\Http\Controllers\MoneySourceController;
 use App\Http\Controllers\MoneySourceFileController;
 use App\Http\Controllers\MoneySourceTaskController;
@@ -434,6 +435,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Money Sources
     Route::get('/money_sources', [MoneySourceController::class, 'index'])->name('money_sources.index');
+    Route::get('/money_sources/settings', [MoneySourceController::class, 'showSettings'])->name('money_sources.settings');
     Route::get('/money_sources/search', [MoneySourceController::class, 'search'])->name('money_sources.search');
     Route::get('/money_sources/{moneySource}', [MoneySourceController::class, 'show'])->name('money_sources.show');
     Route::patch('/money_sources/{moneySource}', [MoneySourceController::class, 'update'])
@@ -447,6 +449,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('money_sources.duplicate');
     Route::post('/money_sources/{moneySource}/pin', [MoneySourceController::class, 'pin'])->name('money_sources.pin');
     Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
+
+    // MoneySourceCategories
+    Route::post('/money_source/categories', [MoneySourceCategoryController::class, 'store'])->name('money_source_categories.store');
+    Route::delete('/money_source/categories/{moneySourceCategory}', [MoneySourceCategoryController::class, 'destroy']);
 
     //Contracts
     Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');

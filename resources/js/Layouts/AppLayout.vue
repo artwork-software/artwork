@@ -310,6 +310,12 @@ export default {
                     route: ['/checklist_templates']
                 },
                 {
+                    name: 'Finanzierungsquellen',
+                    has_permission: this.hasAdminRole(),
+                    href: route('money_sources.settings'),
+                    route: ['/money_sources/settings']
+                },
+                {
                     name: 'Budget Vorlagen',
                     has_permission: this.hasAdminRole() || this.$can('view budget templates'),
                     href: route('templates.view.index'),

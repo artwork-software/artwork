@@ -631,7 +631,7 @@ class CalendarController extends Controller
         $roomCategoryIds = $calendarFilter->room_categories ?? null;
 
         return $query
-            ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project->id))
+            ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project?->id))
             ->when($room, fn(EventBuilder $builder) => $builder->where('room_id', $room->id))
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),

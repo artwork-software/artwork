@@ -69,9 +69,8 @@
                     </svg>
                 </div>
             </div>
-            <div v-if="showMoneySourceCategories" class="flex flex-row flex-wrap">
-                <TagComponent v-if="money_source.categories.length > 0"
-                              v-for="category in money_source.categories"
+            <div v-if="showMoneySourceCategories && money_source.categories.length > 0" class="flex flex-row flex-wrap">
+                <TagComponent v-for="category in money_source.categories"
                               :key="category.id"
                               :displayed-text="category.name"
                               type="gray"

@@ -30,9 +30,8 @@
                             leave-from-class="transform scale-100 opacity-100"
                             leave-to-class="transform scale-95 opacity-0"
                         >
-                            <MenuItems
-                                class="absolute right-0 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                <div class="grid grid-cols-1 gap-2">
+                            <MenuItems class="absolute right-0 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                <div v-if="moneySourceCategories.length > 0" class="grid grid-cols-1 gap-2">
                                     <div v-for="category in moneySourceCategories"
                                          :key="category.id"
                                          class="w-full flex items-center">
@@ -45,6 +44,9 @@
                                             {{ category.name }}
                                         </p>
                                     </div>
+                                </div>
+                                <div v-else class="text-sm text-gray-300">
+                                  Es wurden noch keine Quellenkategorien angelegt
                                 </div>
                             </MenuItems>
                         </transition>
@@ -59,7 +61,7 @@
                               hide-x="true"/>
             </div>
             <div class="justify-center flex w-full my-6">
-                <AddButton text="Speichern" mode="modal" class="px-6 py-3" @click="attachCategories"/>
+                <AddButton :disabled="moneySourceCategories.length === 0" text="Speichern" mode="modal" class="px-6 py-3" @click="attachCategories"/>
             </div>
         </template>
     </jet-dialog-modal>

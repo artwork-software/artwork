@@ -1,10 +1,12 @@
 <template>
     <app-layout>
-        <div class="ml-14">
-            <h2 class="headline1">Dienstpläne & Schichtvorlagen</h2>
+        <div class="ml-9 max-h-screen overflow-hidden">
+           <div class="ml-5">
+               <h2 class="headline1">Dienstpläne & Schichtvorlagen</h2>
 
-            <ShiftTabs />
+               <ShiftTabs />
 
+           </div>
             <slot></slot>
         </div>
 

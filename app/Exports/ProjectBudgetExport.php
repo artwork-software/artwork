@@ -17,23 +17,17 @@ class ProjectBudgetExport implements FromView, ShouldAutoSize, WithStyles
 {
     use Exportable;
 
-    /**
-     * @param Project $project
-     */
     public function __construct(private readonly Project $project)
     {
     }
 
-    /**
-     * @return View
-     */
     public function view(): View
     {
         return view('exports.projectBudget', ['data' => $this->getData()]);
     }
 
     /**
-     * @return array
+     * @return array<string, mixed>
      */
     public function getData(): array
     {
@@ -65,25 +59,19 @@ class ProjectBudgetExport implements FromView, ShouldAutoSize, WithStyles
         ];
     }
 
-    /**
-     * @param Model $budgetTable
-     * @param BudgetTypesEnum $mainPositionBudgetType
-     * @return Collection
-     */
     private function getMainPositionsByBudgetType(
-        Model           $budgetTable,
+        Model $budgetTable,
         BudgetTypesEnum $mainPositionBudgetType
-    ): Collection
-    {
+    ): Collection {
         return $budgetTable->mainPositions->filter(
             fn($mainPosition) => $mainPosition->type === $mainPositionBudgetType->value
         );
     }
 
     /**
-     * @param Worksheet $sheet
-     * @return array[]
+     * @return array<int, array<string, array<string, mixed>>>
      */
+    //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterface
     public function styles(Worksheet $sheet): array
     {
         return [

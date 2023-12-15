@@ -11,10 +11,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property string $name
  * @property string $color
+ * @property string $created_at
+ * @property string $updated_at
+ * @property string $deleted_at
  */
 class ProjectStates extends Model
 {
-    use HasFactory, SoftDeletes, Prunable;
+    use HasFactory;
+    use SoftDeletes;
+    use Prunable;
 
     protected $fillable = [
         'name',

@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('service_providers', function (Blueprint $table) {
+        Schema::create('service_providers', function (Blueprint $table): void {
             $table->id();
             $table->string('profile_image')->nullable();
             $table->string('provider_name')->default('Neuer Dienstleister');
@@ -37,7 +37,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('service_providers');
     }

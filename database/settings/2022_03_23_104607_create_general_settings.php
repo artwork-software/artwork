@@ -3,6 +3,7 @@
 use Spatie\LaravelSettings\Exceptions\SettingAlreadyExists;
 use Spatie\LaravelSettings\Migrations\SettingsMigration;
 
+//phpcs:ignore PSR1.Classes.ClassDeclaration.MissingNamespace
 class CreateGeneralSettings extends SettingsMigration
 {
     /**

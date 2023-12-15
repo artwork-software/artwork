@@ -7,11 +7,11 @@ use App\Casts\TimeWithoutSeconds;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use function Clue\StreamFilter\fun;
-
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 
 /**
- * App\Models\Shift
  * @property int $id
  * @property int $event_id
  * @property string $start
@@ -20,39 +20,18 @@ use function Clue\StreamFilter\fun;
  * @property int $craft_id
  * @property int $number_employees
  * @property int $number_masters
- * @property string|null $description
+ * @property string $description
  * @property bool $is_committed
- * @property string|null $shift_uuid
- * @property string|null $event_start_day
- * @property string|null $event_end_day
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @property-read \App\Models\Craft $craft
- * @property-read \App\Models\Event $event
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Freelancer[] $freelancer
- * @property-read int|null $freelancer_count
- * @property-read int $currentCount
- * @property-read int $empty_master_count
- * @property-read int $empty_user_count
- * @property-read int $maxCount
- * @property-read float $master_count
- * @property-read int $user_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $users
- * @property-read int|null $users_count
- * @property-read \Illuminate\Support\Collection $history
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ServiceProvider[] $service_provider
- * @property-read int|null $service_provider_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $masters
- * @property-read int|null $masters_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $employees
- * @property-read int|null $employees_count
- * @property-read array $allUsers
- * @property-read bool $infringement
- * @property-read string $break_formatted
+ * @property string $shift_uuid
+ * @property string $event_start_day
+ * @property string $event_end_day
+ * @property string $created_at
+ * @property string $updated_at
  */
 class Shift extends Model
 {
-    use HasFactory, HasChangesHistory;
+    use HasFactory;
+    use HasChangesHistory;
 
     protected $fillable = [
         'event_id',
@@ -77,19 +56,29 @@ class Shift extends Model
 
     protected $with = ['craft'];
 
-    protected $appends = ['break_formatted', 'user_count', 'empty_user_count', 'empty_master_count', 'master_count', 'allUsers', 'currentCount', 'maxCount', 'infringement'];
+    protected $appends = [
+        'break_formatted',
+        'user_count',
+        'empty_user_count',
+        'empty_master_count',
+        'master_count',
+        'allUsers',
+        'currentCount',
+        'maxCount',
+        'infringement'
+    ];
 
-    public function event(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class)->without(['series']);
     }
 
-    public function craft(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function craft(): BelongsTo
     {
         return $this->belongsTo(Craft::class)->without(['users']);
     }
 
-    public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'shift_user', 'shift_id', 'user_id')
             ->withPivot(['is_master', 'shift_count'])
@@ -98,7 +87,7 @@ class Shift extends Model
             ->without(['calender_settings']);
     }
 
-    public function freelancer(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function freelancer(): BelongsToMany
     {
         return $this->belongsToMany(Freelancer::class, 'shifts_freelancers', 'shift_id', 'freelancer_id')
             ->withPivot(['is_master', 'shift_count'])
@@ -106,10 +95,16 @@ class Shift extends Model
             ->withCasts(['is_master' => 'boolean']);
     }
 
-    public function service_provider(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    //@todo: fix phpcs error - refactor function name to serviceProvider
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function service_provider(): BelongsToMany
     {
-        return $this->belongsToMany(ServiceProvider::class, 'shifts_service_providers', 'shift_id', 'service_provider_id')
-            ->withPivot(['is_master', 'shift_count'])
+        return $this->belongsToMany(
+            ServiceProvider::class,
+            'shifts_service_providers',
+            'shift_id',
+            'service_provider_id'
+        )->withPivot(['is_master', 'shift_count'])
             ->orderByPivot('is_master', 'desc')
             ->withCasts(['is_master' => 'boolean'])
             ->without(['contacts']);
@@ -180,12 +175,12 @@ class Shift extends Model
         return $this->getWorkerCount();
     }
 
-    public function getHistoryAttribute(): \Illuminate\Support\Collection
+    public function getHistoryAttribute(): Collection
     {
         return $this->historyChanges();
     }
 
-    public function getMastersAttribute(): \Illuminate\Support\Collection
+    public function getMastersAttribute(): Collection
     {
         $masterUsers = $this->users()->wherePivot('is_master', true)->without(['calender_settings'])->get();
         $masterFreelancers = $this->freelancer()->wherePivot('is_master', true)->get();
@@ -195,9 +190,14 @@ class Shift extends Model
     }
 
 
-    public function getEmployeesAttribute(): \Illuminate\Support\Collection
+    public function getEmployeesAttribute(): Collection
     {
-        return $this->users()->wherePivot('is_master', false)->without(['calender_settings'])->get()->merge($this->freelancer()->wherePivot('is_master', false)->get())->merge($this->service_provider()->wherePivot('is_master', false)->get());
+        return $this->users()
+            ->wherePivot('is_master', false)
+            ->without(['calender_settings'])
+            ->get()
+            ->merge($this->freelancer()->wherePivot('is_master', false)->get())
+            ->merge($this->service_provider()->wherePivot('is_master', false)->get());
     }
 
     public function getBreakFormattedAttribute(): string
@@ -219,7 +219,9 @@ class Shift extends Model
         return false;
     }
 
-
+    /**
+     * @return array<string, mixed>
+     */
     public function getAllUsersAttribute(): array
     {
         return [
@@ -228,5 +230,4 @@ class Shift extends Model
             'service_providers' => $this->service_provider,
         ];
     }
-
 }

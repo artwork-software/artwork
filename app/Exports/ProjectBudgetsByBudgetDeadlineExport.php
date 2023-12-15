@@ -16,36 +16,30 @@ class ProjectBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, 
 {
     use Exportable;
 
-    /**
-     * @param string $startBudgetDeadline
-     * @param string $endBudgetDeadline
-     */
     public function __construct(
         private readonly string $startBudgetDeadline,
         private readonly string $endBudgetDeadline
-    )
-    {
+    ) {
     }
 
-    /**
-     * @return View
-     */
     public function view(): View
     {
         return view('exports.projectBudgetsByBudgetDeadline', ['rows' => $this->getRows()]);
     }
 
     /**
-     * @return array
+     * @return array<string, mixed>
      */
     private function getRows(): array
     {
         $rows = [];
 
-        foreach (Project::query()
-                     ->whereBetween('budget_deadline', [$this->startBudgetDeadline, $this->endBudgetDeadline])
-                     ->orderBy('budget_deadline')
-                     ->get() as $project) {
+        foreach (
+            Project::query()
+                ->whereBetween('budget_deadline', [$this->startBudgetDeadline, $this->endBudgetDeadline])
+                ->orderBy('budget_deadline')
+                ->get() as $project
+        ) {
             $projectBudgetTable = $project->table()->with(['columns'])->first();
 
             //get column id of last column which is not a sum or difference column
@@ -74,8 +68,9 @@ class ProjectBudgetsByBudgetDeadlineExport implements FromView, ShouldAutoSize, 
 
     /**
      * @param Worksheet $sheet
-     * @return array[]
+     * @return array<int, array<string, array<string, mixed>>>
      */
+    //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterface
     public function styles(Worksheet $sheet): array
     {
         return [

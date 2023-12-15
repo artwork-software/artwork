@@ -13,29 +13,16 @@ class BudgetVerified extends Notification
 {
     use Queueable;
 
-    /**
-     * @var stdClass|null
-     */
     protected ?stdClass $notificationData = null;
 
-    /**
-     * @var array|mixed
-     */
     protected array $broadcastMessage = [];
 
-    /**
-     * @param $notificationData
-     * @param array $broadcastMessage
-     */
     public function __construct($notificationData, array $broadcastMessage = [])
     {
         $this->notificationData = $notificationData;
         $this->broadcastMessage = $broadcastMessage;
     }
 
-    /**
-     * @return BroadcastMessage
-     */
     public function toBroadcast(): BroadcastMessage
     {
         return new BroadcastMessage([
@@ -43,8 +30,8 @@ class BudgetVerified extends Notification
         ]);
     }
 
+
     /**
-     * @param $user
      * @return string[]
      */
     public function via($user): array
@@ -66,11 +53,6 @@ class BudgetVerified extends Notification
         return $channels;
     }
 
-    /**
-     * Get the mail representation of the notification.
-     *
-     * @return MailMessage
-     */
     public function toMail(): MailMessage
     {
         return (new MailMessage())
@@ -78,11 +60,6 @@ class BudgetVerified extends Notification
             ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
     }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return stdClass
-     */
     public function toArray(): stdClass
     {
         return $this->notificationData;

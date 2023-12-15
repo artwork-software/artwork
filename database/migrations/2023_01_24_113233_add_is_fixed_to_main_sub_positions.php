@@ -11,13 +11,13 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::table('main_positions', function (Blueprint $table) {
+        Schema::table('main_positions', function (Blueprint $table): void {
             $table->boolean('is_fixed')->default(false);
         });
 
-        Schema::table('sub_positions', function (Blueprint $table) {
+        Schema::table('sub_positions', function (Blueprint $table): void {
             $table->boolean('is_fixed')->default(false);
         });
     }
@@ -27,13 +27,13 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
-        Schema::table('main_positions', function (Blueprint $table) {
+        Schema::table('main_positions', function (Blueprint $table): void {
             $table->dropColumn('is_fixed');
         });
 
-        Schema::table('sub_positions', function (Blueprint $table) {
+        Schema::table('sub_positions', function (Blueprint $table): void {
             $table->dropColumn('is_fixed');
         });
     }

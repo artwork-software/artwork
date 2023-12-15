@@ -3,23 +3,22 @@
 namespace App\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
-use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * App\Models\UserVacations
  * @property int $id
  * @property int $user_id
  * @property string $from
- *  @property string $until
+ * @property string $until
+ * @property string $created_at
+ * @property string $updated_at
  */
 class UserVacations extends Model
 {
     use HasFactory;
     use HasChangesHistory;
-
 
     protected $fillable = [
         'user_id',
@@ -27,8 +26,7 @@ class UserVacations extends Model
         'until'
     ];
 
-
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

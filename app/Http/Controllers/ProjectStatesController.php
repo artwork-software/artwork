@@ -3,38 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProjectStates;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
 class ProjectStatesController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(): void
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function store(Request $request): void
     {
         ProjectStates::create([
             'name' => $request->name,
@@ -42,64 +25,34 @@ class ProjectStatesController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\ProjectStates  $projectStates
-     * @return \Illuminate\Http\Response
-     */
-    public function show(ProjectStates $projectStates)
+    public function show(ProjectStates $projectStates): void
     {
-        //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\ProjectStates  $projectStates
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(ProjectStates $projectStates)
+    public function edit(ProjectStates $projectStates): void
     {
-        //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\ProjectStates  $projectStates
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, ProjectStates $projectStates)
+    public function update(Request $request, ProjectStates $projectStates): void
     {
-        //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\ProjectStates  $projectStates
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(ProjectStates $projectStates)
+    public function destroy(ProjectStates $projectStates): void
     {
         $projectStates->delete();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(int $id): RedirectResponse
     {
         $projectStates = ProjectStates::onlyTrashed()->findOrFail($id);
-
         $projectStates->forceDelete();
 
         return Redirect::route('projects.settings.trashed')->with('success', 'ProjectStates deleted');
     }
 
-    public function restore(int $id)
+    public function restore(int $id): RedirectResponse
     {
         $projectStates = ProjectStates::onlyTrashed()->findOrFail($id);
-
         $projectStates->restore();
 
         return Redirect::route('projects.settings.trashed')->with('success', 'ProjectStates restored');

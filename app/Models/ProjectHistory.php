@@ -11,10 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $project_id
  * @property int $user_id
  * @property string $description
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
- * @property \App\Models\User $user
+ * @property string $created_at
+ * @property string $updated_at
  */
 class ProjectHistory extends Model
 {

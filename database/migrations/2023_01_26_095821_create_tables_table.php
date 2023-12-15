@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('tables', function (Blueprint $table) {
+        Schema::create('tables', function (Blueprint $table): void {
             $table->id();
             $table->string('name')->nullable();
             $table->boolean('is_template')->default(false);
@@ -27,7 +27,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('tables');
     }

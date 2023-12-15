@@ -24,14 +24,8 @@ use stdClass;
 
 class DepartmentController extends Controller
 {
-    /**
-     * @var NotificationService|null
-     */
     protected ?NotificationService $notificationService = null;
 
-    /**
-     * @var stdClass|null
-     */
     protected ?stdClass $notificationData = null;
 
     public function __construct()
@@ -45,10 +39,6 @@ class DepartmentController extends Controller
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TEAM;
     }
 
-    /**
-     * @param SearchRequest $request
-     * @return bool|Collection
-     */
     public function search(SearchRequest $request): bool|Collection
     {
         if (!Auth::user()->can(PermissionNameEnum::PROJECT_UPDATE->value)) {
@@ -63,11 +53,6 @@ class DepartmentController extends Controller
         ]);
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return Response|ResponseFactory
-     */
     public function index(): Response|ResponseFactory
     {
         return inertia('Departments/DepartmentManagement', [
@@ -76,22 +61,11 @@ class DepartmentController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return Response|ResponseFactory
-     */
     public function create(): Response|ResponseFactory
     {
         return inertia('Departments/Create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  StoreDepartmentRequest  $request
-     * @return RedirectResponse
-     */
     public function store(StoreDepartmentRequest $request): RedirectResponse
     {
         $department = Department::create([
@@ -131,12 +105,6 @@ class DepartmentController extends Controller
         return Redirect::route('departments')->with('success', 'Department created.');
     }
 
-    /**
-     * Show the specified resource.
-     *
-     * @param  Department  $department
-     * @return Response|ResponseFactory
-     */
     public function show(Department $department): Response|ResponseFactory
     {
         return inertia('Departments/Show', [
@@ -144,12 +112,6 @@ class DepartmentController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  Department  $department
-     * @return Response|ResponseFactory
-     */
     public function edit(Department $department): Response|ResponseFactory
     {
         return inertia('Departments/Edit', [
@@ -158,13 +120,6 @@ class DepartmentController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  Request  $request
-     * @param  Department  $department
-     * @return RedirectResponse
-     */
     public function update(Request $request, Department $department): RedirectResponse
     {
         // get team member before update
@@ -237,12 +192,6 @@ class DepartmentController extends Controller
         return Redirect::route('departments', $department->id)->with('success', 'Department updated');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  Department  $department
-     * @return RedirectResponse
-     */
     public function destroy(Department $department): RedirectResponse
     {
         $notificationTitle = 'Team "' . $department->name . '" wurde gelöscht';

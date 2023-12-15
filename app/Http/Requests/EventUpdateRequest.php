@@ -7,13 +7,16 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class EventUpdateRequest extends EventStoreOrUpdateRequest
 {
-    public function data()
+    /**
+     * @return array<string, mixed>
+     */
+    public function data(): array
     {
         return [
             'start_time' => Carbon::create($this->get('start'))->setTimezone(config('app.timezone')),
             'end_time' => Carbon::create($this->get('end'))->setTimezone(config('app.timezone')),
             'room_id' => $this->get('roomId'),
-            'declined_room_id'=> $this->get('declinedRoomId'),
+            'declined_room_id' => $this->get('declinedRoomId'),
             'name' => $this->get('title'),
             'eventName' => $this->get('eventName'),
             'project_id_mandatory' => $this->get('projectIdMandatory'),

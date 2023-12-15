@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('copyrights', function (Blueprint $table) {
+        Schema::create('copyrights', function (Blueprint $table): void {
             $table->id();
             $table->boolean('own_copyright');
             $table->boolean('live_music');
@@ -29,7 +29,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('copyright');
     }

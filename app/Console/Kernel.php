@@ -14,13 +14,7 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
-    /**
-     * Define the application's command schedule.
-     *
-     * @param Schedule $schedule
-     * @return void
-     */
-    protected function schedule(Schedule $schedule)
+    protected function schedule(Schedule $schedule): void
     {
         $schedule->command('model:prune')->daily();
         $schedule->command(NotificationScheduling::class)->everyTenMinutes();
@@ -29,28 +23,20 @@ class Kernel extends ConsoleKernel
         $schedule->command(DeleteNotifications::class)->dailyAt('07:00');
         $schedule->command(DeleteExpiredNotificationForAll::class)->everyFiveMinutes()->runInBackground();
         $schedule->command(DailyDeleteCalendarExportPDFs::class)->dailyAt('01:00')->runInBackground();
-
         $schedule->command(SendNotificationEmailSummaries::class, ['daily'])
             ->dailyAt('9:00');
-
         $schedule->command(SendNotificationEmailSummaries::class, ['weekly_once'])
             ->weekly()
             ->mondays()
             ->at('9:00');
-
         $schedule->command(SendNotificationEmailSummaries::class, ['weekly_twice'])
             ->days([Schedule::MONDAY, Schedule::THURSDAY])
             ->at('9:00');
     }
 
-    /**
-     * Register the commands for the application.
-     *
-     * @return void
-     */
-    protected function commands()
+    protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

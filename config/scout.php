@@ -134,7 +134,7 @@ return [
         'key' => env('MEILISEARCH_KEY', null),
         'settings' => [
             \App\Models\MoneySource::class => [
-                'updateFilterableAttributes'=> ['is_group'],
+                'updateFilterableAttributes' => ['is_group'],
             ],
         ],
     ],

@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::table('user_calendar_filters', function (Blueprint $table) {
+        Schema::table('user_calendar_filters', function (Blueprint $table): void {
             $table->date('start_date')->nullable()->after('user_id');
             $table->date('end_date')->nullable()->after('start_date');
         });
@@ -24,9 +24,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
-        Schema::table('user_calendar_filters', function (Blueprint $table) {
+        Schema::table('user_calendar_filters', function (Blueprint $table): void {
             $table->dropColumn('start_date');
             $table->dropColumn('end_date');
         });

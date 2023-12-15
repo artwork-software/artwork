@@ -16,6 +16,7 @@ use App\Support\Services\NotificationService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,11 +40,6 @@ class ContractController extends Controller
         $this->notificationService = new NotificationService();
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return Response|ResponseFactory
-     */
     public function viewIndex(): Response|ResponseFactory
     {
         $contracts = Contract::all();
@@ -60,7 +56,11 @@ class ContractController extends Controller
         $companyTypesFilter = json_decode($request->input('companyTypesFilter'));
         $contractTypesFilter = json_decode($request->input('contractTypesFilter'));
 
-        if (count($costsFilter->array) != 0 || count($companyTypesFilter->array) != 0 || count($contractTypesFilter->array) != 0) {
+        if (
+            count($costsFilter->array) != 0 ||
+            count($companyTypesFilter->array) != 0 ||
+            count($contractTypesFilter->array) != 0
+        ) {
             $company_type_ids = collect($companyTypesFilter->array);
             $contract_type_ids = collect($contractTypesFilter->array);
             $cost_filters = collect($costsFilter->array);
@@ -87,12 +87,6 @@ class ContractController extends Controller
         ];
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param Contract $contract
-     * @return Response|ResponseFactory
-     */
     public function show(Contract $contract): Response|ResponseFactory
     {
         return inertia('Contracts/Contracts', [
@@ -100,12 +94,6 @@ class ContractController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param Request $request
-     * @return RedirectResponse
-     */
     public function store(Request $request, Project $project): RedirectResponse
     {
         if (!Storage::exists("contracts")) {
@@ -129,21 +117,20 @@ class ContractController extends Controller
             'description' => $request->description,
             'ksk_liable' => $request->ksk_liable,
             'resident_abroad' => $request->resident_abroad,
-            'is_freed' => @$request->is_freed,
-            'has_power_of_attorney' => @$request->has_power_of_attorney,
+            'is_freed' => $request->get('is_freed', false),
+            'has_power_of_attorney' => $request->get('has_power_of_attorney', false),
             'contract_type_id' => $request->contract_type_id,
             'company_type_id' => $request->company_type_id
         ]);
 
-        $this->store_contract_tasks_and_comment($request, $contract);
+        $this->storeContractTasksAndComment($request, $contract);
 
-        $contract->accessing_users()->sync(collect($request->accessibleUsers));
+        $contract->accessingUsers()->sync(collect($request->accessibleUsers));
         if (!in_array(Auth::id(), $request->accessibleUsers ?? [])) {
-            $contract->accessing_users()->save(Auth::user());
+            $contract->accessingUsers()->save(Auth::user());
         }
 
-
-        $contractUsers =  $contract->accessing_users()->get();
+        $contractUsers =  $contract->accessingUsers()->get();
         $notificationTitle = 'Ein Vertrag wurde für dich freigegeben';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
@@ -167,7 +154,8 @@ class ContractController extends Controller
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
         $this->notificationService->setProjectId($project->id);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+        $this->notificationService
+            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
 
@@ -181,13 +169,6 @@ class ContractController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param Contract $contract
-     * @return StreamedResponse
-     * @throws AuthorizationException
-     */
     public function download(Contract $contract): StreamedResponse
     {
         //$this->authorize('view contracts');
@@ -195,17 +176,11 @@ class ContractController extends Controller
         return Storage::download('contracts/' . $contract->basename, $contract->name);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Contract $contract
-     * @return RedirectResponse
-     */
     public function update(Contract $contract, ContractUpdateRequest $request): RedirectResponse
     {
         $original_name = '';
         if ($request->get('accessibleUsers')) {
-            $contract->accessing_users()->sync(collect($request->accessibleUsers));
+            $contract->accessingUsers()->sync(collect($request->accessibleUsers));
         }
 
         if ($request->file('file')) {
@@ -222,12 +197,12 @@ class ContractController extends Controller
 
         $contract->fill($request->data());
 
-        $this->store_contract_tasks_and_comment($request, $contract);
+        $this->storeContractTasksAndComment($request, $contract);
 
         $contract->save();
 
         $project = $contract->project()->first();
-        $contractUsers =  $contract->accessing_users()->get();
+        $contractUsers =  $contract->accessingUsers()->get();
         $notificationTitle = 'Ein Vertrag wurde geändert';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
@@ -251,7 +226,8 @@ class ContractController extends Controller
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
         $this->notificationService->setProjectId($project->id);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+        $this->notificationService
+            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
 
@@ -264,7 +240,6 @@ class ContractController extends Controller
 
     public function storeFile(Request $request): void
     {
-
         if (!Storage::exists("contracts")) {
             Storage::makeDirectory("contracts");
         }
@@ -281,16 +256,10 @@ class ContractController extends Controller
         $contract->save();
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param Contract $contract
-     * @return RedirectResponse
-     */
     public function destroy(Contract $contract): RedirectResponse
     {
         $project = $contract->project()->first();
-        $contractUsers =  $contract->accessing_users()->get();
+        $contractUsers =  $contract->accessingUsers()->get();
         $notificationTitle = 'Ein Vertrag wurde gelöscht';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
@@ -319,7 +288,8 @@ class ContractController extends Controller
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(2);
         $this->notificationService->setProjectId($project->id);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+        $this->notificationService
+            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
 
@@ -331,12 +301,7 @@ class ContractController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * @param Request $request
-     * @param \Illuminate\Database\Eloquent\Model $contract
-     * @return void
-     */
-    public function store_contract_tasks_and_comment(Request $request, \Illuminate\Database\Eloquent\Model $contract): void
+    public function storeContractTasksAndComment(Request $request, Model $contract): void
     {
         if (isset($request->tasks)) {
             foreach ($request->tasks as $task_from_req) {

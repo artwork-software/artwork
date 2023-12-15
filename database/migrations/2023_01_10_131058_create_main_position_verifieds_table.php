@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('main_position_verifieds', function (Blueprint $table) {
+        Schema::create('main_position_verifieds', function (Blueprint $table): void {
             $table->id();
             $table->bigInteger('main_position_id');
             $table->integer('requested_by');
@@ -27,7 +27,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('main_position_verifieds');
     }

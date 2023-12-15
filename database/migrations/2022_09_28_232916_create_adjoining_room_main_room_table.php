@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('adjoining_room_main_room', function (Blueprint $table) {
+        Schema::create('adjoining_room_main_room', function (Blueprint $table): void {
             $table->id();
             $table->integer('main_room_id');
             $table->integer('adjoining_room_id');
@@ -26,7 +26,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('adjoining_room_main_room');
     }

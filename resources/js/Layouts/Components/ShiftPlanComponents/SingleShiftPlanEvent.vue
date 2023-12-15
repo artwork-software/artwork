@@ -2,15 +2,14 @@
     <div>
         <div>
             <div>
-            <div class="text-secondaryHover xsWhiteBold px-1 py-1" :class="eventType.svg_name">
-                {{ eventType.abbreviation }}: {{ project?.name }}
+                <div class="text-secondaryHover xsWhiteBold px-1 py-1" :class="eventType.svg_name">
+                    {{ eventType.abbreviation }}: {{ project?.name }}
+                </div>
             </div>
-
-            </div>
-            <div class="bg-backgroundGray">
+            <div class="bg-backgroundGray" :class="userForMultiEdit ? 'bg-blue-300/20' : 'bg-backgroundGray'">
                 <div v-for="shift in event.shifts" class="flex justify-between px-1">
                     <!-- Drop Element --->
-                    <ShiftDropElement :highlight-mode="highlightMode" :highlighted-id="highlightedId" :highlighted-type="highlightedType" :shift="shift" :show-room="showRoom" :room="room" :event="event"  :currentCount="shift.currentCount" :maxCount="shift.maxCount"  :free-employee-count="shift.empty_user_count" :free-master-count="shift.empty_master_count"/>
+                    <ShiftDropElement @drop-feedback="getDropFeedback" :multiEditMode="multiEditMode" :craft-id="shift.craft.id" :userForMultiEdit="userForMultiEdit" :highlight-mode="highlightMode" :highlighted-id="highlightedId" :highlighted-type="highlightedType" :shift="shift" :show-room="showRoom" :room="room" :event="event"  :currentCount="shift.currentCount" :maxCount="shift.maxCount"  :free-employee-count="shift.empty_user_count" :free-master-count="shift.empty_master_count"/>
                 </div>
             </div>
         </div>
@@ -40,14 +39,42 @@ export default defineComponent({
         'room',
         'highlightMode',
         'highlightedId',
-        'highlightedType'
+        'highlightedType',
+        'multiEditMode',
+        'userForMultiEdit'
     ],
     computed: {
 
     },
-    data() {
-        return {}
+    methods: {
+        enableMultiEditModeForShifts() {
+            if(this.multiEditMode){
+                this.isMultiEditMode = !this.isMultiEditMode;
+            } else {
+                this.isMultiEditMode = false;
+            }
+        },
+        getDropFeedback(event) {
+            this.$emit('dropFeedback', event)
+        }
     },
+    data() {
+        return {
+            isMultiEditMode: false,
+        }
+    },
+    emits: ['dropFeedback'],
+    watch: {
+        multiEditMode: {
+            handler() {
+                if(!this.multiEditMode){
+                    this.isMultiEditMode = false;
+                }
+            },
+            deep: true
+
+        }
+    }
 })
 
 </script>

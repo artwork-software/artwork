@@ -24,11 +24,6 @@ class CategoryController extends Controller
         $this->authorizeResource(Category::class);
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return Response|ResponseFactory
-     */
     public function index(): Response|ResponseFactory
     {
         return inertia('Settings/ProjectSettings', [
@@ -75,12 +70,6 @@ class CategoryController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param Request $request
-     * @return RedirectResponse
-     */
     public function store(Request $request): RedirectResponse
     {
         Category::create([
@@ -89,13 +78,6 @@ class CategoryController extends Controller
         return Redirect::back()->with('success', 'Category created');
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param Category $category
-     * @return RedirectResponse
-     */
     public function update(Request $request, Category $category): RedirectResponse
     {
         $category->update($request->only('name'));
@@ -103,22 +85,12 @@ class CategoryController extends Controller
         return Redirect::back()->with('success', 'Category edited');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param Category $category
-     * @return RedirectResponse
-     */
     public function destroy(Category $category): RedirectResponse
     {
         $category->delete();
         return Redirect::back()->with('success', 'Category deleted');
     }
 
-    /**
-     * @param int $id
-     * @return RedirectResponse
-     */
     public function forceDelete(int $id): RedirectResponse
     {
         $category = Category::onlyTrashed()->findOrFail($id);
@@ -128,10 +100,6 @@ class CategoryController extends Controller
         return Redirect::route('projects.settings.trashed')->with('success', 'Category deleted');
     }
 
-    /**
-     * @param int $id
-     * @return RedirectResponse
-     */
     public function restore(int $id): RedirectResponse
     {
         $category = Category::onlyTrashed()->findOrFail($id);

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 trait SimpleMapping
 {
-    protected function map(Collection $collection): Collection|\Illuminate\Support\Collection|array
+    protected function map(Collection $collection): Collection|\Illuminate\Support\Collection
     {
         return $collection->map(fn(Model $model) => [
             'id' => $model->id,

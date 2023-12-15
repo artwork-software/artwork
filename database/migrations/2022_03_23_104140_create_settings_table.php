@@ -4,9 +4,14 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateSettingsTable extends Migration
+return new class extends Migration
 {
-    public function up()
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up(): void
     {
         Schema::create('settings', function (Blueprint $table): void {
             $table->id();
@@ -19,4 +24,14 @@ class CreateSettingsTable extends Migration
             $table->timestamps();
         });
     }
-}
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('settings');
+    }
+};

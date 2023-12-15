@@ -7,17 +7,17 @@ use ZxcvbnPhp\Zxcvbn;
 trait PasswordValidationRules
 {
     /**
-     * Get the validation rules used to validate passwords.
-     *
-     * @return array
+     * @return array<int, mixed>
      */
-    protected function passwordRules()
+    protected function passwordRules(): array
     {
         return [
             'required',
             'string',
-            fn ($attribute, $value, $fail) => (new Zxcvbn())->passwordStrength($value)['score'] >= 3
-                ?: $fail('Bitte wähle ein stärkeres Passwort, in dem du z.B. Buchstaben, Zahlen und Sonderzeichen verwendest.'),
+            //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundBeforeLastUsed
+            fn ($attribute, $value, $fail) => (new Zxcvbn())->passwordStrength($value)['score'] >= 3 ?: $fail(
+                'Bitte wähle ein stärkeres Passwort, in dem du z.B. Buchstaben, Zahlen und Sonderzeichen verwendest.'
+            )
         ];
     }
 }

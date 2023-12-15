@@ -10,9 +10,6 @@ class AcceptInvitationRequest extends UserCreateRequest
 {
     use PasswordValidationRules;
 
-    /**
-     * @return bool
-     */
     public function authorize(): bool
     {
         $invitation = Invitation::query()
@@ -23,8 +20,6 @@ class AcceptInvitationRequest extends UserCreateRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
      * @return array<string, array<int, string>>
      */
     public function rules(): array

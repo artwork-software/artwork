@@ -23,6 +23,38 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property int $id
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $work_name
+ * @property string $email
+ * @property Carbon $email_verified_at
+ * @property string $phone_number
+ * @property string $password
+ * @property string $two_factor_secret
+ * @property string $two_factor_recovery_codes
+ * @property string $position
+ * @property string $business
+ * @property string $description
+ * @property string $work_description
+ * @property bool $toggle_hints
+ * @property array $opened_checklists
+ * @property array $opened_areas
+ * @property string $remember_token
+ * @property int $current_team_id
+ * @property string $profile_photo_path
+ * @property bool $temporary
+ * @property string $employStart
+ * @property string $employEnd
+ * @property bool $can_master
+ * @property bool $can_work_shifts
+ * @property int $weekly_working_hours
+ * @property int $salary_per_hour
+ * @property string $salary_description
+ * @property string $created_at
+ * @property string $updated_at
+ */
 class User extends Authenticatable
 {
     use HasApiTokens;
@@ -34,12 +66,6 @@ class User extends Authenticatable
     use TwoFactorAuthenticatable;
     use Searchable;
 
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var string[]
-     */
     protected $fillable = [
         'first_name',
         'last_name',
@@ -63,11 +89,6 @@ class User extends Authenticatable
         'salary_description',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'opened_checklists' => 'array',
@@ -78,11 +99,6 @@ class User extends Authenticatable
         'can_work_shifts' => 'boolean',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array
-     */
     protected $hidden = [
         'password',
         'remember_token',
@@ -90,42 +106,27 @@ class User extends Authenticatable
         'two_factor_secret',
     ];
 
-    /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array
-     */
     protected $appends = [
         'profile_photo_url',
         'full_name',
         'type',
         'formatted_vacation_days',
+        'assigned_craft_ids',
+        'shift_ids_array'
     ];
 
-    /**
-     * @var string[]
-     */
     protected $with = ['calendar_settings'];
 
-    /**
-     * @return string
-     */
     public function getTypeAttribute(): string
     {
         return 'user';
     }
 
-    /**
-     * @return BelongsToMany
-     */
     public function crafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'craft_users');
     }
 
-    /**
-     * @return BelongsToMany
-     */
     public function shifts(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -138,9 +139,6 @@ class User extends Authenticatable
             ->withCasts(['is_master' => 'boolean']);
     }
 
-    /**
-     * @return Collection
-     */
     public function getShiftsAttribute(): Collection
     {
         return $this->shifts()
@@ -153,33 +151,23 @@ class User extends Authenticatable
             });
     }
 
-    /**
-     * @return string
-     */
     public function getFullNameAttribute(): string
     {
         return $this->first_name . ' ' . $this->last_name;
     }
 
-    /**
-     * @return string
-     */
     public function getDisplayNameAttribute(): string
     {
         return $this->last_name . ', ' . $this->first_name;
     }
 
-    /**
-     * @return HasOne
-     */
+    //@todo: fix phpcs error - refactor function name to calendarSettings
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function calendar_settings(): HasOne
     {
         return $this->hasOne(UserCalendarSettings::class);
     }
 
-    /**
-     * @return HasMany
-     */
     public function vacations(): HasMany
     {
         return $this->hasMany(UserVacations::class);
@@ -205,137 +193,92 @@ class User extends Authenticatable
         return $returnInterval;
     }
 
-    /**
-     * @return HasMany
-     */
+    //@todo: fix phpcs error - refactor function name to projectFiles
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function project_files(): HasMany
     {
         return $this->hasMany(ProjectFile::class);
     }
 
-    /**
-     * @return HasMany
-     */
     public function notificationSettings(): HasMany
     {
         return $this->hasMany(NotificationSetting::class);
     }
 
-    /**
-     * @return BelongsToMany
-     */
     public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class);
     }
 
-    /**
-     * @return BelongsToMany
-     */
     public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class)->withPivot('access_budget', 'is_manager', 'can_write');
     }
 
-    /**
-     * @return HasMany
-     */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
     }
 
-    /**
-     * @return HasMany
-     */
+    //@todo: fix phpcs error - refactor function name to privateChecklists
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function private_checklists(): HasMany
     {
         return $this->hasMany(Checklist::class);
     }
 
-    /**
-     * @return HasMany
-     */
-    public function created_rooms(): HasMany
+    public function createdRppms(): HasMany
     {
         return $this->hasMany(Room::class);
     }
 
-    /**
-     * @return BelongsToMany
-     */
-    public function admin_rooms(): BelongsToMany
+    public function adminRooms(): BelongsToMany
     {
         return $this->belongsToMany(Room::class, 'room_user');
     }
 
-    /**
-     * @return HasMany
-     */
-    public function done_tasks(): HasMany
+    public function doneTasks(): HasMany
     {
         return $this->hasMany(Task::class);
     }
 
-    /**
-     * @return HasMany
-     */
     public function events(): HasMany
     {
         return $this->hasMany(Event::class);
     }
 
-    /**
-     * @return HasManyThrough
-     */
     public function privateTasks(): HasManyThrough
     {
         return $this->hasManyThrough(Task::class, Checklist::class);
     }
 
-    /**
-     * @return \Illuminate\Support\Collection
-     */
     public function getPermissionAttribute(): \Illuminate\Support\Collection
     {
         return $this->getAllPermissions();
     }
 
-    /**
-     * @return HasOne
-     */
     public function globalNotifications(): HasOne
     {
         return $this->hasOne(GlobalNotification::class, 'created_by');
     }
 
-    /**
-     * @return HasMany
-     */
+    //@todo: fix phpcs error - refactor function name to moneySources
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function money_sources(): HasMany
     {
         return $this->hasMany(MoneySource::class, 'creator_id');
     }
 
-    /**
-     * @return HasMany
-     */
-    public function money_source_tasks(): HasMany
+    public function moneySourceTasks(): HasMany
     {
         return $this->hasMany(MoneySourceTask::class, 'user_id');
     }
 
-    /**
-     * @return HasMany
-     */
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class, 'user_id');
     }
 
-    /**
-     * @return BelongsToMany
-     */
     public function accessMoneySources(): BelongsToMany
     {
         return $this->belongsToMany(MoneySource::class, 'money_source_users')
@@ -343,37 +286,47 @@ class User extends Authenticatable
             ->using(MoneySourceUserPivot::class);
     }
 
-    /**
-     * @return HasOne
-     */
+    //@todo: fix phpcs error - refactor function name to calendarFilter
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function calendar_filter(): HasOne
     {
         return $this->hasOne(UserCalendarFilter::class);
     }
 
-    /**
-     * @return HasOne
-     */
+    //@todo: fix phpcs error - refactor function name to shiftCalendarFilter
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function shift_calendar_filter(): HasOne
     {
         return $this->hasOne(UserShiftCalendarFilter::class);
     }
 
-    /**
-     * @return HasOne
-     */
-    public function commented_budget_items_setting(): HasOne
+    public function commentedBudgetItemsSetting(): HasOne
     {
         return $this->hasOne(UserCommentedBudgetItemsSetting::class);
     }
 
-    /**
-     * @return BelongsToMany
-     */
-    public function assigned_crafts(): BelongsToMany
+    public function assignedCrafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'users_assigned_crafts');
     }
+
+    /**
+     * @return array<int>
+     */
+    public function getAssignedCraftIdsAttribute(): array
+    {
+        return $this->assignedCrafts()->pluck('crafts.id')->toArray();
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function getShiftIdsArrayAttribute(): array
+    {
+        return $this->shifts()->pluck('shifts.id')->toArray();
+    }
+
+
 
     /**
      * @return string[]
@@ -415,11 +368,6 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * @param $startDate
-     * @param $endDate
-     * @return float|int
-     */
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
         $shiftsInDateRange = $this->shifts()

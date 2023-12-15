@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ChecklistFactory extends Factory
 {
-
     protected $model = Checklist::class;
 
     /**

@@ -8,16 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use function Clue\StreamFilter\fun;
 
 /**
  * @property int $id
- * @property int $project_id
+ * @property int $table_id
  * @property string $type
  * @property int $position
  * @property string $name
  * @property string $is_verified
- * @property boolean $is_fixed
+ * @property string $created_at
+ * @property string $updated_at
+ * @property bool $is_fixed
  */
 class MainPosition extends Model
 {
@@ -69,21 +70,19 @@ class MainPosition extends Model
             ->mapWithKeys(fn ($cells, $column_id) => [
                     $column_id => [
                         'sum' => $cells->sum('value'),
-                        'hasComments' => @$sumDetails[$column_id]->comments_count > 0,
-                        'hasMoneySource' => @$sumDetails[$column_id]->sum_money_source_count > 0,
+                        'hasComments' => isset($sumDetails[$column_id]) && $sumDetails[$column_id]->comments_count > 0,
+                        'hasMoneySource' => isset($sumDetails[$column_id]) &&
+                            $sumDetails[$column_id]->sum_money_source_count > 0,
                     ]
-                ]
-            );
+                ]);
     }
 
-    public function getColumnVerifiedChangesAttribute(){
-        $subPositionRowIds = SubPositionRow::whereIn('sub_position_id', $this->subPositions()->pluck('id'))->pluck('id');
-        $changes = ColumnCell::whereIn('sub_position_row_id', $subPositionRowIds)
-            ->whereColumn('verified_value', '!=', 'value')
-            ->where('verified_value', '!=', '')
-            ->exists();
-
-        return $changes;
+    public function getColumnVerifiedChangesAttribute()
+    {
+        return ColumnCell::whereIn(
+            'sub_position_row_id',
+            SubPositionRow::whereIn('sub_position_id', $this->subPositions()->pluck('id'))->pluck('id')
+        )->whereColumn('verified_value', '!=', 'value')->where('verified_value', '!=', '')->exists();
     }
 
 

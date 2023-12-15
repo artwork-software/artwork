@@ -2,13 +2,11 @@
 
 namespace Database\Factories;
 
-use App\Models\Category;
-use App\Models\Genre;
-use App\Models\Sector;
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\project>
+ * @extends Factory<Project>
  */
 class ProjectFactory extends Factory
 {
@@ -17,7 +15,7 @@ class ProjectFactory extends Factory
      *
      * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'name' => 'Project ' . $this->faker->firstNameFemale,

@@ -7,13 +7,12 @@ use App\Models\Event;
 use App\Models\SubEvents;
 use App\Support\Services\NotificationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class SubEventsController extends Controller
 {
     protected ?NotificationService $notificationService = null;
-    protected ?\stdClass $notificationData = null;
 
+    protected ?\stdClass $notificationData = null;
 
     public function __construct()
     {
@@ -22,32 +21,14 @@ class SubEventsController extends Controller
         $this->notificationData->event = new \stdClass();
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(): void
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return void
-     */
     public function store(Request $request): void
     {
         SubEvents::create($request->only([
@@ -63,13 +44,11 @@ class SubEventsController extends Controller
             'allDay'
         ]));
 
-
-
         // Send Notification to Room Admins
         $event = Event::find($request->event_id);
         $room = $event->room()->first();
         $roomAdmins = $room->users()->wherePivot('is_admin', true)->get();
-        foreach ($roomAdmins as $roomAdmin){
+        foreach ($roomAdmins as $roomAdmin) {
             $notificationTitle = 'Lauter Termin im Nebenraum';
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
@@ -81,42 +60,22 @@ class SubEventsController extends Controller
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
             $this->notificationService->setEventId($event);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->createNotification();
         }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\SubEvents  $subEvents
-     * @return \Illuminate\Http\Response
-     */
-    public function show(SubEvents $subEvents)
+    public function show(): void
     {
-        //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\SubEvents  $subEvents
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(SubEvents $subEvents)
+    public function edit(SubEvents $subEvents): void
     {
-        //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\SubEvents  $subEvents
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, SubEvents $subEvents)
+    public function update(Request $request, SubEvents $subEvents): void
     {
         $subEvents->update($request->only([
             'eventName',
@@ -131,12 +90,7 @@ class SubEventsController extends Controller
         ]));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\SubEvents  $subEvents
-     */
-    public function destroy(SubEvents $subEvents)
+    public function destroy(SubEvents $subEvents): void
     {
         $subEvents->delete();
     }

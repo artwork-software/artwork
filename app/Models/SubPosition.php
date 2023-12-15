@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -15,7 +15,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $position
  * @property int $main_position_id
  * @property string $is_verified
- * @property boolean $is_fixed
+ * @property string $created_at
+ * @property string $updated_at
+ * @property bool $is_fixed
  */
 class SubPosition extends Model
 {
@@ -45,13 +47,12 @@ class SubPosition extends Model
         return $this->hasMany(SubPositionRow::class);
     }
 
-    public function getColumnSumsAttribute()
+    public function getColumnSumsAttribute(): \Illuminate\Support\Collection
     {
         $subPositionRowIds = $this->subPositionRows()
             ->where('commented', false)
             ->pluck('id');
         $sumDetails = $this->groupedSumDetails();
-
 
         // @Jakob hier bitte checken
         // Siehe Notion
@@ -65,13 +66,15 @@ class SubPosition extends Model
             ->mapWithKeys(fn ($cells, $column_id) => [
                 $column_id => [
                     'sum' => $cells->sum('value'),
-                    'hasComments' => @$sumDetails[$column_id]->comments_count > 0,
-                    'hasMoneySource' => @$sumDetails[$column_id]->sum_money_source_count > 0,
+                    'hasComments' => isset($sumDetails[$column_id]) &&
+                        $sumDetails[$column_id]->comments_count > 0,
+                    'hasMoneySource' => isset($sumDetails[$column_id]) &&
+                        $sumDetails[$column_id]->sum_money_source_count > 0,
                 ]
             ]);
     }
 
-    public function verified()
+    public function verified(): HasOne
     {
         return $this->hasOne(SubPositionVerified::class);
     }
@@ -88,6 +91,4 @@ class SubPosition extends Model
     {
         return $this->hasMany(SubpositionSumDetail::class);
     }
-
-
 }

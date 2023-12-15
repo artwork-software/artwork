@@ -8,22 +8,23 @@ use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $created_at
+ * @property string $updated_at
+ * @property string $deleted_at
+ */
 class CompanyType extends Model
 {
     use HasFactory;
     use SoftDeletes;
     use Prunable;
 
-    /**
-     * @var string[]
-     */
     protected $fillable = [
       'name'
     ];
 
-    /**
-     * @return BelongsToMany
-     */
     public function contracts(): BelongsToMany
     {
         return $this->belongsToMany(Contract::class);

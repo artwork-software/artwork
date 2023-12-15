@@ -4,13 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
+ * @property int $id
+ * @property int $user_id
  * @property boolean $project_status
  * @property boolean $options
  * @property boolean $project_management
  * @property boolean $repeating_events
  * @property boolean $work_shifts
+ * @property string $created_at
+ * @property string $updated_at
  */
 class UserCalendarSettings extends Model
 {
@@ -23,9 +28,6 @@ class UserCalendarSettings extends Model
         'updated_at'
     ];
 
-    /**
-     * @var string[]
-     */
     protected $fillable = [
         'project_status',
         'options',
@@ -34,9 +36,6 @@ class UserCalendarSettings extends Model
         'work_shifts'
     ];
 
-    /**
-     * @var array
-     */
     protected $casts = [
         'project_status' => 'boolean',
         'options' => 'boolean',
@@ -45,10 +44,7 @@ class UserCalendarSettings extends Model
         'work_shifts' => 'boolean'
     ];
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

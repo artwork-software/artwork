@@ -159,8 +159,14 @@
                                  :crafts="crafts"
                                  :currentUserCrafts="currentUserCrafts"
                                  :event="event"
-                                 :event-types="eventTypes"/>
+                                 :event-types="eventTypes"
+                                @dropFeedback="showDropFeedback"/>
         </div>
+        </div>
+    </div>
+    <div class="fixed bottom-0 w-full h-12 bg-gray-900/80 z-10" v-if="dropFeedback">
+        <div class="flex items-center justify-center h-12 text-red-500">
+            {{ dropFeedback }}
         </div>
     </div>
 </template>
@@ -207,7 +213,8 @@ export default defineComponent({
             showIntern: false,
             showExtern: false,
             showProvider: false,
-            activeCraftFilters: []
+            activeCraftFilters: [],
+            dropFeedback: null
         }
     },
     computed: {
@@ -241,7 +248,7 @@ export default defineComponent({
             if (this.activeCraftFilters.length > 0) {
                 this.activeCraftFilters.forEach((craftId) => {
                     users = users.concat(
-                        this.dropUsers.filter(user => user.element.assigned_crafts_ids.includes(craftId))
+                        this.dropUsers.filter(user => user.element.assigned_craft_ids.includes(craftId))
                     );
                 });
                 //remove duplicates from users
@@ -257,6 +264,12 @@ export default defineComponent({
         this.makeContainerDraggable();
     },
     methods: {
+        showDropFeedback(feedback) {
+            this.dropFeedback = feedback;
+            setTimeout(() => {
+                this.dropFeedback = null
+            }, 2000)
+        },
         dayjs,
         usePage,
         updateCommitmentOfShifts() {
@@ -293,9 +306,6 @@ export default defineComponent({
         },
         preventContainerDrag(event) {
             event.stopPropagation();
-        },
-        handleActiveCraftFilters(craftId, event) {
-            console.debug(craftId, event);
         }
     },
 })

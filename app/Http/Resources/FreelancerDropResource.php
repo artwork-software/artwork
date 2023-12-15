@@ -21,7 +21,7 @@ class FreelancerDropResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'profile_photo_url' => $this->profile_image,
-            'assigned_crafts_ids' => $this->assignedCrafts->pluck('id'),
+            'assigned_craft_ids' => $this->assignedCrafts->pluck('id'),
         ];
     }
 }

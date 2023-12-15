@@ -20,6 +20,8 @@ class ServiceProviderShiftResource extends JsonResource
             'provider_name' => $this->provider_name,
             'profile_photo_url' => $this->profile_image,
             'shifts' => $this->getShiftsAttribute(),
+            'assigned_craft_ids' => $this->getAssignedCraftIdsAttribute(),
+            'shift_ids_array' => $this->getShiftIdsArrayAttribute(),
         ];
     }
 }

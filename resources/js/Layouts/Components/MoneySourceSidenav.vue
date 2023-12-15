@@ -52,7 +52,8 @@
                                      @click="showMoneySourceCategories = !showMoneySourceCategories"/>
                 </div>
 
-                <div class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
+                <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
+                     class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                      @click="openMoneySourceCategoriesModal">
                     <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
                         <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">

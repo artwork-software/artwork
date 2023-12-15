@@ -361,12 +361,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/room_files/{id}/force_delete', [RoomFileController::class, 'force_delete']);
 
     //Room Categories
-    Route::post('/rooms/categories', [RoomCategoryController::class, 'store']);
-    Route::delete('/rooms/categories/{roomCategory}', [RoomCategoryController::class, 'destroy']);
+    Route::post('/rooms/categories', [RoomCategoryController::class, 'store'])
+        ->name('room_categories.store');
+    Route::delete('/rooms/categories/{roomCategory}', [RoomCategoryController::class, 'destroy'])
+        ->name('room_categories.destroy');
 
     //Room Attributes
-    Route::post('/rooms/attributes', [RoomAttributeController::class, 'store']);
-    Route::delete('/rooms/attributes/{roomAttribute}', [RoomAttributeController::class, 'destroy']);
+    Route::post('/rooms/attributes', [RoomAttributeController::class, 'store'])
+        ->name('room_attribute.store');
+    Route::delete('/rooms/attributes/{roomAttribute}', [RoomAttributeController::class, 'destroy'])
+        ->name('room_attribute.destroy');
 
     //Filters
     Route::get('/filters', [FilterController::class, 'index']);
@@ -450,11 +454,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('money_sources.duplicate');
     Route::post('/money_sources/{moneySource}/pin', [MoneySourceController::class, 'pin'])->name('money_sources.pin');
     Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
+    Route::post('/money_sources/{moneySource}/categories', [MoneySourceController::class, 'syncCategories'])
+        ->name('money_sources.categories.sync');
 
     // MoneySourceCategories
     Route::post('/money_source/categories', [MoneySourceCategoryController::class, 'store'])
         ->name('money_source_categories.store');
-    Route::delete('/money_source/categories/{moneySourceCategory}', [MoneySourceCategoryController::class, 'destroy']);
+    Route::delete('/money_source/categories/{moneySourceCategory}', [MoneySourceCategoryController::class, 'destroy'])
+        ->name('money_source_categories.destroy');
 
     //Contracts
     Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');

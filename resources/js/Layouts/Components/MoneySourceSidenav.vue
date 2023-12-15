@@ -47,6 +47,40 @@
         <div class="w-full items-center mb-4">
             <div class="text-secondary flex items-center justify-between text-md font-semibold my-2">
                 <div class="flex items-center">
+                    Quellenkategorien
+                    <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySourceCategories ? 'rotate-180' : '']"
+                                     @click="showMoneySourceCategories = !showMoneySourceCategories"/>
+                </div>
+
+                <div class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
+                     @click="openMoneySourceCategoriesModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
+                        <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">
+                            <path id="Pfad_1013" data-name="Pfad 1013"
+                                  d="M7.436,6H3.986A.986.986,0,0,0,3,6.986v6.9a.986.986,0,0,0,.986.986h6.9a.986.986,0,0,0,.986-.986v-3.45"
+                                  transform="translate(-3 -4.954)" fill="none" stroke="#fcfcfb" stroke-linecap="round"
+                                  stroke-linejoin="round" stroke-width="1"/>
+                            <path id="Pfad_1014" data-name="Pfad 1014"
+                                  d="M17.176,3.124A1.046,1.046,0,0,1,18.654,4.6L13.972,9.286,12,9.779l.493-1.972Z"
+                                  transform="translate(-9.043 -2.818)" fill="none" stroke="#fcfcfb"
+                                  stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+            <div v-if="showMoneySourceCategories" class="flex flex-row flex-wrap">
+                <TagComponent v-if="money_source.categories.length > 0"
+                              v-for="category in money_source.categories"
+                              :key="category.id"
+                              :displayed-text="category.name"
+                              type="gray"
+                              hide-x="true"/>
+            </div>
+        </div>
+        <div class="border-t-2 my-5 w-full border-secondary border-opacity-30" />
+        <div class="w-full items-center mb-4">
+            <div class="text-secondary flex items-center justify-between text-md font-semibold my-2">
+                <div class="flex items-center">
                 Zugriff für
                     <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showLinkedProjects ? 'rotate-180' : '']"
                                      @click="showLinkedProjects = !showLinkedProjects"/>
@@ -169,6 +203,7 @@
 
     <MoneySourceFileUploadModal :show="showFileUploadModal" :close-modal="closeFileUploadModal"
                                 :money-source-id="money_source.id"/>
+
     <MoneySourceFileEditModal :show="showFileEditModal" :close-modal="closeFileEditModal"
                               :file="moneySourceFileToEdit"/>
 
@@ -176,7 +211,12 @@
                                 :close-modal="closeFileDeleteModal"
                                 :file="moneySourceFileToDelete"/>
 
-
+    <MoneySourceCategoriesModal :show="showMoneySourceCategoriesModal"
+                                :money-source-id="money_source.id"
+                                :money-source-categories="moneySourceCategories"
+                                :money-source-current-categories="money_source.categories"
+                                :close-modal="closeMoneySourceCategoriesModal"
+    />
 </template>
 
 <script>
@@ -187,28 +227,39 @@ import {
 } from '@heroicons/vue/outline';
 import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
 import CreateMoneySourceTask from "@/Layouts/Components/CreateMoneySourceTask.vue";
 import {Inertia} from "@inertiajs/inertia";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import MoneySourceFileUploadModal from "@/Layouts/Components/MoneySourceFileUploadModal.vue";
 import MoneySourceFileEditModal from "@/Layouts/Components/MoneySourceFileEditModal.vue";
 import MoneySourceFileDeleteModal from "@/Layouts/Components/MoneySourceFileDeleteModal.vue";
+import MoneySourceCategoriesModal from "@/Layouts/Components/MoneySourceCategoriesModal.vue";
 import {ChevronDownIcon} from "@heroicons/vue/solid";
 import LinkProjectsToMoneySourcesComponent from "@/Layouts/Components/LinkProjectsToMoneySourcesComponent.vue";
 import EditMoneySourceUsersModal from "@/Layouts/Components/EditMoneySourceUsersModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
-
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
 
 export default {
     mixins: [Permissions],
     name: "MoneySourceSidenav",
-    props: ['users', 'tasks', 'money_source', 'moneySourceFiles', 'linkedProjects', 'competent', 'writeAccess'],
+    props: [
+        'users',
+        'tasks',
+        'money_source',
+        'moneySourceFiles',
+        'linkedProjects',
+        'competent',
+        'writeAccess',
+        'moneySourceCategories'
+    ],
     components: {
+        TagComponent,
         LinkProjectsToMoneySourcesComponent,
         MoneySourceFileDeleteModal,
         MoneySourceFileEditModal,
         MoneySourceFileUploadModal,
+        MoneySourceCategoriesModal,
         NewUserToolTip,
         ContractModuleDeleteModal,
         DownloadIcon,
@@ -231,6 +282,8 @@ export default {
             showLinkProjectsModal: false,
             showEditUsersModal: false,
             showLinkedProjects: false,
+            showMoneySourceCategories: false,
+            showMoneySourceCategoriesModal: false,
         }
     },
     methods: {
@@ -245,6 +298,9 @@ export default {
         },
         openLinkProjectsModal() {
             this.showLinkProjectsModal = true;
+        },
+        openMoneySourceCategoriesModal() {
+            this.showMoneySourceCategoriesModal = true;
         },
         onCloseLinkProjectsModal() {
             this.showLinkProjectsModal = false;
@@ -267,6 +323,9 @@ export default {
         closeFileDeleteModal() {
             this.showFileDeleteModal = false;
             this.moneySourceFileToDelete = null;
+        },
+        closeMoneySourceCategoriesModal() {
+            this.showMoneySourceCategoriesModal = false;
         },
         downloadMoneySourceFile(file) {
             let link = document.createElement('a');

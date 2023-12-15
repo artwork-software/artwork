@@ -234,6 +234,7 @@
                 :linked-projects="linkedProjects"
                 :competent="competent_member"
                 :write-access="access_member"
+                :money-source-categories="moneySourceCategories"
             ></MoneySourceSidenav>
         </BaseSidenav>
     </app-layout>
@@ -285,7 +286,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 export default {
     mixins: [Permissions],
     name: "MoneySourceShow",
-    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects', 'linkedProjects'],
+    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'moneySourceCategories', 'projects', 'linkedProjects'],
     components: {
         UserPopoverTooltip,
         ConfirmDeleteModal,

@@ -383,9 +383,11 @@ class MoneySourceController extends Controller
                 'subMoneySourcePositions' => $subMoneySourcePositions,
                 'linked_projects' => array_unique($linked_projects, SORT_REGULAR),
                 'usersWithAccess' => array_unique($usersWithAccess, SORT_NUMERIC),
-                'history' => $historyArray
+                'history' => $historyArray,
+                'categories' => $moneySource->categories
             ],
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
+            'moneySourceCategories' => MoneySourceCategory::all(),
             'moneySources' => MoneySource::where('is_group', false)->get(),
             'projects' => Project::all()->map(fn($project) => [
                 'id' => $project->id,
@@ -604,5 +606,10 @@ class MoneySourceController extends Controller
     public function updateProjects(MoneySource $moneySource, Request $request): void
     {
         $moneySource->projects()->sync($request->linkedProjectIds);
+    }
+
+    public function syncCategories(MoneySource $moneySource, Request $request): void
+    {
+        $moneySource->categories()->sync($request->categoryIds);
     }
 }

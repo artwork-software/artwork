@@ -3,18 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\MoneySourceCategory;
+use App\Models\MoneySourceCategoryMapping;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use JetBrains\PhpStorm\NoReturn;
 
 class MoneySourceCategoryController extends Controller
 {
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         MoneySourceCategory::create([
             'name' => $request->get('name')
@@ -22,16 +20,18 @@ class MoneySourceCategoryController extends Controller
         return Redirect::back();
     }
 
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\MoneySourceCategory  $moneySourceCategory
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(MoneySourceCategory $moneySourceCategory): \Illuminate\Http\RedirectResponse
+    public function destroy(MoneySourceCategory $moneySourceCategory): RedirectResponse
     {
+        foreach (
+            MoneySourceCategoryMapping::query()
+                ->where('money_source_category_id', '=', $moneySourceCategory->id)
+                ->get() as $moneySourceCategoryMapping
+        ) {
+            $moneySourceCategoryMapping->delete();
+        }
+
         $moneySourceCategory->delete();
+
         return Redirect::back();
     }
 }

@@ -47,7 +47,7 @@
                                 </div>
                                 <div v-else class="flex items-center w-full mr-2">
                                     <input type="text"
-                                           placeholder="Suche nach Projekten"
+                                           placeholder="Suche nach Quellen"
                                            v-model="moneySource_query"
                                            class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>

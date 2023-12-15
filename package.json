@@ -39,6 +39,7 @@
         "mathjax": "^2.7.2",
         "vue-cal": "^4.8.0",
         "vue-mathjax-next": "^0.0.4",
+        "vue-resizable": "^2.1.7",
         "vue-tailwind-datepicker": "^1.4.3",
         "vuedraggable": "^4.1.0",
         "ziggy": "^2.4.0"

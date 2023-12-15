@@ -165,11 +165,8 @@
 
     </div>
 
-    <div class="fixed bottom-0 w-full h-12 bg-gray-900/80 z-10" v-if="dropFeedback">
-        <div class="flex items-center justify-center h-12 text-red-500">
-            {{ dropFeedback }}
-        </div>
-    </div>
+
+    <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
 </template>
 <script>
 
@@ -192,11 +189,13 @@ import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
 import {Switch} from "@headlessui/vue";
 import MultiEditUserCell from "@/Pages/Shifts/Components/MultiEditUserCell.vue";
+import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        SideNotification,
         MultiEditUserCell,
         Switch,
         DragElement, ShowUserShiftsModal,

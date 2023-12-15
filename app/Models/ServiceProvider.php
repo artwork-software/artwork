@@ -51,7 +51,7 @@ class ServiceProvider extends Model
 
     protected $with = ['contacts'];
 
-    protected $appends = ['name', 'type', 'profile_photo_url'];
+    protected $appends = ['name', 'type', 'profile_photo_url', 'assigned_craft_ids', 'shift_ids_array'];
 
     public function contacts(): HasMany
     {
@@ -73,6 +73,22 @@ class ServiceProvider extends Model
     public function assignedCrafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'service_provider_assigned_crafts');
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function getAssignedCraftIdsAttribute(): array
+    {
+        return $this->assignedCrafts()->pluck('crafts.id')->toArray();
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function getShiftIdsArrayAttribute(): array
+    {
+        return $this->shifts()->pluck('shifts.id')->toArray();
     }
 
     public function getNameAttribute(): string

@@ -5,7 +5,7 @@ import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesS
 export default defineComponent({
     name: "MasterDropElement",
     components: {ChooseUserSeriesShift},
-    props: ['shiftId', 'master', 'users', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount', 'userIds', 'is_series'],
+    props: ['shiftId', 'craftId', 'master', 'users', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount', 'userIds', 'is_series'],
     data(){
         return {
             showChooseUserSeriesShiftModal: false,
@@ -15,9 +15,11 @@ export default defineComponent({
                 end: null,
                 dayOfWeek: null
             },
-            selectedUser: null
+            selectedUser: null,
+            dropFeedback: null,
         }
     },
+    emits: ['dropFeedback'],
     methods: {
         onDragOver(event) {
             event.preventDefault();
@@ -39,6 +41,13 @@ export default defineComponent({
         saveUser(){
             let dropElement = this.selectedUser;
             dropElement = JSON.parse(dropElement)[0];
+
+            if(dropElement.craft_ids && !dropElement.craft_ids.includes(this.craftId)){
+                this.dropFeedback = 'Nutzer*in hat nicht das richtige Gewerk';
+                this.$emit('dropFeedback', this.dropFeedback);
+                return;
+            }
+
 
             if(this.maxCount === this.currentCount){
                 return;

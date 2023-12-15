@@ -195,7 +195,7 @@ export default defineComponent({
             console.log(dropElement);
 
             if(dropElement.craft_ids && !dropElement.craft_ids.includes(this.craftId)){
-                this.dropFeedback = 'Nutzer*in hat nicht das richtige Gewerk';
+                this.dropFeedback = 'Nutzer*in kann nicht zu Schichten von diesem Gewerk zugewiesen werden.';
                 this.$emit('dropFeedback', this.dropFeedback);
                 return;
             }

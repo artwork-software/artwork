@@ -1,8 +1,7 @@
 <template>
-    <div class=" h-full w-full flex flex-col">
+    <div class="w-full flex flex-col">
         <ShiftHeader>
-            <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
-                 :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' mt-8 max-h-[38rem]' : ' mt-24','overflow-x-scroll ']">
+            <div class="ml-5 bg-white flex-grow">
                 <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
                                       @next-time-range="nextTimeRange"
                                       :date-value="dateValue"
@@ -13,10 +12,10 @@
                                       @enterFullscreenMode="openFullscreen"
                                       @openHistoryModal="openHistoryModal"
                                       :user_filters="user_filters"
-                ></ShiftPlanFunctionBar>
-
-
-
+                />
+            </div>
+            <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
+                 :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' mt-8 max-h-[34rem]' : ' mt-24','overflow-x-scroll ']">
                 <table class="w-full bg-white">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                     <div>
@@ -50,29 +49,29 @@
                     </div>
                 </table>
             </div>
+            <div id="userOverview" class="w-full">
+                <vue-resizable min-height="600" :active="['t']">
+                    <div class="flex justify-center overflow-y-scroll">
+                        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
+                             class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">
+                            <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
+                                     viewBox="0 0 14.123 6.519">
+                                    <g id="Gruppe_1608" data-name="Gruppe 1608"
+                                       transform="translate(-275.125 870.166) rotate(-90)">
+                                        <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0"
+                                              transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1"
+                                              stroke-width="1"/>
+                                        <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0"
+                                              transform="translate(864.081 286.591) rotate(-90)" fill="none"
+                                              stroke="#a7a6b1" stroke-width="1"/>
+                                    </g>
+                                </svg>
+                            </div>
 
-            <div id="userOverview" :style="{ 'max-height': computedUserOverviewMaxHeight }" class="w-[102.5%]  overflow-x-scroll -ml-5">
-                <div class="flex justify-center overflow-y-scroll ">
-                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                         class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">
-                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
-                                 viewBox="0 0 14.123 6.519">
-                                <g id="Gruppe_1608" data-name="Gruppe 1608"
-                                   transform="translate(-275.125 870.166) rotate(-90)">
-                                    <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0"
-                                          transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1"
-                                          stroke-width="1"/>
-                                    <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0"
-                                          transform="translate(864.081 286.591) rotate(-90)" fill="none"
-                                          stroke="#a7a6b1" stroke-width="1"/>
-                                </g>
-                            </svg>
                         </div>
                     </div>
-                </div>
-                <div ref="userOverview" class="w-full bg-primary overflow-x-scroll min-h-[40rem]"
-                     v-show="showUserOverview">
+                <div ref="userOverview" class="w-full bg-primary overflow-x-scroll fixed z-30" v-show="showUserOverview">
                     <table class="w-full text-white overflow-y-scroll">
                         <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                         <div>
@@ -135,6 +134,7 @@
                         </div>
                     </table>
                 </div>
+                </vue-resizable>
             </div>
 
 
@@ -191,7 +191,7 @@ import ShowUserShiftsModal from "@/Pages/Shifts/Components/showUserShiftsModal.v
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
 import {Switch} from "@headlessui/vue";
-import MultiEditUserCell from "@/Pages/Shifts/Components/MultiEditUserCell.vue";
+import VueResizable from 'vue-resizable'
 
 export default {
     name: "ShiftPlan",
@@ -209,7 +209,8 @@ export default {
         LightBulbIcon,
         AppLayout,
         ShiftPlanFunctionBar,
-        HighlightUserCell
+        HighlightUserCell,
+        VueResizable
     },
     props: [
         'events',

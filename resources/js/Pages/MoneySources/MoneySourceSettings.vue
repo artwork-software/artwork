@@ -67,7 +67,7 @@
                                description="Bist du sicher, dass du die Quellenkategorie löschen möchtest? Damit sind
                                     alle Zuordnungen der Finanzierungsquellen zu dieser Kategorie unwiderruflich
                                     gelöscht."
-                               @closed="afterConfirm"/>
+                               @closed="afterDeleteCategoryConfirm"/>
     </app-layout>
 </template>
 
@@ -112,7 +112,7 @@ export default defineComponent({
             this.categoryDeleteModalVisible = true;
             this.categoryToDelete = category;
         },
-        afterConfirm(confirmed) {
+        afterDeleteCategoryConfirm(confirmed) {
             if (confirmed) {
                 Inertia.delete(
                     route('money_source_categories.destroy', {moneySourceCategory: this.categoryToDelete.id}),

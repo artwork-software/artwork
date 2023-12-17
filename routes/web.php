@@ -98,6 +98,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::put('/settings/email', [AppController::class, 'updateEmailSettings'])->name('tool.updateMail');
     });
 
+    Route::group(['middleware' => ['can:can edit and delete money sources']], function (): void {
+        Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
+        Route::get('/projects/{project}/budget', [ProjectController::class, 'projectBudgetTab'])
+            ->name('projects.show.budget');
+    });
+
+    Route::group(['middleware' => ['can:view edit add money_sources']], function (): void {
+        Route::get('/money_sources', [MoneySourceController::class, 'index'])->name('money_sources.index');
+        Route::get('/money_sources/{moneySource}', [MoneySourceController::class, 'show'])->name('money_sources.show');
+    });
+
     //Hints
     Route::post('/toggle/hints', [AppController::class, 'toggle_hints'])->name('toggle.hints');
     Route::post(
@@ -223,8 +234,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/projects/{project}/checklist', [ProjectController::class, 'projectChecklistTab'])
         ->name('projects.show.checklist');
     Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])->name('projects.show.shift');
-    Route::get('/projects/{project}/budget', [ProjectController::class, 'projectBudgetTab'])
-        ->name('projects.show.budget');
     Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
         ->name('projects.export.budget');
     Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])
@@ -434,11 +443,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('global_notification.destroy');
 
     // Money Sources
-    Route::get('/money_sources', [MoneySourceController::class, 'index'])->name('money_sources.index');
     Route::get('/money_sources/settings', [MoneySourceController::class, 'showSettings'])
         ->name('money_sources.settings');
     Route::get('/money_sources/search', [MoneySourceController::class, 'search'])->name('money_sources.search');
-    Route::get('/money_sources/{moneySource}', [MoneySourceController::class, 'show'])->name('money_sources.show');
     Route::patch('/money_sources/{moneySource}', [MoneySourceController::class, 'update'])
         ->name('money_sources.update');
     Route::patch('/money_sources/{moneySource}/users', [MoneySourceController::class, 'updateUsers'])
@@ -449,7 +456,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/money_sources/{moneySource}/duplicate', [MoneySourceController::class, 'duplicate'])
         ->name('money_sources.duplicate');
     Route::post('/money_sources/{moneySource}/pin', [MoneySourceController::class, 'pin'])->name('money_sources.pin');
-    Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
 
     // MoneySourceCategories
     Route::post('/money_source/categories', [MoneySourceCategoryController::class, 'store'])

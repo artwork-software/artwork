@@ -173,7 +173,7 @@ class EventController extends Controller
                 'user' => UserIndexResource::make($user),
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'expectedWorkingHours' => $expectedWorkingHours,
-                'vacations' => $vacations
+                'vacations' => $vacations,
             ];
         }
 
@@ -192,6 +192,8 @@ class EventController extends Controller
                     'last_name' => $freelancer->last_name,
                     'profile_photo_url' => $freelancer->profile_image,
                     'shifts' => $freelancer->getShiftsAttribute(),
+                    'assigned_craft_ids' => $freelancer->getAssignedCraftIdsAttribute(),
+                    'shift_ids_array' => $freelancer->getShiftIdsArrayAttribute(),
                 ],
                 'vacations' => $vacations,
                 'plannedWorkingHours' => $plannedWorkingHours,

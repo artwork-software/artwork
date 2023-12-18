@@ -5,7 +5,7 @@ import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesS
 export default defineComponent({
     name: "DropElement",
     components: {ChooseUserSeriesShift},
-    props: ['shiftId', 'master', 'users', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount', 'userIds', 'is_series'],
+    props: ['shiftId', 'craftId', 'master', 'users', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount', 'userIds', 'is_series'],
     data(){
         return {
             showChooseUserSeriesShiftModal: false,
@@ -15,9 +15,11 @@ export default defineComponent({
                 end: null,
                 dayOfWeek: null
             },
-            selectedUser: null
+            selectedUser: null,
+            dropFeedback: null,
         }
     },
+    emits: ['dropFeedback'],
     methods: {
         onDragOver(event) {
             event.preventDefault();
@@ -41,6 +43,12 @@ export default defineComponent({
             dropElement = JSON.parse(dropElement)[0];
 
             if(this.maxCount === this.currentCount){
+                return;
+            }
+
+            if(dropElement.craft_ids && !dropElement.craft_ids.includes(this.craftId)){
+                this.dropFeedback = 'Nutzer*in kann nicht zu Schichten von diesem Gewerk zugewiesen werden.';
+                this.$emit('dropFeedback', this.dropFeedback);
                 return;
             }
 

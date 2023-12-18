@@ -43,7 +43,7 @@
 import {defineComponent} from 'vue'
 
 export default defineComponent({
-    name: "DragElement",
+    name: "MultiEditUserCell",
     props: ['item', 'type','plannedHours','expectedHours', 'userForMultiEdit', 'multiEditMode'],
     data() {
         return {
@@ -53,7 +53,7 @@ export default defineComponent({
     watch: {
         userForMultiEdit: {
             handler(){
-                this.item.checkedForMultiEdit = this.userForMultiEdit.id === this.item.id && this.userForMultiEdit.type === this.type;
+                this.item.checkedForMultiEdit = this.userForMultiEdit?.id === this.item?.id && this.userForMultiEdit?.type === this.type;
             },
             deep: true
         },
@@ -69,9 +69,16 @@ export default defineComponent({
     emits: ['addUserToMultiEdit'],
     methods: {
         changeUserForMultiEdit() {
+            if(this.item.checkedForMultiEdit){
+                this.item.checkedForMultiEdit = false
+                this.$emit('addUserToMultiEdit', null)
+                return
+            }
             const returnValue = {
                 id: this.item.id,
-                type: this.type
+                type: this.type,
+                assigned_craft_ids: this.item.assigned_craft_ids,
+                shift_ids_array: this.item.shift_ids_array
             }
             this.$emit('addUserToMultiEdit', returnValue)
         }

@@ -8,7 +8,8 @@ import Helper from "../../../mixins/Helper.vue";
 export default defineComponent({
     name: "ShiftDropElement",
     components: {ChooseUserSeriesShift, CheckIcon, VueMathjax},
-    props: ['shift','showRoom','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount','highlightMode','highlightedId','highlightedType', 'multiEditMode'],
+    props: ['shift','showRoom', 'craftId','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount','highlightMode','highlightedId','highlightedType', 'multiEditMode', 'userForMultiEdit'],
+    emits: ['dropFeedback'],
     mixins: [Helper],
     computed: {
         shiftUserIds(){
@@ -30,7 +31,10 @@ export default defineComponent({
             })
 
             return ids;
-        }
+        },
+        checkIfUserIsInCraft(){
+            return this.userForMultiEdit.assigned_craft_ids.includes(this.shift.craft.id)
+        },
     },
     watch: {
         multiEditMode: {
@@ -40,7 +44,12 @@ export default defineComponent({
                 }
             },
             deep: true
-
+        },
+        userForMultiEdit: {
+            handler(){
+                this.shift.isCheckedForMultiEdit = this.userForMultiEdit?.shift_ids_array.includes(this.shift.id)
+            },
+            deep: true
         }
     },
     data(){
@@ -52,7 +61,8 @@ export default defineComponent({
                 end: null,
                 dayOfWeek: null
             },
-            selectedUser: null
+            selectedUser: null,
+            dropFeedback: null,
         }
     },
     methods: {
@@ -182,6 +192,14 @@ export default defineComponent({
             let dropElement = this.selectedUser;
             dropElement = JSON.parse(dropElement)[0];
 
+            console.log(dropElement);
+
+            if(dropElement.craft_ids && !dropElement.craft_ids.includes(this.craftId)){
+                this.dropFeedback = 'Nutzer*in kann nicht zu Schichten von diesem Gewerk zugewiesen werden.';
+                this.$emit('dropFeedback', this.dropFeedback);
+                return;
+            }
+
             if(this.maxCount === this.currentCount){
                 return;
             }
@@ -275,8 +293,9 @@ export default defineComponent({
 </script>
 
 <template>
+
     <div :class="[highlightMode && !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30' : '', shift.empty_user_count === 0 && shift.empty_master_count === 0 && multiEditMode ? 'hidden' : '', multiEditMode ? 'text-[10px] my-1' : '']" class="flex items-center xsLight text-shiftText subpixel-antialiased" @dragover="onDragOver" @drop="onDrop">
-        <div :class="shift.empty_user_count === 0 && shift.empty_master_count === 0 ? 'hidden' : 'block'"  v-if="multiEditMode">
+        <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
             <input v-model="shift.isCheckedForMultiEdit" id="comments" aria-describedby="comments-description" name="comments" type="checkbox" class="h-5 w-5 border-gray-300 text-green-600 focus:ring-green-600 mr-1" />
         </div>
         <div class="flex items-center justify-between">

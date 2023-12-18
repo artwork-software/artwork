@@ -111,6 +111,8 @@ class User extends Authenticatable
         'full_name',
         'type',
         'formatted_vacation_days',
+        'assigned_craft_ids',
+        'shift_ids_array'
     ];
 
     protected $with = ['calendar_settings'];
@@ -307,6 +309,23 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Craft::class, 'users_assigned_crafts');
     }
+
+    /**
+     * @return array<int>
+     */
+    public function getAssignedCraftIdsAttribute(): array
+    {
+        return $this->assignedCrafts()->pluck('crafts.id')->toArray();
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function getShiftIdsArrayAttribute(): array
+    {
+        return $this->shifts()->pluck('shifts.id')->toArray();
+    }
+
 
 
     /**

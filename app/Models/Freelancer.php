@@ -55,7 +55,7 @@ class Freelancer extends Model
     ];
 
     protected $appends = [
-        'name', 'display_name', 'type', 'profile_photo_url'
+        'name', 'display_name', 'type', 'profile_photo_url', 'assigned_craft_ids', 'shift_ids_array'
     ];
 
     public function shifts(): BelongsToMany
@@ -102,6 +102,23 @@ class Freelancer extends Model
     {
         return $this->belongsToMany(Craft::class, 'freelancer_assigned_crafts');
     }
+
+    /**
+     * @return array<int>
+     */
+    public function getAssignedCraftIdsAttribute(): array
+    {
+        return $this->assignedCrafts()->pluck('crafts.id')->toArray();
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function getShiftIdsArrayAttribute(): array
+    {
+        return $this->shifts()->pluck('shifts.id')->toArray();
+    }
+
 
     public function getShiftsAttribute(): Collection
     {

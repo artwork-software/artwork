@@ -159,10 +159,13 @@
                                  :crafts="crafts"
                                  :currentUserCrafts="currentUserCrafts"
                                  :event="event"
-                                 :event-types="eventTypes"/>
+                                 :event-types="eventTypes"
+                                @dropFeedback="showDropFeedback"/>
         </div>
         </div>
     </div>
+
+    <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -176,12 +179,14 @@ import Input from "@/Jetstream/Input.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import {usePage} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
+import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
 
 export default defineComponent({
     name: "ShiftTab",
     props: ['eventsWithRelevant', 'crafts', 'users', 'dropUsers', 'eventTypes', 'currentUserCrafts'],
     mixins: [Permissions],
     components: {
+        SideNotification,
         Input,
         SingleRelevantEvent,
         DragElement,
@@ -207,7 +212,8 @@ export default defineComponent({
             showIntern: false,
             showExtern: false,
             showProvider: false,
-            activeCraftFilters: []
+            activeCraftFilters: [],
+            dropFeedback: null
         }
     },
     computed: {
@@ -241,7 +247,7 @@ export default defineComponent({
             if (this.activeCraftFilters.length > 0) {
                 this.activeCraftFilters.forEach((craftId) => {
                     users = users.concat(
-                        this.dropUsers.filter(user => user.element.assigned_crafts_ids.includes(craftId))
+                        this.dropUsers.filter(user => user.element.assigned_craft_ids.includes(craftId))
                     );
                 });
                 //remove duplicates from users
@@ -257,6 +263,12 @@ export default defineComponent({
         this.makeContainerDraggable();
     },
     methods: {
+        showDropFeedback(feedback) {
+            this.dropFeedback = feedback;
+            setTimeout(() => {
+                this.dropFeedback = null
+            }, 2000)
+        },
         dayjs,
         usePage,
         updateCommitmentOfShifts() {

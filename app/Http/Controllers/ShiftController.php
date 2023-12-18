@@ -1361,17 +1361,27 @@ class ShiftController extends Controller
         $user = null;
         $freelancer = null;
         $serviceProvider = null;
+        $modelShifts = null;
 
         if ($request->user['type'] === 0) {
             $user = User::find($request->user['id']);
+            $modelShifts = $user->shifts()->get()->pluck('id')->all();
+            // remove all shifts from user
+            $user->shifts()->detach($modelShifts);
         }
 
         if ($request->user['type'] === 1) {
             $freelancer = Freelancer::find($request->user['id']);
+            $modelShifts = $freelancer->shifts()->get()->pluck('id')->all();
+            // remove all shifts from freelancer
+            $freelancer->shifts()->detach($modelShifts);
         }
 
         if ($request->user['type'] === 2) {
             $serviceProvider = ServiceProvider::find($request->user['id']);
+            $modelShifts = $serviceProvider->shifts()->get()->pluck('id')->all();
+            // remove all shifts from service provider
+            $serviceProvider->shifts()->detach($modelShifts);
         }
 
         //dd($request->user['type']);

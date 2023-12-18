@@ -31,6 +31,8 @@ class UserIndexResource extends JsonResource
             'shifts' => $this->getShiftsAttribute(),
             'display_name' => $this->getDisplayNameAttribute(),
             'type' => $this->getTypeAttribute(),
+            'assigned_craft_ids' => $this->getAssignedCraftIdsAttribute(),
+            'shift_ids_array' => $this->getShiftIdsArrayAttribute(),
         ];
     }
 }

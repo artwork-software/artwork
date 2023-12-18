@@ -145,13 +145,13 @@
             </div>
         </div>
         <div v-for="user in Math.floor(shift.empty_master_count)">
-            <MasterDropElement :users="shift.users" :shift-id="shift.id" :currentCount="shift.currentCount"
+            <MasterDropElement @dropFeedback="dropFeedback" :craft-id="shift.craft.id" :users="shift.users" :shift-id="shift.id" :currentCount="shift.currentCount"
                          :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count"
                          :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="true"
                          :is_series="event.is_series"/>
         </div>
         <div v-for="user in Math.floor(shift.empty_user_count) ? Math.floor(shift.empty_user_count) : 0">
-            <EmployeeDropElement :users="shift.allUsers" :shift-id="shift.id" :currentCount="shift.currentCount"
+            <EmployeeDropElement @dropFeedback="dropFeedback" :craft-id="shift.craft.id" :users="shift.allUsers" :shift-id="shift.id" :currentCount="shift.currentCount"
                                  :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count"
                                  :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="false"
                                  :is_series="event.is_series"/>
@@ -205,6 +205,7 @@ export default defineComponent({
     },
     mixins: [Helper],
     props: ['shift', 'crafts', 'event', 'currentUserCrafts'],
+    emits: ['dropFeedback'],
     data() {
         return {
             openEditShiftModal: false,
@@ -218,7 +219,7 @@ export default defineComponent({
                 type: null
             },
             highlight: null,
-            anyoneHasVacation: false
+            anyoneHasVacation: false,
         }
     },
     mounted() {
@@ -258,6 +259,9 @@ export default defineComponent({
         }
     },
     methods: {
+        dropFeedback(feedback){
+            this.$emit('dropFeedback', feedback);
+        },
         dayjs,
         truncateDecimal(number) {
             const decimalPart = number.toString().split('.')[1];

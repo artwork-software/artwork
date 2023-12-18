@@ -1,4 +1,5 @@
 <template>
+
     <div class="mb-3">
         <!-- Event Header -->
         <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm"
@@ -90,9 +91,11 @@
                                      :shifts="event.shifts"
                                      :crafts="crafts"
                                      :currentUserCrafts="currentUserCrafts"
-                                     :event="event.event"/>
+                                     :event="event.event"
+                                    @dropFeedback="dropFeedback"/>
         </div>
     </div>
+
 
 
 </template>
@@ -114,6 +117,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 export default defineComponent({
     name: "SingleRelevantEvent",
     props: ['event', 'crafts', 'eventTypes', 'currentUserCrafts'],
+    emits: ['dropFeedback'],
     components: {
         SvgCollection,
         ImportShiftTemplate,
@@ -137,10 +141,13 @@ export default defineComponent({
             showConfirmDeleteModal: false,
             showAddShiftPresetModal: false,
             showShift: parseInt(this.$page.props?.urlParameters?.eventId) === parseInt(this.event.event.id) ? true : false,
-            showImportShiftTemplateModal: false
+            showImportShiftTemplateModal: false,
         }
     },
     methods: {
+        dropFeedback(event) {
+            this.$emit('dropFeedback', event)
+        },
         openDeletConfirmModal() {
             this.showConfirmDeleteModal = true
         },

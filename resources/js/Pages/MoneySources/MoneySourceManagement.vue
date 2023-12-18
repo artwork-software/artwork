@@ -9,37 +9,38 @@
                     <div class="w-full flex my-auto">
                         <div class="flex justify-between w-full">
                             <div class="flex">
-                            <Listbox as="div" class="flex" v-model="moneySourceFilter">
-                                <ListboxButton
-                                    class="bg-white w-full relative py-2 cursor-pointer focus:outline-none">
-                                    <div class="flex items-center my-auto">
-                                        <p class="items-center flex mr-2 xsDark">
-                                            {{ moneySourceFilter.name }}</p>
-                                        <span
-                                            class="inset-y-0 flex items-center pr-2 pointer-events-none">
-                                            <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
-                                         </span>
-                                    </div>
-                                </ListboxButton>
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions
-                                        class="absolute w-80 z-10 mt-12 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
-                                        <ListboxOption as="template" class="max-h-8"
-                                                       v-for="filter in moneySourceFilters"
-                                                       :key="filter.name"
-                                                       :value="filter"
-                                                       v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
-                                                        {{ filter.name }}
-                                                    </span>
-                                            </li>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </transition>
-                            </Listbox>
+                                <Listbox as="div" class="flex" v-model="moneySourceFilter">
+                                    <ListboxButton
+                                        class="bg-white w-full relative py-2 cursor-pointer focus:outline-none">
+                                        <div class="flex items-center my-auto">
+                                            <p class="items-center flex mr-2 xsDark">
+                                                {{ moneySourceFilter.name }}</p>
+                                            <span
+                                                class="inset-y-0 flex items-center pr-2 pointer-events-none">
+                                                <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
+                                             </span>
+                                        </div>
+                                    </ListboxButton>
+                                    <transition leave-active-class="transition ease-in duration-100"
+                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        <ListboxOptions
+                                            class="absolute w-80 z-10 mt-12 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
+                                            <ListboxOption as="template" class="max-h-8"
+                                                           v-for="filter in moneySourceFilters"
+                                                           :key="filter.name"
+                                                           :value="filter"
+                                                           v-slot="{ active, selected }">
+                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                                        <span
+                                                            :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
+                                                            {{ filter.name }}
+                                                        </span>
+                                                </li>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </transition>
+                                </Listbox>
+                            </div>
                             <div class="flex items-center ml-8">
                                 <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
                                      class="cursor-pointer inset-y-0 mr-3">

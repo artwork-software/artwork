@@ -63,7 +63,7 @@
                                                 <ChevronDownIcon :class="open ? 'rotate-180 transform' : ''" class="h-4 w-4 mt-0.5 text-white"/>
                                             </DisclosureButton>
                                             <DisclosurePanel>
-                                                <div class="flex flex-col gap-1 px-2">
+                                                <div class="flex flex-col gap-1 px-2" v-if="moneySourceCategories.length > 0">
                                                     <div v-for="moneySourceCategory in moneySourceCategories"
                                                          class="flex flex-row items-center">
                                                         <input class="text-success h-4 w-4 border-1 border-darkGray bg-darkGrayBg focus:border-none"
@@ -82,6 +82,9 @@
                                                             {{moneySourceCategory.name}}
                                                         </label>
                                                     </div>
+                                                </div>
+                                                <div v-else class="xxsLight px-2">
+                                                    Bisher wurden keine Kategorien für Finanzierungsquellen angelegt.
                                                 </div>
                                             </DisclosurePanel>
                                         </Disclosure>
@@ -115,6 +118,83 @@
                                     </div>
                                 </div>
                             </div>
+                            <div>
+                                <Menu as="div" class="my-auto relative">
+                                    <div class="flex">
+                                        <MenuButton
+                                            class="flex">
+                                            <img src="/Svgs/IconSvgs/icon_sort.svg"
+                                                 class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                                 aria-hidden="true" alt="Sortieren"/>
+                                        </MenuButton>
+                                    </div>
+                                    <transition enter-active-class="transition ease-out duration-100"
+                                                enter-from-class="transform opacity-0 scale-95"
+                                                enter-to-class="transform opacity-100 scale-100"
+                                                leave-active-class="transition ease-in duration-75"
+                                                leave-from-class="transform opacity-100 scale-100"
+                                                leave-to-class="transform opacity-0 scale-95">
+                                        <MenuItems
+                                            class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                            <div class="py-1">
+                                                <MenuItem class="cursor-pointer" v-slot="{ active }">
+                                                    <div @click="changeSortAlgorithm('name')"
+                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        Alphabetisch
+                                                        <ArrowNarrowDownIcon
+                                                            v-if="sortType === 'name' && sortOrder === 'descending'"
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        <ArrowNarrowUpIcon
+                                                            v-if="sortType === 'name' && sortOrder === 'ascending'"
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                    </div>
+                                                </MenuItem>
+                                                <MenuItem class="cursor-pointer" v-slot="{ active }">
+                                                    <div @click="changeSortAlgorithm('funding_start_date')"
+                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        Startdatum
+                                                        <ArrowNarrowDownIcon
+                                                            v-if="sortType === 'funding_start_date' && sortOrder === 'descending'"
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        <ArrowNarrowUpIcon
+                                                            v-if="sortType === 'funding_start_date' && sortOrder === 'ascending'"
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                    </div>
+                                                </MenuItem>
+                                                <MenuItem class="cursor-pointer" v-slot="{ active }">
+                                                    <div @click="changeSortAlgorithm('funding_end_date')"
+                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        Enddatum
+                                                        <ArrowNarrowDownIcon
+                                                            v-if="sortType === 'funding_end_date' && sortOrder === 'descending'"
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        <ArrowNarrowUpIcon
+                                                            v-if="sortType === 'funding_end_date' && sortOrder === 'ascending'"
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                    </div>
+                                                </MenuItem>
+                                                <MenuItem class="cursor-pointer" v-slot="{ active }">
+                                                    <div @click="changeSortAlgorithm('created_at')"
+                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        Erstellt am
+                                                        <ArrowNarrowDownIcon
+                                                            v-if="sortType === 'created_at' && sortOrder === 'descending'"
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        <ArrowNarrowUpIcon
+                                                            v-if="sortType === 'created_at' && sortOrder === 'ascending'"
+                                                            class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"/>
+                                                    </div>
+                                                </MenuItem>
+                                            </div>
+                                        </MenuItems>
+                                    </transition>
+                                </Menu>
+                            </div>
+
                             <div class="flex"
                                  v-if="$can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                 <div v-if="$page.props.can.show_hints" class="flex mt-1">
@@ -301,7 +381,15 @@ import {
   MenuItem,
   MenuItems
 } from "@headlessui/vue";
-import {ChevronDownIcon, DotsVerticalIcon, SearchIcon, TrashIcon, XIcon} from "@heroicons/vue/solid";
+import {
+    ChevronDownIcon,
+    DotsVerticalIcon,
+    SearchIcon,
+    TrashIcon,
+    XIcon,
+    ArrowNarrowDownIcon,
+    ArrowNarrowUpIcon
+} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import InputComponent from "@/Layouts/Components/InputComponent";
@@ -350,7 +438,9 @@ export default defineComponent({
         Link,
         DuplicateIcon,
         TrashIcon,
-        IconPin
+        IconPin,
+        ArrowNarrowUpIcon,
+        ArrowNarrowDownIcon
     },
     props: ['moneySourceCategories', 'moneySources', 'moneySourceGroups'],
     computed: {
@@ -410,19 +500,7 @@ export default defineComponent({
                     return compareStartDate <= filterEndDate && compareEndDate >= filterStartDate;
                 });
             }
-
-            // sorts by name but pin is always on top. Accounts for pinned_by_users being null
-            filteredMoneySources.sort((a, b) => {
-                if (a.pinned_by_users && a.pinned_by_users.includes(this.$page.props.user.id)) {
-                    return -1;
-                } else if (b.pinned_by_users && b.pinned_by_users.includes(this.$page.props.user.id)) {
-                    return 1;
-                } else {
-                    return a.name.localeCompare(b.name);
-                }
-            });
-
-            return filteredMoneySources;
+            return this.sortMoneySources(filteredMoneySources);
         },
     },
     methods: {
@@ -461,10 +539,10 @@ export default defineComponent({
                 write_access: []
             }
             moneySource.users.forEach((user) => {
-                if(user.pivot.competent){
+                if (user.pivot.competent) {
                     returnArray.competent.push(user.id);
                 }
-                if(user.pivot.write_access){
+                if (user.pivot.write_access) {
                     returnArray.write_access.push(user.id);
                 }
             })
@@ -511,6 +589,66 @@ export default defineComponent({
 
             this.deleteMoneySource(this.sourceToDelete)
         },
+        sortMoneySources(array) {
+            let compareFunction;
+
+            // Grundlegender Vergleich für angepinnte Elemente
+            const pinCompare = (a, b) => {
+                const isAPinned = a.pinned_by_users && a.pinned_by_users.includes(userId);
+                const isBPinned = b.pinned_by_users && b.pinned_by_users.includes(userId);
+
+                if (isAPinned && !isBPinned) return -1;
+                if (!isAPinned && isBPinned) return 1;
+                return 0; // Beide gleich (entweder beide angepinnt oder keines von beiden)
+            };
+
+            // Sortierfunktionen je nach Sortiertyp
+            switch (this.sortType) {
+                case 'name':
+                    compareFunction = (a, b) => {
+                        let pinComparison = pinCompare(a, b);
+                        if (pinComparison !== 0) return pinComparison;
+                        let nameA = a.name.toLowerCase();
+                        let nameB = b.name.toLowerCase();
+                        return (nameA < nameB ? -1 : 1);
+                    };
+                    break;
+                case 'funding_start_date':
+                case 'funding_end_date':
+                case 'created_at':
+                    compareFunction = (a, b) => {
+                        let pinComparison = pinCompare(a, b);
+                        if (pinComparison !== 0) return pinComparison;
+                        let dateA = new Date(a[this.sortType]);
+                        let dateB = new Date(b[this.sortType]);
+                        return (dateA - dateB);
+                    };
+                    break;
+                default:
+                    compareFunction = (a, b) => {
+                        let pinComparison = pinCompare(a, b);
+                        if (pinComparison !== 0) return pinComparison;
+                        let nameA = a.name.toLowerCase();
+                        let nameB = b.name.toLowerCase();
+                        return (nameA < nameB ? -1 : 1);
+                    };
+            }
+
+            if (this.sortOrder === 'descending') {
+                compareFunction = ((originalCompareFunction) => (a, b) => -1 * originalCompareFunction(a, b))(compareFunction);
+            }
+
+            return array.sort(compareFunction);
+        },
+        changeSortAlgorithm(sortType) {
+            if (this.sortType === sortType) {
+                this.sortOrder = this.sortOrder === 'ascending' ? 'descending' : 'ascending';
+            } else {
+                this.sortType = sortType;
+                this.sortOrder = 'ascending';
+            }
+        },
+
     },
     data() {
         return {
@@ -535,6 +673,8 @@ export default defineComponent({
             timeSpanFilterStart: null,
             timeSpanFilterEnd: null,
             timeSpanFilterActive: false,
+            sortType: null,
+            sortOrder: null,
         }
     }
 })

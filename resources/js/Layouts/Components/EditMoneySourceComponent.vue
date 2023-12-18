@@ -74,6 +74,22 @@
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                             </div>
+                            <div class="flex mb-2 space-x-2">
+                                <div class="w-1/2">
+                                    <input type="text" onfocus="(this.type='date')"
+                                           v-model="this.editSingleSourceForm.funding_start_date"
+                                           id="sourceStartDate"
+                                           placeholder="Förderzeitraum Start"
+                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                </div>
+                                <div class="w-1/2">
+                                    <input type="text" onfocus="(this.type='date')"
+                                           v-model="this.editSingleSourceForm.funding_end_date"
+                                           id="sourceEndDate"
+                                           placeholder="Förderzeitraum Ende"
+                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                </div>
+                            </div>
                             <div class="mb-2">
                                 <div class="relative w-full">
                                     <div class="w-full">
@@ -381,6 +397,8 @@ export default {
                 description: this.moneySource.description,
                 is_group: false,
                 group_id: this.moneySource.group_id,
+                funding_start_date: this.moneySource.funding_start_date,
+                funding_end_date: this.moneySource.funding_end_date,
                 users: []
             }),
             editSourceGroupForm: useForm({

@@ -432,6 +432,8 @@ class MoneySourceController extends Controller
             'description' => $request->description,
             'is_group' => $request->is_group,
             'group_id' => $request->group_id,
+            'funding_start_date' => $request->funding_start_date,
+            'funding_end_date' => $request->funding_end_date,
         ]);
 
         $newName = $moneySource->name;

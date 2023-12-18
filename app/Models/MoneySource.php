@@ -91,6 +91,7 @@ class MoneySource extends Model
             'is_group' => $this->is_group
         ];
     }
+
     public function moneySourceFiles(): HasMany
     {
         return $this->hasMany(MoneySourceFile::class);
@@ -101,8 +102,10 @@ class MoneySource extends Model
         return $this->hasMany(SumMoneySource::class);
     }
 
-    public function categories()
+    public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(MoneySourceCategory::class);
+        return $this
+            ->belongsToMany(MoneySourceCategory::class, 'money_source_category_mappings')
+            ->using(MoneySourceCategoryMapping::class);
     }
 }

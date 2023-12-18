@@ -12,6 +12,10 @@
                                     Lege Kategorien fest. Nach diesen kann anschließend in der
                                     Übersicht gefiltert werden.
                                 </div>
+                                <div v-if="showInvalidCategoryNameErrorText" class="text-red-600 text-sm mt-4">
+                                    Sie haben einen ungültigen Namen angegeben. Am Anfang und Ende sind keine
+                                    Leerzeichen erlaubt. Ebenso ist es unzulässig ausschließlich Leerzeichen einzugeben.
+                                </div>
                                 <div class=" w-full grid grid-cols-2 grid-flow-col grid-rows-2">
                                     <!-- Finanzierungsquellenkategorien -->
                                     <div class="mt-8 mr-10 flex">
@@ -44,8 +48,7 @@
                                               class="rounded-full items-center font-medium text-tagText
                                             border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                             {{ category.name }}
-                                            <button type="button" @click="deleteMoneySourceCategory(category)">
-                                                <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
+                                            <button type="button" @click="this.showCategoryDeleteModal(category)">
                                                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                                             </button>
                                         </span>
@@ -57,6 +60,14 @@
                 </div>
             </div>
         </div>
+        <!-- Delete Category Modal -->
+        <ConfirmationComponent v-if="categoryDeleteModalVisible"
+                               confirm="Quellenkategorie löschen"
+                               titel="Quellenkategorie löschen"
+                               description="Bist du sicher, dass du die Quellenkategorie löschen möchtest? Damit sind
+                                    alle Zuordnungen der Finanzierungsquellen zu dieser Kategorie unwiderruflich
+                                    gelöscht."
+                               @closed="afterDeleteCategoryConfirm"/>
     </app-layout>
 </template>
 
@@ -72,10 +83,14 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import {defineComponent} from 'vue'
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        ConfirmationComponent,
+        JetDialogModal,
         AddButton,
         Button,
         AppLayout,
@@ -87,22 +102,45 @@ export default defineComponent({
     data() {
         return {
             moneySourceCategoryInput: '',
-
+            categoryDeleteModalVisible: false,
+            categoryToDelete: null,
+            showInvalidCategoryNameErrorText: false,
         }
     },
     methods: {
-        deleteMoneySourceCategory(category) {
-            Inertia.delete(`/money_source/categories/${category.id}`, {
-                preserveState: true,
-                preserveScroll: true
-            });
+        showCategoryDeleteModal(category) {
+            this.categoryDeleteModalVisible = true;
+            this.categoryToDelete = category;
+        },
+        afterDeleteCategoryConfirm(confirmed) {
+            if (confirmed) {
+                Inertia.delete(
+                    route('money_source_categories.destroy', {moneySourceCategory: this.categoryToDelete.id}),
+                    {
+                        preserveScroll: true
+                    }
+                );
+            }
+            this.categoryDeleteModalVisible = false;
+            this.categoryToDelete = null;
         },
         addMoneySourceCategory() {
-            if (this.moneySourceCategoryInput.indexOf(' ') === -1) {
-                Inertia.post(`/money_source/categories/`, {name: this.moneySourceCategoryInput});
+            //Leerzeichen am Anfang und am Ende des Strings sind nicht erlaubt, aber innerhalb des Strings
+            const regex = /^(?!\s)(?:(?!\s+$)\s|\S+\s*\S*)*(?<!\s)$/;
+            if (regex.test(this.moneySourceCategoryInput)) {
+                this.showInvalidCategoryNameErrorText = false;
+                Inertia.post(
+                    route('money_source_categories.store'),
+                    {
+                        name: this.moneySourceCategoryInput
+                    },
+                    {
+                        onSuccess: () => this.moneySourceCategoryInput = ''
+                    }
+                );
+            } else {
+                this.showInvalidCategoryNameErrorText = true;
             }
-            this.moneySourceCategoryInput = "";
-
         },
     },
 })

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\RoomCategory;
+use App\Models\RoomRoomCategoryMapping;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -36,7 +37,16 @@ class RoomCategoryController extends Controller
 
     public function destroy(RoomCategory $roomCategory): RedirectResponse
     {
+        foreach (
+            RoomRoomCategoryMapping::query()
+                ->where('room_category_id', '=', $roomCategory->id)
+                ->get() as $roomRoomCategoryMapping
+        ) {
+            $roomRoomCategoryMapping->delete();
+        }
+
         $roomCategory->delete();
-        return Redirect::route('areas.management')->with('success', 'Roomcategory deleted');
+
+        return Redirect::back();
     }
 }

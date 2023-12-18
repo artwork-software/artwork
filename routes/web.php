@@ -86,7 +86,7 @@ Route::post('/setup', [AppController::class, 'createAdmin'])->name('setup.create
 Route::get('/users/invitations/accept', [InvitationController::class, 'accept']);
 Route::post('/users/invitations/accept', [InvitationController::class, 'createUser'])->name('invitation.accept');
 
-Route::get('/reset-password', [UserController::class, 'reset_password'])->name('reset_user_password');
+Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // TOOL SETTING ROUTE
@@ -149,20 +149,20 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])
         ->name('user.edit.workProfile');
     Route::patch('/users/{user}/edit', [UserController::class, 'update'])->name('user.update');
-    Route::patch('/users/{user}/checklists', [UserController::class, 'update_checklist_status'])
+    Route::patch('/users/{user}/checklists', [UserController::class, 'updateChecklistStatus'])
         ->name('user.checklists.update');
-    Route::patch('/users/{user}/areas', [UserController::class, 'update_area_status'])->name('user.areas.update');
+    Route::patch('/users/{user}/areas', [UserController::class, 'updateAreaStatus'])->name('user.areas.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
     Route::patch('/users/{user}', [UserController::class, 'temporaryUserUpdate'])->name('update.user.temporary');
     Route::patch('/users/{user}/conditions', [UserController::class, 'updateUserTerms'])->name('user.update.terms');
     Route::post('/users/{user}/photo', [UserController::class, 'updateUserPhoto'])->name('user.update.photo');
 
-    Route::post('/users/reset-password', [UserController::class, 'reset_user_password'])->name('user.reset.password');
+    Route::post('/users/reset-password', [UserController::class, 'resetUserPassword'])->name('user.reset.password');
     Route::post('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])
         ->name('user.update.craftSettings');
-    Route::post('/users/{user}/masters', [UserController::class, 'update_user_can_master'])
+    Route::post('/users/{user}/masters', [UserController::class, 'updateUserCanMaster'])
         ->name('user.update.can_master');
-    Route::post('/users/{user}/canWorkShifts', [UserController::class, 'update_user_can_work_shifts'])
+    Route::post('/users/{user}/canWorkShifts', [UserController::class, 'updateUserCanWorkShifts'])
         ->name('user.update.can_work_shifts');
     Route::post('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])
         ->name('user.update.workProfile');
@@ -361,12 +361,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/room_files/{id}/force_delete', [RoomFileController::class, 'force_delete']);
 
     //Room Categories
-    Route::post('/rooms/categories', [RoomCategoryController::class, 'store']);
-    Route::delete('/rooms/categories/{roomCategory}', [RoomCategoryController::class, 'destroy']);
+    Route::post('/rooms/categories', [RoomCategoryController::class, 'store'])
+        ->name('room_categories.store');
+    Route::delete('/rooms/categories/{roomCategory}', [RoomCategoryController::class, 'destroy'])
+        ->name('room_categories.destroy');
 
     //Room Attributes
-    Route::post('/rooms/attributes', [RoomAttributeController::class, 'store']);
-    Route::delete('/rooms/attributes/{roomAttribute}', [RoomAttributeController::class, 'destroy']);
+    Route::post('/rooms/attributes', [RoomAttributeController::class, 'store'])
+        ->name('room_attribute.store');
+    Route::delete('/rooms/attributes/{roomAttribute}', [RoomAttributeController::class, 'destroy'])
+        ->name('room_attribute.destroy');
 
     //Filters
     Route::get('/filters', [FilterController::class, 'index']);
@@ -450,11 +454,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('money_sources.duplicate');
     Route::post('/money_sources/{moneySource}/pin', [MoneySourceController::class, 'pin'])->name('money_sources.pin');
     Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
+    Route::post('/money_sources/{moneySource}/categories', [MoneySourceController::class, 'syncCategories'])
+        ->name('money_sources.categories.sync');
 
     // MoneySourceCategories
     Route::post('/money_source/categories', [MoneySourceCategoryController::class, 'store'])
         ->name('money_source_categories.store');
-    Route::delete('/money_source/categories/{moneySourceCategory}', [MoneySourceCategoryController::class, 'destroy']);
+    Route::delete('/money_source/categories/{moneySourceCategory}', [MoneySourceCategoryController::class, 'destroy'])
+        ->name('money_source_categories.destroy');
 
     //Contracts
     Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');

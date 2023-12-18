@@ -47,7 +47,8 @@ class MoneySourceController extends Controller
     public function index(): Response|ResponseFactory
     {
         return inertia('MoneySources/MoneySourceManagement', [
-            'moneySources' => MoneySource::with(['users'])->get(),
+            'moneySourceCategories' => MoneySourceCategory::all(),
+            'moneySources' => MoneySource::with(['users', 'categories', 'moneySourceTasks'])->get(),
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
         ]);
     }

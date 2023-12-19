@@ -23,9 +23,10 @@ class CreateMoneySourceExpirationReminderNotificationsCommand extends Command
     public function handle(): int
     {
         foreach (
-            MoneySourceReminder::all()
-                 ->where('type', '=', MoneySourceReminder::MONEY_SOURCE_REMINDER_TYPE_EXPIRATION)
-                 ->where('notification_created', '=', false) as $moneySourceExpirationReminder
+            MoneySourceReminder::query()
+                ->where('type', '=', MoneySourceReminder::MONEY_SOURCE_REMINDER_TYPE_EXPIRATION)
+                ->where('notification_created', '=', false)
+                ->get() as $moneySourceExpirationReminder
         ) {
             $moneySource = $moneySourceExpirationReminder->moneySource;
 

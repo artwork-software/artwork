@@ -27,6 +27,10 @@ enum NotificationConstEnum: string
 
     case NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED = 'NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED';
 
+    case NOTIFICATION_MONEY_SOURCE_EXPIRATION = 'NOTIFICATION_MONEY_SOURCE_EXPIRATION';
+
+    case NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED = 'NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED';
+
     case NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED = 'NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED';
 
     case NOTIFICATION_UPSERT_ROOM_REQUEST = 'NOTIFICATION_UPSERT_ROOM_REQUEST';
@@ -72,6 +76,8 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_BUDGET_STATE_CHANGED,
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED,
             self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED,
+            self::NOTIFICATION_MONEY_SOURCE_EXPIRATION,
+            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED,
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED => "BUDGET",
 
             self::NOTIFICATION_UPSERT_ROOM_REQUEST,
@@ -133,6 +139,9 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED => 'Budget- und Finanzierungsquellenzugriff',
             self::NOTIFICATION_BUDGET_STATE_CHANGED => 'Änderungen am Budgetstatus',
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED => 'Änderungen an Budget und Finanzierungsquellen',
+            self::NOTIFICATION_MONEY_SOURCE_EXPIRATION => 'Finanzquelle läuft aus',
+            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED =>
+                'Finanzquelle hat hinterlegten Schwellenwert erreicht',
             self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => 'Änderungen an Dokumenten und Verträgen',
 
             self::NOTIFICATION_UPSERT_ROOM_REQUEST => "Neue/geänderte Raumanfrage",
@@ -175,6 +184,10 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED => 'Werde benachrichtigt wenn es Änderungen am Budget, " .
                 "dem Kostenträger oder Urheberrechten deines Projektes gab. Erhalte außerdem eine Warnung, sobald " .
                 "deine Finanzierungsquelle ins Minus gerutscht ist.',
+            self::NOTIFICATION_MONEY_SOURCE_EXPIRATION =>
+                'Werde benachrichtigt sobald die Finanzierungsquelle ausläuft.',
+            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED =>
+                'Werde benachrichtigt sobald die Finanzierungsquelle den hinterlegten Schwellenwert erreicht.',
             self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => 'Erfahre ob du eine Freigabe für Dokumente oder " ,
                 "Verträge erhalten hast und ob es Änderungen an diesen Dokumenten gab.',
             self::NOTIFICATION_UPSERT_ROOM_REQUEST => "Erfahre ob es neue oder geänderte Raumanfragen gibt.",

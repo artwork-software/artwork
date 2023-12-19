@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Date;
 use Laravel\Scout\Searchable;
 
 /**
@@ -91,6 +90,7 @@ class MoneySource extends Model
             'is_group' => $this->is_group
         ];
     }
+
     public function moneySourceFiles(): HasMany
     {
         return $this->hasMany(MoneySourceFile::class);
@@ -101,8 +101,13 @@ class MoneySource extends Model
         return $this->hasMany(SumMoneySource::class);
     }
 
-    public function categories()
+    public function categories(): BelongsToMany
     {
         return $this->belongsToMany(MoneySourceCategory::class);
+    }
+
+    public function reminder(): HasMany
+    {
+        return $this->hasMany(MoneySourceReminder::class);
     }
 }

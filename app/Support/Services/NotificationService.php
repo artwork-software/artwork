@@ -382,6 +382,7 @@ class NotificationService
                 break;
             case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
             case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:
+            case NotificationConstEnum::NOTIFICATION_MONEY_SOURCE_EXPIRATION:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),

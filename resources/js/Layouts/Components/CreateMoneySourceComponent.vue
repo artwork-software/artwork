@@ -191,7 +191,7 @@
                                     </label>
                                 </div>
                                 <div v-if="remindOnExpiration" class="flex flex-col columns-1 mt-2">
-                                    <div v-for="(expirationReminder, index) in createSingleSourceForm.expirationReminders"
+                                    <div v-for="(expirationReminder, index) in expirationReminders"
                                          class="flex flex-col mb-2">
                                         <div class="flex flex-row items-center">
                                             <input type="number"
@@ -245,7 +245,7 @@
                                     </label>
                                 </div>
                                 <div v-if="remindOnThreshold" class="flex flex-col columns-1 mt-2">
-                                    <div v-for="(thresholdReminder, index) in createSingleSourceForm.thresholdReminders"
+                                    <div v-for="(thresholdReminder, index) in thresholdReminders"
                                          class="flex flex-col mb-2">
                                         <div class="flex flex-row items-center">
                                             <input type="number"
@@ -436,6 +436,7 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton";
 import Permissions from "@/mixins/Permissions.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     name: 'EventComponent',
@@ -499,8 +500,6 @@ export default {
                 is_group: false,
                 group_id: null,
                 users: [],
-                expirationReminders: [],
-                thresholdReminders: []
             }),
             createSourceGroupForm: useForm({
                 name: '',
@@ -514,7 +513,9 @@ export default {
                 sub_money_source_ids: []
             }),
             remindOnExpiration: false,
+            expirationReminders: [],
             remindOnThreshold: false,
+            thresholdReminders: [],
         }
     },
 
@@ -567,14 +568,6 @@ export default {
             this.subMoneySources.splice(index, 1);
         },
         createSingleSource() {
-            if (!this.remindOnExpiration) {
-                this.createSingleSourceForm.expirationReminders = [];
-            }
-
-            if (!this.remindOnThreshold) {
-                this.createSingleSourceForm.thresholdReminders = [];
-            }
-
             this.createSingleSourceForm.users = {}
             this.usersToAdd.forEach((userToAdd) => {
                 this.createSingleSourceForm.users[userToAdd.id] = {
@@ -587,8 +580,32 @@ export default {
                 this.createSingleSourceForm.group_id = this.selectedMoneySourceGroup.id
             }
 
-            this.createSingleSourceForm.post(route('money_sources.store'));
-            this.closeModal(true);
+            this.createSingleSourceForm.post(
+                route('money_sources.store'),
+                {
+                    onSuccess: (response) => {
+                        if (
+                            (this.remindOnExpiration && this.expirationReminders.length > 0) ||
+                            (this.remindOnThreshold && this.thresholdReminders.length > 0)
+                        ) {
+                            Inertia.post(
+                                route(
+                                    'money_source.reminder.store',
+                                    {
+                                        money_source: response.props.recentlyCreatedMoneySourceId
+                                    }
+                                ),
+                                {
+                                    expirationReminders: this.remindOnExpiration ? this.expirationReminders : [],
+                                    thresholdReminders: this.remindOnThreshold ? this.thresholdReminders : []
+                                }
+                            );
+                        }
+
+                        this.closeModal(true);
+                    }
+                }
+            );
         },
         createMoneySourceGroup() {
             this.createSourceGroupForm.users = {}
@@ -624,13 +641,13 @@ export default {
             let hasInvalidThresholdReminders = false;
 
             if (this.remindOnExpiration) {
-                hasInvalidExpirationReminders = form.expirationReminders.some(
+                hasInvalidExpirationReminders = this.expirationReminders.some(
                     (expirationReminder) => !this.isValidNumber(expirationReminder.days)
                 )
             }
 
             if (this.remindOnThreshold) {
-                hasInvalidThresholdReminders = form.thresholdReminders.some(
+                hasInvalidThresholdReminders = this.thresholdReminders.some(
                     (thresholdReminder) => !this.isValidNumber(thresholdReminder.threshold)
                 )
             }
@@ -642,16 +659,16 @@ export default {
             return form.name;
         },
         addExpirationReminder() {
-            this.createSingleSourceForm.expirationReminders.push({days: 1});
+            this.expirationReminders.push({days: 1});
         },
         removeExpirationReminder(index) {
-            this.createSingleSourceForm.expirationReminders.splice(index, 1);
+            this.expirationReminders.splice(index, 1);
         },
         addThresholdReminder() {
-            this.createSingleSourceForm.thresholdReminders.push({threshold: 1});
+            this.thresholdReminders.push({threshold: 1});
         },
         removeThresholdReminder(index) {
-            this.createSingleSourceForm.thresholdReminders.splice(index, 1);
+            this.thresholdReminders.splice(index, 1);
         },
         isValidNumber(number) {
             return number >= 1 && Number.isInteger(number);

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class MoneySourceCategory extends Model
 {
@@ -13,7 +14,7 @@ class MoneySourceCategory extends Model
         'name'
     ];
 
-    public function moneySources()
+    public function moneySources(): BelongsToMany
     {
         return $this->belongsToMany(MoneySource::class);
     }

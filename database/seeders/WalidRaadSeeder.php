@@ -656,6 +656,9 @@ class WalidRaadSeeder extends Seeder
             ]
         ]);
 
+        //take last three columns and reset indices
+        $lastThreeColumns = $columns->take(-3)->values();
+
         // COST TABLE
         $costMainPosition = $table->mainPositions()->create([
             'type' => BudgetTypesEnum::BUDGET_TYPE_COST,
@@ -664,9 +667,33 @@ class WalidRaadSeeder extends Seeder
                     ->where('type', BudgetTypesEnum::BUDGET_TYPE_COST)->max('position') + 1
         ]);
 
+        $costMainPosition->mainPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(0)->id
+        ]);
+
+        $costMainPosition->mainPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(1)->id
+        ]);
+
+        $costMainPosition->mainPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(2)->id
+        ]);
+
         $costSubPosition = $costMainPosition->subPositions()->create([
             'name' => 'Gagen',
             'position' => $costMainPosition->subPositions()->max('position') + 1
+        ]);
+
+        $costSubPosition->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(0)->id
+        ]);
+
+        $costSubPosition->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(1)->id
+        ]);
+
+        $costSubPosition->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(2)->id
         ]);
 
         //$firstThreeColumns = $columns->shift(3);
@@ -847,6 +874,18 @@ class WalidRaadSeeder extends Seeder
             'position' => $costMainPosition->subPositions()->max('position') + 1
         ]);
 
+        $costSubPosition2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(0)->id
+        ]);
+
+        $costSubPosition2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(1)->id
+        ]);
+
+        $costSubPosition2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(2)->id
+        ]);
+
         // Zeile 1
         $costSubPositionRow2 = $costSubPosition2->subPositionRows()->create([
             'commented' => false,
@@ -892,6 +931,18 @@ class WalidRaadSeeder extends Seeder
         $costSubPosition3 = $costMainPosition->subPositions()->create([
             'name' => 'Transporte / Zoll',
             'position' => $costMainPosition->subPositions()->max('position') + 1
+        ]);
+
+        $costSubPosition3->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(0)->id
+        ]);
+
+        $costSubPosition3->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(1)->id
+        ]);
+
+        $costSubPosition3->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(2)->id
         ]);
 
         $costSubPositionRow3 = $costSubPosition3->subPositionRows()->create([
@@ -944,6 +995,18 @@ class WalidRaadSeeder extends Seeder
             'is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED
         ]);
 
+        $costMainPosition2->mainPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(0)->id
+        ]);
+
+        $costMainPosition2->mainPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(1)->id
+        ]);
+
+        $costMainPosition2->mainPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(2)->id
+        ]);
+
         $costMainPosition2->verified()->create([
             'requested_by' => 1,
             'requested' => 2
@@ -952,6 +1015,18 @@ class WalidRaadSeeder extends Seeder
         $costSubPositionMain2 = $costMainPosition2->subPositions()->create([
             'name' => 'Ton',
             'position' => $costMainPosition->subPositions()->max('position') + 1
+        ]);
+
+        $costSubPositionMain2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(0)->id
+        ]);
+
+        $costSubPositionMain2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(1)->id
+        ]);
+
+        $costSubPositionMain2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(2)->id
         ]);
 
         $costSubPositionRow1Main2 = $costSubPositionMain2->subPositionRows()->create([
@@ -1000,6 +1075,18 @@ class WalidRaadSeeder extends Seeder
             'position' => $costMainPosition->subPositions()->max('position') + 1
         ]);
 
+        $costSubPosition2Main2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(0)->id
+        ]);
+
+        $costSubPosition2Main2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(1)->id
+        ]);
+
+        $costSubPosition2Main2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(2)->id
+        ]);
+
         $costSubPositionRow2Main2 = $costSubPosition2Main2->subPositionRows()->create([
             'commented' => false,
             'position' => $costSubPosition->subPositionRows()->max('position') + 1
@@ -1044,6 +1131,18 @@ class WalidRaadSeeder extends Seeder
         $costSubPosition3Main2 = $costMainPosition2->subPositions()->create([
             'name' => 'sonstige Ausgaben',
             'position' => $costMainPosition->subPositions()->max('position') + 1
+        ]);
+
+        $costSubPosition3Main2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(0)->id
+        ]);
+
+        $costSubPosition3Main2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(1)->id
+        ]);
+
+        $costSubPosition3Main2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(2)->id
         ]);
 
         $costSubPositionRow3Main2 = $costSubPosition3Main2->subPositionRows()->create([
@@ -1098,9 +1197,33 @@ class WalidRaadSeeder extends Seeder
                     ->where('type', BudgetTypesEnum::BUDGET_TYPE_EARNING)->max('position') + 1
         ]);
 
+        $earningMainPosition->mainPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(0)->id
+        ]);
+
+        $earningMainPosition->mainPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(1)->id
+        ]);
+
+        $earningMainPosition->mainPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(2)->id
+        ]);
+
         $earningSubPosition = $earningMainPosition->subPositions()->create([
             'name' => 'Erstattung Sachleistungen',
             'position' => $costSubPosition->subPositionRows()->max('position') + 1
+        ]);
+
+        $earningSubPosition->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(0)->id
+        ]);
+
+        $earningSubPosition->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(1)->id
+        ]);
+
+        $earningSubPosition->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(2)->id
         ]);
 
         $earningSubPositionRow = $earningSubPosition->subPositionRows()->create([
@@ -1149,6 +1272,18 @@ class WalidRaadSeeder extends Seeder
             'position' => $costSubPosition->subPositionRows()->max('position') + 1
         ]);
 
+        $earningSubPosition2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(0)->id
+        ]);
+
+        $earningSubPosition2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(1)->id
+        ]);
+
+        $earningSubPosition2->subPositionSumDetails()->create([
+            'column_id' => $lastThreeColumns->get(2)->id
+        ]);
+
         $earningSubPositionRow2 = $earningSubPosition2->subPositionRows()->create([
             'commented' => false,
             'position' => $earningSubPosition->subPositionRows()->max('position') + 1
@@ -1191,29 +1326,33 @@ class WalidRaadSeeder extends Seeder
             'verified_value' => ''
         ]);
 
-        $costMainPosition->mainPositionSumDetails()->create([
-            'column_id' => $columns->first()->id
-        ]);
-
-        $earningMainPosition->mainPositionSumDetails()->create([
-            'column_id' => $columns->first()->id
-        ]);
-
-        $costSubPosition->subPositionSumDetails()->create([
-            'column_id' => $columns->first()->id
-        ]);
-
-        $earningSubPosition->subPositionSumDetails()->create([
-            'column_id' => $columns->first()->id
-        ]);
-
         BudgetSumDetails::create([
-            'column_id' => $columns->first()->id,
+            'column_id' => $lastThreeColumns->get(0)->id,
             'type' => 'COST'
         ]);
 
         BudgetSumDetails::create([
-            'column_id' => $columns->first()->id,
+            'column_id' => $lastThreeColumns->get(1)->id,
+            'type' => 'COST'
+        ]);
+
+        BudgetSumDetails::create([
+            'column_id' => $lastThreeColumns->get(2)->id,
+            'type' => 'COST'
+        ]);
+
+        BudgetSumDetails::create([
+            'column_id' => $lastThreeColumns->get(0)->id,
+            'type' => 'EARNING'
+        ]);
+
+        BudgetSumDetails::create([
+            'column_id' => $lastThreeColumns->get(1)->id,
+            'type' => 'EARNING'
+        ]);
+
+        BudgetSumDetails::create([
+            'column_id' => $lastThreeColumns->get(2)->id,
             'type' => 'EARNING'
         ]);
     }

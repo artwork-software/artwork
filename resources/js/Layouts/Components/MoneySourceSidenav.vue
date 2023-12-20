@@ -81,7 +81,7 @@
         <div class="w-full items-center mb-4">
             <div class="text-secondary flex items-center justify-between text-md font-semibold my-2">
                 <div class="flex items-center">
-                Zugriff für
+                Finanzierte Projekte
                     <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showLinkedProjects ? 'rotate-180' : '']"
                                      @click="showLinkedProjects = !showLinkedProjects"/>
                 </div>
@@ -103,8 +103,9 @@
                     </svg>
                 </div>
             </div>
-            <div v-if="showLinkedProjects" class="text-secondary text-sm" v-for="linkedProject in linkedProjects">
-                {{ linkedProject.name }}
+            <div v-if="showLinkedProjects" class="text-secondary text-md" v-for="linkedProject in linkedProjects">
+                <Link class="underline" v-if="linkedProject.id" :href="route('projects.show.budget',{project: linkedProject.id})">{{ linkedProject.name }} </Link>
+                 | {{ positionSumsPerProject[linkedProject.id] }} € genutzt
             </div>
         </div>
         <div class="border-t-2 my-5 w-full border-secondary border-opacity-30" />
@@ -239,6 +240,7 @@ import LinkProjectsToMoneySourcesComponent from "@/Layouts/Components/LinkProjec
 import EditMoneySourceUsersModal from "@/Layouts/Components/EditMoneySourceUsersModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import {Link} from "@inertiajs/inertia-vue3";
 
 export default {
     mixins: [Permissions],
@@ -251,9 +253,11 @@ export default {
         'linkedProjects',
         'competent',
         'writeAccess',
-        'moneySourceCategories'
+        'moneySourceCategories',
+        'positionSumsPerProject'
     ],
     components: {
+        Link,
         TagComponent,
         LinkProjectsToMoneySourcesComponent,
         MoneySourceFileDeleteModal,

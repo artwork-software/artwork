@@ -41,7 +41,7 @@
                                     </transition>
                                 </Listbox>
                             </div>
-                            <div class="flex items-center ml-8">
+                            <div class="flex items-center">
                                 <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
                                      class="cursor-pointer inset-y-0 mr-3">
                                     <SearchIcon class="h-5 w-5" aria-hidden="true"/>
@@ -53,24 +53,32 @@
                                            class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                                 </div>
-                                <div class="flex items-center ml-8 relative h-10 w-10">
-                                    <img @click="showMoneySourceFilters = !showMoneySourceFilters" src="/Svgs/IconSvgs/icon_filter.svg" class="h-6 w-6 mx-2 cursor-pointer" />
+                            </div>
+                            <div class="flex items-center">
+                                <div class="flex items-center relative h-10 w-10">
+                                    <img @click="showMoneySourceFilters = !showMoneySourceFilters"
+                                         src="/Svgs/IconSvgs/icon_filter.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
                                     <div v-if="showMoneySourceFilters"
-                                         class="w-72 absolute top-10 h-auto bg-primary p-2 flex flex-col">
+                                         class="w-72 absolute top-10 h-auto bg-primary p-2 flex flex-col z-50">
                                         <Disclosure v-slot="{ open }">
-                                            <DisclosureButton class="flex w-full py-2 px-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
-                                                <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Alle Kategorien</span>
-                                                <ChevronDownIcon :class="open ? 'rotate-180 transform' : ''" class="h-4 w-4 mt-0.5 text-white"/>
+                                            <DisclosureButton
+                                                class="flex w-full py-2 px-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
+                                                <span
+                                                    :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Alle Kategorien</span>
+                                                <ChevronDownIcon :class="open ? 'rotate-180 transform' : ''"
+                                                                 class="h-4 w-4 mt-0.5 text-white"/>
                                             </DisclosureButton>
                                             <DisclosurePanel>
-                                                <div class="flex flex-col gap-1 px-2" v-if="moneySourceCategories.length > 0">
+                                                <div class="flex flex-col gap-1 px-2"
+                                                     v-if="moneySourceCategories.length > 0">
                                                     <div v-for="moneySourceCategory in moneySourceCategories"
                                                          class="flex flex-row items-center">
-                                                        <input class="text-success h-4 w-4 border-1 border-darkGray bg-darkGrayBg focus:border-none"
-                                                               v-model="categoryFilters"
-                                                               :id="'moneySourceCategoryFilterId-' + moneySourceCategory.id"
-                                                               type="checkbox"
-                                                               :value="moneySourceCategory.id"
+                                                        <input
+                                                            class="text-success h-4 w-4 border-1 border-darkGray bg-darkGrayBg focus:border-none"
+                                                            v-model="categoryFilters"
+                                                            :id="'moneySourceCategoryFilterId-' + moneySourceCategory.id"
+                                                            type="checkbox"
+                                                            :value="moneySourceCategory.id"
                                                         />
                                                         <label :class="[
                                                                   categoryFilters.includes(moneySourceCategory.id) ?
@@ -79,7 +87,7 @@
                                                                   'cursor-pointer text-xs text-secondary subpixel-antialiased ml-1.5'
                                                                ]"
                                                                :for="'moneySourceId-' + moneySourceCategory.id">
-                                                            {{moneySourceCategory.name}}
+                                                            {{ moneySourceCategory.name }}
                                                         </label>
                                                     </div>
                                                 </div>
@@ -90,10 +98,11 @@
                                         </Disclosure>
                                         <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
                                         <div class="flex flex-row px-2">
-                                            <input class="text-success h-4 w-4 border-1 border-darkGray bg-darkGrayBg focus:border-none cursor-pointer"
-                                                   v-model="openTasksFilter"
-                                                   id="openTasksFilter"
-                                                   type="checkbox"
+                                            <input
+                                                class="text-success h-4 w-4 border-1 border-darkGray bg-darkGrayBg focus:border-none cursor-pointer"
+                                                v-model="openTasksFilter"
+                                                id="openTasksFilter"
+                                                type="checkbox"
                                             />
                                             <label :class="[
                                                         openTasksFilter ?
@@ -117,9 +126,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div>
-                                <Menu as="div" class="my-auto relative">
+                                <Menu as="div" class="my-auto relative ml-2">
                                     <div class="flex">
                                         <MenuButton
                                             class="flex">
@@ -193,18 +200,10 @@
                                         </MenuItems>
                                     </transition>
                                 </Menu>
-                            </div>
-
-                            <div class="flex"
-                                 v-if="$can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                    <span
-                                        class="hind ml-1 my-auto">Lege neue Finanzierungsquellen oder -gruppen an</span>
-                                    <img src="/Svgs/IconSvgs/icon_grey_arrow_right.svg"
-                                         class="h-4 w-4 ml-1"
-                                         aria-hidden="true"/>
+                                <div class="flex"
+                                     v-if="$can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
+                                    <AddButton @click="openAddMoneySourceModal" text="Neu" mode="page"/>
                                 </div>
-                                <AddButton @click="openAddMoneySourceModal" text="Neu" mode="page"/>
                             </div>
                         </div>
                     </div>
@@ -227,12 +226,12 @@
                             <div class="py-5 flex flex-col justify-between border-b-2 border-gray-200 my-2"
                                  v-if="($page.props.myMoneySources.some(source => source.money_source_id === moneySource.id) || $page.props.is_money_source_admin || $canAny('view edit add money_sources','can edit and delete money sources'))">
                                 <div class="flex flex-row w-full">
-                                    <div class="flex w-full">
-                                        <div class="flex">
+                                    <div class="flex w-full items-center">
+                                        <div class="flex items-center w-full">
                                             <img v-if="moneySource.is_group" src="/Svgs/IconSvgs/icon_group_red.svg"
                                                  class=" h-6 w-6 ml-5" alt="groupIcon"/>
-                                            <Link :href="getEditHref(moneySource)"
-                                                  class="sDark ml-5 my-auto w-full justify-start mr-6">
+                                            <Link :class="moneySource.is_group ? 'ml-2' : 'ml-5'" :href="getEditHref(moneySource)"
+                                                  class="sDark my-auto w-full">
                                                 {{ moneySource.name }}
                                             </Link>
                                         </div>
@@ -244,8 +243,9 @@
                                             }}
                                         </div>
                                     </div>
-                                    <div v-if="moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.user.id)"
-                                         class="flex items-center xxsLight subpixel-antialiased ml-14 mt-1">
+                                    <div
+                                        v-if="moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.user.id)"
+                                        class="flex items-center xxsLight subpixel-antialiased ml-14 mt-1">
                                         <IconPin class="h-5 w-5 mr-4 text-primary"/>
                                     </div>
                                     <div class="flex">
@@ -276,7 +276,8 @@
                                                                 Bearbeiten
                                                             </a>
                                                         </MenuItem>
-                                                        <MenuItem class="cursor-pointer" v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
+                                                        <MenuItem class="cursor-pointer" v-slot="{ active }"
+                                                                  v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                                             <a @click="duplicateMoneySource(moneySource)"
                                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                 <DuplicateIcon
@@ -285,7 +286,8 @@
                                                                 Duplizieren
                                                             </a>
                                                         </MenuItem>
-                                                        <MenuItem class="cursor-pointer" v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
+                                                        <MenuItem class="cursor-pointer" v-slot="{ active }"
+                                                                  v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                                             <a @click="pinMoneySource(moneySource)"
                                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                 <IconPin
@@ -294,7 +296,8 @@
                                                                 Anpinnen
                                                             </a>
                                                         </MenuItem>
-                                                        <MenuItem class="cursor-pointer" v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('can edit and delete money sources') || $role('artwork admin')">
+                                                        <MenuItem class="cursor-pointer" v-slot="{ active }"
+                                                                  v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('can edit and delete money sources') || $role('artwork admin')">
                                                             <a @click="openDeleteSourceModal(moneySource)"
                                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                 <TrashIcon
@@ -309,7 +312,28 @@
                                         </Menu>
                                     </div>
                                 </div>
-                                <div class="ml-5 mt-4 flex flex-wrap">
+                                <div class="flex xxsLight items-center subpixel-antialiased">
+                                    <div class="flex items-center pl-5 py-1 pr-1">
+                                        {{ moneySource.amount + moneySource.sumOfPositions }}€ /
+                                        {{ moneySource.amount }}€
+                                    </div>
+                                    <div class="" v-if="moneySource.funding_start_date && moneySource.funding_end_date">
+                                        |
+                                        Förderzeitraum: {{ formatDateString(moneySource.funding_start_date) }} -
+                                        {{ formatDateString(moneySource.funding_end_date) }}
+                                    </div>
+                                </div>
+                                <div v-if="moneySource.description" class="flex xxsLight items-center pl-5 subpixel-antialiased">
+                                    {{ moneySource.description}}
+                                </div>
+                                <div class="flex items-center xxsLight pl-5 pt-1 subpixel-antialiased" v-if="moneySource.history">
+                                    Letzte Änderung: {{ moneySource.history[0].created_at }} von
+                                    <NewUserToolTip class="ml-2" :height="6" :width="6" v-if="moneySource.history[0].changes[0].changed_by"
+                                                    :user="moneySource.history[0].changes[0].changed_by" :id="moneySource.history[0].changes[0].changed_by.id + moneySource.id"/>
+                                    {{moneySource.history[0].changes[0].changed_by.first_name}}
+                                    {{moneySource.history[0].changes[0].changed_by.last_name}}
+                                </div>
+                                <div class="ml-5 mt-2 flex flex-wrap">
                                     <TagComponent v-for="moneySourceCategory in moneySource.categories"
                                                   :key="moneySourceCategory.id"
                                                   :displayed-text="moneySourceCategory.name"
@@ -337,10 +361,11 @@
 
     <jet-dialog-modal :show="timeSpanFilterModalVisible" @close="closeTimeSpanFilterModal">
         <template #content>
-            <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="Illustration Projekt bearbeiten"/>
+            <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4"
+                 alt="Illustration Projekt bearbeiten"/>
             <XIcon @click="closeTimeSpanFilterModal()"
-                 class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                 aria-hidden="true"/>
+                   class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                   aria-hidden="true"/>
             <div class="mx-4">
                 <h1 class="my-1 flex">
                     <div class="flex-grow headline1">
@@ -363,6 +388,12 @@
             </div>
         </template>
     </jet-dialog-modal>
+
+    <MoneySourceHistoryComponent
+        @closed="closeMoneySourceHistoryModal"
+        v-if="showMoneySourceHistory"
+        :history="moneySourceToShowHistoryOf.history"
+    ></MoneySourceHistoryComponent>
 </template>
 
 <script>
@@ -370,16 +401,16 @@
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
-  Disclosure, DisclosureButton, DisclosurePanel,
-  Listbox,
-  ListboxButton,
-  ListboxLabel,
-  ListboxOption,
-  ListboxOptions,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems
+    Disclosure, DisclosureButton, DisclosurePanel,
+    Listbox,
+    ListboxButton,
+    ListboxLabel,
+    ListboxOption,
+    ListboxOptions,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems
 } from "@headlessui/vue";
 import {
     ChevronDownIcon,
@@ -399,21 +430,25 @@ import {Link} from "@inertiajs/inertia-vue3";
 import Permissions from "@/mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import Input from "@/Layouts/Components/InputComponent.vue";
-import { IconPin } from '@tabler/icons-vue';
+import {IconPin} from '@tabler/icons-vue';
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import Label from "@/Jetstream/Label.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
-      JetDialogModal,
-      DisclosurePanel,
-      DisclosureButton,
-      Disclosure,
-      Label,
-      TagComponent,
+        NewUserToolTip,
+        MoneySourceHistoryComponent,
+        JetDialogModal,
+        DisclosurePanel,
+        DisclosureButton,
+        Disclosure,
+        Label,
+        TagComponent,
         Input,
         ConfirmDeleteModal,
         AppLayout,
@@ -440,7 +475,7 @@ export default defineComponent({
         TrashIcon,
         IconPin,
         ArrowNarrowUpIcon,
-        ArrowNarrowDownIcon
+        ArrowNarrowDownIcon,
     },
     props: ['moneySourceCategories', 'moneySources', 'moneySourceGroups'],
     computed: {
@@ -533,7 +568,7 @@ export default defineComponent({
         deactivateCategoryFilter(categoryFilter) {
             document.getElementById('moneySourceCategoryFilterId-' + categoryFilter).click();
         },
-        getMemberInMoneySource(moneySource){
+        getMemberInMoneySource(moneySource) {
             const returnArray = {
                 competent: [],
                 write_access: []
@@ -648,6 +683,14 @@ export default defineComponent({
                 this.sortOrder = 'ascending';
             }
         },
+        closeMoneySourceHistoryModal(){
+            this.showMoneySourceHistory = false;
+            this.moneySourceToShowHistoryOf = null;
+        },
+        openMoneySourceHistoryModal(moneySource){
+            this.moneySourceToShowHistoryOf = moneySource;
+            this.showMoneySourceHistory = true;
+        }
 
     },
     data() {
@@ -675,6 +718,8 @@ export default defineComponent({
             timeSpanFilterActive: false,
             sortType: null,
             sortOrder: null,
+            showMoneySourceHistory: false,
+            moneySourceToShowHistoryOf: null,
         }
     }
 })

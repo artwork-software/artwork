@@ -18,6 +18,7 @@ use App\Models\SubPositionRow;
 use App\Models\SubpositionSumDetail;
 use App\Models\Table;
 use App\Models\User;
+use App\Support\Services\MoneySourceCalculationService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -33,6 +34,8 @@ class MoneySourceController extends Controller
 {
     protected ?NotificationService $notificationService = null;
 
+    protected ?MoneySourceCalculationService $moneySourceCalculationService = null;
+
     protected ?stdClass $notificationData = null;
 
     protected ?NewHistoryService $history = null;
@@ -40,15 +43,34 @@ class MoneySourceController extends Controller
     public function __construct()
     {
         $this->notificationService = new NotificationService();
+        $this->moneySourceCalculationService = new MoneySourceCalculationService();
         $this->notificationData = new \stdClass();
         $this->history = new NewHistoryService('App\Models\MoneySource');
     }
 
     public function index(): Response|ResponseFactory
     {
+        $moneySources = MoneySource::with(['users', 'categories', 'moneySourceTasks'])->get();
+
+        foreach ($moneySources as $moneySource) {
+            $moneySource->sumOfPositions = $this->moneySourceCalculationService->calculatePositionSumPerMoneySource($moneySource);
+            $historyArray = [];
+            $historyComplete = $moneySource->historyChanges()->all();
+
+            foreach ($historyComplete as $history) {
+                $historyArray[] = [
+                    'changes' => json_decode($history->changes),
+                    'created_at' => $history->created_at->diffInHours() < 24
+                        ? $history->created_at->diffForHumans()
+                        : $history->created_at->format('d.m.Y, H:i'),
+                ];
+            }
+            $moneySource->history = $historyArray;
+        }
+
         return inertia('MoneySources/MoneySourceManagement', [
             'moneySourceCategories' => MoneySourceCategory::all(),
-            'moneySources' => MoneySource::with(['users', 'categories', 'moneySourceTasks'])->get(),
+            'moneySources' => $moneySources,
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
         ]);
     }

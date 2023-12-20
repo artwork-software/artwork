@@ -17,25 +17,22 @@ class Kernel extends ConsoleKernel
 {
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('model:prune')->daily()->runInBackground();
-        $schedule->command(NotificationScheduling::class)->everyTenMinutes()->runInBackground();
-        $schedule->command(DeadLine::class)->dailyAt('09:00')->runInBackground();
+        $schedule->command('model:prune')->daily();
+        $schedule->command(NotificationScheduling::class)->everyTenMinutes();
+        $schedule->command(DeadLine::class)->dailyAt('09:00');
         $schedule->command(RemoveTempRooms::class)->dailyAt('08:00')->runInBackground();
-        $schedule->command(DeleteNotifications::class)->dailyAt('07:00')->runInBackground();
+        $schedule->command(DeleteNotifications::class)->dailyAt('07:00');
         $schedule->command(DeleteExpiredNotificationForAll::class)->everyFiveMinutes()->runInBackground();
         $schedule->command(DailyDeleteCalendarExportPDFs::class)->dailyAt('01:00')->runInBackground();
         $schedule->command(SendNotificationEmailSummaries::class, ['daily'])
-            ->dailyAt('9:00')
-            ->runInBackground();
+            ->dailyAt('9:00');
         $schedule->command(SendNotificationEmailSummaries::class, ['weekly_once'])
             ->weekly()
             ->mondays()
-            ->at('9:00')
-            ->runInBackground();
+            ->at('9:00');
         $schedule->command(SendNotificationEmailSummaries::class, ['weekly_twice'])
             ->days([Schedule::MONDAY, Schedule::THURSDAY])
-            ->at('9:00')
-            ->runInBackground();
+            ->at('9:00');
         $schedule->command(CreateMoneySourceExpirationReminderNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();

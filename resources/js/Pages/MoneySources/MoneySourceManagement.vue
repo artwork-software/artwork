@@ -326,12 +326,12 @@
                                 <div v-if="moneySource.description" class="flex xxsLight items-center pl-5 subpixel-antialiased">
                                     {{ moneySource.description}}
                                 </div>
-                                <div class="flex items-center xxsLight pl-5 pt-1 subpixel-antialiased" v-if="moneySource.history">
-                                    Letzte Änderung: {{ moneySource.history[0].created_at }} von
-                                    <NewUserToolTip class="ml-2" :height="6" :width="6" v-if="moneySource.history[0].changes[0].changed_by"
-                                                    :user="moneySource.history[0].changes[0].changed_by" :id="moneySource.history[0].changes[0].changed_by.id + moneySource.id"/>
-                                    {{moneySource.history[0].changes[0].changed_by.first_name}}
-                                    {{moneySource.history[0].changes[0].changed_by.last_name}}
+                                <div class="flex items-center xxsLight pl-5 pt-1 subpixel-antialiased" v-if="moneySource.history[0]">
+                                    Letzte Änderung: {{ moneySource.history[0]?.created_at }} von
+                                    <NewUserToolTip class="ml-2" :height="6" :width="6" v-if="moneySource.history[0]?.changes[0]?.changed_by"
+                                                    :user="moneySource.history[0]?.changes[0]?.changed_by" :id="moneySource.history[0]?.changes[0]?.changed_by?.id + moneySource.id"/>
+                                    {{moneySource.history[0]?.changes[0]?.changed_by?.first_name}}
+                                    {{moneySource.history[0]?.changes[0]?.changed_by?.last_name}}
                                 </div>
                                 <div class="ml-5 mt-2 flex flex-wrap">
                                     <TagComponent v-for="moneySourceCategory in moneySource.categories"

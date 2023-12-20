@@ -22,6 +22,6 @@ class RoomAttribute extends Model
 
     public function rooms(): BelongsToMany
     {
-        return $this->belongsToMany(Room::class, 'room_pivot_room_attribute');
+        return $this->belongsToMany(Room::class)->using(RoomRoomAttributeMapping::class);
     }
 }

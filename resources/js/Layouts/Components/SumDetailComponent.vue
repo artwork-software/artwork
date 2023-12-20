@@ -250,7 +250,8 @@ export default {
             this.moneySource_query = '';
         },
         updateMoneySourceLink() {
-            if (this.isLinked && this.selectedSumDetail.sum_money_source === null) {
+            console.log(this.selectedSumDetail)
+            if (this.isLinked && typeof(this.selectedSumDetail.sum_money_source) === 'undefined') {
                 this.$inertia.post(route('project.sum.money.source.store'), {
                     sourceable_id: this.selectedSumDetail.id,
                     sourceable_type: this.selectedSumDetail.class,

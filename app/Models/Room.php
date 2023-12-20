@@ -109,12 +109,12 @@ class Room extends Model
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(RoomCategory::class);
+        return $this->belongsToMany(RoomCategory::class)->using(RoomRoomCategoryMapping::class);
     }
 
     public function attributes(): BelongsToMany
     {
-        return $this->belongsToMany(RoomAttribute::class);
+        return $this->belongsToMany(RoomAttribute::class)->using(RoomRoomAttributeMapping::class);
     }
 
     public function prunable(): Builder

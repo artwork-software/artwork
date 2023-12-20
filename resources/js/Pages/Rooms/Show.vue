@@ -4,7 +4,7 @@
             <div class="flex-wrap">
                 <div class="flex">
                     <h2 class="headline1">{{ room.name }}</h2>
-                    <Menu as="div" class="my-auto relative">
+                    <Menu as="div" class="my-auto relative ml-2">
                         <div class="flex"
                              v-if="$role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin">
                             <MenuButton
@@ -289,30 +289,6 @@
                 </div>
             </template>
         </jet-dialog-modal>
-        <!-- Delete Room Modal -->
-        <jet-dialog-modal :show="showSoftDeleteRoomModal" @close="closeSoftDeleteRoomModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="headline1 my-2">
-                        Raum in den Papierkorb
-                    </div>
-                    <XIcon @click="closeSoftDeleteRoomModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="errorText">
-                        Bist du sicher, dass du den Raum {{ roomToSoftDelete.name }} in den Papierkorb legen möchtest?
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <AddButton class="px-28" @click="softDeleteRoom()" text="Entfernen" mode="modal"/>
-                        <div class="flex my-auto">
-                            <span @click="closeSoftDeleteRoomModal()"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </jet-dialog-modal>
         <!-- Success Modal -->
         <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
             <template #content>
@@ -534,8 +510,6 @@
                 </div>
             </template>
         </jet-dialog-modal>
-
-
     </app-layout>
 
     <BaseSidenav :show="showSidenav" @toggle="this.showSidenav =! this.showSidenav">
@@ -556,6 +530,12 @@
         :room_history="room.room_history"
         @closed="closeRoomHistoryModal"
     />
+    <!-- Delete Room Modal -->
+    <ConfirmationComponent v-if="showSoftDeleteRoomModal"
+                           confirm="Raum löschen"
+                           titel="Raum in den Papierkorb"
+                           :description="roomDeleteDescriptionText"
+                           @closed="afterSoftDeleteRoomConfirm"/>
 </template>
 
 <script>
@@ -610,6 +590,7 @@ import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendar
 import SingleRoomCalendarComponent from "@/Layouts/Components/SingleRoomCalendarComponent.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -646,6 +627,7 @@ export default {
         'user_filters'
     ],
     components: {
+        ConfirmationComponent,
         UserPopoverTooltip,
         IndividualCalendarComponent,
         RoomSidenav,
@@ -704,7 +686,10 @@ export default {
                 requestsToShow = this.room.event_requests
             }
             return requestsToShow
-        }
+        },
+        roomDeleteDescriptionText() {
+            return `Bist du sicher, dass du den Raum ${this.roomToSoftDelete.name} in den Papierkorb legen möchtest?`;
+        },
     },
     mounted() {
         setTimeout(() => {
@@ -802,6 +787,13 @@ export default {
                     return 'Sa';
                 case 'Sunday':
                     return 'So';
+            }
+        },
+        afterSoftDeleteRoomConfirm(confirmed) {
+            if (confirmed) {
+                this.softDeleteRoom()
+            } else {
+                this.closeSoftDeleteRoomModal()
             }
         },
 

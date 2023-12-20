@@ -19,6 +19,7 @@ use App\Models\SubPositionRow;
 use App\Models\SubpositionSumDetail;
 use App\Models\Table;
 use App\Models\User;
+use App\Support\Services\MoneySourceCalculationService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -34,6 +35,8 @@ class MoneySourceController extends Controller
 {
     protected ?NotificationService $notificationService = null;
 
+    protected ?MoneySourceCalculationService $moneySourceCalculationService = null;
+
     protected ?stdClass $notificationData = null;
 
     protected ?NewHistoryService $history = null;
@@ -41,14 +44,34 @@ class MoneySourceController extends Controller
     public function __construct()
     {
         $this->notificationService = new NotificationService();
+        $this->moneySourceCalculationService = new MoneySourceCalculationService();
         $this->notificationData = new \stdClass();
         $this->history = new NewHistoryService('App\Models\MoneySource');
     }
 
     public function index(): Response|ResponseFactory
     {
+        $moneySources = MoneySource::with(['users', 'categories', 'moneySourceTasks'])->get();
+
+        foreach ($moneySources as $moneySource) {
+            $moneySource->sumOfPositions = $this->moneySourceCalculationService->calculatePositionSumPerMoneySource($moneySource);
+            $historyArray = [];
+            $historyComplete = $moneySource->historyChanges()->all();
+
+            foreach ($historyComplete as $history) {
+                $historyArray[] = [
+                    'changes' => json_decode($history->changes),
+                    'created_at' => $history->created_at->diffInHours() < 24
+                        ? $history->created_at->diffForHumans()
+                        : $history->created_at->format('d.m.Y, H:i'),
+                ];
+            }
+            $moneySource->history = $historyArray;
+        }
+
         return inertia('MoneySources/MoneySourceManagement', [
-            'moneySources' => MoneySource::with(['users'])->get(),
+            'moneySourceCategories' => MoneySourceCategory::all(),
+            'moneySources' => $moneySources,
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
             //is set if index is called due to redirect response of store method
             'recentlyCreatedMoneySourceId' => session('recentlyCreatedMoneySourceId')
@@ -387,12 +410,14 @@ class MoneySourceController extends Controller
                 'linked_projects' => array_unique($linked_projects, SORT_REGULAR),
                 'usersWithAccess' => array_unique($usersWithAccess, SORT_NUMERIC),
                 'history' => $historyArray,
+                'categories' => $moneySource->categories,
                 'hasSentExpirationReminderNotification' => $moneySource->reminder()
                     ->where('type', '=', MoneySourceReminder::MONEY_SOURCE_REMINDER_TYPE_EXPIRATION)
                     ->where('notification_created', '=', true)
                     ->count() > 0
             ],
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
+            'moneySourceCategories' => MoneySourceCategory::all(),
             'moneySources' => MoneySource::where('is_group', false)->get(),
             'projects' => Project::all()->map(fn($project) => [
                 'id' => $project->id,
@@ -436,6 +461,8 @@ class MoneySourceController extends Controller
             'description' => $request->description,
             'is_group' => $request->is_group,
             'group_id' => $request->group_id,
+            'funding_start_date' => $request->funding_start_date,
+            'funding_end_date' => $request->funding_end_date,
         ]);
 
         $newName = $moneySource->name;
@@ -611,5 +638,10 @@ class MoneySourceController extends Controller
     public function updateProjects(MoneySource $moneySource, Request $request): void
     {
         $moneySource->projects()->sync($request->linkedProjectIds);
+    }
+
+    public function syncCategories(MoneySource $moneySource, Request $request): void
+    {
+        $moneySource->categories()->sync($request->categoryIds);
     }
 }

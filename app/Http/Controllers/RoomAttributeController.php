@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\RoomAttribute;
+use App\Models\RoomRoomAttributeMapping;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -36,8 +37,16 @@ class RoomAttributeController extends Controller
 
     public function destroy(RoomAttribute $roomAttribute): RedirectResponse
     {
+        foreach (
+            RoomRoomAttributeMapping::query()
+                ->where('room_attribute_id', '=', $roomAttribute->id)
+                ->get() as $roomRoomAttributeMapping
+        ) {
+            $roomRoomAttributeMapping->delete();
+        }
+
         $roomAttribute->delete();
 
-        return Redirect::route('areas.management')->with('success', 'Roomattribute deleted');
+        return Redirect::back();
     }
 }

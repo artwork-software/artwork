@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20.121" height="20.121" viewBox="0 0 20.121 20.121">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #000;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.5px;
+      }
+    </style>
+  </defs>
+  <path id="Pfad_1544" data-name="Pfad 1544" class="cls-1" d="M3,7.5,7.5,3m0,0L12,7.5M7.5,3V16.5m13.5,0L16.5,21m0,0L12,16.5M16.5,21V7.5" transform="translate(-1.939 -1.939)"/>
+</svg>

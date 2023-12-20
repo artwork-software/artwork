@@ -16,6 +16,8 @@ class MoneySourceCategory extends Model
 
     public function moneySources(): BelongsToMany
     {
-        return $this->belongsToMany(MoneySource::class);
+        return $this
+            ->belongsToMany(MoneySource::class, 'money_source_category_mappings')
+            ->using(MoneySourceCategoryMapping::class);
     }
 }

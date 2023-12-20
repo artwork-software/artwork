@@ -103,7 +103,9 @@ class MoneySource extends Model
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(MoneySourceCategory::class);
+        return $this
+            ->belongsToMany(MoneySourceCategory::class, 'money_source_category_mappings')
+            ->using(MoneySourceCategoryMapping::class);
     }
 
     public function reminder(): HasMany

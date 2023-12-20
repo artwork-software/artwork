@@ -22,6 +22,6 @@ class RoomCategory extends Model
 
     public function rooms(): BelongsToMany
     {
-        return $this->belongsToMany(Room::class);
+        return $this->belongsToMany(Room::class)->using(RoomRoomCategoryMapping::class);
     }
 }

@@ -126,8 +126,10 @@
                 </div>
             </div>
         </div>
+
         <!-- Positions Div with Bg-Color -->
         <div class="w-full h-full mb-48">
+
             <div class="max-w-screen-2xl bg-lightBackgroundGray">
                 <div class="flex pt-12 justify-between items-center">
                     <div class="headline4  ml-14">
@@ -239,6 +241,8 @@
                 :linked-projects="linkedProjects"
                 :competent="competent_member"
                 :write-access="access_member"
+                :money-source-categories="moneySourceCategories"
+                :positionSumsPerProject="positionSumsPerProject"
             ></MoneySourceSidenav>
         </BaseSidenav>
     </app-layout>
@@ -290,7 +294,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 export default {
     mixins: [Permissions],
     name: "MoneySourceShow",
-    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects', 'linkedProjects'],
+    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'moneySourceCategories', 'projects', 'linkedProjects'],
     components: {
         UserPopoverTooltip,
         ConfirmDeleteModal,
@@ -338,6 +342,22 @@ export default {
                 }
             }
 
+        },
+        positionSumsPerProject() {
+            const sumsByProject = {};
+
+            this.filteredPositions.forEach(position => {
+                const projectId = position.project?.id;
+                const value = parseFloat(position.value) || 0;
+
+                if (!sumsByProject[projectId]) {
+                    sumsByProject[projectId] = 0;
+                }
+
+                sumsByProject[projectId] += value;
+            });
+
+            return sumsByProject;
         },
         access_member(){
             const accessUserIds = [];

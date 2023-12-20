@@ -89,7 +89,7 @@
 
                                     <div class="mt-2 flex flex-wrap">
                                         <span v-for="(attribute,index) in room_attributes"
-                                          class="mr-1 rounded-full items-center font-medium text-tagText
+                                              class="mr-1 rounded-full items-center font-medium text-tagText
                                          border bg-tagBg border-tag px-3 text-sm mb-1 h-8 inline-flex">
                                             {{ attribute.name }}
                                             <button type="button" @click="this.showRoomAttributeDeleteModal(attribute)">
@@ -232,7 +232,8 @@
                                                                         angelegt am {{ element.created_at }} von
                                                                         <UserPopoverTooltip :user="element.created_by"
                                                                                             :id="element.created_by.id"
-                                                                                            :height="6" :width="6" class="ml-2"/>
+                                                                                            :height="6" :width="6"
+                                                                                            class="ml-2"/>
                                                                     </div>
                                                                 </div>
                                                                 <Menu as="div" class="my-auto relative"
@@ -331,10 +332,12 @@
                                                                         <div
                                                                             class="ml-6 flex items-center xsLight my-auto">
                                                                             angelegt am {{ element.created_at }} von
-                                                                            <UserPopoverTooltip :user="element.created_by"
-                                                                                                :id="element.created_by.id"
-                                                                                                height="6"
-                                                                                                width="6" class="ml-2"></UserPopoverTooltip>
+                                                                            <UserPopoverTooltip
+                                                                                :user="element.created_by"
+                                                                                :id="element.created_by.id"
+                                                                                height="6"
+                                                                                width="6"
+                                                                                class="ml-2"></UserPopoverTooltip>
                                                                         </div>
                                                                     </div>
                                                                     <Menu as="div" class="my-auto relative"
@@ -425,7 +428,8 @@
                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary sDark focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="roomNameEdit"
-                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name des Areals*
+                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
+                            des Areals*
                         </label>
                         <jet-input-error :message="newAreaForm.error" class="mt-2"/>
                     </div>
@@ -870,7 +874,8 @@
                                           class="flex rounded-full items-center font-medium text-tagText
                                          border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
                                         {{ category.name }}
-                                        <button @click="editRoomForm.room_categoriesToDisplay.splice(index,1)" type="button">
+                                        <button @click="editRoomForm.room_categoriesToDisplay.splice(index,1)"
+                                                type="button">
                                             <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                                         </button>
                                     </span>
@@ -878,7 +883,8 @@
                               class="flex rounded-full items-center font-medium text-tagText
                                          border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
                                         {{ attribute.name }}
-                                        <button @click="editRoomForm.room_attributesToDisplay.splice(index,1)" type="button">
+                                        <button @click="editRoomForm.room_attributesToDisplay.splice(index,1)"
+                                                type="button">
                                             <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                                         </button>
                                     </span>
@@ -886,7 +892,8 @@
                               class="flex rounded-full items-center font-medium text-tagText
                                          border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
                                         Nebenraum von {{ room.name }}
-                                        <button @click="editRoomForm.adjoining_roomsToDisplay.splice(index,1)" type="button">
+                                        <button @click="editRoomForm.adjoining_roomsToDisplay.splice(index,1)"
+                                                type="button">
                                             <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                                         </button>
                                     </span>
@@ -942,82 +949,6 @@
             </div>
         </template>
     </jet-dialog-modal>
-    <!-- Delete Area Modal -->
-    <jet-dialog-modal :show="showSoftDeleteAreaModal" @close="closeSoftDeleteAreaModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-            <div class="mx-4">
-
-                <div class="headline1 my-2">
-                    Areal in den Papierkorb
-                </div>
-                <XIcon @click="closeSoftDeleteAreaModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
-                <div class="errorText">
-                    Bist du sicher,dass du das Areal {{ areaToSoftDelete.name }} mit allen Räumen in den Papierkorb
-                    legen möchtest?
-                </div>
-                <div class="flex justify-between mt-6">
-                    <AddButton class="px-16" @click="softDeleteArea()" text="In den Papierkorb" mode="modal"/>
-                    <div class="flex my-auto">
-                            <span @click="closeSoftDeleteAreaModal()"
-                                  class="txsLight cursor-pointer">Nein, doch nicht</span>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </jet-dialog-modal>
-    <!-- Delete Room Modal -->
-    <jet-dialog-modal :show="showSoftDeleteRoomModal" @close="closeSoftDeleteRoomModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-            <div class="mx-4">
-
-                <div class="headline1 my-2">
-                    Raum in den Papierkorb
-                </div>
-                <XIcon @click="closeSoftDeleteRoomModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
-                <div class="errorText">
-                    Bist du sicher, dass du den Raum {{ roomToSoftDelete.name }} in den Papierkorb legen möchtest?
-                </div>
-                <div class="flex justify-between mt-6">
-                    <AddButton class="px-28" @click="softDeleteRoom()" text="Entfernen" mode="modal"/>
-                    <div class="flex my-auto">
-                            <span @click="closeSoftDeleteRoomModal()"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </jet-dialog-modal>
-    <!-- Delete All Rooms from Area Modal -->
-    <jet-dialog-modal :show="showDeleteAllRoomsModal" @close="closeDeleteAllRoomsModal">
-        <template #content>
-            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-            <div class="mx-4">
-
-                <div class="headline1 my-2">
-                    Alle Räume entfernen
-                </div>
-                <XIcon @click="closeDeleteAllRoomsModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
-                <div class="errorText">
-                    Bist du sicher, dass du alle Räume aus diesem Areal in den Papierkorb legen möchtest?
-                </div>
-                <div class="flex justify-between mt-6">
-                    <AddButton class="px-28" @click="softDeleteAllRooms()" text="In den Papierkorb" mode="modal"/>
-                    <div class="flex my-auto">
-                            <span @click="closeDeleteAllRoomsModal()"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
-                    </div>
-                </div>
-            </div>
-        </template>
-    </jet-dialog-modal>
     <!-- Success Modal -->
     <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
         <template #content>
@@ -1044,6 +975,24 @@
 
         </template>
     </jet-dialog-modal>
+    <!-- Delete Area Modal -->
+    <ConfirmationComponent v-if="showSoftDeleteAreaModal"
+                           confirm="In den Papierkorb"
+                           titel="Areal in den Papierkorb"
+                           :description="areaDeleteDescriptionText"
+                           @closed="afterSoftDeleteAreaConfirm"/>
+    <!-- Delete All Rooms from Area Modal -->
+    <ConfirmationComponent v-if="showDeleteAllRoomsModal"
+                           confirm="In den Papierkorb"
+                           titel="Alle Räume entfernen"
+                           description="Bist du sicher, dass du alle Räume aus diesem Areal in den Papierkorb legen möchtest?"
+                           @closed="afterSoftDeleteAllRoomsConfirm"/>
+    <!-- Delete Room Modal -->
+    <ConfirmationComponent v-if="showSoftDeleteRoomModal"
+                           confirm="Raum löschen"
+                           titel="Raum in den Papierkorb"
+                           :description="roomDeleteDescriptionText"
+                           @closed="afterSoftDeleteRoomConfirm"/>
     <!-- Delete Room Category Modal -->
     <ConfirmationComponent v-if="roomCategoryDeleteModalVisible"
                            confirm="Raumkategorie löschen"
@@ -1197,7 +1146,37 @@ export default defineComponent({
             roomAttributeToDelete: null,
         }
     },
+    computed: {
+        roomDeleteDescriptionText() {
+            return `Bist du sicher, dass du den Raum ${this.roomToSoftDelete.name} in den Papierkorb legen möchtest?`;
+        },
+        areaDeleteDescriptionText() {
+            return `Bist du sicher,dass du das Areal ${this.areaToSoftDelete.name} mit allen Räumen in den Papierkorb
+            legen möchtest?`
+        }
+    },
     methods: {
+        afterSoftDeleteAllRoomsConfirm(confirmed) {
+            if (confirmed) {
+                this.softDeleteAllRooms()
+            } else {
+                this.closeDeleteAllRoomsModal()
+            }
+        },
+        afterSoftDeleteRoomConfirm(confirmed) {
+            if (confirmed) {
+                this.softDeleteRoom()
+            } else {
+                this.closeSoftDeleteRoomModal()
+            }
+        },
+        afterSoftDeleteAreaConfirm(confirmed) {
+            if (confirmed) {
+                this.softDeleteArea()
+            } else {
+                this.closeSoftDeleteAreaModal()
+            }
+        },
         showRoomCategoryDeleteModal(roomCategory) {
             this.roomCategoryToDelete = roomCategory;
             this.roomCategoryDeleteModalVisible = true;
@@ -1387,14 +1366,14 @@ export default defineComponent({
             this.editRoomForm.end_date = room.end_date;
             this.editRoomForm.start_date_dt_local = room.start_date_dt_local;
             this.editRoomForm.end_date_dt_local = room.end_date_dt_local;
-            room.adjoining_rooms.forEach((adjoining_room) =>{
-               this.editRoomForm.adjoining_roomsToDisplay.push({id:adjoining_room.id, name: adjoining_room.name})
+            room.adjoining_rooms.forEach((adjoining_room) => {
+                this.editRoomForm.adjoining_roomsToDisplay.push({id: adjoining_room.id, name: adjoining_room.name})
             });
-            room.room_categories.forEach((room_category) =>{
-                this.editRoomForm.room_categoriesToDisplay.push({id:room_category.id, name: room_category.name})
+            room.room_categories.forEach((room_category) => {
+                this.editRoomForm.room_categoriesToDisplay.push({id: room_category.id, name: room_category.name})
             });
-            room.room_attributes.forEach((room_attribute) =>{
-                this.editRoomForm.room_attributesToDisplay.push({id:room_attribute.id, name: room_attribute.name})
+            room.room_attributes.forEach((room_attribute) => {
+                this.editRoomForm.room_attributesToDisplay.push({id: room_attribute.id, name: room_attribute.name})
             });
 
             if (room.temporary === true) {

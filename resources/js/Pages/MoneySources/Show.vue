@@ -96,7 +96,12 @@
                 <div class="mt-3 xsDark" v-if="moneySource.start_date && moneySource.end_date">
                     Laufzeit: {{ formatDate(moneySource.start_date) }} - {{ formatDate(moneySource.end_date) }}
                 </div>
-                <div class="mt-3 xsDark" v-if="moneySource.funding_start_date && moneySource.funding_end_date">
+                <div :class="[
+                        moneySource.hasSentExpirationReminderNotification ?
+                            'text-error' :
+                            '',
+                        'mt-3 xsDark'
+                     ]" v-if="moneySource.funding_start_date && moneySource.funding_end_date">
                     Förderzeitraum: {{ formatDate(moneySource.funding_start_date) }} - {{ formatDate(moneySource.funding_end_date) }}
                 </div>
                 <div class="mt-2 xsDark" v-if="moneySource.source_name">
@@ -114,7 +119,12 @@
                     </div>
                     <div class="w-1/2 xsLight uppercase ml-6">
                         Noch Verfügbar
-                        <div class="bigNumber my-4" :class="moneySource.amount_available < 0 ? 'text-red-500' : ''">
+                        <div :class="[
+                                 moneySource.amount_available <= 0 || moneySource.hasSentThresholdReminderNotification ?
+                                    'text-red-500' :
+                                    '',
+                                    'bigNumber my-4'
+                             ]">
                             {{ currencyFormat(moneySource.amount_available) }}
                         </div>
                     </div>

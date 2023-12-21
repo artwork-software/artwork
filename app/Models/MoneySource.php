@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Date;
 use Laravel\Scout\Searchable;
 
 /**
@@ -18,7 +18,7 @@ use Laravel\Scout\Searchable;
  * @property string $source_name
  * @property string $start_date
  * @property string $end_date
- * @property array $users
+ * @property Collection $users
  * @property int $group_id
  * @property string $description
  * @property int $is_group
@@ -107,5 +107,10 @@ class MoneySource extends Model
         return $this
             ->belongsToMany(MoneySourceCategory::class, 'money_source_category_mappings')
             ->using(MoneySourceCategoryMapping::class);
+    }
+
+    public function reminder(): HasMany
+    {
+        return $this->hasMany(MoneySourceReminder::class);
     }
 }

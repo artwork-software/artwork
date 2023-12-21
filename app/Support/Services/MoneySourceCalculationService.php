@@ -4,18 +4,13 @@ namespace App\Support\Services;
 
 use App\Models\BudgetSumDetails;
 use App\Models\ColumnCell;
-use App\Models\MainPosition;
 use App\Models\MainPositionDetails;
 use App\Models\MoneySource;
-use App\Models\Project;
-use App\Models\SubPosition;
-use App\Models\SubPositionRow;
 use App\Models\SubpositionSumDetail;
-use App\Models\Table;
 
 class MoneySourceCalculationService
 {
-    public function calculatePositionSumPerMoneySource($moneySource): int
+    public function calculatePositionSumPerMoneySource(MoneySource $moneySource): int
     {
         $positionSum = 0;
         $positionSum += $this->getPositionSumOfOneMoneySource($moneySource);
@@ -23,7 +18,7 @@ class MoneySourceCalculationService
         return $positionSum;
     }
 
-    public function getPositionSumOfOneMoneySource($moneySource)
+    public function getPositionSumOfOneMoneySource(MoneySource $moneySource): int
     {
         $positionSum = 0;
         $subMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
@@ -46,9 +41,10 @@ class MoneySourceCalculationService
 
         if ($moneySource->is_group) {
             foreach ($subMoneySources as $subMoneySource) {
-                $positionSum += $this->getPositionSumofOneMoneySource($subMoneySource);
+                $positionSum += $this->getPositionSumOfOneMoneySource($subMoneySource);
             }
         }
+
         foreach ($columnCells as $columnCell) {
             if ($columnCell->linked_type === 'EARNING') {
                 $positionSum += $columnCell->value;

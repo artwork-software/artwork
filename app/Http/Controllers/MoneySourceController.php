@@ -11,6 +11,7 @@ use App\Models\MainPosition;
 use App\Models\MainPositionDetails;
 use App\Models\MoneySource;
 use App\Models\MoneySourceCategory;
+use App\Models\MoneySourceReminder;
 use App\Models\MoneySourceTask;
 use App\Models\Project;
 use App\Models\SubPosition;
@@ -72,6 +73,8 @@ class MoneySourceController extends Controller
             'moneySourceCategories' => MoneySourceCategory::all(),
             'moneySources' => $moneySources,
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
+            //is set if index is called due to redirect response of store method
+            'recentlyCreatedMoneySourceId' => session('recentlyCreatedMoneySourceId')
         ]);
     }
 
@@ -175,7 +178,7 @@ class MoneySourceController extends Controller
 
         $this->history->createHistory($source->id, 'Finanzierungsquelle erstellt');
 
-        return back();
+        return back()->with(['recentlyCreatedMoneySourceId' => $source->id]);
     }
 
     //@todo: fix phpcs error - refactor function because complexity is rising
@@ -407,7 +410,15 @@ class MoneySourceController extends Controller
                 'linked_projects' => array_unique($linked_projects, SORT_REGULAR),
                 'usersWithAccess' => array_unique($usersWithAccess, SORT_NUMERIC),
                 'history' => $historyArray,
-                'categories' => $moneySource->categories
+                'categories' => $moneySource->categories,
+                'hasSentExpirationReminderNotification' => $moneySource->reminder()
+                    ->where('type', '=', MoneySourceReminder::MONEY_SOURCE_REMINDER_TYPE_EXPIRATION)
+                    ->where('notification_created', '=', true)
+                    ->count() > 0,
+                'hasSentThresholdReminderNotification' => $moneySource->reminder()
+                    ->where('type', '=', MoneySourceReminder::MONEY_SOURCE_REMINDER_TYPE_THRESHOLD)
+                    ->where('notification_created', '=', true)
+                    ->count() > 0
             ],
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
             'moneySourceCategories' => MoneySourceCategory::all(),

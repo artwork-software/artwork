@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\CreateMoneySourceExpirationReminderNotificationsCommand;
 use App\Console\Commands\DailyDeleteCalendarExportPDFs;
 use App\Console\Commands\DeadLine;
 use App\Console\Commands\DeleteExpiredNotificationForAll;
@@ -32,6 +33,9 @@ class Kernel extends ConsoleKernel
         $schedule->command(SendNotificationEmailSummaries::class, ['weekly_twice'])
             ->days([Schedule::MONDAY, Schedule::THURSDAY])
             ->at('9:00');
+        $schedule->command(CreateMoneySourceExpirationReminderNotificationsCommand::class)
+            ->dailyAt('01:00')
+            ->runInBackground();
     }
 
     protected function commands(): void

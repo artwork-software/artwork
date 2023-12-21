@@ -32,6 +32,7 @@ use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\MoneySourceCategoryController;
 use App\Http\Controllers\MoneySourceController;
 use App\Http\Controllers\MoneySourceFileController;
+use App\Http\Controllers\MoneySourceReminderController;
 use App\Http\Controllers\MoneySourceTaskController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PresetShiftController;
@@ -139,7 +140,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     //Users
     Route::get('/users', [UserController::class, 'index'])->name('users');
     Route::get('/users/search', [UserController::class, 'search'])->name('users.search');
-    Route::get('/users/money_source_search', [UserController::class, 'money_source_search'])
+    Route::get('/users/money_source_search', [UserController::class, 'moneySourceSearch'])
         ->name('users.money_source_search');
     Route::get('/users/{user}/info', [UserController::class, 'editUserInfo'])->name('user.edit.info');
     Route::get('/users/{user}/shiftplan', [UserController::class, 'editUserShiftplan'])->name('user.edit.shiftplan');
@@ -462,6 +463,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('money_source_categories.store');
     Route::delete('/money_source/categories/{moneySourceCategory}', [MoneySourceCategoryController::class, 'destroy'])
         ->name('money_source_categories.destroy');
+
+    // MoneySourceReminder
+    Route::resource('money_source.reminder', MoneySourceReminderController::class)->only('store');
 
     //Contracts
     Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');

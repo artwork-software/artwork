@@ -382,13 +382,19 @@ class NotificationService
                 break;
             case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
             case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:
-            case NotificationConstEnum::NOTIFICATION_MONEY_SOURCE_EXPIRATION:
                 if ($this->getNotificationTo()->id !== Auth::id()) {
                     Notification::send(
                         $this->getNotificationTo(),
                         new MoneySourceNotification($body, $this->getBroadcastMessage())
                     );
                 }
+                break;
+            case NotificationConstEnum::NOTIFICATION_MONEY_SOURCE_EXPIRATION:
+            case NotificationConstEnum::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED:
+                Notification::send(
+                    $this->getNotificationTo(),
+                    new MoneySourceNotification($body, $this->getBroadcastMessage())
+                );
                 break;
             case NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
             case NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED:

@@ -119,7 +119,12 @@
                     </div>
                     <div class="w-1/2 xsLight uppercase ml-6">
                         Noch Verfügbar
-                        <div class="bigNumber my-4" :class="moneySource.amount_available < 0 ? 'text-red-500' : ''">
+                        <div :class="[
+                                 moneySource.amount_available <= 0 || moneySource.hasSentThresholdReminderNotification ?
+                                    'text-red-500' :
+                                    '',
+                                    'bigNumber my-4'
+                             ]">
                             {{ currencyFormat(moneySource.amount_available) }}
                         </div>
                     </div>

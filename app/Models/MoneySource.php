@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -17,7 +18,7 @@ use Laravel\Scout\Searchable;
  * @property string $source_name
  * @property string $start_date
  * @property string $end_date
- * @property array $users
+ * @property Collection $users
  * @property int $group_id
  * @property string $description
  * @property int $is_group

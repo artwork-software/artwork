@@ -3,10 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Enums\NotificationConstEnum;
+use App\Models\MoneySource;
 use App\Models\MoneySourceReminder;
 use App\Support\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Collection;
 use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class CreateMoneySourceExpirationReminderNotificationsCommand extends Command
@@ -28,6 +30,7 @@ class CreateMoneySourceExpirationReminderNotificationsCommand extends Command
                 ->where('notification_created', '=', false)
                 ->get() as $moneySourceExpirationReminder
         ) {
+            /** @var MoneySource $moneySource */
             $moneySource = $moneySourceExpirationReminder->moneySource;
 
             if (
@@ -37,47 +40,63 @@ class CreateMoneySourceExpirationReminderNotificationsCommand extends Command
                 continue;
             }
 
-            $notificationTitle = sprintf(
-                'Am %s wird die Förderung "%s" eingestellt.',
-                Carbon::parse($moneySource->funding_end_date)->format('d.m.Y'),
-                $moneySource->name
-            );
-            $broadcastMessage = [
-                'id' => rand(1, 1000000),
-                'type' => 'success',
-                'message' => $notificationTitle
-            ];
-            $notificationDescription = [
-                1 => [
-                    'type' => 'string',
-                    'title' => 'Sollte das Projekt/die Projekte weiter laufen, trage bitte die ' .
-                        'Folgefinanzierung ein.',
-                    'href' => null
-                ],
-                2 => [
-                    'type' => 'link',
-                    'title' => 'Finanzierungsquelle: ' . $moneySource->name,
-                    'href' => route('money_sources.show', $moneySource->id)
-                ]
-            ];
+            //sent notifications if responsible users are given, otherwise just handle the expiration-reminder
+            $responsibleMoneySourceUsers = $moneySource
+                ->users()
+                ->wherePivot('competent', '=', true)
+                ->get();
 
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setIcon('red');
-            $this->notificationService->setPriority(3);
-            $this->notificationService->setNotificationConstEnum(
-                NotificationConstEnum::NOTIFICATION_MONEY_SOURCE_EXPIRATION
-            );
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setModelId($moneySource->id);
-            foreach ($moneySource->users()->get() as $responsibleMoneySourceUser) {
-                $this->notificationService->setNotificationTo($responsibleMoneySourceUser);
-                $this->notificationService->createNotification();
+            if ($responsibleMoneySourceUsers->count() > 0) {
+                $this->createMoneySourceExpirationReminderNotifications($moneySource, $responsibleMoneySourceUsers);
             }
 
             $moneySourceExpirationReminder->update(['notification_created' => true]);
         }
 
         return CommandAlias::SUCCESS;
+    }
+
+    private function createMoneySourceExpirationReminderNotifications(
+        MoneySource $moneySource,
+        Collection $responsibleMoneySourceUsers
+    ): void {
+        $notificationTitle = sprintf(
+            'Am %s wird die Förderung "%s" eingestellt.',
+            Carbon::parse($moneySource->funding_end_date)->format('d.m.Y'),
+            $moneySource->name
+        );
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'error',
+            'message' => $notificationTitle
+        ];
+        $notificationDescription = [
+            1 => [
+                'type' => 'string',
+                'title' => 'Sollte das Projekt/die Projekte weiter laufen, trage bitte die ' .
+                    'Folgefinanzierung ein.',
+                'href' => null
+            ],
+            2 => [
+                'type' => 'link',
+                'title' => 'Finanzquelle: ' . $moneySource->name,
+                'href' => route('money_sources.show', $moneySource->id)
+            ]
+        ];
+
+        $this->notificationService->setTitle($notificationTitle);
+        $this->notificationService->setDescription($notificationDescription);
+        $this->notificationService->setIcon('red');
+        $this->notificationService->setPriority(3);
+        $this->notificationService->setNotificationConstEnum(
+            NotificationConstEnum::NOTIFICATION_MONEY_SOURCE_EXPIRATION
+        );
+        $this->notificationService->setBroadcastMessage($broadcastMessage);
+        $this->notificationService->setModelId($moneySource->id);
+
+        foreach ($responsibleMoneySourceUsers as $responsibleMoneySourceUser) {
+            $this->notificationService->setNotificationTo($responsibleMoneySourceUser);
+            $this->notificationService->createNotification();
+        }
     }
 }

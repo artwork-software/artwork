@@ -475,23 +475,13 @@ export default {
             this.$emit('closed', bool);
         },
         updateMoneySourceLink() {
-            if (this.isLinked) {
-                this.$inertia.patch(route('project.budget.cell-source.update'), {
-                    cell_id: this.cell.id,
-                    linked_type: this.linkedType.type,
-                    money_source_id: this.selectedMoneySource.id
-                }, {
-                    preserveScroll: true
-                });
-            } else {
-                this.$inertia.patch(route('project.budget.cell-source.update'), {
-                    cell_id: this.cell.id,
-                    linked_type: null,
-                    money_source_id: null,
-                }, {
-                    preserveScroll: true
-                });
-            }
+            this.$inertia.patch(route('project.budget.cell-source.update'), {
+                cell_id: this.cell.id,
+                linked_type: this.isLinked ? this.linkedType.type : null,
+                money_source_id: this.isLinked ? this.selectedMoneySource.id : null
+            }, {
+                preserveScroll: true
+            });
 
             this.closeModal(true);
         },

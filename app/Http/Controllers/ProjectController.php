@@ -59,6 +59,7 @@ use App\Models\Table;
 use App\Models\TimeLine;
 use App\Models\User;
 use App\Support\Services\HistoryService;
+use App\Support\Services\MoneySourceThresholdReminderService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Carbon\Carbon;
@@ -1093,13 +1094,20 @@ class ProjectController extends Controller
         }
     }
 
-    public function updateCellSource(Request $request): void
-    {
-        $column = ColumnCell::find($request->cell_id);
-        $column->update([
-            'linked_type' => $request->linked_type,
-            'linked_money_source_id' => $request->money_source_id
-        ]);
+    public function updateCellSource(
+        Request $request,
+        MoneySourceThresholdReminderService $moneySourceThresholdReminderService
+    ): void {
+        ColumnCell::find($request->cell_id)
+            ->update([
+                'linked_type' => $request->linked_type,
+                'linked_money_source_id' => $request->money_source_id
+            ]);
+
+        if ($request->money_source_id) {
+            $moneySourceThresholdReminderService
+                ->handleThresholdReminders(MoneySource::find($request->money_source_id));
+        }
     }
 
     public function updateColumnName(Request $request): void
@@ -1278,8 +1286,10 @@ class ProjectController extends Controller
         }
     }
 
-    public function updateCellValue(Request $request): void
-    {
+    public function updateCellValue(
+        Request $request,
+        MoneySourceThresholdReminderService $moneySourceThresholdReminderService
+    ): void {
         $column = Column::find($request->column_id);
         $project = $column->table()->first()->project()->first();
         $cell = ColumnCell::where('column_id', $request->column_id)
@@ -1296,6 +1306,12 @@ class ProjectController extends Controller
 
         $cell->update(['value' => $request->value]);
         $this->updateAutomaticCellValues($request->sub_position_row_id);
+
+        if ($cell->linked_money_source_id) {
+            $moneySourceThresholdReminderService->handleThresholdReminders(
+                MoneySource::find($cell->linked_money_source_id)
+            );
+        }
     }
 
     public function changeColumnColor(Request $request): RedirectResponse

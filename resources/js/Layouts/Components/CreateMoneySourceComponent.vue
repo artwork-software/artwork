@@ -205,7 +205,7 @@
                                                    v-model="expirationReminder.days"
                                             />
                                             <span class="xsLight">
-                                                Tage vorher erinnern
+                                                Tag/e vorher erinnern
                                             </span>
                                             <TrashIcon class="w-5 h-5 cursor-pointer xsLight ml-2 hover:text-error"
                                                        @click="removeExpirationReminder(index)"
@@ -513,9 +513,17 @@ export default {
                 sub_money_source_ids: []
             }),
             remindOnExpiration: false,
-            expirationReminders: [],
+            expirationReminders: [
+                {
+                    days: 1
+                }
+            ],
             remindOnThreshold: false,
-            thresholdReminders: [],
+            thresholdReminders: [
+                {
+                    threshold: 1
+                }
+            ],
         }
     },
 

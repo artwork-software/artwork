@@ -414,6 +414,10 @@ class MoneySourceController extends Controller
                 'hasSentExpirationReminderNotification' => $moneySource->reminder()
                     ->where('type', '=', MoneySourceReminder::MONEY_SOURCE_REMINDER_TYPE_EXPIRATION)
                     ->where('notification_created', '=', true)
+                    ->count() > 0,
+                'hasSentThresholdReminderNotification' => $moneySource->reminder()
+                    ->where('type', '=', MoneySourceReminder::MONEY_SOURCE_REMINDER_TYPE_THRESHOLD)
+                    ->where('notification_created', '=', true)
                     ->count() > 0
             ],
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),

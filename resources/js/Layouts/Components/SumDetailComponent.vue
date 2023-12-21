@@ -250,14 +250,14 @@ export default {
             this.moneySource_query = '';
         },
         updateMoneySourceLink() {
-            console.log(this.selectedSumDetail)
-            if (this.isLinked && typeof(this.selectedSumDetail.sum_money_source) === 'undefined') {
+            if (this.isLinked && this.selectedSumDetail.sum_money_source === null) {
                 this.$inertia.post(route('project.sum.money.source.store'), {
                     sourceable_id: this.selectedSumDetail.id,
                     sourceable_type: this.selectedSumDetail.class,
                     linked_type: this.linkedType.type,
                     money_source_id: this.selectedMoneySource.id
                 }, {
+                    preserveState: true,
                     preserveScroll: true
                 });
             } else if (this.isLinked && this.selectedSumDetail.sum_money_source) {
@@ -265,6 +265,7 @@ export default {
                     linked_type: this.linkedType.type,
                     money_source_id: this.selectedMoneySource.id
                 }, {
+                    preserveState: true,
                     preserveScroll: true
                 });
             }

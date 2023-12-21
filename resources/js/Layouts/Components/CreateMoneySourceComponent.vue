@@ -216,12 +216,16 @@
                                             Wenn eine Erinnerung erstellt werden soll, gib die Anzahl Tage ein oder entferne die Erinnerung.
                                         </span>
                                     </div>
-                                    <div class="flex flex-row items-center" @click="addExpirationReminder()">
+                                    <div class="flex flex-row items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"
-                                             class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer">
+                                             class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer"
+                                             @click="addExpirationReminder()"
+                                        >
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
-                                        <span class="text-xs underline text-buttonBlue cursor-pointer">
+                                        <span class="text-xs underline text-buttonBlue cursor-pointer"
+                                              @click="addExpirationReminder()"
+                                        >
                                             Weitere Erinnerung hinzufügen
                                         </span>
                                     </div>
@@ -270,12 +274,16 @@
                                             Wenn ein Countdown erstellt werden soll, gib den Prozentsatz ein oder entferne den Countdown.
                                         </span>
                                     </div>
-                                    <div class="flex flex-row items-center" @click="addThresholdReminder()">
+                                    <div class="flex flex-row items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"
-                                             class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer">
+                                             class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer"
+                                             @click="addThresholdReminder()"
+                                        >
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
-                                        <span class="text-xs underline text-buttonBlue cursor-pointer">
+                                        <span class="text-xs underline text-buttonBlue cursor-pointer"
+                                              @click="addThresholdReminder()"
+                                        >
                                             Weitere Erinnerung hinzufügen
                                         </span>
                                     </div>

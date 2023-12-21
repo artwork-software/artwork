@@ -17,6 +17,7 @@ use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderShiftResource;
 use App\Http\Resources\TaskDashboardResource;
 use App\Http\Resources\UserIndexResource;
+use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Filter;
@@ -215,6 +216,7 @@ class EventController extends Controller
 
         return inertia('Shifts/ShiftPlan', [
             'events' => $events,
+            'crafts' => Craft::all(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => Project::all(),
             'shiftPlan' => $showCalendar['roomsWithEvents'],

@@ -71,7 +71,7 @@
 
                         </div>
                     </div>
-                <div ref="userOverview" class="w-full bg-primary overflow-x-scroll fixed z-30" v-show="showUserOverview">
+                <div ref="userOverview" class="w-full bg-primary overflow-x-scroll fixed z-30 h-[29rem] overflow-y-scroll" v-show="showUserOverview">
                     <table class="w-full text-white overflow-y-scroll">
                         <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                         <div>
@@ -104,8 +104,15 @@
                                     </div>
                                 </th>
                             </tr>
-                            <tbody class="w-full pt-3">
-                            <tr v-for="(user,index) in dropUsers" class="w-full flex">
+                            <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
+                            <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility(craft.id)">
+                                {{craft.name}}
+                                <ChevronDownIcon
+                                    :class="closedCrafts.includes(craft.id) ? '' : 'rotate-180 transform'"
+                                    class="h-4 w-4 mt-0.5"
+                                />
+                            </tr>
+                            <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users" class="w-full flex">
                                 <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
                                     <DragElement v-if="!highlightMode && !multiEditMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
                                                  :planned-hours="user.plannedWorkingHours" :type="user.type"/>
@@ -128,6 +135,36 @@
 
                                     </div>
 
+                                </td>
+                            </tr>
+                            </tbody>
+                            <tbody>
+                            <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility('noCraft')">
+                                Ohne Gewerkszuordnung
+                                <ChevronDownIcon
+                                    :class="closedCrafts.includes('noCraft') ? '' : 'rotate-180 transform'"
+                                    class="h-4 w-4 mt-0.5"
+                                />
+                            </tr>
+                            <tr v-if="!closedCrafts.includes('noCraft')" v-for="(user,index) in usersWithNoCrafts" class="w-full flex">
+                                <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
+                                    <DragElement v-if="!highlightMode && !multiEditMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                                 :planned-hours="user.plannedWorkingHours" :type="user.type"/>
+                                    <MultiEditUserCell v-else-if="multiEditMode && !highlightMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                                       :planned-hours="user.plannedWorkingHours" :type="user.type" @addUserToMultiEdit="addUserToMultiEdit" :userForMultiEdit="userForMultiEdit" :multiEditMode="multiEditMode" />
+                                    <HighlightUserCell v-else :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false" :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                                       :planned-hours="user.plannedWorkingHours" :type="user.type"
+                                                       @highlightShiftsOfUser="highlightShiftsOfUser"/>
+                                </th>
+                                <td v-for="day in days">
+                                    <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer">
+                                        <span v-for="shift in user.element?.shifts[day.full_day]" v-if="!user.vacations?.includes(day.without_format)">
+                                            {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                        </span>
+                                        <span v-else class="h-full flex justify-center items-center">
+                                            nicht verfügbar
+                                        </span>
+                                    </div>
                                 </td>
                             </tr>
                             </tbody>
@@ -172,7 +209,7 @@
 
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Permissions from "@/mixins/Permissions.vue";
-import {LightBulbIcon} from "@heroicons/vue/outline";
+import {ChevronDownIcon, LightBulbIcon} from "@heroicons/vue/outline";
 import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
@@ -196,6 +233,7 @@ export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        ChevronDownIcon,
         SideNotification,
         MultiEditUserCell,
         Switch,
@@ -227,7 +265,8 @@ export default {
         'usersForShifts',
         'freelancersForShifts',
         'serviceProvidersForShifts',
-        'user_filters'
+        'user_filters',
+        'crafts'
     ],
     mounted() {
         // Listen for scroll events on both sections
@@ -244,8 +283,8 @@ export default {
                     plannedWorkingHours: user.plannedWorkingHours,
                     expectedWorkingHours: user.expectedWorkingHours,
                     vacations: user.vacations,
-                    assigned_craft_ids: user.assigned_craft_ids,
-                    shift_ids_array: user.shift_ids_array
+                    assigned_craft_ids: user.user.assigned_craft_ids,
+                    shift_ids_array: user.user.shift_ids_array
                 })
             })
             this.freelancersForShifts.forEach((freelancer) => {
@@ -254,8 +293,8 @@ export default {
                     type: 1,
                     plannedWorkingHours: freelancer.plannedWorkingHours,
                     vacations: freelancer.vacations,
-                    assigned_craft_ids: freelancer.assigned_craft_ids,
-                    shift_ids_array: freelancer.shift_ids_array
+                    assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
+                    shift_ids_array: freelancer.freelancer.shift_ids_array
                 })
             })
             this.serviceProvidersForShifts.forEach((service_provider) => {
@@ -263,11 +302,24 @@ export default {
                     element: service_provider.service_provider,
                     type: 2,
                     plannedWorkingHours: service_provider.plannedWorkingHours,
-                    assigned_craft_ids: service_provider.assigned_craft_ids,
-                    shift_ids_array: service_provider.shift_ids_array
+                    assigned_craft_ids: service_provider.service_provider.assigned_craft_ids,
+                    shift_ids_array: service_provider.service_provider.shift_ids_array
                 })
             })
             return users;
+        },
+        craftsToDisplay() {
+            const users = this.dropUsers;
+            return this.crafts.map(craft => ({
+                name: craft.name,
+                id: craft.id,
+                users: users.filter(user => user.assigned_craft_ids?.includes(craft.id))
+            }));
+        },
+        usersWithNoCrafts() {
+            return this.dropUsers.filter(user =>
+                !user.assigned_craft_ids || user.assigned_craft_ids?.length === 0
+            );
         },
         computedUserOverviewMaxHeight() {
             const minHeight = 33; // Minimum max height in rem
@@ -422,6 +474,13 @@ export default {
                     this.multiEditMode = false;
                 }
             })
+        },
+        changeCraftVisibility(id) {
+            if (this.closedCrafts.includes(id)) {
+                this.closedCrafts.splice(this.closedCrafts.indexOf(id), 1);
+            } else {
+                this.closedCrafts.push(id);
+            }
         }
     },
     data() {
@@ -439,7 +498,8 @@ export default {
             checkedShiftsForMultiEdit: [],
             userForMultiEdit: null,
             multiEditFeedback: null,
-            dropFeedback: null
+            dropFeedback: null,
+            closedCrafts:[],
         }
     },
     beforeDestroy() {

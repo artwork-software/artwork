@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('freelancer_assigned_crafts', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('freelancer_id')->constrained('users');
+            $table->foreignId('freelancer_id')->constrained('freelancers');
             $table->foreignId('craft_id')->constrained('crafts');
         });
     }

@@ -34,8 +34,6 @@ class MoneySourceController extends Controller
 {
     protected ?NotificationService $notificationService = null;
 
-    protected ?MoneySourceCalculationService $moneySourceCalculationService = null;
-
     protected ?stdClass $notificationData = null;
 
     protected ?NewHistoryService $history = null;
@@ -43,17 +41,16 @@ class MoneySourceController extends Controller
     public function __construct()
     {
         $this->notificationService = new NotificationService();
-        $this->moneySourceCalculationService = new MoneySourceCalculationService();
         $this->notificationData = new \stdClass();
         $this->history = new NewHistoryService('App\Models\MoneySource');
     }
 
-    public function index(): Response|ResponseFactory
+    public function index(MoneySourceCalculationService $moneySourceCalculationService): Response|ResponseFactory
     {
         $moneySources = MoneySource::with(['users', 'categories', 'moneySourceTasks'])->get();
 
         foreach ($moneySources as $moneySource) {
-            $moneySource->sumOfPositions = $this->moneySourceCalculationService->calculatePositionSumPerMoneySource($moneySource);
+            $moneySource->sumOfPositions = $moneySourceCalculationService->getPositionSumOfOneMoneySource($moneySource);
             $historyArray = [];
             $historyComplete = $moneySource->historyChanges()->all();
 

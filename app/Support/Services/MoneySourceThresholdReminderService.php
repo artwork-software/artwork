@@ -33,7 +33,7 @@ class MoneySourceThresholdReminderService
 
         $positionSumPerMoneySource = $this
             ->moneySourceCalculationService
-            ->calculatePositionSumPerMoneySource($moneySource);
+            ->getPositionSumOfOneMoneySource($moneySource);
 
         //early return if $positionSumPerMoneySource is positive, there is no need to check the threshold-reminders,
         //because the money source is growing

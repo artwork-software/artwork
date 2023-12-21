@@ -9,7 +9,7 @@
                         </div>
                         <div class="ml-3">
                             <h3 class="headline1">
-                                {{ freelancer.name }}
+                                {{ freelancer.first_name }} {{freelancer.last_name}}
                             </h3>
                         </div>
                     </div>

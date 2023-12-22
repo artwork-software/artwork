@@ -18,13 +18,13 @@
                     <div class="flex items-center gap-2 xxsLight" v-if="notification.data?.description[0]">
                         {{ notification.data?.description[0].text }}
                         von
-                        <NewUserToolTip :id="notification?.id" :user="notification.data?.description[0]?.created_by"
+                        <NewUserToolTip :id="notification.id" :user="notification.data?.description[0]?.created_by"
                                         height="5" width="5"/>
                     </div>
                     <div class="flex items-center gap-2 xxsLight" v-else-if="notification.data.created_by">
                         {{ notification.data.created_at }}
                         von
-                        <NewUserToolTip :id="notification?.id" :user="notification.data?.created_by" height="5"
+                        <NewUserToolTip :id="notification.id" :user="notification.data?.created_by" height="5"
                                         width="5"/>
                     </div>
                 </div>

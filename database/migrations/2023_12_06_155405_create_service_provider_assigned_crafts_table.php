@@ -15,7 +15,8 @@ return new class extends Migration
     {
         Schema::create('service_provider_assigned_crafts', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('service_provider_id')->constrained('service_providers');
+            //cascade on delete so the assigned crafts are deleted when corresponding service_provider is deleted
+            $table->foreignId('service_provider_id')->constrained('service_providers')->cascadeOnDelete();
             $table->foreignId('craft_id')->constrained('crafts');
         });
     }

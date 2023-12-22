@@ -20,11 +20,6 @@ use Inertia\Response;
 
 class FreelancerController extends Controller
 {
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @return \Symfony\Component\HttpFoundation\Response
-     */
     public function store(): \Symfony\Component\HttpFoundation\Response
     {
         $freelancer = Freelancer::create(
@@ -35,8 +30,6 @@ class FreelancerController extends Controller
     }
 
     /**
-     * @param Freelancer $freelancer
-     * @param $month
      * @return array<string, mixed>
      */
     private function getAvailabilityData(Freelancer $freelancer, $month = null): array
@@ -98,13 +91,6 @@ class FreelancerController extends Controller
         ];
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param Freelancer $freelancer
-     * @param CalendarController $shiftPlan
-     * @return Response
-     */
     public function show(Freelancer $freelancer, CalendarController $shiftPlan): Response
     {
         $showCalendar = $shiftPlan->createCalendarDataForFreelancerShiftPlan($freelancer);
@@ -131,12 +117,6 @@ class FreelancerController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param Freelancer $freelancer
-     */
     public function update(Request $request, Freelancer $freelancer): void
     {
         $freelancer->update($request->only([
@@ -155,11 +135,6 @@ class FreelancerController extends Controller
             ]));
     }
 
-    /**
-     * @param Freelancer $freelancer
-     * @param Request $request
-     * @return RedirectResponse
-     */
     public function updateWorkProfile(Freelancer $freelancer, Request $request): RedirectResponse
     {
         $freelancer->update([
@@ -170,11 +145,6 @@ class FreelancerController extends Controller
         return Redirect::back()->with('success', ['workProfile' => 'Arbeitsprofil erfolgreich aktualisiert']);
     }
 
-    /**
-     * @param Freelancer $freelancer
-     * @param Request $request
-     * @return RedirectResponse
-     */
     public function updateCraftSettings(Freelancer $freelancer, Request $request): RedirectResponse
     {
         $freelancer->update([
@@ -185,11 +155,6 @@ class FreelancerController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * @param Freelancer $freelancer
-     * @param Request $request
-     * @return RedirectResponse
-     */
     public function assignCraft(Freelancer $freelancer, Request $request): RedirectResponse
     {
         $craftToAssign = Craft::find($request->get('craftId'));
@@ -205,11 +170,6 @@ class FreelancerController extends Controller
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
     }
 
-    /**
-     * @param Freelancer $freelancer
-     * @param Craft $craft
-     * @return RedirectResponse
-     */
     public function removeCraft(Freelancer $freelancer, Craft $craft): RedirectResponse
     {
         $freelancer->assignedCrafts()->detach($craft);
@@ -217,11 +177,6 @@ class FreelancerController extends Controller
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
     }
 
-    /**
-     * @param Request $request
-     * @param Freelancer $freelancer
-     * @return void
-     */
     public function updateProfileImage(Request $request, Freelancer $freelancer): void
     {
         if (!Storage::exists("public/profile-photos")) {
@@ -235,5 +190,12 @@ class FreelancerController extends Controller
         Storage::putFileAs('public/profile-photos', $file, $basename);
 
         $freelancer->update(['profile_image' => Storage::url('public/profile-photos/' . $basename)]);
+    }
+
+    public function destroy(Freelancer $freelancer): RedirectResponse
+    {
+        $freelancer->delete();
+
+        return Redirect::back();
     }
 }

@@ -118,8 +118,11 @@ class ServiceProviderController extends Controller
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
     }
 
-    public function destroy(): void
+    public function destroy(ServiceProvider $serviceProvider): RedirectResponse
     {
+        $serviceProvider->delete();
+
+        return Redirect::back();
     }
 
     public function updateProfileImage(Request $request, ServiceProvider $serviceProvider): void

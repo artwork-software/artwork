@@ -153,7 +153,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/users/{user}/checklists', [UserController::class, 'updateChecklistStatus'])
         ->name('user.checklists.update');
     Route::patch('/users/{user}/areas', [UserController::class, 'updateAreaStatus'])->name('user.areas.update');
-    Route::delete('/users/{user}', [UserController::class, 'destroy']);
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('user.destroy');
     Route::patch('/users/{user}', [UserController::class, 'temporaryUserUpdate'])->name('update.user.temporary');
     Route::patch('/users/{user}/conditions', [UserController::class, 'updateUserTerms'])->name('user.update.terms');
     Route::post('/users/{user}/photo', [UserController::class, 'updateUserPhoto'])->name('user.update.photo');
@@ -778,6 +778,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/freelancer/profile-image/{freelancer}', [FreelancerController::class, 'updateProfileImage'])
         ->name('freelancer.change.profile-image');
     Route::post('freelancer/add', [FreelancerController::class, 'store'])->name('freelancer.add');
+    Route::delete('freelancer/{freelancer}', [FreelancerController::class, 'destroy'])->name('freelancer.destroy');
     Route::post('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])
         ->name('freelancer.update.workProfile');
     Route::post(
@@ -815,6 +816,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [ServiceProviderController::class, 'updateProfileImage']
     )->name('service_provider.change.profile-image');
     Route::post('service-provider/add', [ServiceProviderController::class, 'store'])->name('service_provider.add');
+    Route::delete('service-provider/{serviceProvider}', [ServiceProviderController::class, 'destroy'])
+        ->name('service_provider.destroy');
     Route::post(
         '/service-provider/{serviceProvider}/workProfile',
         [ServiceProviderController::class, 'updateWorkProfile']

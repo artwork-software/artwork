@@ -158,13 +158,21 @@
                                                         Profil bearbeiten
                                                     </a>
                                                 </MenuItem>
-                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole() && user.type === 'user'">
+                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a @click="openDeleteUserModal(user)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        Nutzer*in löschen
+                                                        <span v-if="user.type === 'user'">
+                                                            Nutzer*in löschen
+                                                        </span>
+                                                        <span v-else-if="user.type === 'freelancer'">
+                                                            Freelancer*in löschen
+                                                        </span>
+                                                        <span v-else-if="user.type === 'service_provider'">
+                                                            Dienstleister*in löschen
+                                                        </span>
                                                     </a>
                                                 </MenuItem>
                                             </div>
@@ -465,13 +473,24 @@ export default defineComponent({
             showSearchbar: false,
             user_query: "",
             user_search_results: [],
-            displayFilters: [{
-                'name': 'Alle Nutzer*innen',
-                'type': 'users'
-            }, {'name': 'Alle Freelancer*innen', 'type': 'freelancer'}, {
-                'name': 'Alle Dienstleister*innen',
-                'type': 'service_provider'
-            }, {'name': 'Alle verfügbaren Nutzer*innen', 'type': 'all'}],
+            displayFilters: [
+                {
+                    'name': 'Alle Nutzer*innen',
+                    'type': 'users'
+                },
+                {
+                    'name': 'Alle Freelancer*innen',
+                    'type': 'freelancer'
+                },
+                {
+                    'name': 'Alle Dienstleister*innen',
+                    'type': 'service_provider'
+                },
+                {
+                    'name': 'Alle verfügbaren Nutzer*innen',
+                    'type': 'all'
+                }
+            ],
             selectedFilter: {'name': 'Alle Nutzer*innen', 'type': 'users'},
             openSelectAddUsersModal: false
         }
@@ -503,7 +522,6 @@ export default defineComponent({
 
             return route('user.edit.shiftplan', {user: user.id});
         },
-
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;
             this.user_query = ''
@@ -524,11 +542,26 @@ export default defineComponent({
             this.deletingUser = false;
         },
         deleteUser() {
-            Inertia.delete(`/users/${this.userToDelete.id}`);
-            this.closeDeleteUserModal()
-        },
-        openAddUserModal() {
-            this.addingUser = true
+            let desiredRoute = null;
+
+            switch (this.userToDelete.type) {
+                case 'user':
+                    desiredRoute = route('user.destroy', {user: this.userToDelete.id});
+                    break;
+                case 'freelancer':
+                    desiredRoute = route('freelancer.destroy', {freelancer: this.userToDelete.id});
+                    break;
+                case 'service_provider':
+                    desiredRoute = route('service_provider.destroy', {serviceProvider: this.userToDelete.id});
+                    break;
+            }
+
+            Inertia.delete(
+                desiredRoute,
+                {
+                    onSuccess: () => this.closeDeleteUserModal()
+                }
+            );
         },
         closeAddUserModal(bool) {
             this.addingUser = false;

@@ -178,8 +178,8 @@ class MoneySourceController extends Controller
         return back()->with(['recentlyCreatedMoneySourceId' => $source->id]);
     }
 
-    //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function show(MoneySource $moneySource): Response|ResponseFactory
     {
         $moneySource->load([
@@ -250,7 +250,13 @@ class MoneySourceController extends Controller
             }
         } else {
             foreach ($budgetSumDetails as $detail) {
-                foreach ($detail->column->table->costSums as $costSum) {
+                foreach ($detail->column->table->costSums as $columnId => $costSum) {
+                    if (
+                        $columnId !== $detail->column_id ||
+                        $detail->type !== 'COST'
+                    ) {
+                        continue;
+                    }
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
                         'value' => $costSum,
@@ -262,12 +268,23 @@ class MoneySourceController extends Controller
                         ],
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
+                    if ($detail->sumMoneySource->linked_type === 'EARNING') {
+                        $amount = (int)$amount + (int)$costSum;
+                    } else {
+                        $amount = (int)$amount - (int)$costSum;
+                    }
                 }
 
-                foreach ($detail->column->table->earningSums as $costSum) {
+                foreach ($detail->column->table->earningSums as $columnId => $earningSum) {
+                    if (
+                        $columnId !== $detail->column_id ||
+                        $detail->type !== 'EARNING'
+                    ) {
+                        continue;
+                    }
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
-                        'value' => $costSum,
+                        'value' => $earningSum,
                         'subPositionName' => "",
                         'mainPositionName' => "",
                         'project' => [
@@ -276,11 +293,19 @@ class MoneySourceController extends Controller
                         ],
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
+                    if ($detail->sumMoneySource->linked_type === 'EARNING') {
+                        $amount = (int)$amount + (int)$earningSum;
+                    } else {
+                        $amount = (int)$amount - (int)$earningSum;
+                    }
                 }
             }
 
             foreach ($subPositionSumDetails as $detail) {
-                foreach ($detail->subPosition->columnSums as $columnSum) {
+                foreach ($detail->subPosition->columnSums as $columnId => $columnSum) {
+                    if ($columnId !== $detail->column_id) {
+                        continue;
+                    }
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
                         'value' => $columnSum['sum'],
@@ -293,11 +318,19 @@ class MoneySourceController extends Controller
                         'is_sum' => true,
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
+                    if ($detail->sumMoneySource->linked_type === 'EARNING') {
+                        $amount = (int)$amount + (int)$columnSum['sum'];
+                    } else {
+                        $amount = (int)$amount - (int)$columnSum['sum'];
+                    }
                 }
             }
 
             foreach ($mainPositionSumDetails as $detail) {
-                foreach ($detail->mainPosition->columnSums as $columnSum) {
+                foreach ($detail->mainPosition->columnSums as $columnId => $columnSum) {
+                    if ($columnId !== $detail->column_id) {
+                        continue;
+                    }
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
                         'value' => $columnSum['sum'],
@@ -310,6 +343,11 @@ class MoneySourceController extends Controller
                         'is_sum' => true,
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
+                    if ($detail->sumMoneySource->linked_type === 'EARNING') {
+                        $amount = (int)$amount + (int)$columnSum['sum'];
+                    } else {
+                        $amount = (int)$amount - (int)$columnSum['sum'];
+                    }
                 }
             }
 

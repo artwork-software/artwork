@@ -306,14 +306,27 @@
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="headline1 my-2">
-                        Nutzer*in löschen
+                        <span v-if="userToDelete.type === 'user'">
+                            Nutzer*in löschen
+                        </span>
+                        <span v-else-if="userToDelete.type === 'freelancer'">
+                            Freelancer*in löschen
+                        </span>
+                        <span v-else-if="userToDelete.type === 'service_provider'">
+                            Dienstleister*in löschen
+                        </span>
                     </div>
                     <XIcon @click="closeDeleteUserModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="errorText">
-                        Bist du sicher, dass du {{ userToDelete.last_name + "," }} {{ userToDelete.first_name }} aus dem
-                        System löschen möchtest?
+                        <span v-if="userToDelete.type === 'user' || userToDelete.type === 'freelancer'">
+                            Bist du sicher, dass du "{{ userToDelete.last_name }}, {{ userToDelete.first_name }}"
+                            aus dem System löschen möchtest?
+                        </span>
+                        <span v-else-if="userToDelete.type === 'service_provider'">
+                            Bist du sicher, dass du "{{ userToDelete.provider_name }}" aus dem System löschen möchtest?
+                        </span>
                     </div>
                     <div class="flex justify-between mt-6">
                         <AddButton text="Löschen" mode="modal" class="px-20 py-3"
@@ -469,7 +482,7 @@ export default defineComponent({
             addingUser: false,
             deletingUser: false,
             showSuccessModal: false,
-            userToDelete: {},
+            userToDelete: null,
             showSearchbar: false,
             user_query: "",
             user_search_results: [],
@@ -538,7 +551,7 @@ export default defineComponent({
             this.deletingUser = true;
         },
         closeDeleteUserModal() {
-            this.userToDelete = {};
+            this.userToDelete = null;
             this.deletingUser = false;
         },
         deleteUser() {

@@ -1944,7 +1944,7 @@ class ProjectController extends Controller
 
         $freelancersWithPlannedWorkingHours = [];
 
-        $freelancers = Freelancer::all();
+        $freelancers = Freelancer::where('can_work_shifts', true)->get();
 
         foreach ($freelancers as $freelancer) {
             $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
@@ -1955,7 +1955,7 @@ class ProjectController extends Controller
             ];
         }
 
-        $service_providers = ServiceProvider::without(['contacts'])->get();
+        $service_providers = ServiceProvider::where('can_work_shifts', true)->without(['contacts'])->get();
 
         $serviceProvidersWithPlannedWorkingHours = [];
 

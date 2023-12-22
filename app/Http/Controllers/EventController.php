@@ -180,7 +180,7 @@ class EventController extends Controller
 
         $freelancersWithPlannedWorkingHours = [];
 
-        $freelancers = Freelancer::all();
+        $freelancers = Freelancer::where('can_work_shifts', true)->get();
 
         foreach ($freelancers as $freelancer) {
             $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
@@ -201,9 +201,9 @@ class EventController extends Controller
             ];
         }
 
-        $service_providers = ServiceProvider::all();
-
         $serviceProvidersWithPlannedWorkingHours = [];
+
+        $service_providers = ServiceProvider::where('can_work_shifts', true)->get();
 
         foreach ($service_providers as $service_provider) {
             $plannedWorkingHours = $service_provider->plannedWorkingHours($startDate, $endDate);

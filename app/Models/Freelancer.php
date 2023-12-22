@@ -58,6 +58,11 @@ class Freelancer extends Model
         'name', 'display_name', 'type', 'profile_photo_url', 'assigned_craft_ids', 'shift_ids_array'
     ];
 
+    protected $casts = [
+        'can_work_shifts' => 'boolean',
+        'can_master' => 'boolean'
+    ];
+
     public function shifts(): BelongsToMany
     {
         return $this->belongsToMany(

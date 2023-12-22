@@ -12,6 +12,7 @@
         "ext-gd": "*",
         "ext-zip": "*",
         "ext-pdo": "*",
+        "ext-curl": "*",
         "antonrom00/laravel-model-changes-history": "dev-master",
         "barryvdh/laravel-dompdf": "^2.0",
         "beyondcode/laravel-websockets": "^1.13.1",

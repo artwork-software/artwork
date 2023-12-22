@@ -15,7 +15,8 @@ return new class extends Migration
     {
         Schema::create('freelancer_assigned_crafts', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('freelancer_id')->constrained('freelancers');
+            //cascade on delete so the assigned crafts are deleted when corresponding freelancer is deleted
+            $table->foreignId('freelancer_id')->constrained('freelancers')->cascadeOnDelete();
             $table->foreignId('craft_id')->constrained('crafts');
         });
     }

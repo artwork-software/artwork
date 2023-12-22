@@ -147,7 +147,7 @@
                                                 leave-active-class="transition ease-in duration-75"
                                                 leave-from-class="transform opacity-100 scale-100"
                                                 leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
+                                        <MenuItems class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none z-10">
                                             <div class="py-1">
                                                 <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a :href="checkLink(user)"
@@ -262,7 +262,7 @@
                                                 leave-from-class="transform opacity-100 scale-100"
                                                 leave-to-class="transform opacity-0 scale-95">
                                         <MenuItems
-                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
+                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none z-10">
                                             <div class="py-1">
                                                 <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a :href="getEditHref(user)"

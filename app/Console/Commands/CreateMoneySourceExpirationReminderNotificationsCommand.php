@@ -33,10 +33,17 @@ class CreateMoneySourceExpirationReminderNotificationsCommand extends Command
             /** @var MoneySource $moneySource */
             $moneySource = $moneySourceExpirationReminder->moneySource;
 
-            if (
-                Carbon::parse($moneySource->funding_end_date)->subDays($moneySourceExpirationReminder->value) >
-                Carbon::today()
-            ) {
+            //continue if funding_end_date does not exist, reminder is handled when its properly set
+            if ($moneySource->funding_end_date === null) {
+                continue;
+            }
+
+            //determine the date on which the notification should be created
+            $reminderDeadline = Carbon::parse($moneySource->funding_end_date)
+                ->subDays($moneySourceExpirationReminder->value);
+
+            //continue if deadline is greater than today's date
+            if ($reminderDeadline > Carbon::today()) {
                 continue;
             }
 

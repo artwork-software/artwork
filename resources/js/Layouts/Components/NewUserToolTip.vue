@@ -71,11 +71,11 @@ export default {
     name: "NewUserToolTip",
     props: ['user', 'id', 'height', 'width','type'],
     methods: {
-        showTooltip(flag) {
-            document.getElementById("tooltip" + flag).classList.remove("hidden");
+        showTooltip(id) {
+            document.getElementById("tooltip" + id).classList.remove("hidden");
         },
-        hideTooltip(flag) {
-            document.getElementById("tooltip" + flag).classList.add("hidden");
+        hideTooltip(id) {
+            document.getElementById("tooltip" + id).classList.add("hidden");
         },
     },
 }

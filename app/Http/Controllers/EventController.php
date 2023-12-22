@@ -281,7 +281,7 @@ class EventController extends Controller
 
         $notification = $user
             ->notifications()
-            ->select(['data->priority as priority', 'data'])
+            ->select(['id', 'data->priority as priority', 'data'])
             ->whereDate('created_at', Carbon::now()->format('Y-m-d'))
             ->withCasts(['created_at' => TimeAgoCast::class]);
 

@@ -569,12 +569,14 @@ export default defineComponent({
                     break;
             }
 
-            Inertia.delete(
-                desiredRoute,
-                {
-                    onSuccess: () => this.closeDeleteUserModal()
-                }
-            );
+            if (desiredRoute) {
+                Inertia.delete(
+                    desiredRoute,
+                    {
+                        onSuccess: () => this.closeDeleteUserModal()
+                    }
+                );
+            }
         },
         closeAddUserModal(bool) {
             this.addingUser = false;

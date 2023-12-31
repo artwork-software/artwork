@@ -63,6 +63,7 @@ use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\UserVacationsController;
+use App\Http\Middleware\CanEditProject;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -100,9 +101,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::group(['middleware' => ['can:can edit and delete money sources']], function (): void {
-        Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
         Route::get('/projects/{project}/budget', [ProjectController::class, 'projectBudgetTab'])
             ->name('projects.show.budget');
+
+        Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
     });
 
     Route::group(['middleware' => ['can:view edit add money_sources']], function (): void {
@@ -209,7 +211,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/projects/{project}/updateKeyVisual', [ProjectController::class, 'updateKeyVisual'])
         ->name('projects_key_visual.update');
     Route::post('/projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
-    Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
+    Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])
+        ->middleware(['can:edit projects', CanEditProject::class]);
+
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::patch('/projects/{project}/shiftDescription', [ProjectController::class, 'updateShiftDescription'])
         ->name('projects.update.shift_description');
@@ -221,12 +225,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     )->name('projects.update.shift_event_types');
     Route::patch('/projects/{project}/attributes', [ProjectController::class, 'updateAttributes'])
         ->name('projects.update_attributes');
-    Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])->name('projects.update_team');
     Route::patch('/projects/{project}/updateDescription', [ProjectController::class, 'updateDescription'])
         ->name('projects.update_description');
-    Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
+
+    Route::middleware([CanEditProject::class])->group(function (): void {
+        Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])
+            ->name('projects.update_team');
+    });
 
     //ProjectTabs
     Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])->name('projects.show.info');

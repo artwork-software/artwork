@@ -173,10 +173,129 @@
                                               rows="4"
                                               class="border-2 placeholder-xsLight focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
+                            <div class="flex flex-col mt-2">
+                                <div class="flex flex-row items-center">
+                                    <input id="remindOnExpiration"
+                                           type="checkbox"
+                                           v-model="remindOnExpiration"
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"
+                                    />
+                                    <label for="remindOnExpiration"
+                                           :class="[
+                                               this.remindOnExpiration ?
+                                                    'xsDark' :
+                                                    'xsLight',
+                                               'ml-2 subpixel-antialiased'
+                                           ]">
+                                        Erinnere mich, wenn diese Quelle ausläuft
+                                    </label>
+                                </div>
+                                <div v-if="remindOnExpiration" class="flex flex-col columns-1 mt-2">
+                                    <div v-for="(expirationReminder, index) in expirationReminders"
+                                         class="flex flex-col mb-2">
+                                        <div class="flex flex-row items-center">
+                                            <input type="number"
+                                                   :class="[
+                                                       !this.isValidNumber(expirationReminder.days) ?
+                                                            'border-error' :
+                                                            '',
+                                                       'w-24 inputMain mr-2'
+                                                   ]"
+                                                   min="1"
+                                                   v-model="expirationReminder.days"
+                                            />
+                                            <span class="xsLight">
+                                                Tag/e vorher erinnern
+                                            </span>
+                                            <TrashIcon class="w-5 h-5 cursor-pointer xsLight ml-2 hover:text-error"
+                                                       @click="removeExpirationReminder(index)"
+                                            />
+                                        </div>
+                                        <span v-if="!this.isValidNumber(expirationReminder.days)"
+                                           class="text-error text-xs subpixel-antialiased mt-2">
+                                            Wenn eine Erinnerung erstellt werden soll, gib die Anzahl Tage ein oder entferne die Erinnerung.
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-row items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"
+                                             class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer"
+                                             @click="addExpirationReminder()"
+                                        >
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <span class="text-xs underline text-buttonBlue cursor-pointer"
+                                              @click="addExpirationReminder()"
+                                        >
+                                            Weitere Erinnerung hinzufügen
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col mt-2">
+                                <div class="flex flex-row items-center">
+                                    <input id="remindOnThreshold"
+                                           type="checkbox"
+                                           v-model="remindOnThreshold"
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"
+                                    />
+                                    <label for="remindOnThreshold"
+                                           :class="[
+                                               this.remindOnThreshold ?
+                                                    'xsDark' :
+                                                    'xsLight',
+                                               'ml-2 subpixel-antialiased'
+                                           ]">
+                                        Erinnere mich, wenn nur noch ein bestimmter Prozentsatz der Quelle besteht
+                                    </label>
+                                </div>
+                                <div v-if="remindOnThreshold" class="flex flex-col columns-1 mt-2">
+                                    <div v-for="(thresholdReminder, index) in thresholdReminders"
+                                         class="flex flex-col mb-2">
+                                        <div class="flex flex-row items-center">
+                                            <input type="number"
+                                                   :class="[
+                                                       !this.isValidNumber(thresholdReminder.threshold) ?
+                                                            'border-error' :
+                                                            '',
+                                                       'w-24 inputMain mr-2'
+                                                   ]"
+                                                   min="1"
+                                                   v-model="thresholdReminder.threshold"
+                                            />
+                                            <span class="xsLight">
+                                                Prozent löst eine Countdown-Benachrichtigung aus
+                                            </span>
+                                            <TrashIcon class="w-5 h-5 cursor-pointer xsLight ml-2 hover:text-error"
+                                                       @click="removeThresholdReminder(index)"
+                                            />
+                                        </div>
+                                        <span v-if="!this.isValidNumber(thresholdReminder.threshold)"
+                                              class="text-error text-xs subpixel-antialiased mt-2">
+                                            Wenn ein Countdown erstellt werden soll, gib den Prozentsatz ein oder entferne den Countdown.
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-row items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"
+                                             class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer"
+                                             @click="addThresholdReminder()"
+                                        >
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <span class="text-xs underline text-buttonBlue cursor-pointer"
+                                              @click="addThresholdReminder()"
+                                        >
+                                            Weitere Erinnerung hinzufügen
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="flex justify-center mt-2">
-                                <AddButton :disabled="!isFormComplete()" mode="modal"
+                                <AddButton :disabled="!isFormComplete()"
+                                           mode="modal"
                                            class="text-white resize-none"
-                                           @click="createSingleSource()" text="Finanzierungsquelle anlegen"/>
+                                           @click="createSingleSource()"
+                                           text="Finanzierungsquelle anlegen"
+                                />
                             </div>
                         </div>
                     </div>
@@ -325,6 +444,7 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton";
 import Permissions from "@/mixins/Permissions.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     name: 'EventComponent',
@@ -361,8 +481,7 @@ export default {
                 {name: 'Einzelquelle', href: '#', current: this.isSingleSourceTab},
                 {name: 'Gruppe', href: '#', current: this.isGroupTab},
             ]
-        },
-
+        }
     },
     data() {
         return {
@@ -401,6 +520,18 @@ export default {
                 users: [],
                 sub_money_source_ids: []
             }),
+            remindOnExpiration: false,
+            expirationReminders: [
+                {
+                    days: 1
+                }
+            ],
+            remindOnThreshold: false,
+            thresholdReminders: [
+                {
+                    threshold: 1
+                }
+            ],
         }
     },
 
@@ -465,8 +596,32 @@ export default {
                 this.createSingleSourceForm.group_id = this.selectedMoneySourceGroup.id
             }
 
-            this.createSingleSourceForm.post(route('money_sources.store'));
-            this.closeModal(true);
+            this.createSingleSourceForm.post(
+                route('money_sources.store'),
+                {
+                    onSuccess: (response) => {
+                        if (
+                            (this.remindOnExpiration && this.expirationReminders.length > 0) ||
+                            (this.remindOnThreshold && this.thresholdReminders.length > 0)
+                        ) {
+                            Inertia.post(
+                                route(
+                                    'money_source.reminder.store',
+                                    {
+                                        money_source: response.props.recentlyCreatedMoneySourceId
+                                    }
+                                ),
+                                {
+                                    expirationReminders: this.remindOnExpiration ? this.expirationReminders : [],
+                                    thresholdReminders: this.remindOnThreshold ? this.thresholdReminders : []
+                                }
+                            );
+                        }
+
+                        this.closeModal(true);
+                    }
+                }
+            );
         },
         createMoneySourceGroup() {
             this.createSourceGroupForm.users = {}
@@ -493,19 +648,46 @@ export default {
                 this.isGroupTab = true;
             }
         },
-        openModal() {
-
-        },
         closeModal(bool) {
             this.$emit('closed', bool);
         },
         isFormComplete() {
             const form = this.createSingleSourceForm;
-            return form.name && form.amount;
+            let hasInvalidExpirationReminders = false;
+            let hasInvalidThresholdReminders = false;
+
+            if (this.remindOnExpiration) {
+                hasInvalidExpirationReminders = this.expirationReminders.some(
+                    (expirationReminder) => !this.isValidNumber(expirationReminder.days)
+                )
+            }
+
+            if (this.remindOnThreshold) {
+                hasInvalidThresholdReminders = this.thresholdReminders.some(
+                    (thresholdReminder) => !this.isValidNumber(thresholdReminder.threshold)
+                )
+            }
+
+            return form.name && form.amount && !hasInvalidExpirationReminders && !hasInvalidThresholdReminders;
         },
         isGroupFormComplete() {
             const form = this.createSourceGroupForm;
             return form.name;
+        },
+        addExpirationReminder() {
+            this.expirationReminders.push({days: 1});
+        },
+        removeExpirationReminder(index) {
+            this.expirationReminders.splice(index, 1);
+        },
+        addThresholdReminder() {
+            this.thresholdReminders.push({threshold: 1});
+        },
+        removeThresholdReminder(index) {
+            this.thresholdReminders.splice(index, 1);
+        },
+        isValidNumber(number) {
+            return number >= 1 && Number.isInteger(number);
         }
     },
 }

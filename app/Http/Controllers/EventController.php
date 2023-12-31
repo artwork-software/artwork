@@ -17,6 +17,7 @@ use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderShiftResource;
 use App\Http\Resources\TaskDashboardResource;
 use App\Http\Resources\UserIndexResource;
+use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Filter;
@@ -179,7 +180,7 @@ class EventController extends Controller
 
         $freelancersWithPlannedWorkingHours = [];
 
-        $freelancers = Freelancer::all();
+        $freelancers = Freelancer::where('can_work_shifts', true)->get();
 
         foreach ($freelancers as $freelancer) {
             $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
@@ -200,9 +201,9 @@ class EventController extends Controller
             ];
         }
 
-        $service_providers = ServiceProvider::all();
-
         $serviceProvidersWithPlannedWorkingHours = [];
+
+        $service_providers = ServiceProvider::where('can_work_shifts', true)->get();
 
         foreach ($service_providers as $service_provider) {
             $plannedWorkingHours = $service_provider->plannedWorkingHours($startDate, $endDate);
@@ -215,6 +216,7 @@ class EventController extends Controller
 
         return inertia('Shifts/ShiftPlan', [
             'events' => $events,
+            'crafts' => Craft::all(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => Project::all(),
             'shiftPlan' => $showCalendar['roomsWithEvents'],
@@ -279,7 +281,7 @@ class EventController extends Controller
 
         $notification = $user
             ->notifications()
-            ->select(['data->priority as priority', 'data'])
+            ->select(['id', 'data->priority as priority', 'data'])
             ->whereDate('created_at', Carbon::now()->format('Y-m-d'))
             ->withCasts(['created_at' => TimeAgoCast::class]);
 

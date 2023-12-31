@@ -13,11 +13,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users_assigned_crafts', function (Blueprint $table): void {
+        Schema::create('money_source_category_mappings', function (Blueprint $table): void {
             $table->id();
-            //cascade on delete so the assigned crafts are deleted when corresponding user is deleted
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('craft_id')->constrained('crafts');
+            $table->foreignId('money_source_id')->constrained('money_sources');
+            $table->foreignId('money_source_category_id')->constrained('money_source_categories');
         });
     }
 
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users_assigned_crafts');
+        Schema::dropIfExists('money_source_category_mappings');
     }
 };

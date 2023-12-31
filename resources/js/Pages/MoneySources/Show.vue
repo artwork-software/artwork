@@ -96,7 +96,12 @@
                 <div class="mt-3 xsDark" v-if="moneySource.start_date && moneySource.end_date">
                     Laufzeit: {{ formatDate(moneySource.start_date) }} - {{ formatDate(moneySource.end_date) }}
                 </div>
-                <div class="mt-3 xsDark" v-if="moneySource.funding_start_date && moneySource.funding_end_date">
+                <div :class="[
+                        moneySource.hasSentExpirationReminderNotification ?
+                            'text-error' :
+                            '',
+                        'mt-3 xsDark'
+                     ]" v-if="moneySource.funding_start_date && moneySource.funding_end_date">
                     Förderzeitraum: {{ formatDate(moneySource.funding_start_date) }} - {{ formatDate(moneySource.funding_end_date) }}
                 </div>
                 <div class="mt-2 xsDark" v-if="moneySource.source_name">
@@ -114,15 +119,22 @@
                     </div>
                     <div class="w-1/2 xsLight uppercase ml-6">
                         Noch Verfügbar
-                        <div class="bigNumber my-4" :class="moneySource.amount_available < 0 ? 'text-red-500' : ''">
+                        <div :class="[
+                                 moneySource.amount_available <= 0 || moneySource.hasSentThresholdReminderNotification ?
+                                    'text-red-500' :
+                                    '',
+                                    'bigNumber my-4'
+                             ]">
                             {{ currencyFormat(moneySource.amount_available) }}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
         <!-- Positions Div with Bg-Color -->
         <div class="w-full h-full mb-48">
+
             <div class="max-w-screen-2xl bg-lightBackgroundGray">
                 <div class="flex pt-12 justify-between items-center">
                     <div class="headline4  ml-14">
@@ -234,6 +246,8 @@
                 :linked-projects="linkedProjects"
                 :competent="competent_member"
                 :write-access="access_member"
+                :money-source-categories="moneySourceCategories"
+                :positionSumsPerProject="positionSumsPerProject"
             ></MoneySourceSidenav>
         </BaseSidenav>
     </app-layout>
@@ -285,7 +299,7 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 export default {
     mixins: [Permissions],
     name: "MoneySourceShow",
-    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects', 'linkedProjects'],
+    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'moneySourceCategories', 'projects', 'linkedProjects'],
     components: {
         UserPopoverTooltip,
         ConfirmDeleteModal,
@@ -333,6 +347,22 @@ export default {
                 }
             }
 
+        },
+        positionSumsPerProject() {
+            const sumsByProject = {};
+
+            this.filteredPositions.forEach(position => {
+                const projectId = position.project?.id;
+                const value = parseFloat(position.value) || 0;
+
+                if (!sumsByProject[projectId]) {
+                    sumsByProject[projectId] = 0;
+                }
+
+                sumsByProject[projectId] += value;
+            });
+
+            return sumsByProject;
         },
         access_member(){
             const accessUserIds = [];

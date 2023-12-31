@@ -53,6 +53,11 @@ class ServiceProvider extends Model
 
     protected $appends = ['name', 'type', 'profile_photo_url', 'assigned_craft_ids', 'shift_ids_array'];
 
+    protected $casts = [
+        'can_work_shifts' => 'boolean',
+        'can_master' => 'boolean'
+    ];
+
     public function contacts(): HasMany
     {
         return $this->hasMany(ServiceProviderContacts::class);

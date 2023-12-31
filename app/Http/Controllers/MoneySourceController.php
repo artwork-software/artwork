@@ -11,6 +11,7 @@ use App\Models\MainPosition;
 use App\Models\MainPositionDetails;
 use App\Models\MoneySource;
 use App\Models\MoneySourceCategory;
+use App\Models\MoneySourceReminder;
 use App\Models\MoneySourceTask;
 use App\Models\Project;
 use App\Models\SubPosition;
@@ -18,6 +19,7 @@ use App\Models\SubPositionRow;
 use App\Models\SubpositionSumDetail;
 use App\Models\Table;
 use App\Models\User;
+use App\Support\Services\MoneySourceCalculationService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -44,11 +46,32 @@ class MoneySourceController extends Controller
         $this->history = new NewHistoryService('App\Models\MoneySource');
     }
 
-    public function index(): Response|ResponseFactory
+    public function index(MoneySourceCalculationService $moneySourceCalculationService): Response|ResponseFactory
     {
+        $moneySources = MoneySource::with(['users', 'categories', 'moneySourceTasks'])->get();
+
+        foreach ($moneySources as $moneySource) {
+            $moneySource->sumOfPositions = $moneySourceCalculationService->getPositionSumOfOneMoneySource($moneySource);
+            $historyArray = [];
+            $historyComplete = $moneySource->historyChanges()->all();
+
+            foreach ($historyComplete as $history) {
+                $historyArray[] = [
+                    'changes' => json_decode($history->changes),
+                    'created_at' => $history->created_at->diffInHours() < 24
+                        ? $history->created_at->diffForHumans()
+                        : $history->created_at->format('d.m.Y, H:i'),
+                ];
+            }
+            $moneySource->history = $historyArray;
+        }
+
         return inertia('MoneySources/MoneySourceManagement', [
-            'moneySources' => MoneySource::with(['users'])->get(),
+            'moneySourceCategories' => MoneySourceCategory::all(),
+            'moneySources' => $moneySources,
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
+            //is set if index is called due to redirect response of store method
+            'recentlyCreatedMoneySourceId' => session('recentlyCreatedMoneySourceId')
         ]);
     }
 
@@ -152,11 +175,11 @@ class MoneySourceController extends Controller
 
         $this->history->createHistory($source->id, 'Finanzierungsquelle erstellt');
 
-        return back();
+        return back()->with(['recentlyCreatedMoneySourceId' => $source->id]);
     }
 
-    //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function show(MoneySource $moneySource): Response|ResponseFactory
     {
         $moneySource->load([
@@ -227,7 +250,13 @@ class MoneySourceController extends Controller
             }
         } else {
             foreach ($budgetSumDetails as $detail) {
-                foreach ($detail->column->table->costSums as $costSum) {
+                foreach ($detail->column->table->costSums as $columnId => $costSum) {
+                    if (
+                        $columnId !== $detail->column_id ||
+                        $detail->type !== 'COST'
+                    ) {
+                        continue;
+                    }
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
                         'value' => $costSum,
@@ -239,12 +268,23 @@ class MoneySourceController extends Controller
                         ],
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
+                    if ($detail->sumMoneySource->linked_type === 'EARNING') {
+                        $amount = (int)$amount + (int)$costSum;
+                    } else {
+                        $amount = (int)$amount - (int)$costSum;
+                    }
                 }
 
-                foreach ($detail->column->table->earningSums as $costSum) {
+                foreach ($detail->column->table->earningSums as $columnId => $earningSum) {
+                    if (
+                        $columnId !== $detail->column_id ||
+                        $detail->type !== 'EARNING'
+                    ) {
+                        continue;
+                    }
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
-                        'value' => $costSum,
+                        'value' => $earningSum,
                         'subPositionName' => "",
                         'mainPositionName' => "",
                         'project' => [
@@ -253,11 +293,19 @@ class MoneySourceController extends Controller
                         ],
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
+                    if ($detail->sumMoneySource->linked_type === 'EARNING') {
+                        $amount = (int)$amount + (int)$earningSum;
+                    } else {
+                        $amount = (int)$amount - (int)$earningSum;
+                    }
                 }
             }
 
             foreach ($subPositionSumDetails as $detail) {
-                foreach ($detail->subPosition->columnSums as $columnSum) {
+                foreach ($detail->subPosition->columnSums as $columnId => $columnSum) {
+                    if ($columnId !== $detail->column_id) {
+                        continue;
+                    }
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
                         'value' => $columnSum['sum'],
@@ -270,11 +318,19 @@ class MoneySourceController extends Controller
                         'is_sum' => true,
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
+                    if ($detail->sumMoneySource->linked_type === 'EARNING') {
+                        $amount = (int)$amount + (int)$columnSum['sum'];
+                    } else {
+                        $amount = (int)$amount - (int)$columnSum['sum'];
+                    }
                 }
             }
 
             foreach ($mainPositionSumDetails as $detail) {
-                foreach ($detail->mainPosition->columnSums as $columnSum) {
+                foreach ($detail->mainPosition->columnSums as $columnId => $columnSum) {
+                    if ($columnId !== $detail->column_id) {
+                        continue;
+                    }
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
                         'value' => $columnSum['sum'],
@@ -287,6 +343,11 @@ class MoneySourceController extends Controller
                         'is_sum' => true,
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
+                    if ($detail->sumMoneySource->linked_type === 'EARNING') {
+                        $amount = (int)$amount + (int)$columnSum['sum'];
+                    } else {
+                        $amount = (int)$amount - (int)$columnSum['sum'];
+                    }
                 }
             }
 
@@ -383,9 +444,19 @@ class MoneySourceController extends Controller
                 'subMoneySourcePositions' => $subMoneySourcePositions,
                 'linked_projects' => array_unique($linked_projects, SORT_REGULAR),
                 'usersWithAccess' => array_unique($usersWithAccess, SORT_NUMERIC),
-                'history' => $historyArray
+                'history' => $historyArray,
+                'categories' => $moneySource->categories,
+                'hasSentExpirationReminderNotification' => $moneySource->reminder()
+                    ->where('type', '=', MoneySourceReminder::MONEY_SOURCE_REMINDER_TYPE_EXPIRATION)
+                    ->where('notification_created', '=', true)
+                    ->count() > 0,
+                'hasSentThresholdReminderNotification' => $moneySource->reminder()
+                    ->where('type', '=', MoneySourceReminder::MONEY_SOURCE_REMINDER_TYPE_THRESHOLD)
+                    ->where('notification_created', '=', true)
+                    ->count() > 0
             ],
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
+            'moneySourceCategories' => MoneySourceCategory::all(),
             'moneySources' => MoneySource::where('is_group', false)->get(),
             'projects' => Project::all()->map(fn($project) => [
                 'id' => $project->id,
@@ -429,6 +500,8 @@ class MoneySourceController extends Controller
             'description' => $request->description,
             'is_group' => $request->is_group,
             'group_id' => $request->group_id,
+            'funding_start_date' => $request->funding_start_date,
+            'funding_end_date' => $request->funding_end_date,
         ]);
 
         $newName = $moneySource->name;
@@ -604,5 +677,10 @@ class MoneySourceController extends Controller
     public function updateProjects(MoneySource $moneySource, Request $request): void
     {
         $moneySource->projects()->sync($request->linkedProjectIds);
+    }
+
+    public function syncCategories(MoneySource $moneySource, Request $request): void
+    {
+        $moneySource->categories()->sync($request->categoryIds);
     }
 }

@@ -135,9 +135,8 @@ class EventController extends Controller
     public function viewShiftPlan(CalendarController $shiftPlan): Response
     {
         $this->user = Auth::user();
-        $this->userCalendarFilter = $this->user->calendar_filter()->first();
         $this->userShiftCalendarFilter = $this->user->shift_calendar_filter()->first();
-        $showCalendar = $shiftPlan->createCalendarDataForShiftPlan();
+        $showCalendar = $shiftPlan->createCalendarDataForShiftPlan($this->userShiftCalendarFilter);
         $shiftFilterController = new ShiftFilterController();
         $shiftFilters = $shiftFilterController->index();
 
@@ -162,8 +161,8 @@ class EventController extends Controller
 
         $usersWithPlannedWorkingHours = [];
 
-        //get the diff of startDate and endDate in days
-        $diffInDays = $startDate->diffInDays($endDate);
+        //get the diff of startDate and endDate in days, +1 to include the current date
+        $diffInDays = $startDate->diffInDays($endDate) + 1;
 
         foreach ($users as $user) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);

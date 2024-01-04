@@ -1926,8 +1926,8 @@ class ProjectController extends Controller
 
         $usersWithPlannedWorkingHours = [];
 
-        //get the diff of startDate and endDate in days
-        $diffInDays = $startDate->diffInDays($endDate);
+        //get the diff of startDate and endDate in days, +1 to include the current date
+        $diffInDays = $startDate->diffInDays($endDate) + 1;
 
         foreach ($users as $user) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);

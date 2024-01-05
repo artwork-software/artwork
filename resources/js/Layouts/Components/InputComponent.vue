@@ -3,14 +3,12 @@
         <input type="text"
                :placeholder="placeholder"
                @input="updateContent"
-               v-model="modelValue"
+               v-model="model"
                class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
     </div>
 </template>
 
 <script>
-import {InformationCircleIcon} from "@heroicons/vue/outline";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Permissions from "@/mixins/Permissions.vue";
 
 export default {
@@ -18,15 +16,15 @@ export default {
     mixins: [Permissions],
     components: {},
     props: ['modelValue', 'placeholder'],
-    emits:['update:modelValue'],
+    emits: ['update:modelValue'],
     data (){
-        return{
-           modelValue: this.modelValue
+        return {
+           model: this.modelValue
         }
     },
     methods: {
         updateContent(){
-            this.$emit('update:modelValue', this.modelValue)
+            this.$emit('update:modelValue', this.model)
         }
     },
 }

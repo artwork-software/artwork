@@ -28,8 +28,6 @@ test('users with the permission can view all areas', function () {
 });
 
 test('users with the permission can create areas', function () {
-
-
     $this->post('/areas', [
         'name' => 'TestArea'
     ]);
@@ -41,7 +39,7 @@ test('users with the permission can create areas', function () {
 
 test('users with the permission can update areas', function () {
 
-    $this->patch("/areas/{$this->area->id}", [
+    $response = $this->patch("/areas/{$this->area->id}", [
         'name' => 'TestArea'
     ]);
 

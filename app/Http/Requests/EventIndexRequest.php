@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class EventIndexRequest extends FormRequest
 {
-    public function rules()
+    public function rules(): array
     {
         return [
             'projectId' => ['nullable', 'exists:projects,id'],
@@ -15,19 +15,19 @@ class EventIndexRequest extends FormRequest
             'start' => ['required', 'date'],
             'end' => ['required', 'date', 'after:start'],
 
-            'filters' => ['sometimes', 'json'],
-            'filters.roomIds' => ['sometimes', 'array'],
-            'filters.roomIds.?' => ['sometimes', 'exists:rooms,id'],
-            'filters.areaIds' => ['sometimes', 'array'],
-            'filters.areaIds.?' => ['exists:areas,id'],
-            'filters.eventTypeIds' => ['sometimes', 'array'],
-            'filters.eventTypeIds.?' => ['exists:event_types,id'],
-            'filters.roomAttributeIds' => ['sometimes', 'array'],
-            'filters.roomAttributeIds.?' => ['exists:room_attributes,id'],
-            'filters.isLoud' => ['sometimes', 'boolean'],
-            'filters.hasAudience' => ['sometimes', 'boolean'],
-            'filters.adjoiningHasAudience' => ['sometimes', 'boolean'],
-            'filters.adjoiningIsLoud' => ['sometimes', 'boolean'],
+            'calendarFilters' => ['sometimes', 'json'],
+            'calendarFilters.roomIds' => ['sometimes', 'array'],
+            'calendarFilters.roomIds.?' => ['sometimes', 'exists:rooms,id'],
+            'calendarFilters.areaIds' => ['sometimes', 'array'],
+            'calendarFilters.areaIds.?' => ['exists:areas,id'],
+            'calendarFilters.eventTypeIds' => ['sometimes', 'array'],
+            'calendarFilters.eventTypeIds.?' => ['exists:event_types,id'],
+            'calendarFilters.roomAttributeIds' => ['sometimes', 'array'],
+            'calendarFilters.roomAttributeIds.?' => ['exists:room_attributes,id'],
+            'calendarFilters.isLoud' => ['sometimes', 'boolean'],
+            'calendarFilters.hasAudience' => ['sometimes', 'boolean'],
+            'calendarFilters.adjoiningHasAudience' => ['sometimes', 'boolean'],
+            'calendarFilters.adjoiningIsLoud' => ['sometimes', 'boolean'],
         ];
     }
 

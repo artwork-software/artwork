@@ -27,6 +27,10 @@ class TaskTemplate extends Model
         'checklist_template_id'
     ];
 
+    protected $casts = [
+        'done' => 'boolean'
+    ];
+
     //@todo: fix phpcs error - refactor function name to checklistTemplate
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function checklist_template(): BelongsTo

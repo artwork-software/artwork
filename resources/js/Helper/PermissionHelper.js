@@ -9,7 +9,7 @@ const PROJECT_DELETE = 'delete projects';
 const PROJECT_VIEW = 'view projects';
 const ADD_EDIT_OWN_PROJECT = 'create and edit own project';
 const WRITE_PROJECTS = 'write projects';
-const PROJECT_BUDGET_ADMIN = 'access project budgets';
+const GLOBAL_PROJECT_BUDGET_ADMIN = 'can manage global project budgets';
 
 const PROJECT_BUDGET_VERIFIED_ADD_REMOVE = 'can add and remove verified states';
 const PROJECT_BUDGET_SEE_DOCS_CONTRACTS = 'can see, edit and delete project contracts and docs';
@@ -98,7 +98,7 @@ export function writeAccessOnAllProjects(){
  * @returns {*}
  */
 export function canSeeEditAllBudgets(){
-    return can(PROJECT_BUDGET_ADMIN)
+    return can(GLOBAL_PROJECT_BUDGET_ADMIN)
 }
 
 

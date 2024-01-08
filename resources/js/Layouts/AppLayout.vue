@@ -316,7 +316,7 @@ export default {
                     route: ['/money_sources/settings']
                 },
                 {
-                    name: 'Budget Vorlagen',
+                    name: 'Budgetvorlagen',
                     has_permission: this.hasAdminRole() || this.$can('view budget templates'),
                     href: route('templates.view.index'),
                     route: ['/templates/index']

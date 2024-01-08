@@ -134,8 +134,6 @@ class DepartmentController extends Controller
         $department->users()->sync(
             collect($request->users)
                 ->map(function ($user) {
-                    $this->authorize('update', User::find($user['id']));
-
                     return $user['id'];
                 })
         );

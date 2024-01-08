@@ -108,13 +108,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
         Permission::create([
-            'name' => PermissionNameEnum::PROJECT_BUDGET_ADMIN->value,
-            'name_de' => "Hat auf alle Projekte Budget-Zugriff",
-            'group' => 'Dokumente & Budget',
-            'tooltipText' => 'Tooltip fehlt',
-            'checked' => false
-        ]);
-        Permission::create([
             'name' => PermissionNameEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value,
             'name_de' => "Darf zusätzlich sämtliche Verifizierungs-, oder festgeschriebene Status und gesperrte ' .
                 'Spalten aufheben.",

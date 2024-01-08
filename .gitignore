@@ -19,7 +19,7 @@ yarn-error.log
 MailHog_windows_amd64.exe
 meilisearch-windows-amd64.exe
 package-lock.json
-composer.lock
 data.ms/instance-uid
 public/mix-manifest.json
 webpack.mix.js
+.composer

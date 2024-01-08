@@ -14,11 +14,11 @@ use Artwork\Modules\Room\Models\RoomCategory;
 
 class FilterController extends Controller
 {
-
     /**
      * Get all filters of the current user
      */
-    public function index() {
+    public function index()
+    {
         return Filter::where('user_id', Auth::id())->get()->map(fn (Filter $filter) => [
             'id' => $filter->id,
             'name' => $filter->name,
@@ -49,7 +49,7 @@ class FilterController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $filter = Filter::create([
             'name' => $request->name,
@@ -70,37 +70,32 @@ class FilterController extends Controller
         $roomAttributeIds = $request->input('calendarFilters.roomAttributeIds');
         $eventTypeIds = $request->input('calendarFilters.eventTypeIds');
 
-        if($roomIds) {
-            foreach($roomIds as $roomId)
-            {
+        if ($roomIds) {
+            foreach ($roomIds as $roomId) {
                 $filter->rooms()->save(Room::where('id', $roomId)->first());
             }
         }
 
-        if($areaIds) {
-            foreach($areaIds as $areaId)
-            {
+        if ($areaIds) {
+            foreach ($areaIds as $areaId) {
                 $filter->areas()->save(Area::where('id', $areaId)->first());
             }
         }
 
-        if($roomCategoryIds) {
-            foreach($roomCategoryIds as $roomCategoryId)
-            {
+        if ($roomCategoryIds) {
+            foreach ($roomCategoryIds as $roomCategoryId) {
                 $filter->room_categories()->save(RoomCategory::where('id', $roomCategoryId)->first());
             }
         }
 
-        if($roomAttributeIds) {
-            foreach($roomAttributeIds as $roomAttributeId)
-            {
+        if ($roomAttributeIds) {
+            foreach ($roomAttributeIds as $roomAttributeId) {
                 $filter->room_attributes()->save(RoomAttribute::where('id', $roomAttributeId)->first());
             }
         }
 
-        if($eventTypeIds) {
-            foreach($eventTypeIds as $eventTypeId)
-            {
+        if ($eventTypeIds) {
+            foreach ($eventTypeIds as $eventTypeId) {
                 $filter->event_types()->save(EventType::where('id', $eventTypeId)->first());
             }
         }
@@ -114,8 +109,9 @@ class FilterController extends Controller
      * @param  \App\Models\Filter  $filter
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Filter $filter)
+    public function destroy(Filter $filter): \Illuminate\Http\RedirectResponse
     {
         $filter->delete();
+        return Redirect::back()->with('success', 'Filter deleted');
     }
 }

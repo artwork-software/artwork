@@ -32,11 +32,13 @@ use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection;
@@ -48,9 +50,7 @@ use Inertia\Response;
 class EventController extends Controller
 {
 
-    protected ?NotificationService $notificationService = null;
     protected ?\stdClass $notificationData = null;
-    protected ?CollisionService $collisionService = null;
     protected ?NewHistoryService $history = null;
     protected ?string $notificationKey = '';
 
@@ -58,14 +58,16 @@ class EventController extends Controller
     private UserShiftCalendarFilter $userShiftCalendarFilter;
     private UserCalendarFilter $userCalendarFilter;
 
-    public function __construct()
+    public function __construct(
+        private readonly CollisionService $collisionService,
+        private readonly NotificationService $notificationService,
+        private readonly ProjectService $projectService
+    )
     {
-        $this->collisionService = new CollisionService();
-        $this->notificationService = new NotificationService();
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
-        $this->history = new NewHistoryService('App\Models\Event');
+        $this->history = new NewHistoryService(Event::class);
 
         $this->notificationKey = Str::random(15);
     }
@@ -183,7 +185,7 @@ class EventController extends Controller
 
         foreach ($freelancers as $freelancer) {
             $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
-            //dd($freelancer->getShiftsAttribute());
+            $vacations = $freelancer->hasVacationDays();
             $freelancersWithPlannedWorkingHours[] = [
                 'freelancer' => [
                     'resource' => 'FreelancerShiftResource',
@@ -193,6 +195,7 @@ class EventController extends Controller
                     'profile_photo_url' => $freelancer->profile_image,
                     'shifts' => $freelancer->getShiftsAttribute(),
                 ],
+                'vacations' => $vacations,
                 'plannedWorkingHours' => $plannedWorkingHours,
             ];
         }
@@ -209,9 +212,6 @@ class EventController extends Controller
                 'plannedWorkingHours' => $plannedWorkingHours,
             ];
         }
-
-        //dd($showCalendar['user_filters']);
-
 
         return inertia('Shifts/ShiftPlan', [
             'events' => $events,
@@ -753,71 +753,6 @@ class EventController extends Controller
             if (!empty($project)) {
                 $projectManagers = $project->managerUsers()->get();
             }
-            //dd($request->all());
-            /*if($request->accept || $request->optionAccept){
-                $event->update(['occupancy_option' => false]);
-
-                if($request->accept){
-                    $event->update(['accepted' => true]);
-                }
-
-                if($request->optionAccept){
-                    $event->update(['accepted' => true, 'option_string' => $request->optionString]);
-                }
-
-                $notificationTitle = 'Raumanfrage bestätigt';
-                $this->history->createHistory($event->id, 'Raum bestätigt');
-                $broadcastMessage = [
-                    'id' => rand(1, 1000000),
-                    'type' => 'success',
-                    'message' => $notificationTitle
-                ];
-
-                $event->save();
-                $notificationDescription = [
-                    1 => [
-                        'type' => 'link',
-                        'title' => $room->name,
-                        'href' => route('rooms.show', $room->id)
-                    ],
-                    2 => [
-                        'type' => 'string',
-                        'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
-                        'href' => null
-                    ],
-                    3 => [
-                        'type' => 'link',
-                        'title' => $project ? $project->name : '',
-                        'href' => $project ? route('projects.show.calendar', $project->id) : null
-                    ],
-                    4 => [
-                        'type' => 'string',
-                        'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
-                        'href' => null
-                    ],
-                    5 => [
-                        'type' => 'comment',
-                        'title' => $request->adminComment,
-                        'href' => null
-                    ]
-                ];
-                $this->notificationService->setTitle($notificationTitle);
-                $this->notificationService->setIcon('green');
-                $this->notificationService->setPriority(3);
-                $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
-                $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setDescription($notificationDescription);
-                foreach ($projectManagers as $projectManager){
-                    if($projectManager->id === $event->creator){
-                        continue;
-                    }
-                    $this->notificationService->setNotificationTo($projectManager);
-                    $this->notificationService->createNotification();
-                }
-                $this->notificationService->setNotificationTo($event->creator);
-                $this->notificationService->createNotification();
-
-            } else {*/
             if (!empty($request->adminComment)) {
                 $projectManagers = [];
                 $this->notificationService->setNotificationKey($this->notificationKey);
@@ -973,7 +908,7 @@ class EventController extends Controller
 
         if (!empty($event->project_id)) {
             $eventProject = $event->project()->first();
-            $projectHistory = new NewHistoryService('Artwork\Modules\Project\Models\Project');
+            $projectHistory = new NewHistoryService(Project::class);
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan geändert');
         }
 
@@ -1479,12 +1414,12 @@ class EventController extends Controller
      *
      * @param Event $event
      */
-    public function destroy(Event $event)
+    public function destroy(Event $event): RedirectResponse
     {
         $this->authorize('delete', $event);
         if(!empty($event->project_id)){
             $eventProject = $event->project()->first();
-            $projectHistory = new NewHistoryService('Artwork\Modules\Project\Models\Project');
+            $projectHistory = new NewHistoryService(Project::class);
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
         }
 
@@ -1498,14 +1433,14 @@ class EventController extends Controller
         }
         $notificationTitle = 'Termin abgesagt';
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => random_int(1, 1000000),
             'type' => 'error',
             'message' => $notificationTitle
         ];
         $notificationDescription = [
             1 => [
                 'type' => 'link',
-                'title' => $room ? $room->name : '',
+                'title' => $room->name ?? '',
                 'href' => $room ? route('rooms.show', $room->id) : null
             ],
             2 => [
@@ -1515,7 +1450,7 @@ class EventController extends Controller
             ],
             3 => [
                 'type' => 'link',
-                'title' => $project ? $project->name : '',
+                'title' => $project->name ?? '',
                 'href' => $project ? route('projects.show.calendar', $project->id) : null
             ],
             4 => [

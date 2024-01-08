@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\ChecklistTemplateIndexResource;
-use App\Models\Checklist;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\TaskTemplate;
 use Illuminate\Http\Request;
@@ -126,16 +126,8 @@ class ChecklistTemplateController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\ChecklistTemplate $checklistTemplate
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(Request $request, ChecklistTemplate $checklistTemplate)
+    public function update(Request $request, ChecklistTemplate $checklistTemplate): \Illuminate\Http\RedirectResponse
     {
-        //dd($request->task_templates);
 
         $checklistTemplate->update($request->only('name'));
 
@@ -146,9 +138,9 @@ class ChecklistTemplateController extends Controller
         if ($request->task_templates) {
             $checklistTemplate->task_templates()->delete();
             foreach ($request->task_templates as $task_template) {
-                    $task_template_new = $checklistTemplate->task_templates()->create($task_template);
-                    $task_template_new->task_users()->sync($request->users);
-                }
+                $task_template_new = $checklistTemplate->task_templates()->create($task_template);
+                $task_template_new->task_users()->sync($request->users);
+            }
         }
 
         return Redirect::route('checklist_templates.management', $checklistTemplate->id)->with('success', 'ChecklistTemplate updated');

@@ -168,7 +168,7 @@
                     <div v-if="isLinkTab">
                         <h2 class="xsLight mb-2 mt-4">
                             Behalte den Überblick über deine Finanzierungsquellen. Du kannst den Wert zur
-                            Quelle entweder addieren oder subtrahieren.
+                            Quelle addieren.
                         </h2>
                         <div class="flex items-center justify-start my-6">
                             <input v-model="isLinked" type="checkbox" :disabled="cell.column.is_locked"
@@ -345,10 +345,10 @@ export default {
             linkedType: this.cell.linked_type === 'EARNING' ? linkTypes[0] : linkTypes[1],
             selectedMoneySource: this.cell.linked_money_source_id !== null ? this.moneySources.find(moneySource => moneySource.id === this.cell.linked_money_source_id) : null,
             linkTypes,
-            isCalculateTab: this.cell.column.type === 'empty',
-            isCommentTab: this.cell.column.type !== 'empty',
+            isCalculateTab: this.openTab === 'calculation' || (this.cell.column.type === 'empty' && this.openTab !== 'comment' && this.openTab !== 'moneySource'),
+            isCommentTab: this.openTab === 'comment' || this.cell.column.type !== 'empty' && this.openTab !== 'moneySource' && this.openTab !== 'calculation',
             isExcludeTab: false,
-            isLinkTab: false,
+            isLinkTab: this.openTab === 'moneySource',
             hoveredBorder: false,
             refreshSumKey: 0,
             isExcluded: this.cell.commented,
@@ -365,7 +365,7 @@ export default {
         }
     },
 
-    props: ['cell', 'moneySources', 'projectId'],
+    props: ['cell', 'moneySources', 'projectId','openTab'],
 
     emits: ['closed'],
 

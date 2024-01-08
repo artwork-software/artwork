@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\EventTypeResource;
+use App\Http\Resources\ServiceProviderShowResource;
+use App\Models\Craft;
 use App\Models\EventType;
 use App\Models\ServiceProvider;
 use Artwork\Modules\Project\Models\Project;
@@ -20,7 +22,7 @@ class ServiceProviderController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return void
      */
     public function index()
     {
@@ -30,7 +32,7 @@ class ServiceProviderController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return void
      */
     public function create()
     {
@@ -40,12 +42,13 @@ class ServiceProviderController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function store(Request $request): \Symfony\Component\HttpFoundation\Response
+    public function store(): \Symfony\Component\HttpFoundation\Response
     {
-        $serviceProvider = ServiceProvider::create(['profile_image' => 'https://ui-avatars.com/api/?name=NEU&color=7F9CF5&background=EBF4FF']);
+        $serviceProvider = ServiceProvider::create(
+            ['profile_image' => 'https://ui-avatars.com/api/?name=NEU&color=7F9CF5&background=EBF4FF']
+        );
 
         return Inertia::location(route('service_provider.show', $serviceProvider->id));
     }
@@ -54,15 +57,15 @@ class ServiceProviderController extends Controller
      * Display the specified resource.
      *
      * @param ServiceProvider $serviceProvider
+     * @param CalendarController $shiftPlan
      * @return Response
      */
-    public function show(ServiceProvider $serviceProvider, CalendarController $shiftPlan): \Inertia\Response
+    public function show(ServiceProvider $serviceProvider, CalendarController $shiftPlan): Response
     {
-        //$shiftPlan = new CalendarController();
         $showCalendar = $shiftPlan->createCalendarDataForServiceProviderShiftPlan($serviceProvider);
 
         return Inertia::render('ServiceProvider/Show', [
-            'serviceProvider' => $serviceProvider,
+            'serviceProvider' => new ServiceProviderShowResource($serviceProvider),
             //needed for UserShiftPlan
             'dateValue'=> $showCalendar['dateValue'],
             'daysWithEvents' => $showCalendar['daysWithEvents'],
@@ -70,17 +73,21 @@ class ServiceProviderController extends Controller
             'rooms' => Room::all(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => Project::all(),
-            'shifts' => $serviceProvider->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),
+            'shifts' => $serviceProvider
+                ->shifts()
+                ->with(['event', 'event.project', 'event.room'])
+                ->orderBy('start', 'ASC')
+                ->get(),
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\ServiceProvider  $serviceProvider
-     * @return \Illuminate\Http\Response
+     * @param ServiceProvider $serviceProvider
+     * @return void
      */
-    public function edit(ServiceProvider $serviceProvider)
+    public function edit(ServiceProvider $serviceProvider): void
     {
         //
     }
@@ -88,11 +95,11 @@ class ServiceProviderController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\ServiceProvider  $serviceProvider
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param ServiceProvider $serviceProvider
+     * @return void
      */
-    public function update(Request $request, ServiceProvider $serviceProvider)
+    public function update(Request $request, ServiceProvider $serviceProvider): void
     {
         $serviceProvider->update($request->only([
             'provider_name',
@@ -108,37 +115,83 @@ class ServiceProviderController extends Controller
         ]));
     }
 
-    public function update_provider_can_master(ServiceProvider $serviceProvider, Request $request): RedirectResponse
+    /**
+     * @param ServiceProvider $serviceProvider
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function updateWorkProfile(ServiceProvider $serviceProvider, Request $request): RedirectResponse
     {
         $serviceProvider->update([
-            'can_master' => $request->can_master
+            'work_name' => $request->get('workName'),
+            'work_description' => $request->get('workDescription')
         ]);
 
-        return Redirect::back()->with('success', 'Service provider updated');
+        return Redirect::back()->with('success', ['workProfile' => 'Arbeitsprofil erfolgreich aktualisiert']);
     }
 
-    public function update_work_data(ServiceProvider $serviceProvider, Request $request): RedirectResponse
+    /**
+     * @param ServiceProvider $serviceProvider
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function updateCraftSettings(ServiceProvider $serviceProvider, Request $request): RedirectResponse
     {
         $serviceProvider->update([
-            'work_name' => $request->work_name,
-            'work_description' => $request->work_description
+            'can_work_shifts' => $request->boolean('canBeAssignedToShifts'),
+            'can_master' => $request->boolean('canBeUsedAsMasterCraftsman')
         ]);
 
-        return Redirect::back()->with('success', 'Service provider updated');
+        return Redirect::back();
+    }
+
+    /**
+     * @param ServiceProvider $serviceProvider
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function assignCraft(ServiceProvider $serviceProvider, Request $request): RedirectResponse
+    {
+        $craftToAssign = Craft::find($request->get('craftId'));
+
+        if (is_null($craftToAssign)) {
+            return Redirect::back();
+        }
+
+        if (!$serviceProvider->assigned_crafts->contains($craftToAssign)) {
+            $serviceProvider->assigned_crafts()->attach(Craft::find($request->get('craftId')));
+        }
+
+        return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
+    }
+
+    /**
+     * @param ServiceProvider $serviceProvider
+     * @param Craft $craft
+     * @return RedirectResponse
+     */
+    public function removeCraft(ServiceProvider $serviceProvider, Craft $craft): RedirectResponse
+    {
+        $serviceProvider->assigned_crafts()->detach($craft);
+
+        return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\ServiceProvider  $serviceProvider
-     * @return \Illuminate\Http\Response
+     * @return void
      */
-    public function destroy(ServiceProvider $serviceProvider)
+    public function destroy(): void
     {
         //
     }
 
-
+    /**
+     * @param Request $request
+     * @param ServiceProvider $serviceProvider
+     * @return void
+     */
     public function updateProfileImage(Request $request, ServiceProvider $serviceProvider): void
     {
         if (!Storage::exists("public/profile-photos")) {
@@ -152,6 +205,5 @@ class ServiceProviderController extends Controller
         Storage::putFileAs('public/profile-photos', $file, $basename);
 
         $serviceProvider->update(['profile_image' => Storage::url('public/profile-photos/' . $basename)]);
-
     }
 }

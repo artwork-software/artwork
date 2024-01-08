@@ -8,71 +8,6 @@ use Illuminate\Http\Request;
 class CellCalculationsController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \Artwork\Modules\Budget\Models\CellCalculations  $cellCalculations
-     * @return \Illuminate\Http\Response
-     */
-    public function show(CellCalculations $cellCalculations)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \Artwork\Modules\Budget\Models\CellCalculations  $cellCalculations
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(CellCalculations $cellCalculations)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Artwork\Modules\Budget\Models\CellCalculations  $cellCalculations
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, CellCalculations $cellCalculations)
-    {
-        //
-    }
-
-    /**
      * Remove the specified resource from storage.
      *
      * @param  \Artwork\Modules\Budget\Models\CellCalculations  $cellCalculations
@@ -83,7 +18,7 @@ class CellCalculationsController extends Controller
         $cellCalculation->delete();
 
         // reset Positions on all other calculations in this cell
-        $cellCalculation->cell->calculations->each(function ($calculation, $index) {
+        $cellCalculation->cell->calculations->each(function ($calculation, $index): void {
             $calculation->update([
                 'position' => $index
             ]);

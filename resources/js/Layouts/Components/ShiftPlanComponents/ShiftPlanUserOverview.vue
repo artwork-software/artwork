@@ -70,23 +70,13 @@ export default defineComponent({
     methods: {
         showCloseUserOverview(){
             this.showUserOverview = !this.showUserOverview
-            //this.$emit('isOpen', this.showUserOverview)
         },
         openShowUserShiftModal(user, day){
             this.userToShow = user
             this.dayToShow = day
             this.showUserShifts = true
         }
-    },
-
-    computed: {
-        filteredUsers(){
-            if(!this.showExtern && !this.showIntern && !this.showProvider){
-                return this.users;
-            }
-        }
-    },
-
+    }
 })
 </script>
 

@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Room\Models\Room;
 use Illuminate\Support\Facades\Date;
 
 beforeEach(function () {
@@ -11,20 +13,19 @@ beforeEach(function () {
 
     $this->room = Room::factory()->create();
 
+    $this->actingAs($this->auth_user);
+
 });
 
-test('users with the permission can create rooms', function() {
-
-    $this->auth_user->givePermissionTo('manage areas');
-
-    $this->actingAs($this->auth_user);
+test('users with the permission can create rooms', function () {
 
     $this->post('/rooms', [
         'name' => 'TestRoom',
         'description' => 'Test description',
         'user_id' => $this->auth_user->id,
         'area_id' => $this->area->id,
-        'temporary' => false
+        'temporary' => false,
+        'everyone_can_book' => false,
     ]);
 
     $this->assertDatabaseHas('rooms', [
@@ -33,11 +34,7 @@ test('users with the permission can create rooms', function() {
     ]);
 });
 
-test('users with the permission can update rooms', function() {
-
-    $this->auth_user->givePermissionTo('manage areas');
-
-    $this->actingAs($this->auth_user);
+test('users with the permission can update rooms', function () {
 
     $this->patch("/rooms/{$this->room->id}", [
         'name' => 'TestRoom',
@@ -50,7 +47,7 @@ test('users with the permission can update rooms', function() {
     ]);
 });
 
-test('users with the permission can duplicate rooms', function() {
+test('users with the permission can duplicate rooms', function () {
 
     $old_room = Room::factory()->create([
         'name' => 'TestRoom',
@@ -58,9 +55,6 @@ test('users with the permission can duplicate rooms', function() {
         'temporary' => false,
         'area_id' => $this->area->id,
     ]);
-
-    $this->auth_user->givePermissionTo('manage areas');
-    $this->actingAs($this->auth_user);
 
     $this->post("/rooms/{$old_room->id}/duplicate")->assertStatus(302);
 
@@ -71,11 +65,7 @@ test('users with the permission can duplicate rooms', function() {
 
 });
 
-test('users with the permission can delete rooms', function() {
-
-    $this->auth_user->givePermissionTo('manage areas');
-
-    $this->actingAs($this->auth_user);
+test('users with the permission can delete rooms', function () {
 
     $this->delete("/rooms/{$this->room->id}");
 

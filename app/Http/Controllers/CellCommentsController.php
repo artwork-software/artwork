@@ -9,25 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class CellCommentsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -42,45 +23,6 @@ class CellCommentsController extends Controller
         ]);
 
         return back();
-    }
-
-    public function get(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \Artwork\Modules\Budget\Models\CellComment  $cellComments
-     * @return \Illuminate\Http\Response
-     */
-    public function show(CellComment $cellComments)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \Artwork\Modules\Budget\Models\CellComment  $cellComments
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(CellComment $cellComments)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Artwork\Modules\Budget\Models\CellComment  $cellComments
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, CellComment $cellComments)
-    {
-        //
     }
 
     /**

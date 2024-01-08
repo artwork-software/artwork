@@ -13,21 +13,18 @@ class ProjectFile extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use BelongsToProject;
 
     protected $guarded = [
         'id'
     ];
 
-    public function project() {
-        return $this->belongsTo(Project::class, 'project_id' , 'id', 'project');
-    }
-
-    public function accessing_users()
+    public function accessing_users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class);
     }
 
-    public function comments()
+    public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Comment::class);
     }

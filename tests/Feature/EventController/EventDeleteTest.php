@@ -4,34 +4,32 @@ namespace Tests\Feature\EventController;
 
 use App\Models\Event;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class EventDeleteTest extends TestCase
 {
-    use RefreshDatabase;
 
-    public function testEventDelete()
+    public function testEventDelete(): void
     {
         $event = Event::factory()->create();
 
-        $this->actingAs($this->adminUser())
-            ->delete(route('events.delete', ['event' => $event]))
-            ->assertSuccessful();
+        $this->actingAs($this->adminUser());
+        $this->delete(route('events.delete', ['event' => $event]))
+            ->assertRedirect();
 
-        $this->assertDatabaseCount('events', 0);
+        $this->assertSoftDeleted('events', ['id' => $event->id]);
     }
 
-    public function testEventDeletePermissions()
+    public function testEventDeletePermissions(): void
     {
         // user without permissions
         $user = User::factory()->create();
         $event = Event::factory()->create();
 
-        $this->actingAs($user)
-            ->delete(route('events.delete', ['event' => $event]))
+        $this->actingAs($user);
+        $this->delete(route('events.delete', ['event' => $event]))
             ->assertForbidden();
 
-        $this->assertDatabaseCount('events', 1);
+        $this->assertDatabaseHas('events', ['id' => $event->id]);
     }
 }

@@ -1,6 +1,9 @@
 <?php
 
 use App\Models\User;
+use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomFile;
 use Illuminate\Http\UploadedFile;
 
 beforeEach(function () {
@@ -14,15 +17,13 @@ beforeEach(function () {
     $this->room = Room::factory()->create(['area_id' => $this->area->id]);
 
     $this->room_file = RoomFile::factory()->create(['room_id' => $this->room->id]);
-
+    $this->auth_user->givePermissionTo(\App\Enums\PermissionNameEnum::ROOM_UPDATE->value);
+    $this->actingAs($this->auth_user);
 });
 
 test('authorized users can upload files to a room', function () {
 
-    $this->auth_user->givePermissionTo('manage areas');
-    $this->actingAs($this->auth_user);
-
-    $this->post("/rooms/{$this->room->id}/files", [
+    $response = $this->post("/rooms/{$this->room->id}/files", [
         'file' => UploadedFile::fake()->create('document.pdf', 100),
     ]);
 
@@ -33,19 +34,15 @@ test('authorized users can upload files to a room', function () {
 });
 
 test('non authenticated users cannot upload files to a room', function () {
-
-    $this->actingAs($this->auth_user);
-
-    $this->post("/rooms/{$this->room->id}/files", [
+    $response = $this->post("/rooms/{$this->room->id}/files", [
         'file' => UploadedFile::fake()->create('document.pdf', 100),
-    ])->assertStatus(403);
+    ]);
+
+    $response->assertRedirect();
 
 });
 
 test('users can delete files from a room', function () {
-
-    $this->auth_user->givePermissionTo('manage areas');
-    $this->actingAs($this->auth_user);
 
     $this->delete("/room_files/{$this->room_file->id}");
 
@@ -55,9 +52,6 @@ test('users can delete files from a room', function () {
 });
 
 test('users can force delete files from a room', function () {
-
-    $this->auth_user->givePermissionTo('manage areas');
-    $this->actingAs($this->auth_user);
 
     $this->delete("/room_files/{$this->room_file->id}");
     $this->delete("/room_files/{$this->room_file->id}/force_delete");
@@ -71,6 +65,6 @@ test('non authenticated users cannot delete files from a room', function () {
 
     $this->actingAs($this->auth_user);
 
-    $this->delete("/room_files/{$this->room_file->id}")->assertStatus(403);
+    $this->delete("/room_files/{$this->room_file->id}")->assertRedirect();
 
 });

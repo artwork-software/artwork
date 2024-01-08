@@ -194,7 +194,7 @@
             </div>
         </div>
 
-        <div v-if="$role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin">
+        <div class="my-12 ml-14" v-if="$role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin">
             <div class="flex mt-6 items-center mb-2 ml-14">
                 <h3 class="headline2"> Raumbelegung </h3>
             </div>

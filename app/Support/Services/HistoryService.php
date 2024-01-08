@@ -2,7 +2,7 @@
 
 namespace App\Support\Services;
 
-use App\Models\Checklist;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\Task;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHistory;

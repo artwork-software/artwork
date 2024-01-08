@@ -1,0 +1,51 @@
+name: PHP CS
+
+on:
+  push:
+    branches:
+      - dev
+      - pipeline
+  pull_request:
+    paths:
+      - "**.php"
+      - "phpcs.xml"
+      - ".github/workflows/phpcs.yml"
+
+jobs:
+  phpcs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # important!
+
+      - name: Install PHP and Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: gd
+
+
+      - name: Install Dependencies
+        run: composer install --no-progress --no-suggest --no-interaction
+
+      - name: Install PHP_CodeSniffer
+        run: |
+          curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
+          php phpcs.phar --version
+
+      - name: Sniff
+        uses: tinovyatkin/action-php-codesniffer@v1
+        with:
+          files: "**.php" # you may customize glob as needed
+          phpcs_path: php phpcs.phar
+          standard: phpcs.xml
+
+#      - name: Create Merge Request
+#        uses: peter-evans/create-pull-request@v3
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          branch: fix-phpcs-violations
+#          commit-message: 'Fix PHPCS violations'
+#          title: 'Fix PHPCS Violations'
+#          body: 'This pull request fixes PHPCS violations found in the codebase.'

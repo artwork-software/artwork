@@ -87,14 +87,14 @@
             <span v-if="shift.break_minutes">| {{ shift.break_formatted }}</span>
         </p>
         <p class="text-xs mb-3">{{ shift.description }}</p>
-        <div v-for="user in shift.allUsers" class="">
+        <div v-for="user in shift?.allUsers" class="">
             <div v-for="intern in user">
                 <div v-if="intern.full_name"
                      class="flex items-center justify-between p-1 hover:bg-gray-50/40 rounded cursor-pointer group">
                     <div class="flex gap-2 items-center">
                         <img :src="intern.profile_photo_url"
-                             class="h-4 w-4 rounded-full block bg-gray-500 object-cover" :class="intern.formatted_vacation_days?.includes(this.shift.event_start_day) ? 'ring-2 ring-red-500' : ''">
-                        <span class="text-xs" :class="intern.formatted_vacation_days?.includes(this.shift.event_start_day) ? '!text-red-500' : ''">{{ intern.full_name }} </span>
+                             class="h-4 w-4 rounded-full block bg-gray-500 object-cover" :class="intern?.formatted_vacation_days?.includes(this.shift.event_start_day) ? 'ring-2 ring-red-500' : ''">
+                        <span class="text-xs" :class="intern?.formatted_vacation_days?.includes(this.shift.event_start_day) ? '!text-red-500' : ''">{{ intern.full_name }} </span>
                         <span v-if="intern.pivot.shift_count > 1"
                               class="text-xs"> {{ `1/${intern.pivot.shift_count}` }} </span>
                         <span v-if="intern.pivot.is_master">
@@ -145,22 +145,27 @@
             </div>
         </div>
         <div v-for="user in Math.floor(shift.empty_master_count)">
-            <DropElement :users="shift.users" :shift-id="shift.id" :currentCount="shift.currentCount"
+            <MasterDropElement :users="shift.users" :shift-id="shift.id" :currentCount="shift.currentCount"
                          :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count"
                          :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="true"
                          :is_series="event.is_series"/>
         </div>
         <div v-for="user in Math.floor(shift.empty_user_count) ? Math.floor(shift.empty_user_count) : 0">
-            <DropElement :users="shift.allUsers" :shift-id="shift.id" :currentCount="shift.currentCount"
-                         :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count"
-                         :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="false"
-                         :is_series="event.is_series"/>
+            <EmployeeDropElement :users="shift.allUsers" :shift-id="shift.id" :currentCount="shift.currentCount"
+                                 :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count"
+                                 :free-master-count="shift.empty_master_count" :userIds="shiftUserIds" :master="false"
+                                 :is_series="event.is_series"/>
         </div>
     </div>
     </div>
 
-    <AddShiftModal :shift="shift" :event="event" :crafts="crafts" v-if="openEditShiftModal"
-                   @closed="openEditShiftModal = false" :edit="true"/>
+    <AddShiftModal v-if="openEditShiftModal"
+                   :shift="shift"
+                   :event="event"
+                   :crafts="crafts"
+                   @closed="openEditShiftModal = false"
+                   :currentUserCrafts="currentUserCrafts"
+                   :edit="true"/>
 
     <ChooseDeleteUserShiftModal :buffer="buffer" :event="event" v-if="showDeleteUserModal"
                                 @close-modal="showDeleteUserModal = false" @returnBuffer="deleteUser"/>
@@ -176,17 +181,30 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import ChooseDeleteUserShiftModal from "@/Pages/Projects/Components/ChooseDeleteUserShiftModal.vue";
 import Helper from "@/mixins/Helper.vue";
+import EmployeeDropElement from "@/Pages/Projects/Components/EmployeeDropElement.vue";
+import MasterDropElement from "@/Pages/Projects/Components/MasterDropElement.vue";
 
 export default defineComponent({
     name: "SingleShift",
     components: {
+        MasterDropElement,
+        EmployeeDropElement,
         ChooseDeleteUserShiftModal,
         AddShiftModal,
-        DotsVerticalIcon, SvgCollection, TrashIcon, DuplicateIcon, PencilAltIcon, DropElement, XIcon,
-        Menu, MenuButton, MenuItem, MenuItems
+        DotsVerticalIcon,
+        SvgCollection,
+        TrashIcon,
+        DuplicateIcon,
+        PencilAltIcon,
+        DropElement,
+        XIcon,
+        Menu,
+        MenuButton,
+        MenuItem,
+        MenuItems
     },
     mixins: [Helper],
-    props: ['shift', 'crafts', 'event'],
+    props: ['shift', 'crafts', 'event', 'currentUserCrafts'],
     data() {
         return {
             openEditShiftModal: false,
@@ -222,7 +240,7 @@ export default defineComponent({
                 providerIds: []
             }
             this.shift.users.forEach(user => {
-                if(user.formatted_vacation_days?.includes(this.shift.event_start_day)){
+                if(user?.formatted_vacation_days?.includes(this.shift.event_start_day)){
                     this.anyoneHasVacation = true;
                 }
                 ids.userIds.push(user.id)

@@ -32,6 +32,7 @@ class CalendarController extends Controller
 
     public function __construct(private readonly FilterProvider $filterProvider)
     {
+        //@todo This will break if no user present
         $this->user = Auth::user();
         $this->userCalendarFilter = $this->user?->calendar_filter;
         $this->userShiftCalendarFilter = $this->user?->shift_calendar_filter;
@@ -191,6 +192,8 @@ class CalendarController extends Controller
                 'day_string' => $period->shortDayName,
                 'is_weekend' => $period->isWeekend(),
                 'full_day' => $period->format('d.m.Y'),
+                'week_number' => $period->weekOfYear,
+                'is_monday' => $period->isMonday(),
             ];
         }
 
@@ -340,6 +343,8 @@ class CalendarController extends Controller
                 'full_day' => $date->format('d.m.Y'),
                 'events' => $events,
                 'plannedWorkingHours' => $plannedWorkingHours,
+                'is_monday' => $date->isMonday(),
+                'week_number' => $date->weekOfYear,
             ];
             // Calculate total planned working hours for all days
             $totalPlannedWorkingHours += $plannedWorkingHours;
@@ -429,6 +434,8 @@ class CalendarController extends Controller
                 'full_day' => $date->format('d.m.Y'),
                 'events' => $events,
                 'plannedWorkingHours' => $plannedWorkingHours,
+                'is_monday' => $date->isMonday(),
+                'week_number' => $date->weekOfYear,
             ];
 
             // Calculate total planned working hours for all days
@@ -500,6 +507,8 @@ class CalendarController extends Controller
                 'full_day' => $date->format('d.m.Y'),
                 'events' => $events,
                 'plannedWorkingHours' => $plannedWorkingHours,
+                'is_monday' => $date->isMonday(),
+                'week_number' => $date->weekOfYear,
             ];
             // Calculate total planned working hours for all days
             $totalPlannedWorkingHours += $plannedWorkingHours;
@@ -534,7 +543,9 @@ class CalendarController extends Controller
                 'day_string' => $period->shortDayName,
                 'is_weekend' => $period->isWeekend(),
                 'full_day' => $period->format('d.m.Y'),
-                'without_format' => $period->format('Y-m-d')
+                'without_format' => $period->format('Y-m-d'),
+                'week_number' => $period->weekOfYear,
+                'is_monday' => $period->isMonday(),
             ];
         }
         if (!is_null($this->userShiftCalendarFilter->start_date) && !is_null($this->userShiftCalendarFilter->end_date)) {

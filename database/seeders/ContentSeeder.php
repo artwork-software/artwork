@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Http\Controllers\ProjectController;
-use App\Models\Checklist;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\CollectingSociety;
 use App\Models\CompanyType;
 use App\Models\ContractType;
@@ -337,7 +337,7 @@ class ContentSeeder extends Seeder
             'number_of_participants' => null,
         ]);
 
-        $projectController = new ProjectController();
+        $projectController = app()->get(ProjectController::class);
         $projectController->generateBasicBudgetValues($project);
 
 

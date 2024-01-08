@@ -13,8 +13,6 @@
                     <ChevronDownIcon class="h-4 w-4" v-if="!showShift"/>
                     <ChevronUpIcon class="h-4 w-4" v-else/>
                 </div>
-
-
             </div>
             <div class="mt-1">
                 <Menu as="div" class="relative">
@@ -88,7 +86,10 @@
         />
 
         <div class="flex justify-start mt-3 overflow-x-scroll gap-3 h-full" v-if="showShift">
-            <TimeLineShiftsComponent :time-line="event.timeline" :shifts="event.shifts" :crafts="crafts"
+            <TimeLineShiftsComponent :time-line="event.timeline"
+                                     :shifts="event.shifts"
+                                     :crafts="crafts"
+                                     :currentUserCrafts="currentUserCrafts"
                                      :event="event.event"/>
         </div>
     </div>
@@ -112,7 +113,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 
 export default defineComponent({
     name: "SingleRelevantEvent",
-    props: ['event', 'crafts', 'eventTypes'],
+    props: ['event', 'crafts', 'eventTypes', 'currentUserCrafts'],
     components: {
         SvgCollection,
         ImportShiftTemplate,

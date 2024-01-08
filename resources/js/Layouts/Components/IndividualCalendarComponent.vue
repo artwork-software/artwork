@@ -50,7 +50,7 @@
                                 :class="isDashboard || isFullscreen? 'stickyDaysNoMarginLeft bg-userBg' : 'stickyDays'"
                                 class="text-secondary text-right -mt-2 pr-1">
                                 <div :style="textStyle">
-                                    {{ zoomFactor > 0.4 ? day.day_string : '' }} {{ day.day }}
+                                    {{ zoomFactor > 0.4 ? day.day_string : '' }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
                                 </div>
 
                             </th>

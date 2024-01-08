@@ -88,7 +88,13 @@
 
             </div>
         </div>
-        <div class="w-full flex flex-row-reverse mb-4">
+        <div class="w-full flex flex-row-reverse mb-4 items-center">
+            <button @click="downloadBudgetExport(project.id)"
+                    type="button"
+                    class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton focus:outline-none bg-buttonBlue hover:bg-buttonHover">
+                <DocumentReportIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
+                <p class="text-sm">Excel-Export</p>
+            </button>
             <div>
                 <img alt="Fullscreen" @click="$emit('changeProjectHeaderVisualisation',true)" v-if="!hideProjectHeader"
                      src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
@@ -107,7 +113,6 @@
                     </span>
                 </SwitchLabel>
             </SwitchGroup>
-
         </div>
 
         <div class="w-full flex stickyHeader" >
@@ -287,10 +292,10 @@
                     </th>
                     <th>
                         <div class="flex items-center">
-                    <div class="text-white hidden xl:block mt-3">
+                    <div class="text-white hidden xl:block ml-3 mt-3">
                         Neue Spalte
                     </div>
-                        <button @click="openAddColumnModal()" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="font-bold ml-2 text-xl hover:bg-buttonHover p-1 mt-3 bg-secondary border-white border-2 hover:border-buttonBlue rounded-full items-center uppercase shadow-sm text-secondaryHover">
+                        <button @click="openAddColumnModal()" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="font-bold mr-2 ml-2 text-xl hover:bg-buttonHover p-1 mt-3 bg-secondary border-white border-2 hover:border-buttonBlue rounded-full items-center uppercase shadow-sm text-secondaryHover">
                             <PlusIcon class="h-4 w-4"></PlusIcon>
                         </button>
                         </div>
@@ -720,6 +725,7 @@
         :cell="selectedCell"
         :moneySources="moneySources"
         :project-id="project.id"
+        :openTab="cellDetailOpenTab"
         @closed="closeCellDetailModal()"
     />
 
@@ -782,7 +788,8 @@ import {
     XCircleIcon,
     XIcon,
     ZoomInIcon,
-    ZoomOutIcon
+    ZoomOutIcon,
+    DocumentReportIcon
 } from '@heroicons/vue/outline';
 import {ChevronUpIcon, ChevronDownIcon,PlusIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
@@ -856,6 +863,7 @@ export default {
         PlusIcon,
         RenameTableComponent,
         ErrorComponent,
+        DocumentReportIcon
     },
 
     data() {
@@ -921,6 +929,7 @@ export default {
                 project_title: this.project?.name,
                 table_id: this.table?.id
             }),
+            cellDetailOpenTab: 'calculation',
             userExcludeCommentedBudgetItems: this.$page.props.user.commented_budget_items_setting ?
                 this.$page.props.user.commented_budget_items_setting.exclude === 1 :
                 false
@@ -1227,13 +1236,14 @@ export default {
                 preserveState: true
             });
         },
-        openCellDetailModal(cell) {
+        openCellDetailModal(cell, type) {
             Inertia.get(route('projects.show.budget', {project: this.project.id}), {
                 selectedCell: cell.id,
             }, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
+                    this.cellDetailOpenTab = type;
                     this.showCellDetailModal = true;
                 }
             })
@@ -1460,6 +1470,15 @@ export default {
             this.errorDescription = description
             this.showErrorModal = true;
         },
+        downloadBudgetExport(projectId) {
+            window.open(route(
+                'projects.export.budget',
+                {
+                    project: projectId
+                }
+            ));
+
+        }
     },
 }
 </script>

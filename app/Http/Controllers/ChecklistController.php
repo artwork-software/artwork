@@ -2,44 +2,38 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ChecklistUpdateRequest;
+use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use App\Http\Resources\ChecklistShowResource;
-use App\Models\Checklist;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Task;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
+use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHistory;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\ResponseFactory;
 
 class ChecklistController extends Controller
 {
     protected ?NewHistoryService $history = null;
 
-    public function __construct()
+    public function __construct(protected readonly ChecklistService $checklistService)
     {
         $this->authorizeResource(Checklist::class);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function create()
+    public function create(): ResponseFactory
     {
         return inertia('Checklists/Create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $this->authorize('createProperties', Project::find($request->project_id));
         //Check whether checklist should be created on basis of a template
@@ -146,57 +140,25 @@ class ChecklistController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Checklist  $checklist
-     */
     public function update(ChecklistUpdateRequest $request, Checklist $checklist)
     {
-        $checklist->fill($request->data());
-
-        $checklist->save();
-
-        if ($request->get('tasks')) {
-            $checklist->tasks()->delete();
-            $checklist->tasks()->createMany($request->tasks);
-        }
+        $this->checklistService->updateByRequest($checklist, $request);
 
         if ($request->missing('assigned_user_ids')) {
             return Redirect::back()->with('success', 'Checklist updated');
         }
 
-        // User Select
-        $checklist->users()->sync($request->assigned_user_ids);
-        $tasksInChecklist = $checklist->tasks()->get();
-        foreach ($tasksInChecklist as $taskInChecklist){
-            $taskInChecklist->task_users()->syncWithoutDetaching($request->assigned_user_ids);
-        }
-        /*$departmentIds = collect($request->get('assigned_department_ids'));
-        if ($departmentIds->isNotEmpty()) {
-            $syncedDepartmentIds = $checklist->project->departments()->pluck('departments.id');
-            $checklist->project->departments()
-                ->syncWithoutDetaching($departmentIds->whereNotIn('id', $syncedDepartmentIds));
-        }*/
+        $this->checklistService->assignUsersById($checklist, $request->assigned_user_ids);
 
-        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
+        $this->history = new NewHistoryService(Project::class);
         $this->history->createHistory($checklist->project_id, 'Checkliste ' . $checklist->name . ' geändert');
-        //$checklist->departments()->sync($departmentIds);
 
         return Redirect::back()->with('success', 'Checklist updated');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Checklist  $checklist
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(Checklist $checklist, HistoryService $historyService)
+    public function destroy(Checklist $checklist, HistoryService $historyService): RedirectResponse
     {
-
-        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
+        $this->history = new NewHistoryService(Project::class);
         $this->history->createHistory($checklist->project_id, 'Checkliste ' . $checklist->name . ' gelöscht');
         $checklist->delete();
         $historyService->checklistUpdated($checklist);

@@ -12,7 +12,7 @@
                     <div class="w-1/7 h-48 mx-1" :style="{minWidth: 200 + 'px'}"
                          v-for="day in daysWithVacationAndEvents">
                         <div class="calendarRoomHeader">
-                            {{ day.day_string }} {{ day.day }}
+                            {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-0.5">(KW{{ day.week_number }})</span>
                             <span class="text-shiftText subpixel-antialiased">
                                 (<span
                                 :class="day.shiftDurationWarning? 'text-error': ''">{{

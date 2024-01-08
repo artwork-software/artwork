@@ -1,21 +1,41 @@
 <template>
     <!-- Static sidebar for desktop -->
     <div class="my-auto w-full">
-        <div class="sidebar fixed z-50 top-0 bottom-0 p-2 w-full sm:w-16 bg-primary hidden sm:block">
+        <div :class="this.fullSidenav ? 'sm:w-64' : 'sm:w-16'"
+             class="sidebar fixed z-50 top-0 bottom-0 p-2 w-full bg-primary hidden sm:block">
             <div class="w-full py-2 flex flex-col items-center">
-                <div class="text-2xl font-bold text-secondaryHover">
-                    <img src="/Svgs/Logos/artwork_logo_small.svg" class="h-16 w-16 mb-8" alt="artwork-logo"/>
+                <div class="flex items-center" :class="fullSidenav ? 'w-full ml-16' : ''">
+                    <div @mouseover="hoveredIcon = true" @mouseleave="hoveredIcon = false">
+                        <div v-if="!hoveredIcon" class="text-2xl font-bold text-secondaryHover">
+                            <img src="/Svgs/Logos/artwork_logo_small.svg"
+                                 :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" alt="artwork-logo"/>
+                        </div>
+                        <div v-else class="cursor-pointer" :class="fullSidenav ? 'rotate-180' : ''"
+                             @click="changeSidenavMode()">
+                            <img src="/Svgs/IconSvgs/icon_mainnav_arrows.svg" class=""
+                                 :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" aria-hidden="true"/>
+                        </div>
+                    </div>
+                    <div v-if="fullSidenav" class="ml-4">
+                        <img src="/Svgs/Logos/artwork_logo_white.svg"/>
+                    </div>
                 </div>
+
                 <!-- <img alt="small-logo" v-else :src="$page.props.small_logo" class="rounded-full h-16 w-16"/> -->
-                <div class="flex-1 w-full space-y-1">
+                <div class="flex-1 w-full space-y-1 mt-8">
                     <a v-for="item in navigation" :key="item.name" :href="item.href"
                        :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight  hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center', item.has_permission ? 'block': 'hidden']">
-                        <img :src="isCurrent(item.route) ? item.svgSrc_active : item.svgSrc"
-                             alt="menu-item"
-                             :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'xxsLight group-hover:text-secondaryHover', 'mb-1']"
-                             aria-hidden="true"/>
+                        <div class="flex items-center">
+                            <img :src="isCurrent(item.route) ? item.svgSrc_active : item.svgSrc"
+                                 alt="menu-item"
+                                 :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'xxsLight group-hover:text-secondaryHover', 'mb-1']"
+                                 aria-hidden="true"/>
+                            <div class="ml-4 w-32" v-if="fullSidenav">
+                                {{ item.name }}
+                            </div>
+                        </div>
                     </a>
-                    <Menu as="div" class="my-auto" v-if="
+                    <Menu as="div" class="my-auto w-full" v-if="
                         $canAny([
                             'usermanagement',
                             'admin checklistTemplates',
@@ -28,25 +48,27 @@
                             'view budget templates'
                         ]) || hasAdminRole()
                         ">
-                        <div class="flex">
                             <MenuButton
                             >
                                 <div
-                                    class="w-full cursor-pointer p-1 -mt-2">
-                                    <img class="h-16 w-16" :src="isCurrent(this.managementRoutes) ? '/Svgs/IconSvgs/icon_system_settings_active.svg' : '/Svgs/IconSvgs/icon_system_settings_idle.svg'"
+                                    class="w-full flex items-center cursor-pointer p-1 hover:bg-primaryHover rounded-md" :class="fullSidenav ? 'ml-5' : '-mt-2'">
+                                    <img :class=" fullSidenav ? 'h-9 w-9' : 'h-16 w-16'" class=""
+                                         :src="isCurrent(this.managementRoutes) ? '/Svgs/IconSvgs/icon_system_settings_active.svg' : '/Svgs/IconSvgs/icon_system_settings_idle.svg'"
                                          alt="Systemeinstellungen"
                                          aria-hidden="true"/>
+                                    <div :class="[isCurrent(this.managementRoutes) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight group-hover:text-secondaryHover', 'w-full items-center']" class="w-32 ml-4" v-if="fullSidenav">
+                                        System
+                                    </div>
                                 </div>
                             </MenuButton>
-                        </div>
                         <transition enter-active-class="transition ease-out duration-100"
                                     enter-from-class="transform opacity-0 scale-95"
                                     enter-to-class="transform opacity-100 scale-100"
                                     leave-active-class="transition ease-in duration-75"
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="z-50 managementMenu max-h-40 overflow-y-auto opacity-100 relative origin-top-left ml-14 -mt-12 w-36 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
+                            <MenuItems :class="fullSidenav ? 'ml-36' : 'ml-14'"
+                                class="z-50 managementMenu max-h-40 overflow-y-auto opacity-100 relative origin-top-left -mt-12 w-36 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
                                 <div class="z-50" v-for="item in managementNavigation" :key="item.name">
                                     <MenuItem v-if="item.has_permission" v-slot="{ active }">
                                         <Link :href="item.href"
@@ -257,16 +279,18 @@ export default {
                 },*/
                 {
                     name: 'Räume',
-                    has_permission: this.$can('admin rooms') || this.hasAdminRole() ,
+                    has_permission: this.$can('admin rooms') || this.hasAdminRole(),
                     href: route('areas.management'),
                     route: ['/areas']
                 },
+                /*
                 {
                     name: 'Anfragen',
                     has_permission: this.$can('read details room request') || this.hasAdminRole(),
                     href: route('events.requests'),
                     route: ['/events/requests']
                 },
+                */
                 {
                     name: 'Projekte',
                     has_permission: this.$can('change project settings') || this.hasAdminRole(),
@@ -293,7 +317,7 @@ export default {
                 },
             ]
         },
-        navigation(){
+        navigation() {
             return [
                 {
                     name: 'Dashboard',
@@ -342,7 +366,7 @@ export default {
                     route: ['/money_sources'],
                     svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',
                     svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg',
-                    has_permission: this.$canAny(['view edit add money_sources','can edit and delete money sources']) || this.hasAdminRole()
+                    has_permission: this.$canAny(['view edit add money_sources', 'can edit and delete money sources']) || this.hasAdminRole()
                 },
                 {
                     name: 'Nutzer*innen',
@@ -405,6 +429,9 @@ export default {
         closePushNotification(id) {
             const pushNotification = document.getElementById(id);
             pushNotification?.remove();
+        },
+        changeSidenavMode() {
+            this.fullSidenav = !this.fullSidenav;
         }
     },
     mounted() {
@@ -425,7 +452,9 @@ export default {
             showSystemSettings: false,
             showUserMenu: false,
             pushNotifications: [],
-            showPermissions: false
+            showPermissions: false,
+            hoveredIcon: false,
+            fullSidenav: false,
         }
     },
     setup() {

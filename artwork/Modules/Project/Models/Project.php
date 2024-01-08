@@ -4,7 +4,6 @@ namespace Artwork\Modules\Project\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Models\Category;
-use App\Models\Checklist;
 use App\Models\Comment;
 use App\Models\Contract;
 use App\Models\Copyright;
@@ -17,10 +16,14 @@ use App\Models\Sector;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Room\Models\Room;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
@@ -32,25 +35,25 @@ use Laravel\Scout\Searchable;
  * @property string $key_visual_path
  * @property int $number_of_participants
  * @property string $cost_center
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- * @property \Illuminate\Support\Carbon $deleted_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property Carbon $deleted_at
  *
- * @property \Illuminate\Database\Eloquent\Collection<User> $users
- * @property \Illuminate\Database\Eloquent\Collection<User> $access_budget
- * @property \Illuminate\Database\Eloquent\Collection<User> $managerUsers
- * @property \Illuminate\Database\Eloquent\Collection<User> $writeUsers
- * @property \Illuminate\Database\Eloquent\Collection<event> $events
- * @property \Illuminate\Database\Eloquent\Collection<Department> $departments
- * @property \Illuminate\Database\Eloquent\Collection<ProjectHistory> $project_histories
- * @property \Illuminate\Database\Eloquent\Collection<Checklist> $checklists
- * @property \Illuminate\Database\Eloquent\Collection<ProjectFile> $project_files
- * @property \Illuminate\Database\Eloquent\Collection<Comment> $comments
- * @property \Illuminate\Database\Eloquent\Collection<Category> $categories
- * @property \Illuminate\Database\Eloquent\Collection<Sector> $sectors
- * @property \Illuminate\Database\Eloquent\Collection<Genre> $genres
- * @property \Illuminate\Database\Eloquent\Collection<Project> $groups
- * @property \Illuminate\Database\Eloquent\Collection<\Room> $rooms
+ * @property Collection|User[] $users
+ * @property Collection|User[] $access_budget
+ * @property Collection|User> $managerUsers
+ * @property Collection|User> $writeUsers
+ * @property Collection|Event[] $events
+ * @property Collection|Department[] $departments
+ * @property Collection|ProjectHistory[] $project_histories
+ * @property Collection|Checklist[] $checklists
+ * @property Collection|ProjectFile[] $project_files
+ * @property Collection|Comment[] $comments
+ * @property Collection|Category[] $categories
+ * @property Collection|Sector[] $sectors
+ * @property Collection|Genre[] $genres
+ * @property Collection|Project[] $groups
+ * @property Collection|Room[] $rooms
  * @property Sector $sector
  * @property Category $category
  * @property Genre $genre
@@ -73,7 +76,8 @@ class Project extends Model
         'registration_required',
         'register_by',
         'registration_deadline',
-        'closed_society'
+        'closed_society',
+        'budget_deadline'
     ];
 
     protected $casts = [
@@ -84,17 +88,17 @@ class Project extends Model
     protected $with = ['shiftRelevantEventTypes', 'state'];
 
 
-    public function cost_center()
+    public function cost_center(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(CostCenter::class);
     }
 
-    public function shiftRelevantEventTypes(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function shiftRelevantEventTypes(): BelongsToMany
     {
         return $this->belongsToMany(EventType::class, 'project_shift_relevant_event_types');
     }
 
-    public function shift_contact(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function shift_contact(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_shift_contacts');
     }
@@ -104,13 +108,13 @@ class Project extends Model
         return $this->hasOne(Copyright::class);
     }
 
-    public function users()
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
             ->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission');
     }
 
-    public function headlines()
+    public function headlines(): BelongsToMany
     {
         return $this->belongsToMany(ProjectHeadline::class, 'project_project_headlines', 'project_id')
             ->withPivot('text');
@@ -122,19 +126,19 @@ class Project extends Model
             ->wherePivot('access_budget', true);
     }
 
-    public function writeUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function writeUsers():BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
             ->wherePivot('can_write', true);
     }
 
-    public function delete_permission_users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function delete_permission_users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
             ->wherePivot('delete_permission', true);
     }
 
-    public function managerUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function managerUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
             ->wherePivot('is_manager', true);
@@ -153,6 +157,11 @@ class Project extends Model
     public function departments()
     {
         return $this->belongsToMany(Department::class);
+    }
+
+    public function project_histories()
+    {
+        return $this->hasMany(ProjectHistory::class);
     }
 
     public function checklists()
@@ -197,7 +206,7 @@ class Project extends Model
 
     public function groups()
     {
-        return $this->belongsToMany(Project::class, 'project_groups', 'group_id');
+        return $this->belongsToMany(__CLASS__, 'project_groups', 'group_id');
     }
 
 

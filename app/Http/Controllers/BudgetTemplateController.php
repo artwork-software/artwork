@@ -15,13 +15,14 @@ use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
+use function Clue\StreamFilter\fun;
+
 class BudgetTemplateController extends Controller
 {
     protected ?array $columns = null;
 
     public function __construct()
     {
-
     }
 
     /**
@@ -61,10 +62,10 @@ class BudgetTemplateController extends Controller
                         }, 'mainPositions.subPositions.subPositionRows.cells.column'
                     ])
                     ->get(),
-                'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments' => function ($query) {
+                'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments' => function ($query): void {
                     $query->orderBy('created_at', 'desc');
                 }]),
-                'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query) {
+                'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query): void {
                     $query->orderBy('created_at', 'desc');
                 }]),
                 'templates' => $templates,
@@ -73,28 +74,19 @@ class BudgetTemplateController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Table $table, Request $request)
+    public function store(Table $table, Request $request): \Illuminate\Http\RedirectResponse
     {
         $oldTable = $table;
         $this->createTemplate($request->template_name, $oldTable);
+        return back()->with('success');
     }
 
-    private function createTemplate($name, $oldTable, $isTemplate = true, $projectId = null)
+    private function createTemplate($name, $oldTable, $isTemplate = true, $projectId = null): void
     {
 
         //dd($oldTable);
@@ -104,7 +96,7 @@ class BudgetTemplateController extends Controller
             'is_template' => $isTemplate,
             'project_id' => $projectId
         ]);
-        $oldTable->columns->map(function (Column $column) use ($newTable) {
+        $oldTable->columns->map(function (Column $column) use ($newTable): void {
             $replicated_column = $column->replicate()->fill(['table_id' => $newTable->id]);
             $replicated_column->save();
             $this->columns[$column->id] = $replicated_column->id;
@@ -114,31 +106,31 @@ class BudgetTemplateController extends Controller
             ]);
         });
 
-        $oldTable->mainPositions->map(function (MainPosition $mainPosition) use ($newTable) {
+        $oldTable->mainPositions->map(function (MainPosition $mainPosition) use ($newTable): void {
             $replicated_mainPosition = $mainPosition->replicate()->fill(['table_id' => $newTable->id]);
             $replicated_mainPosition->save();
-            $mainPosition->subPositions->map(function (SubPosition $subPosition) use ($replicated_mainPosition) {
+            $mainPosition->subPositions->map(function (SubPosition $subPosition) use ($replicated_mainPosition): void {
                 $replicated_subPosition = $subPosition->replicate()->fill(['main_position_id' => $replicated_mainPosition->id]);
                 $replicated_subPosition->save();
-                $subPosition->subPositionRows->map(function (SubPositionRow $subPositionRow) use ($replicated_subPosition) {
+                $subPosition->subPositionRows->map(function (SubPositionRow $subPositionRow) use ($replicated_subPosition): void {
                     $replicated_subPositionRow = $subPositionRow->replicate()->fill(['sub_position_id' => $replicated_subPosition->id]);
                     $replicated_subPositionRow->save();
-                    $subPositionRow->cells->map(function (ColumnCell $columnCell) use ($replicated_subPositionRow) {
+                    $subPositionRow->cells->map(function (ColumnCell $columnCell) use ($replicated_subPositionRow): void {
                         $replicated_columnCell = $columnCell->replicate()->fill(['sub_position_row_id' => $replicated_subPositionRow->id]);
                         $replicated_columnCell->linked_money_source_id = null;
                         $replicated_columnCell->linked_type = null;
                         $replicated_columnCell->column_id = $this->columns[$columnCell->column_id];
                         $replicated_columnCell->save();
-                        $columnCell->comments->map(function (CellComment $cellComment) use ($replicated_columnCell) {
+                        $columnCell->comments->map(function (CellComment $cellComment) use ($replicated_columnCell): void {
                             $replicated_comment = $cellComment->replicate()->fill(['column_cell_id' => $replicated_columnCell->id]);
                             $replicated_comment->save();
                         });
-                        $columnCell->calculations->map(function (CellCalculations $cellCalculations) use ($replicated_columnCell) {
+                        $columnCell->calculations->map(function (CellCalculations $cellCalculations) use ($replicated_columnCell): void {
                             $replicated_cellCalculation = $cellCalculations->replicate()->fill(['cell_id' => $replicated_columnCell->id]);
                             $replicated_cellCalculation->save();
                         });
                     });
-                    $subPositionRow->comments->map(function (RowComment $rowComment) use ($replicated_subPositionRow) {
+                    $subPositionRow->comments->map(function (RowComment $rowComment) use ($replicated_subPositionRow): void {
                         $replicated_rowComment = $rowComment->replicate()->fill(['sub_position_row_id' => $replicated_subPositionRow->id]);
                         $replicated_rowComment->save();
                     });
@@ -158,11 +150,11 @@ class BudgetTemplateController extends Controller
         return back()->with('success');
     }
 
-    public function useTemplateFromProject(Request $request)
+    public function useTemplateFromProject(Request $request): void
     {
         if ($request->template_project_id !== $request->project_id) {
-        $templateProject = Project::find($request->template_project_id);
-        $project = Project::find($request->project_id);
+            $templateProject = Project::find($request->template_project_id);
+            $project = Project::find($request->project_id);
 
             $this->deleteOldTable($project);
 
@@ -170,7 +162,7 @@ class BudgetTemplateController extends Controller
         }
     }
 
-    public function deleteOldTable(Project $project)
+    public function deleteOldTable(Project $project): void
     {
         $tableToDelete = $project->table()->first();
 
@@ -197,50 +189,5 @@ class BudgetTemplateController extends Controller
         }
 
         $tableToDelete->delete();
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param int $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param int $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
     }
 }

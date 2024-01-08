@@ -13,7 +13,6 @@
                             Details
                         </div>
                     </h1>
-                    {{selectedSumDetail}}
                     <div class="mb-4">
                         <div class="hidden sm:block">
                             <div class="border-gray-200">

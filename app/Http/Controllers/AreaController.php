@@ -17,7 +17,6 @@ use Inertia\Inertia;
 
 class AreaController extends Controller
 {
-
     public function __construct(private readonly AreaService $areaService)
     {
         $this->authorizeResource(Area::class);
@@ -28,7 +27,7 @@ class AreaController extends Controller
      *
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
-    public function index()
+    public function index(): \Inertia\Response|\Inertia\ResponseFactory
     {
         return inertia('Areas/AreaManagement', [
             'areas' => Area::all()->map(fn ($area) => [
@@ -50,21 +49,10 @@ class AreaController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $this->areaService->createByRequest($request);
         return Redirect::route('areas.management')->with('success', 'Area created.');
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \Area  $area
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Area $area)
-    {
-        //not needed
     }
 
     /**
@@ -74,7 +62,7 @@ class AreaController extends Controller
      * @param  \Area  $area
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Area $area)
+    public function update(Request $request, Area $area): \Illuminate\Http\RedirectResponse
     {
         $this->areaService->updateByRequest($area, $request);
         return Redirect::route('areas.management')->with('success', 'Area updated');
@@ -95,7 +83,7 @@ class AreaController extends Controller
      * @param  \Area  $area
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Area $area)
+    public function destroy(Area $area): \Illuminate\Http\RedirectResponse
     {
         $this->areaService->delete($area);
         return Redirect::route('areas.management')->with('success', 'Area moved to trash');

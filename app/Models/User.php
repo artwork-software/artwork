@@ -12,10 +12,13 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
+use Artwork\Modules\Checklist\Models\Checklist;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -108,8 +111,6 @@ class User extends Authenticatable implements Vacationer
         'salary_description',
     ];
 
-
-
     /**
      * The attributes that should be cast.
      *
@@ -149,24 +150,45 @@ class User extends Authenticatable implements Vacationer
         'formatted_vacation_days',
     ];
 
+    /**
+     * @var string[]
+     */
     protected $with = ['calendar_settings'];
 
-
+    /**
+     * @return string
+     */
     public function getTypeAttribute(): string
     {
         return 'user';
     }
 
-    public function crafts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    /**
+     * @return BelongsToMany
+     */
+    public function crafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'craft_users');
     }
 
-    public function shifts(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    /**
+     * @return BelongsToMany
+     */
+    public function shifts(): BelongsToMany
     {
-        return $this->belongsToMany(Shift::class, 'shift_user', 'user_id', 'shift_id')->withPivot(['is_master'])->orderByPivot('is_master', 'desc')->withCasts(['is_master' => 'boolean']);
+        return $this->belongsToMany(
+            Shift::class,
+            'shift_user',
+            'user_id',
+            'shift_id'
+        )->withPivot(['is_master'])
+            ->orderByPivot('is_master', 'desc')
+            ->withCasts(['is_master' => 'boolean']);
     }
 
+    /**
+     * @return Collection
+     */
     public function getShiftsAttribute(): Collection
     {
         return $this->shifts()
@@ -179,15 +201,25 @@ class User extends Authenticatable implements Vacationer
             });
     }
 
-    public function getFullNameAttribute(){
+    /**
+     * @return string
+     */
+    public function getFullNameAttribute(): string
+    {
         return $this->first_name . ' ' . $this->last_name;
     }
 
+    /**
+     * @return string
+     */
     public function getDisplayNameAttribute(): string
     {
         return $this->last_name . ', ' . $this->first_name;
     }
 
+    /**
+     * @return HasOne
+     */
     public function calendar_settings(): HasOne
     {
         return $this->hasOne(UserCalendarSettings::class);
@@ -207,106 +239,181 @@ class User extends Authenticatable implements Vacationer
             }
         }
         return $returnInterval;
-
     }
 
-    public function project_files()
+    /**
+     * @return HasMany
+     */
+    public function project_files(): HasMany
     {
         return $this->hasMany(ProjectFile::class);
     }
 
-    public function notificationSettings(): HasMany {
+    /**
+     * @return HasMany
+     */
+    public function notificationSettings(): HasMany
+    {
         return $this->hasMany(NotificationSetting::class);
     }
 
-    public function departments()
+    /**
+     * @return BelongsToMany
+     */
+    public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class);
     }
 
-    public function projects()
+    /**
+     * @return BelongsToMany
+     */
+    public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class)->withPivot('access_budget', 'is_manager', 'can_write');
     }
 
-    public function comments()
+    /**
+     * @return HasMany
+     */
+    public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
     }
 
-    public function private_checklists()
+    /**
+     * @return HasMany
+     */
+    public function private_checklists(): HasMany
     {
         return $this->hasMany(Checklist::class);
     }
 
-    public function created_rooms()
+    /**
+     * @return HasMany
+     */
+    public function created_rooms(): HasMany
     {
         return $this->hasMany(Room::class);
     }
 
-    public function admin_rooms()
+    /**
+     * @return BelongsToMany
+     */
+    public function admin_rooms(): BelongsToMany
     {
         return $this->belongsToMany(Room::class, 'room_user');
     }
 
-    public function done_tasks()
+    /**
+     * @return HasMany
+     */
+    public function done_tasks(): HasMany
     {
         return $this->hasMany(Task::class);
     }
 
-    public function events()
+    /**
+     * @return HasMany
+     */
+    public function events(): HasMany
     {
         return $this->hasMany(Event::class);
     }
-    public function privateTasks()
+
+    /**
+     * @return HasManyThrough
+     */
+    public function privateTasks(): HasManyThrough
     {
         return $this->hasManyThrough(Task::class, Checklist::class);
     }
 
-    public function getPermissionAttribute()
+    /**
+     * @return \Illuminate\Support\Collection
+     */
+    public function getPermissionAttribute(): \Illuminate\Support\Collection
     {
         return $this->getAllPermissions();
     }
 
-    public function globalNotifications()
+    /**
+     * @return HasOne
+     */
+    public function globalNotifications(): HasOne
     {
         return $this->hasOne(GlobalNotification::class, 'created_by');
     }
 
-    public function money_sources(){
+    /**
+     * @return HasMany
+     */
+    public function money_sources(): HasMany
+    {
         return $this->hasMany(MoneySource::class, 'creator_id');
     }
 
+    /**
+     * @return HasMany
+     */
     public function money_source_tasks(): HasMany
     {
         return $this->hasMany(MoneySourceTask::class, 'user_id');
     }
 
+    /**
+     * @return HasMany
+     */
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class, 'user_id');
     }
 
-    public function accessMoneySources(){
-        return $this->belongsToMany(MoneySource::class, 'money_source_users')->withPivot(['competent', 'write_access'])->using(MoneySourceUserPivot::class);
+    /**
+     * @return BelongsToMany
+     */
+    public function accessMoneySources(): BelongsToMany
+    {
+        return $this->belongsToMany(MoneySource::class, 'money_source_users')
+            ->withPivot(['competent', 'write_access'])
+            ->using(MoneySourceUserPivot::class);
     }
 
-
+    /**
+     * @return HasOne
+     */
     public function calendar_filter(): HasOne
     {
         return $this->hasOne(UserCalendarFilter::class);
     }
 
+    /**
+     * @return HasOne
+     */
     public function shift_calendar_filter(): HasOne
     {
         return $this->hasOne(UserShiftCalendarFilter::class);
     }
 
+    /**
+     * @return HasOne
+     */
     public function commented_budget_items_setting(): HasOne
     {
         return $this->hasOne(UserCommentedBudgetItemsSetting::class);
     }
 
+    /**
+     * @return BelongsToMany
+     */
+    public function assigned_crafts(): BelongsToMany
+    {
+        return $this->belongsToMany(Craft::class, 'users_assigned_crafts');
+    }
+
+    /**
+     * @return string[]
+     */
     public function getAllPermissionsAttribute(): array
     {
         $permissions = [];
@@ -318,6 +425,9 @@ class User extends Authenticatable implements Vacationer
         return $permissions;
     }
 
+    /**
+     * @return string[]
+     */
     public function getAllRolesAttribute(): array
     {
         $rolesArray = [];
@@ -328,6 +438,10 @@ class User extends Authenticatable implements Vacationer
         }
         return $rolesArray;
     }
+
+    /**
+     * @return array<string, mixed>
+     */
     public function toSearchableArray(): array
     {
         return [
@@ -336,6 +450,12 @@ class User extends Authenticatable implements Vacationer
             'last_name' => $this->last_name
         ];
     }
+
+    /**
+     * @param $startDate
+     * @param $endDate
+     * @return float|int
+     */
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
         $shiftsInDateRange = $this->shifts()

@@ -7,6 +7,8 @@ use App\Http\Requests\SearchRequest;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
+use App\Http\Resources\UserWorkProfileResource;
+use App\Models\Craft;
 use App\Models\EventType;
 use App\Models\Freelancer;
 use App\Models\ServiceProvider;
@@ -15,6 +17,8 @@ use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,17 +43,24 @@ class UserController extends Controller
         $this->authorizeResource(User::class, 'user');
     }
 
-    public function search(SearchRequest $request)
+    /**
+     * @param SearchRequest $request
+     * @return array
+     * @throws AuthorizationException
+     */
+    public function search(SearchRequest $request): array
     {
-
-        $this->authorize('viewAny', User::class);
+       $this->authorize('viewAny',User::class);
 
         return UserIndexResource::collection(User::search($request->input('query'))->get())->resolve();
     }
 
-    public function money_source_search(SearchRequest $request)
+    /**
+     * @param SearchRequest $request
+     * @return array
+     */
+    public function money_source_search(SearchRequest $request): array
     {
-
         //$this->authorize('viewAny',User::class);
         $wantedUserArray = [];
 
@@ -60,9 +71,13 @@ class UserController extends Controller
         return $wantedUserArray;
     }
 
-    public function reset_user_password(Request $request)
+    /**
+     * @param Request $request
+     * @return Application|RedirectResponse|mixed
+     * @throws AuthorizationException
+     */
+    public function reset_user_password(Request $request): mixed
     {
-
         //$user = Auth::user();
 
         $this->authorize('update', User::class);
@@ -82,7 +97,10 @@ class UserController extends Controller
             : app(FailedPasswordResetLinkRequestResponse::class, ['status' => $status]);
     }
 
-    public function reset_password()
+    /**
+     * @return Response|ResponseFactory
+     */public function reset_password()
+    : Response|ResponseFactory
     {
         $token = request('token');
         $email = request('email');
@@ -110,6 +128,10 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * @param User $user
+     * @return Response|ResponseFactory
+     */
     public function editUserInfo(User $user): Response|ResponseFactory
     {
         return inertia('Users/UserInfoPage', [
@@ -123,29 +145,15 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * @param User $user
+     * @param CalendarController $shiftPlan
+     * @return Response|ResponseFactory
+     */
     public function editUserShiftplan(User $user, CalendarController $shiftPlan): Response|ResponseFactory
     {
-
         $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
         $availabilityData = $this->getAvailabilityData($user, request('month'));
-
-        /*if(\request('startDate') && \request('endDate')){
-
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
-
-        }else{
-
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
-
-        }
-
-        $events = Event::with(['shifts','event_type'])
-            ->whereHas('shifts', function ($query) {
-                $query->whereNotNull('shifts.id');
-            })
-            ->get();*/
 
         return inertia('Users/UserShiftPlanPage', [
             //needed for UserEditHeader
@@ -162,12 +170,18 @@ class UserController extends Controller
             'rooms' => Room::all(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => Project::all(),
-            'shifts' => $user->shifts()->with(['event', 'event.project', 'event.room'])->orderBy('start', 'ASC')->get(),
-
-
+            'shifts' => $user
+                ->shifts()
+                ->with(['event', 'event.project', 'event.room'])
+                ->orderBy('start', 'ASC')
+                ->get(),
         ]);
     }
 
+    /**
+     * @param User $user
+     * @return Response|ResponseFactory
+     */
     public function editUserTerms(User $user): Response|ResponseFactory
     {
         return inertia('Users/UserTermsPage', [
@@ -176,6 +190,10 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * @param User $user
+     * @return Response|ResponseFactory
+     */
     public function editUserPermissions(User $user): Response|ResponseFactory
     {
         return inertia('Users/UserPermissionsPage', [
@@ -186,6 +204,26 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * @param User $user
+     * @return Response|ResponseFactory
+     */
+    public function editUserWorkProfile(User $user): Response|ResponseFactory
+    {
+        return inertia(
+            'Users/UserWorkProfilePage',
+            [
+                'userToEdit' => new UserWorkProfileResource($user),
+                'currentTab' => 'workProfile',
+            ]
+        );
+    }
+
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return void
+     */
     public function updateUserPhoto(User $user, Request $request): void
     {
         if (isset($request['photo'])) {
@@ -193,6 +231,11 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * @param User $user
+     * @param $month
+     * @return array
+     */
     function getAvailabilityData(User $user, $month = null): array
     {
         $vacationDays = $user->vacations()->orderBy('from', 'ASC')->get();
@@ -279,6 +322,10 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'Benutzer aktualisiert');
     }
 
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     */
     public function update_checklist_status(Request $request): RedirectResponse
     {
         $user = Auth::user();
@@ -290,6 +337,10 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'Checklist status updated');
     }
 
+    /**
+     * @param Request $request
+     * @return RedirectResponse
+     */
     public function update_area_status(Request $request): RedirectResponse
     {
         $user = Auth::user();
@@ -301,6 +352,11 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'Area status updated');
     }
 
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return RedirectResponse
+     */
     public function update_user_can_master(User $user, Request $request): RedirectResponse
     {
         $user->update([
@@ -310,6 +366,11 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'User updated');
     }
 
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return RedirectResponse
+     */
     public function update_user_can_work_shifts(User $user, Request $request): RedirectResponse
     {
         $user->update([
@@ -319,6 +380,11 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'User updated');
     }
 
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return RedirectResponse
+     */
     public function update_work_data(User $user, Request $request): RedirectResponse
     {
         $user->update([
@@ -327,6 +393,68 @@ class UserController extends Controller
         ]);
 
         return Redirect::back()->with('success', 'User updated');
+    }
+
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function updateWorkProfile(User $user, Request $request): RedirectResponse
+    {
+        $user->update([
+            'work_name' => $request->get('workName'),
+            'work_description' => $request->get('workDescription')
+        ]);
+
+        return Redirect::back()->with('success', ['workProfile' => 'Arbeitsprofil erfolgreich aktualisiert']);
+    }
+
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function updateCraftSettings(User $user, Request $request): RedirectResponse
+    {
+        $user->update([
+            'can_work_shifts' => $request->boolean('canBeAssignedToShifts'),
+            'can_master' => $request->boolean('canBeUsedAsMasterCraftsman')
+        ]);
+
+        return Redirect::back();
+    }
+
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function assignCraft(User $user, Request $request): RedirectResponse
+    {
+        $craftToAssign = Craft::find($request->get('craftId'));
+
+        if (is_null($craftToAssign)) {
+            return Redirect::back();
+        }
+
+        if (!$user->assigned_crafts->contains($craftToAssign)) {
+            $user->assigned_crafts()->attach(Craft::find($request->get('craftId')));
+        }
+
+        return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
+    }
+
+    /**
+     * @param User $user
+     * @param Craft $craft
+     * @return RedirectResponse
+     */
+    public function removeCraft(User $user, Craft $craft): RedirectResponse
+    {
+        $user->assigned_crafts()->detach($craft);
+
+        return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
     }
 
     /**
@@ -344,7 +472,12 @@ class UserController extends Controller
         return Redirect::route('users')->with('success', 'Benutzer gelöscht');
     }
 
-    public function temporaryUserUpdate(User $user, Request $request)
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return void
+     */public function temporaryUserUpdate(User $user, Request $request)
+    : void
     {
         $user->update($request->only([
             'temporary',
@@ -353,7 +486,12 @@ class UserController extends Controller
         ]));
     }
 
-    public function updateUserTerms(User $user, Request $request)
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return void
+     */public function updateUserTerms(User $user, Request $request)
+    : void
     {
         $user->update($request->only([
             'can_master',
@@ -364,7 +502,12 @@ class UserController extends Controller
 
     }
 
-    public function updateCalendarSettings(User $user, Request $request)
+    /**
+     * @param User $user
+     * @param Request $request
+     * @return void
+     */public function updateCalendarSettings(User $user, Request $request)
+    : void
     {
         $user->calendar_settings()->update($request->only([
             'project_status',

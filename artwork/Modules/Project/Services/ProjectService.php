@@ -10,8 +10,6 @@ use Artwork\Modules\Project\Repositories\ProjectStateRepository;
 
 class ProjectService
 {
-
-
     public function __construct(
         private readonly ProjectFileRepository     $projectFileRepository,
         private readonly ProjectHeadlineRepository $projectHeadlineRepository,

@@ -11,13 +11,13 @@ class EventPolicy
 {
     use HandlesAuthorization;
 
-    public function create()
+    public function create(): bool
     {
         //return $user->canAny([PermissionNameEnum::PROJECT_UPDATE, PermissionNameEnum::PROJECT_ADMIN]);
         return true;
     }
 
-    public function update(User $user, Event $event)
+    public function update(User $user, Event $event): bool
     {
         if (
             $user->canAny(
@@ -37,7 +37,7 @@ class EventPolicy
             $event->creator?->id === $user->id ?? false;
     }
 
-    public function delete(User $user, Event $event)
+    public function delete(User $user, Event $event): bool
     {
         if (
             $user->canAny(

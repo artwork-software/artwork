@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\Sector;
+use App\Enums\PermissionNameEnum;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -12,22 +12,22 @@ class SectorPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->can('manage categories_etc');
+        return $user->can(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
     }
 
     public function create(User $user): bool
     {
-        return $user->can('manage categories_etc');
+        return $user->can(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
     }
 
     public function update(User $user): bool
     {
-        return $user->can('manage categories_etc');
+        return $user->can(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
     }
 
     public function delete(User $user): bool
     {
-        return $user->can('manage categories_etc');
+        return $user->can(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
     }
 
     public function restore(): void

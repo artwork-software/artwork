@@ -5,7 +5,6 @@
             <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
-                <!--   Heading   -->
                 <div>
                     <h1 class="my-1 flex">
                         <div class="flex-grow headline1">
@@ -21,7 +20,7 @@
                         </div>
                     </div>
                     <div class="flex justify-center">
-                        <AddButton @click="createBudgetTemplate()" :disabled="tableName === ''"
+                        <AddButton @click="updateBudgetTemplateName()" :disabled="tableName === ''"
                                    :class="tableName === '' ? 'bg-secondary hover:bg-secondary cursor-pointer-none' : ''"
                                    class="mt-8 py-3 flex" text="Umbenennen"
                                    mode="modal"></AddButton>
@@ -34,9 +33,6 @@
 </template>
 
 <script>
-
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
-
 
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
@@ -57,26 +53,18 @@ export default {
         InputComponent,
         XCircleIcon
     },
-
     data() {
         return {
             tableName: this.table?.name,
         }
     },
-
-
     props: ['table'],
-
     emits: ['closed'],
-
     methods: {
-        openModal() {
-        },
-
         closeModal(bool) {
             this.$emit('closed', bool);
         },
-        createBudgetTemplate() {
+        updateBudgetTemplateName() {
             this.$inertia.patch(route('project.budget.table.update-name'), {
                 table_id: this.table.id,
                 table_name: this.tableName

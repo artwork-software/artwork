@@ -634,11 +634,15 @@ export default {
     methods: {
         getTimeOfDate(date) {
             //returns hours and minutes in format HH:mm, if necessary with leading zeros, from given date object
-            return ('0' + date.getUTCHours()).slice(-2) + ":" + ('0' + date.getUTCMinutes()).slice(-2);
+            return ('0' + date.getHours()).slice(-2) + ":" + ('0' + date.getMinutes()).slice(-2);
         },
         getDateOfDate(date) {
-            //returns date in format "YYYY-MM-DD" from given date object
-            return date.toISOString().split('T')[0];
+            //returns date in format "YYYY-MM-DD" from given date object, with leading zeros
+            //make sure to add 1 to the returned month because javascript starts counting from 0, January = 0
+            return date.getFullYear() + "-" +
+                (date.getMonth() + 1).toString().padStart(2, '0') + '-' +
+                date.getDate().toString().padStart(2, '0');
+
         },
         convertDateFormat(dateString) {
             const parts = dateString.split('-');

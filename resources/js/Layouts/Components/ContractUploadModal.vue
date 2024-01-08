@@ -342,13 +342,13 @@
                             <div class="flex justify-between">
                                 <button v-if="!creatingNewTask" type="button"
                                         @click="[creatingNewTask = !creatingNewTask]"
-                                        class="flex py-3 px-8 mt-1 items-center border border-2 mt-6 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
+                                        class="flex py-3 px-8 items-center  border-2 mt-6 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
                                     <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
                                     <p class="text-sm">{{ tasks.length === 0 ? 'Neue Aufgabe' : 'Weitere Aufgabe' }}</p>
                                 </button>
 
                                 <button
-                                    class="flex text-sm py-3 px-8 mt-1 items-center border border-2 mt-6 border-success bg-backgroundGray hover:bg-green-50 rounded-full shadow-sm text-success hover:shadow-blueButton focus:outline-none"
+                                    class="flex text-sm py-3 px-8 items-center border-2 mt-6 border-success bg-backgroundGray hover:bg-green-50 rounded-full shadow-sm text-success hover:shadow-blueButton focus:outline-none"
                                     v-if="creatingNewTask"
                                     @click="$refs.task_form.saveTask(); this.errorText === null ? creatingNewTask = false : null">
                                     Aufgabe im Vertrag speichern
@@ -395,7 +395,10 @@ export default {
         closeModal: Function,
         projectId: Number,
         extraSettings: Array,
-        budgetAccess: Array
+        budgetAccess: Array,
+        contractTypes: Array,
+        companyTypes: Array,
+        currencies: Array,
     },
     components: {
         Input,
@@ -452,9 +455,7 @@ export default {
             selectedProject: null,
             project_query: '',
             project_search_results: [],
-            contractTypes: [],
-            companyTypes: [],
-            currencies: [],
+
             errorText: null,
             creatingNewTask: false,
             tasks: [],
@@ -491,17 +492,7 @@ export default {
             }),
         }
     },
-    mounted() {
-        axios.get(route('contract_types.index')).then(res => {
-            this.contractTypes = res.data
-        })
-        axios.get(route('company_types.index')).then(res => {
-            this.companyTypes = res.data
-        })
-        axios.get(route('currencies.index')).then(res => {
-            this.currencies = res.data
-        })
-    },
+
     methods: {
         showError() {
             this.errorText = 'Du musst die Aufgabe einer Person mit Dokumentenzugriff zuweisen'

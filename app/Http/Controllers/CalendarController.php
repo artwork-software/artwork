@@ -300,12 +300,18 @@ class CalendarController extends Controller
     public function createCalendarDataForUserShiftPlan(?User $user = null): array
     {
         $currentDate = Carbon::now();
-        // Calculate the start of the Monday of the recent calendar week
-        $this->startDate = $currentDate->copy()->startOfWeek()->startOfDay();
 
-        // Calculate the end of the Sunday of the recent calendar week
-        $this->endDate = $currentDate->copy()->endOfWeek()->endOfDay();
-        $this->setDefaultDates();
+        if (!is_null($this->userShiftCalendarFilter->start_date)) {
+            $this->startDate = Carbon::parse($this->userShiftCalendarFilter->start_date);
+        } else {
+            $this->startDate = $currentDate->copy()->startOfWeek()->startOfDay();
+        }
+
+        if (!is_null($this->userShiftCalendarFilter->end_date)) {
+            $this->endDate = Carbon::parse($this->userShiftCalendarFilter->end_date);
+        } else {
+            $this->endDate = $currentDate->copy()->endOfWeek()->endOfDay();
+        }
 
         $calendarPeriod = CarbonPeriod::create($this->startDate, $this->endDate);
         $daysWithEvents = [];

@@ -4,18 +4,13 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\Budget\Models\CellComment;
 use Artwork\Modules\Budget\Models\ColumnCell;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CellCommentsController extends Controller
 {
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     */
-    public function store(Request $request, ColumnCell $columnCell): \Illuminate\Http\RedirectResponse
+    public function store(Request $request, ColumnCell $columnCell): RedirectResponse
     {
         $columnCell->comments()->create([
             'user_id' => Auth::id(),

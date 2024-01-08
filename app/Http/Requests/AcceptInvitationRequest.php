@@ -10,7 +10,7 @@ class AcceptInvitationRequest extends UserCreateRequest
 {
     use PasswordValidationRules;
 
-    public function authorize()
+    public function authorize(): bool
     {
         $invitation = Invitation::query()
             ->where('email', $this->request->get('email'))
@@ -20,11 +20,9 @@ class AcceptInvitationRequest extends UserCreateRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
+     * @return array<string, array<int, string>>
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'first_name' => ['required', 'string', 'max:255'],

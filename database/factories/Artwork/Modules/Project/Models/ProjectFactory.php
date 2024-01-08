@@ -5,6 +5,10 @@ namespace Database\Factories\Artwork\Modules\Project\Models;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+
+/**
+ * @extends Factory<Project>
+ */
 class ProjectFactory extends Factory
 {
     protected $model = Project::class;

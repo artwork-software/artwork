@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\FileUpload;
 use App\Models\Comment;
+
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
@@ -18,10 +19,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-
 class ProjectFileController extends Controller
 {
     protected ?NewHistoryService $history = null;
+
     protected ?NotificationService $notificationService = null;
 
     public function __construct()
@@ -30,12 +31,8 @@ class ProjectFileController extends Controller
         $this->notificationService = new NotificationService();
     }
 
-    /**
-     * @throws AuthorizationException
-     */
-    public function store(FileUpload $request, Project $project): \Illuminate\Http\RedirectResponse
+    public function store(FileUpload $request, Project $project): RedirectResponse
     {
-
         $this->authorize('view', $project);
 
         if (!Storage::exists("project_files")) {
@@ -44,26 +41,26 @@ class ProjectFileController extends Controller
 
         $file = $request->file('file');
         $original_name = $file->getClientOriginalName();
-        $basename = Str::random(20).$original_name;
+        $basename = Str::random(20) . $original_name;
 
         Storage::putFileAs('project_files', $file, $basename);
 
-        $projectFile =$project->project_files()->create([
+        $projectFile = $project->project_files()->create([
             'name' => $original_name,
             'basename' => $basename,
         ]);
 
-        $projectFile->accessing_users()->sync(collect($request->accessibleUsers));
+        $projectFile->accessingUsers()->sync(collect($request->accessibleUsers));
 
-        if(is_array($request->accessibleUsers)){
-            if(!in_array(Auth::id(), $request->accessibleUsers)) {
-                $projectFile->accessing_users()->save(Auth::user());
+        if (is_array($request->accessibleUsers)) {
+            if (!in_array(Auth::id(), $request->accessibleUsers)) {
+                $projectFile->accessingUsers()->save(Auth::user());
             }
         } else {
-            $projectFile->accessing_users()->save(Auth::user());
+            $projectFile->accessingUsers()->save(Auth::user());
         }
 
-        if($request->comment){
+        if ($request->comment) {
             $comment = Comment::create([
                 'text' => $request->comment,
                 'user_id' => Auth::id(),
@@ -72,12 +69,11 @@ class ProjectFileController extends Controller
             $projectFile->comments()->save($comment);
         }
 
-
         $this->history->createHistory($project->id, 'Datei ' . $original_name . ' hinzugefügt', 'public_changes');
         $projectController = new ProjectController();
         $projectController->setPublicChangesNotification($project->id);
 
-        $projectFileUsers =  $projectFile->accessing_users()->get();
+        $projectFileUsers =  $projectFile->accessingUsers()->get();
         $notificationTitle = 'Ein Dokument wurde für dich freigegeben';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
@@ -100,52 +96,41 @@ class ProjectFileController extends Controller
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+        $this->notificationService->setNotificationConstEnum(
+            NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED
+        );
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setProjectId($project->id);
         $this->notificationService->setDescription($notificationDescription);
 
-        foreach ($projectFileUsers as $projectFileUser){
+        foreach ($projectFileUsers as $projectFileUser) {
             $this->notificationService->setNotificationTo($projectFileUser);
             $this->notificationService->createNotification();
         }
+
         return Redirect::back();
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param ProjectFile $projectFile
-     * @return StreamedResponse
-     * @throws AuthorizationException
-     */
     public function download(ProjectFile $projectFile): StreamedResponse
     {
         $this->authorize('view', $projectFile->project);
 
-        return Storage::download('project_files/'. $projectFile->basename, $projectFile->name);
+        return Storage::download('project_files/' . $projectFile->basename, $projectFile->name);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param ProjectFile $projectFile
-     * @return RedirectResponse
-     */
     public function update(Request $request, ProjectFile $projectFile): RedirectResponse
     {
         $original_name = '';
 
         if ($request->get('accessibleUsers')) {
-            $projectFile->accessing_users()->sync(collect($request->accessibleUsers));
+            $projectFile->accessingUsers()->sync(collect($request->accessibleUsers));
         }
 
-        if($request->file('file')) {
-            Storage::delete('project_files/'. $projectFile->basename);
+        if ($request->file('file')) {
+            Storage::delete('project_files/' . $projectFile->basename);
             $file = $request->file('file');
             $original_name = $file->getClientOriginalName();
-            $basename = Str::random(20).$original_name;
+            $basename = Str::random(20) . $original_name;
 
             $projectFile->basename = $basename;
             $projectFile->name = $original_name;
@@ -153,7 +138,7 @@ class ProjectFileController extends Controller
             Storage::putFileAs('project_files', $file, $basename);
         }
 
-        if($request->get('comment')) {
+        if ($request->get('comment')) {
             $comment = Comment::create([
                 'text' => $request->comment,
                 'user_id' => Auth::id(),
@@ -165,7 +150,7 @@ class ProjectFileController extends Controller
         $projectFile->save();
 
         $project = $projectFile->project()->first();
-        $projectFileUsers =  $projectFile->accessing_users()->get();
+        $projectFileUsers =  $projectFile->accessingUsers()->get();
         $notificationTitle = 'Ein Dokument wurde geändert';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
@@ -188,28 +173,21 @@ class ProjectFileController extends Controller
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+        $this->notificationService->setNotificationConstEnum(
+            NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED
+        );
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setProjectId($project->id);
         $this->notificationService->setDescription($notificationDescription);
 
-        foreach ($projectFileUsers as $projectFileUser){
+        foreach ($projectFileUsers as $projectFileUser) {
             $this->notificationService->setNotificationTo($projectFileUser);
             $this->notificationService->createNotification();
         }
         return Redirect::back();
-
-
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param ProjectFile $projectFile
-     * @return RedirectResponse
-     * @throws AuthorizationException
-     */
-    public function destroy(ProjectFile $projectFile)
+    public function destroy(ProjectFile $projectFile): RedirectResponse
     {
         $this->authorize('view', $projectFile->project);
         $project = $projectFile->project()->first();
@@ -217,7 +195,7 @@ class ProjectFileController extends Controller
         $projectController = new ProjectController();
         $projectController->setPublicChangesNotification($project->id);
 
-        $projectFileUsers =  $projectFile->accessing_users()->get();
+        $projectFileUsers =  $projectFile->accessingUsers()->get();
         $notificationTitle = 'Ein Dokument wurde gelöscht';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
@@ -240,12 +218,14 @@ class ProjectFileController extends Controller
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(2);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+        $this->notificationService->setNotificationConstEnum(
+            NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED
+        );
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
         $this->notificationService->setProjectId($project->id);
 
-        foreach ($projectFileUsers as $projectFileUser){
+        foreach ($projectFileUsers as $projectFileUser) {
             $this->notificationService->setNotificationTo($projectFileUser);
             $this->notificationService->createNotification();
         }
@@ -253,13 +233,12 @@ class ProjectFileController extends Controller
         return Redirect::back();
     }
 
-    public function force_delete(int $id): \Illuminate\Http\RedirectResponse
+    public function forceDelete(int $id): RedirectResponse
     {
-
         $projectFile = ProjectFile::onlyTrashed()->findOrFail($id);
         $this->authorize('view', $projectFile->project);
 
-        Storage::delete('project_files/'. $projectFile->basename);
+        Storage::delete('project_files/' . $projectFile->basename);
 
         $projectFile->forceDelete();
         return Redirect::back();

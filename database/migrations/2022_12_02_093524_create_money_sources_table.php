@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('money_sources', function (Blueprint $table) {
+        Schema::create('money_sources', function (Blueprint $table): void {
             $table->id();
             $table->bigInteger('creator_id');
             $table->string('name');
@@ -21,7 +21,10 @@ return new class extends Migration
             $table->string('source_name')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
+            $table->date('funding_start_date')->nullable();
+            $table->date('funding_end_date')->nullable();
             $table->json('users')->nullable();
+            $table->json('pinned_by_users')->nullable();
             $table->bigInteger('group_id')->nullable();
             $table->text('description')->nullable();
             $table->boolean('is_group')->default(false);
@@ -34,7 +37,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('money_sources');
     }

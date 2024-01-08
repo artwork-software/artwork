@@ -33,35 +33,28 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    /**
-     * Create the controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         $this->authorizeResource(User::class, 'user');
     }
 
     /**
-     * @param SearchRequest $request
-     * @return array
+     * @return array<string, mixed>
      * @throws AuthorizationException
      */
     public function search(SearchRequest $request): array
     {
-       $this->authorize('viewAny',User::class);
+        $this->authorize('viewAny', User::class);
 
         return UserIndexResource::collection(User::search($request->input('query'))->get())->resolve();
     }
 
     /**
      * @param SearchRequest $request
-     * @return array
+     * @return User[]
      */
-    public function money_source_search(SearchRequest $request): array
+    public function moneySourceSearch(SearchRequest $request): array
     {
-        //$this->authorize('viewAny',User::class);
         $wantedUserArray = [];
 
         $wantedUsers = User::search($request->input('query'))->get();
@@ -72,13 +65,11 @@ class UserController extends Controller
     }
 
     /**
-     * @param Request $request
      * @return Application|RedirectResponse|mixed
      * @throws AuthorizationException
      */
-    public function reset_user_password(Request $request): mixed
+    public function resetUserPassword(Request $request): mixed
     {
-        //$user = Auth::user();
 
         $this->authorize('update', User::class);
 
@@ -88,19 +79,13 @@ class UserController extends Controller
             $request->only(Fortify::email())
         );
 
-        /*if($user->email === $request->email){
-            Auth::logout();
-        }*/
-
         return $status == Password::RESET_LINK_SENT
             ? Redirect::back()->with('status', __('passwords.sent_to_user', ['email' => $request->email]))
             : app(FailedPasswordResetLinkRequestResponse::class, ['status' => $status]);
     }
 
-    /**
-     * @return Response|ResponseFactory
-     */public function reset_password()
-    : Response|ResponseFactory
+
+    public function resetPassword(): Response|ResponseFactory
     {
         $token = request('token');
         $email = request('email');
@@ -111,11 +96,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return Response|ResponseFactory
-     */
     public function index(): Response|ResponseFactory
     {
         return inertia('Users/Index', [
@@ -128,42 +108,27 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * @param User $user
-     * @return Response|ResponseFactory
-     */
     public function editUserInfo(User $user): Response|ResponseFactory
     {
         return inertia('Users/UserInfoPage', [
-            //needed for UserEditHeader
             'user_to_edit' => new UserShowResource($user),
             'currentTab' => 'info',
-
             "departments" => Department::all(),
             "password_reset_status" => session('status'),
-
         ]);
     }
 
-    /**
-     * @param User $user
-     * @param CalendarController $shiftPlan
-     * @return Response|ResponseFactory
-     */
     public function editUserShiftplan(User $user, CalendarController $shiftPlan): Response|ResponseFactory
     {
         $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
         $availabilityData = $this->getAvailabilityData($user, request('month'));
 
         return inertia('Users/UserShiftPlanPage', [
-            //needed for UserEditHeader
             'user_to_edit' => new UserShowResource($user),
             'currentTab' => 'shiftplan',
-            //needed for availability calendar
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
             'vacations' => $user->vacations()->orderBy('from', 'ASC')->get(),
-            //needed for UserShiftPlan
             'dateValue' => $showCalendar['dateValue'],
             'daysWithEvents' => $showCalendar['daysWithEvents'],
             'totalPlannedWorkingHours' => $showCalendar['totalPlannedWorkingHours'],
@@ -178,10 +143,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * @param User $user
-     * @return Response|ResponseFactory
-     */
     public function editUserTerms(User $user): Response|ResponseFactory
     {
         return inertia('Users/UserTermsPage', [
@@ -190,10 +151,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * @param User $user
-     * @return Response|ResponseFactory
-     */
     public function editUserPermissions(User $user): Response|ResponseFactory
     {
         return inertia('Users/UserPermissionsPage', [
@@ -204,10 +161,6 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * @param User $user
-     * @return Response|ResponseFactory
-     */
     public function editUserWorkProfile(User $user): Response|ResponseFactory
     {
         return inertia(
@@ -219,11 +172,6 @@ class UserController extends Controller
         );
     }
 
-    /**
-     * @param User $user
-     * @param Request $request
-     * @return void
-     */
     public function updateUserPhoto(User $user, Request $request): void
     {
         if (isset($request['photo'])) {
@@ -234,9 +182,9 @@ class UserController extends Controller
     /**
      * @param User $user
      * @param $month
-     * @return array
+     * @return array<string, mixed>
      */
-    function getAvailabilityData(User $user, $month = null): array
+    private function getAvailabilityData(User $user, $month = null): array
     {
         $vacationDays = $user->vacations()->orderBy('from', 'ASC')->get();
 
@@ -295,13 +243,6 @@ class UserController extends Controller
         ];
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param User $user
-     * @return RedirectResponse
-     */
     public function update(Request $request, User $user): RedirectResponse
     {
         $user->update($request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email'));
@@ -322,11 +263,7 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'Benutzer aktualisiert');
     }
 
-    /**
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function update_checklist_status(Request $request): RedirectResponse
+    public function updateChecklistStatus(Request $request): RedirectResponse
     {
         $user = Auth::user();
 
@@ -337,11 +274,7 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'Checklist status updated');
     }
 
-    /**
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function update_area_status(Request $request): RedirectResponse
+    public function updateAreaStatus(Request $request): RedirectResponse
     {
         $user = Auth::user();
 
@@ -352,12 +285,7 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'Area status updated');
     }
 
-    /**
-     * @param User $user
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function update_user_can_master(User $user, Request $request): RedirectResponse
+    public function updateUserCanMaster(User $user, Request $request): RedirectResponse
     {
         $user->update([
             'can_master' => $request->can_master
@@ -366,12 +294,7 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'User updated');
     }
 
-    /**
-     * @param User $user
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function update_user_can_work_shifts(User $user, Request $request): RedirectResponse
+    public function updateUserCanWorkShifts(User $user, Request $request): RedirectResponse
     {
         $user->update([
             'can_work_shifts' => $request->can_work_shifts
@@ -380,26 +303,6 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'User updated');
     }
 
-    /**
-     * @param User $user
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function update_work_data(User $user, Request $request): RedirectResponse
-    {
-        $user->update([
-            'work_name' => $request->work_name,
-            'work_description' => $request->work_description
-        ]);
-
-        return Redirect::back()->with('success', 'User updated');
-    }
-
-    /**
-     * @param User $user
-     * @param Request $request
-     * @return RedirectResponse
-     */
     public function updateWorkProfile(User $user, Request $request): RedirectResponse
     {
         $user->update([
@@ -410,11 +313,6 @@ class UserController extends Controller
         return Redirect::back()->with('success', ['workProfile' => 'Arbeitsprofil erfolgreich aktualisiert']);
     }
 
-    /**
-     * @param User $user
-     * @param Request $request
-     * @return RedirectResponse
-     */
     public function updateCraftSettings(User $user, Request $request): RedirectResponse
     {
         $user->update([
@@ -425,11 +323,6 @@ class UserController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * @param User $user
-     * @param Request $request
-     * @return RedirectResponse
-     */
     public function assignCraft(User $user, Request $request): RedirectResponse
     {
         $craftToAssign = Craft::find($request->get('craftId'));
@@ -438,31 +331,20 @@ class UserController extends Controller
             return Redirect::back();
         }
 
-        if (!$user->assigned_crafts->contains($craftToAssign)) {
-            $user->assigned_crafts()->attach(Craft::find($request->get('craftId')));
+        if (!$user->assignedCrafts->contains($craftToAssign)) {
+            $user->assignedCrafts()->attach(Craft::find($request->get('craftId')));
         }
 
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
     }
 
-    /**
-     * @param User $user
-     * @param Craft $craft
-     * @return RedirectResponse
-     */
     public function removeCraft(User $user, Craft $craft): RedirectResponse
     {
-        $user->assigned_crafts()->detach($craft);
+        $user->assignedCrafts()->detach($craft);
 
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param User $user
-     * @return RedirectResponse
-     */
     public function destroy(User $user): RedirectResponse
     {
         $user->delete();
@@ -472,12 +354,8 @@ class UserController extends Controller
         return Redirect::route('users')->with('success', 'Benutzer gelöscht');
     }
 
-    /**
-     * @param User $user
-     * @param Request $request
-     * @return void
-     */public function temporaryUserUpdate(User $user, Request $request)
-    : void
+
+    public function temporaryUserUpdate(User $user, Request $request): void
     {
         $user->update($request->only([
             'temporary',
@@ -486,12 +364,8 @@ class UserController extends Controller
         ]));
     }
 
-    /**
-     * @param User $user
-     * @param Request $request
-     * @return void
-     */public function updateUserTerms(User $user, Request $request)
-    : void
+
+    public function updateUserTerms(User $user, Request $request): void
     {
         $user->update($request->only([
             'can_master',
@@ -499,15 +373,10 @@ class UserController extends Controller
             'salary_per_hour',
             'salary_description',
         ]));
-
     }
 
-    /**
-     * @param User $user
-     * @param Request $request
-     * @return void
-     */public function updateCalendarSettings(User $user, Request $request)
-    : void
+
+    public function updateCalendarSettings(User $user, Request $request): void
     {
         $user->calendar_settings()->update($request->only([
             'project_status',

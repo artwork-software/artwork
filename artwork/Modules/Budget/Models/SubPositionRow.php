@@ -8,6 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $sub_position_id
+ * @property int $position
+ * @property bool $commented
+ * @property string $created_at
+ * @property string $updated_at
+ */
 class SubPositionRow extends Model
 {
     use HasFactory;
@@ -25,8 +33,7 @@ class SubPositionRow extends Model
 
     public function columns(): BelongsToMany
     {
-        return $this->belongsToMany(Column::class)
-            ->withTimestamps();
+        return $this->belongsToMany(Column::class)->withTimestamps();
     }
 
     public function cells(): HasMany
@@ -38,10 +45,4 @@ class SubPositionRow extends Model
     {
         return $this->hasMany(RowComment::class);
     }
-
 }
-
-
-/**
- * select `columns`.*, `column_sub_position_row`.`sub_position_row_id` as `pivot_sub_position_row_id`, `column_sub_position_row`.`column_id` as `pivot_column_id`, `column_sub_position_row`.`value` as `pivot_value`, `column_sub_position_row`.`linked_money_source_id` as `pivot_linked_money_source_id`, `column_sub_position_row`.`id` as `pivot_id`, `column_sub_position_row`.`calculations` as `pivot_calculations`, `column_sub_position_row`.`comments` as `pivot_comments`, `column_sub_position_row`.`created_at` as `pivot_created_at`, `column_sub_position_row`.`updated_at` as `pivot_updated_at` from `columns` inner join `column_sub_position_row` on `columns`.`id` = `column_sub_position_row`.`column_id` where `column_sub_position_row`.`sub_position_row_id` in (1, 2, 3)
- */

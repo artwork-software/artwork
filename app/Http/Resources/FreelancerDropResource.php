@@ -7,17 +7,12 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class FreelancerDropResource extends JsonResource
 {
-    /**
-     * @var null
-     */
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  Request  $request
-     * @return array
+     * @return array<string, mixed>
      */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
         return [
@@ -26,7 +21,9 @@ class FreelancerDropResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'profile_photo_url' => $this->profile_image,
-            'assigned_crafts_ids' => $this->assigned_crafts->pluck('id'),
+            'assigned_craft_ids' => $this->assignedCrafts->pluck('id'),
+            'can_master' => $this->can_master,
+            'can_work_shifts' => $this->can_work_shifts,
         ];
     }
 }

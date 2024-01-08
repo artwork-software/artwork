@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+
 use Artwork\Modules\Craft\Models\Craft;
 use Illuminate\Database\Seeder;
 
@@ -12,7 +13,7 @@ class CraftSeed extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         $calderoSystems = Craft::create([
             'name' => 'Caldero-Systems GmbH',

@@ -16,6 +16,7 @@ use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +29,7 @@ use stdClass;
 class TaskController extends Controller
 {
     protected ?stdClass $notificationData = null;
+
     protected ?NewHistoryService $history = null;
 
     public function __construct(protected NotificationService $notificationService)
@@ -37,24 +39,18 @@ class TaskController extends Controller
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_CHANGED;
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return Response|ResponseFactory
-     */
-    public function create()
+    public function create(): Response|ResponseFactory
     {
         return inertia('Tasks/Create');
     }
 
-    public function indexOwnTasks()
+    public function indexOwnTasks(): Response|ResponseFactory
     {
         $tasks = Task::query()
             ->with(['checklist.project', 'checklist.users'])
             ->whereHas('checklist', fn(Builder $checklistBuilder) => $checklistBuilder
-                ->where('user_id', Auth::id())
-            )
-            ->orWhereHas('task_users', function ($q) {
+                ->where('user_id', Auth::id()))
+            ->orWhereHas('task_users', function ($q): void {
                 $q->where('user_id', Auth::id());
             })->get();
 
@@ -66,8 +62,7 @@ class TaskController extends Controller
         ]);
     }
 
-
-    public function store(StoreTaskRequest $request)
+    public function store(StoreTaskRequest $request): JsonResponse|RedirectResponse
     {
         $checklist = Checklist::where('id', $request->checklist_id)->first();
         $authorized = false;
@@ -95,15 +90,14 @@ class TaskController extends Controller
         }
 
         $this->history = new NewHistoryService(Project::class);
-        $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $request->name . ' zu ' . $checklist->name . ' hinzugefügt');
+        $this->history->createHistory(
+            $checklist->project_id,
+            'Aufgabe ' . $request->name . ' zu ' . $checklist->name . ' hinzugefügt'
+        );
         $this->createNotificationForAllChecklistUser($checklist);
         return Redirect::back()->with('success', 'Task created.');
     }
 
-    /**
-     * @param Checklist $checklist
-     * @return void
-     */
     private function createNotificationForAllChecklistUser(Checklist $checklist): void
     {
         $taskScheduling = new SchedulingController();
@@ -121,7 +115,7 @@ class TaskController extends Controller
         }
     }
 
-    private function createTask(Request $request)
+    private function createTask(Request $request): void
     {
         $task = Task::create([
             'name' => $request->name,
@@ -138,33 +132,22 @@ class TaskController extends Controller
             }
         }
 
-        $Checklist = Checklist::find($request->checklist_id);
-        $checklistUsers = $Checklist->users()->get();
+        $checklist = Checklist::find($request->checklist_id);
+        $checklistUsers = $checklist->users()->get();
 
         $task->task_users()->syncWithoutDetaching(collect($checklistUsers)->pluck('id'));
 
         (new HistoryService())->taskUpdated($task);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param Task $task
-     * @return Response|ResponseFactory
-     */
-    public function edit(Task $task)
+    public function edit(Task $task): Response|ResponseFactory
     {
         return inertia('Tasks/Edit', [
             'task' => new TaskIndexResource($task),
         ]);
     }
 
-    /**
-     * @param Request $request
-     * @param Task $task
-     * @return RedirectResponse
-     */
-    public function update(Request $request, Task $task)
+    public function update(Request $request, Task $task): RedirectResponse
     {
         $update_properties = $request->only('name', 'description', 'deadline', 'done', 'checklist_id');
         $task->user_id = null;
@@ -177,7 +160,6 @@ class TaskController extends Controller
         }
 
         $task->fill($update_properties);
-
         $task->save();
 
         if (!$request->private && !empty($request->users)) {
@@ -185,20 +167,17 @@ class TaskController extends Controller
         }
 
         if ($checklist = $task->checklist()->first()) {
+
             $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
             $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert');
+
 
             $this->createNotificationUpdateTask($task);
         }
 
-
         return Redirect::back()->with('success', 'Task updated');
     }
 
-    /**
-     * @param Task $task
-     * @return void
-     */
     private function createNotificationUpdateTask(Task $task): void
     {
         $taskUser = $task->checklist()->first()->user_id;
@@ -217,12 +196,7 @@ class TaskController extends Controller
         }
     }
 
-    /**
-     * @param Request $request
-     * @param HistoryService $historyService
-     * @return RedirectResponse
-     */
-    public function updateOrder(Request $request, HistoryService $historyService)
+    public function updateOrder(Request $request, HistoryService $historyService): RedirectResponse
     {
         $firstTask = Task::findOrFail($request->tasks[0]['id']);
 
@@ -234,16 +208,13 @@ class TaskController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * @param Task $task
-     * @param HistoryService $historyService
-     * @return RedirectResponse
-     */
-    public function destroy(Task $task)
+    public function destroy(Task $task): RedirectResponse
     {
         $checklist = $task->checklist()->first();
+
         $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
         $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' gelöscht');
+
         $task->delete();
         return Redirect::back()->with('success', 'Task deleted');
     }

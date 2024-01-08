@@ -7,31 +7,16 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
 class TimeWithoutSeconds implements CastsAttributes
 {
-    /**
-     * Cast the given value.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @param  string  $key
-     * @param  mixed  $value
-     * @param  array  $attributes
-     * @return mixed
-     */
-    public function get($model, string $key, $value, array $attributes)
+    //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceAfterLastUsed, Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceBeforeLastUsed
+    public function get($model, string $key, mixed $value, array $attributes): ?string
     {
-        if(is_null($value)) return null;
+        if (is_null($value)) {
+            return null;
+        }
         return Carbon::parse($value)->format('H:i');
     }
 
-    /**
-     * Prepare the given value for storage.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @param  string  $key
-     * @param  mixed  $value
-     * @param  array  $attributes
-     * @return mixed
-     */
-    public function set($model, string $key, $value, array $attributes)
+    public function set($model, string $key, mixed $value, array $attributes): mixed
     {
         return $value;
     }

@@ -6,20 +6,15 @@ use App\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @mixin \App\Models\Event
- */
 class EventCalendarDayResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource collection into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         /** @var Carbon $date */
         $date = $this->metaDate;

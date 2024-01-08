@@ -501,7 +501,7 @@ export default {
             })
             this.contractForm.accessibleUsers = userIds;
             this.contractForm.tasks = this.tasks
-            this.contractForm.post(this.route('contracts.update', this.contract.id));
+            this.contractForm.patch(this.route('contracts.update', this.contract.id));
 
             this.closeModal()
         },

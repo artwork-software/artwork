@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChecklistTemplate;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use App\Http\Resources\ChecklistShowResource;
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\ChecklistTemplate;
-use App\Models\Task;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHistory;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Response;
 use Inertia\ResponseFactory;
 
 class ChecklistController extends Controller
@@ -56,14 +56,9 @@ class ChecklistController extends Controller
         return Redirect::back()->with('success', 'Checklist created.');
     }
 
-    /**
-     * Creates a checklist on basis of a ChecklistTemplate
-     * @param  Request  $request
-     */
-    protected function createFromTemplate(Request $request)
+    protected function createFromTemplate(Request $request): void
     {
         $template = ChecklistTemplate::where('id', $request->template_id)->first();
-        $project = Project::where('id', $request->project_id)->first();
 
         $checklist = Checklist::create([
             'name' => $template->name,
@@ -81,20 +76,15 @@ class ChecklistController extends Controller
             ]);
         }
 
-            $checklist->users()->sync(
-                collect($template->users)
-                    ->map(function ($user) {
-                        return $user['id'];
-                    })
-            );
+        $checklist->users()->sync(
+            collect($template->users)
+                ->map(function ($user) {
+                    return $user['id'];
+                })
+        );
     }
 
-    /**
-     * Default creation of a checklist without a template
-     * @param  Request  $request
-     * @return \Illuminate\Http\JsonResponse|void
-     */
-    protected function createWithoutTemplate(Request $request)
+    protected function createWithoutTemplate(Request $request): void
     {
         $checklist = Checklist::create([
             'name' => $request->name,
@@ -114,33 +104,21 @@ class ChecklistController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Checklist  $checklist
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function show(Checklist $checklist)
+    public function show(Checklist $checklist): Response|ResponseFactory
     {
         return inertia('Checklists/Show', [
             'checklist' => new ChecklistShowResource($checklist),
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Checklist  $checklist
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function edit(Checklist $checklist)
+    public function edit(Checklist $checklist): Response|ResponseFactory
     {
         return inertia('Checklists/Edit', [
             'checklist' => new ChecklistShowResource($checklist),
         ]);
     }
 
-    public function update(ChecklistUpdateRequest $request, Checklist $checklist)
+    public function update(ChecklistUpdateRequest $request, Checklist $checklist): RedirectResponse
     {
         $this->checklistService->updateByRequest($checklist, $request);
 

@@ -34,13 +34,7 @@ use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    /**
-     * The policy mappings for the application.
-     *
-     * @var array<class-string, class-string>
-     */
     protected $policies = [
-        // 'App\Models\Model' => 'App\Policies\ModelPolicy',
         Invitation::class => InvitationPolicy::class,
         User::class => UserPolicy::class,
         Department::class => DepartmentPolicy::class,
@@ -56,18 +50,13 @@ class AuthServiceProvider extends ServiceProvider
         Contract::class => ContractPolicy::class
     ];
 
-    /**
-     * Register any authentication / authorization services.
-     *
-     * @return void
-     */
-    public function boot()
+    public function boot(): void
     {
         $this->registerPolicies();
 
         // Implicitly grant "admin" role all permissions
         // This works in the app by using gate-related functions like auth()->user->can() and @can()
-        Gate::before(function ($user, $ability) {
+        Gate::before(function ($user) {
             return $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) ? true : null;
         });
     }

@@ -14,6 +14,9 @@ class FilterProvider
 {
     use SimpleMapping;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function provide(): array
     {
         $roomCategories = RoomCategory::all();

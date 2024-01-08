@@ -12,19 +12,17 @@ class RoomCalendarResource extends JsonResource
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         $events = $this->events()->get();
 
         $historyArray = [];
         $historyComplete = $this->historyChanges()->all();
 
-        foreach ($historyComplete as $history){
+        foreach ($historyComplete as $history) {
             $historyArray[] = [
                 'changes' => json_decode($history->changes),
                 'created_at' => $history->created_at->diffInHours() < 24
@@ -49,8 +47,11 @@ class RoomCalendarResource extends JsonResource
             'room_files' => $this->room_files,
             'area_id' => $this->area_id,
             'everyone_can_book' => $this->everyone_can_book,
-            'room_admins' => UserWithoutApartmentIndexResource::collection($this->users()->wherePivot('is_admin', true)->get())->resolve(),
-            'requestable_by' => UserWithoutApartmentIndexResource::collection($this->users()->wherePivot('can_request', true)->get())->resolve(),
+            'room_admins' => UserWithoutApartmentIndexResource::collection($this->users()->wherePivot('is_admin', true)
+                ->get())->resolve(),
+            'requestable_by' => UserWithoutApartmentIndexResource::collection(
+                $this->users()->wherePivot('can_request', true)->get()
+            )->resolve(),
             'event_requests' => EventShowResource::collection($events->where('occupancy_option', true))->resolve(),
             'area' => $this->area,
         ];

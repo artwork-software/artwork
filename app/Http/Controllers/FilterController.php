@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\EventType;
 use App\Models\Filter;
 use Artwork\Modules\Area\Models\Area;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -14,9 +15,6 @@ use Artwork\Modules\Room\Models\RoomCategory;
 
 class FilterController extends Controller
 {
-    /**
-     * Get all filters of the current user
-     */
     public function index()
     {
         return Filter::where('user_id', Auth::id())->get()->map(fn (Filter $filter) => [
@@ -43,13 +41,9 @@ class FilterController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    public function store(Request $request): RedirectResponse
     {
         $filter = Filter::create([
             'name' => $request->name,
@@ -107,9 +101,9 @@ class FilterController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Filter  $filter
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function destroy(Filter $filter): \Illuminate\Http\RedirectResponse
+    public function destroy(Filter $filter): RedirectResponse
     {
         $filter->delete();
         return Redirect::back()->with('success', 'Filter deleted');

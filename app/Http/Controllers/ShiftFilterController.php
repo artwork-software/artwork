@@ -6,17 +6,15 @@ use App\Models\EventType;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\ShiftFilter;
 use Barryvdh\Debugbar\Facades\Debugbar;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
 class ShiftFilterController extends Controller
 {
-
-    /**
-     * Get all filters of the current user
-     */
-    public function index() {
+    public function index()
+    {
         return ShiftFilter::where('user_id', Auth::id())->get()->map(fn (ShiftFilter $filter) => [
             'id' => $filter->id,
             'name' => $filter->name,
@@ -30,13 +28,7 @@ class ShiftFilterController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         Debugbar::info('Storing Shift filter');
 
@@ -48,16 +40,14 @@ class ShiftFilterController extends Controller
         $roomIds = $request->input('calendarFilters.roomIds');
         $eventTypeIds = $request->input('calendarFilters.eventTypeIds');
 
-        if($roomIds) {
-            foreach($roomIds as $roomId)
-            {
+        if ($roomIds) {
+            foreach ($roomIds as $roomId) {
                 $filter->rooms()->save(Room::where('id', $roomId)->first());
             }
         }
 
-        if($eventTypeIds) {
-            foreach($eventTypeIds as $eventTypeId)
-            {
+        if ($eventTypeIds) {
+            foreach ($eventTypeIds as $eventTypeId) {
                 $filter->event_types()->save(EventType::where('id', $eventTypeId)->first());
             }
         }
@@ -65,13 +55,7 @@ class ShiftFilterController extends Controller
         return Redirect::back()->with('success', 'Shift Filter created.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Filter  $filter
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(ShiftFilter $filter)
+    public function destroy(ShiftFilter $filter): void
     {
         $filter->delete();
     }

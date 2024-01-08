@@ -6,31 +6,23 @@ use App\Models\UserCalendarSettings;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * @mixin \App\Models\Event
- * @property mixed $collision_count
- * @see \App\Builders\EventBuilder::withCollisionCount()
- */
 class CalendarEventResource extends JsonResource
 {
     public static $wrap = null;
 
     private UserCalendarSettings $userCalendarSettings;
-    /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
-     */
-    public function toArray($request)
-    {
 
+    /**
+     * @return array<string, mixed>
+     */
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
+    {
         $this->userCalendarSettings = Auth::user()->calendar_settings;
 
-        $classString = '';
-        if($this->occupancy_option){
+        if ($this->occupancy_option) {
             $classString = $this->event_type->svg_name . ' ' . 'occupancy_option_' . $this->event_type->svg_name;
-        }else{
+        } else {
             $classString = $this->event_type->svg_name;
         }
 
@@ -40,7 +32,7 @@ class CalendarEventResource extends JsonResource
             'start' => $this->start_time->utc()->toIso8601String(),
             'startTime' => $this->start_time,
             'end' => $this->end_time->utc()->toIso8601String(),
-            'title' => $this->project?->name ?: $this->eventName? : $this->event_type->name,
+            'title' => $this->project?->name ?: $this->eventName ? : $this->event_type->name,
             'alwaysEventName' => $this->eventName,
             'eventName' => $this->eventName,
             'event_type' => $this->event_type,
@@ -54,19 +46,18 @@ class CalendarEventResource extends JsonResource
             'declinedRoomId' => $this->declined_room_id,
             'eventTypeId' => $this->event_type_id,
             'eventTypeName' => $this->event_type->name,
-            'eventTypeAbbreviation' =>$this->event_type->abbreviation,
+            'eventTypeAbbreviation' => $this->event_type->abbreviation,
             'class' => $classString,
             'areaId' => $this->room?->area_id,
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
             'created_by' => $this->creator,
             'occupancy_option' => $this->occupancy_option,
             'projectLeaders' => $this->project?->managerUsers,
-            //'project' => new ProjectInEventResource($this->project),
             'project' => new ProjectInCalendarResource($this->project),
-            'collisionCount'=> $this->collision_count,
-            'is_series'=> $this->is_series,
-            'series_id'=> $this->series_id,
-            'option_string'=>$this->option_string,
+            'collisionCount' => $this->collision_count,
+            'is_series' => $this->is_series,
+            'series_id' => $this->series_id,
+            'option_string' => $this->option_string,
             'series' => $this->series,
             'allDay' => $this->allDay,
             // to display rooms as split
@@ -74,7 +65,6 @@ class CalendarEventResource extends JsonResource
             // Todo Add Authorization
             'resizable' => true,
             'draggable' => true,
-
             'canEdit' => Auth::user()->can('update', $this->resource),
             'canAccept' => Auth::user()->can('update', $this->resource),
             'canDelete' => Auth::user()->can('delete', $this->resource),
@@ -83,14 +73,18 @@ class CalendarEventResource extends JsonResource
             'shifts' => $this->shifts,
         ];
 
-        if(!$this->userCalendarSettings->work_shifts){
-            if(isset($output['shifts'])){
-                if(array_key_exists('shifts', $output)){
-                    unset($output['shifts']);
-                }
-            }
-        }
+        return $this->handleNoUserCalendarWorkShifts($output);
+    }
 
+    /**
+     * @param array $output
+     * @return array<string, mixed>
+     */
+    private function handleNoUserCalendarWorkShifts(array $output): array
+    {
+        if (!$this->userCalendarSettings->work_shifts && array_key_exists('shifts', $output)) {
+            unset($output['shifts']);
+        }
         return $output;
     }
 }

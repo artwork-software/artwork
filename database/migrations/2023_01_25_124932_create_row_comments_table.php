@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('row_comments', function (Blueprint $table) {
+        Schema::create('row_comments', function (Blueprint $table): void {
             $table->id();
             $table->bigInteger('sub_position_row_id');
             $table->unsignedBigInteger('user_id');
@@ -27,7 +27,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('row_comments');
     }

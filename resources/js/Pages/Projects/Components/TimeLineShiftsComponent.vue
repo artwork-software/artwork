@@ -2,7 +2,7 @@
     <div class="flex h-full gap-2">
         <Timeline :time-line="timeLine" :event="event"/>
         <div class="w-[175px]" v-for="shift in shifts">
-            <SingleShift :shift="shift" :crafts="crafts" :event="event" :currentUserCrafts="currentUserCrafts"/>
+            <SingleShift @dropFeedback="dropFeedback" :shift="shift" :crafts="crafts" :event="event" :currentUserCrafts="currentUserCrafts"/>
         </div>
         <!-- Empty -->
         <div class="w-[175px] flex items-center justify-center border-2 border-dashed" @click="checkWhichModal">
@@ -52,7 +52,11 @@ export default defineComponent({
             }
         }
     },
+    emits: ['dropFeedback'],
     methods: {
+        dropFeedback(event){
+            this.$emit('dropFeedback', event)
+        },
         dayjs,
         checkWhichModal() {
             if (this.event.is_series) {

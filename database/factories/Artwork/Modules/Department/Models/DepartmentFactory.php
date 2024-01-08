@@ -5,6 +5,9 @@ namespace Database\Factories\Artwork\Modules\Department\Models;
 use Artwork\Modules\Department\Models\Department;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<Department>
+ */
 class DepartmentFactory extends Factory
 {
     protected  $model = Department::class;

@@ -3,7 +3,14 @@ namespace Artwork\Modules\Room\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $created_at
+ * @property string $updated_at
+ */
 class RoomAttribute extends Model
 {
     use HasFactory;
@@ -12,8 +19,8 @@ class RoomAttribute extends Model
         'name'
     ];
 
-    public function rooms()
+    public function rooms(): BelongsToMany
     {
-        return $this->belongsToMany(Room::class, 'room_pivot_room_attribute');
+        return $this->belongsToMany(Room::class)->using(RoomRoomAttributeMapping::class);
     }
 }

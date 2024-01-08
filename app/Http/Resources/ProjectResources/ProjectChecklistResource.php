@@ -17,17 +17,15 @@ class ProjectChecklistResource extends JsonResource
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         $historyArray = [];
         $historyComplete = $this->historyChanges()->all();
 
-        foreach ($historyComplete as $history){
+        foreach ($historyComplete as $history) {
             $historyArray[] = [
                 'changes' => json_decode($history->changes),
                 'created_at' => $history->created_at->diffInHours() < 24
@@ -40,15 +38,16 @@ class ProjectChecklistResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
+            'isMemberOfADepartment' => $this->departments
+                ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'key_visual_path' => $this->key_visual_path,
-
             'write_auth' => $this->writeUsers,
             'users' => UserResourceWithoutShifts::collection($this->users)->resolve(),
-
-            'public_checklists' => ChecklistIndexResource::collection($this->checklists->whereNull('user_id'))->resolve(),
-            'private_checklists' => ChecklistIndexResource::collection($this->checklists->where('user_id', Auth::id()))->resolve(),
-
+            'public_checklists' => ChecklistIndexResource::collection($this->checklists->whereNull('user_id'))
+                ->resolve(),
+            'private_checklists' => ChecklistIndexResource::collection(
+                $this->checklists->where('user_id', Auth::id())
+            )->resolve(),
             //needed for ProjectShowHeaderComponent
             'project_history' => $historyArray,
             'delete_permission_users' => $this->delete_permission_users,

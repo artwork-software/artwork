@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('checklist_template_user', function (Blueprint $table) {
+        Schema::create('checklist_template_user', function (Blueprint $table): void {
             $table->unsignedBigInteger('checklist_template_id');
             $table->unsignedBigInteger('user_id');
             $table->timestamps();
@@ -25,7 +25,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('checklist_template_user');
     }

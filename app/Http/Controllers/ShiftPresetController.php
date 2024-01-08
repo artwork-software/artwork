@@ -4,17 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\EventType;
+
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Shift\Models\ShiftPreset;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Inertia\Inertia;
 
 class ShiftPresetController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     */
     public function index()
     {
         $shiftPresets = ShiftPreset::with(['event_type', 'shifts', 'timeLine'])->get();
@@ -46,23 +44,11 @@ class ShiftPresetController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Event $event, Request $request)
+    public function store(Event $event, Request $request): void
     {
         $shifts = $event->shifts()->get();
         $timeLines = $event->timeline()->get();
@@ -94,52 +80,27 @@ class ShiftPresetController extends Controller
         }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \Artwork\Modules\Shift\Models\ShiftPreset  $shiftPreset
-     * @return \Illuminate\Http\Response
-     */
-    public function show(ShiftPreset $shiftPreset)
+
+    public function show(ShiftPreset $shiftPreset): void
     {
-        //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \Artwork\Modules\Shift\Models\ShiftPreset  $shiftPreset
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(ShiftPreset $shiftPreset)
+    public function edit(ShiftPreset $shiftPreset): void
     {
-        //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Artwork\Modules\Shift\Models\ShiftPreset  $shiftPreset
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, ShiftPreset $shiftPreset)
+    public function update(Request $request, ShiftPreset $shiftPreset): void
     {
         $shiftPreset->update($request->only(['name', 'event_type_id']));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \Artwork\Modules\Shift\Models\ShiftPreset  $shiftPreset
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(ShiftPreset $shiftPreset)
+    public function destroy(ShiftPreset $shiftPreset): void
     {
         $shiftPreset->delete();
     }
 
-    public function duplicate(ShiftPreset $shiftPreset){
+    public function duplicate(ShiftPreset $shiftPreset): void
+    {
         $shifts = $shiftPreset->shifts()->get();
         $timeLines = $shiftPreset->timeline()->get();
 
@@ -170,7 +131,8 @@ class ShiftPresetController extends Controller
         }
     }
 
-    public function addNewShift(Request $request, ShiftPreset $shiftPreset){
+    public function addNewShift(Request $request, ShiftPreset $shiftPreset): void
+    {
         $shiftPreset->shifts()->create([
             'start' => $request->start,
             'end' => $request->end,
@@ -183,16 +145,16 @@ class ShiftPresetController extends Controller
         ]);
     }
 
-    public function storeEmpty(Request $request)
+    public function storeEmpty(Request $request): void
     {
         ShiftPreset::create([
             'name' => $request->name,
             'event_type_id' => $request->event_type_id
         ]);
-
     }
 
-    public function search(Request $request){
+    public function search(Request $request)
+    {
         $query = $request->input('query');
 
         // Assuming you also have an 'eventTypeId' parameter in your request
@@ -204,7 +166,7 @@ class ShiftPresetController extends Controller
         $returnArray = [];
 
         foreach ($shiftPresets->get() as $shiftPreset) {
-            if($shiftPreset->event_type_id == $eventTypeId){
+            if ($shiftPreset->event_type_id == $eventTypeId) {
                 array_push($returnArray, $shiftPreset);
             }
         }
@@ -212,21 +174,21 @@ class ShiftPresetController extends Controller
         return $returnArray;
     }
 
-    public function import(Request $request, Event $event, ShiftPreset $shiftPreset)
+    public function import(Request $request, Event $event, ShiftPreset $shiftPreset): void
     {
-        if($request->all === true){
+        if ($request->all === true) {
             $project = $event->project()->first();
 
             $eventsByProject = $project->events()->where('event_type_id', $shiftPreset->event_type_id)->get();
 
-            foreach ($eventsByProject as $eventByProject){
+            foreach ($eventsByProject as $eventByProject) {
                 $eventByProject->shifts()->delete();
                 $eventByProject->timeline()->delete();
 
                 $shifts = $shiftPreset->shifts()->get();
                 $timeLines = $shiftPreset->timeline()->get();
 
-                foreach ($shifts as $shift){
+                foreach ($shifts as $shift) {
                     $eventByProject->shifts()->create([
                         'start' => $shift->start,
                         'end' => $shift->end,
@@ -239,7 +201,7 @@ class ShiftPresetController extends Controller
                     ]);
                 }
 
-                foreach ($timeLines as $timeLine){
+                foreach ($timeLines as $timeLine) {
                     $eventByProject->timeline()->create([
                         'start' => $timeLine->start,
                         'end' => $timeLine->end,
@@ -247,7 +209,6 @@ class ShiftPresetController extends Controller
                     ]);
                 }
             }
-
         } else {
             $event->shifts()->delete();
             $event->timeline()->delete();
@@ -255,7 +216,7 @@ class ShiftPresetController extends Controller
             $shifts = $shiftPreset->shifts()->get();
             $timeLines = $shiftPreset->timeline()->get();
 
-            foreach ($shifts as $shift){
+            foreach ($shifts as $shift) {
                 $event->shifts()->create([
                     'start' => $shift->start,
                     'end' => $shift->end,
@@ -268,7 +229,7 @@ class ShiftPresetController extends Controller
                 ]);
             }
 
-            foreach ($timeLines as $timeLine){
+            foreach ($timeLines as $timeLine) {
                 $event->timeline()->create([
                     'start' => $timeLine->start,
                     'end' => $timeLine->end,

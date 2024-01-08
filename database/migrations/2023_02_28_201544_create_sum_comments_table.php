@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
-        Schema::create('sum_comments', function (Blueprint $table) {
+        Schema::create('sum_comments', function (Blueprint $table): void {
             $table->id();
             $table->morphs('commentable');
             $table->text("comment");
@@ -17,4 +17,13 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('sum_comments');
+    }
 };

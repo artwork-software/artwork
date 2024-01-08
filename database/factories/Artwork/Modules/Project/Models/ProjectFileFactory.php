@@ -2,9 +2,13 @@
 
 namespace Database\Factories\Artwork\Modules\Project\Models;
 
+use Artwork\Modules\Project\Models\ProjectFile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
+/**
+ * @extends Factory<ProjectFile>
+ */
 class ProjectFileFactory extends Factory
 {
     protected $model = ProjectFileFactory::class;
@@ -18,7 +22,7 @@ class ProjectFileFactory extends Factory
     {
         return [
             "name" => "Datei.pdf",
-            "basename" => Str::random(20)."Datei.pdf",
+            "basename" => Str::random(20) . "Datei.pdf",
             "project_id" => 1
         ];
     }

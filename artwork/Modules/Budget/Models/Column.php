@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $linked_first_column
  * @property int $linked_second_column
  * @property string $color
- * @property boolean $is_locked
+ * @property bool $is_locked
  */
 class Column extends Model
 {
@@ -43,7 +43,7 @@ class Column extends Model
     ];
 
     protected $with = [
-        'locked_by'
+        'lockedBy'
     ];
 
     public function subPositionRows(): BelongsToMany
@@ -52,27 +52,27 @@ class Column extends Model
     }
 
 
-    public function cells(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function cells(): HasMany
     {
         return $this->hasMany(ColumnCell::class, 'column_id');
     }
 
-    function subPositionSumDetails(): HasMany
+    public function subPositionSumDetails(): HasMany
     {
         return $this->hasMany(SubpositionSumDetail::class);
     }
 
-    function mainPositionSumDetails(): HasMany
+    public function mainPositionSumDetails(): HasMany
     {
         return $this->hasMany(MainPositionDetails::class);
     }
 
-    function budgetSumDetails(): HasMany
+    public function budgetSumDetails(): HasMany
     {
         return $this->hasMany(BudgetSumDetails::class);
     }
 
-    public function locked_by(): BelongsTo
+    public function lockedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'locked_by', 'id', 'locked_by');
     }

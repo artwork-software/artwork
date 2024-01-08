@@ -11,7 +11,7 @@ class EventPolicy
 {
     use HandlesAuthorization;
 
-    public function create(User $user)
+    public function create()
     {
         //return $user->canAny([PermissionNameEnum::PROJECT_UPDATE, PermissionNameEnum::PROJECT_ADMIN]);
         return true;
@@ -19,18 +19,40 @@ class EventPolicy
 
     public function update(User $user, Event $event)
     {
-        if ($user->canAny([PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value, PermissionNameEnum::PROJECT_MANAGEMENT->value])) {
+        if (
+            $user->canAny(
+                [
+                    PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value,
+                    PermissionNameEnum::PROJECT_MANAGEMENT->value
+                ]
+            )
+        ) {
             return true;
         }
 
-        return $event->room?->users()->wherePivot('is_admin', true)->where('user_id', $user->id)->get() || $event->creator?->id === $user->id ?? false;
+        return $event->room?->users()
+            ->wherePivot('is_admin', true)
+            ->where('user_id', $user->id)
+            ->get() ||
+            $event->creator?->id === $user->id ?? false;
     }
 
     public function delete(User $user, Event $event)
     {
-        if ($user->canAny([PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value, PermissionNameEnum::PROJECT_MANAGEMENT->value])) {
+        if (
+            $user->canAny(
+                [
+                    PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value,
+                    PermissionNameEnum::PROJECT_MANAGEMENT->value
+                ]
+            )
+        ) {
             return true;
         }
-        return $event->room?->users()->wherePivot('is_admin', true)->where('user_id', $user->id)->get() || $event->creator?->id === $user->id ?? false;
+        return $event->room?->users()
+            ->wherePivot('is_admin', true)
+            ->where('user_id', $user->id)
+            ->get() ||
+            $event->creator?->id === $user->id ?? false;
     }
 }

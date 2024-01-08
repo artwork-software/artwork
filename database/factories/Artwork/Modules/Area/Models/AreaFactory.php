@@ -5,6 +5,9 @@ namespace Database\Factories\Artwork\Modules\Area\Models;
 use Artwork\Modules\Area\Models\Area;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<Area>
+ */
 class AreaFactory extends Factory
 {
     protected $model = Area::class;

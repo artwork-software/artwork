@@ -6,9 +6,6 @@ use Illuminate\Support\Collection;
 
 class ProjectBudgetExportFormulaService
 {
-    /**
-     * @var string[]
-     */
     private static array $cellCharacters = [
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
         'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
@@ -16,22 +13,13 @@ class ProjectBudgetExportFormulaService
         'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ'
     ];
 
-    /**
-     * @param Collection $columns
-     * @param int $currentRowCount
-     * @param int $firstLinkedColumnId
-     * @param string $operator
-     * @param int $secondLinkedColumnId
-     * @return string
-     */
     public function createFormula(
         Collection $columns,
-        int        $currentRowCount,
-        int        $firstLinkedColumnId,
-        string     $operator,
-        int        $secondLinkedColumnId
-    ): string
-    {
+        int $currentRowCount,
+        int $firstLinkedColumnId,
+        string $operator,
+        int $secondLinkedColumnId
+    ): string {
         return sprintf(
             '=%s%s%s',
             $this->determineExcelColumn($columns, $firstLinkedColumnId, $currentRowCount),
@@ -40,12 +28,6 @@ class ProjectBudgetExportFormulaService
         );
     }
 
-    /**
-     * @param Collection $columns
-     * @param int $columnId
-     * @param int $currentRowCount
-     * @return string
-     */
     public function determineExcelColumn(Collection $columns, int $columnId, int $currentRowCount): string
     {
         return
@@ -55,10 +37,6 @@ class ProjectBudgetExportFormulaService
             ($currentRowCount + 1);
     }
 
-    /**
-     * @param array $columnsToSum
-     * @return string
-     */
     public function createColumnSumRangeFormula(array $columnsToSum): string
     {
         if (count($columnsToSum) === 1) {
@@ -77,10 +55,6 @@ class ProjectBudgetExportFormulaService
         }
     }
 
-    /**
-     * @param array $columnsToSum
-     * @return string
-     */
     public function createColumnSumSeparatedFormula(array $columnsToSum): string
     {
         return sprintf(
@@ -92,11 +66,6 @@ class ProjectBudgetExportFormulaService
         );
     }
 
-    /**
-     * @param string $firstColumnCell
-     * @param string $secondColumnCell
-     * @return string
-     */
     public function createSubtractionFormula(string $firstColumnCell, string $secondColumnCell): string
     {
         return sprintf("=%s-%s", $firstColumnCell, $secondColumnCell);

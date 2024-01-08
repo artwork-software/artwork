@@ -7,78 +7,63 @@ use Illuminate\Http\Request;
 
 class PresetShiftController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(): void
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function store(Request $request): void
     {
-        //
     }
 
     /**
      * Display the specified resource.
      *
      * @param  \Artwork\Modules\Shift\Models\PresetShift  $presetShift
-     * @return \Illuminate\Http\Response
      */
-    public function show(PresetShift $presetShift)
+    public function show(PresetShift $presetShift): void
     {
-        //
     }
+
 
     /**
      * Show the form for editing the specified resource.
      *
      * @param  \Artwork\Modules\Shift\Models\PresetShift  $presetShift
-     * @return \Illuminate\Http\Response
+     *
      */
-    public function edit(PresetShift $presetShift)
+    public function edit(PresetShift $presetShift): void
     {
-        //
     }
+
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Artwork\Modules\Shift\Models\PresetShift  $presetShift
-     * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, PresetShift $presetShift)
+    public function update(Request $request, PresetShift $presetShift): void
     {
-        $presetShift->update($request->only(['start', 'end', 'break_minutes', 'craft_id', 'number_employees', 'number_masters', 'description']));
+        $presetShift->update(
+            $request->only(
+                [
+                    'start',
+                    'end',
+                    'break_minutes',
+                    'craft_id',
+                    'number_employees',
+                    'number_masters',
+                    'description'
+                ]
+            )
+        );
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \Artwork\Modules\Shift\Models\PresetShift  $presetShift
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(PresetShift $presetShift)
+    public function destroy(PresetShift $presetShift): void
     {
         $presetShift->delete();
     }

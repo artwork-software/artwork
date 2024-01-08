@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+
 use Artwork\Modules\Budget\Models\CellCalculations;
 use Artwork\Modules\Budget\Models\CellComment;
 use Artwork\Modules\Budget\Models\Column;
@@ -62,9 +63,15 @@ class BudgetTemplateController extends Controller
                         }, 'mainPositions.subPositions.subPositionRows.cells.column'
                     ])
                     ->get(),
-                'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments' => function ($query): void {
-                    $query->orderBy('created_at', 'desc');
-                }]),
+                'selectedCell' => $selectedCell?->load(
+                    [
+                        'calculations',
+                        'comments.user',
+                        'comments' => function ($query): void {
+                            $query->orderBy('created_at', 'desc');
+                        }
+                    ]
+                ),
                 'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query): void {
                     $query->orderBy('created_at', 'desc');
                 }]),
@@ -73,13 +80,7 @@ class BudgetTemplateController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(Table $table, Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Table $table, Request $request): RedirectResponse
     {
         $oldTable = $table;
         $this->createTemplate($request->template_name, $oldTable);
@@ -88,9 +89,6 @@ class BudgetTemplateController extends Controller
 
     private function createTemplate($name, $oldTable, $isTemplate = true, $projectId = null): void
     {
-
-        //dd($oldTable);
-
         $newTable = Table::create([
             'name' => $name,
             'is_template' => $isTemplate,
@@ -101,8 +99,12 @@ class BudgetTemplateController extends Controller
             $replicated_column->save();
             $this->columns[$column->id] = $replicated_column->id;
             $replicated_column->update([
-                'linked_first_column' => $column->linked_first_column !== null ? $this->columns[$column->linked_first_column] : null,
-                'linked_second_column' => $column->linked_second_column !== null ? $this->columns[$column->linked_second_column] : null
+                'linked_first_column' => $column->linked_first_column !== null ?
+                    $this->columns[$column->linked_first_column] :
+                    null,
+                'linked_second_column' => $column->linked_second_column !== null ?
+                    $this->columns[$column->linked_second_column] :
+                    null
             ]);
         });
 
@@ -110,31 +112,53 @@ class BudgetTemplateController extends Controller
             $replicated_mainPosition = $mainPosition->replicate()->fill(['table_id' => $newTable->id]);
             $replicated_mainPosition->save();
             $mainPosition->subPositions->map(function (SubPosition $subPosition) use ($replicated_mainPosition): void {
-                $replicated_subPosition = $subPosition->replicate()->fill(['main_position_id' => $replicated_mainPosition->id]);
+                $replicated_subPosition = $subPosition->replicate()->fill(
+                    ['main_position_id' => $replicated_mainPosition->id]
+                );
                 $replicated_subPosition->save();
-                $subPosition->subPositionRows->map(function (SubPositionRow $subPositionRow) use ($replicated_subPosition): void {
-                    $replicated_subPositionRow = $subPositionRow->replicate()->fill(['sub_position_id' => $replicated_subPosition->id]);
-                    $replicated_subPositionRow->save();
-                    $subPositionRow->cells->map(function (ColumnCell $columnCell) use ($replicated_subPositionRow): void {
-                        $replicated_columnCell = $columnCell->replicate()->fill(['sub_position_row_id' => $replicated_subPositionRow->id]);
-                        $replicated_columnCell->linked_money_source_id = null;
-                        $replicated_columnCell->linked_type = null;
-                        $replicated_columnCell->column_id = $this->columns[$columnCell->column_id];
-                        $replicated_columnCell->save();
-                        $columnCell->comments->map(function (CellComment $cellComment) use ($replicated_columnCell): void {
-                            $replicated_comment = $cellComment->replicate()->fill(['column_cell_id' => $replicated_columnCell->id]);
-                            $replicated_comment->save();
-                        });
-                        $columnCell->calculations->map(function (CellCalculations $cellCalculations) use ($replicated_columnCell): void {
-                            $replicated_cellCalculation = $cellCalculations->replicate()->fill(['cell_id' => $replicated_columnCell->id]);
-                            $replicated_cellCalculation->save();
-                        });
-                    });
-                    $subPositionRow->comments->map(function (RowComment $rowComment) use ($replicated_subPositionRow): void {
-                        $replicated_rowComment = $rowComment->replicate()->fill(['sub_position_row_id' => $replicated_subPositionRow->id]);
-                        $replicated_rowComment->save();
-                    });
-                });
+                $subPosition->subPositionRows->map(
+                    function (SubPositionRow $subPositionRow) use ($replicated_subPosition): void {
+                        $replicated_subPositionRow = $subPositionRow->replicate()->fill(
+                            ['sub_position_id' => $replicated_subPosition->id]
+                        );
+                        $replicated_subPositionRow->save();
+                        $subPositionRow->cells->map(
+                            function (ColumnCell $columnCell) use ($replicated_subPositionRow): void {
+                                $replicated_columnCell = $columnCell->replicate()->fill(
+                                    ['sub_position_row_id' => $replicated_subPositionRow->id]
+                                );
+                                $replicated_columnCell->linked_money_source_id = null;
+                                $replicated_columnCell->linked_type = null;
+                                $replicated_columnCell->column_id = $this->columns[$columnCell->column_id];
+                                $replicated_columnCell->save();
+                                $columnCell->comments->map(
+                                    function (CellComment $cellComment) use ($replicated_columnCell): void {
+                                        $replicated_comment = $cellComment->replicate()->fill(
+                                            ['column_cell_id' => $replicated_columnCell->id]
+                                        );
+                                        $replicated_comment->save();
+                                    }
+                                );
+                                $columnCell->calculations->map(
+                                    function (CellCalculations $cellCalculations) use ($replicated_columnCell): void {
+                                        $replicated_cellCalculation = $cellCalculations->replicate()->fill(
+                                            ['cell_id' => $replicated_columnCell->id]
+                                        );
+                                        $replicated_cellCalculation->save();
+                                    }
+                                );
+                            }
+                        );
+                        $subPositionRow->comments->map(
+                            function (RowComment $rowComment) use ($replicated_subPositionRow): void {
+                                $replicated_rowComment = $rowComment->replicate()->fill(
+                                    ['sub_position_row_id' => $replicated_subPositionRow->id]
+                                );
+                                $replicated_rowComment->save();
+                            }
+                        );
+                    }
+                );
             });
         });
     }
@@ -158,7 +182,12 @@ class BudgetTemplateController extends Controller
 
             $this->deleteOldTable($project);
 
-            $this->createTemplate($templateProject->name . ' Budgettabelle', $templateProject->table()->first(), false, $project->id);
+            $this->createTemplate(
+                $templateProject->name . ' Budgettabelle',
+                $templateProject->table()->first(),
+                false,
+                $project->id
+            );
         }
     }
 
@@ -187,7 +216,6 @@ class BudgetTemplateController extends Controller
             }
             $mainPosition->delete();
         }
-
         $tableToDelete->delete();
     }
 }

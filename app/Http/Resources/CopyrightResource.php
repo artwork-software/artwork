@@ -7,18 +7,16 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class CopyrightResource extends JsonResource
 {
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         return [
             'id' => $this->id,
             'own_copyright' => $this->own_copyright,
             'live_music' => $this->live_music,
-            'collecting_society' => $this->collecting_society,
+            'collecting_society' => $this->collectingSociety,
             'law_size' => $this->law_size,
             'project_id' => $this->project_id
         ];

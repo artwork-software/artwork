@@ -22,12 +22,7 @@ use RoomAttribute;
 
 class TestContentSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
+    public function run(): void
     {
         $this->seedModelsThatRequireNoRelationships();
         $this->seedRooms();
@@ -86,7 +81,7 @@ class TestContentSeeder extends Seeder
         }
     }
 
-    private function seedModelsThatRequireNoRelationships()
+    private function seedModelsThatRequireNoRelationships(): void
     {
         Area::factory()->count(4)->create();
         Genre::factory()->count(8)->create();
@@ -100,20 +95,24 @@ class TestContentSeeder extends Seeder
         }
     }
 
-    private function seedRooms()
+    private function seedRooms(): void
     {
         $rooms = Room::factory()->count(6)->create();
         $categories = Category::all();
         $roomAttributes = RoomAttribute::all();
 
-        $rooms->map(function (Room $room) use ($roomAttributes, $categories, $rooms) {
-            $room->adjoiningRooms()->sync($rooms->shuffle()->take(random_int(0, 2))->pluck('id')->filter(fn ($id) => $id !== $room->id));
+        $rooms->map(function (Room $room) use ($roomAttributes, $categories, $rooms): void {
+            $room->adjoiningRooms()
+                ->sync($rooms->shuffle()
+                ->take(random_int(0, 2))
+                ->pluck('id')
+                ->filter(fn ($id) => $id !== $room->id));
             $room->categories()->sync($categories->shuffle()->take(random_int(1, 3))->pluck('id'));
             $room->attributes()->sync($roomAttributes->shuffle()->take(random_int(1, 3))->pluck('id'));
         });
     }
 
-    private function seedProjects()
+    private function seedProjects(): void
     {
         $historyService = new HistoryService();
         $sectors = Sector::all();
@@ -144,7 +143,7 @@ class TestContentSeeder extends Seeder
         $historyService->projectUpdated($project3);
     }
 
-    private function seedEvents()
+    private function seedEvents(): void
     {
         $eventTypes = EventType::all();
         $rooms = Room::all();

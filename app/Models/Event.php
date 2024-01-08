@@ -12,44 +12,42 @@ use Carbon\CarbonPeriod;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
 /**
- *
  * @property int $id
- * @property ?string $name
- * @property ?string $eventName
- * @property ?string $description
- * @property ?string $option_string
- * @property ?Carbon $start_time
- * @property ?Carbon $end_time
- * @property ?bool $occupancy_option
- * @property ?bool $audience
- * @property ?bool $is_loud
- * @property ?int $event_type_id
- * @property ?int $room_id
- * @property ?int $declined_room_id
+ * @property string $name
+ * @property string $eventName
+ * @property string $description
+ * @property Carbon $start_time
+ * @property Carbon $end_time
+ * @property bool $occupancy_option
+ * @property bool $audience
+ * @property bool $is_loud
+ * @property bool $allDay
+ * @property int $event_type_id
+ * @property int $room_id
+ * @property int $declined_room_id
  * @property int $user_id
- * @property ?int $project_id
+ * @property int $project_id
+ * @property bool $is_series
  * @property int $series_id
- * @property int $is_series
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @property Carbon $deleted_at
- *
- * @property EventType $event_type
- * @property Room $room
- * @property Project $project
- * @property User $creator
- * @property \Illuminate\Database\Eloquent\Collection<Event> $sameRoomEvents
- * @property \Illuminate\Database\Eloquent\Collection<Event> $adjoiningEvents
+ * @property string $created_at
+ * @property string $updated_at
+ * @property string $deleted_at
+ * @property bool $accepted
+ * @property string $option_string
  */
 class Event extends Model
 {
     use HasChangesHistory;
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $with = ['series', 'event_type'];
 
@@ -74,7 +72,6 @@ class Event extends Model
         'allDay'
     ];
 
-
     protected $guarded = [
         'id',
     ];
@@ -94,11 +91,14 @@ class Event extends Model
         'days_of_event', 'start_time_without_day', 'end_time_without_day'
     ];
 
-    public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function comments(): HasMany
     {
         return $this->hasMany(EventComments::class)->orderBy('id', 'DESC');
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getDaysOfEventAttribute(): array
     {
         $days_period = CarbonPeriod::create($this->start_time, $this->end_time);
@@ -111,47 +111,49 @@ class Event extends Model
         return $days;
     }
 
-    public function timeline(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function timeline(): HasMany
     {
         return $this->hasMany(TimeLine::class);
     }
 
-    public function shifts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function shifts(): HasMany
     {
         return $this->hasMany(Shift::class);
     }
 
-    public function getStartTimeWithoutDayAttribute()
+    public function getStartTimeWithoutDayAttribute(): string
     {
         return Carbon::parse($this->start_time)->format('H:i');
     }
 
-    public function getEndTimeWithoutDayAttribute()
+    public function getEndTimeWithoutDayAttribute(): string
     {
         return Carbon::parse($this->end_time)->format('H:i');
     }
 
-    public function serializeDate(DateTimeInterface $date)
+    public function serializeDate(DateTimeInterface $date): string
     {
         return $date->format('Y-m-d H:i:s');
     }
 
-    public function event_type()
+    //@todo: fix phpcs error - refactor function name to eventType
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function event_type(): BelongsTo
     {
         return $this->belongsTo(EventType::class, 'event_type_id');
     }
 
-    public function room()
+    public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class, 'room_id');
     }
 
-    public function project()
+    public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id');
     }
 
-    public function creator()
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
@@ -161,14 +163,15 @@ class Event extends Model
         return $this->belongsToMany(User::class, 'room_user', 'user_id', 'room_id', 'room_id', 'id');
     }
 
-    public function sameRoomEvents()
+    public function sameRoomEvents(): HasMany
     {
         return $this->hasMany(Event::class, 'room_id', 'room_id');
     }
 
-    public function adjoiningEvents()
+    public function adjoiningEvents(): BelongsToMany
     {
-        return $this->belongsToMany(Event::class,
+        return $this->belongsToMany(
+            Event::class,
             'adjoining_room_main_room',
             'main_room_id',
             'adjoining_room_id',
@@ -177,28 +180,16 @@ class Event extends Model
         );
     }
 
-    public function series()
+    public function series(): HasOne
     {
         return $this->hasOne(SeriesEvents::class, 'id', 'series_id');
     }
 
-    public function subEvents()
+    public function subEvents(): HasMany
     {
         return $this->hasMany(SubEvents::class)->orderBy('start_time', 'ASC');
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public static function query(): \Illuminate\Database\Eloquent\Builder
-    {
-        return parent::query();
-    }
-
-    /**
-     * @param  \Illuminate\Database\Query\Builder  $query
-     * @return \App\Builders\EventBuilder
-     */
     public function newEloquentBuilder($query): EventBuilder
     {
         return new EventBuilder($query);
@@ -243,9 +234,7 @@ class Event extends Model
             return false;
         }
 
-        return $this->start_time->isBetween($event->start_time, $event->end_time)
-            || $this->end_time->isBetween($event->start_time, $event->end_time);
+        return $this->start_time->isBetween($event->start_time, $event->end_time) ||
+            $this->end_time->isBetween($event->start_time, $event->end_time);
     }
-
-
 }

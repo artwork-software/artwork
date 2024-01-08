@@ -18,22 +18,19 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
+use Inertia\Response;
+use Inertia\ResponseFactory;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class InvitationController extends Controller
 {
-    public function __construct(StatefulGuard $guard)
+    public function __construct()
     {
         $this->authorizeResource(Invitation::class);
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function index()
+    public function index(): Response|ResponseFactory
     {
         request()->validate([
             'direction' => ['in:asc,desc', 'string'],
@@ -57,7 +54,7 @@ class InvitationController extends Controller
         ]);
     }
 
-    public function invite()
+    public function invite(): Response|ResponseFactory
     {
         return inertia('Users/Invite', [
             'available_roles' => Role::all()->pluck('name'),
@@ -65,13 +62,7 @@ class InvitationController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  StoreInvitationRequest  $request
-     * @return RedirectResponse
-     */
-    public function store(StoreInvitationRequest $request)
+    public function store(StoreInvitationRequest $request): RedirectResponse
     {
         $admin_user = Auth::user();
         $permissions = $request->permissions;
@@ -103,13 +94,7 @@ class InvitationController extends Controller
         return Redirect::route('users')->with('success', 'Invitation created.');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Invitation  $invitation
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function edit(Invitation $invitation)
+    public function edit(Invitation $invitation): Response|ResponseFactory
     {
         return inertia('Users/InvitationEdit', [
             'invitation' => [
@@ -119,14 +104,7 @@ class InvitationController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Invitation  $invitation
-     * @return RedirectResponse
-     */
-    public function update(Request $request, Invitation $invitation)
+    public function update(Request $request, Invitation $invitation): RedirectResponse
     {
         $oldEmail = $invitation->email;
         $newMail = $request->input('email');
@@ -142,20 +120,14 @@ class InvitationController extends Controller
         return Redirect::route('user.invitations')->with('success', 'Invitation updated.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Invitation  $invitation
-     * @return RedirectResponse
-     */
-    public function destroy(Invitation $invitation)
+    public function destroy(Invitation $invitation): RedirectResponse
     {
         $invitation->delete();
 
         return Redirect::back()->with('success', 'Invitation deleted');
     }
 
-    public function accept(Request $request)
+    public function accept(Request $request): Response|ResponseFactory
     {
         return inertia('Users/Accept', [
             'token' => $request->query('token'),
@@ -163,7 +135,7 @@ class InvitationController extends Controller
         ]);
     }
 
-    public function createUser(AcceptInvitationRequest $request, StatefulGuard $guard)
+    public function createUser(AcceptInvitationRequest $request, StatefulGuard $guard): RedirectResponse
     {
         /** @var Invitation $invitation */
         $invitation = Invitation::query()
@@ -175,14 +147,12 @@ class InvitationController extends Controller
         $user = User::create($request->userData());
 
         foreach (NotificationConstEnum::cases() as $notificationType) {
-
             $user->notificationSettings()->create([
                 'group_type' => $notificationType->groupType(),
                 'type' => $notificationType->value,
                 'title' => $notificationType->title(),
                 'description' => $notificationType->description()
             ]);
-
         }
 
         $user->departments()->sync($invitation->departments->pluck('id'));
@@ -195,7 +165,6 @@ class InvitationController extends Controller
         $invitation->delete();
 
         $guard->login($user);
-
 
         broadcast(new UserUpdated())->toOthers();
 

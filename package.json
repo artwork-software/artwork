@@ -17,6 +17,8 @@
         "@tailwindcss/typography": "^0.5.0",
         "@vue/compiler-sfc": "^3.0.5",
         "axios": "^0.25",
+        "browser-sync": "^2.29.3",
+        "browser-sync-webpack-plugin": "^2.3.0",
         "laravel-echo": "^1.12.1",
         "laravel-mix": "^6.0.6",
         "lodash": "^4.17.19",
@@ -30,12 +32,14 @@
     "dependencies": {
         "@headlessui/vue": "^1.7.12",
         "@heroicons/vue": "^1.0.6",
+        "@tabler/icons-vue": "^2.43.0",
         "@vuepic/vue-datepicker": "^3.2.2",
         "dayjs": "^1.11.7",
         "laravel-permission-to-vuejs": "^3.0.1",
         "mathjax": "^2.7.2",
         "vue-cal": "^4.8.0",
         "vue-mathjax-next": "^0.0.4",
+        "vue-resizable": "^2.1.7",
         "vue-tailwind-datepicker": "^1.4.3",
         "vuedraggable": "^4.1.0",
         "ziggy": "^2.4.0"

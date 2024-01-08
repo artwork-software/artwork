@@ -147,7 +147,7 @@
                                                 leave-active-class="transition ease-in duration-75"
                                                 leave-from-class="transform opacity-100 scale-100"
                                                 leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
+                                        <MenuItems class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none z-10">
                                             <div class="py-1">
                                                 <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a :href="checkLink(user)"
@@ -158,13 +158,21 @@
                                                         Profil bearbeiten
                                                     </a>
                                                 </MenuItem>
-                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole() && user.type === 'user'">
+                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a @click="openDeleteUserModal(user)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        Nutzer*in löschen
+                                                        <span v-if="user.type === 'user'">
+                                                            Nutzer*in löschen
+                                                        </span>
+                                                        <span v-else-if="user.type === 'freelancer'">
+                                                            Freelancer*in löschen
+                                                        </span>
+                                                        <span v-else-if="user.type === 'service_provider'">
+                                                            Dienstleister*in löschen
+                                                        </span>
                                                     </a>
                                                 </MenuItem>
                                             </div>
@@ -262,7 +270,7 @@
                                                 leave-from-class="transform opacity-100 scale-100"
                                                 leave-to-class="transform opacity-0 scale-95">
                                         <MenuItems
-                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
+                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none z-10">
                                             <div class="py-1">
                                                 <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a :href="getEditHref(user)"
@@ -298,14 +306,27 @@
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="headline1 my-2">
-                        Nutzer*in löschen
+                        <span v-if="userToDelete.type === 'user'">
+                            Nutzer*in löschen
+                        </span>
+                        <span v-else-if="userToDelete.type === 'freelancer'">
+                            Freelancer*in löschen
+                        </span>
+                        <span v-else-if="userToDelete.type === 'service_provider'">
+                            Dienstleister*in löschen
+                        </span>
                     </div>
                     <XIcon @click="closeDeleteUserModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="errorText">
-                        Bist du sicher, dass du {{ userToDelete.last_name + "," }} {{ userToDelete.first_name }} aus dem
-                        System löschen möchtest?
+                        <span v-if="userToDelete.type === 'user' || userToDelete.type === 'freelancer'">
+                            Bist du sicher, dass du "{{ userToDelete.last_name }}, {{ userToDelete.first_name }}"
+                            aus dem System löschen möchtest?
+                        </span>
+                        <span v-else-if="userToDelete.type === 'service_provider'">
+                            Bist du sicher, dass du "{{ userToDelete.provider_name }}" aus dem System löschen möchtest?
+                        </span>
                     </div>
                     <div class="flex justify-between mt-6">
                         <AddButton text="Löschen" mode="modal" class="px-20 py-3"
@@ -461,17 +482,28 @@ export default defineComponent({
             addingUser: false,
             deletingUser: false,
             showSuccessModal: false,
-            userToDelete: {},
+            userToDelete: null,
             showSearchbar: false,
             user_query: "",
             user_search_results: [],
-            displayFilters: [{
-                'name': 'Alle Nutzer*innen',
-                'type': 'users'
-            }, {'name': 'Alle Freelancer*innen', 'type': 'freelancer'}, {
-                'name': 'Alle Dienstleister*innen',
-                'type': 'service_provider'
-            }, {'name': 'Alle verfügbaren Nutzer*innen', 'type': 'all'}],
+            displayFilters: [
+                {
+                    'name': 'Alle Nutzer*innen',
+                    'type': 'users'
+                },
+                {
+                    'name': 'Alle Freelancer*innen',
+                    'type': 'freelancer'
+                },
+                {
+                    'name': 'Alle Dienstleister*innen',
+                    'type': 'service_provider'
+                },
+                {
+                    'name': 'Alle verfügbaren Nutzer*innen',
+                    'type': 'all'
+                }
+            ],
             selectedFilter: {'name': 'Alle Nutzer*innen', 'type': 'users'},
             openSelectAddUsersModal: false
         }
@@ -503,7 +535,6 @@ export default defineComponent({
 
             return route('user.edit.shiftplan', {user: user.id});
         },
-
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;
             this.user_query = ''
@@ -520,15 +551,32 @@ export default defineComponent({
             this.deletingUser = true;
         },
         closeDeleteUserModal() {
-            this.userToDelete = {};
+            this.userToDelete = null;
             this.deletingUser = false;
         },
         deleteUser() {
-            Inertia.delete(`/users/${this.userToDelete.id}`);
-            this.closeDeleteUserModal()
-        },
-        openAddUserModal() {
-            this.addingUser = true
+            let desiredRoute = null;
+
+            switch (this.userToDelete.type) {
+                case 'user':
+                    desiredRoute = route('user.destroy', {user: this.userToDelete.id});
+                    break;
+                case 'freelancer':
+                    desiredRoute = route('freelancer.destroy', {freelancer: this.userToDelete.id});
+                    break;
+                case 'service_provider':
+                    desiredRoute = route('service_provider.destroy', {serviceProvider: this.userToDelete.id});
+                    break;
+            }
+
+            if (desiredRoute) {
+                Inertia.delete(
+                    desiredRoute,
+                    {
+                        onSuccess: () => this.closeDeleteUserModal()
+                    }
+                );
+            }
         },
         closeAddUserModal(bool) {
             this.addingUser = false;

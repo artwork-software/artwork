@@ -9,35 +9,16 @@ use Illuminate\Support\Facades\Auth;
 
 class RowCommentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(): void
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(Request $request, SubPositionRow $row)
+    public function store(Request $request, SubPositionRow $row): RedirectResponse
     {
-
         $row->comments()->create([
             'user_id' => Auth::id(),
             'description' => $request->description
@@ -46,47 +27,22 @@ class RowCommentController extends Controller
         return back();
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \Artwork\Modules\Budget\Models\RowComment  $rowComment
-     * @return \Illuminate\Http\Response
-     */
-    public function show(RowComment $rowComment)
+
+    public function show(RowComment $rowComment): void
     {
-        //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \Artwork\Modules\Budget\Models\RowComment  $rowComment
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(RowComment $rowComment)
+
+    public function edit(RowComment $rowComment): void
     {
-        //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Artwork\Modules\Budget\Models\RowComment  $rowComment
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, RowComment $rowComment)
+
+    public function update(Request $request, RowComment $rowComment): void
     {
-        //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \Artwork\Modules\Budget\Models\RowComment  $rowComment
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(RowComment $rowComment)
+    public function destroy(RowComment $rowComment): RedirectResponse
     {
         $rowComment->delete();
         return back();

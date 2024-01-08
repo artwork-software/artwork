@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('subposition_sum_details', function (Blueprint $table) {
+        Schema::create('subposition_sum_details', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger("sub_position_id");
             $table->unsignedBigInteger("column_id");
@@ -26,7 +26,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('subposition_sum_details');
     }

@@ -7,34 +7,14 @@ use App\Models\User;
 use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * Class NewHistoryService
- * @package App\Support\Services
- * @property string $modelObject
- * @property string $modelId
- * @property string $historyText
- * @property string $type
- * @property string $user
- * @property string $userObj
- * @property string $array
- * @property string $shift
- * @property string $event
- * @property string $eventTitle
- * @property string $shiftId
- * @property string $shiftDescription
- * @property string $change
- * @property string $changerType
- * @property string $changerId
- * @property string $stackTrace
- * @property string $created_at
- * @property string $updated_at
- */
 class NewHistoryService
 {
 
 
     protected int $modelId;
+
     protected string $historyText;
+
     protected string $type = 'project';
 
     /**
@@ -83,8 +63,8 @@ class NewHistoryService
         $this->type = $type;
     }
 
-
-    public function create(){
+    public function create(): void
+    {
         $user = Auth::user();
         $userObj = [
             'id' => $user->id,
@@ -99,7 +79,7 @@ class NewHistoryService
             'description' => $user->description
         ];
         $array[] = ['type' => $this->getType(), 'message' => $this->getHistoryText(), 'changed_by' => $userObj];
-        if($this->getType() === 'shift'){
+        if ($this->getType() === 'shift') {
             $shift = Shift::find($this->getModelId());
             $array[] = [
                 'event_title' => $shift->event->eventName,
@@ -120,14 +100,6 @@ class NewHistoryService
         ]);
     }
 
-
-    /**
-     * function to create history
-     * @param int $modelId
-     * @param string $historyText
-     * @param string $type
-     * @return void
-     */
     public function createHistory(int $modelId, string $historyText, string $type = 'project'): void
     {
         $user = Auth::user();
@@ -144,7 +116,7 @@ class NewHistoryService
             'description' => $user->description
         ];
         $array[] = ['type' => $type, 'message' => $historyText, 'changed_by' => $userObj];
-        if($type === 'shift'){
+        if ($type === 'shift') {
             $shift = Shift::find($modelId);
             $array[] = [
                 'event_title' => $shift->event->eventName,

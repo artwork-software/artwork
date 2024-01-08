@@ -12,71 +12,35 @@ class UserPolicy
 {
     use HandlesAuthorization;
 
-    /**
-     * Determine whether the user can view any models.
-     *
-     * @param User $user
-     * @return Response|bool
-     */
-    public function viewAny(User $user): Response|bool
+    public function viewAny(): bool
     {
         return true;
     }
 
-    /**
-     * Determine whether the user can view the model.
-     *
-     * @param User $user
-     * @return bool
-     */
-    public function view(User $user): bool
+
+    public function view(): bool
     {
         return true;
     }
 
-    /**
-     * Determine whether the user can update the model.
-     *
-     * @param User $user
-     * @return bool
-     */
     public function update(User $user): bool
     {
         return $user->can(PermissionNameEnum::USER_UPDATE->value) || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     *
-     * @param User $user
-     * @param User $model
-     * @return bool
-     */
+
     public function delete(User $user, User $model): bool
     {
         return $user->can(PermissionNameEnum::USER_UPDATE->value) ||
-            $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) || $user->id == $model->id;
+            $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) ||
+            $user->id == $model->id;
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     *
-     * @param User $user
-     * @return void
-     */
-    public function restore(User $user): void
+    public function restore(): void
     {
-        //
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     *
-     * @param User $user
-     * @return void
-     */
-    public function forceDelete(User $user): void
+    public function forceDelete(): void
     {
-        //
     }
 }

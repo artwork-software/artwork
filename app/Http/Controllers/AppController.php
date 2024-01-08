@@ -4,20 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Actions\Fortify\PasswordValidationRules;
 use App\Enums\NotificationConstEnum;
-use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
 use App\Http\Requests\UserCreateRequest;
 use App\Models\GeneralSettings;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use ZxcvbnPhp\Zxcvbn;
-
+use Illuminate\Http\RedirectResponse;
+use Inertia\Response;
+use Inertia\ResponseFactory;
+use Illuminate\Routing\Redirector;
+use Illuminate\Contracts\Foundation\Application;
 
 class AppController extends Controller
 {
@@ -28,18 +30,22 @@ class AppController extends Controller
         return (new Zxcvbn())->passwordStrength($request->input('password'))['score'];
     }
 
-    public function toggle_hints(): \Illuminate\Http\RedirectResponse
+    //@todo: fix phpcs error - refactor function name to toggleHints
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function toggle_hints(): RedirectResponse
     {
         $user = Auth::user();
 
         $user->update([
-            'toggle_hints' => ! $user->toggle_hints
+            'toggle_hints' => !$user->toggle_hints
         ]);
 
         return Redirect::back()->with('success', 'Hilfe umgeschaltet');
     }
-    //CalendarSettings
-    public function toggle_calendar_settings_project_status(): \Illuminate\Http\RedirectResponse
+
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsProjectStatus
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function toggle_calendar_settings_project_status(): RedirectResponse
     {
         $user = Auth::user();
 
@@ -51,7 +57,10 @@ class AppController extends Controller
 
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
-    public function toggle_calendar_settings_options(): \Illuminate\Http\RedirectResponse
+
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsOptions
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function toggle_calendar_settings_options(): RedirectResponse
     {
         $user = Auth::user();
 
@@ -63,7 +72,10 @@ class AppController extends Controller
 
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
-    public function toggle_calendar_settings_project_management(): \Illuminate\Http\RedirectResponse
+
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsProjectManagement
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function toggle_calendar_settings_project_management(): RedirectResponse
     {
         $user = Auth::user();
 
@@ -75,7 +87,10 @@ class AppController extends Controller
 
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
-    public function toggle_calendar_settings_repeating_events(): \Illuminate\Http\RedirectResponse
+
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsRepeatingEvents
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function toggle_calendar_settings_repeating_events(): RedirectResponse
     {
         $user = Auth::user();
 
@@ -87,7 +102,10 @@ class AppController extends Controller
 
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
-    public function toggle_calendar_settings_work_shifts(): \Illuminate\Http\RedirectResponse
+
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsWorkShifts
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function toggle_calendar_settings_work_shifts(): RedirectResponse
     {
         $user = Auth::user();
 
@@ -100,22 +118,25 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Einstellung gespeichert');
     }
 
-    public function index(GeneralSettings $settings): \Illuminate\Http\RedirectResponse
+    public function index(GeneralSettings $settings): RedirectResponse
     {
         //setup process finished
         return $settings->setup_finished ? Redirect::route('login') : Redirect::route('setup');
     }
 
-    public function showSetupPage(GeneralSettings $settings): \Illuminate\Http\RedirectResponse|\Inertia\Response|\Inertia\ResponseFactory
+    public function showSetupPage(GeneralSettings $settings): RedirectResponse|Response|ResponseFactory
     {
         //setup process finished
         return $settings->setup_finished ? Redirect::route('login') : inertia('Auth/Register');
     }
 
-    public function updateTool(Request $request, GeneralSettings $settings)
+    public function updateTool(Request $request, GeneralSettings $settings): RedirectResponse
     {
-        if (! Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
-            throw new MethodNotAllowedHttpException(['update'], 'Fehlende Berechtigung zum Ändern der Seiten Einstellungen');
+        if (!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
+            throw new MethodNotAllowedHttpException(
+                ['update'],
+                'Fehlende Berechtigung zum Ändern der Seiten Einstellungen'
+            );
         }
 
         $smallLogo = $request->file('smallLogo');
@@ -139,20 +160,21 @@ class AppController extends Controller
         return Redirect::back()->with('success', 'Fotos hinzugefügt');
     }
 
-    public function createAdmin(UserCreateRequest $request, GeneralSettings $settings, StatefulGuard $guard)
-    {
+    public function createAdmin(
+        UserCreateRequest $request,
+        GeneralSettings $settings,
+        StatefulGuard $guard
+    ): Redirector|Application|RedirectResponse {
         /** @var User $user */
         $user = User::create($request->userData());
 
         foreach (NotificationConstEnum::cases() as $notificationType) {
-
             $user->notificationSettings()->create([
                 'group_type' => $notificationType->groupType(),
                 'type' => $notificationType->value,
                 'title' => $notificationType->title(),
                 'description' => $notificationType->description()
             ]);
-
         }
 
         $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
@@ -166,9 +188,9 @@ class AppController extends Controller
         return redirect(RouteServiceProvider::HOME);
     }
 
-    public function updateEmailSettings(Request $request, GeneralSettings $settings)
+    public function updateEmailSettings(Request $request, GeneralSettings $settings): RedirectResponse
     {
-        if (! Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
+        if (!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             throw new MethodNotAllowedHttpException(['update'], 'Nur Admins können Email Einstellungen ändern');
         }
 

@@ -45,6 +45,7 @@ use App\Models\ServiceProvider;
 use App\Models\TimeLine;
 use App\Models\User;
 use App\Support\Services\HistoryService;
+use App\Support\Services\MoneySourceThresholdReminderService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
@@ -83,13 +84,17 @@ use Inertia\ResponseFactory;
 use Intervention\Image\Facades\Image;
 use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProjectController extends Controller
 {
     // init empty notification controller
     protected ?NotificationService $notificationService = null;
+
     protected ?stdClass $notificationData = null;
+
     protected ?NewHistoryService $history = null;
+
     protected ?SchedulingController $schedulingController = null;
     public function __construct(
         private readonly ProjectService $projectService,
@@ -106,26 +111,25 @@ class ProjectController extends Controller
         $this->schedulingController = new SchedulingController();
     }
 
-    public function projectUserSearch(Request $request){
+    /**
+     * @return User[]
+     */
+    public function projectUserSearch(Request $request): array
+    {
         $users = User::search($request->input('query'))->get();
         $project = Project::find($request->input('projectId'));
 
         $returnUser = [];
-        foreach ($users as $user){
+        foreach ($users as $user) {
             $projectUser = $project->users()->where('user_id', $user->id)->first();
-            if($projectUser !== null){
+            if ($projectUser !== null) {
                 $returnUser[] = $projectUser;
             }
         }
         return $returnUser;
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return Response|ResponseFactory
-     */
-    public function index()
+    public function index(): Response|ResponseFactory
     {
         $projects = Project::query()
             ->with([
@@ -173,7 +177,10 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function search_departments_and_users(SearchRequest $request): array
+    /**
+     * @return array<string, mixed>
+     */
+    public function searchDepartmentsAndUsers(SearchRequest $request): array
     {
         // TODO: Hier bitte gucken wie man die Policy wieder zum laufen bekommt
         /*$this->authorize('viewAny', Department::class);
@@ -185,7 +192,11 @@ class ProjectController extends Controller
         ];
     }
 
-    public function search(SearchRequest $request)
+    /**
+     * @return array<string, mixed>
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function search(SearchRequest $request): array
     {
         $this->authorize('viewAny', Project::class);
         $projects = Project::search($request->input('query'))->get();
@@ -194,6 +205,9 @@ class ProjectController extends Controller
         return ProjectIndexResource::collection($projects)->resolve();
     }
 
+    /**
+     * @return Project[]
+     */
     public function searchProjectsWithoutGroup(Request $request): array
     {
         $filteredObjects = [];
@@ -206,24 +220,23 @@ class ProjectController extends Controller
         return $filteredObjects;
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return Response|ResponseFactory
-     */
-    public function create()
+    public function create(): Response|ResponseFactory
     {
         return inertia('Projects/Create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param Request $request
-     */
-    public function store(ProjectStoreRequest $request)
+
+    public function store(StoreProjectRequest $request): JsonResponse|RedirectResponse
     {
-        if (!Auth::user()->canAny([PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::WRITE_PROJECTS->value, PermissionNameEnum::PROJECT_MANAGEMENT->value])) {
+        if (
+            !Auth::user()->canAny(
+                [
+                    PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value,
+                    PermissionNameEnum::WRITE_PROJECTS->value,
+                    PermissionNameEnum::PROJECT_MANAGEMENT->value
+                ]
+            )
+        ) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
@@ -245,7 +258,10 @@ class ProjectController extends Controller
             'budget_deadline' => $request->budgetDeadline
         ]);
 
-        $project->users()->save(Auth::user(), ['access_budget' => true, 'is_manager' => false, 'can_write' => true, 'delete_permission' => true]);
+        $project->users()->save(
+            Auth::user(),
+            ['access_budget' => true, 'is_manager' => false, 'can_write' => true, 'delete_permission' => true]
+        );
 
         if ($request->isGroup) {
             $project->is_group = true;
@@ -277,7 +293,10 @@ class ProjectController extends Controller
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
 
-    public function updateEntranceData(Project $project, Request $request) {
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    public function updateEntranceData(Project $project, Request $request)
+    {
         $oldNumOfGuest = $project->num_of_guests;
         $oldEntryFee = $project->entry_fee;
         $oldRegistrationRequired = $project->registration_required;
@@ -285,7 +304,9 @@ class ProjectController extends Controller
         $oldRegistrationDeadline = $project->registration_deadline;
         $oldClosedSociety = $project->closed_society;
 
-        $project->update(array_filter($request->all(), function($field) { return !is_null($field) || empty($field);}));
+        $project->update(array_filter($request->all(), function ($field) {
+            return !is_null($field) || empty($field);
+        }));
 
         $newNumOfGuest = $project->num_of_guests;
         $newEntryFee = $project->entry_fee;
@@ -296,69 +317,76 @@ class ProjectController extends Controller
 
 
         // Geändert
-        if($oldNumOfGuest !== $newNumOfGuest && $oldNumOfGuest !== null && $newNumOfGuest !== null){
+        if ($oldNumOfGuest !== $newNumOfGuest && $oldNumOfGuest !== null && $newNumOfGuest !== null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
         }
 
-        if($oldClosedSociety !== $newClosedSociety && $oldClosedSociety !== null && $oldClosedSociety !== null){
+        if ($oldClosedSociety !== $newClosedSociety && $oldClosedSociety !== null && $oldClosedSociety !== null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
         }
 
-        if($oldEntryFee !== $newEntryFee && $oldEntryFee !== null && $oldEntryFee !== null){
+        if ($oldEntryFee !== $newEntryFee && $oldEntryFee !== null && $oldEntryFee !== null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
         }
 
-        if($oldRegisterBy !== $newRegisterBy && $oldRegisterBy !== null && $oldRegisterBy !== null){
+        if ($oldRegisterBy !== $newRegisterBy && $oldRegisterBy !== null && $oldRegisterBy !== null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
         }
 
-        if($oldRegistrationRequired !== $newRegistrationRequired && $oldRegistrationRequired !== null && $oldRegistrationRequired !== null){
+        if (
+            $oldRegistrationRequired !== $newRegistrationRequired &&
+            $oldRegistrationRequired !== null &&
+            $oldRegistrationRequired !== null
+        ) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
         }
 
-        if($oldRegistrationDeadline !== $newRegistrationDeadline && $oldRegistrationDeadline !== null  && $oldRegistrationDeadline !== null){
+        if (
+            $oldRegistrationDeadline !== $newRegistrationDeadline &&
+            $oldRegistrationDeadline !== null &&
+            $oldRegistrationDeadline !== null
+        ) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
         }
-
 
         // enfernt
-        if($oldNumOfGuest !== null && $newNumOfGuest === null){
+        if ($oldNumOfGuest !== null && $newNumOfGuest === null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
         }
-        if($oldClosedSociety !== null && $newClosedSociety === null){
+        if ($oldClosedSociety !== null && $newClosedSociety === null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
         }
-        if($oldEntryFee !== null && $newEntryFee === null){
+        if ($oldEntryFee !== null && $newEntryFee === null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
         }
-        if($oldRegisterBy !== null && $newRegisterBy === null){
+        if ($oldRegisterBy !== null && $newRegisterBy === null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
         }
-        if($oldRegistrationRequired !== null && $newRegistrationRequired === null){
+        if ($oldRegistrationRequired !== null && $newRegistrationRequired === null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
         }
-        if($oldRegistrationDeadline !== null && $newRegistrationDeadline === null){
+        if ($oldRegistrationDeadline !== null && $newRegistrationDeadline === null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
         }
 
 
         // hinzugefügt
-        if($oldNumOfGuest === null && $newNumOfGuest !== null){
+        if ($oldNumOfGuest === null && $newNumOfGuest !== null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
         }
-        if($oldClosedSociety === null && $newClosedSociety !== null){
+        if ($oldClosedSociety === null && $newClosedSociety !== null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
         }
-        if($oldEntryFee === null && $newEntryFee !== null){
+        if ($oldEntryFee === null && $newEntryFee !== null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
         }
-        if($oldRegisterBy === null && $newRegisterBy !== null){
+        if ($oldRegisterBy === null && $newRegisterBy !== null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
         }
-        if($oldRegistrationRequired === null && $newRegistrationRequired !== null){
+        if ($oldRegistrationRequired === null && $newRegistrationRequired !== null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
         }
-        if($oldRegistrationDeadline === null && $newRegistrationDeadline !== null){
+        if ($oldRegistrationDeadline === null && $newRegistrationDeadline !== null) {
             $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
         }
 
@@ -367,18 +395,41 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
-    public function generateBasicBudgetValues(Project $project)
+    public function generateBasicBudgetValues(Project $project): void
     {
         $table = $project->table()->create([
             'name' => $project->name . ' Budgettabelle'
         ]);
 
-
         $columns = $table->columns()->createMany([
-            ['name' => 'KTO', 'subName' => '', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
-            ['name' => 'A', 'subName' => '', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
-            ['name' => 'Position', 'subName' => '', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
-            ['name' => date('Y') . ' €', 'subName' => 'A', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
+            [
+                'name' => 'KTO',
+                'subName' => '',
+                'type' => 'empty',
+                'linked_first_column' => null,
+                'linked_second_column' => null
+            ],
+            [
+                'name' => 'A',
+                'subName' => '',
+                'type' => 'empty',
+                'linked_first_column' => null,
+                'linked_second_column' => null
+            ],
+            [
+                'name' => 'Position',
+                'subName' => '',
+                'type' => 'empty',
+                'linked_first_column' => null,
+                'linked_second_column' => null
+            ],
+            [
+                'name' => date('Y') . ' €',
+                'subName' => 'A',
+                'type' => 'empty',
+                'linked_first_column' => null,
+                'linked_second_column' => null
+            ],
         ]);
 
         $costMainPosition = $table->mainPositions()->create([
@@ -467,7 +518,6 @@ class ProjectController extends Controller
             'verified_value' => null,
             'linked_money_source_id' => null,
         ]);
-
     }
 
     public function verifiedRequestMainPosition(Request $request): RedirectResponse
@@ -476,10 +526,10 @@ class ProjectController extends Controller
         $mainPosition = MainPosition::find($request->id);
         $project = $mainPosition->table()->first()->project()->first();
 
-        if($request->giveBudgetAccess){
-           $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
-           $user = User::find($request->user);
-            $notificationTitle = 'Du hast Budgetzugriff in '. $project->name .' erhalten';
+        if ($request->giveBudgetAccess) {
+            $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
+            $user = User::find($request->user);
+            $notificationTitle = 'Du hast Budgetzugriff in ' . $project->name . ' erhalten';
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -531,13 +581,17 @@ class ProjectController extends Controller
             'requested_by' => Auth::id(),
             'requested' => $request->user
         ]);
-        $this->history->createHistory($project->id, 'Hauptposition „' . $mainPosition->name . '“ zur Verifizierung angefragt', 'budget');
+        $this->history->createHistory(
+            $project->id,
+            'Hauptposition „' . $mainPosition->name . '“ zur Verifizierung angefragt',
+            'budget'
+        );
         return back()->with('success');
     }
 
     public function takeBackVerification(Request $request): RedirectResponse
     {
-       $notificationTitle = 'Verifizierungsanfrage gelöscht';
+        $notificationTitle = 'Verifizierungsanfrage gelöscht';
         $budgetData = new stdClass();
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypesEnum::BUDGET_VERIFICATION_TAKE_BACK;
@@ -568,7 +622,8 @@ class ProjectController extends Controller
             ];
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setBudgetData($budgetData);
             $this->notificationService->setProjectId($project->id);
@@ -577,8 +632,11 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
             $verifiedRequest->delete();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            $this->history->createHistory($project->id, 'Hauptposition „' . $mainPosition->name . '“ Verifizierungsanfrage zurückgenommen', 'budget');
-
+            $this->history->createHistory(
+                $project->id,
+                'Hauptposition „' . $mainPosition->name . '“ Verifizierungsanfrage zurückgenommen',
+                'budget'
+            );
         }
 
         if ($request->type === 'sub') {
@@ -610,7 +668,8 @@ class ProjectController extends Controller
 
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setBudgetData($budgetData);
             $this->notificationService->setProjectId($project->id);
@@ -619,12 +678,14 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->delete();
-            $this->history->createHistory($project->id, 'Unterposition „' . $subPosition->name . '“ Verifizierungsanfrage zurückgenommen', 'budget');
+            $this->history->createHistory(
+                $project->id,
+                'Unterposition „' . $subPosition->name . '“ Verifizierungsanfrage zurückgenommen',
+                'budget'
+            );
         }
         return back()->with(['success']);
     }
-
-
 
     private function deleteOldNotification($positionId, $requestedId): void
     {
@@ -641,7 +702,7 @@ class ProjectController extends Controller
         $budgetData = new stdClass();
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypesEnum::BUDGET_VERIFICATION_DELETED;
-       // $this->createVerificationNotificationHeader('Verifizierung in Budget aufgehoben', $request->position, BudgetTypesEnum::BUDGET_VERIFICATION_DELETED);
+
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
@@ -668,7 +729,8 @@ class ProjectController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setBudgetData($budgetData);
             $this->notificationService->setProjectId($project->id);
@@ -677,7 +739,11 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->delete();
-            $this->history->createHistory($project->id, 'Hauptposition „' . $mainPosition->name . '“ Verifizierung aufgehoben', 'budget');
+            $this->history->createHistory(
+                $project->id,
+                'Hauptposition „' . $mainPosition->name . '“ Verifizierung aufgehoben',
+                'budget'
+            );
         }
 
         if ($request->type === 'sub') {
@@ -708,7 +774,8 @@ class ProjectController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setBudgetData($budgetData);
             $this->notificationService->setProjectId($project->id);
@@ -717,7 +784,11 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->delete();
-            $this->history->createHistory($project->id, 'Unterposition „' . $subPosition->name . '“ Verifizierung aufgehoben', 'budget');
+            $this->history->createHistory(
+                $project->id,
+                'Unterposition „' . $subPosition->name . '“ Verifizierung aufgehoben',
+                'budget'
+            );
         }
 
         return back()->with(['success']);
@@ -725,15 +796,14 @@ class ProjectController extends Controller
 
     public function verifiedRequestSubPosition(Request $request): RedirectResponse
     {
-
         $subPosition = SubPosition::find($request->id);
         $mainPosition = $subPosition->mainPosition()->first();
         $project = $mainPosition->table()->first()->project()->first();
-        if($request->giveBudgetAccess){
+        if ($request->giveBudgetAccess) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
             // Notification
-            $notificationTitle = 'Du hast Budgetzugriff in '. $project->name .' erhalten';
+            $notificationTitle = 'Du hast Budgetzugriff in ' . $project->name . ' erhalten';
             $project = $mainPosition->table()->first()->project()->first();
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
@@ -755,7 +825,8 @@ class ProjectController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setNotificationTo($user);
             $this->notificationService->setDescription($notificationDescription);
@@ -801,7 +872,11 @@ class ProjectController extends Controller
             'requested' => $request->user
         ]);
 
-        $this->history->createHistory($project->id, 'Unterposition „' . $subPosition->name . '“ zur Verifizierung angefragt', 'budget');
+        $this->history->createHistory(
+            $project->id,
+            'Unterposition „' . $subPosition->name . '“ zur Verifizierung angefragt',
+            'budget'
+        );
         return back()->with('success');
     }
 
@@ -817,7 +892,13 @@ class ProjectController extends Controller
             ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
             ->whereJsonContains("data->budgetData->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
             ->delete();
-        $this->history->createHistory($request->project_id, 'Unterposition „' . $subPosition->name . '“ verifiziert', 'budget');
+
+        $this->history->createHistory(
+            $request->project_id,
+            'Unterposition „' . $subPosition->name . '“ verifiziert',
+            'budget'
+        );
+
         return back()->with('success');
     }
 
@@ -857,11 +938,17 @@ class ProjectController extends Controller
         $this->notificationService->setBudgetData($budgetData);
         $this->notificationService->setDescription($notificationDescription);
 
-        foreach ($project->access_budget()->get() as $user){
+        foreach ($project->access_budget()->get() as $user) {
             $this->notificationService->setNotificationTo($user);
             $this->notificationService->createNotification();
         }
-        $this->history->createHistory($project->id, 'Unterposition „' . $subPosition->name . '“ festgeschrieben', 'budget');
+
+        $this->history->createHistory(
+            $project->id,
+            'Unterposition „' . $subPosition->name . '“ festgeschrieben',
+            'budget'
+        );
+
         return back()->with('success');
     }
 
@@ -901,11 +988,17 @@ class ProjectController extends Controller
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setBudgetData($budgetData);
         $this->notificationService->setDescription($notificationDescription);
-        foreach ($project->access_budget()->get() as $user){
+        foreach ($project->access_budget()->get() as $user) {
             $this->notificationService->setNotificationTo($user);
             $this->notificationService->createNotification();
         }
-        $this->history->createHistory($request->project_id, 'Unterposition „' . $subPosition->name . '“ Festschreibung aufgehoben', 'budget');
+
+        $this->history->createHistory(
+            $request->project_id,
+            'Unterposition „' . $subPosition->name . '“ Festschreibung aufgehoben',
+            'budget'
+        );
+
         return back()->with('success');
     }
 
@@ -914,7 +1007,11 @@ class ProjectController extends Controller
         $mainPosition = MainPosition::find($request->mainPositionId);
         $this->setMainPositionCellVerifiedValue($mainPosition);
         $mainPosition->update(['is_fixed' => true]);
-        $this->history->createHistory($request->project_id, 'Hauptposition „' . $mainPosition->name . '“ festgeschrieben', 'budget');
+        $this->history->createHistory(
+            $request->project_id,
+            'Hauptposition „' . $mainPosition->name . '“ festgeschrieben',
+            'budget'
+        );
         return back()->with('success');
     }
 
@@ -923,7 +1020,11 @@ class ProjectController extends Controller
         $mainPosition = MainPosition::find($request->mainPositionId);
         $this->removeMainPositionCellVerifiedValue($mainPosition);
         $mainPosition->update(['is_fixed' => false]);
-        $this->history->createHistory($request->project_id, 'Hauptposition „' . $mainPosition->name . '“ Festschreibung aufgehoben', 'budget');
+        $this->history->createHistory(
+            $request->project_id,
+            'Hauptposition „' . $mainPosition->name . '“ Festschreibung aufgehoben',
+            'budget'
+        );
         return back()->with('success');
     }
 
@@ -950,22 +1051,26 @@ class ProjectController extends Controller
             ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
             ->whereJsonContains("data->budgetData->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
             ->delete();
-        $this->history->createHistory($request->project_id, 'Hauptposition „' . $mainPosition->name . '“ verifiziert', 'budget');
+        $this->history->createHistory(
+            $request->project_id,
+            'Hauptposition „' . $mainPosition->name . '“ verifiziert',
+            'budget'
+        );
         return back()->with('success');
     }
 
-    private function setSubPositionCellVerifiedValue(SubPosition $subPosition)
+    private function setSubPositionCellVerifiedValue(SubPosition $subPosition): void
     {
         $subPositionRows = $subPosition->subPositionRows()->get();
         foreach ($subPositionRows as $subPositionRow) {
             $cells = $subPositionRow->cells()->get();
             foreach ($cells as $cell) {
-                $cell->update(['verified_value' => @$cell->value]);
+                $cell->update(['verified_value' => $cell->value]);
             }
         }
     }
 
-    private function removeSubPositionCellVerifiedValue(SubPosition $subPosition)
+    private function removeSubPositionCellVerifiedValue(SubPosition $subPosition): void
     {
         $subPositionRows = $subPosition->subPositionRows()->get();
         foreach ($subPositionRows as $subPositionRow) {
@@ -976,7 +1081,7 @@ class ProjectController extends Controller
         }
     }
 
-    private function setMainPositionCellVerifiedValue(MainPosition $mainPosition)
+    private function setMainPositionCellVerifiedValue(MainPosition $mainPosition): void
     {
         $subPositions = $mainPosition->subPositions()->get();
         foreach ($subPositions as $subPosition) {
@@ -984,13 +1089,13 @@ class ProjectController extends Controller
             foreach ($subPositionRows as $subPositionRow) {
                 $cells = $subPositionRow->cells()->get();
                 foreach ($cells as $cell) {
-                    $cell->update(['verified_value' => @$cell->value]);
+                    $cell->update(['verified_value' => $cell->value]);
                 }
             }
         }
     }
 
-    private function removeMainPositionCellVerifiedValue(MainPosition $mainPosition)
+    private function removeMainPositionCellVerifiedValue(MainPosition $mainPosition): void
     {
         $subPositions = $mainPosition->subPositions()->get();
         foreach ($subPositions as $subPosition) {
@@ -1004,13 +1109,20 @@ class ProjectController extends Controller
         }
     }
 
-    public function updateCellSource(Request $request): void
-    {
-        $column = ColumnCell::find($request->cell_id);
-        $column->update([
-            'linked_type' => $request->linked_type,
-            'linked_money_source_id' => $request->money_source_id
-        ]);
+    public function updateCellSource(
+        Request $request,
+        MoneySourceThresholdReminderService $moneySourceThresholdReminderService
+    ): void {
+        ColumnCell::find($request->cell_id)
+            ->update([
+                'linked_type' => $request->linked_type,
+                'linked_money_source_id' => $request->money_source_id
+            ]);
+
+        if ($request->money_source_id) {
+            $moneySourceThresholdReminderService
+                ->handleThresholdReminders(MoneySource::find($request->money_source_id));
+        }
     }
 
     public function updateColumnName(Request $request): void
@@ -1028,7 +1140,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function columnDelete(Column $column)
+    public function columnDelete(Column $column): void
     {
         $cells = ColumnCell::where('column_id', $column->id)->get();
 
@@ -1055,11 +1167,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    /**
-     * @param $project_id
-     * @return void
-     */
-    private function setColumnSubName($table_id): void
+    private function setColumnSubName(int $table_id): void
     {
         $table = Table::find($table_id);
         $columns = $table->columns()->get();
@@ -1078,7 +1186,7 @@ class ProjectController extends Controller
         }
     }
 
-    public function getNameFromNumber($num): string
+    public function getNameFromNumber(int $num): string
     {
         $numeric = ($num - 1) % 26;
         $letter = chr(65 + $numeric);
@@ -1090,10 +1198,6 @@ class ProjectController extends Controller
         }
     }
 
-    /**
-     * @param Request $request
-     * @return void
-     */
     public function addColumn(Request $request): void
     {
         $table = Table::find($request->table_id);
@@ -1107,9 +1211,12 @@ class ProjectController extends Controller
             ]);
             $this->setColumnSubName($request->table_id);
 
-            $subPositionRows = SubPositionRow::whereHas('subPosition.mainPosition', function (Builder $query) use ($request) {
-                $query->where('table_id', $request->table_id);
-            })->pluck('id');
+            $subPositionRows = SubPositionRow::whereHas(
+                'subPosition.mainPosition',
+                function (Builder $query) use ($request): void {
+                    $query->where('table_id', $request->table_id);
+                }
+            )->pluck('id');
 
             $column->subPositionRows()->attach($subPositionRows, [
                 'value' => 0,
@@ -1117,7 +1224,7 @@ class ProjectController extends Controller
                 'linked_money_source_id' => null
             ]);
 
-            $subPositions = SubPosition::whereHas('mainPosition', function (Builder $query) use ($request) {
+            $subPositions = SubPosition::whereHas('mainPosition', function (Builder $query) use ($request): void {
                 $query->where('table_id', $request->table_id);
             })->get();
 
@@ -1154,7 +1261,9 @@ class ProjectController extends Controller
             ]);
             $this->setColumnSubName($request->table_id);
             foreach ($firstColumns as $firstColumn) {
-                $secondColumn = ColumnCell::where('column_id', $request->second_column_id)->where('sub_position_row_id', $firstColumn->sub_position_row_id)->first();
+                $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
+                    ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
+                    ->first();
                 $sum = (int)$firstColumn->value + (int)$secondColumn->value;
                 ColumnCell::create([
                     'column_id' => $column->id,
@@ -1177,7 +1286,9 @@ class ProjectController extends Controller
             ]);
             $this->setColumnSubName($request->table_id);
             foreach ($firstColumns as $firstColumn) {
-                $secondColumn = ColumnCell::where('column_id', $request->second_column_id)->where('sub_position_row_id', $firstColumn->sub_position_row_id)->first();
+                $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
+                    ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
+                    ->first();
                 $sum = (int)$firstColumn->value - (int)$secondColumn->value;
                 ColumnCell::create([
                     'column_id' => $column->id,
@@ -1190,24 +1301,33 @@ class ProjectController extends Controller
         }
     }
 
-    /**
-     * @param Request $request
-     * @return void
-     */
-    public function updateCellValue(Request $request): void
-    {
+    public function updateCellValue(
+        Request $request,
+        MoneySourceThresholdReminderService $moneySourceThresholdReminderService
+    ): void {
         $column = Column::find($request->column_id);
         $project = $column->table()->first()->project()->first();
-        $cell = ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->first();
+        $cell = ColumnCell::where('column_id', $request->column_id)
+            ->where('sub_position_row_id', $request->sub_position_row_id)
+            ->first();
 
         if ($request->is_verified) {
-            $this->history->createHistory($project->id, '„' . $cell->value . '“ in „' . $request->value . '“ geändert', 'budget');
+            $this->history->createHistory(
+                $project->id,
+                '„' . $cell->value . '“ in „' . $request->value . '“ geändert',
+                'budget'
+            );
         }
 
         $cell->update(['value' => $request->value]);
         $this->updateAutomaticCellValues($request->sub_position_row_id);
-    }
 
+        if ($cell->linked_money_source_id) {
+            $moneySourceThresholdReminderService->handleThresholdReminders(
+                MoneySource::find($cell->linked_money_source_id)
+            );
+        }
+    }
 
     public function changeColumnColor(Request $request): RedirectResponse
     {
@@ -1216,7 +1336,7 @@ class ProjectController extends Controller
         return back()->with('success', 'color changed');
     }
 
-    public function addSubPositionRow(Request $request)
+    public function addSubPositionRow(Request $request): void
     {
         $table = Table::find($request->table_id);
         $columns = $table->columns()->get();
@@ -1247,10 +1367,6 @@ class ProjectController extends Controller
         ]);
     }
 
-    /**
-     * @param Request $request
-     * @return void
-     */
     public function addMainPosition(Request $request): void
     {
         $table = Table::find($request->table_id);
@@ -1283,7 +1399,6 @@ class ProjectController extends Controller
 
     public function addSubPosition(Request $request): void
     {
-
         $table = Table::find($request->table_id);
         $columns = $table->columns()->get();
         $mainPosition = MainPosition::find($request->main_position_id);
@@ -1301,7 +1416,8 @@ class ProjectController extends Controller
         $this->addSubPositionRowsWithColumns($subPosition, $columns);
     }
 
-    private function addSubPositionRowsWithColumns(SubPosition $subPosition, Collection $columns){
+    private function addSubPositionRowsWithColumns(SubPosition $subPosition, Collection $columns): void
+    {
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
             'position' => 1,
@@ -1318,7 +1434,8 @@ class ProjectController extends Controller
         $subPosition->subPositionSumDetails()->createMany(
             $columns->map(fn($column) => [
                 'column_id' => $column->id
-            ])->all());
+            ])->all()
+        );
 
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => 0,
@@ -1327,34 +1444,32 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function updateCellCalculation(Request $request)
+    public function updateCellCalculation(Request $request): RedirectResponse
     {
-        if($request->calculations){
-        foreach ($request->calculations as $calculation) {
-            $cellCalculation = CellCalculations::find($calculation['id']);
-            $cellCalculation->update([
-                'name' => @$calculation['name'],
-                'value' => @$calculation['value'],
-                'description' => @$calculation['description']
-            ]);
-        }
+        if ($request->calculations) {
+            foreach ($request->calculations as $calculation) {
+                $cellCalculation = CellCalculations::find($calculation['id']);
+                $cellCalculation->update([
+                    'name' => $calculation['name'] ?? '',
+                    'value' => $calculation['value'] ?? 0,
+                    'description' => $calculation['description'] ?? ''
+                ]);
+            }
 
-        $cell = ColumnCell::find($request->calculations[0]['cell_id']);
-        $cell->update(['value' => $cell->calculations()->sum('value')]);
+            $cell = ColumnCell::find($request->calculations[0]['cell_id']);
+            $cell->update(['value' => $cell->calculations()->sum('value')]);
         }
 
         return back()->with('success');
     }
 
-    public function addCalculation(ColumnCell $cell, Request $request)
+    public function addCalculation(ColumnCell $cell, Request $request): void
     {
         // current position found in $request->position
-
         // add check if $request->position is present, if not set to 0
-        if(!$request->position){
+        if (!$request->position) {
             $request->position = 0;
         }
-
 
         $newCalculation = $cell->calculations()->create([
             'name' => '',
@@ -1363,8 +1478,8 @@ class ProjectController extends Controller
             'position' => $request->position + 1
         ]);
 
-        // update all positions of calculations where position is greater than $request->position and cell_id is $cell->id and where not id is $newCalculation->id, increment position by 1 after new calculation
-
+        // update all positions of calculations where position is greater than $request->position and cell_id is
+        // $cell->id and where not id is $newCalculation->id, increment position by 1 after new calculation
         CellCalculations::query()
             ->where('cell_id', $cell->id)
             ->where('position', '>', $request->position)
@@ -1377,7 +1492,7 @@ class ProjectController extends Controller
      * @param $subPositionRowId
      * @return void
      */
-    private function updateAutomaticCellValues($subPositionRowId)
+    private function updateAutomaticCellValues($subPositionRowId): void
     {
 
         $rows = ColumnCell::where('sub_position_row_id', $subPositionRowId)->get();
@@ -1388,10 +1503,17 @@ class ProjectController extends Controller
             if ($column->type === 'empty') {
                 continue;
             }
-            $firstRowValue = ColumnCell::where('column_id', $column->linked_first_column)->where('sub_position_row_id', $subPositionRowId)->first()->value;
-            $secondRowValue = ColumnCell::where('column_id', $column->linked_second_column)->where('sub_position_row_id', $subPositionRowId)->first()->value;
-
-            $updateColumn = ColumnCell::where('sub_position_row_id', $subPositionRowId)->where('column_id', $column->id)->first();
+            $firstRowValue = ColumnCell::where('column_id', $column->linked_first_column)
+                ->where('sub_position_row_id', $subPositionRowId)
+                ->first()
+                ->value;
+            $secondRowValue = ColumnCell::where('column_id', $column->linked_second_column)
+                ->where('sub_position_row_id', $subPositionRowId)
+                ->first()
+                ->value;
+            $updateColumn = ColumnCell::where('sub_position_row_id', $subPositionRowId)
+                ->where('column_id', $column->id)
+                ->first();
 
             if ($column->type == 'sum') {
                 $sum = (int)$firstRowValue + (int)$secondRowValue;
@@ -1407,70 +1529,41 @@ class ProjectController extends Controller
         }
     }
 
-    /**
-     * Function to lock a column
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function lockColumn(Request $request)
+    public function lockColumn(Request $request): RedirectResponse
     {
         $column = Column::find($request->columnId);
         $column->update(['is_locked' => true, 'locked_by' => Auth::id()]);
         return back()->with('success');
     }
 
-    /**
-     * Function to unlock a column
-     * @param Request $request
-     * @return RedirectResponse
-     */
-    public function unlockColumn(Request $request)
+    public function unlockColumn(Request $request): RedirectResponse
     {
         $column = Column::find($request->columnId);
         $column->update(['is_locked' => false, 'locked_by' => null]);
         return back()->with('success');
     }
 
-
-    public function updateProjectState(Request $request, Project $project){
-
+    public function updateProjectState(Request $request, Project $project): void
+    {
         $oldState = $project->state()->first();
         $project->update(['state' => $request->state_id]);
         $newState = $project->state()->first();
 
-        if(!empty($newState) && $oldState !== $newState ){
+        if (!empty($newState) && $oldState !== $newState) {
             $this->history->createHistory($project->id, 'Projektstatus hat sich geändert', 'public_changes');
         }
-        if(empty($oldState) && !empty($newState)){
+        if (empty($oldState) && !empty($newState)) {
             $this->history->createHistory($project->id, 'Projektstatus hat sich geändert', 'public_changes');
         }
-        if(!empty($oldState) && empty($newState)){
+        if (!empty($oldState) && empty($newState)) {
             $this->history->createHistory($project->id, 'Projektstatus hat sich geändert', 'public_changes');
         }
 
         $this->setPublicChangesNotification($project->id);
     }
 
-
-    private function get_events_of_day_for_project($date_of_day, $room, $project_id): array
+    public function projectInfoTab(Project $project)
     {
-
-        $eventsToday = [];
-        $today = $date_of_day->format('d.m.');
-
-        foreach ($room->events as $event) {
-            if(in_array($today, $event->days_of_event)) {
-                if($event->project_id === $project_id){
-                    $eventsToday[] = $event;
-                }
-            }
-        }
-        return $eventsToday;
-    }
-
-    public function projectInfoTab(Project $project, Request $request)
-    {
-
         $project->load([
             'categories',
             'departments.users.departments',
@@ -1486,9 +1579,11 @@ class ProjectController extends Controller
             'delete_permission_users'
         ]);
 
-
         if (!$project->is_group) {
-            $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
+            $group = DB::table('project_groups')
+                ->select('*')
+                ->where('project_id', '=', $project->id)
+                ->first();
             if (!empty($group)) {
                 $groupOutput = Project::find($group?->group_id);
             } else {
@@ -1504,28 +1599,22 @@ class ProjectController extends Controller
         $events = $project->events()->get();
         $RoomsWithAudience = null;
 
-        foreach ($events as $event){
-            if(!$event->audience){
+        foreach ($events as $event) {
+            if (!$event->audience) {
                 continue;
             }
             $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room){
+            foreach ($rooms as $room) {
                 $RoomsWithAudience[$room->id] = $room->name;
             }
         }
-        $managerIds = [];
+
         //get the ids of all managerUsers of the Project
         $managerIds = $project->managerUsers()->pluck('user_id');
-
-        $writeIds = [];
         //get the ids of all writeUsers of the Project
         $writeIds = $project->writeUsers()->pluck('user_id');
-
-        $deleteIds = [];
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
-
-
 
         return inertia('Projects/SingleProjectInformation', [
             // needed for the ProjectShowHeaderComponent
@@ -1541,7 +1630,6 @@ class ProjectController extends Controller
             'states' => ProjectStates::all(),
             'projectGroups' => $project->groups()->get(),
             'groupProjects' => Project::where('is_group', 1)->get(),
-
             // needed for ProjectSecondSidenav
             'categories' => Category::all(),
             'projectCategoryIds' => $project->categories()->pluck('category_id'),
@@ -1556,7 +1644,7 @@ class ProjectController extends Controller
             'access_budget' => $project->access_budget,
         ]);
     }
-    public function projectCalendarTab(Project $project, Request $request,CalendarController $calendar)
+    public function projectCalendarTab(Project $project, CalendarController $calendar): Response|ResponseFactory
     {
         $showCalendar = $calendar->createCalendarData('', $project);
 
@@ -1577,7 +1665,10 @@ class ProjectController extends Controller
         ]);
 
         if (!$project->is_group) {
-            $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
+            $group = DB::table('project_groups')
+                ->select('*')
+                ->where('project_id', '=', $project->id)
+                ->first();
             if (!empty($group)) {
                 $groupOutput = Project::find($group?->group_id);
             } else {
@@ -1589,7 +1680,7 @@ class ProjectController extends Controller
 
         $eventsAtAGlance = [];
 
-        if(\request('atAGlance') === 'true'){
+        if (\request('atAGlance') === 'true') {
             $eventsQuery = $project->events();
             $filteredEvents = $calendar->filterEvents($eventsQuery, null, null, null, $project);
 
@@ -1601,36 +1692,30 @@ class ProjectController extends Controller
         $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
 
         $events = $project->events()->get();
-        $RoomsWithAudience = null;
+        $roomsWithAudience = null;
 
-
-        foreach ($events as $event){
-            if(!$event->audience){
+        foreach ($events as $event) {
+            if (!$event->audience) {
                 continue;
             }
             $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room){
-                $RoomsWithAudience[$room->id] = $room->name;
+            foreach ($rooms as $room) {
+                $roomsWithAudience[$room->id] = $room->name;
             }
         }
 
-        if(\request('startDate') && \request('endDate')){
+        if (\request('startDate') && \request('endDate')) {
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
-        }else{
+        } else {
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
 
-        $managerIds = [];
         //get the ids of all managerUsers of the Project
         $managerIds = $project->managerUsers()->pluck('user_id');
-
-        $writeIds = [];
         //get the ids of all writeUsers of the Project
         $writeIds = $project->writeUsers()->pluck('user_id');
-
-        $deleteIds = [];
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
@@ -1641,7 +1726,7 @@ class ProjectController extends Controller
             'project' => new ProjectCalendarResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
-            'RoomsWithAudience' => $RoomsWithAudience,
+            'RoomsWithAudience' => $roomsWithAudience,
             'projectManagerIds' => $managerIds,
             'projectWriteIds' => $writeIds,
             'projectDeleteIds' => $deleteIds,
@@ -1650,7 +1735,6 @@ class ProjectController extends Controller
             'states' => ProjectStates::all(),
             'projectGroups' => $project->groups()->get(),
             'groupProjects' => Project::where('is_group', 1)->get(),
-
             // needed for ProjectSecondSidenav
             'categories' => Category::all(),
             'projectCategoryIds' => $project->categories()->pluck('category_id'),
@@ -1662,12 +1746,10 @@ class ProjectController extends Controller
             'projectSectorIds' => $project->sectors()->pluck('sector_id'),
             'projectSectors' => $project->sectors,
             'projectState' => $project->state,
-
             // needed for SingleProjectCalendar
-
             'eventsAtAGlance' => $eventsAtAGlance,
             'calendar' => $showCalendar['roomsWithEvents'],
-            'dateValue'=>$showCalendar['dateValue'],
+            'dateValue' => $showCalendar['dateValue'],
             'days' => $showCalendar['days'],
             'selectedDate' => $showCalendar['selectedDate'],
             'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
@@ -1687,9 +1769,9 @@ class ProjectController extends Controller
             'access_budget' => $project->access_budget,
         ]);
     }
-    public function projectChecklistTab(Project $project, Request $request)
-    {
 
+    public function projectChecklistTab(Project $project): Response|ResponseFactory
+    {
         $project->load([
             'categories',
             'checklists.users',
@@ -1706,7 +1788,10 @@ class ProjectController extends Controller
         ]);
 
         if (!$project->is_group) {
-            $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
+            $group = DB::table('project_groups')
+                ->select('*')
+                ->where('project_id', '=', $project->id)
+                ->first();
             if (!empty($group)) {
                 $groupOutput = Project::find($group?->group_id);
             } else {
@@ -1720,28 +1805,22 @@ class ProjectController extends Controller
         $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
 
         $events = $project->events()->get();
-        $RoomsWithAudience = null;
+        $roomsWithAudience = null;
 
-
-        foreach ($events as $event){
-            if(!$event->audience){
+        foreach ($events as $event) {
+            if (!$event->audience) {
                 continue;
             }
             $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room){
-                $RoomsWithAudience[$room->id] = $room->name;
+            foreach ($rooms as $room) {
+                $roomsWithAudience[$room->id] = $room->name;
             }
         }
 
-        $managerIds = [];
         //get the ids of all managerUsers of the Project
         $managerIds = $project->managerUsers()->pluck('user_id');
-
-        $writeIds = [];
         //get the ids of all writeUsers of the Project
         $writeIds = $project->writeUsers()->pluck('user_id');
-
-        $deleteIds = [];
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
@@ -1749,7 +1828,7 @@ class ProjectController extends Controller
             'project' => new ProjectChecklistResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
-            'RoomsWithAudience' => $RoomsWithAudience,
+            'RoomsWithAudience' => $roomsWithAudience,
             'projectManagerIds' => $managerIds,
             'projectWriteIds' => $writeIds,
             'projectDeleteIds' => $deleteIds,
@@ -1765,7 +1844,9 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function projectShiftTab(Project $project, Request $request)
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    public function projectShiftTab(Project $project): Response|ResponseFactory
     {
         $project->load([
             'departments.users.departments',
@@ -1779,7 +1860,10 @@ class ProjectController extends Controller
         ]);
 
         if (!$project->is_group) {
-            $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
+            $group = DB::table('project_groups')
+                ->select('*')
+                ->where('project_id', '=', $project->id)
+                ->first();
             if (!empty($group)) {
                 $groupOutput = Project::find($group?->group_id);
             } else {
@@ -1791,21 +1875,18 @@ class ProjectController extends Controller
         $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
         $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
 
-        if($firstEventInProject && $lastEventInProject){
+        if ($firstEventInProject && $lastEventInProject) {
             //get the start of day of the firstEventInProject
             $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
             //get the end of day of the lastEventInProject
             $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
-
-        }else{
+        } else {
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
 
-
         $events = $project->events()->get();
-        $RoomsWithAudience = null;
-
+        $roomsWithAudience = null;
 
         $shiftRelevantEventTypes = $project->shiftRelevantEventTypes()->pluck('event_type_id');
         $shiftRelevantEvents = $project->events()
@@ -1817,7 +1898,7 @@ class ProjectController extends Controller
         foreach ($shiftRelevantEvents as $event) {
             $timeline = $event->timeline()->get()->toArray();
 
-            foreach($timeline as &$singleTimeLine) {
+            foreach ($timeline as &$singleTimeLine) {
                 $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
             }
 
@@ -1842,13 +1923,13 @@ class ProjectController extends Controller
             ];
         }
 
-        foreach ($events as $event){
-            if(!$event->audience){
+        foreach ($events as $event) {
+            if (!$event->audience) {
                 continue;
             }
             $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room){
-                $RoomsWithAudience[$room->id] = $room->name;
+            foreach ($rooms as $room) {
+                $roomsWithAudience[$room->id] = $room->name;
             }
         }
 
@@ -1856,8 +1937,8 @@ class ProjectController extends Controller
 
         $usersWithPlannedWorkingHours = [];
 
-        //get the diff of startDate and endDate in days
-        $diffInDays = $startDate->diffInDays($endDate);
+        //get the diff of startDate and endDate in days, +1 to include the current date
+        $diffInDays = $startDate->diffInDays($endDate) + 1;
 
         foreach ($users as $user) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
@@ -1874,7 +1955,7 @@ class ProjectController extends Controller
 
         $freelancersWithPlannedWorkingHours = [];
 
-        $freelancers = Freelancer::all();
+        $freelancers = Freelancer::where('can_work_shifts', true)->get();
 
         foreach ($freelancers as $freelancer) {
             $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
@@ -1885,7 +1966,7 @@ class ProjectController extends Controller
             ];
         }
 
-        $service_providers = ServiceProvider::without(['contacts'])->get();
+        $service_providers = ServiceProvider::where('can_work_shifts', true)->without(['contacts'])->get();
 
         $serviceProvidersWithPlannedWorkingHours = [];
 
@@ -1898,15 +1979,10 @@ class ProjectController extends Controller
             ];
         }
 
-        $managerIds = [];
         //get the ids of all managerUsers of the Project
         $managerIds = $project->managerUsers()->pluck('user_id');
-
-        $writeIds = [];
         //get the ids of all writeUsers of the Project
         $writeIds = $project->writeUsers()->pluck('user_id');
-
-        $deleteIds = [];
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
@@ -1919,7 +1995,7 @@ class ProjectController extends Controller
             'serviceProvidersForShifts' => $serviceProvidersWithPlannedWorkingHours,
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
-            'RoomsWithAudience' => $RoomsWithAudience,
+            'RoomsWithAudience' => $roomsWithAudience,
             'projectManagerIds' => $managerIds,
             'projectWriteIds' => $writeIds,
             'projectDeleteIds' => $deleteIds,
@@ -1938,8 +2014,9 @@ class ProjectController extends Controller
         ]);
     }
 
-
-    public function projectBudgetTab(Project $project, Request $request)
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    public function projectBudgetTab(Project $project): Response|ResponseFactory
     {
         $project->load([
             'access_budget',
@@ -1991,65 +2068,63 @@ class ProjectController extends Controller
 
         $selectedSumDetail = null;
 
-        if(request('selectedSubPosition') && request('selectedColumn')) {
-            $selectedSumDetail = Collection::make(SubpositionSumDetail::with(['comments.user', 'sumMoneySource.moneySource'])
-                ->where('sub_position_id', request('selectedSubPosition'))
-                ->where('column_id', request('selectedColumn'))
-                ->first())
-                ->merge(['class' => SubpositionSumDetail::class]);
+        if (request('selectedSubPosition') && request('selectedColumn')) {
+            $selectedSumDetail = Collection::make(
+                SubpositionSumDetail::with(['comments.user', 'sumMoneySource.moneySource'])
+                    ->where('sub_position_id', request('selectedSubPosition'))
+                    ->where('column_id', request('selectedColumn'))
+                    ->first()
+            )->merge(['class' => SubpositionSumDetail::class]);
         }
 
-        if(request('selectedMainPosition') && request('selectedColumn')) {
-            $selectedSumDetail =  Collection::make(MainPositionDetails::with(['comments.user', 'sumMoneySource.moneySource'])
-                ->where('main_position_id', request('selectedMainPosition'))
-                ->where('column_id', request('selectedColumn'))
-                ->first())
-                ->merge(['class' => MainPositionDetails::class]);
+        if (request('selectedMainPosition') && request('selectedColumn')) {
+            $selectedSumDetail = Collection::make(
+                MainPositionDetails::with(['comments.user', 'sumMoneySource.moneySource'])
+                    ->where('main_position_id', request('selectedMainPosition'))
+                    ->where('column_id', request('selectedColumn'))
+                    ->first()
+            )->merge(['class' => MainPositionDetails::class]);
         }
 
-        if(request('selectedBudgetType') && request('selectedColumn')) {
-            $selectedSumDetail = Collection::make(BudgetSumDetails::with(['comments.user', 'sumMoneySource.moneySource'])
-                ->where('type', request('selectedBudgetType'))
-                ->where('column_id', request('selectedColumn'))
-                ->first())
-                ->merge(['class' => BudgetSumDetails::class]);
+        if (request('selectedBudgetType') && request('selectedColumn')) {
+            $selectedSumDetail = Collection::make(
+                BudgetSumDetails::with(['comments.user', 'sumMoneySource.moneySource'])
+                    ->where('type', request('selectedBudgetType'))
+                    ->where('column_id', request('selectedColumn'))
+                    ->first()
+            )->merge(['class' => BudgetSumDetails::class]);
         }
         $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
         $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
 
         $events = $project->events()->get();
-        $RoomsWithAudience = null;
+        $roomsWithAudience = null;
 
-        foreach ($events as $event){
-            if(!$event->audience){
+        foreach ($events as $event) {
+            if (!$event->audience) {
                 continue;
             }
             $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room){
-                $RoomsWithAudience[$room->id] = $room->name;
+            foreach ($rooms as $room) {
+                $roomsWithAudience[$room->id] = $room->name;
             }
         }
 
-        $managerIds = [];
         //get the ids of all managerUsers of the Project
         $managerIds = $project->managerUsers()->pluck('user_id');
-
-        $writeIds = [];
         //get the ids of all writeUsers of the Project
         $writeIds = $project->writeUsers()->pluck('user_id');
-
-        $deleteIds = [];
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
         //load commented budget items setting for given user
-        Auth::user()->load(['commented_budget_items_setting']);
+        Auth::user()->load(['commentedBudgetItemsSetting']);
 
         return inertia('Projects/SingleProjectBudget', [
             'project' => new ProjectBudgetResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
-            'RoomsWithAudience' => $RoomsWithAudience,
+            'RoomsWithAudience' => $roomsWithAudience,
             'projectManagerIds' => $managerIds,
             'projectWriteIds' => $writeIds,
             'projectDeleteIds' => $deleteIds,
@@ -2066,22 +2141,22 @@ class ProjectController extends Controller
                         'mainPositions.subPositions.verified',
                         'mainPositions.subPositions.subPositionRows' => function ($query) {
                             return $query->orderBy('position');
-                        }, 'mainPositions.subPositions.subPositionRows.cells' => function($query){
+                        }, 'mainPositions.subPositions.subPositionRows.cells' => function ($query): void {
                             $query->withCount('comments')
-                                ->withCount(['calculations' => function($query){
+                                ->withCount(['calculations' => function ($query) {
                                     // count if value is not 0
                                     return $query->where('value', '!=', 0);
                                 }]);
                         }, 'mainPositions.subPositions.subPositionRows.cells.column'
                     ])
                     ->first(),
-                'selectedCell' => $selectedCell?->load(['calculations' => function($calculations) {
+                'selectedCell' => $selectedCell?->load(['calculations' => function ($calculations): void {
                     $calculations->orderBy('position', 'asc');
-                }, 'comments.user', 'comments', 'column' => function ($query) {
+                }, 'comments.user', 'comments', 'column' => function ($query): void {
                     $query->orderBy('created_at', 'desc');
                 }]),
                 'selectedSumDetail' => $selectedSumDetail,
-                'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query) {
+                'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query): void {
                     $query->orderBy('created_at', 'desc');
                 }]),
                 'templates' => $templates,
@@ -2098,7 +2173,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function projectCommentTab(Project $project, Request $request)
+    public function projectCommentTab(Project $project): Response|ResponseFactory
     {
         $project->load([
             'categories',
@@ -2128,27 +2203,22 @@ class ProjectController extends Controller
         $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
 
         $events = $project->events()->get();
-        $RoomsWithAudience = null;
+        $roomsWithAudience = null;
 
-        foreach ($events as $event){
-            if(!$event->audience){
+        foreach ($events as $event) {
+            if (!$event->audience) {
                 continue;
             }
             $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room){
-                $RoomsWithAudience[$room->id] = $room->name;
+            foreach ($rooms as $room) {
+                $roomsWithAudience[$room->id] = $room->name;
             }
         }
 
-        $managerIds = [];
         //get the ids of all managerUsers of the Project
         $managerIds = $project->managerUsers()->pluck('user_id');
-
-        $writeIds = [];
         //get the ids of all writeUsers of the Project
         $writeIds = $project->writeUsers()->pluck('user_id');
-
-        $deleteIds = [];
         //get the ids of all deleteUsers of the Project
         $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
@@ -2156,7 +2226,7 @@ class ProjectController extends Controller
             'project' => new ProjectCommentResource($project),
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
-            'RoomsWithAudience' => $RoomsWithAudience,
+            'RoomsWithAudience' => $roomsWithAudience,
             'projectManagerIds' => $managerIds,
             'projectWriteIds' => $writeIds,
             'projectDeleteIds' => $deleteIds,
@@ -2179,8 +2249,8 @@ class ProjectController extends Controller
         ]);
     }
 
-
-    public function addTimeLineRow(Event $event, Request $request) {
+    public function addTimeLineRow(Event $event, Request $request): void
+    {
         $event->timeline()->create(
             $request->validate(
                 [
@@ -2192,8 +2262,9 @@ class ProjectController extends Controller
         );
     }
 
-    public function updateTimeLines(Request $request){
-        foreach ($request->timelines as $timeline){
+    public function updateTimeLines(Request $request): void
+    {
+        foreach ($request->timelines as $timeline) {
             $findTimeLine = TimeLine::find($timeline['id']);
             $findTimeLine->update([
                 'start' => $timeline['start'],
@@ -2203,13 +2274,7 @@ class ProjectController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param Project $project
-     * @return Response|ResponseFactory
-     */
-    public function edit(Project $project)
+    public function edit(Project $project): Response|ResponseFactory
     {
         return inertia('Projects/Edit', [
             'project' => new ProjectEditResource($project),
@@ -2218,13 +2283,6 @@ class ProjectController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param UpdateProjectRequest $request
-     * @param Project $project
-     * @return JsonResponse|RedirectResponse
-     */
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
     {
         $update_properties = $request->only('name', 'budget_deadline');
@@ -2260,12 +2318,17 @@ class ProjectController extends Controller
     public function updateTeam(Request $request, Project $project): JsonResponse|RedirectResponse
     {
 
-        if(!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)){
+        if (!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             // authorization
-            if ((!Auth::user()->canAny([PermissionNameEnum::PROJECT_MANAGEMENT->value, PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::WRITE_PROJECTS->value]))
-                && $project->access_budget->pluck('id')->doesntContain(Auth::id())
-                && $project->managerUsers->pluck('id')->doesntContain(Auth::id())
-                && $project->writeUsers->pluck('id')->doesntContain(Auth::id())
+            if (
+                !Auth::user()->canAny([
+                    PermissionNameEnum::PROJECT_MANAGEMENT->value,
+                    PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value,
+                    PermissionNameEnum::WRITE_PROJECTS->value
+                ]) &&
+                $project->access_budget->pluck('id')->doesntContain(Auth::id()) &&
+                $project->managerUsers->pluck('id')->doesntContain(Auth::id()) &&
+                $project->writeUsers->pluck('id')->doesntContain(Auth::id())
             ) {
                 return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
             }
@@ -2287,11 +2350,19 @@ class ProjectController extends Controller
         // history functions
         $this->checkDepartmentChanges($project->id, $oldProjectDepartments, $newProjectDepartments);
         // Get and check project admins, managers and users after update
-        $this->createNotificationProjectMemberChanges($project, $projectManagerBefore, $projectUsers, $projectUsersAfter, $projectManagerAfter, $projectBudgetAccessBefore, $projectBudgetAccessAfter);
-
+        $this->createNotificationProjectMemberChanges(
+            $project,
+            $projectManagerBefore,
+            $projectUsers,
+            $projectUsersAfter,
+            $projectManagerAfter,
+            $projectBudgetAccessBefore,
+            $projectBudgetAccessAfter
+        );
 
         return Redirect::back();
     }
+
     public function updateAttributes(Request $request, Project $project): JsonResponse|RedirectResponse
     {
         $oldProjectCategories = $project->categories()->get();
@@ -2326,8 +2397,6 @@ class ProjectController extends Controller
         return Redirect::back();
     }
 
-
-
     private function checkProjectSectorChanges($projectId, $oldSectors, $newSectors): void
     {
         $oldSectorIds = [];
@@ -2342,31 +2411,33 @@ class ProjectController extends Controller
         foreach ($newSectors as $newSector) {
             $newSectorIds[] = $newSector->id;
             if (!in_array($newSector->id, $oldSectorIds)) {
-                $this->history->createHistory($projectId, 'Bereich ' . $newSector->name . ' hinzugefügt', 'public_changes');
+                $this->history->createHistory(
+                    $projectId,
+                    'Bereich ' . $newSector->name . ' hinzugefügt',
+                    'public_changes'
+                );
             }
         }
 
         foreach ($oldSectorIds as $oldSectorId) {
             if (!in_array($oldSectorId, $newSectorIds)) {
-                $this->history->createHistory($projectId, 'Bereich ' . $oldSectorNames[$oldSectorId] . ' gelöscht', 'public_changes');
+                $this->history->createHistory(
+                    $projectId,
+                    'Bereich ' . $oldSectorNames[$oldSectorId] . ' gelöscht',
+                    'public_changes'
+                );
             }
         }
 
         $this->setPublicChangesNotification($projectId);
     }
 
-    public function deleteProjectFromGroup(Request $request)
+    public function deleteProjectFromGroup(Request $request): void
     {
         $group = Project::find($request->groupId);
         $group->groups()->detach($request->projectIdToDelete);
     }
 
-    /**
-     * @param $projectId
-     * @param $oldGenres
-     * @param $newGenres
-     * @return void
-     */
     private function checkProjectGenreChanges($projectId, $oldGenres, $newGenres): void
     {
         $oldGenreIds = [];
@@ -2381,24 +2452,27 @@ class ProjectController extends Controller
         foreach ($newGenres as $newGenre) {
             $newGenreIds[] = $newGenre->id;
             if (!in_array($newGenre->id, $oldGenreIds)) {
-                $this->history->createHistory($projectId, 'Genre ' . $newGenre->name . ' hinzugefügt', 'public_changes');
+                $this->history->createHistory(
+                    $projectId,
+                    'Genre ' . $newGenre->name . ' hinzugefügt',
+                    'public_changes'
+                );
             }
         }
 
         foreach ($oldGenreIds as $oldGenreId) {
             if (!in_array($oldGenreId, $newGenreIds)) {
-                $this->history->createHistory($projectId, 'Genre ' . $oldGenreNames[$oldGenreId] . ' gelöscht', 'public_changes');
+                $this->history->createHistory(
+                    $projectId,
+                    'Genre ' . $oldGenreNames[$oldGenreId] . ' gelöscht',
+                    'public_changes'
+                );
             }
         }
+
         $this->setPublicChangesNotification($projectId);
     }
 
-    /**
-     * @param $projectId
-     * @param $oldCategories
-     * @param $newCategories
-     * @return void
-     */
     private function checkProjectCategoryChanges($projectId, $oldCategories, $newCategories): void
     {
         $oldCategoryIds = [];
@@ -2413,24 +2487,27 @@ class ProjectController extends Controller
         foreach ($newCategories as $newCategory) {
             $newCategoryIds[] = $newCategory->id;
             if (!in_array($newCategory->id, $oldCategoryIds)) {
-                $this->history->createHistory($projectId, 'Kategorie ' . $newCategory->name . ' hinzugefügt', 'public_changes');
+                $this->history->createHistory(
+                    $projectId,
+                    'Kategorie ' . $newCategory->name . ' hinzugefügt',
+                    'public_changes'
+                );
             }
         }
 
         foreach ($oldCategoryIds as $oldCategoryId) {
             if (!in_array($oldCategoryId, $newCategoryIds)) {
-                $this->history->createHistory($projectId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' gelöscht', 'public_changes');
+                $this->history->createHistory(
+                    $projectId,
+                    'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' gelöscht',
+                    'public_changes'
+                );
             }
         }
+
         $this->setPublicChangesNotification($projectId);
     }
 
-    /**
-     * @param $projectId
-     * @param $oldName
-     * @param $newName
-     * @return void
-     */
     private function checkProjectNameChanges($projectId, $oldName, $newName): void
     {
         if ($oldName !== $newName) {
@@ -2439,44 +2516,26 @@ class ProjectController extends Controller
         }
     }
 
-    /**
-     * @param int $projectId
-     * @param string|null $oldProjectBudgetDeadline
-     * @param string $newProjectBudgetDeadline
-     * @return void
-     */
     private function checkProjectBudgetDeadlineChanges(
         int $projectId,
         string|null $oldProjectBudgetDeadline,
         string $newProjectBudgetDeadline
-    ): void
-    {
+    ): void {
         if ($oldProjectBudgetDeadline !== $newProjectBudgetDeadline) {
             $this->history->createHistory($projectId, 'Projekt Stichtag Budget geändert', 'public_changes');
             $this->setPublicChangesNotification($projectId);
         }
     }
 
-    /**
-     * @param $projectId
-     * @return void
-     */
     public function setPublicChangesNotification($projectId): void
     {
         $project = Project::find($projectId);
         $projectUsers = $project->users()->get();
-        foreach ($projectUsers as $projectUser){
+        foreach ($projectUsers as $projectUser) {
             $this->schedulingController->create($projectUser->id, 'PUBLIC_CHANGES', 'PROJECTS', $project->id);
         }
-
     }
 
-    /**
-     * @param $projectId
-     * @param $oldDepartments
-     * @param $newDepartments
-     * @return void
-     */
     private function checkDepartmentChanges($projectId, $oldDepartments, $newDepartments): void
     {
         $oldDepartmentIds = [];
@@ -2496,12 +2555,15 @@ class ProjectController extends Controller
 
         foreach ($oldDepartmentIds as $oldDepartmentId) {
             if (!in_array($oldDepartmentId, $newDepartmentIds)) {
-                $this->history->createHistory($projectId, 'Projektteam ' . $oldDepartmentNames[$oldDepartmentId] . ' entfernt');
+                $this->history->createHistory(
+                    $projectId,
+                    'Projektteam ' . $oldDepartmentNames[$oldDepartmentId] . ' entfernt'
+                );
             }
         }
     }
 
-    private function checkProjectDescriptionChanges($projectId, $oldDescription, $newDescription)
+    private function checkProjectDescriptionChanges($projectId, $oldDescription, $newDescription): void
     {
         if (strlen($newDescription) === null) {
             $this->history->createHistory($projectId, 'Kurzbeschreibung gelöscht', 'public_changes');
@@ -2515,20 +2577,17 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($projectId);
     }
 
-    /**
-     * @param Project $project
-     * @param $projectAdminsBefore
-     * @param $projectManagerBefore
-     * @param $projectUsers
-     * @param $projectAdminsAfter
-     * @param $projectUsersAfter
-     * @param $projectManagerAfter
-     * @return void
-     */
-    private function createNotificationProjectMemberChanges(Project $project, $projectManagerBefore, $projectUsers, $projectUsersAfter, $projectManagerAfter, $projectBudgetAccessBefore, $projectBudgetAccessAfter): void
-    {
-
-
+    //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    private function createNotificationProjectMemberChanges(
+        Project $project,
+        $projectManagerBefore,
+        $projectUsers,
+        $projectUsersAfter,
+        $projectManagerAfter,
+        $projectBudgetAccessBefore,
+        $projectBudgetAccessAfter
+    ): void {
         $userIdsBefore = [];
         $managerIdsBefore = [];
         $budgetIdsBefore = [];
@@ -2682,16 +2741,18 @@ class ProjectController extends Controller
         }
     }
 
-    /**
-     * Duplicates the project whose id is passed in the request
-     */
     public function duplicate(Project $project, HistoryService $historyService)
     {
         // authorization
         if ($project->users->isNotEmpty() || !Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
-            if ((!Auth::user()->canAny([PermissionNameEnum::PROJECT_MANAGEMENT->value, PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::WRITE_PROJECTS->value]))
-                && $project->access_budget->pluck('id')->doesntContain(Auth::id())
-                && $project->managerUsers->pluck('id')->doesntContain(Auth::id())
+            if (
+                !Auth::user()->canAny([
+                    PermissionNameEnum::PROJECT_MANAGEMENT->value,
+                    PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value,
+                    PermissionNameEnum::WRITE_PROJECTS->value
+                ]) &&
+                $project->access_budget->pluck('id')->doesntContain(Auth::id()) &&
+                $project->managerUsers->pluck('id')->doesntContain(Auth::id())
             ) {
                 return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
             }
@@ -2725,20 +2786,13 @@ class ProjectController extends Controller
         return Redirect::route('projects.show.info', $newProject->id)->with('success', 'Project created.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param Project $project
-     * @return RedirectResponse
-     */
-    public function destroy(Project $project)
+    public function destroy(Project $project): RedirectResponse
     {
         $project->events()->delete();
 
         foreach ($project->checklists() as $checklist) {
             $checklist->tasks()->delete();
         }
-
 
         $notificationTitle = $project->name . ' wurde gelöscht';
         $broadcastMessage = [
@@ -2766,7 +2820,7 @@ class ProjectController extends Controller
         return Redirect::route('projects')->with('success', 'Project moved to trash');
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(int $id): RedirectResponse
     {
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
@@ -2778,7 +2832,7 @@ class ProjectController extends Controller
         return Redirect::route('projects.trashed')->with('success', 'Project deleted');
     }
 
-    public function restore(int $id)
+    public function restore(int $id): RedirectResponse
     {
         $project = Project::onlyTrashed()->findOrFail($id);
 
@@ -2788,7 +2842,7 @@ class ProjectController extends Controller
         return Redirect::route('projects.trashed')->with('success', 'Project restored');
     }
 
-    public function getTrashedSettings()
+    public function getTrashedSettings(): Response|ResponseFactory
     {
         return inertia('Trash/ProjectSettings', [
             'trashed_genres' => Genre::onlyTrashed()->get(),
@@ -2799,28 +2853,27 @@ class ProjectController extends Controller
             'trashed_company_types' => CompanyType::onlyTrashed()->get(),
             'trashed_collecting_societies' => CollectingSociety::onlyTrashed()->get(),
             'trashed_currencies' => Currency::onlyTrashed()->get(),
-            //'trashed_project_headlines' => ProjectHeadline::onlyTrashed()->get(),
         ]);
     }
 
-    public function getTrashed()
+    public function getTrashed(): Response|ResponseFactory
     {
         return inertia('Trash/Projects', [
             'trashed_projects' => ProjectIndexResource::collection(Project::onlyTrashed()->get())->resolve()
         ]);
     }
 
-    public function deleteRow(SubPositionRow $row)
+    public function deleteRow(SubPositionRow $row): void
     {
         $row->forceDelete();
     }
 
-    public function deleteTable(Table $table)
+    public function deleteTable(Table $table): void
     {
         $table->forceDelete();
     }
 
-    public function deleteMainPosition(MainPosition $mainPosition)
+    public function deleteMainPosition(MainPosition $mainPosition): void
     {
         $subPositions = $mainPosition->subPositions()->get();
         foreach ($subPositions as $subPosition) {
@@ -2829,10 +2882,6 @@ class ProjectController extends Controller
             foreach ($subRows as $subRow) {
                 $cells = $subRow->cells()->get();
                 foreach ($cells as $cell) {
-                    /*$comments = $cells->comments()->get();
-                    foreach ($comments as $comment){
-                        $comment->delete();
-                    }*/
                     $cell->delete();
                 }
                 $subRow->delete();
@@ -2842,23 +2891,20 @@ class ProjectController extends Controller
         $mainPosition->delete();
     }
 
-    public function deleteSubPosition(SubPosition $subPosition)
+    public function deleteSubPosition(SubPosition $subPosition): void
     {
         $subRows = $subPosition->subPositionRows()->get();
 
         foreach ($subRows as $subRow) {
             $cells = $subRow->cells()->get();
             foreach ($cells as $cell) {
-                /*$comments = $cells->comments()->get();
-                foreach ($comments as $comment){
-                    $comment->delete();
-                }*/
                 $cell->delete();
             }
             $subRow->delete();
         }
         $subPosition->delete();
     }
+
     public function updateCommentedStatusOfRow(Request $request, SubPositionRow $row): RedirectResponse
     {
         $row->update(['commented' => $request->commented]);
@@ -2876,11 +2922,10 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
-    public function updateKeyVisual(Request $request, Project $project)
+    public function updateKeyVisual(Request $request, Project $project): RedirectResponse
     {
-
         $oldKeyVisual = $project->key_visual_path;
-        if($request->file('keyVisual')) {
+        if ($request->file('keyVisual')) {
             $file = $request->file('keyVisual');
 
             $img = Image::make($file);
@@ -2889,16 +2934,17 @@ class ProjectController extends Controller
             $width = $img->width();
             $ratio = $width / $height;
 
-            if($ratio < 4 || $ratio > 8) {
+            if ($ratio < 4 || $ratio > 8) {
                 throw ValidationException::withMessages([
-                    'key_visual' => 'Das Key Visual sollte mindestens 4 und maximal 8 mal so breit wie hoch sein. Im Idealfall 1150px breit und 200px hoch.'
+                    'key_visual' => 'Das Key Visual sollte mindestens 4 und maximal 8 mal so breit wie hoch sein. ' .
+                        'Im Idealfall 1150px breit und 200px hoch.'
                 ]);
             }
 
-            Storage::delete('keyVisual/'. $project->key_visual_path);
+            Storage::delete('keyVisual/' . $project->key_visual_path);
 
             $original_name = $file->getClientOriginalName();
-            $basename = Str::random(20).$original_name;
+            $basename = Str::random(20) . $original_name;
 
             $project->key_visual_path = $basename;
             $img->save(Storage::path('public/keyVisual') . '/header_' . $basename, 100, $file->clientExtension());
@@ -2908,11 +2954,11 @@ class ProjectController extends Controller
 
         $newKeyVisual = $project->key_visual_path;
 
-        if($oldKeyVisual !== $newKeyVisual){
+        if ($oldKeyVisual !== $newKeyVisual) {
             $this->history->createHistory($project->id, 'Key Visual wurde geändert', 'public_changes');
         }
 
-        if($newKeyVisual === ''){
+        if ($newKeyVisual === '') {
             $this->history->createHistory($project->id, 'Key Visual wurde entfernt', 'public_changes');
         }
 
@@ -2921,33 +2967,39 @@ class ProjectController extends Controller
         return Redirect::back()->with('success', 'Key Visual hinzugefügt');
     }
 
-    public function downloadKeyVisual(Project $project){
+    public function downloadKeyVisual(Project $project): StreamedResponse
+    {
         return Storage::download('public/keyVisual/' . $project->key_visual_path, $project->key_visual_path);
     }
 
-    public function deleteKeyVisual(Project $project){
-        Storage::delete('public/keyVisual/'. $project->key_visual_path);
+    public function deleteKeyVisual(Project $project): void
+    {
+        Storage::delete('public/keyVisual/' . $project->key_visual_path);
         $project->update(['key_visual_path' => null]);
     }
 
-    public function updateShiftDescription(Request $request, Project $project){
+    public function updateShiftDescription(Request $request, Project $project): void
+    {
         $project->shift_description = $request->shiftDescription;
         $project->save();
     }
 
-    public function updateShiftContacts(Request $request, Project $project){
+    public function updateShiftContacts(Request $request, Project $project): void
+    {
         $project->shift_contact()->sync(collect($request->contactIds));
     }
 
-    public function updateShiftRelevantEventTypes(Request $request, Project $project){
+    public function updateShiftRelevantEventTypes(Request $request, Project $project): void
+    {
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
-    public function deleteTimeLineRow(TimeLine $timeLine){
+    public function deleteTimeLineRow(TimeLine $timeLine): void
+    {
         $timeLine->delete();
     }
 
-    public function duplicateColumn(Request $request, Column $column): void
+    public function duplicateColumn(Column $column): void
     {
         $newColumn = $column->replicate();
         $newColumn->save();
@@ -2962,14 +3014,16 @@ class ProjectController extends Controller
         $newSubPosition->save();
         $newSubPosition->update(['name' => $subPosition->name . ' (Kopie)']);
 
-        if($mainPositionId !== null){
+        if ($mainPositionId !== null) {
             $newSubPosition->update(['main_position_id' => $mainPositionId]);
         }
 
-        foreach ($subPosition->subPositionRows()->get() as $subPositionRow){
+        foreach ($subPosition->subPositionRows()->get() as $subPositionRow) {
             $newSubPositionRow = $subPositionRow->replicate();
             $newSubPositionRow->save();
-            $newSubPositionRow->update(['name' => $subPositionRow->name . ' (Kopie)', 'sub_position_id' => $newSubPosition->id]);
+            $newSubPositionRow->update(
+                ['name' => $subPositionRow->name . ' (Kopie)', 'sub_position_id' => $newSubPosition->id]
+            );
             $newSubPositionRow->cells()->delete();
             $newSubPositionRow->cells()->createMany($subPositionRow->cells()->get()->toArray());
         }
@@ -2982,15 +3036,11 @@ class ProjectController extends Controller
         $newMainPosition->update(['name' => $mainPosition->name . ' (Kopie)']);
 
         // duplicate sub positions
-        foreach ($mainPosition->subPositions()->get() as $subPosition){
+        foreach ($mainPosition->subPositions()->get() as $subPosition) {
             $this->duplicateSubPosition($subPosition, $newMainPosition->id);
         }
     }
 
-    /**
-     * @param SubPositionRow $subPositionRow
-     * @return void
-     */
     public function duplicateRow(SubPositionRow $subPositionRow): void
     {
         $subPositionRowReplicate = $subPositionRow->replicate();
@@ -3004,21 +3054,12 @@ class ProjectController extends Controller
         }
     }
 
-    /**
-     * @param Request $request
-     * @param Column $column
-     * @return void
-     */
     public function updateCommentedStatusOfColumn(Request $request, Column $column): void
     {
         $validated = $request->validate(['commented' => 'required|boolean']);
         $column->update(['commented' => $validated['commented']]);
     }
 
-    /**
-     * @param Project $project
-     * @return BinaryFileResponse
-     */
     public function projectBudgetExport(Project $project): BinaryFileResponse
     {
         return (new ProjectBudgetExport($project))
@@ -3028,19 +3069,14 @@ class ProjectController extends Controller
                     Str::snake($project->name),
                     Carbon::now()->format('d-m-Y_H_i_s')
                 )
-            );
+            )
+            ->deleteFileAfterSend();
     }
 
-    /**
-     * @param string $startBudgetDeadline
-     * @param string $endBudgetDeadline
-     * @return BinaryFileResponse
-     */
     public function projectsBudgetByBudgetDeadlineExport(
         string $startBudgetDeadline,
         string $endBudgetDeadline
-    ): BinaryFileResponse
-    {
+    ): BinaryFileResponse {
         return (new ProjectBudgetsByBudgetDeadlineExport($startBudgetDeadline, $endBudgetDeadline))
             ->download(
                 sprintf(
@@ -3049,6 +3085,7 @@ class ProjectController extends Controller
                     $endBudgetDeadline,
                     Carbon::now()->format('d-m-Y_H_i_s')
                 )
-            );
+            )
+            ->deleteFileAfterSend();
     }
 }

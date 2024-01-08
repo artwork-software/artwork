@@ -2,22 +2,20 @@
 
 namespace App\Mail;
 
-use App\Enums\NotificationConstEnum;
-use App\Enums\NotificationGroupEnum;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-
 class NotificationSummary extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+
+    use SerializesModels;
 
     public array $notifications;
+
     public string $user;
 
     public function __construct(array $notifications, string $user)

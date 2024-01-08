@@ -7,32 +7,15 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
 class TimeAgoCast implements CastsAttributes
 {
-    /**
-     * Cast the given value.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @param  string  $key
-     * @param  mixed  $value
-     * @param  array  $attributes
-     * @return mixed
-     */
-    public function get($model, string $key, $value, array $attributes)
+    //phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceAfterLastUsed, Generic.CodeAnalysis.UnusedFunctionParameter.FoundInImplementedInterfaceBeforeLastUsed
+    public function get($model, string $key, mixed $value, array $attributes): string
     {
         $now = Carbon::now();
         $time = Carbon::parse($value);
         return $time->diffForHumans($now);
     }
 
-    /**
-     * Prepare the given value for storage.
-     *
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @param  string  $key
-     * @param  mixed  $value
-     * @param  array  $attributes
-     * @return mixed
-     */
-    public function set($model, string $key, $value, array $attributes)
+    public function set($model, string $key, mixed $value, array $attributes): mixed
     {
         return $value;
     }

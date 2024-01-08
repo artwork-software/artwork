@@ -10,6 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
+/**
+ * @property int $id
+ * @property string $type
+ * @property int $column_id
+ * @property string $created_at
+ * @property string $updated_at
+ */
 class BudgetSumDetails extends Model
 {
     use HasFactory;

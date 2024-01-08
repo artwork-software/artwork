@@ -5,7 +5,6 @@ namespace App\Notifications;
 use App\Enums\NotificationFrequency;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -14,7 +13,9 @@ use stdClass;
 class TeamNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
+
     protected ?stdClass $notificationData = null;
+
     protected array $broadcastMessage = [];
 
     public function __construct($notificationData, $broadcastMessage = [])
@@ -23,14 +24,17 @@ class TeamNotification extends Notification implements ShouldBroadcast
         $this->broadcastMessage = $broadcastMessage;
     }
 
-    public function toBroadcast($notifiable): BroadcastMessage
+    public function toBroadcast(): BroadcastMessage
     {
         return new BroadcastMessage([
             'message' => $this->broadcastMessage
         ]);
     }
 
-    public function via($user)
+    /**
+     * @return string[]
+     */
+    public function via($user): array
     {
         $channels = ['database'];
 
@@ -38,40 +42,26 @@ class TeamNotification extends Notification implements ShouldBroadcast
             ->where('type', $this->notificationData->type)
             ->first();
 
-        if($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequency::IMMEDIATELY) {
+        if ($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequency::IMMEDIATELY) {
             $channels[] = 'mail';
         }
 
-
-        if($typeSettings?->enabled_push && !empty($this->broadcastMessage)) {
+        if ($typeSettings?->enabled_push && !empty($this->broadcastMessage)) {
             $channels[] = 'broadcast';
         }
 
         return $channels;
     }
 
-    /**
-     * Get the mail representation of the notification.
-     *
-     * @param  mixed  $notifiable
-     * @return \Illuminate\Notifications\Messages\MailMessage
-     */
-    public function toMail($notifiable)
+    public function toMail(): MailMessage
     {
-        return (new MailMessage)
+        return (new MailMessage())
             ->subject($this->notificationData->title)
             ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
     }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @param  mixed  $notifiable
-     * @return stdClass
-     */
-    public function toArray($notifiable)
+    public function toArray(): stdClass
     {
         return $this->notificationData;
     }
-
 }

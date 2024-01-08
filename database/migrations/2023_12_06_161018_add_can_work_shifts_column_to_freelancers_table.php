@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('freelancers', function (Blueprint $table) {
+        Schema::table('freelancers', function (Blueprint $table): void {
             $table->boolean('can_work_shifts')->default(false);
         });
     }
@@ -25,7 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('freelancers', function (Blueprint $table) {
+        Schema::table('freelancers', function (Blueprint $table): void {
             $table->dropColumn('can_work_shifts');
         });
     }

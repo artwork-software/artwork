@@ -13,12 +13,10 @@ class RoomIndexWithoutEventsResource extends JsonResource
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         return [
             'resource' => class_basename($this),
@@ -30,7 +28,9 @@ class RoomIndexWithoutEventsResource extends JsonResource
             'end_date' => $this->end_date?->format('d.m.Y'),
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
             'created_by' => User::where('id', $this->user_id)->first(),
-            'room_admins' => UserIndexResource::collection($this->users()->wherePivot('is_admin', true)->get())->resolve(),
+            'room_admins' => UserIndexResource::collection(
+                $this->users()->wherePivot('is_admin', true)->get()
+            )->resolve(),
         ];
     }
 }

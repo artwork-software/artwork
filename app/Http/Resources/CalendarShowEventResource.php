@@ -3,24 +3,21 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Auth;
 
 class CalendarShowEventResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         $classString = '';
-        if($this->occupancy_option){
+        if ($this->occupancy_option) {
             $classString = $this->event_type->svg_name . ' ' . 'occupancy_option_' . $this->event_type->svg_name;
-        }else{
+        } else {
             $classString = $this->event_type->svg_name;
         }
         return [
@@ -29,7 +26,7 @@ class CalendarShowEventResource extends JsonResource
             'start' => $this->start_time->utc()->toIso8601String(),
             'startTime' => $this->start_time,
             'end' => $this->end_time->utc()->toIso8601String(),
-            'title' => $this->project?->name ?: $this->eventName? : $this->event_type->name,
+            'title' => $this->project?->name ?: $this->eventName ? : $this->event_type->name,
             'alwaysEventName' => $this->eventName,
             'eventName' => $this->eventName,
             'description' => $this->description,
@@ -42,7 +39,7 @@ class CalendarShowEventResource extends JsonResource
             'declinedRoomId' => $this->declined_room_id,
             'eventTypeId' => $this->event_type_id,
             'eventTypeName' => $this->event_type->name,
-            'eventTypeAbbreviation' =>$this->event_type->abbreviation,
+            'eventTypeAbbreviation' => $this->event_type->abbreviation,
             'class' => $classString,
             'areaId' => $this->room?->area_id,
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),

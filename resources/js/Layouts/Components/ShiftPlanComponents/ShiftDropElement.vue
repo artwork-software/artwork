@@ -8,31 +8,48 @@ import Helper from "../../../mixins/Helper.vue";
 export default defineComponent({
     name: "ShiftDropElement",
     components: {ChooseUserSeriesShift, CheckIcon, VueMathjax},
-    props: ['shift', 'users','showRoom','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount'],
+    props: ['shift','showRoom', 'craftId','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount','highlightMode','highlightedId','highlightedType', 'multiEditMode', 'userForMultiEdit'],
+    emits: ['dropFeedback'],
     mixins: [Helper],
     computed: {
-        userIds(){
-            return this.users.map(user => user.id)
-        },
         shiftUserIds(){
             const ids = {
                 userIds: [],
                 freelancerIds: [],
                 providerIds: []
             }
-            this.shift.users.forEach(user => {
+            this.shift.allUsers.users.forEach(user => {
                 ids.userIds.push(user.id)
             })
 
-            this.shift.freelancer?.forEach((freelancer) => {
+            this.shift.allUsers.freelancers?.forEach((freelancer) => {
                 ids.freelancerIds.push(freelancer.id)
             })
 
-            this.shift.service_provider?.forEach((provider) => {
+            this.shift.allUsers.service_providers?.forEach((provider) => {
                 ids.providerIds.push(provider.id)
             })
 
             return ids;
+        },
+        checkIfUserIsInCraft(){
+            return this.userForMultiEdit.assigned_craft_ids.includes(this.shift.craft.id)
+        },
+    },
+    watch: {
+        multiEditMode: {
+            handler() {
+                if(!this.multiEditMode){
+                    this.shift.isCheckedForMultiEdit = false;
+                }
+            },
+            deep: true
+        },
+        userForMultiEdit: {
+            handler(){
+                this.shift.isCheckedForMultiEdit = this.userForMultiEdit?.shift_ids_array.includes(this.shift.id)
+            },
+            deep: true
         }
     },
     data(){
@@ -44,7 +61,8 @@ export default defineComponent({
                 end: null,
                 dayOfWeek: null
             },
-            selectedUser: null
+            selectedUser: null,
+            dropFeedback: null,
         }
     },
     methods: {
@@ -150,9 +168,37 @@ export default defineComponent({
                 return `${numerator}/${denominator}`;
             }
         },
+        isIdHighlighted(highlightedId, highlightedType) {
+            // Map the highlightedType to the correct property in shiftUserIds
+            const typeMap = {
+                0: 'userIds',
+                1: 'freelancerIds',
+                2: 'providerIds'
+            };
+
+
+            if(highlightedId){
+                // Get the correct array from shiftUserIds based on the highlightedType
+                const arrayToCheck = this.shiftUserIds[typeMap[highlightedType]];
+
+                // Check if the array contains the highlightedId
+                return arrayToCheck.includes(highlightedId);
+            }else{
+                return false;
+            }
+
+        },
         saveUser(){
             let dropElement = this.selectedUser;
             dropElement = JSON.parse(dropElement)[0];
+
+            console.log(dropElement);
+
+            if(dropElement.craft_ids && !dropElement.craft_ids.includes(this.craftId)){
+                this.dropFeedback = 'Nutzer*in kann nicht zu Schichten von diesem Gewerk zugewiesen werden.';
+                this.$emit('dropFeedback', this.dropFeedback);
+                return;
+            }
 
             if(this.maxCount === this.currentCount){
                 return;
@@ -247,21 +293,29 @@ export default defineComponent({
 </script>
 
 <template>
-    <div class="flex items-center xsLight text-shiftText subpixel-antialiased" @dragover="onDragOver" @drop="onDrop">
-        <div>
-            {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
+
+    <div :class="[highlightMode && !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30' : '', shift.empty_user_count === 0 && shift.empty_master_count === 0 && multiEditMode ? 'hidden' : '', multiEditMode ? 'text-[10px] my-1' : '']" class="flex items-center xsLight text-shiftText subpixel-antialiased" @dragover="onDragOver" @drop="onDrop">
+        <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
+            <input v-model="shift.isCheckedForMultiEdit" id="comments" aria-describedby="comments-description" name="comments" type="checkbox" class="h-5 w-5 border-gray-300 text-green-600 focus:ring-green-600 mr-1" />
+        </div>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div>
+                    {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
+                </div>
+                <div v-if="!showRoom" class="ml-0.5 " :class="multiEditMode ? 'text-[10px]' : 'text-xs'">
+                    ({{ decimalToCommonFraction(shift.user_count) }}/{{ shift.number_employees }}
+                    <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)
+                </div>
+                <div v-else-if="room" class="truncate">
+                    , {{room?.name}}
+                </div>
+            </div>
+            <div v-if="shift.empty_user_count === 0 && shift.empty_master_count === 0">
+                <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
+            </div>
         </div>
 
-        <div v-if="!showRoom" class="ml-0.5 text-xs">
-             ({{ decimalToCommonFraction(shift.user_count) }}/{{ shift.number_employees }}
-            <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)
-        </div>
-        <div v-else-if="room" class="truncate">
-            , {{room?.name}}
-        </div>
-        <div v-if="shift.empty_employee_count === 0 && shift.empty_master_count === 0">
-            <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
-        </div>
     </div>
 
 

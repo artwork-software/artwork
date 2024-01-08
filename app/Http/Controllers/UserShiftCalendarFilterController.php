@@ -3,74 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\UserShiftCalendarFilter;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class UserShiftCalendarFilterController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(): void
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function store(): void
     {
-        //
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\UserShiftCalendarFilter  $userShiftCalendarFilter
-     * @return \Illuminate\Http\Response
-     */
-    public function show(UserShiftCalendarFilter $userShiftCalendarFilter)
+    public function show(): void
     {
-        //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\UserShiftCalendarFilter  $userShiftCalendarFilter
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(UserShiftCalendarFilter $userShiftCalendarFilter)
+    public function edit(): void
     {
-        //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\UserShiftCalendarFilter  $userShiftCalendarFilter
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, User $user)
+    public function update(Request $request, User $user): void
     {
         $user->shift_calendar_filter()->update($request->only([
             'event_types',
@@ -80,11 +39,10 @@ class UserShiftCalendarFilterController extends Controller
 
     public function updateDates(Request $request, User $user): void
     {
-        $user->calendar_filter()->update([
+        $user->shift_calendar_filter()->update([
             'start_date' => Carbon::parse($request->start_date)->format('Y-m-d'),
             'end_date' => Carbon::parse($request->end_date)->format('Y-m-d')
         ]);
-
     }
 
     public function singleValueUpdate(Request $request, User $user): void
@@ -94,25 +52,17 @@ class UserShiftCalendarFilterController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\UserShiftCalendarFilter  $userShiftCalendarFilter
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(UserShiftCalendarFilter $userShiftCalendarFilter)
+    public function destroy(): void
     {
-        //
     }
 
-    public function reset(User $user): \Illuminate\Http\RedirectResponse
+    public function reset(User $user): RedirectResponse
     {
         $user->shift_calendar_filter()->update([
             'event_types' => null,
             'rooms' => null,
         ]);
 
-        // reload page
         return redirect()->back();
     }
 }

@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('service_provider_contacts', function (Blueprint $table) {
+        Schema::create('service_provider_contacts', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('service_provider_id');
             $table->string('first_name')->nullable();
@@ -29,7 +29,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('service_provider_contacts');
     }

@@ -7,17 +7,20 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Room>
+ *
+ * @method RoomAttribute createOne(array $attributes = [])
+ * @method RoomAttribute[] create(array $attributes = [])
+ * @method RoomAttribute makeOne(array $attributes = [])
  */
+
 class RoomAttributeFactory extends Factory
 {
     protected $model = RoomAttribute::class;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'name' => $this->faker->randomElement([

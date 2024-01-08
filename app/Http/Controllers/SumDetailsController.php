@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MoneySource;
 use App\Models\SumMoneySource;
+use App\Support\Services\MoneySourceThresholdReminderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class SumDetailsController extends Controller
 {
-
-    public function store(Request $request): RedirectResponse
-    {
+    public function store(
+        Request $request,
+        MoneySourceThresholdReminderService $moneySourceThresholdReminderService
+    ): RedirectResponse {
         SumMoneySource::create([
             'linked_type' => $request->linked_type,
             'money_source_id' => $request->money_source_id,
@@ -18,15 +21,25 @@ class SumDetailsController extends Controller
             'sourceable_type' => $request->sourceable_type
         ]);
 
+        $moneySourceThresholdReminderService->handleThresholdReminders(MoneySource::find($request->money_source_id));
+
         return back();
     }
 
-    public function update(SumMoneySource $sumMoneySource, Request $request): RedirectResponse
-    {
+    public function update(
+        SumMoneySource $sumMoneySource,
+        Request $request,
+        MoneySourceThresholdReminderService $moneySourceThresholdReminderService
+    ): RedirectResponse {
         $sumMoneySource->update([
             'linked_type' => $request->linked_type,
             'money_source_id' => $request->money_source_id
         ]);
+
+        if ($request->money_source_id) {
+            $moneySourceThresholdReminderService
+                ->handleThresholdReminders(MoneySource::find($request->money_source_id));
+        }
 
         return back();
     }
@@ -36,5 +49,4 @@ class SumDetailsController extends Controller
         $sumMoneySource->delete();
         return back();
     }
-
 }

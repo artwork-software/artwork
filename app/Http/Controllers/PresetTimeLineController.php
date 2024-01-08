@@ -8,69 +8,33 @@ use Illuminate\Http\Request;
 
 class PresetTimeLineController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(): void
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request, ShiftPreset $shiftPreset)
+    public function store(ShiftPreset $shiftPreset): void
     {
         $shiftPreset->timeLine()->create();
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \Artwork\Modules\Shift\Models\PresetTimeLine  $presetTimeLine
-     * @return \Illuminate\Http\Response
-     */
-    public function show(PresetTimeLine $presetTimeLine)
+
+    public function show(PresetTimeLine $presetTimeLine): void
     {
-        //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \Artwork\Modules\Shift\Models\PresetTimeLine  $presetTimeLine
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(PresetTimeLine $presetTimeLine)
+
+    public function edit(PresetTimeLine $presetTimeLine): void
     {
-        //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Artwork\Modules\Shift\Models\PresetTimeLine  $presetTimeLine
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request)
+
+    public function update(Request $request): void
     {
-        foreach ($request->timelines as $timeline){
+        foreach ($request->timelines as $timeline) {
             $findTimeLine = PresetTimeLine::find($timeline['id']);
             $findTimeLine->update([
                 'start' => $timeline['start'],
@@ -80,13 +44,7 @@ class PresetTimeLineController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \Artwork\Modules\Shift\Models\PresetTimeLine  $presetTimeLine
-     * @return void
-     */
-    public function destroy(PresetTimeLine $presetTimeLine) : void
+    public function destroy(PresetTimeLine $presetTimeLine): void
     {
         $presetTimeLine->delete();
     }

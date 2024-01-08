@@ -10,13 +10,29 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $profile_image
+ * @property string $provider_name
+ * @property string $work_name
+ * @property string $work_description
+ * @property string $email
+ * @property string $phone_number
+ * @property string $street
+ * @property string $zip_code
+ * @property string $location
+ * @property string $note
+ * @property int $salary_per_hour
+ * @property string $salary_description
+ * @property int $can_master
+ * @property string $created_at
+ * @property string $updated_at
+ * @property int $can_work_shifts
+ */
 class ServiceProvider extends Model
 {
     use HasFactory;
 
-    /**
-     * @var string[]
-     */
     protected $fillable = [
         'profile_image',
         'provider_name',
@@ -34,27 +50,20 @@ class ServiceProvider extends Model
         'can_work_shifts'
     ];
 
-    /**
-     * @var string[]
-     */
     protected $with = ['contacts'];
 
-    /**
-     * @var string[]
-     */
-    protected $appends = ['name', 'type', 'profile_photo_url'];
+    protected $appends = ['name', 'type', 'profile_photo_url', 'assigned_craft_ids', 'shift_ids_array'];
 
-    /**
-     * @return HasMany
-     */
+    protected $casts = [
+        'can_work_shifts' => 'boolean',
+        'can_master' => 'boolean'
+    ];
+
     public function contacts(): HasMany
     {
         return $this->hasMany(ServiceProviderContacts::class);
     }
 
-    /**
-     * @return BelongsToMany
-     */
     public function shifts(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -67,25 +76,32 @@ class ServiceProvider extends Model
             ->withCasts(['is_master' => 'boolean']);
     }
 
-    /**
-     * @return BelongsToMany
-     */
-    public function assigned_crafts(): BelongsToMany
+    public function assignedCrafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'service_provider_assigned_crafts');
     }
 
     /**
-     * @return string
+     * @return array<int>
      */
+    public function getAssignedCraftIdsAttribute(): array
+    {
+        return $this->assignedCrafts()->pluck('crafts.id')->toArray();
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function getShiftIdsArrayAttribute(): array
+    {
+        return $this->shifts()->pluck('shifts.id')->toArray();
+    }
+
     public function getNameAttribute(): string
     {
         return $this->provider_name;
     }
 
-    /**
-     * @return Collection
-     */
     public function getShiftsAttribute(): Collection
     {
         return $this->shifts()
@@ -98,18 +114,11 @@ class ServiceProvider extends Model
             });
     }
 
-
-    /**
-     * @return string
-     */
     public function getTypeAttribute(): string
     {
         return 'service_provider';
     }
 
-    /**
-     * @return string
-     */
     public function getProfilePhotoUrlAttribute(): string
     {
         return $this->profile_image ?
@@ -117,11 +126,6 @@ class ServiceProvider extends Model
             'https://ui-avatars.com/api/?name=' . $this->provider_name[0] . '&color=7F9CF5&background=EBF4FF';
     }
 
-    /**
-     * @param $startDate
-     * @param $endDate
-     * @return float|int
-     */
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
         $shiftsInDateRange = $this->shifts()

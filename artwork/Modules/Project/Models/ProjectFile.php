@@ -6,9 +6,20 @@ use App\Models\Comment;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $basename
+ * @property int $project_id
+ * @property string $deleted_at
+ * @property string $created_at
+ * @property string $updated_at
+ */
 class ProjectFile extends Model
 {
     use HasFactory;
@@ -24,9 +35,8 @@ class ProjectFile extends Model
         return $this->belongsToMany(User::class);
     }
 
-    public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
     }
-
 }

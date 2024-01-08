@@ -10,6 +10,7 @@ use App\Models\ContractType;
 use App\Models\Copyright;
 use App\Models\CostCenter;
 use App\Models\Currency;
+
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
@@ -23,7 +24,7 @@ class ContentSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         $this->seedCollectingSocieties();
         $this->seedContractTypes();
@@ -40,7 +41,7 @@ class ContentSeeder extends Seeder
         $this->seedCurrencies();
     }
 
-    private function seedCollectingSocieties()
+    private function seedCollectingSocieties(): void
     {
         CollectingSociety::create([
             'name' => 'GEMA'
@@ -55,7 +56,7 @@ class ContentSeeder extends Seeder
         ]);
     }
 
-    private function seedCurrencies()
+    private function seedCurrencies(): void
     {
         Currency::create([
             'name' => '€'
@@ -71,7 +72,7 @@ class ContentSeeder extends Seeder
         ]);
     }
 
-    private function seedContractTypes()
+    private function seedContractTypes(): void
     {
         ContractType::create([
             'name' => 'Werkvertrag'
@@ -82,7 +83,7 @@ class ContentSeeder extends Seeder
         ]);
     }
 
-    private function seedCompanyTypes()
+    private function seedCompanyTypes(): void
     {
         CompanyType::create([
             'name' => 'GmbH'
@@ -97,7 +98,7 @@ class ContentSeeder extends Seeder
         ]);
     }
 
-    private function seedDepartments()
+    private function seedDepartments(): void
     {
         $department = Department::create([
             'name' => 'Kulturelle Bildung',
@@ -133,10 +134,9 @@ class ContentSeeder extends Seeder
         $department->users()->attach(1);
         $stage->users()->attach(2);
         $free->users()->attach([1, 2]);
-
     }
 
-    private function seedRoomCategories()
+    private function seedRoomCategories(): void
     {
         DB::table('room_categories')->insert([
             'name' => 'Meetingraum',
@@ -159,7 +159,7 @@ class ContentSeeder extends Seeder
         ]);
     }
 
-    private function seedRoomAttributes()
+    private function seedRoomAttributes(): void
     {
         DB::table('room_attributes')->insert([
             'name' => 'rollstuhlgerecht',
@@ -174,7 +174,7 @@ class ContentSeeder extends Seeder
         ]);
     }
 
-    private function seedGenreAndCategoriesAndAreas()
+    private function seedGenreAndCategoriesAndAreas(): void
     {
         DB::table('areas')->insert([
             'name' => 'Hauptareal',
@@ -190,7 +190,7 @@ class ContentSeeder extends Seeder
         ]);
     }
 
-    private function seedRooms()
+    private function seedRooms(): void
     {
         DB::table('rooms')->insert([
             'name' => 'Hauptraum',
@@ -229,7 +229,7 @@ class ContentSeeder extends Seeder
         ]);
     }
 
-    private function seedEventsAndEventTypes()
+    private function seedEventsAndEventTypes(): void
     {
         DB::table('event_types')->insert([
             'name' => 'Blocker',
@@ -323,17 +323,19 @@ class ContentSeeder extends Seeder
         ]);
     }
 
-    private function seedProjects()
+    private function seedProjects(): void
     {
         $project = Project::create([
             'name' => 'Dan Daw Creative Projects',
-            'description' => 'Nachdem er sein Leben lang Inspiration für andere gewesen ist, ergreift Dan Daw, preisgekrönter,
-            in Großbritannien lebender Choreograf und Performer, endlich die Gelegenheit, sich selbst zu inspirieren.
-            Er macht sich die wunderschöne Unordnung zu eigen, die alles ausmacht, was er ist. Dabei lässt Dan los, wer er ehemals war,
-            und macht Platz für den, der er sein will. Dan Daw und Performer wie Komplize Christopher Owen finden sich in einem intimen
-            Play-Abend wieder: Dan erobert die Macht zurück, indem er sich nach seinen eigenen Bedingungen dominieren lässt.
-            Nominiert für die National Dance Awards 2021 sowie den Achievement in Dance Award der UK Theatre Awards gibt THE DAN DAW SHOW
-            in der Regie von Mark Maughan einen Einblick in die glänzende und schweißtreibende Zerrissenheit, mit Scham zu leben und gleichzeitig vor Stolz zu strotzen.',
+            'description' => 'Nachdem er sein Leben lang Inspiration für andere gewesen ist, ergreift Dan Daw, ' .
+                'preisgekrönter, in Großbritannien lebender Choreograf und Performer, endlich die Gelegenheit, sich ' .
+                'selbst zu inspirieren. Er macht sich die wunderschöne Unordnung zu eigen, die alles ausmacht, was ' .
+                'er ist. Dabei lässt Dan los, wer er ehemals war, und macht Platz für den, der er sein will. ' .
+                'Dan Daw und Performer wie Komplize Christopher Owen finden sich in einem intimen Play-Abend wieder: ' .
+                'Dan erobert die Macht zurück, indem er sich nach seinen eigenen Bedingungen dominieren lässt. ' .
+                'Nominiert für die National Dance Awards 2021 sowie den Achievement in Dance Award der UK Theatre ' .
+                'Awards gibt THE DAN DAW SHOW in der Regie von Mark Maughan einen Einblick in die glänzende und ' .
+                'schweißtreibende Zerrissenheit, mit Scham zu leben und gleichzeitig vor Stolz zu strotzen.',
             'number_of_participants' => null,
         ]);
 
@@ -353,10 +355,13 @@ class ContentSeeder extends Seeder
 
         $second_project = Project::create([
             'name' => 'IN THE HEART OF ANOTHER COUNTRY',
-            'description' => 'In the Heart of Another Country erkundet den Heimatbegriff als Gefühl der Sehnsucht und Zugehörigkeit von Künstler*innen verschiedener Diasporagruppen.
-            Die Ausstellung widmet sich der Frage, in welcher Weise physische Bewegung – Mobilität über Ländergrenzen hinweg – die Rahmenbedingungen des internationalen zeitgenössischen Kunstschaffens formten.
-            Auf ihren Migrationsrouten durchquerten die Künstler*innen Süd- und Westasien, Afrika und die Karibik.
-            Die meisten von ihnen leben heute über die ganze Welt verstreut und weit von den Orten entfernt, zu denen sie sich ursprünglich zugehörig fühlten.',
+            'description' => 'In the Heart of Another Country erkundet den Heimatbegriff als Gefühl der Sehnsucht ' .
+                'und Zugehörigkeit von Künstler*innen verschiedener Diasporagruppen. Die Ausstellung widmet sich ' .
+                'der Frage, in welcher Weise physische Bewegung – Mobilität über Ländergrenzen hinweg – die ' .
+                'Rahmenbedingungen des internationalen zeitgenössischen Kunstschaffens formten. Auf ihren ' .
+                'Migrationsrouten durchquerten die Künstler*innen Süd- und Westasien, Afrika und die Karibik. Die ' .
+                'meisten von ihnen leben heute über die ganze Welt verstreut und weit von den Orten entfernt, zu ' .
+                'denen sie sich ursprünglich zugehörig fühlten.',
             'number_of_participants' => null,
         ]);
 
@@ -369,9 +374,12 @@ class ContentSeeder extends Seeder
 
         $nextProject = Project::create([
             'name' => 'Participative Audio Lab',
-            'description' => 'Das Participative Audio Lab (PAL) ist eine neu gegründete Initiative, die sich auf kollektive kreative Prozesse und die Entwicklung von Open-Source-Tools konzentriert,
-            die es Künstler*innen ermöglichen sollen, eigene partizipative digitale Musikprojekte zu gestalten und zu verbreiten, ohne dass sie selbst über Programmierkenntnisse verfügen müssen.
-            Die Initiative wurde vergangenes Jahr im Rahmen des Projekts “Prototyping Sonic Institutions” ins Leben gerufen, das von Black Swan und CTM Festival zur Festivalausgabe 2022 organisiert wurde.',
+            'description' => 'Das Participative Audio Lab (PAL) ist eine neu gegründete Initiative, die sich auf ' .
+                'kollektive kreative Prozesse und die Entwicklung von Open-Source-Tools konzentriert, die es ' .
+                'Künstler*innen ermöglichen sollen, eigene partizipative digitale Musikprojekte zu gestalten und zu ' .
+                'verbreiten, ohne dass sie selbst über Programmierkenntnisse verfügen müssen. Die Initiative wurde ' .
+                'vergangenes Jahr im Rahmen des Projekts “Prototyping Sonic Institutions” ins Leben gerufen, das von ' .
+                'Black Swan und CTM Festival zur Festivalausgabe 2022 organisiert wurde.',
             'number_of_participants' => null,
         ]);
 
@@ -384,12 +392,15 @@ class ContentSeeder extends Seeder
 
         $nextProject = Project::create([
             'name' => 'Mega Projekt 🚀',
-            'description' => 'One morning, when Gregor Samsa woke from troubled dreams, he found himself transformed in his bed into a horrible vermin.
-            He lay on his armour-like back, and if he lifted his head a little he could see his brown belly, slightly domed and divided by arches into stiff sections.
-            The bedding was hardly able to cover it and seemed ready to slide off any moment. His many legs, pitifully thin compared with the size of the rest of him,
-            waved about helplessly as he looked. "What`s happened to me?" he thought. It wasn`t a dream. His room, a proper human room although a little too small,
-            lay peacefully between its four familiar walls. A collection of textile samples lay spread out on the table - Samsa was a travelling salesman -
-            and above it there hung a picture that he had recently cut out of an illustrated magazine and housed in a nice, gilded frame.',
+            'description' => 'One morning, when Gregor Samsa woke from troubled dreams, he found himself transformed ' .
+                'in his bed into a horrible vermin. He lay on his armour-like back, and if he lifted his head a ' .
+                'little he could see his brown belly, slightly domed and divided by arches into stiff sections. The ' .
+                'bedding was hardly able to cover it and seemed ready to slide off any moment. His many legs, ' .
+                'pitifully thin compared with the size of the rest of him, waved about helplessly as he looked. ' .
+                '"What`s happened to me?" he thought. It wasn`t a dream. His room, a proper human room although a ' .
+                'little too small, lay peacefully between its four familiar walls. A collection of textile samples ' .
+                'lay spread out on the table - Samsa was a travelling salesman - and above it there hung a picture ' .
+                'that he had recently cut out of an illustrated magazine and housed in a nice, gilded frame.',
             'number_of_participants' => null,
         ]);
 
@@ -401,7 +412,7 @@ class ContentSeeder extends Seeder
         $projectController->generateBasicBudgetValues($nextProject);
     }
 
-    private function seedCostCenters()
+    private function seedCostCenters(): void
     {
         CostCenter::create([
             'name' => '123456',
@@ -410,7 +421,7 @@ class ContentSeeder extends Seeder
         ]);
     }
 
-    private function seedCopyrights()
+    private function seedCopyrights(): void
     {
         Copyright::create([
             'own_copyright' => true,
@@ -420,5 +431,4 @@ class ContentSeeder extends Seeder
             'project_id' => 1
         ]);
     }
-
 }

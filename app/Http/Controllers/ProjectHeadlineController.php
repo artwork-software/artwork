@@ -5,27 +5,21 @@ namespace App\Http\Controllers;
 use App\Support\Services\NewHistoryService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHeadline;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Redirect;
 
 class ProjectHeadlineController extends Controller
 {
-
     protected ?NewHistoryService $history = null;
-
 
     public function __construct()
     {
         $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $project_headline = ProjectHeadline::create([
             "name" => $request->name,
@@ -41,56 +35,60 @@ class ProjectHeadlineController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Artwork\Modules\Project\Models\ProjectHeadline  $projectHeadline
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(Request $request, ProjectHeadline $projectHeadline)
+
+    public function update(Request $request, ProjectHeadline $projectHeadline): RedirectResponse
     {
         $projectHeadline->update(["name" => $request->name]);
 
         return Redirect::back();
     }
 
-    public function updateText(Request $request, ProjectHeadline $projectHeadline, Project $project)
+    public function updateText(Request $request, ProjectHeadline $projectHeadline, Project $project): void
     {
         $oldHeadLine = $project->headlines()->where('project_headline_id', $projectHeadline->id)->first();
         $projectHeadline->projects()->updateExistingPivot($project, array('text' => nl2br($request->text)), false);
         $newHeadLine = $project->headlines()->where('project_headline_id', $projectHeadline->id)->first();
 
-        if($oldHeadLine->pivot->text === null && $newHeadLine->pivot->text !== null){
-            $this->history->createHistory($project->id, $projectHeadline->name . ' wurde hinzugefügt', 'public_changes');
+        if ($oldHeadLine->pivot->text === null && $newHeadLine->pivot->text !== null) {
+            $this->history->createHistory(
+                $project->id,
+                $projectHeadline->name . ' wurde hinzugefügt',
+                'public_changes'
+            );
         }
-        if($oldHeadLine->pivot->text !== null && $newHeadLine->pivot->text === null){
-            $this->history->createHistory($project->id, $projectHeadline->name . ' wurde entfernt', 'public_changes');
+        if ($oldHeadLine->pivot->text !== null && $newHeadLine->pivot->text === null) {
+            $this->history->createHistory(
+                $project->id,
+                $projectHeadline->name . ' wurde entfernt',
+                'public_changes'
+            );
         }
-        if($oldHeadLine->pivot->text !== null && $newHeadLine->pivot->text !== null && $oldHeadLine->pivot->text !== $newHeadLine->pivot->text){
-            $this->history->createHistory($project->id, $projectHeadline->name . ' wurde geändert', 'public_changes');
+        if (
+            $oldHeadLine->pivot->text !== null &&
+            $newHeadLine->pivot->text !== null &&
+            $oldHeadLine->pivot->text !== $newHeadLine->pivot->text
+        ) {
+            $this->history->createHistory(
+                $project->id,
+                $projectHeadline->name . ' wurde geändert',
+                'public_changes'
+            );
         }
 
         $projectController = new ProjectController();
         $projectController->setPublicChangesNotification($project->id);
     }
 
-    public function updateOrder(Request $request)
+    public function updateOrder(Request $request): RedirectResponse
     {
-
         foreach ($request->headlines as $headline) {
             ProjectHeadline::findOrFail($headline['id'])->update(['order' => $headline['order']]);
         }
 
         return Redirect::back();
     }
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \Artwork\Modules\Project\Models\ProjectHeadline  $projectHeadline
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(ProjectHeadline $projectHeadline)
+
+    public function destroy(ProjectHeadline $projectHeadline): void
     {
         $projectHeadline->delete();
 

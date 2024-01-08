@@ -4,6 +4,7 @@ namespace App\Http\Resources\ProjectResources;
 
 use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\UserResourceWithoutShifts;
+
 use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -16,17 +17,15 @@ class ProjectCommentResource extends JsonResource
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         $historyArray = [];
         $historyComplete = $this->historyChanges()->all();
 
-        foreach ($historyComplete as $history){
+        foreach ($historyComplete as $history) {
             $historyArray[] = [
                 'changes' => json_decode($history->changes),
                 'created_at' => $history->created_at->diffInHours() < 24
@@ -39,7 +38,8 @@ class ProjectCommentResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
+            'isMemberOfADepartment' => $this->departments
+                ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'key_visual_path' => $this->key_visual_path,
 
             'write_auth' => $this->writeUsers,

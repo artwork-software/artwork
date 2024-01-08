@@ -20,17 +20,15 @@ class ProjectBudgetResource extends JsonResource
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         $historyArray = [];
         $historyComplete = $this->historyChanges()->all();
 
-        foreach ($historyComplete as $history){
+        foreach ($historyComplete as $history) {
             $historyArray[] = [
                 'changes' => json_decode($history->changes),
                 'created_at' => $history->created_at->diffInHours() < 24
@@ -44,22 +42,21 @@ class ProjectBudgetResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'project_headlines' => ProjectHeadlineResource::collection($this->headlines->sortBy('order'))->resolve(),
-            'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
+            'isMemberOfADepartment' => $this->departments
+                ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'key_visual_path' => $this->key_visual_path,
             'cost_center' => $this->cost_center,
             'copyright' => new CopyrightResource($this->copyright),
-            'moneySources' => $this->money_sources,
+            'moneySources' => $this->moneySources,
             'project_files' => ProjectFileResource::collection($this->project_files),
             'contracts' => ContractResource::collection($this->contracts),
             'access_budget' => $this->access_budget,
             'state' => ProjectStates::find($this->state),
             'write_auth' => $this->writeUsers,
             'users' => UserResourceWithoutShifts::collection($this->users)->resolve(),
-
             //needed for ProjectShowHeaderComponent
             'project_history' => $historyArray,
             'delete_permission_users' => $this->delete_permission_users,
-
             'project_managers' => $this->managerUsers,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
         ];

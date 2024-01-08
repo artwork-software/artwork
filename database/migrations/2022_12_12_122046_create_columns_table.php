@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('columns', function (Blueprint $table) {
+        Schema::create('columns', function (Blueprint $table): void {
             $table->id();
             $table->bigInteger('table_id');
             $table->string('name')->nullable();
@@ -31,7 +31,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('columns');
     }

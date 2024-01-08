@@ -7,44 +7,39 @@ use App\Enums\RoleNameEnum;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
+    public function run(): void
     {
         // Reset cached roles and permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
         Permission::create([
             'name' => PermissionNameEnum::PROJECT_VIEW->value,
             'name_de' => "Leserechte für alle Projekte",
             'group' => 'Projekte',
-            'tooltipText' => 'Nutzer*in darf sämtliche Projekte einsehen – sowohl die Projektdetails als auch die Belegungen im Kalender.',
+            'tooltipText' => 'Nutzer*in darf sämtliche Projekte einsehen – sowohl die Projektdetails als auch die ' .
+                'Belegungen im Kalender.',
             'checked' => false
         ]);
-
         //Projekte
         Permission::create([
             'name' => PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value,
             'name_de' => "Eigene Projekte anlegen & bearbeiten",
             'group' => 'Projekte',
-            'tooltipText' => 'Nutzer*in darf Projekte anlegen, bearbeiten & löschen – dadurch ist er/sie automatisch Projektadmin des neu angelegten Projekts.',
+            'tooltipText' => 'Nutzer*in darf Projekte anlegen, bearbeiten & löschen – dadurch ist er/sie automatisch ' .
+                'Projektadmin des neu angelegten Projekts.',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::WRITE_PROJECTS->value,
             'name_de' => "Schreibrechte für alle Projekte",
             'group' => 'Projekte',
-            'tooltipText' => 'Nutzer*in hat auf alle Projekte Projektadmin-Rechte, auch wenn er/sie nicht zum Projektteam gehört.',
+            'tooltipText' => 'Nutzer*in hat auf alle Projekte Projektadmin-Rechte, auch wenn er/sie nicht zum ' .
+                'Projektteam gehört.',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::PROJECT_DELETE->value,
             'name_de' => "Löschrecht für alle Projekte",
@@ -52,7 +47,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Nutzer*in darf alle Projekte löschen, auch wenn er/sie nicht zum Projektteam gehört',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::PROJECT_MANAGEMENT->value,
             'name_de' => "Projektleitung sein",
@@ -60,17 +54,15 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'User darf in Projekten Projektleitung sein.',
             'checked' => false
         ]);
-
-
         // Raumbelegungen
         Permission::create([
             'name' => PermissionNameEnum::EVENT_REQUEST->value,
             'name_de' => "Raumbelegungen anfragen",
             'group' => 'Raumbelegungen',
-            'tooltipText' => 'Nutzer*in darf Raumbelegungs-Anfragen für die eigenen Projekte stellen und die eigenen Anfragen editieren & löschen.',
+            'tooltipText' => 'Nutzer*in darf Raumbelegungs-Anfragen für die eigenen Projekte stellen und die ' .
+                'eigenen Anfragen editieren & löschen.',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::ROOM_ADMIN->value,
             'name_de' => "Hat Raumadminrechte bei allen Räumen",
@@ -78,9 +70,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Kein Tooltip',
             'checked' => false
         ]);
-
-
-
         // Dokumente & Budget
         Permission::create([
             'name' => PermissionNameEnum::CONTRACT_SEE_DOWNLOAD->value,
@@ -89,7 +78,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Hier fehlt der tooltip ? ',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value,
             'name_de' => "Vertragsbausteine verwalten",
@@ -97,15 +85,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Darf Vertragsbausteine hochladen und löschen.',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value,
             'name_de' => "Finanzierungsquellen anlegen und verwalten",
             'group' => 'Dokumente & Budget',
-            'tooltipText' => 'User darf eigene Finanzierungsquellen anlegen und zur Einsicht & Verwaltung von Finanzierungsquellen eingeladen werden.',
+            'tooltipText' => 'User darf eigene Finanzierungsquellen anlegen und zur Einsicht & Verwaltung ' .
+                'von Finanzierungsquellen eingeladen werden.',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::MONEY_SOURCE_EDIT_DELETE->value,
             'name_de' => "Hat auf alle Finanzierungsquellen Schreib- und Löschrechte",
@@ -113,7 +100,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Tooltip fehlt',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value,
             'name_de' => "Darf alle Budget-Dokumente & Verträge von allen Projekten einsehen, bearbeiten und löschen",
@@ -121,7 +107,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Tooltip fehlt',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::PROJECT_BUDGET_ADMIN->value,
             'name_de' => "Hat auf alle Projekte Budget-Zugriff",
@@ -129,40 +114,29 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Tooltip fehlt',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value,
-            'name_de' => "Darf zusätzlich sämtliche Verifizierungs-, oder festgeschriebene Status und gesperrte Spalten aufheben.",
+            'name_de' => "Darf zusätzlich sämtliche Verifizierungs-, oder festgeschriebene Status und gesperrte ' .
+                'Spalten aufheben.",
             'group' => 'Dokumente & Budget',
             'tooltipText' => 'Tooltip fehlt',
             'checked' => false
         ]);
-
-
         // Systemeinstellungen
         Permission::create([
             'name' => PermissionNameEnum::SETTINGS_UPDATE->value,
             'name_de' => "Tooleinstellungen editieren",
             'group' => 'Systemeinstellungen',
-            'tooltipText' => 'Nutzer*in darf die Grundeinstellungen des Tools editieren und z.B. Logos austauschen, Impressum definieren etc.',
+            'tooltipText' => 'Nutzer*in darf die Grundeinstellungen des Tools editieren und z.B. Logos austauschen, ' .
+                'Impressum definieren etc.',
             'checked' => false
         ]);
-
-        /*
-         * Nur noch der Artwork Admin !!!!!
-         * Permission::create([
-            'name' => PermissionNameEnum::USER_UPDATE->value,
-            'name_de' => "Nutzer*innenverwaltung",
-            'group' => 'Systemeinstellungen',
-            'tooltipText' => 'Nutzer*in darf weitere Nutzer*innen einladen, bearbeiten und löschen. Zusätzlich darf er/sie Nutzerrechte für sämtliche Nutzer*innen vergeben und editieren.',
-            'checked' => false
-        ]);*/
-
         Permission::create([
             'name' => PermissionNameEnum::TEAM_UPDATE->value,
             'name_de' => "Teamverwaltung",
             'group' => 'Systemeinstellungen',
-            'tooltipText' => 'Nutzer*in darf Teams (Abteilungen) im System anlegen, editieren & löschen. Diese Teams können anschließend z.B. Projekten zugeordnet werden.',
+            'tooltipText' => 'Nutzer*in darf Teams (Abteilungen) im System anlegen, editieren & löschen. Diese Teams ' .
+                'können anschließend z.B. Projekten zugeordnet werden.',
             'checked' => false
         ]);
         Permission::create([
@@ -176,7 +150,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'name' => PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value,
             'name_de' => "Systemeinstellungen für Projekte definieren",
             'group' => 'Systemeinstellungen',
-            'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Projektkategorien, Genres & Bereiche definieren, bearbeiten & löschen.',
+            'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Projektkategorien, Genres & Bereiche ' .
+                'definieren, bearbeiten & löschen.',
             'checked' => false
         ]);
         Permission::create([
@@ -186,23 +161,22 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Termintypen definieren, editieren & löschen.  ',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value,
             'name_de' => "Verwaltung von Checklisten-Vorlagen",
             'group' => 'Systemeinstellungen',
-            'tooltipText' => 'Nutzer*in darf Checklisten-Vorlagen erstellen, bearbeiten & löschen. Alle Vorlagen können anschließend von allen anderen Usern verwendet werden..',
+            'tooltipText' => 'Nutzer*in darf Checklisten-Vorlagen erstellen, bearbeiten & löschen. Alle Vorlagen ' .
+                'können anschließend von allen anderen Usern verwendet werden..',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::SYSTEM_NOTIFICATION->value,
             'name_de' => "Systemnachrichten verwalten",
             'group' => 'Systemeinstellungen',
-            'tooltipText' => 'Nutzer*in darf Systemnachrichten anlegen, editieren und löschen. Diese Benachrichtigungen werden allen Usern angezeigt.',
+            'tooltipText' => 'Nutzer*in darf Systemnachrichten anlegen, editieren und löschen. Diese ' .
+                'Benachrichtigungen werden allen Usern angezeigt.',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::MA_MANAGER->value,
             'name_de' => "MA-Verwaltung",
@@ -210,7 +184,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Darf MA Seiten anlegen und bearbeiten, aber die User nicht einladen.',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::SHIFT_PLANNER->value,
             'name_de' => "Schichtplaner",
@@ -218,34 +191,30 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Darf MA Seiten nicht anlegen aber die User verplanen.',
             'checked' => false
         ]);
-
         Role::create([
             'name' => RoleNameEnum::ARTWORK_ADMIN->value,
             'name_de' => "artwork-Admin",
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::VIEW_BUDGET_TEMPLATES->value,
             'name_de' => "Budgetvorlagen einsehen",
             'group' => 'Dokumente & Budget',
             "checked" => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::UPDATE_BUDGET_TEMPLATES->value,
             'name_de' => "Budgetvorlagen bearbeiten",
             'group' => 'Dokumente & Budget',
             "checked" => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
             'name_de' => "Globaler Budgetzugriff",
             'group' => 'Dokumente & Budget',
-            'tooltipText' => 'Hat auf alle Projekte Budgetzugriff, d.h. kann die Budgetplanung von allen Projekten einsehen',
+            'tooltipText' => 'Hat auf alle Projekte Budgetzugriff, d.h. kann die Budgetplanung von allen ' .
+                'Projekten einsehen',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::VIEW_SHIFT_PLAN->value,
             'name_de' => "Schichtplan einsehen",
@@ -253,7 +222,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Darf den globalen Schichtplan einsehen',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::CAN_COMMIT_SHIFTS->value,
             'name_de' => "Dienstpläne festschreiben",
@@ -261,7 +229,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Darf Dienstpläne festschreiben',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::EDIT_EXTERNAL_USERS_CONDITIONS->value,
             'name_de' => "Externe Mitarbeiterkonditionen verwalten",
@@ -269,46 +236,51 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Darf die Konditionen von externen Mitarbeitern sehen und bearbeiten',
             'checked' => false
         ]);
-
-
-
+        /*
+         * Nur noch der Artwork Admin !!!!!
+         * Permission::create([
+            'name' => PermissionNameEnum::USER_UPDATE->value,
+            'name_de' => "Nutzer*innenverwaltung",
+            'group' => 'Systemeinstellungen',
+            'tooltipText' => 'Nutzer*in darf weitere Nutzer*innen einladen, bearbeiten und löschen. Zusätzlich ' .
+                'darf er/sie Nutzerrechte für sämtliche Nutzer*innen vergeben und editieren.',
+            'checked' => false
+        ]);*/
         /*$user = Role::create([
             'name' => RoleNameEnum::USER->value,
             'name_de' => "Standard-Nutzer*in",
         ]);*/
-
-        //$user->syncPermissions([PermissionNameEnum::PROJECT_VIEW->value, PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::EVENT_REQUEST->value]);
-
-       /* $roomAdmin = Role::create([
+        /*$user->syncPermissions([
+            PermissionNameEnum::PROJECT_VIEW->value,
+            PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value,
+            PermissionNameEnum::EVENT_REQUEST->value
+        ]);*/
+        /* $roomAdmin = Role::create([
             'name' => RoleNameEnum::ROOM_ADMIN->value,
             'name_de' => "Disponent*in",
         ]);
-
         //$roomAdmin->syncPermissions([PermissionNameEnum::ROOM_UPDATE->value]);
-
         $budgetAdmin = Role::create([
             'name' => RoleNameEnum::BUDGET_ADMIN->value,
             'name_de' => "Budgetadmin",
         ]);*/
-
-        //$budgetAdmin->syncPermissions([PermissionNameEnum::PROJECT_BUDGET_ADMIN->value, PermissionNameEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value]);
-
-
+        /*$budgetAdmin->syncPermissions([
+            PermissionNameEnum::PROJECT_BUDGET_ADMIN->value,
+            PermissionNameEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value
+        ]);*/
         /*$contractAdmin = Role::create([
             'name' => RoleNameEnum::CONTRACT_ADMIN->value,
             'name_de' => "Vertragsadmin",
         ]);*/
-
-        //$contractAdmin->syncPermissions([PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value, PermissionNameEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value]);
-
+        /*$contractAdmin->syncPermissions([
+            PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value,
+            PermissionNameEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value
+        ]);*/
         /*$moneySourceAdmin = Role::create([
             'name' => RoleNameEnum::MONEY_SOURCE_ADMIN->value,
             'name_de' => "Finanzierungsquellenadmin",
         ]);*/
-
         //$moneySourceAdmin->syncPermissions([PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value]);
-
-
         // Gibt es nicht mehr
         /*Permission::create([
             'name' => PermissionNameEnum::PROJECT_DELETE->value,
@@ -317,34 +289,27 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Nutzer*in darf alle Projekte löschen, auch wenn er/sie nicht zum Projektteam gehört.',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value,
             'name_de' => "Finanzierungsquellen anlegen und verwalten",
             'group' => 'Finanzierungsquellen',
-            'tooltipText' => 'User darf eigene Finanzierungsquellen anlegen und zur Einsicht & Verwaltung von Finanzierungsquellen eingeladen werden.',
+            'tooltipText' => 'User darf eigene Finanzierungsquellen anlegen und zur Einsicht & Verwaltung von ' .
+                'Finanzierungsquellen eingeladen werden.'
             'checked' => false
         ]);*/
-
-
-
-
-
         //System
         //Tool
         /*Permission::create([
             'name' => PermissionNameEnum::PROJECT_SETTINGS_ADMIN->value,
             'name_de' => "Tooleinstellungen editieren",
             'group' => 'Systemeinstellungen',
-            'tooltipText' => 'Nutzer*in darf die Grundeinstellungen des Tools editieren und z.B. Logos austauschen, Impressum definieren etc.',
+            'tooltipText' => 'Nutzer*in darf die Grundeinstellungen des Tools editieren und z.B. Logos austauschen, ' .
+                'Impressum definieren etc.',
             'checked' => false
         ]);*/
         //Users
-
         //Teams
-
         //Projektsettings
-
         //Termine
         /*Permission::create([
             'name' => PermissionNameEnum::EVENT_TYPE_SETTINGS_ADMIN->value,
@@ -353,19 +318,20 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Termintypen definieren, editieren & löschen.',
             'checked' => false
         ]);
-
         Permission::create([
             'name' => PermissionNameEnum::EVENT_REQUEST->value,
             'name_de' => "Raumbelegungen anfragen",
             'group' => 'Raumbelegungen',
-            'tooltipText' => 'Nutzer*in darf Raumbelegungs-Anfragen für die eigenen Projekte stellen und die eigenen Anfragen editieren & löschen.',
+            'tooltipText' => 'Nutzer*in darf Raumbelegungs-Anfragen für die eigenen Projekte stellen und die eigenen ' .
+                'Anfragen editieren & löschen.',
             'checked' => false
         ]);
         Permission::create([
             'name' => PermissionNameEnum::EVENT_REQUEST_CONFIRM->value,
             'name_de' => "Belegungs-Anfragen einsehen",
             'group' => 'Raumbelegungen',
-            'tooltipText' => 'Nutzer*in darf sämtliche Belegungsanfragen im Kalender einsehen. Auf diese Weise können Doppel-Anfragen vermieden werden.',
+            'tooltipText' => 'Nutzer*in darf sämtliche Belegungsanfragen im Kalender einsehen. Auf diese Weise ' .
+                'können Doppel-Anfragen vermieden werden.',
             'checked' => false
         ]);
         Permission::create([
@@ -375,12 +341,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Nutzer*in darf die Benachrichtigung für alle erstellen, bearbeiten und löschen.',
             'checked' => false
         ]);*/
-
-
         //Has every permission because of the gate in AuthServiceProvider
-
-
-
         //Globale
         /*Permission::create([
             'name' => PermissionNameEnum::ARTWORK_ADMIN->value,

@@ -4,24 +4,27 @@ namespace App\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Artwork\Modules\Project\Models\Project;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Date;
 use Laravel\Scout\Searchable;
-
 
 /**
  * @property int $id
+ * @property int $creator_id
  * @property string $name
  * @property float $amount
- * @property Date $start_date
- * @property Date $end_date
  * @property string $source_name
- * @property string $description
- * @property boolean $is_group
- * @property array $users
+ * @property string $start_date
+ * @property string $end_date
+ * @property Collection $users
  * @property int $group_id
+ * @property string $description
+ * @property int $is_group
+ * @property string $created_at
+ * @property string $updated_at
  */
 class MoneySource extends Model
 {
@@ -29,48 +32,59 @@ class MoneySource extends Model
     use Searchable;
     use HasChangesHistory;
 
-
     protected $fillable = [
         'name',
         'amount',
         'start_date',
         'end_date',
+        'funding_start_date',
+        'funding_end_date',
         'source_name',
         'description',
         'is_group',
         'users',
         'group_id',
-        'sub_money_source_ids'
+        'sub_money_source_ids',
+        'pinned_by_users'
     ];
 
     protected $casts = [
         'is_group' => 'boolean',
+        'pinned_by_users' => 'array',
     ];
 
-
-    public function users()
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'money_source_users')->withPivot(
-            'competent', 'write_access'
+            'competent',
+            'write_access'
         )->using(MoneySourceUserPivot::class);
     }
 
-    public function competent(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function pinnedByUsers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'money_source_users')->wherePivot('competent', true)->using(MoneySourceUserPivot::class);
+        return $this->belongsToMany(User::class, 'money_source_user_pinned');
     }
 
-    public function money_source_tasks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function competent(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'money_source_users')
+            ->wherePivot('competent', true)->using(MoneySourceUserPivot::class);
+    }
+
+    public function moneySourceTasks(): HasMany
     {
         return $this->hasMany(MoneySourceTask::class, 'money_source_id');
-
     }
 
-    public function projects()
+    public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'money_source_project');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toSearchableArray(): array
     {
         return [
@@ -78,7 +92,8 @@ class MoneySource extends Model
             'is_group' => $this->is_group
         ];
     }
-    public function money_source_files()
+
+    public function moneySourceFiles(): HasMany
     {
         return $this->hasMany(MoneySourceFile::class);
     }
@@ -88,4 +103,15 @@ class MoneySource extends Model
         return $this->hasMany(SumMoneySource::class);
     }
 
+    public function categories(): BelongsToMany
+    {
+        return $this
+            ->belongsToMany(MoneySourceCategory::class, 'money_source_category_mappings')
+            ->using(MoneySourceCategoryMapping::class);
+    }
+
+    public function reminder(): HasMany
+    {
+        return $this->hasMany(MoneySourceReminder::class);
+    }
 }

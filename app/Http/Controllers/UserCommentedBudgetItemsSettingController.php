@@ -8,29 +8,16 @@ use Illuminate\Http\Request;
 
 class UserCommentedBudgetItemsSettingController extends Controller
 {
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param Request $request
-     * @param User $user
-     * @return void
-     */
     public function store(Request $request, User $user): void
     {
         $validated = $request->validate(['exclude' => 'required|boolean']);
-        $user->commented_budget_items_setting()->create([
+        $user->commentedBudgetItemsSetting()->create([
             'exclude' => $validated['exclude']
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param Request $request
-     * @param User $user
-     * @param UserCommentedBudgetItemsSetting $commentedBudgetItemsSetting
-     * @return void
-     */
+    /* $user parameter is required otherwise the route model binding isn't working properly, suppress phpcs error
+    phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClassBeforeLastUsed */
     public function update(
         Request $request,
         User $user,

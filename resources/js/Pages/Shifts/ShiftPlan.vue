@@ -1,8 +1,7 @@
 <template>
-    <div class=" h-full w-full flex flex-col">
+    <div class="w-full flex flex-col">
         <ShiftHeader>
-            <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
-                 :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' mt-8 max-h-[38rem]' : ' mt-24','overflow-x-scroll ']">
+            <div class="ml-5 bg-white flex-grow">
                 <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
                                       @next-time-range="nextTimeRange"
                                       :date-value="dateValue"
@@ -13,7 +12,10 @@
                                       @enterFullscreenMode="openFullscreen"
                                       @openHistoryModal="openHistoryModal"
                                       :user_filters="user_filters"
-                ></ShiftPlanFunctionBar>
+                />
+            </div>
+            <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
+                 :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' mt-8 max-h-[34rem]' : ' mt-24','overflow-x-scroll ']">
                 <table class="w-full bg-white">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                     <div>
@@ -28,7 +30,7 @@
                         </tr>
                         <tbody class="w-full pt-3">
                         <tr v-for="(room,index) in shiftPlan" class="w-full flex">
-                            <th class="xsDark flex items-center -mt-2 h-28 w-40"
+                            <th class="xsDark flex items-center -mt-2 h-28 w-44"
                                 :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
                                 <Link class="flex font-semibold items-center ml-4">
                                     {{ room[days[0].day].roomName }}
@@ -37,7 +39,7 @@
                             <td v-for="day in days" :style="{minWidth: 200 + 'px'}"
                                 class="max-h-28 overflow-y-auto cell">
                                 <div v-for="event in room[day.day].events.data" class="mb-1">
-                                    <SingleShiftPlanEvent :eventType="this.findEventTypeById(event.eventTypeId)"
+                                    <SingleShiftPlanEvent @dropFeedback="showDropFeedback" :multiEditMode="multiEditMode" :user-for-multi-edit="userForMultiEdit" :highlightMode="highlightMode" :highlighted-id="idToHighlight" :highlighted-type="typeToHighlight" :eventType="this.findEventTypeById(event.eventTypeId)"
                                                           :project="this.findProjectById(event.projectId)"
                                                           :event="event" v-if="event.shifts.length > 0"/>
                                 </div>
@@ -47,48 +49,81 @@
                     </div>
                 </table>
             </div>
-            <div id="userOverview" :style="{ 'max-height': computedUserOverviewMaxHeight }" class="w-[102.5%]  overflow-x-scroll -ml-5">
-                <div class="flex justify-center overflow-y-scroll ">
-                    <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                         class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">
-                        <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
-                                 viewBox="0 0 14.123 6.519">
-                                <g id="Gruppe_1608" data-name="Gruppe 1608"
-                                   transform="translate(-275.125 870.166) rotate(-90)">
-                                    <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0"
-                                          transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1"
-                                          stroke-width="1"/>
-                                    <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0"
-                                          transform="translate(864.081 286.591) rotate(-90)" fill="none"
-                                          stroke="#a7a6b1" stroke-width="1"/>
-                                </g>
-                            </svg>
+            <div id="userOverview" class="w-full">
+                <vue-resizable min-height="600" :active="['t']">
+                    <div class="flex justify-center overflow-y-scroll">
+                        <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
+                             class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">
+                            <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14.123" height="6.519"
+                                     viewBox="0 0 14.123 6.519">
+                                    <g id="Gruppe_1608" data-name="Gruppe 1608"
+                                       transform="translate(-275.125 870.166) rotate(-90)">
+                                        <path id="Pfad_1313" data-name="Pfad 1313" d="M0,0,6.814,3.882,13.628,0"
+                                              transform="translate(865.708 289) rotate(-90)" fill="none" stroke="#a7a6b1"
+                                              stroke-width="1"/>
+                                        <path id="Pfad_1314" data-name="Pfad 1314" d="M0,0,4.4,2.509,8.809,0"
+                                              transform="translate(864.081 286.591) rotate(-90)" fill="none"
+                                              stroke="#a7a6b1" stroke-width="1"/>
+                                    </g>
+                                </svg>
+                            </div>
+
                         </div>
                     </div>
-                </div>
-                <div ref="userOverview" class="w-full bg-primary overflow-x-scroll min-h-[40rem]"
-                     v-show="showUserOverview">
+                <div ref="userOverview" class="w-full bg-primary overflow-x-scroll fixed z-30 h-[29rem] overflow-y-scroll" v-show="showUserOverview">
                     <table class="w-full text-white overflow-y-scroll">
                         <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                         <div>
-                            <tr class="flex w-full">
-                                <th class="w-56"></th>
-                                <th v-for="day in days" class="flex w-[12.5rem] p-5 h-16 items-center">
-                                    <div class="flex calendarRoomHeader font-semibold">
-                                        {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
+                            <tr class="flex w-full py-1">
+                                <th class="w-44"></th>
+                                <th class="flex items-center pl-2 py-1">
+                                    <Switch @click="toggleHighlightMode"
+                                            :class="[highlightMode ?
+                                        'bg-indigo-500' :
+                                        'bg-gray-300',
+                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
+                                    <span aria-hidden="true"
+                                          :class="[highlightMode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
+                                    </Switch>
+                                    <div :class="[highlightMode ? 'xsLight text-secondaryHover' : 'xsLight','ml-1']">
+                                        Schichten hervorheben
+                                    </div>
+                                </th>
+                                <th class="flex items-center pl-2 py-1">
+                                    <Switch @click="toggleMultiEditMode"
+                                            :class="[multiEditMode ?
+                                        'bg-indigo-500' :
+                                        'bg-gray-300',
+                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
+                                    <span aria-hidden="true"
+                                          :class="[multiEditMode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
+                                    </Switch>
+                                    <div :class="[multiEditMode ? 'xsLight text-secondaryHover' : 'xsLight','ml-1']">
+                                        Multi-Edit
                                     </div>
                                 </th>
                             </tr>
-                            <tbody class="w-full pt-3">
-                            <tr v-for="(user,index) in dropUsers" class="w-full flex">
-                                <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1 w-56"
-                                    :class="index % 2 === 0 ? '' : ''">
-                                    <DragElement :item="user.element" :expected-hours="user.expectedWorkingHours"
+                            <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
+                            <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility(craft.id)">
+                                {{craft.name}}
+                                <ChevronDownIcon
+                                    :class="closedCrafts.includes(craft.id) ? '' : 'rotate-180 transform'"
+                                    class="h-4 w-4 mt-0.5"
+                                />
+                            </tr>
+                            <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users" class="w-full flex">
+                                <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
+                                    <DragElement v-if="!highlightMode && !multiEditMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
                                                  :planned-hours="user.plannedWorkingHours" :type="user.type"/>
+                                    <MultiEditUserCell v-else-if="multiEditMode && !highlightMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                                       :planned-hours="user.plannedWorkingHours" :type="user.type" @addUserToMultiEdit="addUserToMultiEdit" :userForMultiEdit="userForMultiEdit" :multiEditMode="multiEditMode" />
+                                    <HighlightUserCell v-else :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false" :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                                       :planned-hours="user.plannedWorkingHours" :type="user.type"
+                                                       @highlightShiftsOfUser="highlightShiftsOfUser"/>
                                 </th>
                                 <td v-for="day in days">
-                                    <div
+                                    <div :class="highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : ''"
                                         class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
                                         @click="openShowUserShiftModal(user, day)">
                                         <span v-for="shift in user.element?.shifts[day.full_day]" v-if="!user.vacations?.includes(day.without_format)">
@@ -103,23 +138,78 @@
                                 </td>
                             </tr>
                             </tbody>
+                            <tbody>
+                            <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility('noCraft')">
+                                Ohne Gewerkszuordnung
+                                <ChevronDownIcon
+                                    :class="closedCrafts.includes('noCraft') ? '' : 'rotate-180 transform'"
+                                    class="h-4 w-4 mt-0.5"
+                                />
+                            </tr>
+                            <tr v-if="!closedCrafts.includes('noCraft')" v-for="(user,index) in usersWithNoCrafts" class="w-full flex">
+                                <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
+                                    <DragElement v-if="!highlightMode && !multiEditMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                                 :planned-hours="user.plannedWorkingHours" :type="user.type"/>
+                                    <MultiEditUserCell v-else-if="multiEditMode && !highlightMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                                       :planned-hours="user.plannedWorkingHours" :type="user.type" @addUserToMultiEdit="addUserToMultiEdit" :userForMultiEdit="userForMultiEdit" :multiEditMode="multiEditMode" />
+                                    <HighlightUserCell v-else :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false" :item="user.element" :expected-hours="user.expectedWorkingHours"
+                                                       :planned-hours="user.plannedWorkingHours" :type="user.type"
+                                                       @highlightShiftsOfUser="highlightShiftsOfUser"/>
+                                </th>
+                                <td v-for="day in days">
+                                    <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer">
+                                        <span v-for="shift in user.element?.shifts[day.full_day]" v-if="!user.vacations?.includes(day.without_format)">
+                                            {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                        </span>
+                                        <span v-else class="h-full flex justify-center items-center">
+                                            nicht verfügbar
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
                         </div>
                     </table>
                 </div>
+                </vue-resizable>
             </div>
+
+
+
             <show-user-shifts-modal v-if="showUserShifts" @closed="showUserShifts = false" :user="userToShow"
                                     :day="dayToShow" :projects="projects" />
             <ShiftHistoryModal :history="history[0]" v-if="showHistoryModal" @closed="showHistoryModal = false"/>
 
         </ShiftHeader>
+
+        <div class="fixed bottom-1 w-full" v-if="multiEditMode">
+            <div v-show="multiEditFeedback" class="flex items-center justify-center text-red-500 my-2">
+                {{ multiEditFeedback }}
+            </div>
+            <div class="flex items-center justify-center gap-4">
+                <div>
+                    <button type="button" @click="multiEditMode = false" class="rounded-full bg-gray-100 px-14 py-3 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        Abbrechen
+                    </button>
+                </div>
+                <div>
+                    <button type="button" @click="saveMultiEdit" class="rounded-full bg-indigo-900 px-14 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                        Speichern
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
+
+    <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
 </template>
 <script>
 
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Permissions from "@/mixins/Permissions.vue";
-import {CheckIcon, ExclamationIcon} from "@heroicons/vue/outline";
+import {ChevronDownIcon, LightBulbIcon} from "@heroicons/vue/outline";
 import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
@@ -133,21 +223,32 @@ import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import ShiftHistoryModal from "@/Pages/Shifts/Components/ShiftHistoryModal.vue";
 import ShowUserShiftsModal from "@/Pages/Shifts/Components/showUserShiftsModal.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
+import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
+import {Switch} from "@headlessui/vue";
+import MultiEditUserCell from "@/Pages/Shifts/Components/MultiEditUserCell.vue";
+import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
+import VueResizable from 'vue-resizable'
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        ChevronDownIcon,
+        SideNotification,
+        MultiEditUserCell,
+        Switch,
         DragElement, ShowUserShiftsModal,
         ShiftHistoryModal,
         ShiftHeader,
         ShiftTabs,
         ShiftPlanUserOverview,
-        Link, CalendarFunctionBar, SingleCalendarEvent, ExclamationIcon, EventComponent,
+        Link, CalendarFunctionBar, SingleCalendarEvent, EventComponent,
         SingleShiftPlanEvent,
-        CheckIcon,
+        LightBulbIcon,
         AppLayout,
-        ShiftPlanFunctionBar
+        ShiftPlanFunctionBar,
+        HighlightUserCell,
+        VueResizable
     },
     props: [
         'events',
@@ -164,7 +265,8 @@ export default {
         'usersForShifts',
         'freelancersForShifts',
         'serviceProvidersForShifts',
-        'user_filters'
+        'user_filters',
+        'crafts'
     ],
     mounted() {
         // Listen for scroll events on both sections
@@ -181,6 +283,8 @@ export default {
                     plannedWorkingHours: user.plannedWorkingHours,
                     expectedWorkingHours: user.expectedWorkingHours,
                     vacations: user.vacations,
+                    assigned_craft_ids: user.user.assigned_craft_ids,
+                    shift_ids_array: user.user.shift_ids_array
                 })
             })
             this.freelancersForShifts.forEach((freelancer) => {
@@ -189,6 +293,8 @@ export default {
                     type: 1,
                     plannedWorkingHours: freelancer.plannedWorkingHours,
                     vacations: freelancer.vacations,
+                    assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
+                    shift_ids_array: freelancer.freelancer.shift_ids_array
                 })
             })
             this.serviceProvidersForShifts.forEach((service_provider) => {
@@ -196,9 +302,24 @@ export default {
                     element: service_provider.service_provider,
                     type: 2,
                     plannedWorkingHours: service_provider.plannedWorkingHours,
+                    assigned_craft_ids: service_provider.service_provider.assigned_craft_ids,
+                    shift_ids_array: service_provider.service_provider.shift_ids_array
                 })
             })
             return users;
+        },
+        craftsToDisplay() {
+            const users = this.dropUsers;
+            return this.crafts.map(craft => ({
+                name: craft.name,
+                id: craft.id,
+                users: users.filter(user => user.assigned_craft_ids?.includes(craft.id))
+            }));
+        },
+        usersWithNoCrafts() {
+            return this.dropUsers.filter(user =>
+                !user.assigned_craft_ids || user.assigned_craft_ids?.length === 0
+            );
         },
         computedUserOverviewMaxHeight() {
             const minHeight = 33; // Minimum max height in rem
@@ -219,6 +340,12 @@ export default {
         },
     },
     methods: {
+        showDropFeedback(feedback) {
+            this.dropFeedback = feedback;
+            setTimeout(() => {
+                this.dropFeedback = null
+            }, 2000)
+        },
         findProjectById(projectId) {
             return this.projects.find(project => project.id === projectId);
         },
@@ -306,6 +433,54 @@ export default {
             this.userToShow = user
             this.dayToShow = day
             this.showUserShifts = true
+        },
+        toggleHighlightMode() {
+            this.multiEditMode = false;
+            this.highlightMode = !this.highlightMode;
+        },
+        toggleMultiEditMode() {
+            this.highlightMode = false;
+            this.multiEditMode = !this.multiEditMode;
+        },
+        highlightShiftsOfUser(id, type) {
+            this.idToHighlight = id;
+            this.typeToHighlight = type;
+        },
+        addUserToMultiEdit(item){
+            if(item === null){
+               this.userForMultiEdit = [];
+            }
+            this.userForMultiEdit = item;
+        },
+        saveMultiEdit(){
+            this.multiEditFeedback = '';
+            if(this.userForMultiEdit === null){
+                this.multiEditFeedback = 'Bitte wähle einen Nutzer*in aus!';
+                return;
+            }
+            if(this.checkedShiftsForMultiEdit.length === 0){
+                this.multiEditFeedback = 'Bitte wähle mindestens eine Schicht aus!';
+                return;
+            }
+
+
+            Inertia.post(route('shift.multi.edit.save'), {
+                shifts: this.checkedShiftsForMultiEdit,
+                user: this.userForMultiEdit
+            }, {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => {
+                    this.multiEditMode = false;
+                }
+            })
+        },
+        changeCraftVisibility(id) {
+            if (this.closedCrafts.includes(id)) {
+                this.closedCrafts.splice(this.closedCrafts.indexOf(id), 1);
+            } else {
+                this.closedCrafts.push(id);
+            }
         }
     },
     data() {
@@ -316,6 +491,15 @@ export default {
             showUserShifts: false,
             userToShow: null,
             dayToShow: null,
+            highlightMode: false,
+            idToHighlight: null,
+            typeToHighlight: null,
+            multiEditMode: false,
+            checkedShiftsForMultiEdit: [],
+            userForMultiEdit: null,
+            multiEditFeedback: null,
+            dropFeedback: null,
+            closedCrafts:[],
         }
     },
     beforeDestroy() {
@@ -323,6 +507,37 @@ export default {
         this.$refs.shiftPlan.removeEventListener('scroll', this.syncScrollShiftPlan);
         this.$refs.userOverview.removeEventListener('scroll', this.syncScrollUserOverview);
     },
+
+    watch: {
+        shiftPlan: {
+            handler() {
+                this.checkedShiftsForMultiEdit = [];
+                this.shiftPlan.forEach((room) => {
+                    this.days.forEach((day) => {
+                        room[day.day].events.data.forEach((event) => {
+                            event.shifts.forEach((shift) => {
+                                if (shift.isCheckedForMultiEdit) {
+                                    this.checkedShiftsForMultiEdit.push(shift.id)
+                                }
+                            })
+                        })
+                    })
+                })
+            },
+            deep: true
+        },
+        multiEditMode: {
+            handler() {
+                if (!this.multiEditMode) {
+                    this.userForMultiEdit = null;
+                    this.dropUsers.forEach((user) => {
+                        user.element.checkedForMultiEdit = false
+                    })
+                }
+            },
+            deep: true
+        }
+    }
 
 }
 

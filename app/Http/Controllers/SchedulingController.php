@@ -6,7 +6,7 @@ use App\Enums\NotificationConstEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\Event;
 use App\Models\Scheduling;
-use App\Models\Task;
+
 use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Notification\Models\GlobalNotification;
@@ -14,14 +14,13 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use DateTime;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Exception;
 use stdClass;
 
 class SchedulingController extends Controller
 {
-
     protected ?NotificationService $notificationService = null;
+
     protected ?stdClass $notificationData = null;
 
     public function __construct()
@@ -33,6 +32,7 @@ class SchedulingController extends Controller
         $this->notificationData->room = new stdClass();
     }
 
+
     public function create($userId, $type, $model, $modelId): bool
     {
         $scheduling = Scheduling::where('user_id', $userId)
@@ -41,7 +41,7 @@ class SchedulingController extends Controller
             ->where('model_id', $modelId)
             ->first();
 
-        if(!empty($scheduling)){
+        if (!empty($scheduling)) {
             $scheduling->increment('count', 1);
         } else {
             Scheduling::create([
@@ -55,11 +55,18 @@ class SchedulingController extends Controller
         return true;
     }
 
+
     public function destroy(Scheduling $scheduling): void
     {
         $scheduling->delete();
     }
 
+
+    /**
+     * @throws Exception
+     */
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function sendDeadlineNotification(): void
     {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_REMINDER;
@@ -73,7 +80,7 @@ class SchedulingController extends Controller
                 $privateChecklistTasks = $checklist->tasks()->get();
                 foreach ($privateChecklistTasks as $privateChecklistTask) {
                     $user = User::find($checklist->user_id);
-                    if($privateChecklistTask->deadline === null){
+                    if ($privateChecklistTask->deadline === null) {
                         continue;
                     }
                     $deadline = new DateTime($privateChecklistTask->deadline);
@@ -87,7 +94,8 @@ class SchedulingController extends Controller
                         $this->notificationService->setTitle($notificationTitle);
                         $this->notificationService->setIcon('red');
                         $this->notificationService->setPriority(2);
-                        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
+                        $this->notificationService
+                            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
                         $this->notificationService->setBroadcastMessage($broadcastMessage);
                         $this->notificationService->setTaskId($privateChecklistTask->id);
                         $this->notificationService->setNotificationTo($user);
@@ -103,7 +111,8 @@ class SchedulingController extends Controller
                         $this->notificationService->setTitle($notificationTitle);
                         $this->notificationService->setIcon('red');
                         $this->notificationService->setPriority(2);
-                        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
+                        $this->notificationService
+                            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
                         $this->notificationService->setBroadcastMessage($broadcastMessage);
                         $this->notificationService->setTaskId($privateChecklistTask->id);
                         $this->notificationService->setNotificationTo($user);
@@ -114,7 +123,7 @@ class SchedulingController extends Controller
             }
             $tasks = $checklist->tasks()->get();
             foreach ($tasks->where('done_at', null) as $task) {
-                if($task->deadline === null){
+                if ($task->deadline === null) {
                     continue;
                 }
                 $deadline = new DateTime($task->deadline);
@@ -143,7 +152,7 @@ class SchedulingController extends Controller
         }
         foreach ($taskWithReachedDeadline as $taskDeadline) {
             // guard for tasks without teams
-            if(!array_key_exists($taskDeadline['id'], $userForNotify)) {
+            if (!array_key_exists($taskDeadline['id'], $userForNotify)) {
                 continue;
             }
             foreach ($userForNotify[$taskDeadline['id']] as $userToNotify) {
@@ -158,7 +167,8 @@ class SchedulingController extends Controller
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('red');
                     $this->notificationService->setPriority(2);
-                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
+                    $this->notificationService
+                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setTaskId($task->id);
                     $this->notificationService->setNotificationTo($user);
@@ -174,7 +184,8 @@ class SchedulingController extends Controller
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('red');
                     $this->notificationService->setPriority(2);
-                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
+                    $this->notificationService
+                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_REMINDER);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setTaskId($task->id);
                     $this->notificationService->setNotificationTo($user);
@@ -184,9 +195,15 @@ class SchedulingController extends Controller
         }
     }
 
+    //@todo: fix phpcs error - refactor function because nesting level and complexity is too high
+    //phpcs:ignore Generic.Metrics.NestingLevel.TooHigh, Generic.Metrics.CyclomaticComplexity.TooHigh
     public function sendNotification(): void
     {
-        $scheduleToNotify = Scheduling::where('updated_at', '<=', Carbon::now()->addMinutes(30)->setTimezone(config('app.timezone')))->get();
+        $scheduleToNotify = Scheduling::where(
+            'updated_at',
+            '<=',
+            Carbon::now()->addMinutes(30)->setTimezone(config('app.timezone'))
+        )->get();
         $broadcastMessage = [];
         foreach ($scheduleToNotify as $schedule) {
             $user = User::find($schedule->user_id);
@@ -228,7 +245,7 @@ class SchedulingController extends Controller
                     break;
                 case 'TASK_CHANGES':
                     $task = Task::find($schedule->model_id);
-                    $notificationTitle = 'Änderungen an ' . @$task->name;
+                    $notificationTitle = 'Änderungen an ' . $task?->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -237,7 +254,8 @@ class SchedulingController extends Controller
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('blue');
                     $this->notificationService->setPriority(1);
-                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_CHANGED);
+                    $this->notificationService
+                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_TASK_CHANGED);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setTaskId($task->id);
                     $this->notificationService->setButtons(['showInTasks']);
@@ -246,7 +264,7 @@ class SchedulingController extends Controller
                     break;
                 case 'ROOM_CHANGES':
                     $room = Room::find($schedule->model_id);
-                    $notificationTitle = 'Änderungen an ' . @$room->name;
+                    $notificationTitle = 'Änderungen an ' . $room?->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -255,7 +273,8 @@ class SchedulingController extends Controller
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('green');
                     $this->notificationService->setPriority(3);
-                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
+                    $this->notificationService
+                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_CHANGED);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setRoomId($room->id);
                     $this->notificationService->setNotificationTo($user);
@@ -283,18 +302,22 @@ class SchedulingController extends Controller
                         3 => [
                             'type' => 'link',
                             'title' => $event->project()->first() ? $event->project()->first()->name : '',
-                            'href' => $event->project()->first() ? route('projects.show.calendar', $event->project()->first()->id) : null
+                            'href' => $event->project()->first() ?
+                                route('projects.show.calendar', $event->project()->first()->id) :
+                                null
                         ],
                         4 => [
                             'type' => 'string',
-                            'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
+                            'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' .
+                                Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
                             'href' => null
                         ]
                     ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('green');
                     $this->notificationService->setPriority(3);
-                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_EVENT_CHANGED);
+                    $this->notificationService
+                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_EVENT_CHANGED);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setShowHistory(true);
                     $this->notificationService->setHistoryType('event');
@@ -315,7 +338,8 @@ class SchedulingController extends Controller
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('green');
                     $this->notificationService->setPriority(3);
-                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT);
+                    $this->notificationService
+                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setProjectId($project->id);
                     $this->notificationService->setShowHistory(true);
@@ -336,7 +360,8 @@ class SchedulingController extends Controller
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('green');
                     $this->notificationService->setPriority(3);
-                    $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_AVAILABLE);
+                    $this->notificationService
+                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_AVAILABLE);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setShowHistory(true);
                     $this->notificationService->setHistoryType('vacations');
@@ -344,9 +369,9 @@ class SchedulingController extends Controller
                     $this->notificationService->setNotificationTo($user);
                     $this->notificationService->createNotification();
                     $crafts = $user->crafts()->get();
-                    foreach ($crafts as $craft){
-                        foreach ($craft->users()->get() as $craftUser){
-                            if($craftUser->id === $user->id){
+                    foreach ($crafts as $craft) {
+                        foreach ($craft->users()->get() as $craftUser) {
+                            if ($craftUser->id === $user->id) {
                                 continue;
                             }
                             $this->notificationService->setNotificationTo($craftUser);
@@ -355,7 +380,6 @@ class SchedulingController extends Controller
                     }
                     break;
             }
-            //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
             $schedule->delete();
         }
     }
@@ -363,22 +387,21 @@ class SchedulingController extends Controller
     public function deleteOldNotifications(): void
     {
         $users = User::all();
-        foreach($users as $user) {
-            foreach($user->notifications as $notification) {
+        foreach ($users as $user) {
+            foreach ($user->notifications as $notification) {
                 $archived = Carbon::parse($notification->read_at);
-                if($archived->diffInDays(Carbon::now()) >= 7) {
+                if ($archived->diffInDays(Carbon::now()) >= 7) {
                     $notification->delete();
                 }
             }
         }
-
     }
 
     public function deleteExpiredNotificationForAll(): void
     {
         $notificationForAll = GlobalNotification::all();
-        foreach ($notificationForAll as $notification){
-            if ($notification->expiration_date <= now()){
+        foreach ($notificationForAll as $notification) {
+            if ($notification->expiration_date <= now()) {
                 $notification->delete();
             }
         }

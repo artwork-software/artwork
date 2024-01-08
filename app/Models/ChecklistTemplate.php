@@ -12,12 +12,8 @@ use Laravel\Scout\Searchable;
  * @property int $id
  * @property string $name
  * @property int $user_id
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
- * @property TaskTemplate $task_templates
- * @property User $user
- * @property \Illuminate\Database\Eloquent\Collection<Department> $departments
+ * @property string $created_at
+ * @property string $updated_at
  */
 class ChecklistTemplate extends Model
 {
@@ -30,6 +26,8 @@ class ChecklistTemplate extends Model
         'user_id',
     ];
 
+    //@todo: fix phpcs error - refactor function name to taskTemplate
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function task_templates()
     {
         return $this->hasMany(TaskTemplate::class);
@@ -40,6 +38,9 @@ class ChecklistTemplate extends Model
         return $this->belongsToMany(User::class);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toSearchableArray(): array
     {
         return [

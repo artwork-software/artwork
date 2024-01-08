@@ -257,6 +257,7 @@ export default {
                     linked_type: this.linkedType.type,
                     money_source_id: this.selectedMoneySource.id
                 }, {
+                    preserveState: true,
                     preserveScroll: true
                 });
             } else if (this.isLinked && this.selectedSumDetail.sum_money_source) {
@@ -264,6 +265,7 @@ export default {
                     linked_type: this.linkedType.type,
                     money_source_id: this.selectedMoneySource.id
                 }, {
+                    preserveState: true,
                     preserveScroll: true
                 });
             }

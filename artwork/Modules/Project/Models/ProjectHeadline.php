@@ -4,7 +4,15 @@ namespace Artwork\Modules\Project\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property int $order
+ * @property string $created_at
+ * @property string $updated_at
+ */
 class ProjectHeadline extends Model
 {
     use HasFactory;
@@ -14,14 +22,8 @@ class ProjectHeadline extends Model
         'order',
     ];
 
-    public function projects()
+    public function projects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'project_project_headlines')->withPivot('text');
     }
-
-
-
-
-
-
 }

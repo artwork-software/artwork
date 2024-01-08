@@ -882,19 +882,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('preset.delete.timeline.row');
     Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])
         ->name('preset.add.timeline.row');
-    Route::patch('/user/{user}/check/vacation', [UserVacationsController::class, 'checkVacation'])
-        ->name('user.check.vacation');
 
 
     Route::get('/shift/template/search', [\App\Http\Controllers\ShiftPresetController::class, 'search'])
         ->name('shift.template.search');
 
-    Route::post('/shift/{event}/{shiftPreset}/import/preset/', [\App\Http\Controllers\ShiftPresetController::class, 'import'])
+    Route::post('/shift/{event}/{shiftPreset}/import/preset/',
+        [\App\Http\Controllers\ShiftPresetController::class, 'import'])
         ->name('shift.preset.import');
 
     Route::patch('/preset/timeline/update', [\App\Http\Controllers\PresetTimeLineController::class, 'update'])
         ->name('preset.timeline.update');
-    Route::delete('/preset/timeline/{presetTimeLine}/delete', [\App\Http\Controllers\PresetTimeLineController::class, 'destroy'])
+    Route::delete('/preset/timeline/{presetTimeLine}/delete',
+        [\App\Http\Controllers\PresetTimeLineController::class, 'destroy'])
         ->name('preset.delete.timeline.row');
     Route::post('/preset/{shiftPreset}/add', [\App\Http\Controllers\PresetTimeLineController::class, 'store'])
         ->name('preset.add.timeline.row');

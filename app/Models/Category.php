@@ -15,10 +15,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property \Carbon\Carbon	$created_at
  * @property \Carbon\Carbon	$updated_at
  * @property \Illuminate\Support\Collection<\Artwork\Modules\Project\Models\Project> $projects
- * @property int $id
- * @property string $name
- * @property string $created_at
- * @property string $updated_at
  * @property string $deleted_at
  */
 class Category extends Model
@@ -36,3 +32,5 @@ class Category extends Model
         return $this->belongsToMany(Project::class);
     }
 }
+
+

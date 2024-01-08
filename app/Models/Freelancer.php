@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+
 /**
  * @property int $id
  * @property string $position
@@ -37,10 +38,10 @@ class Freelancer extends Model implements Vacationer
 {
     use HasFactory;
     use GoesOnVacation;
+
     /**
      * @var string[]
      */
-
     protected $fillable = [
         'position',
         'profile_image',
@@ -116,13 +117,28 @@ class Freelancer extends Model implements Vacationer
                 return $shift->event->days_of_event;
             });
     }
-    /**
-     * @return BelongsToMany
-     */
-    public function assigned_crafts(): BelongsToMany
+
+    public function assignedCrafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'freelancer_assigned_crafts');
     }
+
+    /**
+     * @return array<int>
+     */
+    public function getAssignedCraftIdsAttribute(): array
+    {
+        return $this->assignedCrafts()->pluck('crafts.id')->toArray();
+    }
+
+    /**
+     * @return array<int>
+     */
+    public function getShiftIdsArrayAttribute(): array
+    {
+        return $this->shifts()->pluck('shifts.id')->toArray();
+    }
+
 
     public function plannedWorkingHours($startDate, $endDate): float|int
     {

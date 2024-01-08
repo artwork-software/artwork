@@ -498,22 +498,24 @@ class CalendarController extends Controller
     /**
      * @return array<string, mixed>
      */
-    public function createCalendarDataForShiftPlan(?Project $project = null, ?Room $room = null): array
+    public function createCalendarDataForShiftPlan(UserShiftCalendarFilter $userShiftCalendarFilter): array
     {
         $selectedDate = null;
+
         $currentDate = Carbon::now();
-        // Calculate the start of the Monday of the recent calendar week
-        $this->startDate = $currentDate->copy()->startOfWeek()->startOfDay();
-
-        // Calculate the end of the Sunday of the recent calendar week
-        $this->endDate = $currentDate->copy()->endOfWeek()->endOfDay();
-
-        $filterController = new FilterController();
-        $this->setDefaultDates();
+        if (!is_null($userShiftCalendarFilter->start_date)) {
+            $this->startDate = Carbon::create($userShiftCalendarFilter->start_date)->startOfDay();
+        } else {
+            $this->startDate = $currentDate->copy()->startOfWeek()->startOfDay();
+        }
+        if (!is_null($userShiftCalendarFilter->end_date)) {
+            $this->endDate = Carbon::create($userShiftCalendarFilter->end_date)->endOfDay();
+        } else {
+            $this->endDate = $currentDate->copy()->endOfWeek()->endOfDay();
+        }
 
         $calendarPeriod = CarbonPeriod::create($this->startDate, $this->endDate);
         $periodArray = [];
-
         foreach ($calendarPeriod as $period) {
             $periodArray[] = [
                 'day' => $period->format('d.m.'),
@@ -525,22 +527,8 @@ class CalendarController extends Controller
                 'is_monday' => $period->isMonday(),
             ];
         }
-        if (
-            !is_null($this->userShiftCalendarFilter->start_date) &&
-            !is_null($this->userShiftCalendarFilter->end_date)
-        ) {
-            $startDate = Carbon::create($this->userShiftCalendarFilter->start_date)->startOfDay();
-            $endDate = Carbon::create($this->userShiftCalendarFilter->end_date)->endOfDay();
-        } else {
-            $currentDate = Carbon::now();
-            // Calculate the start of the Monday of the recent calendar week
-            $startDate = $currentDate->copy()->startOfWeek()->startOfDay();
 
-            // Calculate the end of the Sunday of the recent calendar week
-            $endDate = $currentDate->copy()->endOfWeek()->endOfDay();
-        }
-
-        $better = $this->filterRooms($startDate, $endDate, true)
+        $roomsWithEvents = $this->filterRooms($this->startDate, $this->endDate, true)
             ->with([
                 'events.event_type',
                 'events.comments',
@@ -554,8 +542,8 @@ class CalendarController extends Controller
                 'events.project.users',
                 'events.project.managerUsers',
                 'events.creator',
-                'events' => function ($query) use ($project, $room): void {
-                    $this->filterEvents($query, null, null, $room, $project, true)->orderBy('start_time', 'ASC');
+                'events' => function ($query): void {
+                    $this->filterEvents($query, null, null, null, null, true)->orderBy('start_time', 'ASC');
                 }])
             ->get()
             ->map(fn($room) => collect($calendarPeriod)
@@ -563,11 +551,10 @@ class CalendarController extends Controller
                     $date->format('d.m.') => [
                         'roomName' => $room->name,
                         'events' => CalendarShowEventResource::collection(
-                            $this->getEventsByDate($date, $room, $project?->id)
+                            $this->getEventsByDate($date, $room)
                         )
                     ]
                 ]));
-
 
         return [
             'days' => $periodArray,
@@ -575,9 +562,9 @@ class CalendarController extends Controller
             // Selected Date is needed for change from individual Calendar to VueCal-Daily, so that vuecal knows which
             // date to load
             'selectedDate' => $selectedDate,
-            'roomsWithEvents' => $better,
+            'roomsWithEvents' => $roomsWithEvents,
             'filterOptions' => $this->getFilters(),
-            'personalFilters' => $filterController->index(),
+            'personalFilters' => (new FilterController())->index(),
             'user_filters' => Auth::user()->shift_calendar_filter()->first(),
         ];
     }

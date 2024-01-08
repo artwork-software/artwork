@@ -279,7 +279,7 @@ export default {
                 },*/
                 {
                     name: 'Räume',
-                    has_permission: this.$can('admin rooms') || this.hasAdminRole(),
+                    has_permission: this.$can('create, delete and update rooms') || this.hasAdminRole(),
                     href: route('areas.management'),
                     route: ['/areas']
                 },

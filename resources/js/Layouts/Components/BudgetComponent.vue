@@ -420,15 +420,15 @@
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center" :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
 
-                                        <img v-if="table.costSumDetails[column.id]?.hasComments && table.costSumDetails[column.id]?.hasMoneySource"
+                                        <img @click="openBudgetSumDetailModal('COST', column, 'comment')" v-if="table.costSumDetails[column.id]?.hasComments && table.costSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
-                                             class="h-6 w-6 mr-1"/>
-                                        <img v-else-if="table.costSumDetails[column.id]?.hasComments"
+                                             class="h-6 w-6 mr-1 cursor-pointer"/>
+                                        <img @click="openBudgetSumDetailModal('COST', column, 'comment')" v-else-if="table.costSumDetails[column.id]?.hasComments"
                                              src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
-                                             class="h-5 w-5 mr-1"/>
-                                        <img v-else-if="table.costSumDetails[column.id]?.hasMoneySource"
+                                             class="h-5 w-5 mr-1 cursor-pointer"/>
+                                        <img @click="openBudgetSumDetailModal('COST', column, 'moneySource')" v-else-if="table.costSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
-                                             class="h-6 w-6 mr-1"/>
+                                             class="h-6 w-6 mr-1 cursor-pointer"/>
 
                                         <span>{{ this.getSumOfTable(0, column.id)?.toLocaleString()}}</span>
 
@@ -509,15 +509,15 @@
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
                                          :class="this.getSumOfTable(1,column.id) < 0 ? 'text-red-500' : ''">
 
-                                        <img v-if="table.earningSumDetails[column.id]?.hasComments && table.earningSumDetails[column.id]?.hasMoneySource"
+                                        <img @click="openBudgetSumDetailModal('EARNING', column, 'comment')" v-if="table.earningSumDetails[column.id]?.hasComments && table.earningSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
-                                             class="h-6 w-6 mr-1"/>
-                                        <img v-else-if="table.earningSumDetails[column.id]?.hasComments"
+                                             class="h-6 w-6 mr-1 cursor-pointer"/>
+                                        <img @click="openBudgetSumDetailModal('EARNING', column, 'comment')" v-else-if="table.earningSumDetails[column.id]?.hasComments"
                                              src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
-                                             class="h-5 w-5 mr-1"/>
-                                        <img v-else-if="table.earningSumDetails[column.id]?.hasMoneySource"
+                                             class="h-5 w-5 mr-1 cursor-pointer"/>
+                                        <img @click="openBudgetSumDetailModal('EARNING', column, 'moneySource')" v-else-if="table.earningSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
-                                             class="h-6 w-6 mr-1"/>
+                                             class="h-6 w-6 mr-1 cursor-pointer"/>
 
                                         <span>{{ this.getSumOfTable(1, column.id)?.toLocaleString() }}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
@@ -733,6 +733,7 @@
         :selectedSumDetail="selectedSumDetail"
         v-if="showSumDetailModal"
         :project-id="project.id"
+        :openTab="sumDetailOpenTab"
         @closed="showSumDetailModal = false"
     />
 
@@ -930,6 +931,7 @@ export default {
                 table_id: this.table?.id
             }),
             cellDetailOpenTab: 'calculation',
+            sumDetailOpenTab: 'comment',
             userExcludeCommentedBudgetItems: this.$page.props.user.commented_budget_items_setting ?
                 this.$page.props.user.commented_budget_items_setting.exclude === 1 :
                 false
@@ -1248,7 +1250,7 @@ export default {
                 }
             })
         },
-        openBudgetSumDetailModal(type, column) {
+        openBudgetSumDetailModal(type, column, tab = 'comment') {
             Inertia.get(route('projects.show.budget', {project: this.project.id}), {
                 selectedBudgetType: type,
                 selectedColumn: column.id,
@@ -1256,11 +1258,12 @@ export default {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
+                    this.sumDetailOpenTab = tab;
                     this.showSumDetailModal = true;
                 }
             })
         },
-        openSubPositionSumDetailModal(subPosition, column) {
+        openSubPositionSumDetailModal(subPosition, column, type) {
             Inertia.get(route('projects.show.budget', {project: this.project.id}), {
                 selectedSubPosition: subPosition.id,
                 selectedColumn: column.id,
@@ -1268,11 +1271,13 @@ export default {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
+                    this.sumDetailOpenTab = type;
                     this.showSumDetailModal = true;
+
                 }
             })
         },
-        openMainPositionSumDetailModal(mainPosition, column) {
+        openMainPositionSumDetailModal(mainPosition, column, type) {
             Inertia.get(route('projects.show.budget', {project: this.project.id}), {
                 selectedMainPosition: mainPosition.id,
                 selectedColumn: column.id,
@@ -1280,6 +1285,7 @@ export default {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
+                    this.sumDetailOpenTab = type;
                     this.showSumDetailModal = true;
                 }
             })

@@ -195,9 +195,9 @@
                 <td v-if="subPosition.sub_position_rows.length > 0" class="flex items-center w-48" v-for="column in columns.slice(3)" v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="my-4 w-48 p-1" :class="subPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
                         <div class="flex group relative justify-end items-center">
-                            <img v-if="subPosition.columnSums[column.id]?.hasComments && subPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg" class="h-6 w-6 mr-1"/>
-                            <img v-else-if="subPosition.columnSums[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
-                            <img v-else-if="subPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
+                            <img @click="openSubPositionSumDetailModal(subPosition, column, 'comment')" v-if="subPosition.columnSums[column.id]?.hasComments && subPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
+                            <img @click="openSubPositionSumDetailModal(subPosition, column, 'comment')" v-else-if="subPosition.columnSums[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
+                            <img @click="openSubPositionSumDetailModal(subPosition, column, 'moneySource')" v-else-if="subPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                             <span>
                                 {{subPosition.columnSums[column.id]?.sum.toLocaleString() }}
                             </span>
@@ -495,8 +495,8 @@ export default {
         openCellDetailModal(cell) {
             this.$emit('openCellDetailModal', cell)
         },
-        openSubPositionSumDetailModal(subPosition, column) {
-            this.$emit('openSubPositionSumDetailModal', subPosition, column)
+        openSubPositionSumDetailModal(subPosition, column, type = 'comment') {
+            this.$emit('openSubPositionSumDetailModal', subPosition, column, type)
         },
         closeCellDetailModal() {
             this.showCellDetailModal = false;

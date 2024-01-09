@@ -754,7 +754,7 @@
     <add-budget-template-component
         v-if="showAddBudgetTemplateModal"
         :table-id="table.id"
-        @closed="closeAddBudgetTemplateModal()"
+        @closed="closeAddBudgetTemplateModal"
     />
     <!-- Tabelle umbenennen Modal-->
     <rename-table-component
@@ -1160,8 +1160,13 @@ export default {
         openAddBudgetTemplateModal() {
             this.showAddBudgetTemplateModal = true;
         },
-        closeAddBudgetTemplateModal() {
+        closeAddBudgetTemplateModal(bool) {
             this.showAddBudgetTemplateModal = false;
+            if(bool){
+                this.successHeading = 'Vorlage gespeichert';
+                this.successDescription = 'Deine Vorlage wurde erfolgreich gespeichert.';
+                this.showSuccessModal = true;
+            }
         },
         closeRenameBudgetTemplateModal(){
           this.showRenameTableModal = false;
@@ -1311,7 +1316,6 @@ export default {
 
             }
             this.showDeleteModal = true;
-            console.log(this.showDeleteModal + this.rowToDelete + this.confirmationTitle + this.confirmationDescription);
         },
         openDeleteSubPositionModal(subPosition) {
             this.confirmationTitle = 'Unterposition löschen';

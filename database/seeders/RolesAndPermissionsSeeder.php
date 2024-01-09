@@ -180,6 +180,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::create([
             'name' => RoleNameEnum::ARTWORK_ADMIN->value,
             'name_de' => "artwork-Admin",
+            'tooltipText' => 'Der Admin hat alle Berechtigungen im System und kann somit alles sehen und bearbeiten.',
         ]);
         Permission::create([
             'name' => PermissionNameEnum::VIEW_BUDGET_TEMPLATES->value,

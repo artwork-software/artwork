@@ -33,10 +33,10 @@
                              class="flex w-full ml-4 flex-wrap p-4">
                             <div class="flex justify-between w-full my-auto items-center">
                                 <div>
-                                                    <span
-                                                        class="text-xl ml-6 my-auto leading-6 font-bold font-lexend text-primary">
-                                                        {{ checklist.name }}
-                                                    </span>
+                                    <span
+                                        class="text-xl ml-6 my-auto leading-6 font-bold font-lexend text-primary">
+                                        {{ checklist.name }}
+                                    </span>
                                 </div>
                                 <div class="flex">
                                     <!-- hier User ansicht -->
@@ -171,7 +171,7 @@
                                              :key="element.id"
                                              @mouseout="showMenu = null">
                                             <div class="flex mt-6 flex-wrap w-full"
-                                                 :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
+                                                 :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
                                                 <div class="flex w-full items-center">
                                                     <div v-if="showMenu === element.id"
                                                          class="flex -mt-1 items-center">
@@ -180,7 +180,7 @@
                                                         <DotsVerticalIcon
                                                             class="h-5 w-5 text-secondary"></DotsVerticalIcon>
                                                     </div>
-                                                    <div v-else class="h-5 w-6 flex">
+                                                    <div v-else class="h-5 w-5 flex">
 
                                                     </div>
                                                     <input @change="updateTaskStatus(element)"
@@ -198,23 +198,20 @@
 
                                                     <span v-if="element.done && element.done_by_user"
                                                           class="ml-2 flex my-auto items-center text-sm text-secondary">
-
-                                                                        {{ element.done_at }}
+                                                        {{ element.done_at }}
                                                         <span class="ml-2">
                                                             <UserPopoverTooltip :height="7" :width="7" v-if="element.done_by_user"
                                                                             :user="element.done_by_user" :id="element.id"/>
                                                         </span>
-
-                                                                    </span>
+                                                    </span>
                                                     <span class="mx-3 flex" v-else>
                                                         <span class="flex -mr-3" v-for="user in element.users">
-                                                        <UserPopoverTooltip :id="element.id + 'user' + user.id" :user="user" height="7"
-                                                                        width="7"/>
-                                                    </span>
+                                                            <UserPopoverTooltip :id="element.id + 'user' + user.id" :user="user" height="7" width="7"/>
+                                                        </span>
                                                     </span>
                                                     <Menu
                                                         v-if="this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin')"
-                                                        as="div" class="my-auto relative"
+                                                        as="div" class="my-auto relative z-10"
                                                         v-show="showMenu === element.id">
                                                         <div class="flex">
                                                             <MenuButton
@@ -232,7 +229,7 @@
                                                             leave-from-class="transform opacity-100 scale-100"
                                                             leave-to-class="transform opacity-0 scale-95">
                                                             <MenuItems
-                                                                class="origin-top-right z-30 absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                 <div class="py-1">
                                                                     <MenuItem v-slot="{ active }">
                                                                         <a @click="openEditTaskModal(element, false)"
@@ -256,16 +253,13 @@
                                                             </MenuItems>
                                                         </transition>
                                                     </Menu>
-
                                                 </div>
                                                 <div class="ml-16 text-sm text-secondary subpixel-antialiased"
                                                      :class="element.done ? 'text-secondary line-through' : 'text-primary'">
                                                     {{ element.description }}
                                                 </div>
                                             </div>
-
                                         </div>
-
                                     </template>
                                 </draggable>
                             </div>
@@ -397,7 +391,7 @@
                                                         <DotsVerticalIcon
                                                             class="h-5 w-5 text-secondary"></DotsVerticalIcon>
                                                     </div>
-                                                    <div v-else class="h-5 w-6 flex">
+                                                    <div v-else class="h-5 w-5 flex">
 
                                                     </div>
                                                     <input @change="updateTaskStatus(element)"
@@ -415,15 +409,13 @@
 
                                                     <span v-if="element.done && element.done_by_user"
                                                           class="ml-2 flex my-auto items-center text-sm text-secondary">
-
-                                                                        {{ element.done_at }}
+                                                        {{ element.done_at }}
                                                         <span class="ml-2">
                                                             <UserPopoverTooltip :height="7" :width="7" v-if="element.done_by_user"
                                                                             :user="element.done_by_user" :id="element.id"/>
                                                         </span>
-
-                                                                    </span>
-                                                    <Menu as="div" class="my-auto relative ml-3"
+                                                    </span>
+                                                    <Menu as="div" class="my-auto relative ml-3 z-10"
                                                           v-show="showMenu === element.id">
                                                         <div class="flex">
                                                             <MenuButton

@@ -28,9 +28,9 @@
             </div>
             <div v-else>
                 <IndividualCalendarAtGlanceComponent
-                    :dateValue="dateValue"
                     v-if="atAGlance"
-                    @change-at-a-glance="changeAtAGlance"
+                    :dateValue="dateValue"
+                    :project="null"
                     :atAGlance="this.atAGlance"
                     :eventTypes=this.eventTypes
                     :rooms="rooms"
@@ -38,14 +38,15 @@
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :user_filters="user_filters"
+                    @change-at-a-glance="changeAtAGlance"
                 >
                 </IndividualCalendarAtGlanceComponent>
 
                 <IndividualCalendarComponent
+                    v-else
                     :events-without-room="eventsWithoutRoom"
                     :dateValue="dateValue"
-                    v-else
-                    @change-at-a-glance="changeAtAGlance"
+                    :project="null"
                     :atAGlance="this.atAGlance"
                     :eventTypes=this.eventTypes
                     :calendarData="calendar"
@@ -54,6 +55,7 @@
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :user_filters="user_filters"
+                    @change-at-a-glance="changeAtAGlance"
                 />
             </div>
         </div>

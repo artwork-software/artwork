@@ -106,7 +106,6 @@ export default {
             showChangeTeamsModal: false,
             showSuccessModal: false,
             userForm: useForm({
-                can_master: this.user_to_edit.can_master,
                 weekly_working_hours: this.user_to_edit.weekly_working_hours,
                 salary_per_hour: this.user_to_edit.salary_per_hour,
                 salary_description: this.user_to_edit.salary_description,
@@ -118,41 +117,35 @@ export default {
     },
     methods: {
         updateUserTerms() {
-            if(this.user_type === 'service_provider'){
-                this.userForm.patch(route('service_provider.update', this.user_to_edit.id), {
-                    can_master: this.user_to_edit.can_master,
-                    weekly_working_hours: this.user_to_edit.weekly_working_hours,
-                    salary_per_hour: this.user_to_edit.salary_per_hour,
-                    salary_description: this.user_to_edit.salary_description,
-                    preserveScroll: true,
-                    onFinish: () => {
-                        this.openSuccessModal();
-                    },
-                });
-            }else if(this.user_type === 'freelancer'){
-                this.userForm.patch(route('freelancer.update', this.user_to_edit.id), {
-                    can_master: this.user_to_edit.can_master,
-                    weekly_working_hours: this.user_to_edit.weekly_working_hours,
-                    salary_per_hour: this.user_to_edit.salary_per_hour,
-                    salary_description: this.user_to_edit.salary_description,
-                    preserveScroll: true,
-                    onFinish: () => {
-                        this.openSuccessModal();
-                    },
-                });
-            }else{
-                this.userForm.patch(route('user.update.terms', this.user_to_edit.id), {
-                    can_master: this.user_to_edit.can_master,
-                    weekly_working_hours: this.user_to_edit.weekly_working_hours,
-                    salary_per_hour: this.user_to_edit.salary_per_hour,
-                    salary_description: this.user_to_edit.salary_description,
-                    preserveScroll: true,
-                    onFinish: () => {
-                        this.openSuccessModal();
-                    },
-                });
+            let desiredRoute = null,
+                routeParameter = null;
+
+            switch (this.user_type) {
+                case 'service_provider':
+                    desiredRoute = 'service_provider.update.terms';
+                    routeParameter = {serviceProvider: this.user_to_edit.id};
+                    break;
+                case 'freelancer':
+                    desiredRoute = 'freelancer.update.terms';
+                    routeParameter = {freelancer: this.user_to_edit.id};
+                    break;
+                case 'user':
+                    desiredRoute = 'user.update.terms';
+                    routeParameter = {user: this.user_to_edit.id};
+                    break;
             }
 
+            if (desiredRoute) {
+                this.userForm.patch(
+                    route(desiredRoute, routeParameter),
+                    {
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            this.openSuccessModal();
+                        },
+                    }
+                );
+            }
         },
         openSuccessModal() {
             this.showSuccessModal = true;

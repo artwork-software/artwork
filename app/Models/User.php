@@ -326,8 +326,6 @@ class User extends Authenticatable
         return $this->shifts()->pluck('shifts.id')->toArray();
     }
 
-
-
     /**
      * @return string[]
      */

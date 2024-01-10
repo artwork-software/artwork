@@ -1,5 +1,5 @@
 <template>
-    <h3 class="sDark mt-1">Nicht verfügbar</h3>
+    <h3 class="sDark mt-1">Verfügbarkeit & Abwesenheit</h3>
 
     <div class="my-5">
         <div v-for="vacation in vacations">
@@ -7,12 +7,15 @@
         </div>
     </div>
 
-    <div v-if="$can('can manage workers') || hasAdminRole()">
-        <PlusCircleIcon class="h-5 w-5 text-white bg-[#3017AD] rounded-full cursor-pointer" @click="showAddEditVacationsModal = true" />
+    <div v-if="$can('can manage workers') || hasAdminRole()" class="flex items-center gap-2"  @click="showAddEditVacationsModal = true">
+        <PlusCircleIcon class="h-5 w-5 text-white bg-[#3017AD] rounded-full cursor-pointer" />
+        <div class="underline underline-offset-1 text-[#3017AD] text-sm cursor-pointer">
+            Verfügbarkeit & Abwesenheit bearbeiten
+        </div>
     </div>
 
 
-    <AddEditVacationsModal :type="type" v-if="showAddEditVacationsModal" @closed="showAddEditVacationsModal = false" :user="user" />
+    <AddEditVacationsModal :createShowDate="createShowDate" :type="type" v-if="showAddEditVacationsModal" @closed="showAddEditVacationsModal = false" :user="user" :vacationSelectCalendar="vacationSelectCalendar" />
 </template>
 
 <script>
@@ -30,7 +33,7 @@ export default defineComponent({
         AddEditVacationsModal,
         PlusCircleIcon
     },
-    props: ['user', 'vacations','type'],
+    props: ['user', 'vacations','type', 'vacationSelectCalendar', 'dateToShow', 'createShowDate'],
     data(){
         return {
             showAddEditVacationsModal: false

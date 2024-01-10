@@ -24,11 +24,16 @@ class VacationService
         $this->historyService->setModel(Vacation::class);
     }
 
-    public function create(Vacationer $vacationer, Carbon $from, Carbon $until): Vacation|Model
+    public function create(Vacationer $vacationer, $data): Vacation|Model
     {
         $vacation = $vacationer->vacations()->create([
-            'from' => $from,
-            'until' => $until
+            'start_time' => '',
+            'end_time' => '',
+            'date' => '',
+            'full_day' => true,
+            'comment' => '',
+            'is_serie' => false,
+            'serie_id' => null,
         ]);
 
         $this->createHistory($vacation, 'Verfügbarkeit hinzugefügt');

@@ -23,7 +23,17 @@
 
         </div>
         <div class="col-span-4 mt-12">
-            <UserVacations :type="type" :user="user" :vacations="vacations" />
+            <UserVacations :vacationSelectCalendar="vacationSelectCalendar" :createShowDate="createShowDate" :type="type" :user="user" :vacations="vacations" />
+        </div>
+    </div>
+
+    <pre>
+        {{ vacationSelectCalendar }}
+    </pre>
+
+    <div class="grid grid-cols-7">
+        <div v-for="day in vacationSelectCalendar" :key="day.date" class="day" :class="{ 'today': day.isToday, 'not-in-month': !day.inMonth }">
+            {{ day.day }}
         </div>
     </div>
 
@@ -46,7 +56,7 @@ export default defineComponent({
     },
     mixins: [Permissions],
     components: {TemporarilyHired, UserVacations, UserAvailabilityCalendar},
-    props:['calendarData','dateToShow','user', 'vacations','type'],
+    props:['calendarData','dateToShow','user', 'vacations','type', 'vacationSelectCalendar', 'createShowDate'],
 })
 </script>
 

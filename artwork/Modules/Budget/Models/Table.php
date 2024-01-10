@@ -3,13 +3,10 @@
 namespace Artwork\Modules\Budget\Models;
 
 use Artwork\Core\Database\Models\Model;
-use Artwork\Modules\Project\Models\BelongsToProject;
-use Artwork\Modules\Project\Models\Project;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Artwork\Modules\Project\Models\Trails\BelongsToProject;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Support\Carbon;
 
 
 class Table extends Model

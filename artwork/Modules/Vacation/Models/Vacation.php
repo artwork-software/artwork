@@ -27,13 +27,18 @@ class Vacation extends Model
     protected $table = 'vacations';
 
     protected $fillable = [
-        'from',
-        'until'
+        'start_time',
+        'end_time',
+        'date',
+        'full_day',
+        'comment',
+        'is_serie',
+        'serie_id',
     ];
 
     protected $casts = [
-        'from' => 'date',
-        'until' => 'date'
+        'start_time' => 'time',
+        'end_time' => 'time'
     ];
 
     public function vacations(): MorphTo

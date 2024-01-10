@@ -123,11 +123,53 @@ class UserController extends Controller
         $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
         $availabilityData = $this->getAvailabilityData($user, request('month'));
 
+        $date = Carbon::today();
+        $daysInMonth = $date->daysInMonth;
+        $firstDayOfMonth = Carbon::now()->startOfMonth();
+        $lastDayOfMonth = Carbon::now()->endOfMonth();
+        $createShowDate = [
+            $date->locale('de')->isoFormat('MMMM YYYY'),
+            $date->copy()->startOfMonth()->toDate()
+        ];
+        if (request('vacationMonth')) {
+            $date = Carbon::parse(request('vacationMonth'));
+            $daysInMonth = $date->daysInMonth;
+            $firstDayOfMonth = Carbon::parse(request('vacationMonth'))->startOfMonth();
+            $lastDayOfMonth = Carbon::parse(request('vacationMonth'))->endOfMonth();
+
+            $createShowDate = [
+                $date->locale('de')->isoFormat('MMMM YYYY'),
+                $date->copy()->startOfMonth()->toDate()
+            ];
+        }
+
+        // Assuming you start the week on Monday
+        $paddingStart = $firstDayOfMonth->dayOfWeekIso - 1;
+        $paddingEnd = 7 - $lastDayOfMonth->dayOfWeekIso;
+
+        $days = collect()->range(1 - $paddingStart, $daysInMonth + $paddingEnd)
+            ->map(function ($day) use ($date) {
+                $currentDay = $date->copy()->startOfMonth()->addDays($day - 1);
+                return [
+                    'date' => $currentDay->format('Y-m-d'),
+                    'day' => $currentDay->day,
+                    'inMonth' => $currentDay->month === $date->month,
+                    'isToday' => $currentDay->isToday(),
+                ];
+            });
+
+        // Aufteilung in Wochen
+        $vacationSelectCalendar = $days->chunk(7);
+
+
+
         return inertia('Users/UserShiftPlanPage', [
             'user_to_edit' => new UserShowResource($user),
             'currentTab' => 'shiftplan',
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
+            'vacationSelectCalendar' => $vacationSelectCalendar,
+            'createShowDate' => $createShowDate,
             'vacations' => $user->vacations()->orderBy('from', 'ASC')->get(),
             'dateValue' => $showCalendar['dateValue'],
             'daysWithEvents' => $showCalendar['daysWithEvents'],

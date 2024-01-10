@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
@@ -14,13 +15,14 @@ class VacationController extends Controller
     {
     }
 
-    public function store(Request $request, User $user): void
+    public function store(CreateVacationRequest $createVacationRequest, User $user): void
     {
-        $this->vacationService->create(
-            $user,
-            Carbon::parse($request->from),
-            Carbon::parse($request->until),
-        );
+        if ($createVacationRequest->validated()) {
+            $this->vacationService->create(
+                $user,
+                $createVacationRequest
+            );
+        }
     }
 
     public function checkVacation(Request $request, User $user): void

@@ -31,7 +31,7 @@
                         KW {{ week.weekNumber }}
                     </div>
                 </td>
-                <td class="col-span-1 " v-for="day in week.days" :key="day" :class="day.onVacation ? 'bg-backgroundGray' : ''">
+                <td class="col-span-1 " v-for="day in week.days" :key="day" :class="day.onVacation ? 'line-through' : ''">
                     <div :class="day.notInMonth ? 'text-secondary' : ''" class="p-6 flex justify-center">
                         {{ day.day }}
                     </div>

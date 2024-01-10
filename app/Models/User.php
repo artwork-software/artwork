@@ -333,8 +333,6 @@ class User extends Authenticatable implements Vacationer
         return $this->shifts()->pluck('shifts.id')->toArray();
     }
 
-
-
     /**
      * @return string[]
      */

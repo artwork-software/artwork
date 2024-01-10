@@ -35,8 +35,8 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -320,6 +320,8 @@ class EventController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function storeEvent(EventStoreRequest $request): CalendarEventResource
     {
+        $this->authorize('create', Event::class);
+
         $firstEvent = Event::create($request->data());
         $this->adjoiningRoomsCheck($request, $firstEvent);
         if ($request->get('projectName')) {
@@ -509,7 +511,7 @@ class EventController extends Controller
                 }
             }
         }
-        $this->authorize('create', Event::class);
+
         $collisionsCount = $this->collisionService->getCollision($request, $event)->count();
         if ($collisionsCount > 0) {
             $collisions = $this->collisionService->getConflictEvents($request);
@@ -733,10 +735,15 @@ class EventController extends Controller
         }
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
+        $this->authorize('update', $event);
+
         if (!$request->noNotifications) {
             $projectManagers = [];
             $this->notificationService->setNotificationKey($this->notificationKey);
@@ -874,8 +881,6 @@ class EventController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $this->authorize('update', $event);
-
         $oldEventDescription = $event->description;
         $oldEventRoom = $event->room_id;
         $oldEventProject = $event->project_id;
@@ -991,8 +996,13 @@ class EventController extends Controller
         }
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function answerOnEvent(Event $event, Request $request): void
     {
+        $this->authorize('update', $event);
+
         $event->comments()->create([
             'user_id' => Auth::id(),
             'comment' => $request->comment,
@@ -1076,8 +1086,13 @@ class EventController extends Controller
         }
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function acceptEvent(Request $request, Event $event): RedirectResponse
     {
+        $this->authorize('update', $event);
+
         $event->occupancy_option = false;
         $notificationTitle = 'Raumanfrage bestätigt';
         $this->history->createHistory($event->id, 'Raum bestätigt');
@@ -1144,10 +1159,15 @@ class EventController extends Controller
         return Redirect::back();
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function declineEvent(Request $request, Event $event): void
     {
+        $this->authorize('update', $event);
+
         $projectManagers = [];
         $roomId = $event->room_id;
         $room = $event->room()->first();
@@ -1383,9 +1403,12 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function destroyShifts(Event $event): RedirectResponse
     {
-        Debugbar::info("Deleting shifts of event $event->id");
+        $this->authorize('update', $event);
 
         $event->shifts()->delete();
         $event->timeline()->delete();
@@ -1393,9 +1416,13 @@ class EventController extends Controller
         return redirect()->back();
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function destroy(Event $event): RedirectResponse
     {
         $this->authorize('delete', $event);
+
         if (!empty($event->project_id)) {
             $eventProject = $event->project()->first();
             $projectHistory = new NewHistoryService(Project::class);
@@ -1466,6 +1493,9 @@ class EventController extends Controller
         return Redirect::back();
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function destroyByNotification(Event $event, Request $request): void
     {
         $this->authorize('delete', $event);
@@ -1546,11 +1576,17 @@ class EventController extends Controller
         }
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function forceDelete(int $id): RedirectResponse
     {
         $event = Event::onlyTrashed()->findOrFail($id);
+
         $this->authorize('delete', $event);
+
         $event->forceDelete();
+
         broadcast(new OccupancyUpdated())->toOthers();
 
         return Redirect::route('events.trashed')->with('success', 'Event deleted');

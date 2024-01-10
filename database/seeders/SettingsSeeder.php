@@ -20,20 +20,17 @@ class SettingsSeeder extends Seeder
             File::get(public_path('/Svgs/defaultSvgs/default_banner.svg')),
             'public'
         );
-        $this->command->info("Banner set");
 
         Storage::put(
             '/public/logo/artwork_logo_big.svg',
             File::get(public_path('/Svgs/Logos/artwork_logo_big.svg')),
             'public'
         );
-        $this->command->info("Big logo set");
 
         Storage::put(
             '/public/logo/artwork_logo_small.svg',
             File::get(public_path('/Svgs/Logos/artwork_logo_small.svg')),
             'public'
         );
-        $this->command->info("Small logo set");
     }
 }

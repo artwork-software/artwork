@@ -1,6 +1,4 @@
 <script>
-import {usePage} from "@inertiajs/inertia-vue3";
-
 export default {
     data() {
         return {
@@ -36,5 +34,4 @@ export default {
         }
     }
 };
-
 </script>

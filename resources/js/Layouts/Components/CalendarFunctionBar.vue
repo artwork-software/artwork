@@ -141,8 +141,10 @@
                     </transition>
                 </Menu>
             </div>
-            <button @click="openEventComponent()" type="button" :class="'bg-buttonBlue hover:bg-buttonHover'"
-                    class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton  focus:outline-none">
+            <button v-if="$can('request room occupancy')"
+                    @click="openEventComponent()"
+                    type="button"
+                    class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton focus:outline-none bg-buttonBlue hover:bg-buttonHover">
                 <PlusCircleIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
                 <p class="text-sm">Neue Belegung</p>
             </button>

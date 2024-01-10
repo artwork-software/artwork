@@ -331,10 +331,10 @@ export default {
                     presetPermissions = ['view edit upload contracts', 'can see, edit and delete project contracts and docs'];
                     break;
                 case 'Budgetadmin':
-                    presetPermissions = ['access project budgets', 'can add and remove verified states'];
+                    presetPermissions = ['can manage global project budgets', 'can add and remove verified states'];
                     break;
                 case 'Disponent*in':
-                    presetPermissions = ['admin rooms', 'create, delete and update rooms'];
+                    presetPermissions = ['create, delete and update rooms'];
                     break;
                 case 'Finanzierungsquellenadmin':
                     presetPermissions = ['view edit add money_sources', 'can edit and delete money sources'];

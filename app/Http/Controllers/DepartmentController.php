@@ -103,7 +103,6 @@ class DepartmentController extends Controller
     public function update(UpdateDepartmentRequest $updateDepartmentRequest, Department $department): RedirectResponse
     {
         $this->departmentService->updateByRequest($updateDepartmentRequest, $department);
-
         return Redirect::route('departments', $department->id)->with('success', 'Department updated');
     }
 

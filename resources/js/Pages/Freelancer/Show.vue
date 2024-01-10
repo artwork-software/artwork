@@ -220,7 +220,7 @@ export default {
                 { id: 1, name: 'Einsatzplan', href: '#', current: false, has_permission: this.$can('can plan shifts') || this.hasAdminRole() },
                 { id: 2, name: 'Persönliche Daten', href: '#', current: true, has_permission: true },
                 { id: 3, name: 'Konditionen', href: '#', current: false, has_permission: this.$can('can edit external users conditions') || this.hasAdminRole() },
-                { id: 4, name: 'Arbeitsprofil', href: '#', current: false, has_permission: this.$can('can edit external users conditions') || this.hasAdminRole() },
+                { id: 4, name: 'Arbeitsprofil', href: '#', current: false, has_permission: this.$can('can manage workers') || this.hasAdminRole() },
             ],
             showSuccessModal: false,
             currentTab: 2,

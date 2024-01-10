@@ -9,6 +9,7 @@ use App\Models\EventType;
 use App\Models\ServiceProvider;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -70,14 +71,29 @@ class ServiceProviderController extends Controller
             'zip_code',
             'location',
             'note',
-            'salary_per_hour',
-            'salary_description',
-            'can_master'
         ]));
     }
 
+    /**
+     * @throws AuthorizationException
+     */
+    public function updateTerms(ServiceProvider $serviceProvider, Request $request): void
+    {
+        $this->authorize('updateTerms', ServiceProvider::class);
+
+        $serviceProvider->update($request->only([
+            'salary_per_hour',
+            'salary_description',
+        ]));
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
     public function updateWorkProfile(ServiceProvider $serviceProvider, Request $request): RedirectResponse
     {
+        $this->authorize('updateWorkProfile', ServiceProvider::class);
+
         $serviceProvider->update([
             'work_name' => $request->get('workName'),
             'work_description' => $request->get('workDescription')
@@ -86,8 +102,13 @@ class ServiceProviderController extends Controller
         return Redirect::back()->with('success', ['workProfile' => 'Arbeitsprofil erfolgreich aktualisiert']);
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function updateCraftSettings(ServiceProvider $serviceProvider, Request $request): RedirectResponse
     {
+        $this->authorize('updateWorkProfile', ServiceProvider::class);
+
         $serviceProvider->update([
             'can_work_shifts' => $request->boolean('canBeAssignedToShifts'),
             'can_master' => $request->boolean('canBeUsedAsMasterCraftsman')
@@ -96,8 +117,13 @@ class ServiceProviderController extends Controller
         return Redirect::back();
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function assignCraft(ServiceProvider $serviceProvider, Request $request): RedirectResponse
     {
+        $this->authorize('updateWorkProfile', ServiceProvider::class);
+
         $craftToAssign = Craft::find($request->get('craftId'));
 
         if (is_null($craftToAssign)) {
@@ -111,8 +137,13 @@ class ServiceProviderController extends Controller
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function removeCraft(ServiceProvider $serviceProvider, Craft $craft): RedirectResponse
     {
+        $this->authorize('updateWorkProfile', ServiceProvider::class);
+
         $serviceProvider->assignedCrafts()->detach($craft);
 
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);

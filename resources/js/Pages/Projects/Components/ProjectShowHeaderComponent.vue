@@ -265,7 +265,7 @@ export default {
                     name: 'Budget',
                     href: '#',
                     current: this.openTab === 'budget',
-                    show: this.hasAdminRole() || this.hasBudgetAccess() || this.projectManagerIds.includes(this.$page.props.user.id) || this.$canAny(['can manage global project budgets', 'access project budgets'])
+                    show: this.hasAdminRole() || this.hasBudgetAccess() || this.projectManagerIds.includes(this.$page.props.user.id) || this.$canAny(['can manage global project budgets', 'can manage global project budgets'])
                 },
                 {name: 'Kommentare', href: '#', current: this.openTab === 'comment', show: true},
             ]

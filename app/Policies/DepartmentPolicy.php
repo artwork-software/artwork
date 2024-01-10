@@ -28,21 +28,18 @@ class DepartmentPolicy
 
     public function create(User $user): bool
     {
-        return $user->can(PermissionNameEnum::TEAM_UPDATE->value) ||
-            $user->can(PermissionNameEnum::DEPARTMENT_UPDATE->value);
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value);
     }
 
 
     public function update(User $user): bool
     {
-        return $user->can(PermissionNameEnum::TEAM_UPDATE->value) ||
-            $user->can(PermissionNameEnum::DEPARTMENT_UPDATE->value);
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value);
     }
 
     public function delete(User $user): bool
     {
-        return $user->can(PermissionNameEnum::TEAM_UPDATE->value) ||
-            $user->can(PermissionNameEnum::DEPARTMENT_UPDATE->value);
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value);
     }
 
 

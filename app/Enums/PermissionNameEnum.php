@@ -13,7 +13,6 @@ enum PermissionNameEnum : string
     case PROJECT_VIEW = 'view projects';
     case ADD_EDIT_OWN_PROJECT = 'create and edit own project';
     case WRITE_PROJECTS = 'write projects';
-    case PROJECT_BUDGET_ADMIN = 'access project budgets';
 
     case PROJECT_BUDGET_VERIFIED_ADD_REMOVE = 'can add and remove verified states';
     case PROJECT_BUDGET_SEE_DOCS_CONTRACTS = 'can see, edit and delete project contracts and docs';
@@ -34,8 +33,6 @@ enum PermissionNameEnum : string
     case USER_UPDATE = 'usermanagement';
     case CHECKLIST_SETTINGS_ADMIN = 'admin checklistTemplates';
     case TEAM_UPDATE = 'teammanagement';
-    case DEPARTMENT_UPDATE = 'update departments';
-    case ROOM_ADMIN = 'admin rooms';
     case SETTINGS_UPDATE = 'change tool settings';
     case PROJECT_SETTINGS_UPDATE = 'change project settings';
     case EVENT_SETTINGS_UPDATE = 'change event settings';

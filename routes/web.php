@@ -160,15 +160,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/users/{user}/photo', [UserController::class, 'updateUserPhoto'])->name('user.update.photo');
 
     Route::post('/users/reset-password', [UserController::class, 'resetUserPassword'])->name('user.reset.password');
-    Route::post('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])
+    Route::patch('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])
         ->name('user.update.craftSettings');
-    Route::post('/users/{user}/masters', [UserController::class, 'updateUserCanMaster'])
-        ->name('user.update.can_master');
-    Route::post('/users/{user}/canWorkShifts', [UserController::class, 'updateUserCanWorkShifts'])
-        ->name('user.update.can_work_shifts');
-    Route::post('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])
+    Route::patch('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])
         ->name('user.update.workProfile');
-    Route::post('/users/{user}/assignCraft', [UserController::class, 'assignCraft'])->name('user.assign.craft');
+    Route::patch('/users/{user}/assignCraft', [UserController::class, 'assignCraft'])->name('user.assign.craft');
     Route::delete('/users/{user}/removeCraft/{craft}', [UserController::class, 'removeCraft'])
         ->name('user.remove.craft');
 
@@ -779,13 +775,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('freelancer.change.profile-image');
     Route::post('freelancer/add', [FreelancerController::class, 'store'])->name('freelancer.add');
     Route::delete('freelancer/{freelancer}', [FreelancerController::class, 'destroy'])->name('freelancer.destroy');
-    Route::post('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])
+    Route::patch('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])
         ->name('freelancer.update.workProfile');
-    Route::post(
+    Route::patch('/freelancer/{freelancer}/terms', [FreelancerController::class, 'updateTerms'])
+        ->name('freelancer.update.terms');
+    Route::patch(
         '/freelancer/{freelancer}/updateCraftSettings',
         [FreelancerController::class, 'updateCraftSettings']
     )->name('freelancer.update.craftSettings');
-    Route::post(
+    Route::patch(
         '/freelancer/{freelancer}/assignCraft',
         [FreelancerController::class, 'assignCraft']
     )->name('freelancer.assign.craft');
@@ -815,15 +813,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('service-provider/add', [ServiceProviderController::class, 'store'])->name('service_provider.add');
     Route::delete('service-provider/{serviceProvider}', [ServiceProviderController::class, 'destroy'])
         ->name('service_provider.destroy');
-    Route::post(
+    Route::patch(
         '/service-provider/{serviceProvider}/workProfile',
         [ServiceProviderController::class, 'updateWorkProfile']
     )->name('service_provider.update.workProfile');
-    Route::post(
+    Route::patch(
+        '/service-provider/{serviceProvider}/terms',
+        [ServiceProviderController::class, 'updateTerms']
+    )->name('service_provider.update.terms');
+    Route::patch(
         '/service-provider/{serviceProvider}/updateCraftSettings',
         [ServiceProviderController::class, 'updateCraftSettings']
     )->name('service_provider.update.craftSettings');
-    Route::post(
+    Route::patch(
         '/service-provider/{serviceProvider}/assignCraft',
         [ServiceProviderController::class, 'assignCraft']
     )->name('service_provider.assign.craft');

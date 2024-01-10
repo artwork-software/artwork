@@ -27,7 +27,6 @@ class ChecklistUpdateRequest extends EventStoreOrUpdateRequest
             'assigned_department_ids' => [
                 'sometimes',
                 'array',
-                Rule::prohibitedIf(Auth::user()->canNot(PermissionNameEnum::DEPARTMENT_UPDATE->value))
             ],
             'assigned_department_ids.*.*' => ['required', 'exists:departments,id'],
         ];

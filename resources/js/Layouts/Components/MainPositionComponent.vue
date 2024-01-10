@@ -143,9 +143,9 @@
                 <td class="w-72">SUM</td>
                 <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center" v-for="column in table.columns.slice(3)" v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                     <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="mainPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
-                        <img v-if="mainPosition.columnSums[column.id]?.hasComments && mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments_white.svg" class="h-6 w-6 mr-1"/>
-                        <img v-else-if="mainPosition.columnSums[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments_white.svg" class="h-5 w-5 mr-1"/>
-                        <img v-else-if="mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source_white.svg" class="h-6 w-6 mr-1"/>
+                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-if="mainPosition.columnSums[column.id]?.hasComments && mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
+                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-else-if="mainPosition.columnSums[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments_white.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
+                        <img @click="openMainPositionSumDetailModal(mainPosition, column, 'moneySource')" v-else-if="mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                         <span>{{mainPosition.columnSums[column.id]?.sum.toLocaleString() }}</span>
                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openMainPositionSumDetailModal(mainPosition, column)">
                             <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
@@ -399,11 +399,11 @@ export default {
                 preserveState: true
             });
         },
-        openSubPositionSumDetailModal(subPosition, column) {
-            this.$emit('openSubPositionSumDetailModal', subPosition, column)
+        openSubPositionSumDetailModal(subPosition, column, type) {
+            this.$emit('openSubPositionSumDetailModal', subPosition, column, type)
         },
-        openMainPositionSumDetailModal(mainPosition, column) {
-            this.$emit('openMainPositionSumDetailModal', mainPosition, column)
+        openMainPositionSumDetailModal(mainPosition, column, type='comment') {
+            this.$emit('openMainPositionSumDetailModal', mainPosition, column, type)
         },
         openCellDetailModal(column, type) {
             this.$emit('openCellDetailModal',column, type)

@@ -42,7 +42,7 @@ class ExportPDFController extends Controller
             'personalFilters' => $showCalendar['personalFilters'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'user_filters' => $showCalendar['user_filters'],
-            'events' => $events = new CalendarEventCollectionResourceModel(
+            'events' => new CalendarEventCollectionResourceModel(
                 areas: $showCalendar['filterOptions']['areas'],
                 projects: new Collection(),
                 eventTypes: $showCalendar['filterOptions']['eventTypes'],

@@ -7,8 +7,11 @@ use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
 use App\Models\Comment;
+use App\Models\CompanyType;
 use App\Models\Contract;
 use App\Models\ContractModule;
+use App\Models\ContractType;
+use App\Models\Currency;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\NotificationService;
@@ -45,7 +48,10 @@ class ContractController extends Controller
         $contracts = Contract::all();
         return inertia('Contracts/ContractManagement', [
             'contracts' => ContractResource::collection($contracts),
-            'contract_modules' => ContractModuleResource::collection(ContractModule::all())
+            'contract_modules' => ContractModuleResource::collection(ContractModule::all()),
+            'contract_types' => ContractType::all(),
+            'company_types' => CompanyType::all(),
+            'currencies' => Currency::all(),
         ]);
     }
 

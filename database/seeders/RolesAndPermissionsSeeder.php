@@ -63,13 +63,6 @@ class RolesAndPermissionsSeeder extends Seeder
                 'eigenen Anfragen editieren & löschen.',
             'checked' => false
         ]);
-        Permission::create([
-            'name' => PermissionNameEnum::ROOM_ADMIN->value,
-            'name_de' => "Hat Raumadminrechte bei allen Räumen",
-            'group' => 'Raumbelegungen',
-            'tooltipText' => 'Kein Tooltip',
-            'checked' => false
-        ]);
         // Dokumente & Budget
         Permission::create([
             'name' => PermissionNameEnum::CONTRACT_SEE_DOWNLOAD->value,
@@ -103,13 +96,6 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create([
             'name' => PermissionNameEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value,
             'name_de' => "Darf alle Budget-Dokumente & Verträge von allen Projekten einsehen, bearbeiten und löschen",
-            'group' => 'Dokumente & Budget',
-            'tooltipText' => 'Tooltip fehlt',
-            'checked' => false
-        ]);
-        Permission::create([
-            'name' => PermissionNameEnum::PROJECT_BUDGET_ADMIN->value,
-            'name_de' => "Hat auf alle Projekte Budget-Zugriff",
             'group' => 'Dokumente & Budget',
             'tooltipText' => 'Tooltip fehlt',
             'checked' => false
@@ -194,6 +180,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::create([
             'name' => RoleNameEnum::ARTWORK_ADMIN->value,
             'name_de' => "artwork-Admin",
+            'tooltipText' => 'Der Admin hat alle Berechtigungen im System und kann somit alles sehen und bearbeiten.',
         ]);
         Permission::create([
             'name' => PermissionNameEnum::VIEW_BUDGET_TEMPLATES->value,

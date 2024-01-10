@@ -361,13 +361,13 @@
                             </div>
                             <button type="button" @click="deleteUserFromTeam(index)">
                                 <span class="sr-only">User aus Team entfernen</span>
-                                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
+                                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error"/>
                             </button>
                             </span>
                         </div>
                         <div class="w-full items-center text-center">
                             <AddButton
-                                :class="[this.form.name === '' || this.form.svg_name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                :class="[this.form.name === '' || this.form.svg_name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                 class="mt-8 inline-flex items-center px-10 py-3 border focus:outline-none border-transparent text-base font-bold text-lg tracking-wider shadow-sm text-secondaryHover"
                                 @click="addTeam"
                                 :disabled="this.form.name === '' || this.form.svg_name === ''" mode="modal"

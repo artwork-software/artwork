@@ -285,26 +285,13 @@ class UserController extends Controller
         return Redirect::back()->with('success', 'Area status updated');
     }
 
-    public function updateUserCanMaster(User $user, Request $request): RedirectResponse
-    {
-        $user->update([
-            'can_master' => $request->can_master
-        ]);
-
-        return Redirect::back()->with('success', 'User updated');
-    }
-
-    public function updateUserCanWorkShifts(User $user, Request $request): RedirectResponse
-    {
-        $user->update([
-            'can_work_shifts' => $request->can_work_shifts
-        ]);
-
-        return Redirect::back()->with('success', 'User updated');
-    }
-
+    /**
+     * @throws AuthorizationException
+     */
     public function updateWorkProfile(User $user, Request $request): RedirectResponse
     {
+        $this->authorize('updateWorkProfile', User::class);
+
         $user->update([
             'work_name' => $request->get('workName'),
             'work_description' => $request->get('workDescription')
@@ -313,8 +300,13 @@ class UserController extends Controller
         return Redirect::back()->with('success', ['workProfile' => 'Arbeitsprofil erfolgreich aktualisiert']);
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function updateCraftSettings(User $user, Request $request): RedirectResponse
     {
+        $this->authorize('updateWorkProfile', User::class);
+
         $user->update([
             'can_work_shifts' => $request->boolean('canBeAssignedToShifts'),
             'can_master' => $request->boolean('canBeUsedAsMasterCraftsman')
@@ -323,8 +315,13 @@ class UserController extends Controller
         return Redirect::back();
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function assignCraft(User $user, Request $request): RedirectResponse
     {
+        $this->authorize('updateWorkProfile', User::class);
+
         $craftToAssign = Craft::find($request->get('craftId'));
 
         if (is_null($craftToAssign)) {
@@ -338,8 +335,13 @@ class UserController extends Controller
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function removeCraft(User $user, Craft $craft): RedirectResponse
     {
+        $this->authorize('updateWorkProfile', User::class);
+
         $user->assignedCrafts()->detach($craft);
 
         return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
@@ -365,10 +367,14 @@ class UserController extends Controller
     }
 
 
+    /**
+     * @throws AuthorizationException
+     */
     public function updateUserTerms(User $user, Request $request): void
     {
+        $this->authorize('updateTerms', User::class);
+
         $user->update($request->only([
-            'can_master',
             'weekly_working_hours',
             'salary_per_hour',
             'salary_description',

@@ -92,8 +92,7 @@
                         </transition>
                     </Disclosure>
                     <div class="pb-5 my-2 border-gray-200 sm:pb-0">
-                        <h3 class="mt-6 mb-8 headline2">Nutzerrechte
-                            definieren</h3>
+                        <h3 class="mt-6 mb-8 headline2">Nutzerrechte definieren</h3>
 
                         <div class="mb-8">
                             <div v-for="role in roles">

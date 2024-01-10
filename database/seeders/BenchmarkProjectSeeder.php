@@ -35,11 +35,6 @@ class BenchmarkProjectSeeder extends Seeder
             'closed_society' => false,
         ]);
 
-        Event::factory()
-            ->set('project_id', $project->id)
-            ->count(10)
-            ->create();
-
         Room::factory()
             //create 42 rooms additional to currently existing 8 = 50
             ->count(42)

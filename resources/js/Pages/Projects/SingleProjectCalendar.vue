@@ -10,11 +10,28 @@
                                 :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
                                 :last-event-in-project="lastEventInProject"
-                                :rooms-with-audience="RoomsWithAudience"
+                                :rooms-with-audience="roomsWithAudience"
                                 :group-projects="groupProjects"
                                 :access_budget="access_budget"
                                 open-tab="calendar">
-        <CalendarTab :projectWriteIds="projectWriteIds" :user_filters="user_filters" :projectManagerIds="projectManagerIds" :project="project" :selected-date="selectedDate" :date-value="dateValue" :events="events" :rooms="rooms" :events-without-room="eventsWithoutRoom" :filter-options="filterOptions" :personal-filters="personalFilters" :at-a-glance="atAGlance" :events-at-a-glance="eventsAtAGlance" :calendar="calendar" :days="days" :event-types="eventTypes" @change-at-a-glance="changeAtAGlance"></CalendarTab>
+        <CalendarTab :projectWriteIds="projectWriteIds"
+                     :user_filters="user_filters"
+                     :projectManagerIds="projectManagerIds"
+                     :project="project"
+                     :selected-date="selectedDate"
+                     :date-value="dateValue"
+                     :events="events"
+                     :rooms="rooms"
+                     :events-without-room="eventsWithoutRoom"
+                     :filter-options="filterOptions"
+                     :personal-filters="personalFilters"
+                     :at-a-glance="atAGlance"
+                     :events-at-a-glance="eventsAtAGlance"
+                     :calendar="calendar"
+                     :days="days"
+                     :event-types="eventTypes"
+                     @change-at-a-glance="changeAtAGlance"
+        />
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSecondSidenav
@@ -38,8 +55,6 @@
 </template>
 
 <script>
-
-
 import ProjectShowHeaderComponent from "@/Pages/Projects/Components/ProjectShowHeaderComponent.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
@@ -59,7 +74,8 @@ export default {
         ProjectSecondSidenav,
         BaseSidenav,
         AppLayout,
-        ProjectShowHeaderComponent},
+        ProjectShowHeaderComponent
+    },
     props: [
         'project',
         'eventTypes',
@@ -68,7 +84,7 @@ export default {
         'projectGroups',
         'firstEventInProject',
         'lastEventInProject',
-        'RoomsWithAudience',
+        'roomsWithAudience',
         'groupProjects',
         'projectCategories',
         'projectGenres',
@@ -115,8 +131,3 @@ export default {
     }
 }
 </script>
-
-
-<style scoped>
-
-</style>

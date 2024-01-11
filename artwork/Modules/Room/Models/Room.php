@@ -143,4 +143,9 @@ class Room extends Model
             )
         );
     }
+
+    public function scopeWithAudience(Builder $query): Builder
+    {
+        return $query->whereRelation('events', 'audience', '=', true);
+    }
 }

@@ -61,6 +61,8 @@ enum PermissionNameEnum : string
 
     case GLOBAL_PROJECT_BUDGET_ADMIN = 'can manage global project budgets';
 
+    case GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS = 'can manage all project budgets without docs';
+
     case VIEW_SHIFT_PLAN = 'can view shift plan';
 
     case CAN_COMMIT_SHIFTS = 'can commit shifts';

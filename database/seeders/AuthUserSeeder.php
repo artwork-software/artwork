@@ -5,13 +5,11 @@ namespace Database\Seeders;
 use App\Enums\NotificationConstEnum;
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
-use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\Department;
+use App\Models\Craft;
 use App\Models\GeneralSettings;
-use Artwork\Modules\Project\Models\Project;
 use App\Models\User;
+use Faker\Factory;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -30,14 +28,12 @@ class AuthUserSeeder extends Seeder
             File::get(public_path('/profile-photos/photo-1499996860823-5214fcc65f8f.jpg')),
             'public'
         );
-        $this->command->info("Profile Photo 1 set");
 
         Storage::put(
             '/public/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg',
             File::get(public_path('/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg')),
             'public'
         );
-        $this->command->info("Profile Photo 2 set");
 
         $user = User::create([
             'first_name' => 'Max',
@@ -51,8 +47,13 @@ class AuthUserSeeder extends Seeder
             'toggle_hints' => true,
             'opened_checklists' => [],
             'opened_areas' => [],
-            'profile_photo_path' => '/profile-photos/photo-1499996860823-5214fcc65f8f.jpg'
+            'profile_photo_path' => '/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
+            'can_work_shifts' => Factory::create('de_DE')->boolean()
         ]);
+
+        if ($user->can_work_shifts) {
+            $user->assignedCrafts()->sync(Craft::all()->pluck('id'));
+        }
 
         foreach (NotificationConstEnum::cases() as $notificationType) {
             $user->notificationSettings()->create([

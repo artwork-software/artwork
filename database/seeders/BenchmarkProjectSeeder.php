@@ -2,21 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Enums\BudgetTypesEnum;
-use App\Models\Area;
-use App\Models\BudgetSumDetails;
 use App\Models\Event;
 use App\Models\EventType;
-use App\Models\MoneySource;
 use App\Models\Project;
-use App\Models\ProjectHeadline;
-use App\Models\ProjectStates;
 use App\Models\Room;
-use App\Models\SeriesEvents;
+use App\Models\User;
 use Carbon\Carbon;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class BenchmarkProjectSeeder extends Seeder
 {
@@ -64,6 +57,7 @@ class BenchmarkProjectSeeder extends Seeder
                     ->set('eventName', $eventName)
                     ->set('event_type_id', $eventTypes->search($eventName))
                     ->set('allDay', $faker->boolean())
+                    ->set('user_id', User::find(1)->id)
                     ->count(2)
                     ->create();
             }

@@ -98,10 +98,8 @@ class ProjectController extends Controller
     protected ?SchedulingController $schedulingController = null;
     public function __construct(
         private readonly ProjectService $projectService,
-        private readonly ProjectGroupService $projectGroupService,
         private readonly BudgetService $budgetService,
-    )
-    {
+    ) {
         // init notification controller
         $this->notificationService = new NotificationService();
         $this->notificationData = new stdClass();

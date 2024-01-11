@@ -1,6 +1,7 @@
 <template>
     <div class="ml-14 pr-14">
         <div class="flex flex-col">
+            <!-- if in group -->
             <div v-if="currentGroup" class="bg-secondaryHover -mb-6 z-20 w-fit pr-6 pb-0.5">
                 <div class="flex items-center">
                         <span v-if="!project.is_group">

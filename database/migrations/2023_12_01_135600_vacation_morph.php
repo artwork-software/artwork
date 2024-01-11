@@ -16,13 +16,13 @@ return new class extends Migration
         Schema::create('vacations', static function (Blueprint $t): void {
             $t->id();
             $t->morphs('vacationer');
-            $t->time('start_time');
-            $t->time('end_time');
+            $t->time('start_time')->nullable();
+            $t->time('end_time')->nullable();
             $t->date('date');
             $t->boolean('full_day')->default(false);
             $t->string('comment', 20)->nullable();
-            $t->boolean('is_serie')->default(false);
-            $t->integer('serie_id')->nullable();
+            $t->boolean('is_series')->default(false);
+            $t->integer('series_id')->nullable();
             $t->timestamps();
         });
     }

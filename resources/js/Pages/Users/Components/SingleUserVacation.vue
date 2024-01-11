@@ -2,7 +2,7 @@
     <div class="bg-secondary rounded flex text-sm group relative mb-2">
         <div class="hidden group-hover:block" v-if="$can('can manage workers') || hasAdminRole()">
             <div class="absolute w-full h-full rounded-lg flex justify-center align-middle items-center gap-2">
-                <button type="button" @click="showEditVacationModal = true"
+                <button type="button" @click="openShowEditVacationModal"
                         class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="w-4 h-4">
@@ -20,50 +20,77 @@
             </div>
         </div>
         <div class="py-4 px-3 text-secondaryHover ">
-            {{ dayjs(vacation.from).locale('de').format('dd, DD.MM.YYYY ') }} - {{ dayjs(vacation.until).locale('de').format('dd, DD.MM.YYYY ') }}
+            <div class="flex items-center">
+                <div>
+                    {{ vacation.date_casted }}
+                </div>
+                <div v-if="!vacation.full_day">
+                    , {{ vacation.start_time }} - {{ vacation.end_time }}
+                </div>
+                <div v-if="vacation.is_series" class="flex items-center ml-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="fff" width="18.212" height="12.893" viewBox="0 0 18.212 12.893" class="text-white">
+                        <g id="Icon_ionic-ios-repeat" data-name="Icon ionic-ios-repeat" transform="translate(-4.5 -8.439)">
+                            <path id="Pfad_274" data-name="Pfad 274" d="M17.429,10.217,15.835,8.632a.664.664,0,0,0-.645-.171.567.567,0,0,0-.166.071.662.662,0,0,0-.323.621.7.7,0,0,0,.2.432l.759.754H8.2a3.708,3.708,0,0,0-3.7,3.695v.759a.666.666,0,0,0,.664.664h0a.666.666,0,0,0,.664-.664v-.759A2.38,2.38,0,0,1,8.2,11.663h7.37l-.759.754a.673.673,0,0,0-.2.413.669.669,0,0,0,.664.73.656.656,0,0,0,.47-.194l1.688-1.679a1.026,1.026,0,0,0,.308-.735A1.057,1.057,0,0,0,17.429,10.217Z" transform="translate(0 0)" fill="#fff"/>
+                            <path id="Pfad_275" data-name="Pfad 275" d="M24.449,17.156h0a.666.666,0,0,0-.664.664v.759a2.38,2.38,0,0,1-2.371,2.371h-7.37L14.8,20.2a.673.673,0,0,0,.2-.417.669.669,0,0,0-.664-.73.656.656,0,0,0-.47.194l-1.688,1.679a1.031,1.031,0,0,0,0,1.47l1.594,1.584a.664.664,0,0,0,.645.171.567.567,0,0,0,.166-.071.662.662,0,0,0,.323-.621.7.7,0,0,0-.2-.432l-.759-.754h7.465a3.7,3.7,0,0,0,3.7-3.7v-.759A.664.664,0,0,0,24.449,17.156Z" transform="translate(-2.401 -2.837)" fill="#fff"/>
+                        </g>
+                    </svg>
+
+                </div>
+            </div>
+            <p>&bdquo;{{ vacation.comment }}&rdquo;</p>
         </div>
 
-        <AddEditVacationsModal :edit-vacation="vacation" :user="user" v-if="showEditVacationModal" @closed="showEditVacationModal = false" />
+        <AddEditVacationsModal :createShowDate="createShowDate" :edit-vacation="vacation" :user="user" v-if="showEditVacationModal" :vacationSelectCalendar="vacationSelectCalendar" @closed="showEditVacationModal = false" />
         <ConfirmDeleteModal v-if="showDeleteConfirmModal" title="Urlaub Löschen?" description="Bist du sicher, dass du den ausgewählten Urlaub löschen möchtest? " @closed="showDeleteConfirmModal = false" @delete="deleteVacation" />
     </div>
+
 </template>
 <script>
 import {defineComponent} from 'vue'
 import Button from "@/Jetstream/Button.vue";
 import AddEditVacationsModal from "@/Pages/Users/Components/AddEditVacationsModal.vue";
-import dayjs from "dayjs";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
-require('dayjs/locale/de')
+import {Inertia} from "@inertiajs/inertia";
 export default defineComponent({
     name: "SingleUserVacation",
     mixins: [Permissions],
     components: {ConfirmDeleteModal, AddEditVacationsModal, Button},
-    props: ['vacation', 'user','type'],
+    props: ['vacation', 'user','type', 'createShowDate', 'vacationSelectCalendar'],
     data(){
         return {
             showEditVacationModal: false,
             showDeleteConfirmModal: false
         }
     },
+    computed: {
+    },
     methods: {
-        dayjs,
+        openShowEditVacationModal(){
+            Inertia.reload({
+                data: {
+                    vacationMonth: this.vacation.date,
+                },
+                onFinish: () => {
+                    this.showEditVacationModal = true
+                }
+            })
+        },
         deleteVacation(){
-            if(this.type === 'freelancer'){
-                Inertia.delete(route('freelancer.vacation.delete', this.vacation.id), {
-                    onFinish: () => {
-                        this.showDeleteConfirmModal = false
-                    }
-                })
-            }else{
-                Inertia.delete(route('user.vacation.delete', this.vacation.id), {
-                    onFinish: () => {
-                        this.showDeleteConfirmModal = false
+            if(this.vacation.type_before_update === 'available') {
+                this.vacation.delete(route('delete.availability', this.vacation.id), {
+                    preserveScroll: true, preserveState: true, onFinish: () => {
+                        this.closeModal(true)
                     }
                 })
             }
-
+            if (this.vacation.type_before_update === 'vacation'){
+                this.vacation.delete(route('delete.vacation', this.vacation.id), {
+                    preserveScroll: true, preserveState: true, onFinish: () => {
+                        this.closeModal(true)
+                    }
+                })
+            }
         }
     },
 })

@@ -793,11 +793,30 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Vacation
 
-    Route::post('/freelancer/vacation/{freelancer}/add', [\App\Http\Controllers\VacationController::class, 'store'])->name('freelancer.vacation.add');
-    Route::patch('/freelancer/vacation/{freelancerVacation}/update', [\App\Http\Controllers\VacationController::class, 'update'])->name('freelancer.vacation.update');
-    Route::post('/freelancer/{freelancer}/masters', [\App\Http\Controllers\FreelancerController::class, 'update_freelancer_can_master'])->name('freelancer.update.can_master');
-    Route::post('/freelancer/{freelancer}/workings', [\App\Http\Controllers\FreelancerController::class, 'update_work_data'])->name('freelancer.update.work_data');
-    Route::delete('/freelancer/vacation/{freelancerVacation}/delete', [\App\Http\Controllers\VacationController::class, 'destroy'])->name('freelancer.vacation.delete');
+    Route::post('/freelancer/vacation/{freelancer}/add', [\App\Http\Controllers\VacationController::class, 'storeFreelancerVacation'])
+        ->name('freelancer.vacation.add');
+    Route::patch('/freelancer/vacation/{freelancerVacation}/update', [\App\Http\Controllers\VacationController::class, 'update'])
+        ->name('freelancer.vacation.update');
+    Route::post('/freelancer/{freelancer}/masters', [\App\Http\Controllers\FreelancerController::class, 'update_freelancer_can_master'])
+        ->name('freelancer.update.can_master');
+    Route::post('/freelancer/{freelancer}/workings', [\App\Http\Controllers\FreelancerController::class, 'update_work_data'])
+        ->name('freelancer.update.work_data');
+    Route::delete('/freelancer/vacation/{freelancerVacation}/delete', [\App\Http\Controllers\VacationController::class, 'destroy'])
+        ->name('freelancer.vacation.delete');
+
+
+    // vacation and availability
+    Route::patch('/update/vacation/{vacation}', [\App\Http\Controllers\VacationController::class, 'update'])
+        ->name('update.vacation');
+
+    Route::patch('/update/availability/{availability}', [\App\Http\Controllers\AvailabilityController::class, 'update'])
+        ->name('update.availability');
+
+    Route::delete('/delete/availability/{availability}', [\App\Http\Controllers\AvailabilityController::class, 'destroy'])
+        ->name('delete.availability');
+
+    Route::delete('/delete/vacation/{vacation}', [\App\Http\Controllers\VacationController::class, 'destroy'])
+        ->name('delete.vacation');
 
 
     // Service Provider

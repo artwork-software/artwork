@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Vacation\Repository;
 
-
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
@@ -24,11 +23,7 @@ class VacationRepository
 
     public function delete(Collection|Vacation $vacations): void
     {
-        if ($vacations instanceof Vacation::class) {
-            $vacations = collect($vacations);
-        }
-
-        $vacations->each(fn(Vacation $vacation) => $vacation->delete());
+        $vacations->delete();
     }
 
     public function save(Vacation $vacation): Vacation

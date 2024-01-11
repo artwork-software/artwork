@@ -9,23 +9,20 @@ use Illuminate\Support\Facades\Auth;
 
 class NewHistoryService
 {
-
-
     protected int $modelId;
 
     protected string $historyText;
 
     protected string $type = 'project';
-
+    protected mixed $modelObject;
     /**
      * NewHistoryService constructor.
      * @param string|null $modelObject
      */
-    public function __construct(protected ?string $modelObject){}
 
     public function setModel(mixed $model): void
     {
-        if(is_object($model)) {
+        if (is_object($model)) {
             $this->modelObject = $model::class;
             return;
         }

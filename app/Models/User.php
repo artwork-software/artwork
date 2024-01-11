@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Availability\Models\Available;
+use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Notification\Models\GlobalNotification;
@@ -69,7 +71,7 @@ use Spatie\Permission\Traits\HasRoles;
  * What is this sorcery?
  * @property string $profile_photo_url
  */
-class User extends Authenticatable implements Vacationer
+class User extends Authenticatable implements Vacationer, Available
 {
     use HasApiTokens;
     use HasFactory;
@@ -80,6 +82,7 @@ class User extends Authenticatable implements Vacationer
     use TwoFactorAuthenticatable;
     use Searchable;
     use GoesOnVacation;
+    use HasAvailability;
 
     protected $fillable = [
         'first_name',

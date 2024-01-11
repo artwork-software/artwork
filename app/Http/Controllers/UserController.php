@@ -13,6 +13,7 @@ use App\Models\EventType;
 use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use App\Models\User;
+use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
@@ -33,10 +34,13 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function __construct()
+    public function __construct(
+        private readonly CalendarService $calendarService
+    )
     {
         $this->authorizeResource(User::class, 'user');
     }
+
 
     /**
      * @return array<string, mixed>
@@ -121,46 +125,31 @@ class UserController extends Controller
     public function editUserShiftplan(User $user, CalendarController $shiftPlan): Response|ResponseFactory
     {
         $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
-        $availabilityData = $this->getAvailabilityData($user, request('month'));
+        //$this->getAvailabilityData($user, request('month'))
+        $availabilityData = $this->calendarService
+            ->getAvailabilityData(user: $user, month: request('month'));
 
-        $date = Carbon::today();
-        $daysInMonth = $date->daysInMonth;
-        $firstDayOfMonth = Carbon::now()->startOfMonth();
-        $lastDayOfMonth = Carbon::now()->endOfMonth();
-        $createShowDate = [
-            $date->locale('de')->isoFormat('MMMM YYYY'),
-            $date->copy()->startOfMonth()->toDate()
-        ];
-        if (request('vacationMonth')) {
-            $date = Carbon::parse(request('vacationMonth'));
-            $daysInMonth = $date->daysInMonth;
-            $firstDayOfMonth = Carbon::parse(request('vacationMonth'))->startOfMonth();
-            $lastDayOfMonth = Carbon::parse(request('vacationMonth'))->endOfMonth();
-
-            $createShowDate = [
-                $date->locale('de')->isoFormat('MMMM YYYY'),
-                $date->copy()->startOfMonth()->toDate()
-            ];
+        $selectedDate = Carbon::today();
+        $selectedPeriodDate = Carbon::today();
+        $vacations = [];
+        // get vacations of the selected date (request('showVacationsAndAvailabilities'))
+        if (request('showVacationsAndAvailabilities')) {
+            $selectedDate = Carbon::parse(request('showVacationsAndAvailabilities'));
+            $selectedPeriodDate = Carbon::parse(request('vacationMonth'));
         }
 
-        // Assuming you start the week on Monday
-        $paddingStart = $firstDayOfMonth->dayOfWeekIso - 1;
-        $paddingEnd = 7 - $lastDayOfMonth->dayOfWeekIso;
+        $vacations = $user->vacations()
+            ->where('date', $selectedDate)
+            ->orderBy('date', 'ASC')->get();
 
-        $days = collect()->range(1 - $paddingStart, $daysInMonth + $paddingEnd)
-            ->map(function ($day) use ($date) {
-                $currentDay = $date->copy()->startOfMonth()->addDays($day - 1);
-                return [
-                    'date' => $currentDay->format('Y-m-d'),
-                    'day' => $currentDay->day,
-                    'inMonth' => $currentDay->month === $date->month,
-                    'isToday' => $currentDay->isToday(),
-                ];
-            });
+        $availabilities = $user->availabilities()
+            ->where('date', $selectedDate)
+            ->orderBy('date', 'ASC')->get();
 
-        // Aufteilung in Wochen
-        $vacationSelectCalendar = $days->chunk(7);
-
+        $createShowDate = [
+            $selectedPeriodDate->locale('de')->isoFormat('MMMM YYYY'),
+            $selectedPeriodDate->copy()->startOfMonth()->toDate()
+        ];
 
 
         return inertia('Users/UserShiftPlanPage', [
@@ -168,9 +157,12 @@ class UserController extends Controller
             'currentTab' => 'shiftplan',
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
-            'vacationSelectCalendar' => $vacationSelectCalendar,
+            'vacationSelectCalendar' => $this->calendarService
+                ->createVacationAndAvailabilityPeriodCalendar(request('vacationMonth')),
             'createShowDate' => $createShowDate,
-            'vacations' => $user->vacations()->orderBy('from', 'ASC')->get(),
+            'vacations' => $vacations,
+            'availabilities' => $availabilities,
+            'showVacationsAndAvailabilitiesDate' => $selectedDate->format('Y-m-d'),
             'dateValue' => $showCalendar['dateValue'],
             'daysWithEvents' => $showCalendar['daysWithEvents'],
             'totalPlannedWorkingHours' => $showCalendar['totalPlannedWorkingHours'],
@@ -228,7 +220,7 @@ class UserController extends Controller
      */
     private function getAvailabilityData(User $user, $month = null): array
     {
-        $vacationDays = $user->vacations()->orderBy('from', 'ASC')->get();
+        $vacationDays = $user->vacations()->orderBy('date', 'ASC')->get();
 
         $currentMonth = Carbon::now()->startOfMonth();
 
@@ -247,14 +239,7 @@ class UserController extends Controller
             $weekNumber = $currentDate->weekOfYear;
             $day = $currentDate->day;
             foreach ($vacationDays as $vacationDay) {
-                $vacationStart = Carbon::parse($vacationDay->from);
-                $vacationEnd = Carbon::parse($vacationDay->until);
-                // TODO: Check Performance
-                /*if($currentDate < $vacationStart){
-                    $onVacation = false;
-                    continue;
-                }*/
-                if ($vacationStart <= $currentDate && $vacationEnd >= $currentDate) {
+                if ($currentDate->isSameDay($vacationDay->date)) {
                     $onVacation = true;
                 }
             }
@@ -268,7 +253,8 @@ class UserController extends Controller
             $calendarData[$weekNumber]['days'][] = [
                 'day' => $day,
                 'notInMonth' => $notInMonth,
-                'onVacation' => $onVacation
+                'onVacation' => $onVacation,
+                'day_formatted' => $currentDate->format('Y-m-d'),
             ];
 
             $currentDate->addDay();

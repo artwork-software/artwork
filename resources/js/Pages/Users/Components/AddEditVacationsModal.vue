@@ -11,7 +11,9 @@
                         <DialogPanel class="relative transform bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:p-6">
                             <DialogTitle class="relative flex justify-between items-center mb-7">
                                 <div class="text-primary text-base">
-                                    Verfügbarkeit & Abwesenheit eintragen
+                                    Verfügbarkeit & Abwesenheit
+                                    <span v-if="vacation.id"> bearbeiten</span>
+                                    <span v-else> eintragen</span>
                                 </div>
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
                                     <span class="sr-only">Close</span>
@@ -56,7 +58,11 @@
                                     </tr>
                                 </table>
 
+
                                 <div class="px-7">
+                                    <div v-show="helpText.date" class="text-red-500 text-xs">
+                                        {{ helpText.date }}
+                                    </div>
                                     <!-- type selection --->
                                     <div class="mb-4">
                                         <fieldset class="mt-4">
@@ -64,6 +70,9 @@
                                                 <div v-for="type in availableTypes" :key="type.id" class="flex items-center">
                                                     <input :id="type.id" v-model="vacation.type" name="notification-method" :value="type.id" type="radio" :checked="vacation.type === type.id" class="h-5 w-5 border-2 border-green-300 text-green-600 focus:border-green-600 focus:ring-0 ring-0" />
                                                     <label :for="type.id" class="ml-3 block text-sm font-medium leading-6 text-gray-900">{{ type.title }}</label>
+                                                </div>
+                                                <div v-show="helpText.type" class="mt-1 text-red-500 text-xs">
+                                                    {{ helpText.type }}
                                                 </div>
                                             </div>
                                         </fieldset>
@@ -85,15 +94,21 @@
                                     <div class="mb-4" v-if="!vacation.full_day">
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <label for="email" class="block text-xs font-medium leading-6 text-gray-600">Startuhrzeit</label>
+                                                <label for="start_time" class="block text-xs font-medium leading-6 text-gray-600">Startuhrzeit</label>
                                                 <div class="mt-1">
-                                                    <input type="time" name="email" id="email" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                                    <input type="time" v-model="vacation.start_time" name="start_time" id="start_time" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                                    <div v-show="helpText.start_time" class="mt-1 text-red-500 text-xs">
+                                                        {{ helpText.start_time }}
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div>
-                                                <label for="email" class="block text-xs font-medium leading-6 text-gray-600">Enduhrzeit</label>
+                                                <label for="end_time" class="block text-xs font-medium leading-6 text-gray-600">Enduhrzeit</label>
                                                 <div class="mt-1">
-                                                    <input type="time" name="email" id="email" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                                    <input type="time" v-model="vacation.end_time" name="end_time" id="end_time" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                                    <div v-show="helpText.end_time" class="mt-1 text-red-500 text-xs">
+                                                        {{ helpText.end_time }}
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -104,7 +119,7 @@
                                     <div class="mb-4">
                                         <div class="relative flex items-start">
                                             <div class="flex h-6 items-center">
-                                                <input id="full_day" v-model="vacation.is_series" :checked="vacation.is_series" aria-describedby="repeat-description" name="repeat" type="checkbox" class="h-5 w-5 border-green-300 text-green-600 focus:ring-0 ring-0" />
+                                                <input id="is_serie" v-model="vacation.is_series" :checked="vacation.is_series" aria-describedby="repeat-description" name="repeat" type="checkbox" class="h-5 w-5 border-green-300 text-green-600 focus:ring-0 ring-0" :class="{'!text-gray-500' : vacation?.id}" :disabled="vacation?.id"/>
                                             </div>
                                             <div class="ml-3 text-sm leading-6">
                                                 <label for="repeat" class="font-medium text-gray-900 flex items-center gap-1">
@@ -125,8 +140,8 @@
                                     <div class="mb-4" v-if="vacation.is_series">
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <label for="email" class="block text-xs font-medium leading-6 text-gray-600">Endet</label>
-                                                <select id="location" v-model="vacation.series_repeat" name="location" class="mt-1 block w-full border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                                                <label for="email" class="block text-xs font-medium leading-6 text-gray-600">Wiederholung</label>
+                                                <select id="location" v-model="vacation.series_repeat" name="location" class="mt-1 block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :class="{'!bg-gray-200' : vacation?.id}" :disabled="vacation?.id">
                                                     <option value="weekly" selected>Wöchentlich</option>
                                                     <option value="daily">Täglich</option>
                                                 </select>
@@ -134,7 +149,10 @@
                                             <div>
                                                 <label for="email" class="block text-xs font-medium leading-6 text-gray-600">Endet</label>
                                                 <div class="mt-1">
-                                                    <input type="date" v-model="vacation.series_repeat_until" name="email" id="email" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                                    <input type="date" v-model="vacation.series_repeat_until" name="email" id="email" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :disabled="vacation?.id" :class="{'!bg-gray-100' : vacation?.id}" />
+                                                    <div v-show="helpText.series_repeat_until" class="mt-1 text-red-500 text-xs">
+                                                        {{ helpText.series_repeat_until }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -146,6 +164,9 @@
                                         <div>
                                             <div class="mt-1">
                                                 <input type="text" v-model="vacation.comment" name="comment" id="comment" placeholder="Kommentar" maxlength="20" max="20" class="block w-full border-0 py-3.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                                <div v-show="helpText.comment" class="mt-1 text-red-500 text-xs">
+                                                    {{ helpText.comment }}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -154,14 +175,16 @@
                             </div>
                             <div class="flex items-center justify-between px-7 mt-5">
                                 <div>
-                                    <button class="text-[#3017AD] text-xs underline underline-offset-2">Speichern & weitere Einträge machen</button>
+                                    <button class="text-[#3017AD] text-xs underline underline-offset-2" @click="saveOrUpdateVacation(true)">Speichern & weitere Einträge machen</button>
                                 </div>
                                 <div >
-                                    <AddButton v-if="vacation.isDirty" @click="saveOrUpdateVacation" type="save" mode="modal" text="Speichern"/>
-                                    <AddButton v-if="!vacation.isDirty && vacation.id" @click="saveOrUpdateVacation" type="delete" mode="modal" text="Löschen"/>
-                                    <AddButton v-if="!vacation.isDirty" @click="closeModal(true)" type="delete" mode="modal" text="Abbrechen"/>
+                                    <AddButton v-if="vacation.isDirty && !vacation.id" @click="saveOrUpdateVacation(false)" type="save" mode="modal" text="Speichern"/>
+                                    <AddButton v-if="vacation.isDirty && vacation.id" @click="saveOrUpdateVacation(false)" type="save" mode="modal" text="Bearbeiten"/>
+                                    <AddButton v-if="!vacation.isDirty && vacation.id" @click="deleteAvailabilityOrVacation" type="delete" mode="modal" text="Löschen"/>
+                                    <AddButton v-if="!vacation.isDirty && !vacation.id" @click="closeModal(true)" type="delete" mode="modal" text="Abbrechen"/>
                                 </div>
                             </div>
+
                         </DialogPanel>
                     </TransitionChild>
                 </div>
@@ -191,15 +214,23 @@ export default {
                 id: this.editVacation ? this.editVacation.id : null,
                 start_time: this.editVacation ? this.editVacation.start_time : null,
                 end_time: this.editVacation ? this.editVacation.end_time : null,
-                date: '',
-                type: 'available',
-                full_day: false,
-                is_series: false,
-                series_repeat: 'weekly',
-                series_repeat_until: null,
-                comment: ''
+                date: this.editVacation ? this.editVacation.date : null,
+                type: this.editVacation ? this.editVacation.type : 'available',
+                full_day: this.editVacation ? this.editVacation.full_day : false,
+                is_series:  this.editVacation ? this.editVacation.is_series : false,
+                series_repeat: this.editVacation?.series ? this.editVacation?.series.frequency : 'weekly',
+                series_repeat_until: this.editVacation?.series ? this.editVacation?.series.end_date : null,
+                comment: this.editVacation ? this.editVacation.comment : null,
+                type_before_update: this.editVacation ? this.editVacation.type : null,
             }),
-            helpText: '',
+            helpText: {
+                date: '',
+                type: '',
+                start_time: '',
+                end_time: '',
+                series_repeat_until: '',
+                comment: '',
+            },
             availableTypes: [
                 { id: 'available', title: 'Verfügbarkeit' },
                 { id: 'vacation', title: 'Abwesenheit' },
@@ -216,47 +247,156 @@ export default {
         selectDate(date){
             this.vacation.date = date;
         },
-        saveOrUpdateVacation(){
-            if(this.vacation.from === null || this.vacation.until === null){
-                this.helpText = 'Bitte wähle ein Start und/oder End Datum';
+        saveOrUpdateVacation(withNewModal = false){
+            // add checks here
+
+            // check if date is selected
+            if(!this.vacation.date){
+                this.helpText.date = 'Bitte wähle ein Datum aus.'
                 return;
-            }
-            if(dayjs(this.vacation.from) > dayjs(this.vacation.until)){
-                this.helpText = 'Startdatum darf nicht nach dem Enddatum liegen!'
-                return
             } else {
-                this.helpText = '';
+                this.helpText.date = ''
             }
+
+            // check if type is selected
+            if(!this.vacation.type){
+                this.helpText.type = 'Bitte wähle einen Typ aus.'
+                return;
+            } else {
+                this.helpText.type = ''
+            }
+
+            // check if start time and end time is selected if not full day
+            if(!this.vacation.full_day){
+                if(!this.vacation.start_time){
+                    this.helpText.start_time = 'Bitte wähle eine Startzeit aus.'
+                    return;
+                } else {
+                    this.helpText.start_time = ''
+                }
+                if(!this.vacation.end_time){
+                    this.helpText.end_time = 'Bitte wähle eine Endzeit aus.'
+                    return;
+                } else {
+                    this.helpText.end_time = ''
+                }
+
+                // check if start time is before end time
+                if(this.vacation.start_time > this.vacation.end_time){
+                    this.helpText.start_time = 'Die Startzeit muss vor der Endzeit liegen.'
+                    return;
+                } else {
+                    this.helpText.start_time = ''
+                }
+
+                // check if start time and end time is not the same
+                if(this.vacation.start_time === this.vacation.end_time){
+                    this.helpText.start_time = 'Die Startzeit und die Endzeit dürfen nicht gleich sein.'
+                    return;
+                } else {
+                    this.helpText.start_time = ''
+                }
+            }
+
+            // check if series repeat until is selected if is series
+            if(this.vacation.is_series){
+                if(!this.vacation.series_repeat_until){
+                    this.helpText.series_repeat_until = 'Bitte wähle ein Enddatum aus.'
+                    return;
+                } else {
+                    this.helpText.series_repeat_until = ''
+                }
+            }
+
+            // check if comment is not longer than 20 characters
+            if(this.vacation.comment){
+                if(this.vacation.comment.length > 20){
+                    this.helpText.comment = 'Der Kommentar darf nicht länger als 20 Zeichen sein.'
+                    return;
+                } else {
+                    this.helpText.comment = ''
+                }
+            }
+
+            // check if vacation is new or update
+
+
             if(this.vacation.id === null){
                 if(this.type === 'freelancer'){
                     this.vacation.post(route('freelancer.vacation.add', this.user.id), {
                         preserveScroll: true, preserveState: true, onFinish: () => {
-                            this.closeModal(true)
+                            if (withNewModal){
+                                this.resetForm()
+                            } else {
+                                this.closeModal(true)
+                            }
                         }
                     })
                 }else{
                     this.vacation.post(route('user.vacation.add', this.user.id), {
                         preserveScroll: true, preserveState: true, onFinish: () => {
-                            this.closeModal(true)
+                            if (withNewModal){
+                                this.resetForm()
+                            } else {
+                                this.closeModal(true)
+                            }
                         }
                     })
                 }
 
             } else {
-                if(this.type === 'freelancer'){
-                    this.vacation.patch(route('freelancer.vacation.update', this.vacation.id), {
+                if(this.vacation.type_before_update === 'available') {
+                    this.vacation.patch(route('update.availability', this.vacation.id), {
                         preserveScroll: true, preserveState: true, onFinish: () => {
-                            this.closeModal(true)
-                        }
-                    })
-                }else{
-                    this.vacation.patch(route('user.vacation.update', this.vacation.id), {
-                        preserveScroll: true, preserveState: true, onFinish: () => {
-                            this.closeModal(true)
+                            if (withNewModal){
+                                this.resetForm()
+                            } else {
+                                this.closeModal(true)
+                            }
                         }
                     })
                 }
 
+                if (this.vacation.type_before_update === 'vacation') {
+                    this.vacation.patch(route('update.vacation', this.vacation.id), {
+                        preserveScroll: true, preserveState: true, onFinish: () => {
+                            if (withNewModal){
+                                this.resetForm()
+                            } else {
+                                this.closeModal(true)
+                            }
+                        }
+                    })
+                }
+            }
+        },
+        resetForm(){
+            this.vacation.id = null;
+            this.vacation.start_time = null;
+            this.vacation.end_time = null;
+            this.vacation.date = null;
+            this.vacation.type = 'available';
+            this.vacation.full_day = false;
+            this.vacation.is_series = false;
+            this.vacation.series_repeat = 'weekly';
+            this.vacation.series_repeat_until = null;
+            this.vacation.comment = null;
+            this.vacation.type_before_update = null;
+        },
+        deleteAvailabilityOrVacation(){
+            if(this.vacation.type_before_update === 'available') {
+                this.vacation.delete(route('delete.availability', this.vacation.id), {
+                    preserveScroll: true, preserveState: true, onFinish: () => {
+                        this.closeModal(true)
+                    }
+                })
+            }
+            if (this.vacation.type_before_update === 'vacation'){
+                this.vacation.delete(route('delete.vacation', this.vacation.id), {
+                    preserveScroll: true, preserveState: true, onFinish: () => {
+                        this.closeModal(true)
+                    }
+                })
             }
         },
         previousMonth() {

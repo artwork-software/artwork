@@ -1,9 +1,22 @@
 <template>
-    <h3 class="sDark mt-1">Verfügbarkeit & Abwesenheit</h3>
+
 
     <div class="my-5">
-        <div v-for="vacation in vacations">
-            <SingleUserVacation :type="type" :vacation="vacation" :user="user" />
+        <div v-if="vacations.length > 0">
+            <h3 class="sDark mb-4">Abwesenheiten</h3>
+            <div v-for="vacation in vacationsWithType">
+                <SingleUserVacation :type="type" :createShowDate="createShowDate" :vacation="vacation" :user="user" :vacationSelectCalendar="vacationSelectCalendar" />
+            </div>
+        </div>
+        <div v-if="availabilities.length > 0">
+            <h3 class="sDark mb-4">Eingetragene Verfügbarkeit</h3>
+            <div v-for="availability in availabilitiesWithType">
+                <SingleUserVacation :type="type" :createShowDate="createShowDate" :vacation="availability" :user="user" :vacationSelectCalendar="vacationSelectCalendar" />
+            </div>
+        </div>
+        <div v-if="availabilities.length <= 0 && vacations <= 0">
+            <h3 class="sDark mb-4">Verfügbarkeit & Abwesenheit</h3>
+            <p class="text-sm text-gray-500">Für diesen Tag wurde noch keine Eintragung hinterlegt. </p>
         </div>
     </div>
 
@@ -13,7 +26,6 @@
             Verfügbarkeit & Abwesenheit bearbeiten
         </div>
     </div>
-
 
     <AddEditVacationsModal :createShowDate="createShowDate" :type="type" v-if="showAddEditVacationsModal" @closed="showAddEditVacationsModal = false" :user="user" :vacationSelectCalendar="vacationSelectCalendar" />
 </template>
@@ -33,12 +45,27 @@ export default defineComponent({
         AddEditVacationsModal,
         PlusCircleIcon
     },
-    props: ['user', 'vacations','type', 'vacationSelectCalendar', 'dateToShow', 'createShowDate'],
+    props: ['user', 'vacations','type', 'vacationSelectCalendar', 'dateToShow', 'createShowDate', 'availabilities'],
     data(){
         return {
             showAddEditVacationsModal: false
         }
-    }
+    },
+    computed: {
+        // add value type to all vacations and return them
+        vacationsWithType(){
+            return this.vacations.map(vacation => {
+                vacation.type = 'vacation'
+                return vacation
+            })
+        },
+        availabilitiesWithType(){
+            return this.availabilities.map(availability => {
+                availability.type = 'available'
+                return availability
+            })
+        }
+    },
 })
 </script>
 

@@ -76,7 +76,7 @@
                                :days-with-events="daysWithEvents"
                                :projects="projects" :event-types="eventTypes" :rooms="rooms"
                                :vacations="vacations"></UserShiftPlan>
-                <Availability type="freelancer" :calendar-data="calendarData" :date-to-show="dateToShow"
+                <Availability type="freelancer" :create-show-date="createShowDate" :show-vacations-and-availabilities-date="showVacationsAndAvailabilitiesDate" :vacation-select-calendar="vacationSelectCalendar" :calendar-data="calendarData" :date-to-show="dateToShow"
                               :user="freelancer" :vacations="vacations"/>
             </div>
             <!-- Persönliche Daten -->
@@ -156,6 +156,7 @@
                 <WorkProfileTab user-type="freelancer" :user="freelancer"/>
             </div>
         </div>
+
         <SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" title="Freelancer*in erfolgreich bearbeitet" description="Die Änderungen wurden erfolgreich gespeichert." button="Ok" />
     </AppLayout>
 </template>
@@ -206,7 +207,10 @@ export default {
         'rooms',
         'eventTypes',
         'projects',
-        'totalPlannedWorkingHours'
+        'totalPlannedWorkingHours',
+        'vacationSelectCalendar',
+        'createShowDate',
+        'showVacationsAndAvailabilitiesDate',
     ],
     mounted() {
         this.showSidebar = true;

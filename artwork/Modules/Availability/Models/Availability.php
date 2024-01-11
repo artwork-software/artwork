@@ -1,17 +1,17 @@
 <?php
 
-namespace Artwork\Modules\Vacation\Models;
+namespace Artwork\Modules\Availability\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
-use Artwork\Core\Database\Models\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * @property int $id
- * @property string $vacationer_type
- * @property int $vacationer_id
+* @property int $id
+ * @property string $available_type
+ * @property int $available_id
  * @property Carbon $start_time
  * @property Carbon $end_time
  * @property Carbon $date
@@ -22,12 +22,12 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
-class Vacation extends Model
+class Availability extends Model
 {
     use HasFactory;
     use HasChangesHistory;
 
-    protected $table = 'vacations';
+    protected $table = 'availabilities';
 
     protected $fillable = [
         'start_time',
@@ -37,8 +37,8 @@ class Vacation extends Model
         'comment',
         'is_series',
         'series_id',
-        'vacationer_type',
-        'vacationer_id',
+        'available_type',
+        'available_id',
     ];
 
     protected $casts = [
@@ -52,20 +52,23 @@ class Vacation extends Model
         'date_casted',
     ];
 
-    public function vacations(): MorphTo
+    public function availabilities(): MorphTo
     {
         return $this->morphTo();
     }
-
-    public function series(): \Illuminate\Database\Eloquent\Relations\HasOne
-    {
-        return $this->hasOne(VacationSeries::class, 'id', 'series_id');
-    }
-
 
     public function getDateCastedAttribute()
     {
         Carbon::setLocale('de');
         return Carbon::parse($this->date)->translatedFormat('D, d.m.Y');
+    }
+
+    protected $with = [
+        'series'
+    ];
+
+    public function series(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(AvailabilitySeries::class, 'id', 'series_id');
     }
 }

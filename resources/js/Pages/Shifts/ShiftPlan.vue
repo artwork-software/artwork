@@ -157,7 +157,7 @@
                                                        @highlightShiftsOfUser="highlightShiftsOfUser"/>
                                 </th>
                                 <td v-for="day in days">
-                                    <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer">
+                                    <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"  @click="openShowUserShiftModal(user, day)">
                                         <span v-for="shift in user.element?.shifts[day.full_day]" v-if="!user.vacations?.includes(day.without_format)">
                                             {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                         </span>
@@ -201,6 +201,10 @@
         </div>
 
     </div>
+
+    <pre>
+        {{ usersForShifts }}
+    </pre>
 
 
     <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Availability\Models\Available;
+use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
@@ -34,10 +36,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $updated_at
  * @property int $can_work_shifts
  */
-class Freelancer extends Model implements Vacationer
+class Freelancer extends Model implements Vacationer, Available
 {
     use HasFactory;
     use GoesOnVacation;
+    use HasAvailability;
 
     /**
      * @var string[]
@@ -158,25 +161,5 @@ class Freelancer extends Model implements Vacationer
         }
 
         return $plannedWorkingHours;
-    }
-
-    /**
-     * @return string[]
-     */
-    public function hasVacationDays(): array
-    {
-        $vacations = $this->vacations()->get();
-        $returnInterval = [];
-        foreach ($vacations as $vacation) {
-            $start = Carbon::parse($vacation->from);
-            $end = Carbon::parse($vacation->until);
-
-            $interval = CarbonPeriod::create($start, $end);
-
-            foreach ($interval as $date) {
-                $returnInterval[] = $date->format('Y-m-d');
-            }
-        }
-        return $returnInterval;
     }
 }

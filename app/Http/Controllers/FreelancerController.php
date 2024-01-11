@@ -7,6 +7,7 @@ use App\Http\Resources\FreelancerShowResource;
 use App\Models\Craft;
 use App\Models\EventType;
 use App\Models\Freelancer;
+use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
@@ -21,6 +22,11 @@ use Inertia\Response;
 
 class FreelancerController extends Controller
 {
+    public function __construct(
+        private readonly CalendarService $calendarService
+    ) {
+    }
+
     public function store(): \Symfony\Component\HttpFoundation\Response
     {
         $freelancer = Freelancer::create(
@@ -30,79 +36,45 @@ class FreelancerController extends Controller
         return Inertia::location(route('freelancer.show', $freelancer->id));
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function getAvailabilityData(Freelancer $freelancer, $month = null): array
-    {
-        $vacationDays = $freelancer->vacations()->orderBy('from', 'ASC')->get();
-
-        $currentMonth = Carbon::now()->startOfMonth();
-
-        if ($month) {
-            $currentMonth = Carbon::parse($month)->startOfMonth();
-        }
-
-        $startDate = $currentMonth->copy()->startOfWeek();
-        $endDate = $currentMonth->copy()->endOfMonth()->endOfWeek();
-
-        $calendarData = [];
-        $currentDate = $startDate->copy();
-
-        while ($currentDate <= $endDate) {
-            $onVacation = false;
-            $weekNumber = $currentDate->weekOfYear;
-            $day = $currentDate->day;
-            foreach ($vacationDays as $vacationDay) {
-                $vacationStart = Carbon::parse($vacationDay->from);
-                $vacationEnd = Carbon::parse($vacationDay->until);
-                // TODO: Check Performance
-                /*if($currentDate < $vacationStart){
-                    $onVacation = false;
-                    continue;
-                }*/
-                if ($vacationStart <= $currentDate && $vacationEnd >= $currentDate) {
-                    $onVacation = true;
-                }
-            }
-
-            if (!isset($calendarData[$weekNumber])) {
-                $calendarData[$weekNumber] = ['weekNumber' => $weekNumber, 'days' => []];
-            }
-
-            $notInMonth = !$currentDate->isSameMonth($currentMonth);
-
-            $calendarData[$weekNumber]['days'][] = [
-                'day' => $day,
-                'notInMonth' => $notInMonth,
-                'onVacation' => $onVacation
-            ];
-
-            $currentDate->addDay();
-        }
-
-        $dateToShow = [
-            $currentMonth->locale('de')->isoFormat('MMMM YYYY'),
-            $currentMonth->copy()->startOfMonth()->toDate()
-        ];
-
-        return [
-            'calendarData' => array_values($calendarData),
-            'dateToShow' => $dateToShow
-        ];
-    }
-
     public function show(Freelancer $freelancer, CalendarController $shiftPlan): Response
     {
         $showCalendar = $shiftPlan->createCalendarDataForFreelancerShiftPlan($freelancer);
-        $availabilityData = $this->getAvailabilityData($freelancer, request('month'));
+        //$this->getAvailabilityData($freelancer, request('month'))
+        $availabilityData = $this->calendarService
+            ->getAvailabilityData(freelancer: $freelancer, month: request('month'));
+
+        $selectedDate = Carbon::today();
+        $selectedPeriodDate = Carbon::today();
+        $vacations = [];
+        // get vacations of the selected date (request('showVacationsAndAvailabilities'))
+        if (request('showVacationsAndAvailabilities')) {
+            $selectedDate = Carbon::parse(request('showVacationsAndAvailabilities'));
+            $selectedPeriodDate = Carbon::parse(request('vacationMonth'));
+        }
+
+        $vacations = $freelancer->vacations()
+            ->where('date', $selectedDate)
+            ->orderBy('date', 'ASC')->get();
+
+        $availabilities = $freelancer->availabilities()
+            ->where('date', $selectedDate)
+            ->orderBy('date', 'ASC')->get();
+
+        $createShowDate = [
+            $selectedPeriodDate->locale('de')->isoFormat('MMMM YYYY'),
+            $selectedPeriodDate->copy()->startOfMonth()->toDate()
+        ];
 
         return inertia('Freelancer/Show', [
             'freelancer' => new FreelancerShowResource($freelancer),
             //needed for availability calendar
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
-            'vacations' => $freelancer->vacations()->orderBy('from', 'ASC')->get(),
+            'vacations' => $vacations,
+            'vacationSelectCalendar' => $this->calendarService
+                ->createVacationAndAvailabilityPeriodCalendar(request('vacationMonth')),
+            'createShowDate' => $createShowDate,
+            'showVacationsAndAvailabilitiesDate' => $selectedDate->format('Y-m-d'),
             //needed for UserShiftPlan
             'dateValue' => $showCalendar['dateValue'],
             'daysWithEvents' => $showCalendar['daysWithEvents'],

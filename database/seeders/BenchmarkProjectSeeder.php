@@ -58,6 +58,7 @@ class BenchmarkProjectSeeder extends Seeder
                     ->set('event_type_id', $eventTypes->search($eventName))
                     ->set('allDay', $faker->boolean())
                     ->set('user_id', User::find(1)->id)
+                    ->set('audience', $faker->boolean())
                     ->count(2)
                     ->create();
             }

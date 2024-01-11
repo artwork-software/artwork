@@ -1,21 +1,24 @@
 <template>
     <app-layout>
-    <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds"
-                                :projectWriteIds="projectWriteIds"
-                                :projectManagerIds="projectManagerIds"
-                                :project="project"
-                                :eventTypes="eventTypes"
-                                :currentGroup="currentGroup"
-                                :states="states"
-                                :project-groups="projectGroups"
-                                :first-event-in-project="firstEventInProject"
-                                :last-event-in-project="lastEventInProject"
-                                :rooms-with-audience="RoomsWithAudience"
-                                :group-projects="groupProjects"
-                                :access_budget="access_budget"
-                                open-tab="info">
-        <InfoTab :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project"></InfoTab>
-    </ProjectShowHeaderComponent>
+        <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds"
+                                    :projectWriteIds="projectWriteIds"
+                                    :projectManagerIds="projectManagerIds"
+                                    :project="project"
+                                    :eventTypes="eventTypes"
+                                    :currentGroup="currentGroup"
+                                    :states="states"
+                                    :project-groups="projectGroups"
+                                    :first-event-in-project="firstEventInProject"
+                                    :last-event-in-project="lastEventInProject"
+                                    :rooms-with-audience="roomsWithAudience"
+                                    :group-projects="groupProjects"
+                                    :access_budget="access_budget"
+                                    open-tab="info">
+            <InfoTab :projectWriteIds="projectWriteIds"
+                     :projectManagerIds="projectManagerIds"
+                     :project="project"
+            />
+        </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSecondSidenav
                 :project="project"
@@ -36,8 +39,6 @@
 </template>
 
 <script>
-
-
 import ProjectShowHeaderComponent from "@/Pages/Projects/Components/ProjectShowHeaderComponent.vue";
 import InfoTab from "@/Pages/Projects/Components/TabComponents/InfoTab.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
@@ -52,7 +53,10 @@ export default {
         ProjectShiftSidenav,
         ProjectSecondSidenav,
         BaseSidenav,
-        AppLayout, InfoTab, ProjectShowHeaderComponent},
+        AppLayout,
+        InfoTab,
+        ProjectShowHeaderComponent
+    },
     props: [
         'project',
         'eventTypes',
@@ -61,7 +65,7 @@ export default {
         'projectGroups',
         'firstEventInProject',
         'lastEventInProject',
-        'RoomsWithAudience',
+        'roomsWithAudience',
         'isMemberOfADepartment',
         'groupProjects',
         'projectCategories',
@@ -86,8 +90,3 @@ export default {
     },
 }
 </script>
-
-
-<style scoped>
-
-</style>

@@ -97,10 +97,10 @@
                     v-if="firstEventInProject?.start_time">Uhr -</span> {{ lastEventInProject?.end_time }} <span
                     v-if="lastEventInProject?.end_time">Uhr</span>
                 </div>
-                <div v-if="RoomsWithAudience">
-                    Termine mit Publikum in: <span>{{ locationString }}</span>
+                <div v-if="roomsWithAudience">
+                    Termine mit Publikum in: <span>{{ locationString() }}</span>
                 </div>
-                <div v-if="!RoomsWithAudience && !(firstEventInProject && lastEventInProject)">
+                <div v-if="!roomsWithAudience && !(firstEventInProject && lastEventInProject)">
                     Noch keine Termine innerhalb dieses Projektes
                 </div>
             </div>
@@ -233,7 +233,7 @@ export default {
         'projectGroups',
         'firstEventInProject',
         'lastEventInProject',
-        'RoomsWithAudience',
+        'roomsWithAudience',
         'groupProjects',
         'openTab',
         'projectManagerIds',
@@ -314,7 +314,7 @@ export default {
             this.closeDeleteProjectModal();
         },
         locationString() {
-            return Object.values(this.RoomsWithAudience).join(", ");
+            return Object.values(this.roomsWithAudience).join(", ");
         },
         changeTab(selectedTab) {
             if (selectedTab.name === 'Ablaufplan') {

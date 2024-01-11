@@ -22,6 +22,7 @@
                 :project="project"
                 :cost-center="project.cost_center"
                 :copyright="project.copyright"
+                :projectManagerIds="projectManagerIds"
                 :project-files="project.project_files"
                 :contracts="project.contracts"
                 :money-sources="projectMoneySources"

@@ -196,10 +196,18 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
         Permission::create([
             'name' => PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value,
-            'name_de' => "Globaler Budgetzugriff",
+            'name_de' => "Globaler Budgetzugriff mit Dokumenteneinsicht",
             'group' => 'Dokumente & Budget',
             'tooltipText' => 'Hat auf alle Projekte Budgetzugriff, d.h. kann die Budgetplanung von allen ' .
-                'Projekten einsehen',
+                'Projekten einsehen und kann auch alle Dokumente der Projekte sehen.',
+            'checked' => false
+        ]);
+        Permission::create([
+            'name' => PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS->value,
+            'name_de' => "Globaler Budgetzugriff ohne Dokumenteneinsicht",
+            'group' => 'Dokumente & Budget',
+            'tooltipText' => 'Hat auf alle Projekte Budgetzugriff, d.h. kann die Budgetplanung von allen ' .
+                'Projekten einsehen ohne dabei die Dokumente sehen zu können.',
             'checked' => false
         ]);
         Permission::create([

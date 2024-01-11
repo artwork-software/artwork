@@ -62,7 +62,6 @@ use App\Http\Controllers\UserCalendarFilterController;
 use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
-use App\Http\Controllers\UserVacationsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 

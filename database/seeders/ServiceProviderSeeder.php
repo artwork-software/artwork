@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Craft;
 use App\Models\ServiceProvider;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
@@ -10,48 +11,52 @@ class ServiceProviderSeeder extends Seeder
 {
     public function run(): void
     {
-        $fakeFreelancer = Factory::create('de_DE');
+        $faker = Factory::create('de_DE');
 
         for ($i = 0; $i < 10; $i++) {
-            $companyName = $fakeFreelancer->company;
-            $provider = ServiceProvider::create([
+            $companyName = $faker->company;
+            $serviceProvider = ServiceProvider::create([
                 'profile_image' => 'https://ui-avatars.com/api/?name=' .
                     $companyName[0] .
                     '&color=7F9CF5&background=EBF4FF',
                 'provider_name' => $companyName,
-                'email' => $fakeFreelancer->companyEmail,
-                'phone_number' => $fakeFreelancer->phoneNumber,
-                'street' => $fakeFreelancer->streetName . ' ' . $fakeFreelancer->buildingNumber,
-                'zip_code' => $fakeFreelancer->postcode,
-                'location' => $fakeFreelancer->city,
-                'note' => $fakeFreelancer->realText(250),
+                'email' => $faker->companyEmail,
+                'phone_number' => $faker->phoneNumber,
+                'street' => $faker->streetName . ' ' . $faker->buildingNumber,
+                'zip_code' => $faker->postcode,
+                'location' => $faker->city,
+                'note' => $faker->realText(250),
+                'can_work_shifts' => $faker->boolean()
             ]);
-            $provider->contacts()->create([
-                'first_name' => $fakeFreelancer->firstName,
-                'last_name' => $fakeFreelancer->lastName,
-                'email' => $fakeFreelancer->companyEmail,
-                'phone_number' => $fakeFreelancer->phoneNumber,
+
+            if ($serviceProvider->can_work_shifts) {
+                $serviceProvider->assignedCrafts()->sync(Craft::all()->pluck('id'));
+            }
+
+            $serviceProvider->contacts()->create([
+                'first_name' => $faker->firstName,
+                'last_name' => $faker->lastName,
+                'email' => $faker->companyEmail,
+                'phone_number' => $faker->phoneNumber,
             ]);
-            $provider->contacts()->create([
-                'first_name' => $fakeFreelancer->firstName,
-                'last_name' => $fakeFreelancer->lastName,
-                'email' => $fakeFreelancer->companyEmail,
-                'phone_number' => $fakeFreelancer->phoneNumber,
+            $serviceProvider->contacts()->create([
+                'first_name' => $faker->firstName,
+                'last_name' => $faker->lastName,
+                'email' => $faker->companyEmail,
+                'phone_number' => $faker->phoneNumber,
             ]);
-            $provider->contacts()->create([
-                'first_name' => $fakeFreelancer->firstName,
-                'last_name' => $fakeFreelancer->lastName,
-                'email' => $fakeFreelancer->companyEmail,
-                'phone_number' => $fakeFreelancer->phoneNumber,
+            $serviceProvider->contacts()->create([
+                'first_name' => $faker->firstName,
+                'last_name' => $faker->lastName,
+                'email' => $faker->companyEmail,
+                'phone_number' => $faker->phoneNumber,
             ]);
-            $provider->contacts()->create([
-                'first_name' => $fakeFreelancer->firstName,
-                'last_name' => $fakeFreelancer->lastName,
-                'email' => $fakeFreelancer->companyEmail,
-                'phone_number' => $fakeFreelancer->phoneNumber,
+            $serviceProvider->contacts()->create([
+                'first_name' => $faker->firstName,
+                'last_name' => $faker->lastName,
+                'email' => $faker->companyEmail,
+                'phone_number' => $faker->phoneNumber,
             ]);
         }
-
-        $this->command->info("End generate Service Providers");
     }
 }

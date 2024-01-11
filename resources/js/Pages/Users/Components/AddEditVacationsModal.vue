@@ -401,7 +401,6 @@ export default {
         },
         previousMonth() {
             const currentMonth = new Date(this.createShowDate[1].date);
-
             Inertia.reload({
                 data: {
                     vacationMonth: this.subtractOneMonth(currentMonth),

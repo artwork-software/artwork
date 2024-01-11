@@ -36,8 +36,7 @@ class UserController extends Controller
 {
     public function __construct(
         private readonly CalendarService $calendarService
-    )
-    {
+    ) {
         $this->authorizeResource(User::class, 'user');
     }
 
@@ -135,6 +134,9 @@ class UserController extends Controller
         // get vacations of the selected date (request('showVacationsAndAvailabilities'))
         if (request('showVacationsAndAvailabilities')) {
             $selectedDate = Carbon::parse(request('showVacationsAndAvailabilities'));
+        }
+
+        if (request('vacationMonth')) {
             $selectedPeriodDate = Carbon::parse(request('vacationMonth'));
         }
 

@@ -666,11 +666,9 @@ class EventController extends Controller
         }
     }
 
-    private function associateProject($request, $event): void
+    private function associateProject($request, $event, ProjectController $projectController): void
     {
         $project = Project::create(['name' => $request->get('projectName')]);
-        $project->users()->save(Auth::user(), ['access_budget' => true]);
-        $projectController = new ProjectController();
         $projectController->generateBasicBudgetValues($project);
         $event->project()->associate($project);
         $event->save();
@@ -740,7 +738,7 @@ class EventController extends Controller
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
+    public function updateEvent(EventUpdateRequest $request, Event $event, ProjectController $projectController): CalendarEventResource
     {
         $this->authorize('update', $event);
 
@@ -896,7 +894,6 @@ class EventController extends Controller
         if ($request->get('projectName')) {
             $project = Project::create(['name' => $request->get('projectName')]);
             $project->users()->save(Auth::user(), ['access_budget' => true]);
-            $projectController = new ProjectController();
             $projectController->generateBasicBudgetValues($project);
             $event->project()->associate($project);
             $event->save();

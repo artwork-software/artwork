@@ -65,6 +65,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\ProjectGroupService;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;

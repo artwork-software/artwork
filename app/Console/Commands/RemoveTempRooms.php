@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-
 use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class RemoveTempRooms extends Command

@@ -4,9 +4,9 @@ namespace Database\Seeders;
 
 use App\Models\Event;
 use App\Models\EventType;
-use App\Models\Project;
-use App\Models\Room;
 use App\Models\User;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use Faker\Factory;
 use Illuminate\Database\Seeder;

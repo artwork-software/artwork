@@ -10,11 +10,15 @@
                                 :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
                                 :last-event-in-project="lastEventInProject"
-                                :rooms-with-audience="RoomsWithAudience"
+                                :rooms-with-audience="roomsWithAudience"
                                 :group-projects="groupProjects"
                                 :access_budget="access_budget"
                                 open-tab="comment">
-        <CommentTab :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :is-member-of-a-department="isMemberOfADepartment"></CommentTab>
+        <CommentTab :projectWriteIds="projectWriteIds"
+                    :projectManagerIds="projectManagerIds"
+                    :project="project"
+                    :is-member-of-a-department="isMemberOfADepartment"
+        />
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSecondSidenav
@@ -37,8 +41,6 @@
 </template>
 
 <script>
-
-
 import ProjectShowHeaderComponent from "@/Pages/Projects/Components/ProjectShowHeaderComponent.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
@@ -67,7 +69,7 @@ export default {
         'projectGroups',
         'firstEventInProject',
         'lastEventInProject',
-        'RoomsWithAudience',
+        'roomsWithAudience',
         'isMemberOfADepartment',
         'groupProjects',
         'projectCategories',
@@ -93,8 +95,3 @@ export default {
     },
 }
 </script>
-
-
-<style scoped>
-
-</style>

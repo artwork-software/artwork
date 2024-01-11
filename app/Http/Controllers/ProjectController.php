@@ -50,6 +50,7 @@ use App\Models\MainPositionDetails;
 use App\Models\MoneySource;
 use App\Models\Project;
 use App\Models\ProjectStates;
+use App\Models\Room;
 use App\Models\Sector;
 use App\Models\ServiceProvider;
 use App\Models\SubPosition;
@@ -1571,7 +1572,7 @@ class ProjectController extends Controller
                 ->where('project_id', '=', $project->id)
                 ->first();
             if (!empty($group)) {
-                $groupOutput = Project::find($group?->group_id);
+                $groupOutput = Project::find($group->group_id);
             } else {
                 $groupOutput = '';
             }
@@ -1579,38 +1580,26 @@ class ProjectController extends Controller
             $groupOutput = '';
         }
 
-        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
-        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
-
-        $events = $project->events()->get();
-        $RoomsWithAudience = null;
-
-        foreach ($events as $event) {
-            if (!$event->audience) {
-                continue;
-            }
-            $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room) {
-                $RoomsWithAudience[$room->id] = $room->name;
-            }
-        }
-
-        //get the ids of all managerUsers of the Project
-        $managerIds = $project->managerUsers()->pluck('user_id');
-        //get the ids of all writeUsers of the Project
-        $writeIds = $project->writeUsers()->pluck('user_id');
-        //get the ids of all deleteUsers of the Project
-        $deleteIds = $project->delete_permission_users()->pluck('user_id');
+        /** @var Collection $roomsWithAudience */
+        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectInformation', [
             // needed for the ProjectShowHeaderComponent
             'project' => new ProjectInfoResource($project),
-            'firstEventInProject' => $firstEventInProject,
-            'lastEventInProject' => $lastEventInProject,
-            'RoomsWithAudience' => $RoomsWithAudience,
-            'projectManagerIds' => $managerIds,
-            'projectWriteIds' => $writeIds,
-            'projectDeleteIds' => $deleteIds,
+            'firstEventInProject' => $project
+                ->events()
+                ->orderBy('start_time', 'ASC')
+                ->limit(1)
+                ->first(),
+            'lastEventInProject' => $project
+                ->events()
+                ->orderBy('end_time', 'DESC')
+                ->limit(1)
+                ->first(),
+            'roomsWithAudience' => $roomsWithAudience->isEmpty() ? null : $roomsWithAudience,
+            'projectManagerIds' => $project->managerUsers()->pluck('user_id'),
+            'projectWriteIds' => $project->writeUsers()->pluck('user_id'),
+            'projectDeleteIds' => $project->delete_permission_users()->pluck('user_id'),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'currentGroup' => $groupOutput,
             'states' => ProjectStates::all(),
@@ -1671,24 +1660,12 @@ class ProjectController extends Controller
             $eventsQuery = $project->events();
             $filteredEvents = $calendar->filterEvents($eventsQuery, null, null, null, $project);
 
-            $eventsAtAGlance = ProjectCalendarShowEventResource::collection($filteredEvents
-                ->with(['room','project','creator'])
-                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
-        }
-        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
-        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
-
-        $events = $project->events()->get();
-        $roomsWithAudience = null;
-
-        foreach ($events as $event) {
-            if (!$event->audience) {
-                continue;
-            }
-            $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room) {
-                $roomsWithAudience[$room->id] = $room->name;
-            }
+            $eventsAtAGlance = ProjectCalendarShowEventResource::collection(
+                $filteredEvents
+                    ->with(['room','project','creator'])
+                    ->orderBy('start_time', 'ASC')
+                    ->get()
+            )->collection->groupBy('room.id');
         }
 
         if (\request('startDate') && \request('endDate')) {
@@ -1699,24 +1676,18 @@ class ProjectController extends Controller
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
 
-        //get the ids of all managerUsers of the Project
-        $managerIds = $project->managerUsers()->pluck('user_id');
-        //get the ids of all writeUsers of the Project
-        $writeIds = $project->writeUsers()->pluck('user_id');
-        //get the ids of all deleteUsers of the Project
-        $deleteIds = $project->delete_permission_users()->pluck('user_id');
-
-        $eventsOfDay = $calendar->getEventsOfDay();
+        /** @var Collection $roomsWithAudience */
+        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectCalendar', [
             // needed for the ProjectShowHeaderComponent
             'project' => new ProjectCalendarResource($project),
-            'firstEventInProject' => $firstEventInProject,
-            'lastEventInProject' => $lastEventInProject,
-            'RoomsWithAudience' => $roomsWithAudience,
-            'projectManagerIds' => $managerIds,
-            'projectWriteIds' => $writeIds,
-            'projectDeleteIds' => $deleteIds,
+            'firstEventInProject' => $project->events()->orderBy('start_time', 'ASC')->limit(1)->first(),
+            'lastEventInProject' => $project->events()->orderBy('end_time', 'DESC')->limit(1)->first(),
+            'roomsWithAudience' => $roomsWithAudience->isEmpty() ? null : $roomsWithAudience,
+            'projectManagerIds' => $project->managerUsers()->pluck('user_id'),
+            'projectWriteIds' => $project->writeUsers()->pluck('user_id'),
+            'projectDeleteIds' => $project->delete_permission_users()->pluck('user_id'),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'currentGroup' => $groupOutput,
             'states' => ProjectStates::all(),
@@ -1740,14 +1711,14 @@ class ProjectController extends Controller
             'days' => $showCalendar['days'],
             'selectedDate' => $showCalendar['selectedDate'],
             'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
-            'events' => $events = new CalendarEventCollectionResourceModel(
+            'events' => new CalendarEventCollectionResourceModel(
                 areas: $showCalendar['filterOptions']['areas'],
                 projects: $showCalendar['filterOptions']['projects'],
                 eventTypes: $showCalendar['filterOptions']['eventTypes'],
                 roomCategories: $showCalendar['filterOptions']['roomCategories'],
                 roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
-                events: $eventsOfDay,
-                filter: Filter::where('user_id', Auth::id())->get(),
+                events: $calendar->getEventsOfDay(),
+                filter: Filter::query()->where('user_id', Auth::id())->get(),
             ),
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters'],
@@ -1789,37 +1760,17 @@ class ProjectController extends Controller
             $groupOutput = '';
         }
 
-        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
-        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
-
-        $events = $project->events()->get();
-        $roomsWithAudience = null;
-
-        foreach ($events as $event) {
-            if (!$event->audience) {
-                continue;
-            }
-            $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room) {
-                $roomsWithAudience[$room->id] = $room->name;
-            }
-        }
-
-        //get the ids of all managerUsers of the Project
-        $managerIds = $project->managerUsers()->pluck('user_id');
-        //get the ids of all writeUsers of the Project
-        $writeIds = $project->writeUsers()->pluck('user_id');
-        //get the ids of all deleteUsers of the Project
-        $deleteIds = $project->delete_permission_users()->pluck('user_id');
+        /** @var Collection $roomsWithAudience */
+        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectChecklists', [
             'project' => new ProjectChecklistResource($project),
-            'firstEventInProject' => $firstEventInProject,
-            'lastEventInProject' => $lastEventInProject,
-            'RoomsWithAudience' => $roomsWithAudience,
-            'projectManagerIds' => $managerIds,
-            'projectWriteIds' => $writeIds,
-            'projectDeleteIds' => $deleteIds,
+            'firstEventInProject' => $project->events()->orderBy('start_time', 'ASC')->limit(1)->first(),
+            'lastEventInProject' => $project->events()->orderBy('end_time', 'DESC')->limit(1)->first(),
+            'roomsWithAudience' => $roomsWithAudience->isEmpty() ? null : $roomsWithAudience,
+            'projectManagerIds' => $project->managerUsers()->pluck('user_id'),
+            'projectWriteIds' => $project->writeUsers()->pluck('user_id'),
+            'projectDeleteIds' => $project->delete_permission_users()->pluck('user_id'),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
@@ -1861,21 +1812,6 @@ class ProjectController extends Controller
         } else {
             $groupOutput = '';
         }
-        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
-        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
-
-        if ($firstEventInProject && $lastEventInProject) {
-            //get the start of day of the firstEventInProject
-            $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
-            //get the end of day of the lastEventInProject
-            $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
-        } else {
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
-        }
-
-        $events = $project->events()->get();
-        $roomsWithAudience = null;
 
         $shiftRelevantEventTypes = $project->shiftRelevantEventTypes()->pluck('event_type_id');
         $shiftRelevantEvents = $project->events()
@@ -1911,71 +1847,55 @@ class ProjectController extends Controller
                 'room' => $event->room,
             ];
         }
+        rsort($eventsWithRelevant);
 
-        foreach ($events as $event) {
-            if (!$event->audience) {
-                continue;
-            }
-            $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room) {
-                $roomsWithAudience[$room->id] = $room->name;
-            }
+        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->limit(1)->first();
+        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->limit(1)->first();
+        if ($firstEventInProject && $lastEventInProject) {
+            //get the start of day of the firstEventInProject
+            $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
+            //get the end of day of the lastEventInProject
+            $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
+        } else {
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
-
-        $users = User::where('can_work_shifts', true)->get();
-
-        $usersWithPlannedWorkingHours = [];
-
         //get the diff of startDate and endDate in days, +1 to include the current date
         $diffInDays = $startDate->diffInDays($endDate) + 1;
 
-        foreach ($users as $user) {
-            $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
-            $vacations = $user->hasVacationDays();
-            $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
-
+        $usersWithPlannedWorkingHours = [];
+        foreach (User::query()->where('can_work_shifts', true)->get() as $user) {
             $usersWithPlannedWorkingHours[] = [
                 'user' => UserDropResource::make($user),
-                'plannedWorkingHours' => $plannedWorkingHours,
-                'expectedWorkingHours' => $expectedWorkingHours,
-                'vacations' => $vacations,
+                'plannedWorkingHours' => $user->plannedWorkingHours($startDate, $endDate),
+                'expectedWorkingHours' => ($user->weekly_working_hours / 7) * $diffInDays,
+                'vacations' => $user->hasVacationDays(),
             ];
         }
 
         $freelancersWithPlannedWorkingHours = [];
-
-        $freelancers = Freelancer::where('can_work_shifts', true)->get();
-
-        foreach ($freelancers as $freelancer) {
-            $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
-
+        foreach (Freelancer::query()->where('can_work_shifts', true)->get() as $freelancer) {
             $freelancersWithPlannedWorkingHours[] = [
                 'freelancer' => FreelancerDropResource::make($freelancer),
-                'plannedWorkingHours' => $plannedWorkingHours,
+                'plannedWorkingHours' => $freelancer->plannedWorkingHours($startDate, $endDate),
             ];
         }
-
-        $service_providers = ServiceProvider::where('can_work_shifts', true)->without(['contacts'])->get();
 
         $serviceProvidersWithPlannedWorkingHours = [];
-
-        foreach ($service_providers as $service_provider) {
-            $plannedWorkingHours = $service_provider->plannedWorkingHours($startDate, $endDate);
-
+        foreach (
+            ServiceProvider::query()
+                ->where('can_work_shifts', true)
+                ->without(['contacts'])
+                ->get() as $service_provider
+        ) {
             $serviceProvidersWithPlannedWorkingHours[] = [
                 'service_provider' => ServiceProviderDropResource::make($service_provider),
-                'plannedWorkingHours' => $plannedWorkingHours,
+                'plannedWorkingHours' => $service_provider->plannedWorkingHours($startDate, $endDate),
             ];
         }
 
-        //get the ids of all managerUsers of the Project
-        $managerIds = $project->managerUsers()->pluck('user_id');
-        //get the ids of all writeUsers of the Project
-        $writeIds = $project->writeUsers()->pluck('user_id');
-        //get the ids of all deleteUsers of the Project
-        $deleteIds = $project->delete_permission_users()->pluck('user_id');
-
-        rsort($eventsWithRelevant);
+        /** @var Collection $roomsWithAudience */
+        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectShifts', [
             'project' => new ProjectShiftResource($project),
@@ -1984,10 +1904,10 @@ class ProjectController extends Controller
             'serviceProvidersForShifts' => $serviceProvidersWithPlannedWorkingHours,
             'firstEventInProject' => $firstEventInProject,
             'lastEventInProject' => $lastEventInProject,
-            'RoomsWithAudience' => $roomsWithAudience,
-            'projectManagerIds' => $managerIds,
-            'projectWriteIds' => $writeIds,
-            'projectDeleteIds' => $deleteIds,
+            'roomsWithAudience' => $roomsWithAudience->isEmpty() ? null : $roomsWithAudience,
+            'projectManagerIds' => $project->managerUsers()->pluck('user_id'),
+            'projectWriteIds' => $project->writeUsers()->pluck('user_id'),
+            'projectDeleteIds' => $project->delete_permission_users()->pluck('user_id'),
             'groupProjects' => Project::where('is_group', 1)->get(),
             'projectGroups' => $project->groups()->get(),
             'currentGroup' => $groupOutput,
@@ -2084,40 +2004,21 @@ class ProjectController extends Controller
                     ->first()
             )->merge(['class' => BudgetSumDetails::class]);
         }
-        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
-        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
-
-        $events = $project->events()->get();
-        $roomsWithAudience = null;
-
-        foreach ($events as $event) {
-            if (!$event->audience) {
-                continue;
-            }
-            $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room) {
-                $roomsWithAudience[$room->id] = $room->name;
-            }
-        }
-
-        //get the ids of all managerUsers of the Project
-        $managerIds = $project->managerUsers()->pluck('user_id');
-        //get the ids of all writeUsers of the Project
-        $writeIds = $project->writeUsers()->pluck('user_id');
-        //get the ids of all deleteUsers of the Project
-        $deleteIds = $project->delete_permission_users()->pluck('user_id');
 
         //load commented budget items setting for given user
         Auth::user()->load(['commentedBudgetItemsSetting']);
 
+        /** @var Collection $roomsWithAudience */
+        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+
         return inertia('Projects/SingleProjectBudget', [
             'project' => new ProjectBudgetResource($project),
-            'firstEventInProject' => $firstEventInProject,
-            'lastEventInProject' => $lastEventInProject,
-            'RoomsWithAudience' => $roomsWithAudience,
-            'projectManagerIds' => $managerIds,
-            'projectWriteIds' => $writeIds,
-            'projectDeleteIds' => $deleteIds,
+            'firstEventInProject' => $project->events()->orderBy('start_time', 'ASC')->limit(1)->first(),
+            'lastEventInProject' => $project->events()->orderBy('end_time', 'DESC')->limit(1)->first(),
+            'roomsWithAudience' => $roomsWithAudience->isEmpty() ? null : $roomsWithAudience,
+            'projectManagerIds' => $project->managerUsers()->pluck('user_id'),
+            'projectWriteIds' => $project->writeUsers()->pluck('user_id'),
+            'projectDeleteIds' => $project->delete_permission_users()->pluck('user_id'),
             'moneySources' => MoneySource::all(),
             'budget' => [
                 'table' => $project->table()
@@ -2190,37 +2091,18 @@ class ProjectController extends Controller
         } else {
             $groupOutput = '';
         }
-        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
-        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
 
-        $events = $project->events()->get();
-        $roomsWithAudience = null;
-
-        foreach ($events as $event) {
-            if (!$event->audience) {
-                continue;
-            }
-            $rooms = $event->room()->distinct()->get();
-            foreach ($rooms as $room) {
-                $roomsWithAudience[$room->id] = $room->name;
-            }
-        }
-
-        //get the ids of all managerUsers of the Project
-        $managerIds = $project->managerUsers()->pluck('user_id');
-        //get the ids of all writeUsers of the Project
-        $writeIds = $project->writeUsers()->pluck('user_id');
-        //get the ids of all deleteUsers of the Project
-        $deleteIds = $project->delete_permission_users()->pluck('user_id');
+        /** @var Collection $roomsWithAudience */
+        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectComments', [
             'project' => new ProjectCommentResource($project),
-            'firstEventInProject' => $firstEventInProject,
-            'lastEventInProject' => $lastEventInProject,
-            'RoomsWithAudience' => $roomsWithAudience,
-            'projectManagerIds' => $managerIds,
-            'projectWriteIds' => $writeIds,
-            'projectDeleteIds' => $deleteIds,
+            'firstEventInProject' => $project->events()->orderBy('start_time', 'ASC')->limit(1)->first(),
+            'lastEventInProject' => $project->events()->orderBy('end_time', 'DESC')->limit(1)->first(),
+            'roomsWithAudience' => $roomsWithAudience->isEmpty() ? null : $roomsWithAudience,
+            'projectManagerIds' => $project->managerUsers()->pluck('user_id'),
+            'projectWriteIds' => $project->writeUsers()->pluck('user_id'),
+            'projectDeleteIds' => $project->delete_permission_users()->pluck('user_id'),
             'categories' => Category::all(),
             'projectCategoryIds' => $project->categories()->pluck('category_id'),
             'projectCategories' => $project->categories,

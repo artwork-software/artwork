@@ -1244,12 +1244,18 @@ export default defineComponent({
                 const openedAreas = this.opened_areas;
 
                 openedAreas.push(area.id)
-                this.$inertia.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": openedAreas});
+                this.$inertia.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": openedAreas}, {
+                    preserveScroll: true,
+                    preserveState: true
+                });
             } else {
                 const filteredList = this.opened_areas.filter(function (value) {
                     return value !== area.id;
                 })
-                this.$inertia.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": filteredList});
+                this.$inertia.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": filteredList},{
+                    preserveScroll: true,
+                    preserveState: true
+                });
             }
         },
         updateRoomOrder(rooms) {

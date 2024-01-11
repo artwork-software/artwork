@@ -31,8 +31,8 @@
                         KW {{ week.weekNumber }}
                     </div>
                 </td>
-                <td class="col-span-1 " v-for="day in week.days" :key="day" :class="day.onVacation ? 'bg-backgroundGray' : ''">
-                    <div :class="day.notInMonth ? 'text-secondary' : ''" class="p-6 flex justify-center">
+                <td class="col-span-1 cursor-pointer" v-for="day in week.days" :key="day" @click="showVacationsAndAvailabilities(day.day_formatted)">
+                    <div :class="{'text-gray-400' : day.notInMonth, 'bg-gray-900 rounded-full text-white' : day.day_formatted === showVacationsAndAvailabilitiesDate , 'line-through text-gray-800': day.onVacation &&  day.day_formatted !== showVacationsAndAvailabilitiesDate && !day.hasAvailability, 'text-gray-800': day.hasAvailability, 'text-green-500': day.isToday  }" class="p-6 flex items-center justify-center text-gray-400" >
                         {{ day.day }}
                     </div>
                 </td>
@@ -51,7 +51,7 @@ import dayjs from "dayjs";
 export default defineComponent({
     name: "UserAvailabilityCalendar",
     components: {ChevronRightIcon, Button, ChevronLeftIcon},
-    props: ['calendarData', 'dateToShow'],
+    props: ['calendarData', 'dateToShow', 'showVacationsAndAvailabilitiesDate'],
     methods: {
         previousMonth() {
             const currentMonth = new Date(this.dateToShow[1].date);
@@ -69,6 +69,17 @@ export default defineComponent({
                 data: {
                     month: this.addOneMonth(currentMonth),
                 }
+            })
+        },
+        showVacationsAndAvailabilities(day) {
+            const currentMonth = new Date(this.dateToShow[1].date);
+            const rightMonth = dayjs(currentMonth)
+            Inertia.reload({
+                data: {
+                    showVacationsAndAvailabilities: day,
+                    vacationMonth: rightMonth.format('YYYY-MM-DD')
+                },
+                preserveState: true,
             })
         },
         addOneMonth(dateObj) {

@@ -6,6 +6,9 @@ use App\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Room
+ */
 class RoomIndexResource extends JsonResource
 {
     public static $wrap = null;

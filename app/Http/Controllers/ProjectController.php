@@ -28,41 +28,43 @@ use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderDropResource;
 use App\Http\Resources\UserDropResource;
 use App\Http\Resources\UserIndexResource;
-use App\Models\BudgetSumDetails;
 use App\Models\Category;
-use App\Models\CellCalculations;
 use App\Models\ChecklistTemplate;
 use App\Models\CollectingSociety;
-use App\Models\Column;
-use App\Models\ColumnCell;
 use App\Models\CompanyType;
 use App\Models\ContractType;
-use App\Models\Craft;
 use App\Models\Currency;
-use App\Models\Department;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\Genre;
-use App\Models\MainPosition;
-use App\Models\MainPositionDetails;
 use App\Models\MoneySource;
-use App\Models\Project;
-use App\Models\ProjectStates;
-use App\Models\Room;
 use App\Models\Sector;
 use App\Models\ServiceProvider;
-use App\Models\SubPosition;
-use App\Models\SubPositionRow;
-use App\Models\SubpositionSumDetail;
-use App\Models\Table;
 use App\Models\TimeLine;
 use App\Models\User;
 use App\Support\Services\HistoryService;
 use App\Support\Services\MoneySourceThresholdReminderService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Budget\Models\BudgetSumDetails;
+use Artwork\Modules\Budget\Models\CellCalculations;
+use Artwork\Modules\Budget\Models\Column;
+use Artwork\Modules\Budget\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\MainPositionDetails;
+use Artwork\Modules\Budget\Models\SubPosition;
+use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Models\SubpositionSumDetail;
+use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\BudgetService;
+use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Services\ProjectGroupService;
+use Artwork\Modules\Project\Services\ProjectService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -93,15 +95,18 @@ class ProjectController extends Controller
     protected ?NewHistoryService $history = null;
 
     protected ?SchedulingController $schedulingController = null;
-
-    public function __construct()
+    public function __construct(
+        private readonly ProjectService $projectService,
+        private readonly ProjectGroupService $projectGroupService,
+        private readonly BudgetService $budgetService,
+    )
     {
         // init notification controller
         $this->notificationService = new NotificationService();
         $this->notificationData = new stdClass();
         $this->notificationData->project = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
-        $this->history = new NewHistoryService('App\Models\Project');
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
         $this->schedulingController = new SchedulingController();
     }
 
@@ -135,7 +140,6 @@ class ProjectController extends Controller
                 'genres',
                 'managerUsers',
                 'project_files',
-                'project_histories.user',
                 'sectors',
                 'users.departments',
                 'writeUsers',
@@ -220,6 +224,7 @@ class ProjectController extends Controller
         return inertia('Projects/Create');
     }
 
+
     public function store(StoreProjectRequest $request): JsonResponse|RedirectResponse
     {
         if (
@@ -238,6 +243,11 @@ class ProjectController extends Controller
             ->map(fn($department) => Department::query()->findOrFail($department['id']));
         //@todo how did this line ever work?
         //->map(fn(Department $department) => $this->authorize('update', $department));
+
+
+
+        $this->projectService->storeByRequest($request);
+
 
         $project = Project::create([
             'name' => $request->name,
@@ -272,7 +282,9 @@ class ProjectController extends Controller
         $project->genres()->sync($request->assignedGenreIds);
         $project->departments()->sync($departments->pluck('id'));
 
-        $this->generateBasicBudgetValues($project);
+        //$this->generateBasicBudgetValues($project);
+
+        $this->budgetService->generateBasicBudgetValues($project);
 
         $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id')->toArray();
         $project->shiftRelevantEventTypes()->sync(collect($eventRelevantEventTypeIds));
@@ -1019,7 +1031,8 @@ class ProjectController extends Controller
     {
         $budgetTemplateController = new BudgetTemplateController();
         $budgetTemplateController->deleteOldTable($project);
-        $this->generateBasicBudgetValues($project);
+        //$this->generateBasicBudgetValues($project);
+        $this->budgetService->generateBasicBudgetValues($project);
 
         return back()->with('success');
     }
@@ -1559,7 +1572,6 @@ class ProjectController extends Controller
             'project_files',
             'copyright',
             'cost_center',
-            'project_histories.user',
             'sectors',
             'users.departments',
             'state',
@@ -1633,7 +1645,6 @@ class ProjectController extends Controller
             'writeUsers',
             'project_files',
             'contracts',
-            'project_histories.user',
             'sectors',
             'users.departments',
             'state',
@@ -1739,7 +1750,6 @@ class ProjectController extends Controller
             'genres',
             'managerUsers',
             'writeUsers',
-            'project_histories.user',
             'sectors',
             'users.departments',
             'state',
@@ -1792,7 +1802,6 @@ class ProjectController extends Controller
             'managerUsers',
             'writeUsers',
             'project_files',
-            'project_histories.user',
             'sectors',
             'users.departments',
             'state',
@@ -1936,7 +1945,6 @@ class ProjectController extends Controller
             'contracts',
             'copyright',
             'cost_center',
-            'project_histories.user',
             'users.departments',
             'state',
             'delete_permission_users'
@@ -2074,7 +2082,6 @@ class ProjectController extends Controller
             'managerUsers',
             'writeUsers',
             'project_files',
-            'project_histories.user',
             'sectors',
             'users.departments',
             'state',
@@ -2643,7 +2650,9 @@ class ProjectController extends Controller
         ]);
         $historyService->projectUpdated($newProject);
 
-        $this->generateBasicBudgetValues($newProject);
+        //$this->generateBasicBudgetValues($newProject);
+
+        $this->budgetService->generateBasicBudgetValues($newProject);
 
         $newProject->users()->attach([Auth::id() => ['access_budget' => true]]);
         $newProject->categories()->sync($project->categories->pluck('id'));

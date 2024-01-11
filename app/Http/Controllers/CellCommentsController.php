@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CellComment;
-use App\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\CellComment;
+use Artwork\Modules\Budget\Models\ColumnCell;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +20,12 @@ class CellCommentsController extends Controller
         return back();
     }
 
-    public function destroy(CellComment $cellComment): RedirectResponse
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \Artwork\Modules\Budget\Models\CellComment  $cellComments
+     */
+    public function destroy(CellComment $cellComment): \Illuminate\Http\RedirectResponse
     {
         $cellComment->delete();
         return back();

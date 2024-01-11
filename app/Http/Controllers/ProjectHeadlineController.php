@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
-use App\Models\ProjectHeadline;
 use App\Support\Services\NewHistoryService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectHeadline;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -16,7 +16,7 @@ class ProjectHeadlineController extends Controller
 
     public function __construct()
     {
-        $this->history = new NewHistoryService('App\Models\Project');
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
     }
 
     public function store(Request $request): RedirectResponse
@@ -34,6 +34,7 @@ class ProjectHeadlineController extends Controller
 
         return Redirect::back();
     }
+
 
     public function update(Request $request, ProjectHeadline $projectHeadline): RedirectResponse
     {

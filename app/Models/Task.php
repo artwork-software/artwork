@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Artwork\Modules\Checklist\Models\BelongsToChecklist;
+use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Department\Models\Department;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -65,7 +67,7 @@ class Task extends Model
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function user_who_done(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'id', 'user_who_done');
     }
 
     public function checklistDepartments(): BelongsToMany

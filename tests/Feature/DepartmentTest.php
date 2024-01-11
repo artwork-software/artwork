@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Department;
 use App\Models\User;
+use Artwork\Modules\Department\Models\Department;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function() {
@@ -99,6 +99,7 @@ test('authorized users can update a departments name and assigned users', functi
 
     $response = $this->patch("departments/{$department->id}", [
         'name' => 'NewName',
+        'svg_name' => 'lel',
         'users' => [
             $user_2
         ]

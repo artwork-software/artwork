@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectFile;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

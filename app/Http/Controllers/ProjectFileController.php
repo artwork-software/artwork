@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\FileUpload;
 use App\Models\Comment;
-use App\Models\Project;
-use App\Models\ProjectFile;
+
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectFile;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ class ProjectFileController extends Controller
 
     public function __construct()
     {
-        $this->history = new NewHistoryService('App\Models\Project');
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
         $this->notificationService = new NotificationService();
     }
 

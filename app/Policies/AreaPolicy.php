@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Enums\PermissionNameEnum;
 use App\Models\User;
+use Artwork\Modules\Area\Models\Area;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class AreaPolicy
@@ -25,6 +26,7 @@ class AreaPolicy
         return $user->can(PermissionNameEnum::ROOM_UPDATE->value);
     }
 
+
     public function update(User $user): bool
     {
         return $user->can(PermissionNameEnum::ROOM_UPDATE->value);
@@ -34,6 +36,7 @@ class AreaPolicy
     {
         return $user->can(PermissionNameEnum::ROOM_UPDATE->value);
     }
+
 
     public function restore(): void
     {

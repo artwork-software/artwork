@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Builders\EventBuilder;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\Shift;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use DateTimeInterface;

@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChecklistTemplate;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use App\Http\Resources\ChecklistShowResource;
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\ChecklistTemplate;
-use App\Models\Project;
-use App\Models\ProjectHistory;
-use App\Models\Task;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectHistory;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,8 +43,9 @@ class ChecklistController extends Controller
             $this->createWithoutTemplate($request);
         }
 
-        $this->history = new NewHistoryService('App\Models\Project');
-        $this->history->createHistory($request->project_id, 'Checkliste ' . $request->name . ' hinzugefügt');
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
+        $this->history->createHistory($request->project_id, 'Checkliste ' . $request->name. ' hinzugefügt');
+
 
         ProjectHistory::create([
             "user_id" => Auth::id(),

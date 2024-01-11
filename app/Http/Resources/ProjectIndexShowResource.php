@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources;
 
-use App\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 

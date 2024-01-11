@@ -9,14 +9,14 @@ use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\RoomCalendarResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
-use App\Models\Area;
 use App\Models\Event;
 use App\Models\EventType;
-use App\Models\Project;
-use App\Models\Room;
-use App\Models\RoomAttribute;
-use App\Models\RoomCategory;
-use App\Support\Services\RoomService;
+use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\RoomCategory;
+use Artwork\Modules\Room\Services\RoomService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -242,16 +242,7 @@ class RoomController extends Controller
 
     public function duplicate(Room $room): RedirectResponse
     {
-        Room::create([
-            'name' => '(Kopie) ' . $room->name,
-            'description' => $room->description,
-            'temporary' => $room->temporary,
-            'start_date' => $room->start_date,
-            'end_date' => $room->end_date,
-            'area_id' => $room->area_id,
-            'user_id' => Auth::id(),
-            'order' => Room::max('order') + 1,
-        ]);
+        $this->roomService->duplicateByRoomModel($room);
 
         return Redirect::route('areas.management')->with('success', 'Room created.');
     }

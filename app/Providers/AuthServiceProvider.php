@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Enums\RoleNameEnum;
-use App\Models\Area;
 use App\Models\Category;
 use App\Models\Freelancer;
 use App\Models\ServiceProvider as ServiceProviderModel;
@@ -13,10 +12,8 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Comment;
 use App\Models\Contract;
-use App\Models\Department;
 use App\Models\Genre;
 use App\Models\Invitation;
-use App\Models\Project;
 use App\Models\Sector;
 use App\Models\TaskTemplate;
 use App\Models\User;
@@ -33,6 +30,9 @@ use App\Policies\ProjectPolicy;
 use App\Policies\SectorPolicy;
 use App\Policies\TaskTemplatePolicy;
 use App\Policies\UserPolicy;
+use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 

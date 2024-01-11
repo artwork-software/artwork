@@ -89,6 +89,7 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 
 Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
 
+
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {
@@ -170,7 +171,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     //Departments
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');
     Route::get('/departments/search', [DepartmentController::class, 'search'])->name('departments.search');
-    Route::get('/departments/create', [DepartmentController::class, 'create'])->name('departments.create');
     Route::post('/departments', [DepartmentController::class, 'store'])->name('departments.store');
     Route::get('/departments/{department}', [DepartmentController::class, 'show'])->name('departments.show');
     Route::get('/departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.profile');
@@ -792,16 +792,32 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     )->name('freelancer.remove.craft');
 
     // Vacation
-    Route::post('/freelancer/vacation/{freelancer}/add', [FreelancerVacationController::class, 'store'])
+
+    Route::post('/freelancer/vacation/{freelancer}/add', [\App\Http\Controllers\VacationController::class, 'storeFreelancerVacation'])
         ->name('freelancer.vacation.add');
-    Route::patch(
-        '/freelancer/vacation/{freelancerVacation}/update',
-        [FreelancerVacationController::class, 'update']
-    )->name('freelancer.vacation.update');
-    Route::delete(
-        '/freelancer/vacation/{freelancerVacation}/delete',
-        [FreelancerVacationController::class, 'destroy']
-    )->name('freelancer.vacation.delete');
+    Route::patch('/freelancer/vacation/{freelancerVacation}/update', [\App\Http\Controllers\VacationController::class, 'update'])
+        ->name('freelancer.vacation.update');
+    Route::post('/freelancer/{freelancer}/masters', [\App\Http\Controllers\FreelancerController::class, 'update_freelancer_can_master'])
+        ->name('freelancer.update.can_master');
+    Route::post('/freelancer/{freelancer}/workings', [\App\Http\Controllers\FreelancerController::class, 'update_work_data'])
+        ->name('freelancer.update.work_data');
+    Route::delete('/freelancer/vacation/{freelancerVacation}/delete', [\App\Http\Controllers\VacationController::class, 'destroy'])
+        ->name('freelancer.vacation.delete');
+
+
+    // vacation and availability
+    Route::patch('/update/vacation/{vacation}', [\App\Http\Controllers\VacationController::class, 'update'])
+        ->name('update.vacation');
+
+    Route::patch('/update/availability/{availability}', [\App\Http\Controllers\AvailabilityController::class, 'update'])
+        ->name('update.availability');
+
+    Route::delete('/delete/availability/{availability}', [\App\Http\Controllers\AvailabilityController::class, 'destroy'])
+        ->name('delete.availability');
+
+    Route::delete('/delete/vacation/{vacation}', [\App\Http\Controllers\VacationController::class, 'destroy'])
+        ->name('delete.vacation');
+
 
     // Service Provider
     Route::get('/service-provider/{serviceProvider}', [ServiceProviderController::class, 'show'])
@@ -849,15 +865,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     )->name('service-provider.contact.update');
 
     // Vacation
-    Route::post('/user/vacation/{user}/add', [UserVacationsController::class, 'store'])->name('user.vacation.add');
-    Route::patch(
-        '/user/vacation/{userVacations}/update',
-        [UserVacationsController::class, 'update']
-    )->name('user.vacation.update');
-    Route::delete(
-        '/user/vacation/{userVacations}/delete',
-        [UserVacationsController::class, 'destroy']
-    )->name('user.vacation.delete');
+
+    Route::post('/user/vacation/{user}/add', [\App\Http\Controllers\VacationController::class, 'store'])->name('user.vacation.add');
+    Route::patch('/user/vacation/{userVacations}/update', [\App\Http\Controllers\VacationController::class, 'update'])->name('user.vacation.update');
+    Route::delete('/user/vacation/{userVacations}/delete', [\App\Http\Controllers\VacationController::class, 'destroy'])->name('user.vacation.delete');
+
 
     Route::group(['prefix' => 'settings'], function (): void {
         Route::get('shift', [ShiftSettingsController::class, 'index'])->name('shift.settings');
@@ -890,7 +902,24 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('preset.delete.timeline.row');
     Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])
         ->name('preset.add.timeline.row');
-    Route::patch('/user/{user}/check/vacation', [UserVacationsController::class, 'checkVacation'])
+
+
+    Route::get('/shift/template/search', [\App\Http\Controllers\ShiftPresetController::class, 'search'])
+        ->name('shift.template.search');
+
+    Route::post('/shift/{event}/{shiftPreset}/import/preset/',
+        [\App\Http\Controllers\ShiftPresetController::class, 'import'])
+        ->name('shift.preset.import');
+
+    Route::patch('/preset/timeline/update', [\App\Http\Controllers\PresetTimeLineController::class, 'update'])
+        ->name('preset.timeline.update');
+    Route::delete('/preset/timeline/{presetTimeLine}/delete',
+        [\App\Http\Controllers\PresetTimeLineController::class, 'destroy'])
+        ->name('preset.delete.timeline.row');
+    Route::post('/preset/{shiftPreset}/add', [\App\Http\Controllers\PresetTimeLineController::class, 'store'])
+        ->name('preset.add.timeline.row');
+
+    Route::patch('/user/{user}/check/vacation', [\App\Http\Controllers\VacationController::class, 'checkVacation'])
         ->name('user.check.vacation');
 
     Route::post('/calendar/export/pdf', [ExportPDFController::class, 'createPDF'])->name('calendar.export.pdf');

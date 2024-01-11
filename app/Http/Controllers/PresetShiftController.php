@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PresetShift;
+use Artwork\Modules\Shift\Models\PresetShift;
 use Illuminate\Http\Request;
 
 class PresetShiftController extends Controller
@@ -19,14 +19,33 @@ class PresetShiftController extends Controller
     {
     }
 
+    /**
+     * Display the specified resource.
+     *
+     * @param  \Artwork\Modules\Shift\Models\PresetShift  $presetShift
+     */
     public function show(PresetShift $presetShift): void
     {
     }
 
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \Artwork\Modules\Shift\Models\PresetShift  $presetShift
+     *
+     */
     public function edit(PresetShift $presetShift): void
     {
     }
 
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Artwork\Modules\Shift\Models\PresetShift  $presetShift
+     */
     public function update(Request $request, PresetShift $presetShift): void
     {
         $presetShift->update(

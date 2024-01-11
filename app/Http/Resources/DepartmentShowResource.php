@@ -5,6 +5,9 @@ namespace App\Http\Resources;
 use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Department\Models\Department
+ */
 class DepartmentShowResource extends JsonResource
 {
     public static $wrap = null;

@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\Area;
-use App\Models\Room;
 use App\Models\User;
+use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Room\Models\Room;
 use Illuminate\Support\Facades\Date;
 use Inertia\Testing\AssertableInertia as Assert;
 

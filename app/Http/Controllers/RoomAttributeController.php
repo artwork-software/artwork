@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RoomAttribute;
 use App\Models\RoomRoomAttributeMapping;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Artwork\Modules\Room\Models\RoomAttribute;
 
 class RoomAttributeController extends Controller
 {
@@ -23,17 +23,21 @@ class RoomAttributeController extends Controller
         RoomAttribute::create(['name' => $request->get('name')]);
     }
 
+
     public function show(): void
     {
     }
+
 
     public function edit(): void
     {
     }
 
+
     public function update(): void
     {
     }
+
 
     public function destroy(RoomAttribute $roomAttribute): RedirectResponse
     {

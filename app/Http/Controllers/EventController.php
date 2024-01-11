@@ -22,11 +22,8 @@ use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Filter;
 use App\Models\Freelancer;
-use App\Models\Project;
-use App\Models\Room;
 use App\Models\SeriesEvents;
 use App\Models\ServiceProvider;
-use App\Models\Shift;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
@@ -34,6 +31,10 @@ use App\Models\UserShiftCalendarFilter;
 use App\Support\Services\CollisionService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -63,7 +64,8 @@ class EventController extends Controller
 
     public function __construct(
         private readonly CollisionService $collisionService,
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
+        private readonly ProjectService $projectService
     ) {
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
@@ -394,8 +396,9 @@ class EventController extends Controller
 
         if (!empty($firstEvent->project()->get())) {
             $eventProject = $firstEvent->project()->first();
-            if ($eventProject) {
-                $projectHistory = new NewHistoryService('App\Models\Project');
+
+            if($eventProject){
+                $projectHistory = new NewHistoryService('Artwork\Modules\Project\Models\Project');
                 $projectHistory->createHistory($eventProject->id, 'Ablaufplan hinzugefügt');
             }
         }
@@ -901,7 +904,7 @@ class EventController extends Controller
 
         if (!empty($event->project_id)) {
             $eventProject = $event->project()->first();
-            $projectHistory = new NewHistoryService('App\Models\Project');
+            $projectHistory = new NewHistoryService(Project::class);
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan geändert');
         }
 
@@ -1499,7 +1502,7 @@ class EventController extends Controller
 
         if (!empty($event->project_id)) {
             $eventProject = $event->project()->first();
-            $projectHistory = new NewHistoryService('App\Models\Project');
+            $projectHistory = new NewHistoryService('Artwork\Modules\Project\Models\Project');
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
         }
 

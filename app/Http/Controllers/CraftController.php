@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Craft;
-use Illuminate\Http\Request;
+use Artwork\Modules\Craft\Http\Requests\CraftStoreRequest;
+use Artwork\Modules\Craft\Http\Requests\CraftUpdateRequest;
+use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Craft\Services\CraftService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 
 class CraftController extends Controller
 {
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function __construct(private readonly CraftService $craftService)
+    {
+    }
+
+    public function store(CraftStoreRequest $craftStoreRequest): RedirectResponse
     {
         $craft = Craft::create($request->only(['name', 'abbreviation']));
         if (!$request->assignable_by_all) {
@@ -24,36 +25,15 @@ class CraftController extends Controller
         return Redirect::back();
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Craft  $craft
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function update(Request $request, Craft $craft): \Illuminate\Http\RedirectResponse
+    public function update(CraftUpdateRequest $craftUpdateRequest, Craft $craft): RedirectResponse
     {
-        $craft->update($request->only(['name', 'abbreviation']));
-        if (!$request->assignable_by_all) {
-            $craft->update(['assignable_by_all' => false]);
-            $craft->users()->sync($request->users);
-        } else {
-            $craft->update(['assignable_by_all' => true]);
-            $craft->users()->detach();
-        }
+        $this->craftService->updateByRequest($craftUpdateRequest, $craft);
         return Redirect::back();
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Craft  $craft
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(Craft $craft): \Illuminate\Http\RedirectResponse
+    public function destroy(Craft $craft): RedirectResponse
     {
-        $craft->users()->detach();
-        $craft->delete();
+        $this->craftService->delete($craft);
         return Redirect::back()->with('success', 'Craft deleted');
     }
 }

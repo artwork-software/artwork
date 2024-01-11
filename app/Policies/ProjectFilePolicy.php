@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Models\User;
+use Artwork\Modules\Project\Models\ProjectFile;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProjectFilePolicy
@@ -20,9 +22,11 @@ class ProjectFilePolicy
     {
     }
 
+
     public function update(): void
     {
     }
+
 
     public function delete(): void
     {

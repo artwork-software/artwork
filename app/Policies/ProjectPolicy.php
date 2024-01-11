@@ -3,8 +3,9 @@
 namespace App\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Models\Project;
+
 use App\Models\User;
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProjectPolicy
@@ -57,6 +58,7 @@ class ProjectPolicy
             (bool)$user->projects()?->find($project->id)?->pivot?->is_manager === true ||
             $isCreator;
     }
+
 
     public function update(User $user, Project $project): bool
     {

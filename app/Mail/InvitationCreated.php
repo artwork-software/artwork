@@ -13,17 +13,8 @@ class InvitationCreated extends Mailable
     use Queueable;
     use SerializesModels;
 
-    public $invitation;
-
-    public $user;
-
-    public $token;
-
-    public function __construct(Invitation $invitation, Authenticatable $user, $token)
+    public function __construct(public Invitation $invitation, public Authenticatable $user, mixed $token)
     {
-        $this->invitation = $invitation;
-        $this->user = $user;
-        $this->token = $token;
     }
 
     public function build(): InvitationCreated

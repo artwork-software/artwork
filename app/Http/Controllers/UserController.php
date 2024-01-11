@@ -9,13 +9,14 @@ use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
 use App\Http\Resources\UserWorkProfileResource;
 use App\Models\Craft;
-use App\Models\Department;
 use App\Models\EventType;
 use App\Models\Freelancer;
-use App\Models\Project;
-use App\Models\Room;
 use App\Models\ServiceProvider;
 use App\Models\User;
+use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Foundation\Application;
@@ -33,10 +34,12 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private readonly CalendarService $calendarService
+    ) {
         $this->authorizeResource(User::class, 'user');
     }
+
 
     /**
      * @return array<string, mixed>
@@ -70,6 +73,7 @@ class UserController extends Controller
      */
     public function resetUserPassword(Request $request): mixed
     {
+
         $this->authorize('update', User::class);
 
         $request->validate([Fortify::email() => 'required|email']);
@@ -82,6 +86,7 @@ class UserController extends Controller
             ? Redirect::back()->with('status', __('passwords.sent_to_user', ['email' => $request->email]))
             : app(FailedPasswordResetLinkRequestResponse::class, ['status' => $status]);
     }
+
 
     public function resetPassword(): Response|ResponseFactory
     {
@@ -119,14 +124,47 @@ class UserController extends Controller
     public function editUserShiftplan(User $user, CalendarController $shiftPlan): Response|ResponseFactory
     {
         $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
-        $availabilityData = $this->getAvailabilityData($user, request('month'));
+        //$this->getAvailabilityData($user, request('month'))
+        $availabilityData = $this->calendarService
+            ->getAvailabilityData(user: $user, month: request('month'));
+
+        $selectedDate = Carbon::today();
+        $selectedPeriodDate = Carbon::today();
+        $vacations = [];
+        // get vacations of the selected date (request('showVacationsAndAvailabilities'))
+        if (request('showVacationsAndAvailabilities')) {
+            $selectedDate = Carbon::parse(request('showVacationsAndAvailabilities'));
+        }
+
+        if (request('vacationMonth')) {
+            $selectedPeriodDate = Carbon::parse(request('vacationMonth'));
+        }
+
+        $vacations = $user->vacations()
+            ->where('date', $selectedDate)
+            ->orderBy('date', 'ASC')->get();
+
+        $availabilities = $user->availabilities()
+            ->where('date', $selectedDate)
+            ->orderBy('date', 'ASC')->get();
+
+        $createShowDate = [
+            $selectedPeriodDate->locale('de')->isoFormat('MMMM YYYY'),
+            $selectedPeriodDate->copy()->startOfMonth()->toDate()
+        ];
+
 
         return inertia('Users/UserShiftPlanPage', [
             'user_to_edit' => new UserShowResource($user),
             'currentTab' => 'shiftplan',
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
-            'vacations' => $user->vacations()->orderBy('from', 'ASC')->get(),
+            'vacationSelectCalendar' => $this->calendarService
+                ->createVacationAndAvailabilityPeriodCalendar(request('vacationMonth')),
+            'createShowDate' => $createShowDate,
+            'vacations' => $vacations,
+            'availabilities' => $availabilities,
+            'showVacationsAndAvailabilitiesDate' => $selectedDate->format('Y-m-d'),
             'dateValue' => $showCalendar['dateValue'],
             'daysWithEvents' => $showCalendar['daysWithEvents'],
             'totalPlannedWorkingHours' => $showCalendar['totalPlannedWorkingHours'],
@@ -184,7 +222,7 @@ class UserController extends Controller
      */
     private function getAvailabilityData(User $user, $month = null): array
     {
-        $vacationDays = $user->vacations()->orderBy('from', 'ASC')->get();
+        $vacationDays = $user->vacations()->orderBy('date', 'ASC')->get();
 
         $currentMonth = Carbon::now()->startOfMonth();
 
@@ -203,14 +241,7 @@ class UserController extends Controller
             $weekNumber = $currentDate->weekOfYear;
             $day = $currentDate->day;
             foreach ($vacationDays as $vacationDay) {
-                $vacationStart = Carbon::parse($vacationDay->from);
-                $vacationEnd = Carbon::parse($vacationDay->until);
-                // TODO: Check Performance
-                /*if($currentDate < $vacationStart){
-                    $onVacation = false;
-                    continue;
-                }*/
-                if ($vacationStart <= $currentDate && $vacationEnd >= $currentDate) {
+                if ($currentDate->isSameDay($vacationDay->date)) {
                     $onVacation = true;
                 }
             }
@@ -224,7 +255,8 @@ class UserController extends Controller
             $calendarData[$weekNumber]['days'][] = [
                 'day' => $day,
                 'notInMonth' => $notInMonth,
-                'onVacation' => $onVacation
+                'onVacation' => $onVacation,
+                'day_formatted' => $currentDate->format('Y-m-d'),
             ];
 
             $currentDate->addDay();
@@ -354,6 +386,7 @@ class UserController extends Controller
         return Redirect::route('users')->with('success', 'Benutzer gelöscht');
     }
 
+
     public function temporaryUserUpdate(User $user, Request $request): void
     {
         $user->update($request->only([
@@ -362,6 +395,7 @@ class UserController extends Controller
             'employEnd'
         ]));
     }
+
 
     /**
      * @throws AuthorizationException
@@ -376,6 +410,7 @@ class UserController extends Controller
             'salary_description',
         ]));
     }
+
 
     public function updateCalendarSettings(User $user, Request $request): void
     {

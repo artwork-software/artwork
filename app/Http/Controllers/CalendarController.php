@@ -8,13 +8,13 @@ use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\CalendarShowEventResource;
 use App\Models\Event;
 use App\Models\Freelancer;
-use App\Models\Project;
-use App\Models\Room;
 use App\Models\ServiceProvider;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
 use App\Models\UserCalendarSettings;
 use App\Models\UserShiftCalendarFilter;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -29,20 +29,18 @@ class CalendarController extends Controller
     protected ?Carbon $endDate = null;
 
     private ?Authenticatable $user;
+    private ?UserCalendarFilter $userCalendarFilter;
+    private ?UserShiftCalendarFilter $userShiftCalendarFilter;
+    private ?UserCalendarSettings $calendarSettings;
 
-    private UserCalendarFilter $userCalendarFilter;
-
-    private UserShiftCalendarFilter $userShiftCalendarFilter;
-
-    private UserCalendarSettings $calendarSettings;
 
     public function __construct(private readonly FilterProvider $filterProvider)
     {
         //@todo This will break if no user present
         $this->user = Auth::user();
-        $this->userCalendarFilter = $this->user->calendar_filter;
-        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter;
-        $this->calendarSettings = $this->user->calendar_settings;
+        $this->userCalendarFilter = $this->user?->calendar_filter;
+        $this->userShiftCalendarFilter = $this->user?->shift_calendar_filter;
+        $this->calendarSettings = $this->user?->calendar_settings;
     }
 
     /**

@@ -10,7 +10,7 @@
                                 :project-groups="projectGroups"
                                 :first-event-in-project="firstEventInProject"
                                 :last-event-in-project="lastEventInProject"
-                                :rooms-with-audience="RoomsWithAudience"
+                                :rooms-with-audience="roomsWithAudience"
                                 :group-projects="groupProjects"
                                 :access_budget="access_budget"
                                 open-tab="shift">
@@ -21,7 +21,8 @@
                   :currentUserCrafts="currentUserCrafts"
                   :drop-users="dropUsers"
                   :users="project.users"
-                  :event-types="eventTypes" />
+                  :event-types="eventTypes"
+        />
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectShiftSidenav
@@ -33,8 +34,6 @@
 </template>
 
 <script>
-
-
 import ProjectShowHeaderComponent from "@/Pages/Projects/Components/ProjectShowHeaderComponent.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
@@ -53,7 +52,8 @@ export default {
         ProjectSecondSidenav,
         BaseSidenav,
         AppLayout,
-        ProjectShowHeaderComponent},
+        ProjectShowHeaderComponent
+    },
     props: [
         'project',
         'usersForShifts',
@@ -65,7 +65,7 @@ export default {
         'projectGroups',
         'firstEventInProject',
         'lastEventInProject',
-        'RoomsWithAudience',
+        'roomsWithAudience',
         'isMemberOfADepartment',
         'groupProjects',
         'projectState',
@@ -114,7 +114,6 @@ export default {
     },
     methods:{
         projectMembers: function () {
-
             let projectMemberArray = [];
             this.project.users.forEach(member => {
                     projectMemberArray.push(member.id)
@@ -125,8 +124,3 @@ export default {
     }
 }
 </script>
-
-
-<style scoped>
-
-</style>

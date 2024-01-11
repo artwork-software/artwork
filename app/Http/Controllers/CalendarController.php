@@ -187,8 +187,8 @@ class CalendarController extends Controller
         $filterController = new FilterController();
 
         if (!empty($project)) {
-            $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
-            $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+            $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->limit(1)->first();
+            $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->limit(1)->first();
             if (!empty($firstEventInProject) && !empty($lastEventInProject)) {
                 $this->startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
                 $this->endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
@@ -575,10 +575,10 @@ class CalendarController extends Controller
         ];
     }
 
-    public function getEventsOfDay(): Collection
+    public function getEventsOfDay(?Project $project = null): Collection
     {
         $all_events = Event::query();
-        $filteredEvents = $this->filterEvents($all_events, null, null, null, null);
+        $filteredEvents = $this->filterEvents($all_events, null, null, null, $project);
         return $filteredEvents->get();
     }
 

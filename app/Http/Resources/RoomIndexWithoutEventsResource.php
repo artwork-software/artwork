@@ -5,6 +5,9 @@ namespace App\Http\Resources;
 use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Room
+ */
 class RoomIndexWithoutEventsResource extends JsonResource
 {
     public static $wrap = null;

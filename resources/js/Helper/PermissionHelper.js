@@ -1,5 +1,6 @@
 
-export function isAdmin(){
+export function isAdmin()
+{
     return is('artwork admin');
 }
 
@@ -9,8 +10,8 @@ const PROJECT_DELETE = 'delete projects';
 const PROJECT_VIEW = 'view projects';
 const ADD_EDIT_OWN_PROJECT = 'create and edit own project';
 const WRITE_PROJECTS = 'write projects';
-const PROJECT_BUDGET_ADMIN = 'access project budgets';
-
+const GLOBAL_PROJECT_BUDGET_ADMIN = 'can manage global project budgets';
+const GLOBAL_PROJECT_BUDGET_ADMIN_NO_DOCS = 'can manage all project budgets without docs';
 const PROJECT_BUDGET_VERIFIED_ADD_REMOVE = 'can add and remove verified states';
 const PROJECT_BUDGET_SEE_DOCS_CONTRACTS = 'can see, edit and delete project contracts and docs';
 
@@ -58,7 +59,8 @@ const PROJECT_UPDATE = 'create and edit projects';
  * Function to check if member can be project manager
  * @returns {*}
  */
-export function canManagementProjects(){
+export function canManagementProjects()
+{
     return can(PROJECT_MANAGEMENT);
 }
 
@@ -66,7 +68,8 @@ export function canManagementProjects(){
  * function to check if member is allowed to delete projects
  * @returns {*}
  */
-export function canDeleteProjects(){
+export function canDeleteProjects()
+{
     return can(PROJECT_DELETE);
 }
 
@@ -74,7 +77,8 @@ export function canDeleteProjects(){
  * function to check if member is allowed to see projects
  * @returns {*}
  */
-export function viewProjects(){
+export function viewProjects()
+{
     return can(PROJECT_VIEW);
 }
 
@@ -82,7 +86,8 @@ export function viewProjects(){
  * function to check if member is allowed to create own projects
  * @returns boolean
  */
-export function createOwnProjects(){
+export function createOwnProjects()
+{
     return can(ADD_EDIT_OWN_PROJECT)
 }
 
@@ -90,15 +95,17 @@ export function createOwnProjects(){
  * function to check if member is allowed to write all projects
  * @returns {*}
  */
-export function writeAccessOnAllProjects(){
+export function writeAccessOnAllProjects()
+{
     return can(WRITE_PROJECTS);
 }
 /**
  * function to check if member is allowed to write all budgets on projects
  * @returns {*}
  */
-export function canSeeEditAllBudgets(){
-    return can(PROJECT_BUDGET_ADMIN)
+export function canSeeEditAllBudgets()
+{
+    return can(GLOBAL_PROJECT_BUDGET_ADMIN);
 }
 
 

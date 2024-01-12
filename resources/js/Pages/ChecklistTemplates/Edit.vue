@@ -39,11 +39,8 @@
                 </div>
                 <div class="flex">
                     <div class="flex w-full mt-12">
-                        <div class="ml-0.5">
-                            <button @click="openAddTaskModal()" type="button"
-                                    class="flex my-auto items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none">
-                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                            </button>
+                        <div>
+                            <AddButton class="!ml-0" @click="openAddTaskModal()" text="Neue Aufgabe" mode="page"/>
                         </div>
                         <div v-if="$page.props.can.show_hints" class="flex">
                             <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -52,50 +49,53 @@
                         </div>
                     </div>
                 </div>
-                <div class="mt-10 mb-6">
+                <div class="mt-10">
                     <draggable ghost-class="opacity-50" tag="transition-group" item-key="draggableID"
                                v-model="templateForm.task_templates" @start="dragging=true" @end="dragging=false">
                         <template #item="{element}" :key="element.id">
-                            <div class="flex">
-                            <div class="flex mt-6 flex-wrap"
-                                 :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                <div class="flex w-full group">
-                                    <input v-model="element.done"
-                                           type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                    <p class="ml-4 my-auto font-black"
-                                       :class="element.done ? 'text-secondary' : 'text-primary'">
-                                        {{ element.name }}</p>
-                                    <button type="button" @click="deleteTaskFromTemplate(element)">
-                                        <span class="sr-only">Task aus Checklistenvorlage entfernen</span>
-                                        <XCircleIcon class="ml-4 mt-1 h-5 w-5 hover:text-error group-hover:block hidden "/>
-                                    </button>
+                            <div class="flex mb-5">
+                                <div class="flex flex-wrap"
+                                     :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
+                                    <div class="flex flex-col w-full group">
+                                        <div class="flex flex-row items-center">
+                                            <div class="group-hover:flex hidden">
+                                                <DotsVerticalIcon
+                                                    class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
+                                                <DotsVerticalIcon
+                                                    class="h-5 w-5 text-secondary"></DotsVerticalIcon>
+                                            </div>
+                                            <input v-model="element.done"
+                                                   type="checkbox"
+                                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                            <p class="ml-4 my-auto font-black"
+                                               :class="element.done ? 'text-secondary' : 'text-primary'">
+                                                {{ element.name }}</p>
+                                            <button type="button" @click="deleteTaskFromTemplate(element)">
+                                                <span class="sr-only">Task aus Checklistenvorlage entfernen</span>
+                                                <XCircleIcon class="ml-2 h-5 w-5 hover:text-error group-hover:block hidden "/>
+                                            </button>
+                                        </div>
+                                        <div class="ml-10 text-secondary text-sm">
+                                            {{ element.description }}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="ml-10 text-secondary text-sm">
-                                    {{ element.description }}
-                                </div>
-
-                            </div>
-
                             </div>
                         </template>
                     </draggable>
                 </div>
-                <div class="pt-12">
-                    <div class="mt-4">
-                        <AddButton v-if="!showSuccess" class=" bg-primary hover:bg-primaryHover focus:outline-none mt-6 items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="editChecklistTemplate"
-                                   text="Speichern" mode="page" />
-                        <button v-else
-                                class="px-24 ml-6 rounded-full items-center py-2.5 border bg-success focus:outline-none border-transparent"
-                        >
-                            <CheckIcon class="h-7 w-7 inline-block text-secondaryHover"/>
-                        </button>
-                    </div>
+                <div class="mt-10">
+                    <AddButton v-if="!showSuccess"
+                               class="!ml-0 bg-primary hover:bg-primaryHover focus:outline-none items-center px-20 py-3 border border-transparent text-base font-bold shadow-sm text-secondaryHover"
+                               @click="editChecklistTemplate"
+                               text="Speichern" mode="page" />
+                    <button v-else
+                            class="px-24 rounded-full items-center py-2.5 border bg-success focus:outline-none border-transparent"
+                    >
+                        <CheckIcon class="h-7 w-7 inline-block text-secondaryHover"/>
+                    </button>
                 </div>
             </div>
-
         </div>
         <!-- Add Task Modal-->
         <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">

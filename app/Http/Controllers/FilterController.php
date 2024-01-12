@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Area;
 use App\Models\EventType;
 use App\Models\Filter;
-use App\Models\Room;
-use App\Models\RoomAttribute;
-use App\Models\RoomCategory;
+use Artwork\Modules\Area\Models\Area;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use phpDocumentor\Reflection\Types\Collection;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\RoomCategory;
 
 class FilterController extends Controller
 {

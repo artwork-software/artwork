@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ProjectStates;
-use Illuminate\Http\RedirectResponse;
+
+use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -25,9 +25,11 @@ class ProjectStatesController extends Controller
         ]);
     }
 
+
     public function show(ProjectStates $projectStates): void
     {
     }
+
 
     public function edit(ProjectStates $projectStates): void
     {
@@ -36,6 +38,7 @@ class ProjectStatesController extends Controller
     public function update(Request $request, ProjectStates $projectStates): void
     {
     }
+
 
     public function destroy(ProjectStates $projectStates): void
     {

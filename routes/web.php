@@ -62,7 +62,6 @@ use App\Http\Controllers\UserCalendarFilterController;
 use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
-use App\Http\Controllers\UserVacationsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -88,6 +87,7 @@ Route::get('/users/invitations/accept', [InvitationController::class, 'accept'])
 Route::post('/users/invitations/accept', [InvitationController::class, 'createUser'])->name('invitation.accept');
 
 Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('reset_user_password');
+
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // TOOL SETTING ROUTE
@@ -159,22 +159,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/users/{user}/photo', [UserController::class, 'updateUserPhoto'])->name('user.update.photo');
 
     Route::post('/users/reset-password', [UserController::class, 'resetUserPassword'])->name('user.reset.password');
-    Route::post('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])
+    Route::patch('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])
         ->name('user.update.craftSettings');
-    Route::post('/users/{user}/masters', [UserController::class, 'updateUserCanMaster'])
-        ->name('user.update.can_master');
-    Route::post('/users/{user}/canWorkShifts', [UserController::class, 'updateUserCanWorkShifts'])
-        ->name('user.update.can_work_shifts');
-    Route::post('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])
+    Route::patch('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])
         ->name('user.update.workProfile');
-    Route::post('/users/{user}/assignCraft', [UserController::class, 'assignCraft'])->name('user.assign.craft');
+    Route::patch('/users/{user}/assignCraft', [UserController::class, 'assignCraft'])->name('user.assign.craft');
     Route::delete('/users/{user}/removeCraft/{craft}', [UserController::class, 'removeCraft'])
         ->name('user.remove.craft');
 
     //Departments
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');
     Route::get('/departments/search', [DepartmentController::class, 'search'])->name('departments.search');
-    Route::get('/departments/create', [DepartmentController::class, 'create'])->name('departments.create');
     Route::post('/departments', [DepartmentController::class, 'store'])->name('departments.store');
     Route::get('/departments/{department}', [DepartmentController::class, 'show'])->name('departments.show');
     Route::get('/departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.profile');
@@ -391,7 +386,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Event Api
     Route::get('/events', [EventController::class, 'eventIndex'])->name('events.index');
     Route::get('/events/collision', [EventController::class, 'getCollisionCount'])->name('events.collisions');
-    Route::get('/event/{event}', [EventController::class, 'getEventById'])->name('events.getById');
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
@@ -779,13 +773,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('freelancer.change.profile-image');
     Route::post('freelancer/add', [FreelancerController::class, 'store'])->name('freelancer.add');
     Route::delete('freelancer/{freelancer}', [FreelancerController::class, 'destroy'])->name('freelancer.destroy');
-    Route::post('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])
+    Route::patch('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])
         ->name('freelancer.update.workProfile');
-    Route::post(
+    Route::patch('/freelancer/{freelancer}/terms', [FreelancerController::class, 'updateTerms'])
+        ->name('freelancer.update.terms');
+    Route::patch(
         '/freelancer/{freelancer}/updateCraftSettings',
         [FreelancerController::class, 'updateCraftSettings']
     )->name('freelancer.update.craftSettings');
-    Route::post(
+    Route::patch(
         '/freelancer/{freelancer}/assignCraft',
         [FreelancerController::class, 'assignCraft']
     )->name('freelancer.assign.craft');
@@ -795,16 +791,40 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     )->name('freelancer.remove.craft');
 
     // Vacation
-    Route::post('/freelancer/vacation/{freelancer}/add', [FreelancerVacationController::class, 'store'])
+
+    Route::post('/freelancer/vacation/{freelancer}/add', [\App\Http\Controllers\VacationController::class, 'storeFreelancerVacation'])
         ->name('freelancer.vacation.add');
-    Route::patch(
-        '/freelancer/vacation/{freelancerVacation}/update',
-        [FreelancerVacationController::class, 'update']
-    )->name('freelancer.vacation.update');
-    Route::delete(
-        '/freelancer/vacation/{freelancerVacation}/delete',
-        [FreelancerVacationController::class, 'destroy']
-    )->name('freelancer.vacation.delete');
+    Route::patch('/freelancer/vacation/{freelancerVacation}/update', [\App\Http\Controllers\VacationController::class, 'update'])
+        ->name('freelancer.vacation.update');
+    Route::post('/freelancer/{freelancer}/masters', [\App\Http\Controllers\FreelancerController::class, 'update_freelancer_can_master'])
+        ->name('freelancer.update.can_master');
+    Route::post('/freelancer/{freelancer}/workings', [\App\Http\Controllers\FreelancerController::class, 'update_work_data'])
+        ->name('freelancer.update.work_data');
+    Route::delete('/freelancer/vacation/{freelancerVacation}/delete', [\App\Http\Controllers\VacationController::class, 'destroy'])
+        ->name('freelancer.vacation.delete');
+
+
+    // vacation and availability
+    Route::patch('/update/vacation/{vacation}', [\App\Http\Controllers\VacationController::class, 'update'])
+        ->name('update.vacation');
+
+    Route::patch('/update/availability/{availability}', [\App\Http\Controllers\AvailabilityController::class, 'update'])
+        ->name('update.availability');
+
+    Route::delete('/delete/availability/{availability}', [\App\Http\Controllers\AvailabilityController::class, 'destroy'])
+        ->name('delete.availability');
+
+    Route::delete('/delete/vacation/{vacation}', [\App\Http\Controllers\VacationController::class, 'destroy'])
+        ->name('delete.vacation');
+
+    // delete.availability.series
+    Route::delete('/delete/availability/series/{availabilitySeries}', [\App\Http\Controllers\AvailabilityController::class, 'destroySeries'])
+        ->name('delete.availability.series');
+
+    // delete.vacation.series
+    Route::delete('/delete/vacation/series/{vacationSeries}', [\App\Http\Controllers\VacationController::class, 'destroySeries'])
+        ->name('delete.vacation.series');
+
 
     // Service Provider
     Route::get('/service-provider/{serviceProvider}', [ServiceProviderController::class, 'show'])
@@ -818,15 +838,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('service-provider/add', [ServiceProviderController::class, 'store'])->name('service_provider.add');
     Route::delete('service-provider/{serviceProvider}', [ServiceProviderController::class, 'destroy'])
         ->name('service_provider.destroy');
-    Route::post(
+    Route::patch(
         '/service-provider/{serviceProvider}/workProfile',
         [ServiceProviderController::class, 'updateWorkProfile']
     )->name('service_provider.update.workProfile');
-    Route::post(
+    Route::patch(
+        '/service-provider/{serviceProvider}/terms',
+        [ServiceProviderController::class, 'updateTerms']
+    )->name('service_provider.update.terms');
+    Route::patch(
         '/service-provider/{serviceProvider}/updateCraftSettings',
         [ServiceProviderController::class, 'updateCraftSettings']
     )->name('service_provider.update.craftSettings');
-    Route::post(
+    Route::patch(
         '/service-provider/{serviceProvider}/assignCraft',
         [ServiceProviderController::class, 'assignCraft']
     )->name('service_provider.assign.craft');
@@ -848,15 +872,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     )->name('service-provider.contact.update');
 
     // Vacation
-    Route::post('/user/vacation/{user}/add', [UserVacationsController::class, 'store'])->name('user.vacation.add');
-    Route::patch(
-        '/user/vacation/{userVacations}/update',
-        [UserVacationsController::class, 'update']
-    )->name('user.vacation.update');
-    Route::delete(
-        '/user/vacation/{userVacations}/delete',
-        [UserVacationsController::class, 'destroy']
-    )->name('user.vacation.delete');
+
+    Route::post('/user/vacation/{user}/add', [\App\Http\Controllers\VacationController::class, 'store'])->name('user.vacation.add');
+    Route::patch('/user/vacation/{userVacations}/update', [\App\Http\Controllers\VacationController::class, 'update'])->name('user.vacation.update');
+    Route::delete('/user/vacation/{userVacations}/delete', [\App\Http\Controllers\VacationController::class, 'destroy'])->name('user.vacation.delete');
+
 
     Route::group(['prefix' => 'settings'], function (): void {
         Route::get('shift', [ShiftSettingsController::class, 'index'])->name('shift.settings');
@@ -889,7 +909,24 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('preset.delete.timeline.row');
     Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])
         ->name('preset.add.timeline.row');
-    Route::patch('/user/{user}/check/vacation', [UserVacationsController::class, 'checkVacation'])
+
+
+    Route::get('/shift/template/search', [\App\Http\Controllers\ShiftPresetController::class, 'search'])
+        ->name('shift.template.search');
+
+    Route::post('/shift/{event}/{shiftPreset}/import/preset/',
+        [\App\Http\Controllers\ShiftPresetController::class, 'import'])
+        ->name('shift.preset.import');
+
+    Route::patch('/preset/timeline/update', [\App\Http\Controllers\PresetTimeLineController::class, 'update'])
+        ->name('preset.timeline.update');
+    Route::delete('/preset/timeline/{presetTimeLine}/delete',
+        [\App\Http\Controllers\PresetTimeLineController::class, 'destroy'])
+        ->name('preset.delete.timeline.row');
+    Route::post('/preset/{shiftPreset}/add', [\App\Http\Controllers\PresetTimeLineController::class, 'store'])
+        ->name('preset.add.timeline.row');
+
+    Route::patch('/user/{user}/check/vacation', [\App\Http\Controllers\VacationController::class, 'checkVacation'])
         ->name('user.check.vacation');
 
     Route::post('/calendar/export/pdf', [ExportPDFController::class, 'createPDF'])->name('calendar.export.pdf');

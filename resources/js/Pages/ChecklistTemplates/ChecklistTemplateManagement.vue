@@ -31,7 +31,7 @@
                     class="py-3 flex justify-between">
                     <div class="flex">
                         <div class="my-auto w-full justify-start mr-6">
-                            <div class="flex my-auto">
+                            <div class="flex my-auto items-center">
                                 <Link :href="getEditHref(template)" class="mr-3 sDark">
                                     {{ template.name }} </Link>
                                 <p class="ml-1 xsLight my-auto"> angelegt am
@@ -109,7 +109,7 @@
                     class="py-3 flex justify-between">
                     <div class="flex">
                         <div class="my-auto w-full justify-start mr-6">
-                            <div class="flex my-auto">
+                            <div class="flex my-auto items-center">
                                 <p class="mr-3 sDark">
                                     {{ template.name }} </p>
                                 <p class="ml-1 xsLight my-auto"> angelegt am

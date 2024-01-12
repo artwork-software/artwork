@@ -11,48 +11,28 @@ class EventPolicy
 {
     use HandlesAuthorization;
 
-    public function create()
+    public function create(User $user): bool
     {
-        //return $user->canAny([PermissionNameEnum::PROJECT_UPDATE, PermissionNameEnum::PROJECT_ADMIN]);
-        return true;
+        return $user->can([PermissionNameEnum::EVENT_REQUEST->value]);
     }
 
-    public function update(User $user, Event $event)
+    public function update(User $user, Event $event): bool
     {
-        if (
-            $user->canAny(
-                [
-                    PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value,
-                    PermissionNameEnum::PROJECT_MANAGEMENT->value
-                ]
-            )
-        ) {
-            return true;
-        }
-
-        return $event->room?->users()
-            ->wherePivot('is_admin', true)
-            ->where('user_id', $user->id)
-            ->get() ||
-            $event->creator?->id === $user->id ?? false;
+        return $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value) ||
+            $event->room?->users()
+                ->wherePivot('is_admin', true)
+                ->where('user_id', $user->id)
+                ->get() ||
+            $event->creator?->id === $user->id;
     }
 
-    public function delete(User $user, Event $event)
+    public function delete(User $user, Event $event): bool
     {
-        if (
-            $user->canAny(
-                [
-                    PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value,
-                    PermissionNameEnum::PROJECT_MANAGEMENT->value
-                ]
-            )
-        ) {
-            return true;
-        }
-        return $event->room?->users()
-            ->wherePivot('is_admin', true)
-            ->where('user_id', $user->id)
-            ->get() ||
-            $event->creator?->id === $user->id ?? false;
+        return $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value) ||
+            $event->room?->users()
+                ->wherePivot('is_admin', true)
+                ->where('user_id', $user->id)
+                ->get() ||
+            $event->creator?->id === $user->id;
     }
 }

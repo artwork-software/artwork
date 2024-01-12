@@ -98,7 +98,7 @@
                 <div class="pt-12">
                     <div class="mt-4 items-center">
                         <AddButton v-if="!showSuccess" @click="editTeam"
-                                   class="border bg-primary px-5 hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
+                                   class="border bg-buttonBlue px-5 hover:bg-buttonHover focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
                                    text="Änderungen speichern" mode="modal"/>
                         <button v-else
                                 class="px-20 rounded-full items-center py-1 border bg-success focus:outline-none border-transparent"
@@ -238,7 +238,7 @@
                     </div>
                     <div class="w-full items-center text-center">
                         <AddButton @click="editTeam"
-                                   class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                   class=" inline-flex mt-8 items-center px-12 py-3 border bg-buttonBlue hover:bg-buttonHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                                    text="Speichern" mode="modal"/>
                     </div>
 

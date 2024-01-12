@@ -17,6 +17,7 @@ class UserPolicy
         return true;
     }
 
+
     public function view(): bool
     {
         return true;
@@ -26,6 +27,7 @@ class UserPolicy
     {
         return $user->can(PermissionNameEnum::USER_UPDATE->value) || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value);
     }
+
 
     public function delete(User $user, User $model): bool
     {
@@ -40,5 +42,15 @@ class UserPolicy
 
     public function forceDelete(): void
     {
+    }
+
+    public function updateWorkProfile(User $user): bool
+    {
+        return $user->can(PermissionNameEnum::MA_MANAGER->value);
+    }
+
+    public function updateTerms(User $user): bool
+    {
+        return $user->can(PermissionNameEnum::MA_MANAGER->value);
     }
 }

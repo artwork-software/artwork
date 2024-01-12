@@ -2,6 +2,18 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Availability\Models\Available;
+use Artwork\Modules\Availability\Models\HasAvailability;
+use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Notification\Models\GlobalNotification;
+use Artwork\Modules\Notification\Models\NotificationSetting;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectFile;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Vacation\Models\GoesOnVacation;
+use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
@@ -27,7 +39,6 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $id
  * @property string $first_name
  * @property string $last_name
- * @property string $work_name
  * @property string $email
  * @property Carbon $email_verified_at
  * @property string $phone_number
@@ -37,25 +48,30 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $position
  * @property string $business
  * @property string $description
- * @property string $work_description
- * @property bool $toggle_hints
- * @property array $opened_checklists
- * @property array $opened_areas
+ * @property string $toggle_hints
  * @property string $remember_token
  * @property int $current_team_id
  * @property string $profile_photo_path
- * @property bool $temporary
- * @property string $employStart
- * @property string $employEnd
- * @property bool $can_master
- * @property bool $can_work_shifts
- * @property int $weekly_working_hours
- * @property int $salary_per_hour
- * @property string $salary_description
- * @property string $created_at
- * @property string $updated_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property boolean $project_management
+ * @property boolean $can_master
+ * @property boolean $can_work_shifts
+ *
+ * @property Collection<\Artwork\Modules\Department\Models\Department> departments
+ * @property Collection<\Artwork\Modules\Project\Models\Project> projects
+ * @property Collection<\App\Models\Comment> comments
+ * @property Collection<\App\Models\Checklist> private_checklists
+ * @property Collection<\Room> created_rooms
+ * @property Collection<\Room> admin_rooms
+ * @property Collection<\App\Models\Task> done_tasks
+ * @property Collection<\App\Models\Event> events
+ * @property Collection<\App\Models\Task> $privateTasks
+ *
+ * What is this sorcery?
+ * @property string $profile_photo_url
  */
-class User extends Authenticatable
+class User extends Authenticatable implements Vacationer, Available
 {
     use HasApiTokens;
     use HasFactory;
@@ -65,6 +81,8 @@ class User extends Authenticatable
     use Notifiable;
     use TwoFactorAuthenticatable;
     use Searchable;
+    use GoesOnVacation;
+    use HasAvailability;
 
     protected $fillable = [
         'first_name',
@@ -168,15 +186,7 @@ class User extends Authenticatable
         return $this->hasOne(UserCalendarSettings::class);
     }
 
-    public function vacations(): HasMany
-    {
-        return $this->hasMany(UserVacations::class);
-    }
-
-    /**
-     * @return string[]
-     */
-    public function getFormattedVacationDaysAttribute(): array
+    public function getFormattedVacationDaysAttribute()
     {
         $vacations = $this->vacations;
         $returnInterval = [];
@@ -326,8 +336,6 @@ class User extends Authenticatable
         return $this->shifts()->pluck('shifts.id')->toArray();
     }
 
-
-
     /**
      * @return string[]
      */
@@ -386,45 +394,5 @@ class User extends Authenticatable
         }
 
         return $plannedWorkingHours;
-    }
-
-    /**
-     * @return string[]
-     */
-    public function hasVacationDays(): array
-    {
-        $vacations = $this->vacations()->get();
-        $returnInterval = [];
-        foreach ($vacations as $vacation) {
-            $start = Carbon::parse($vacation->from);
-            $end = Carbon::parse($vacation->until);
-
-            $interval = CarbonPeriod::create($start, $end);
-
-            foreach ($interval as $date) {
-                $returnInterval[] = $date->format('Y-m-d');
-            }
-        }
-        return $returnInterval;
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public function hasVacation(): array
-    {
-        $vacations = $this->vacations()->get();
-        $returnInterval = [];
-        foreach ($vacations as $vacation) {
-            $start = Carbon::parse($vacation->from);
-            $end = Carbon::parse($vacation->until);
-
-            $interval = CarbonPeriod::create($start, $end);
-
-            foreach ($interval as $date) {
-                $returnInterval[$date->format('d.m.Y')] = $date->format('Y-m-d');
-            }
-        }
-        return $returnInterval;
     }
 }

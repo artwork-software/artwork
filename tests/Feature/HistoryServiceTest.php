@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Project;
-use App\Models\ProjectHistory;
 use App\Models\Task;
 use App\Support\Services\HistoryService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectHistory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;

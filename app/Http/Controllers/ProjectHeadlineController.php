@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
-use App\Models\ProjectHeadline;
 use App\Support\Services\NewHistoryService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectHeadline;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -16,7 +16,7 @@ class ProjectHeadlineController extends Controller
 
     public function __construct()
     {
-        $this->history = new NewHistoryService('App\Models\Project');
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
     }
 
     public function store(Request $request): RedirectResponse
@@ -35,6 +35,7 @@ class ProjectHeadlineController extends Controller
         return Redirect::back();
     }
 
+
     public function update(Request $request, ProjectHeadline $projectHeadline): RedirectResponse
     {
         $projectHeadline->update(["name" => $request->name]);
@@ -42,8 +43,12 @@ class ProjectHeadlineController extends Controller
         return Redirect::back();
     }
 
-    public function updateText(Request $request, ProjectHeadline $projectHeadline, Project $project): void
-    {
+    public function updateText(
+        Request $request,
+        ProjectHeadline $projectHeadline,
+        Project $project,
+        ProjectController $projectController
+    ): void {
         $oldHeadLine = $project->headlines()->where('project_headline_id', $projectHeadline->id)->first();
         $projectHeadline->projects()->updateExistingPivot($project, array('text' => nl2br($request->text)), false);
         $newHeadLine = $project->headlines()->where('project_headline_id', $projectHeadline->id)->first();
@@ -74,7 +79,6 @@ class ProjectHeadlineController extends Controller
             );
         }
 
-        $projectController = new ProjectController();
         $projectController->setPublicChangesNotification($project->id);
     }
 

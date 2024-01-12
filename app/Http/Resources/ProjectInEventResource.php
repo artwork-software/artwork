@@ -6,6 +6,9 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @mixin \Artwork\Modules\Project\Models\Project
+ */
 class ProjectInEventResource extends JsonResource
 {
     public static $wrap = null;

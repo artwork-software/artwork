@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use App\Enums\BudgetTypesEnum;
-use App\Models\Project;
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;

@@ -239,9 +239,9 @@ export default defineComponent({
             showSuccessModal: false,
             tabs: [
                 { id: 1, name: 'Einsatzplan', href: '#', current: false, has_permission: this.hasAdminRole() },
-                { id: 2, name: 'Konditionen', href: '#', current: false, has_permission: this.hasAdminRole() },
+                { id: 2, name: 'Konditionen', href: '#', current: false, has_permission: this.$can('can edit external users conditions') || this.hasAdminRole() },
                 { id: 3, name: 'Unternehmensdaten', href: '#', current: true, has_permission: true },
-                { id: 4, name: 'Arbeitsprofil', href: '#', current: false, has_permission: this.hasAdminRole() },
+                { id: 4, name: 'Arbeitsprofil', href: '#', current: false, has_permission: this.$can('can manage workers') || this.hasAdminRole() },
             ],
             currentTab: 3,
             providerData: useForm({

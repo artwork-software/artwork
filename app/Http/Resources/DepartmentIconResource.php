@@ -4,6 +4,9 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Department\Models\Department
+ */
 class DepartmentIconResource extends JsonResource
 {
     public static $wrap = null;

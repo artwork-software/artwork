@@ -11,4 +11,15 @@ abstract class BaseRepository
         $model->save();
         return $model;
     }
+
+    public function delete(Model $model): bool
+    {
+        return $model->delete();
+    }
+
+    public function deleteByReference(Model $model, string $referenceName): void
+    {
+        $model->${$referenceName}()->delete();
+    }
+
 }

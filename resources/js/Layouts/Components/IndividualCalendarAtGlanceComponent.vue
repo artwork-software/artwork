@@ -22,8 +22,16 @@
 
                 </div>
                 <div class="py-0.5 pr-1" v-for="event in roomEvents">
-                    <SingleCalendarEvent :atAGlance="true" :multiEdit="multiEdit" :project="project" :zoom-factor="1" :width="204" :event="event" :event-types="eventTypes"
-                                         @open-edit-event-modal="openEditEventModal"></SingleCalendarEvent>
+                    <SingleCalendarEvent
+                        :atAGlance="true"
+                        :multiEdit="multiEdit"
+                        :project="event.project"
+                        :zoom-factor="1"
+                        :width="204"
+                        :event="event"
+                        :event-types="eventTypes"
+                        @open-edit-event-modal="openEditEventModal"
+                    />
                 </div>
             </div>
             <div v-else>

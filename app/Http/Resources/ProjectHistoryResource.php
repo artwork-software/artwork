@@ -4,6 +4,9 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Project\Models\ProjectHistory
+ */
 class ProjectHistoryResource extends JsonResource
 {
     public static $wrap = null;

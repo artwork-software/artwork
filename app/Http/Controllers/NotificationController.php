@@ -11,12 +11,7 @@ use App\Http\Resources\NotificationProjectResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
 use App\Models\Event;
 use App\Models\EventType;
-use App\Models\GlobalNotification;
-use App\Models\NotificationSetting;
-use App\Models\Project;
-use App\Models\Room;
 use App\Models\User;
-use App\Models\UserVacations;
 use App\Notifications\BudgetVerified;
 use App\Notifications\ConflictNotification;
 use App\Notifications\DeadlineNotification;
@@ -27,6 +22,11 @@ use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
 use App\Notifications\TaskNotification;
 use App\Notifications\TeamNotification;
+use Artwork\Modules\Notification\Models\GlobalNotification;
+use Artwork\Modules\Notification\Models\NotificationSetting;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
@@ -36,6 +36,9 @@ use Inertia\ResponseFactory;
 
 class NotificationController extends Controller
 {
+    public function __construct(private readonly VacationService $vacationService)
+    {
+    }
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function index(): Response|ResponseFactory
@@ -70,10 +73,12 @@ class NotificationController extends Controller
                 }
             }
 
+
             if (request('historyType') === 'vacations') {
-                $userVacations = UserVacations::where('user_id', request('modelId'))->get();
-                foreach ($userVacations as $userVacation) {
-                    $historyComplete = $userVacation->historyChanges()->all();
+                $vacations = $this->vacationService->findVacationsByUserId(request('modelId'));
+
+                foreach ($vacations as $vacation) {
+                    $historyComplete = $vacation->historyChanges()->all();
                     foreach ($historyComplete as $history) {
                         $historyObjects[] = [
                             'changes' => json_decode($history->changes),

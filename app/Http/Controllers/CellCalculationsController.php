@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CellCalculations;
+use Artwork\Modules\Budget\Models\CellCalculations;
 use Illuminate\Http\Request;
 
 class CellCalculationsController extends Controller
@@ -10,7 +10,7 @@ class CellCalculationsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\CellCalculations  $cellCalculations
+     * @param  \Artwork\Modules\Budget\Models\CellCalculations  $cellCalculations
      * @return \Illuminate\Http\Response
      */
     public function destroy(CellCalculations $cellCalculation): \Illuminate\Http\RedirectResponse

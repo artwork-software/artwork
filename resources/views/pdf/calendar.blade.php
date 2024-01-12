@@ -174,19 +174,20 @@
                     <td class="{{ $day['is_weekend'] ? 'weekend' : '' }}">
                         @foreach($calendar as $calendarEvent)
                             @foreach($calendarEvent[$day['day']] as $event)
-                                <div class="{{ $event->event_type->svg_name }}" style="font-size: 8px; border-bottom: 1px solid black; padding: 2px;">
-                                    <div>
-                                        {{ $event->eventName ?? $event->name }}
+                                @if($room->id === $event->room_id)
+                                    <div class="{{ $event->event_type->svg_name }}" style="font-size: 8px; border-bottom: 1px solid black; padding: 2px;">
+                                        <div>
+                                            {{ $event->event_type->abbreviation . ': ' . $event->eventName ?? $event->name }}
+                                        </div>
+                                        <div>
+                                            @if(!$event->allDay)
+                                                {{ \Illuminate\Support\Carbon::parse($event->start_time)->format('H:i') }} - {{ \Illuminate\Support\Carbon::parse($event->end_time)->format('H:i') }}
+                                            @else
+                                                <span style="font-weight: bold">Ganztägig</span>
+                                            @endif
+                                        </div>
                                     </div>
-
-                                    <div>
-                                        @if(!$event->allDay)
-                                            {{ \Illuminate\Support\Carbon::parse($event->start_time)->format('H:i') }} - {{ \Illuminate\Support\Carbon::parse($event->end_time)->format('H:i') }}
-                                        @else
-                                            <span style="font-weight: bold">Ganztägig</span>
-                                        @endif
-                                    </div>
-                                </div>
+                                @endif
                             @endforeach
                         @endforeach
                     </td>

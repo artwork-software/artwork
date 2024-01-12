@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\UserCalendarSettings;
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,13 +26,12 @@ class CalendarEventResource extends JsonResource
         } else {
             $classString = $this->event_type->svg_name;
         }
-
         $output = [
             'resource' => class_basename($this),
             'id' => $this->id,
-            'start' => $this->start_time->utc()->toIso8601String(),
-            'startTime' => $this->start_time,
-            'end' => $this->end_time->utc()->toIso8601String(),
+            'start' => $this->start_time->toIso8601String(),
+            'startTime' => $this->start_time->toIso8601String(),
+            'end' => $this->end_time->toIso8601String(),
             'title' => $this->project?->name ?: $this->eventName ? : $this->event_type->name,
             'alwaysEventName' => $this->eventName,
             'eventName' => $this->eventName,

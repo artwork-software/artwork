@@ -22,7 +22,7 @@
 
         <hr class="my-10 border-darkGray">
 
-        <div class="w-full flex items-center mb-4">
+        <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.projectManagerIds.includes(this.$page.props.user.id)">
             <div class="text-secondary text-md">Dokumente</div>
             <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showProjectFiles ? 'rotate-180' : '']"
                              @click="showProjectFiles = !showProjectFiles"/>
@@ -76,7 +76,7 @@
                     :show="showContractUploadModal"
                     :close-modal="closeContractUploadModal"
                     :project-id="project.id"
-                    :budget-access="budgetAccess"
+                    :budget-access="accessBudget"
                 />
             </div>
             <div v-if="showContracts">
@@ -178,7 +178,8 @@ export default {
         projectFiles: Array,
         contracts: Array,
         moneySources: Array,
-        accessBudget: Object,
+        accessBudget: Array,
+        projectManagerIds: Array,
     },
     data() {
         return {

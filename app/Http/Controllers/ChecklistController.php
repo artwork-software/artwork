@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChecklistTemplate;
+use App\Models\Task;
 use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use App\Http\Resources\ChecklistShowResource;
 use Artwork\Modules\Checklist\Models\Checklist;
@@ -33,9 +34,13 @@ class ChecklistController extends Controller
         return inertia('Checklists/Create');
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function store(Request $request): RedirectResponse
     {
         $this->authorize('createProperties', Project::find($request->project_id));
+
         //Check whether checklist should be created on basis of a template
         if ($request->template_id) {
             $this->createFromTemplate($request);
@@ -44,8 +49,7 @@ class ChecklistController extends Controller
         }
 
         $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-        $this->history->createHistory($request->project_id, 'Checkliste ' . $request->name. ' hinzugefügt');
-
+        $this->history->createHistory($request->project_id, 'Checkliste ' . $request->name . ' hinzugefügt');
 
         ProjectHistory::create([
             "user_id" => Auth::id(),

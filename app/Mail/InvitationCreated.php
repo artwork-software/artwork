@@ -13,7 +13,7 @@ class InvitationCreated extends Mailable
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public Invitation $invitation, public Authenticatable $user, mixed $token)
+    public function __construct(public Invitation $invitation, public Authenticatable $user, public string $token)
     {
     }
 
@@ -22,6 +22,6 @@ class InvitationCreated extends Mailable
         return $this->from("einladung@test.de", $this->user->first_name)
             ->replyTo($this->user->email)
             ->subject("Einladung für das artwork")
-            ->markdown('emails.invitations');
+            ->markdown('emails.invitations', ['token' => $this->token]);
     }
 }

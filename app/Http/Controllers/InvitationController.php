@@ -74,8 +74,8 @@ class InvitationController extends Controller
             $invitation = Invitation::create([
                 'email' => $email,
                 'token' => $token['hash'],
-                'permissions' => json_encode($permissions),
-                'roles' => json_encode($roles)
+                'permissions' => $permissions,
+                'roles' => $roles
             ]);
 
             $invitation->departments()->sync(
@@ -139,7 +139,7 @@ class InvitationController extends Controller
     {
         /** @var Invitation $invitation */
         $invitation = Invitation::query()
-            ->where('email', request()->email)
+            ->where('email', $request->email)
             ->with('departments')
             ->firstOrFail();
 

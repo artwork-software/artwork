@@ -11,14 +11,14 @@ use Carbon\Carbon;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
 
-class BenchmarkProjectSeeder extends Seeder
+class Benchmark2022ProjectSeeder extends Seeder
 {
     public function run(): void
     {
         $project = Project::create([
-            'name' => 'Benchmark',
-            'description' => '36500 Events, 2 Events per Room per Day, 50 Rooms',
-            'shift_description' => '',
+            'name' => 'Benchmark 2022',
+            'description' => 'Per Day 10 Events, 5 Rooms, 2 Events per Room per Day',
+            'shift_description' => 'Events of Doom',
             'key_visual_path' => 'M8AUVkujRBdqQu9rbS2Gart.JPG',
             'state' => 4,
             'num_of_guests' => 23,
@@ -28,17 +28,13 @@ class BenchmarkProjectSeeder extends Seeder
             'closed_society' => false,
         ]);
 
-        Room::factory()
-            //create 42 rooms additional to currently existing 8 = 50
-            ->count(42)
-            ->create();
-
-        $startOfYear = Carbon::today()->startOfYear();
+        $startOfYear = Carbon::today()->year(2022)->startOfYear();
         $endOfYear = clone $startOfYear;
         $endOfYear->endOfYear();
         $dateRange = $startOfYear->range($endOfYear);
         $eventTypes = EventType::all()->pluck('name', 'id');
-        $roomIds = Room::all()->pluck('id');
+        //first 5 rooms
+        $roomIds = Room::all()->pluck('id')->shift(5);
         $faker = Factory::create('de_DE');
 
         //generate two events per room per day

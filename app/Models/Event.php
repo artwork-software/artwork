@@ -10,6 +10,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -140,22 +141,22 @@ class Event extends Model
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function event_type(): BelongsTo
     {
-        return $this->belongsTo(EventType::class, 'event_type_id');
+        return $this->belongsTo(EventType::class, 'event_type_id', 'id', 'event_types');
     }
 
     public function room(): BelongsTo
     {
-        return $this->belongsTo(Room::class, 'room_id');
+        return $this->belongsTo(Room::class, 'room_id', 'id', 'rooms');
     }
 
     public function project(): BelongsTo
     {
-        return $this->belongsTo(Project::class, 'project_id');
+        return $this->belongsTo(Project::class, 'project_id', 'id', 'projects');
     }
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'id', 'users');
     }
 
     public function roomAdministrators(): BelongsToMany
@@ -236,5 +237,12 @@ class Event extends Model
 
         return $this->start_time->isBetween($event->start_time, $event->end_time) ||
             $this->end_time->isBetween($event->start_time, $event->end_time);
+    }
+
+    // scopes
+
+    public function scopeHasNoRoom(Builder $builder): Builder
+    {
+        return $builder->whereNull('room_id');
     }
 }

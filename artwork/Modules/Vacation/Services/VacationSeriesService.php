@@ -20,4 +20,11 @@ class VacationSeriesService
         $vacationSeries->end_date = $until;
         return $this->vacationSeriesRepository->save($vacationSeries);
     }
+
+    public function deleteSeries(VacationSeries $vacationSeries): void
+    {
+        $vacationSeries->vacations()->each(function ($vacation): void {
+            $vacation->delete();
+        });
+    }
 }

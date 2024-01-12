@@ -1,11 +1,11 @@
 <template>
     <TransitionRoot as="template" :show="open">
-        <Dialog as="div" class="relative z-100" @close="closeModal">
+        <Dialog as="div" class="relative z-50" @close="closeModal">
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
             </TransitionChild>
 
-            <div class="fixed inset-0 z-100 overflow-y-auto">
+            <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
                         <DialogPanel class="relative transform bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:p-6">
@@ -180,7 +180,7 @@
                                 <div >
                                     <AddButton v-if="vacation.isDirty && !vacation.id" @click="saveOrUpdateVacation(false)" type="save" mode="modal" text="Speichern"/>
                                     <AddButton v-if="vacation.isDirty && vacation.id" @click="saveOrUpdateVacation(false)" type="save" mode="modal" text="Bearbeiten"/>
-                                    <AddButton v-if="!vacation.isDirty && vacation.id" @click="deleteAvailabilityOrVacation" type="delete" mode="modal" text="Löschen"/>
+                                    <AddButton v-if="!vacation.isDirty && vacation.id" @click="checkVacationType" type="delete" mode="modal" text="Löschen"/>
                                     <AddButton v-if="!vacation.isDirty && !vacation.id" @click="closeModal(true)" type="delete" mode="modal" text="Abbrechen"/>
                                 </div>
                             </div>
@@ -191,6 +191,17 @@
             </div>
         </Dialog>
     </TransitionRoot>
+
+    <ConfirmDeleteModal
+        v-if="showDeleteConfirmModal"
+        title="Serieneintrag löschen"
+        button="Einzeleintrag löschen"
+        description="Möchtest Du nur diesen Eintrag löschen oder die ganze Serie?"
+        :is-series-delete="true"
+        :is_budget="false"
+        @closed="showDeleteConfirmModal = false"
+        @complete_delete="deleteCompleteSeries"
+        @delete="deleteAvailabilityOrVacation" />
 </template>
 <script>
 import {ChevronLeftIcon, ChevronRightIcon, XIcon, CalendarIcon} from "@heroicons/vue/solid";
@@ -200,10 +211,12 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
 import {Inertia} from "@inertiajs/inertia";
 import Button from "@/Jetstream/Button.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 export default {
     name: "AddEditVacationsModal",
     components: {
+        ConfirmDeleteModal,
         ChevronRightIcon, Button, ChevronLeftIcon,
         AddButton, XIcon, Dialog, DialogTitle, DialogPanel, TransitionChild, TransitionRoot, CalendarIcon
     },
@@ -234,7 +247,8 @@ export default {
             availableTypes: [
                 { id: 'available', title: 'Verfügbarkeit' },
                 { id: 'vacation', title: 'Abwesenheit' },
-            ]
+            ],
+            showDeleteConfirmModal: false
         }
     },
     emits: ['closed'],
@@ -246,6 +260,13 @@ export default {
         },
         selectDate(date){
             this.vacation.date = date;
+        },
+        checkVacationType(){
+            if(this.editVacation.is_series === true){
+                this.showDeleteConfirmModal = true
+            } else {
+                this.deleteAvailabilityOrVacation()
+            }
         },
         saveOrUpdateVacation(withNewModal = false){
             // add checks here
@@ -393,6 +414,23 @@ export default {
             }
             if (this.vacation.type_before_update === 'vacation'){
                 this.vacation.delete(route('delete.vacation', this.vacation.id), {
+                    preserveScroll: true, preserveState: true, onFinish: () => {
+                        this.closeModal(true)
+                    }
+                })
+            }
+        },
+
+        deleteCompleteSeries(){
+            if(this.vacation.type_before_update === 'available') {
+                this.vacation.delete(route('delete.availability.series', this.editVacation.series_id), {
+                    preserveScroll: true, preserveState: true, onFinish: () => {
+                        this.closeModal(true)
+                    }
+                })
+            }
+            if (this.vacation.type_before_update === 'vacation'){
+                this.vacation.delete(route('delete.vacation.series', this.editVacation.series_id), {
                     preserveScroll: true, preserveState: true, onFinish: () => {
                         this.closeModal(true)
                     }

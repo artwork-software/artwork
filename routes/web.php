@@ -62,7 +62,6 @@ use App\Http\Controllers\UserCalendarFilterController;
 use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
-use App\Http\Controllers\UserVacationsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -817,6 +816,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::delete('/delete/vacation/{vacation}', [\App\Http\Controllers\VacationController::class, 'destroy'])
         ->name('delete.vacation');
+
+    // delete.availability.series
+    Route::delete('/delete/availability/series/{availabilitySeries}', [\App\Http\Controllers\AvailabilityController::class, 'destroySeries'])
+        ->name('delete.availability.series');
+
+    // delete.vacation.series
+    Route::delete('/delete/vacation/series/{vacationSeries}', [\App\Http\Controllers\VacationController::class, 'destroySeries'])
+        ->name('delete.vacation.series');
 
 
     // Service Provider

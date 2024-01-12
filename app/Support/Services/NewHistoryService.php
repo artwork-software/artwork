@@ -15,10 +15,13 @@ class NewHistoryService
 
     protected string $type = 'project';
     protected mixed $modelObject;
-    /**
-     * NewHistoryService constructor.
-     * @param string|null $modelObject
-     */
+
+    public function __construct($modelObject = null)
+    {
+        if ($modelObject) {
+            $this->setModel($modelObject);
+        }
+    }
 
     public function setModel(mixed $model): void
     {

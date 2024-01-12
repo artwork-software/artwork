@@ -272,7 +272,7 @@ class CalendarController extends Controller
                         )
                     ]));
 
-            $events = Event::where('room_id', null)->get();
+            $events = Event::hasNoRoom()->get();
 
             $eventsWithoutRooms = CalendarEventResource::collection($events)->resolve();
         }

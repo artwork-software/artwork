@@ -156,7 +156,7 @@ import RoomRequestDialogComponent from "@/Layouts/Components/RoomRequestDialogCo
 import UserVacationHistoryModal from "@/Pages/Notifications/Components/UserVacationHistoryModal.vue";
 import EventHistoryModal from "@/Pages/Notifications/Components/EventHistoryModal.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
-
+import Permissions from "@/mixins/Permissions.vue";
 export default {
     name: "NotificationBlock",
     components: {
@@ -171,6 +171,7 @@ export default {
         NotificationButtons, ChevronRightIcon,
         RoomRequestDialogComponent
     },
+    mixins: [Permissions],
     props: ['notification', 'eventTypes', 'historyObjects', 'event', 'rooms', 'project', 'wantedSplit', 'roomCollisions', 'isArchive'],
     data() {
         return {

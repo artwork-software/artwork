@@ -98,10 +98,8 @@ class ProjectController extends Controller
     protected ?SchedulingController $schedulingController = null;
     public function __construct(
         private readonly ProjectService $projectService,
-        private readonly ProjectGroupService $projectGroupService,
         private readonly BudgetService $budgetService,
-    )
-    {
+    ) {
         // init notification controller
         $this->notificationService = new NotificationService();
         $this->notificationData = new stdClass();
@@ -1218,15 +1216,19 @@ class ProjectController extends Controller
                 }
             )->pluck('id');
 
-            $column->subPositionRows()->attach($subPositionRows, [
-                'value' => 0,
-                'verified_value' => null,
-                'linked_money_source_id' => null
-            ]);
+            foreach ($subPositionRows as $subPositionRow) {
+                $column->subPositionRows()->attach($subPositionRow, [
+                    'value' => 0,
+                    'verified_value' => null,
+                    'linked_money_source_id' => null,
+                    'commented' => SubPositionRow::find($subPositionRow)->commented
+                ]);
+            }
 
             $subPositions = SubPosition::whereHas('mainPosition', function (Builder $query) use ($request): void {
                 $query->where('table_id', $request->table_id);
             })->get();
+
 
             $column->subPositionSumDetails()->createMany(
                 $subPositions->map(fn($subPosition) => [
@@ -1270,7 +1272,8 @@ class ProjectController extends Controller
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
                     'value' => $sum,
                     'verified_value' => null,
-                    'linked_money_source_id' => null
+                    'linked_money_source_id' => null,
+                    'commented' => $secondColumn->commented
                 ]);
             }
         }
@@ -1296,6 +1299,7 @@ class ProjectController extends Controller
                     'value' => $sum,
                     'verified_value' => null,
                     'linked_money_source_id' => null,
+                    'commented' => $secondColumn->commented
                 ]);
             }
         }

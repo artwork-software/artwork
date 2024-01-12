@@ -31,7 +31,7 @@ class ProjectFileController extends Controller
         $this->notificationService = new NotificationService();
     }
 
-    public function store(FileUpload $request, Project $project): RedirectResponse
+    public function store(FileUpload $request, Project $project, ProjectController $projectController): RedirectResponse
     {
         $this->authorize('view', $project);
 
@@ -70,7 +70,6 @@ class ProjectFileController extends Controller
         }
 
         $this->history->createHistory($project->id, 'Datei ' . $original_name . ' hinzugefügt', 'public_changes');
-        $projectController = new ProjectController();
         $projectController->setPublicChangesNotification($project->id);
 
         $projectFileUsers =  $projectFile->accessingUsers()->get();
@@ -187,12 +186,11 @@ class ProjectFileController extends Controller
         return Redirect::back();
     }
 
-    public function destroy(ProjectFile $projectFile): RedirectResponse
+    public function destroy(ProjectFile $projectFile, ProjectController $projectController): RedirectResponse
     {
         $this->authorize('view', $projectFile->project);
         $project = $projectFile->project()->first();
         $this->history->createHistory($project->id, 'Datei ' . $projectFile->name . ' gelöscht', 'public_changes');
-        $projectController = new ProjectController();
         $projectController->setPublicChangesNotification($project->id);
 
         $projectFileUsers =  $projectFile->accessingUsers()->get();

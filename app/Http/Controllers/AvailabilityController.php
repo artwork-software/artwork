@@ -6,6 +6,8 @@ use App\Models\Freelancer;
 use App\Models\User;
 use Artwork\Modules\Availability\Https\Requests\UpdateAvailabilityRequest;
 use Artwork\Modules\Availability\Models\Availability;
+use Artwork\Modules\Availability\Models\AvailabilitySeries;
+use Artwork\Modules\Availability\Services\AvailabilitySeriesService;
 use Artwork\Modules\Availability\Services\AvailabilityService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Illuminate\Http\Request;
@@ -14,7 +16,8 @@ class AvailabilityController extends Controller
 {
     public function __construct(
         private readonly AvailabilityService $availabilityService,
-        private readonly VacationService $vacationService
+        private readonly VacationService $vacationService,
+        private readonly AvailabilitySeriesService $availabilitySeriesService
     ) {
     }
     /**
@@ -115,6 +118,12 @@ class AvailabilityController extends Controller
     public function destroy(Availability $availability): \Illuminate\Http\RedirectResponse
     {
         $this->availabilityService->delete($availability);
+        return redirect()->back();
+    }
+
+    public function destroySeries(AvailabilitySeries $availabilitySeries): \Illuminate\Http\RedirectResponse
+    {
+        $this->availabilitySeriesService->deleteSeries($availabilitySeries);
         return redirect()->back();
     }
 }

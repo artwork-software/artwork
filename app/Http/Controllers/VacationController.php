@@ -8,6 +8,8 @@ use Artwork\Modules\Availability\Services\AvailabilityService;
 use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Https\Requests\UpdateVacationRequest;
 use Artwork\Modules\Vacation\Models\Vacation;
+use Artwork\Modules\Vacation\Models\VacationSeries;
+use Artwork\Modules\Vacation\Services\VacationSeriesService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -16,7 +18,8 @@ class VacationController extends Controller
 {
     public function __construct(
         private readonly VacationService $vacationService,
-        private readonly AvailabilityService $availabilityService
+        private readonly AvailabilityService $availabilityService,
+        private readonly VacationSeriesService $vacationSeriesService
     ) {
     }
 
@@ -101,5 +104,10 @@ class VacationController extends Controller
     {
         $this->vacationService->delete($vacation);
         return redirect()->back();
+    }
+
+    public function destroySeries(VacationSeries $vacationSeries): void
+    {
+        $this->vacationSeriesService->deleteSeries($vacationSeries);
     }
 }

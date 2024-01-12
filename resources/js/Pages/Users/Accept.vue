@@ -5,7 +5,7 @@
                 <img src="/Svgs/Logos/artwork_logo_big.svg"/>
             </div>
             <div class="flex items-center">
-                <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">Einladung Annehmen</h2>
+                <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">Einladung annehmen</h2>
                 <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
             </div>
             <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
@@ -54,7 +54,6 @@
                         :placeholder="$page.props.businessName"
                         class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
-
                 <div class="sm:col-span-3 mt-1">
                     <label for="position" class="text-sm font-bold text-secondary">Position</label>
                     <input
@@ -65,7 +64,6 @@
                         class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
             </div>
-
             <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3 mt-1">
                     <label for="password" class="text-sm font-bold text-secondary">Passwort</label>
@@ -78,11 +76,8 @@
                                     'focus:ring-black focus:border-black border-2 w-full sm:text-sm']"/>
                     <jet-input-error :message="form.errors.password" class="mt-2"/>
                 </div>
-
                 <div v-if="form.password.length>0" class="sm:col-span-3 flex items-center">
-
                     <span class="text-xs text-secondary">Schwach</span>
-
                     <div class="mx-6 mt-1 w-full bg-gray-200 h-1 dark:bg-gray-700">
                         <div :class="[pw_feedback < 1
                                 ? 'bg-error'
@@ -92,7 +87,6 @@
                                 'h-1']" :style="{width: `${(pw_feedback + 1) / 5 * 100}%`}">
                         </div>
                     </div>
-
                     <span class="text-xs">Stark</span>
                 </div>
             </div>
@@ -104,15 +98,10 @@
                     Sonderzeichen beinhalten.
                 </div>
             </div>
-
             <button :disabled="form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === ''" :class="[form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === '' ? 'bg-secondary hover:bg-secondary' : '']" type="submit"
                     class="flex px-44 py-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover focus:outline-none">
-                <p class="text-sm">Registrieren</p>
+                Registrieren
             </button>
-
-            <pre>
-                {{ form }}
-            </pre>
         </form>
     </div>
 </template>
@@ -130,7 +119,6 @@ import {Head, Link} from '@inertiajs/inertia-vue3';
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetInputError from '@/Jetstream/InputError.vue'
 import Permissions from "@/mixins/Permissions.vue";
-
 
 export default defineComponent({
     mixins: [Permissions],
@@ -176,7 +164,6 @@ export default defineComponent({
             })
         }
     },
-
     methods: {
         submit() {
             this.form.post(this.route('invitation.accept'), {

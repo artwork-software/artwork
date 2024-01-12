@@ -10,6 +10,10 @@ use App\Models\Freelancer;
 use App\Models\FreelancerVacation;
 use App\Models\Task;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Illuminate\Support\Facades\Event as EventFacade;
+
+use function Pest\Faker\faker;
+use function Pest\Laravel\assertDatabaseHas;
 
 beforeEach(function () {
 
@@ -128,6 +132,93 @@ test('views dashboard with tasks', function (Task $task) {
             ])->id
         ]);
     }
+]);
+
+test('event requests', function (\Illuminate\Database\Eloquent\Collection|\Illuminate\Support\Collection $events) {
+
+    $response = $this->get(route('events.requests'));
+
+    $response->assertInertia(fn(AssertableInertia $page) => $page
+        ->component('Events/EventRequestsManagement')
+        ->has('event_requests', $events->count()));
+})->with([
+    'one event' => fn() => Event::factory(1)->create(['occupancy_option' => true]),
+    'five events' => fn() => Event::factory(5)->create(['occupancy_option' => true]),
+    'no events' => fn() => collect(),
+    'events exist but without oc' => function () {
+        Event::factory(5)->create(['occupancy_option' => false]);
+        return collect();
+    }
+]);
+
+test('Store event', function () {
+
+    EventFacade::fake();
+    $title = faker()->company();
+
+    $data = [
+        'start' => now()->format('Y-m-d'),
+        'end' => now()->addDay()->format('Y-m-d'),
+        'roomId' => \Artwork\Modules\Room\Models\Room::factory()->create()->id,
+        'title' => $title,
+        'eventName' => null,
+        'description' => faker()->text(),
+        'audience' => faker()->boolean(),
+        'isLoud' => faker()->boolean(),
+        'projectId' => \Artwork\Modules\Project\Models\Project::factory()->create()->id,
+        'eventTypeId' => 1,
+        'projectIdMandatory' => false,
+        'eventNameMandatory' => false,
+        'creatingProject' => false,
+        'user_id' => $this->auth_user->id,
+        'isOption' => false,
+        'is_series' => false,
+        'seriesFrequency' => null,
+        'seriesEndDate' => null,
+        'allDay' => true,
+    ];
+
+    $this->post(route('events.store'), $data);
+
+    assertDatabaseHas((new Event())->getTable(), ['name' => $title]);
+});
+
+test('Store event series', function(int $frequency) {
+    EventFacade::fake();
+    $title = faker()->company();
+
+    $data = [
+        'start' => now()->format('Y-m-d'),
+        'end' => now()->addYear()->format('Y-m-d'),
+        'roomId' => \Artwork\Modules\Room\Models\Room::factory()->create()->id,
+        'title' => $title,
+        'eventName' => null,
+        'description' => faker()->text(),
+        'audience' => faker()->boolean(),
+        'isLoud' => faker()->boolean(),
+        'projectId' => \Artwork\Modules\Project\Models\Project::factory()->create()->id,
+        'eventTypeId' => 1,
+        'projectIdMandatory' => false,
+        'eventNameMandatory' => false,
+        'creatingProject' => false,
+        'user_id' => $this->auth_user->id,
+        'isOption' => false,
+        'is_series' => true,
+        'seriesFrequency' => $frequency,
+        'seriesEndDate' => now()->addMonths(2),
+        'allDay' => true,
+    ];
+
+    $this->post(route('events.store'), $data);
+
+    assertDatabaseHas((new Event())->getTable(), ['name' => $title]);
+    expect(Event::query()->orderBy('id', 'desc')->get()->first()->series->frequency_id)->toBe($frequency);
+
+})->with([
+    'day' => 1,
+    'week' => 2,
+    'weeks' => 3,
+    'month' => 4,
 ]);
 
 function setupCalendar(User $user): array

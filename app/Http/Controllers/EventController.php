@@ -453,7 +453,7 @@ class EventController extends Controller
             $notificationTitle = 'Dienstplan festgeschrieben';
             if (!empty($firstShift) && !empty($lastShift)) {
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => random_int(1, 1000000),
                     'type' => 'success',
                     'message' => $notificationTitle
                 ];

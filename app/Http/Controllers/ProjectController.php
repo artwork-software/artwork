@@ -1272,7 +1272,8 @@ class ProjectController extends Controller
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
                     'value' => $sum,
                     'verified_value' => null,
-                    'linked_money_source_id' => null
+                    'linked_money_source_id' => null,
+                    'commented' => $secondColumn->commented
                 ]);
             }
         }
@@ -1298,6 +1299,7 @@ class ProjectController extends Controller
                     'value' => $sum,
                     'verified_value' => null,
                     'linked_money_source_id' => null,
+                    'commented' => $secondColumn->commented
                 ]);
             }
         }

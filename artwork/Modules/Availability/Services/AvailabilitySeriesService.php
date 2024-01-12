@@ -21,4 +21,11 @@ class AvailabilitySeriesService
         $availabilitySeries->end_date = $until;
         return $this->availabilitySeriesRepository->save($availabilitySeries);
     }
+
+    public function deleteSeries(AvailabilitySeries $availabilitySeries): void
+    {
+        $availabilitySeries->availabilities()->each(function ($availability): void {
+            $availability->delete();
+        });
+    }
 }

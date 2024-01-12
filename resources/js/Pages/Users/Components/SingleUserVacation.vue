@@ -10,7 +10,7 @@
                               d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
                     </svg>
                 </button>
-                <button type="button" @click="showDeleteConfirmModal = true"
+                <button type="button" @click="checkIfVacationIsSeries"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="w-4 h-4">
@@ -37,13 +37,22 @@
 
                 </div>
             </div>
-            <p>&bdquo;{{ vacation.comment }}&rdquo;</p>
+            <p v-if="vacation.comment">&bdquo;{{ vacation.comment }}&rdquo;</p>
         </div>
 
         <AddEditVacationsModal :createShowDate="createShowDate" :edit-vacation="vacation" :user="user" v-if="showEditVacationModal" :vacationSelectCalendar="vacationSelectCalendar" @closed="showEditVacationModal = false" />
-        <ConfirmDeleteModal v-if="showDeleteConfirmModal" title="Urlaub Löschen?" description="Bist du sicher, dass du den ausgewählten Urlaub löschen möchtest? " @closed="showDeleteConfirmModal = false" @delete="deleteVacation" />
-    </div>
 
+        <ConfirmDeleteModal
+            v-if="showDeleteSeriesConfirmModal"
+            :title="modalTexts.title"
+            :button="modalTexts.button"
+            :description="modalTexts.description"
+            :is-series-delete="isSeries"
+            :is_budget="false"
+            @closed="showDeleteSeriesConfirmModal = false"
+            @complete_delete="deleteCompleteSeries"
+            @delete="deleteAvailabilityOrVacation" />
+    </div>
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -60,7 +69,14 @@ export default defineComponent({
     data(){
         return {
             showEditVacationModal: false,
-            showDeleteConfirmModal: false
+            showDeleteConfirmModal: false,
+            showDeleteSeriesConfirmModal: false,
+            modalTexts: {
+                title: 'Urlaub Löschen?',
+                description: 'Bist du sicher, dass du den ausgewählten Urlaub löschen möchtest?',
+                button: 'Löschen'
+            },
+            isSeries: false
         }
     },
     computed: {
@@ -76,16 +92,44 @@ export default defineComponent({
                 }
             })
         },
-        deleteVacation(){
-            if(this.vacation.type_before_update === 'available') {
-                this.vacation.delete(route('delete.availability', this.vacation.id), {
+        deleteCompleteSeries(){
+            if(this.vacation.type === 'available') {
+                Inertia.delete(route('delete.availability.series', this.vacation.series_id), {
+                    preserveScroll: true, onFinish: () => {
+                        this.showDeleteSeriesConfirmModal = false
+                    }
+                })
+            }
+            if (this.vacation.type === 'vacation'){
+                Inertia.delete(route('delete.vacation.series', this.vacation.series_id), {
+                    preserveScroll: true, onFinish: () => {
+                        this.showDeleteSeriesConfirmModal = false
+                    }
+                })
+            }
+        },
+        checkIfVacationIsSeries(){
+            if(this.vacation.is_series){
+                this.modalTexts.title = 'Serieneintrag löschen'
+                this.modalTexts.description = 'Möchtest Du nur diesen Eintrag löschen oder die ganze Serie?'
+                this.modalTexts.button = 'Einzeleintrag löschen'
+                this.isSeries = true
+                this.showDeleteSeriesConfirmModal = true
+            } else {
+                this.isSeries = false
+                this.showDeleteSeriesConfirmModal = true
+            }
+        },
+        deleteAvailabilityOrVacation(){
+            if(this.vacation.type === 'available') {
+                Inertia.delete(route('delete.availability', this.vacation.id), {
                     preserveScroll: true, preserveState: true, onFinish: () => {
                         this.closeModal(true)
                     }
                 })
             }
-            if (this.vacation.type_before_update === 'vacation'){
-                this.vacation.delete(route('delete.vacation', this.vacation.id), {
+            if (this.vacation.type === 'vacation'){
+                Inertia.delete(route('delete.vacation', this.vacation.id), {
                     preserveScroll: true, preserveState: true, onFinish: () => {
                         this.closeModal(true)
                     }

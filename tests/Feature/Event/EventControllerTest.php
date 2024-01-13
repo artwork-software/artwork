@@ -70,9 +70,21 @@ test('view shiftplan with freelancer', function (Freelancer $freelancer) {
 
     $response = $this->get(route('shifts.plan'));
 
-    $response->assertInertia(fn(AssertableInertia $page) => $page
-        ->component('Shifts/ShiftPlan')
-        ->where('freelancersForShifts.0.freelancer.id', $freelancer->id));
+    $freelancers = Freelancer::where('can_work_shifts', true);
+    $count = $freelancers->count();
+
+    if ($freelancer->onVacation) {
+        $response->assertInertia(fn(AssertableInertia $page) => $page
+            ->component('Shifts/ShiftPlan')
+            ->has('freelancersForShifts', $count));
+    } else {
+        $idCount = $count;
+        $count--;
+        $response->assertInertia(fn(AssertableInertia $page) => $page
+            ->component('Shifts/ShiftPlan')
+            ->has('freelancersForShifts', $idCount)
+            ->where('freelancersForShifts.' . $count . '.freelancer.id', $freelancer->id));
+    }
 })->with([
     'freelancer can work' => fn() => Freelancer::factory()->create([
         'can_work_shifts' => true,
@@ -81,6 +93,7 @@ test('view shiftplan with freelancer', function (Freelancer $freelancer) {
         $freelancer = Freelancer::factory()->create([
             'can_work_shifts' => true,
         ]);
+        $freelancer->onVacation = true;
         FreelancerVacation::factory()->create([
             'freelancer_id' => $freelancer->id,
             'from' => today(),
@@ -506,7 +519,7 @@ test('restore event', function (Event $event) {
 test('multi delete', function () {
     $events = Event::factory(5)->create();
     $this->post(route('multi-edit.delete'), ['events' => $events->pluck('id')->toArray()]);
-    foreach($events as $event) {
+    foreach ($events as $event) {
         assertSoftDeleted($event);
     }
 });

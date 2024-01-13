@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Artwork\Modules\Room\Models;
 
+use App\Models\User;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -23,7 +24,7 @@ class RoomFactory extends Factory
             'start_date' => null,
             'end_date' => null,
             'area_id' => 1,
-            'user_id' => 1,
+            'user_id' => User::factory(),
             'order' => 1,
         ];
     }

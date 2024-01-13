@@ -7,6 +7,7 @@ use App\Models\Event;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Models\BelongsToArea;
+use Artwork\Modules\User\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Prunable;
@@ -44,6 +45,7 @@ class Room extends Model
     use Prunable;
     use HasChangesHistory;
     use BelongsToArea;
+    use BelongsToUser;
 
     protected $fillable = [
         'name',
@@ -69,7 +71,7 @@ class Room extends Model
     ];
 
 
-    public function creator()
+    public function creator(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class, 'user_id', 'id', 'users');
     }

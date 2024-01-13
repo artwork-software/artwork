@@ -392,6 +392,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/events/{event}/by/notification', [EventController::class, 'destroyByNotification'])
         ->name('events.delete.by.notification');
     Route::delete('/events/{event}/shifts', [EventController::class, 'destroyShifts'])->name('events.shifts.delete');
+
+    //Route is doubly used. So only the second line (decline) applies
     Route::put('/event/requests/{event}', [EventController::class, 'acceptEvent'])->name('events.accept');
     Route::put('/event/requests/{event}', [EventController::class, 'declineEvent'])->name('events.decline');
     Route::post('/event/answer/{event}', [EventController::class, 'answerOnEvent'])->name('event.answer');

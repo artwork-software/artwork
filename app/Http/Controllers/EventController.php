@@ -1009,14 +1009,14 @@ class EventController extends Controller
         $this->notificationService->setNotificationKey($this->notificationKey);
         $notificationTitle = 'Neue Nachricht zu Raumanfrage';
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => random_int(1, 1000000),
             'type' => 'success',
             'message' => $notificationTitle
         ];
         $room = Room::find($event->room_id);
 
 
-        $admins = [];
+        $admins = collect();
         if (!empty($room)) {
             $admins = $room->users()->wherePivot('is_admin', true)->get();
         }
@@ -1060,7 +1060,7 @@ class EventController extends Controller
         $this->notificationService->setRoomId($event->room_id);
         $this->notificationService->setEventId($event->id);
         $this->notificationService->setButtons(['accept', 'decline']);
-        if (!empty($admins)) {
+        if ($admins->count() > 0) {
             foreach ($admins as $admin) {
                 $this->notificationService->setNotificationTo($admin);
                 $this->notificationService->createNotification();
@@ -1094,7 +1094,7 @@ class EventController extends Controller
         $notificationTitle = 'Raumanfrage bestätigt';
         $this->history->createHistory($event->id, 'Raum bestätigt');
         $broadcastMessage = [
-            'id' => rand(1, 1000000),
+            'id' => random_int(1, 1000000),
             'type' => 'success',
             'message' => $notificationTitle
         ];
@@ -1102,7 +1102,7 @@ class EventController extends Controller
         $event->save();
         $room = Room::find($event->room_id);
         $project = Project::find($event->project_id);
-        $projectManagers = [];
+        $projectManagers = collect();
         if (!empty($project)) {
             $projectManagers = $project->managerUsers()->get();
         }
@@ -1316,6 +1316,7 @@ class EventController extends Controller
     /**
      * @return CalendarEventCollectionResource[]
      */
+    //is this even used?
     public function eventIndex(EventIndexRequest $request): array
     {
         $calendarFilters = json_decode($request->input('calendarFilters'));

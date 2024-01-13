@@ -4,6 +4,8 @@ namespace Database\Factories;
 
 use App\Models\EventType;
 use App\Models\User;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -29,8 +31,9 @@ class EventFactory extends Factory
             'audience' => $this->faker->boolean(0),
             'is_loud' => $this->faker->boolean(0),
             'event_type_id' => EventType::factory(),
-            'project_id' => null,
+            'project_id' => Project::factory(),
             'user_id' => User::factory(),
+            'room_id' => Room::factory(),
         ];
     }
 }

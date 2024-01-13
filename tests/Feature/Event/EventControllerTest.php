@@ -8,6 +8,7 @@ use App\Models\UserCalendarSettings;
 use App\Notifications\EventNotification;
 use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
+use Artwork\Modules\Room\Models\Room;
 use Inertia\Testing\AssertableInertia;
 use App\Models\Freelancer;
 use App\Models\FreelancerVacation;

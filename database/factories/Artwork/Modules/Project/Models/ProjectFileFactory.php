@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Artwork\Modules\Project\Models;
 
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -11,7 +12,7 @@ use Illuminate\Support\Str;
  */
 class ProjectFileFactory extends Factory
 {
-    protected $model = ProjectFileFactory::class;
+    protected $model = ProjectFile::class;
 
     /**
      * Define the model's default state.
@@ -23,7 +24,7 @@ class ProjectFileFactory extends Factory
         return [
             "name" => "Datei.pdf",
             "basename" => Str::random(20) . "Datei.pdf",
-            "project_id" => 1
+            "project_id" => Project::factory(),
         ];
     }
 }

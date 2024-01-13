@@ -3,76 +3,15 @@
 use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
 use Inertia\Testing\AssertableInertia;
+use Illuminate\Support\Facades\Event as EventFacade;
 
-/** @todo permission is always true */
-//test('users can view users if they have the right to', function () {
-//
-//    $user = User::factory()->create();
-//
-//    $user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
-//
-//    $this->actingAs($user);
-//
-//    $response = $this->get('/users')
-//        ->assertInertia(fn(AssertableInertia $page) => $page
-//            ->component('Users/Index')
-//            ->has('users.data', 2)
-//            ->has('users.data.0', fn(AssertableInertia $page) => $page
-//                ->hasAll([
-//                        'first_name',
-//                        'last_name',
-//                        'email',
-//                        'phone_number',
-//                        'position',
-//                        'business',
-//                        'departments'
-//                    ])->etc()
-//            )
-//            ->where('users.per_page', 15)
-//        );
-//
-//    $response->assertStatus(200);
-//
-//    $user->removeRole('admin');
-//
-//    $response = $this->get('/users')
-//        ->assertInertia(fn(AssertableInertia $page) => $page
-//            ->component('Users/Index')
-//            ->has('users.data', 2)
-//            ->has('users.data.0', fn(AssertableInertia $page) => $page
-//                ->hasAll([
-//                    'first_name',
-//                    'last_name',
-//                    'email',
-//                    'phone_number',
-//                    'position',
-//                    'business',
-//                    'departments'
-//                ])->etc()
-//            )
-//            ->where('users.per_page', 15)
-//        );
-//
-//    $response->assertStatus(200);
-//});
-
-/**
- * @todo I think this test is obsolete
- */
-
-//
-//test('users cannot view all users without permission', function () {
-//
-//    $user = User::factory()->create();
-//    $this->actingAs($user);
-//
-//    $response = $this->get('/users');
-//
-//    $response->assertStatus(403);
-//});
+beforeEach(function() {
+    EventFacade::fake();
+});
 
 test('users can update update other users', function () {
 
+    EventFacade::fake();
     $user = User::factory()->create();
     $department = Department::factory()->create();
 

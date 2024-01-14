@@ -64,6 +64,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\UserVacationsController;
 use App\Http\Middleware\CanEditProject;
+use App\Http\Middleware\CanViewRoom;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -161,7 +162,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/{user}/terms', [UserController::class, 'editUserTerms'])->name('user.edit.terms');
     Route::get('/users/{user}/permissions', [UserController::class, 'editUserPermissions'])
         ->name('user.edit.permissions');
-    Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])
+    Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->can('can:can manage workers')
         ->name('user.edit.workProfile');
     Route::patch('/users/{user}/edit', [UserController::class, 'update'])->name('user.update');
     Route::patch('/users/{user}/checklists', [UserController::class, 'updateChecklistStatus'])
@@ -238,7 +239,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('projects.show.calendar');
     Route::get('/projects/{project}/checklist', [ProjectController::class, 'projectChecklistTab'])
         ->name('projects.show.checklist');
-    Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])->name('projects.show.shift');
+    Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])->name('projects.show.shift')->can('can:can plan shifts');
     Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
         ->name('projects.export.budget');
     Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])
@@ -359,7 +360,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/rooms/trashed', [RoomController::class, 'getTrashed'])->name('rooms.trashed');
     Route::get('/rooms/free', [RoomController::class, 'getAllDayFree'])->name('rooms.free');
     Route::post('/rooms/{room}/duplicate', [RoomController::class, 'duplicate'])->name('rooms.duplicate');
-    Route::get('/rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
+    Route::get('/rooms/{room}', [RoomController::class, 'show'])
+        ->name('rooms.show')->middleware(['can:edit room', CanViewRoom::class]);
+    ;
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
     Route::put('/rooms/order', [RoomController::class, 'updateOrder']);
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
@@ -419,14 +422,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/events/{id}/restore', [EventController::class, 'restore'])->name('events.restore');
 
     //Shifts
-    Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])->name('shifts.plan');
+    Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])->name('shifts.plan')->can('can:can view shift plan');
     Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])->name('shifts.presets');
     Route::post('/shift/{shiftPreset}/preset/store', [ShiftPresetController::class, 'addNewShift'])
         ->name('shift.preset.store');
     Route::post('/shifts/commit', [EventController::class, 'commitShifts'])->name('shifts.commit');
 
     //EventTypes
-    Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management');
+    Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management')->can('can:change event settings');
     Route::post('/event_types', [EventTypeController::class, 'store'])->name('event_types.store');
     Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
     Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
@@ -692,7 +695,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('project.budget.reset.table');
 
     // Templates
-    Route::get('/templates/index', [BudgetTemplateController::class, 'index'])->name('templates.view.index');
+    Route::get('/templates/index', [BudgetTemplateController::class, 'index'])->name('templates.view.index')->can('can:view budget templates');
 
     //CopyRight
     Route::post('/copyright', [CopyrightController::class, 'store'])->name('copyright.store');
@@ -789,7 +792,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('freelancer.change.profile-image');
     Route::post('freelancer/add', [FreelancerController::class, 'store'])->name('freelancer.add');
     Route::delete('freelancer/{freelancer}', [FreelancerController::class, 'destroy'])->name('freelancer.destroy');
-    Route::patch('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])
+    Route::patch('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])->can('can:can manage workers')
         ->name('freelancer.update.workProfile');
     Route::patch('/freelancer/{freelancer}/terms', [FreelancerController::class, 'updateTerms'])
         ->name('freelancer.update.terms');
@@ -857,7 +860,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch(
         '/service-provider/{serviceProvider}/workProfile',
         [ServiceProviderController::class, 'updateWorkProfile']
-    )->name('service_provider.update.workProfile');
+    )->name('service_provider.update.workProfile')->can('can:can manage workers');
     Route::patch(
         '/service-provider/{serviceProvider}/terms',
         [ServiceProviderController::class, 'updateTerms']
@@ -930,14 +933,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/shift/template/search', [\App\Http\Controllers\ShiftPresetController::class, 'search'])
         ->name('shift.template.search');
 
-    Route::post('/shift/{event}/{shiftPreset}/import/preset/',
-        [\App\Http\Controllers\ShiftPresetController::class, 'import'])
+    Route::post(
+        '/shift/{event}/{shiftPreset}/import/preset/',
+        [\App\Http\Controllers\ShiftPresetController::class, 'import']
+    )
         ->name('shift.preset.import');
 
     Route::patch('/preset/timeline/update', [\App\Http\Controllers\PresetTimeLineController::class, 'update'])
         ->name('preset.timeline.update');
-    Route::delete('/preset/timeline/{presetTimeLine}/delete',
-        [\App\Http\Controllers\PresetTimeLineController::class, 'destroy'])
+    Route::delete(
+        '/preset/timeline/{presetTimeLine}/delete',
+        [\App\Http\Controllers\PresetTimeLineController::class, 'destroy']
+    )
         ->name('preset.delete.timeline.row');
     Route::post('/preset/{shiftPreset}/add', [\App\Http\Controllers\PresetTimeLineController::class, 'store'])
         ->name('preset.add.timeline.row');

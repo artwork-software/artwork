@@ -92,7 +92,7 @@ class AuthUserSeeder extends Seeder
             PermissionNameEnum::EVENT_REQUEST->value,
             PermissionNameEnum::CONTRACT_SEE_DOWNLOAD->value,
             PermissionNameEnum::SHIFT_PLANNER->value,
-            PermissionNameEnum::VIEW_BUDGET_TEMPLATES->value,
+            //PermissionNameEnum::VIEW_BUDGET_TEMPLATES->value,
         ]);
 
         foreach (NotificationConstEnum::cases() as $notificationType) {

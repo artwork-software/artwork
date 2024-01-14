@@ -17,10 +17,10 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             SettingsSeeder::class,
             ContentSeeder::class,
-            AuthUserSeeder::class,
-            FreelanceSeeder::class,
-            ServiceProviderSeeder::class,
             CraftSeed::class,
+            AuthUserSeeder::class,
+            FreelancerSeeder::class,
+            ServiceProviderSeeder::class,
             WalidRaadSeeder::class
         ]);
     }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Artwork\Modules\User\Models\BelongsToUser;
+use Artwork\Modules\Department\Models\Department;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;

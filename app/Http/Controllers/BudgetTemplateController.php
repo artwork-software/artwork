@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CellCalculations;
-use App\Models\CellComment;
-use App\Models\Column;
-use App\Models\ColumnCell;
-use App\Models\MainPosition;
-use App\Models\Project;
-use App\Models\RowComment;
-use App\Models\SubPosition;
-use App\Models\SubPositionRow;
-use App\Models\Table;
-use Illuminate\Http\RedirectResponse;
+
+use Artwork\Modules\Budget\Models\CellCalculations;
+use Artwork\Modules\Budget\Models\CellComment;
+use Artwork\Modules\Budget\Models\Column;
+use Artwork\Modules\Budget\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\RowComment;
+use Artwork\Modules\Budget\Models\SubPosition;
+use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -26,7 +26,11 @@ class BudgetTemplateController extends Controller
     {
     }
 
-    public function index()
+    /**
+     * Display a listing of the resource.
+     *
+     */
+    public function index(): \Inertia\Response
     {
         $selectedCell = request('selectedCell')
             ? ColumnCell::find(request('selectedCell'))

@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
-use App\Models\ShiftPreset;
+
+use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Shift\Models\ShiftPreset;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Inertia\Inertia;
@@ -78,6 +79,7 @@ class ShiftPresetController extends Controller
             ]);
         }
     }
+
 
     public function show(ShiftPreset $shiftPreset): void
     {

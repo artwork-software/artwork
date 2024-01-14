@@ -17,13 +17,18 @@
     </div>
     <div class="grid grid-cols-12 w-full mb-20">
         <div class="col-span-7">
-            <UserAvailabilityCalendar :calendar-data="calendarData" :date-to-show="dateToShow" />
+            <UserAvailabilityCalendar :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate" :calendar-data="calendarData" :date-to-show="dateToShow" />
         </div>
         <div class="col-span-1">
 
         </div>
         <div class="col-span-4 mt-12">
-            <UserVacations :type="type" :user="user" :vacations="vacations" />
+            <UserVacations :availabilities="availabilities" :vacationSelectCalendar="vacationSelectCalendar" :createShowDate="createShowDate" :type="type" :user="user" :vacations="vacations" />
+        </div>
+    </div>
+    <div class="grid grid-cols-7">
+        <div v-for="day in vacationSelectCalendar" :key="day.date" class="day" :class="{ 'today': day.isToday, 'not-in-month': !day.inMonth }">
+            {{ day.day }}
         </div>
     </div>
 
@@ -46,7 +51,7 @@ export default defineComponent({
     },
     mixins: [Permissions],
     components: {TemporarilyHired, UserVacations, UserAvailabilityCalendar},
-    props:['calendarData','dateToShow','user', 'vacations','type'],
+    props:['calendarData','dateToShow','user', 'vacations','type', 'vacationSelectCalendar', 'createShowDate', 'showVacationsAndAvailabilitiesDate', 'availabilities'],
 })
 </script>
 

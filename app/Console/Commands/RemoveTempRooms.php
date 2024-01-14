@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Room;
+use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Command\Command as CommandAlias;

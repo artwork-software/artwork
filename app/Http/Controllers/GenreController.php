@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Genre;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -13,13 +14,7 @@ class GenreController extends Controller
         $this->authorizeResource(Genre::class);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         Genre::create([
             'name' => $request->name,
@@ -53,19 +48,13 @@ class GenreController extends Controller
         return Redirect::back()->with('success', 'Genre updated');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Genre  $genre
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(Genre $genre): \Illuminate\Http\RedirectResponse
+    public function destroy(Genre $genre): RedirectResponse
     {
         $genre->delete();
         return Redirect::back()->with('success', 'Genre deleted');
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(int $id): RedirectResponse
     {
         $genre = Genre::onlyTrashed()->findOrFail($id);
 
@@ -74,7 +63,7 @@ class GenreController extends Controller
         return Redirect::route('projects.settings.trashed')->with('success', 'Genre deleted');
     }
 
-    public function restore(int $id)
+    public function restore(int $id): RedirectResponse
     {
         $genre = Genre::onlyTrashed()->findOrFail($id);
 

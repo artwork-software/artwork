@@ -4,6 +4,9 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Room
+ */
 class RoomCalendarResource extends JsonResource
 {
     public static $wrap = null;

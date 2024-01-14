@@ -3,20 +3,35 @@
 namespace App\Support\Services;
 
 use Antonrom\ModelChangesHistory\Models\Change;
-use App\Models\Shift;
+use App\Models\User;
+use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Support\Facades\Auth;
 
 class NewHistoryService
 {
-    public function __construct(protected string $modelObject)
-    {
-    }
-
     protected int $modelId;
 
     protected string $historyText;
 
     protected string $type = 'project';
+    protected mixed $modelObject;
+
+    public function __construct($modelObject = null)
+    {
+        if ($modelObject) {
+            $this->setModel($modelObject);
+        }
+    }
+
+    public function setModel(mixed $model): void
+    {
+        if (is_object($model)) {
+            $this->modelObject = $model::class;
+            return;
+        }
+
+        $this->modelObject = (string)$model;
+    }
 
     public function getModelId(): int
     {
@@ -78,7 +93,7 @@ class NewHistoryService
             'model_type' => $this->modelObject,
             'changes' => json_encode($array),
             'change_type' => 'updated',
-            'changer_type' => 'App\Models\User',
+            'changer_type' => User::class,
             'changer_id' => Auth::id(),
             'stack_trace' => null,
             'created_at' => now()

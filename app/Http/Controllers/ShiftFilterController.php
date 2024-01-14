@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\EventType;
-use App\Models\Room;
-use App\Models\ShiftFilter;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\ShiftFilter;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

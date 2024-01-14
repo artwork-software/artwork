@@ -1,6 +1,7 @@
 <template>
     <app-layout>
-        <ProjectShowHeaderComponent v-if="!hideProjectHeader" :project-delete-ids="projectDeleteIds"
+        <ProjectShowHeaderComponent v-if="!hideProjectHeader"
+                                    :project-delete-ids="projectDeleteIds"
                                     :projectWriteIds="projectWriteIds"
                                     :projectManagerIds="projectManagerIds"
                                     :project="project"
@@ -10,11 +11,18 @@
                                     :project-groups="projectGroups"
                                     :first-event-in-project="firstEventInProject"
                                     :last-event-in-project="lastEventInProject"
-                                    :rooms-with-audience="RoomsWithAudience"
+                                    :rooms-with-audience="roomsWithAudience"
                                     :group-projects="groupProjects"
                                     :access_budget="access_budget"
                                     open-tab="budget">
-            <BudgetTab @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation" :hideProjectHeader="hideProjectHeader" :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :budget="budget" :money-sources="moneySources"></BudgetTab>
+            <BudgetTab @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation"
+                       :hideProjectHeader="hideProjectHeader"
+                       :projectWriteIds="projectWriteIds"
+                       :projectManagerIds="projectManagerIds"
+                       :project="project"
+                       :budget="budget"
+                       :money-sources="moneySources"
+            />
         </ProjectShowHeaderComponent>
         <BudgetTab @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation" :hideProjectHeader="hideProjectHeader" :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :budget="budget" :money-sources="moneySources" v-else ></BudgetTab>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
@@ -22,6 +30,7 @@
                 :project="project"
                 :cost-center="project.cost_center"
                 :copyright="project.copyright"
+                :projectManagerIds="projectManagerIds"
                 :project-files="project.project_files"
                 :contracts="project.contracts"
                 :money-sources="projectMoneySources"
@@ -31,9 +40,7 @@
     </app-layout>
 </template>
 
-
 <script>
-
 import {defineComponent} from "vue";
 import ProjectShowHeaderComponent from "@/Pages/Projects/Components/ProjectShowHeaderComponent.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
@@ -48,7 +55,12 @@ export default defineComponent({
     components: {
         InfoTab,
         ProjectSidenav,
-        BudgetTab, AppLayout, ProjectShiftSidenav, ShiftTab, BaseSidenav, ProjectShowHeaderComponent
+        BudgetTab,
+        AppLayout,
+        ProjectShiftSidenav,
+        ShiftTab,
+        BaseSidenav,
+        ProjectShowHeaderComponent
     },
     props: [
         'project',
@@ -58,7 +70,7 @@ export default defineComponent({
         'projectGroups',
         'firstEventInProject',
         'lastEventInProject',
-        'RoomsWithAudience',
+        'roomsWithAudience',
         'budget',
         'moneySources',
         'projectMoneySources',
@@ -81,7 +93,3 @@ export default defineComponent({
     },
 })
 </script>
-
-<style scoped>
-
-</style>

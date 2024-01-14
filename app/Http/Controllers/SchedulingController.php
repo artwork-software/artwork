@@ -5,13 +5,13 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\Event;
-use App\Models\GlobalNotification;
-use App\Models\Project;
-use App\Models\Room;
 use App\Models\Scheduling;
-use App\Models\Task;
+
 use App\Models\User;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Notification\Models\GlobalNotification;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use DateTime;
 use Exception;
@@ -32,9 +32,6 @@ class SchedulingController extends Controller
         $this->notificationData->room = new stdClass();
     }
 
-    public function index(): void
-    {
-    }
 
     public function create($userId, $type, $model, $modelId): bool
     {
@@ -58,26 +55,12 @@ class SchedulingController extends Controller
         return true;
     }
 
-    public function store(): void
-    {
-    }
-
-    public function show(): void
-    {
-    }
-
-    public function edit(): void
-    {
-    }
-
-    public function update(): void
-    {
-    }
 
     public function destroy(Scheduling $scheduling): void
     {
         $scheduling->delete();
     }
+
 
     /**
      * @throws Exception
@@ -370,7 +353,7 @@ class SchedulingController extends Controller
                     $user = User::find($schedule->model_id);
                     $notificationTitle = 'Verfügbarkeit geändert';
                     $broadcastMessage = [
-                        'id' => rand(1, 1000000),
+                        'id' => random_int(1, 1000000),
                         'type' => 'success',
                         'message' => $notificationTitle
                     ];

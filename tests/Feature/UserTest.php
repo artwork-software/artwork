@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Department;
 use App\Models\User;
+use Artwork\Modules\Department\Models\Department;
 use Inertia\Testing\AssertableInertia;
 
 /** @todo permission is always true */
@@ -176,20 +176,6 @@ test('users can delete other users', function () {
     $this->assertDatabaseMissing('users', [
         "id" => $user_to_edit->id,
     ]);
-
-    /** @todo permissions below do not exist */
-//    $user_to_edit = User::factory()->create();
-//    $user->removeRole('admin');
-//    $user->givePermissionTo('delete users');
-//
-//    $response = $this->delete("/users/{$user_to_edit->id}");
-//
-//    $response->assertStatus(302);
-//
-//    $this->assertDatabaseMissing('users', [
-//        "id" => $user_to_edit->id,
-//    ]);
-
 });
 
 test('users can delete their own accounts', function () {

@@ -203,8 +203,8 @@ export default {
             linkedType: this.selectedSumDetail.sum_money_source?.linked_type === 'EARNING' ? linkTypes[0] : linkTypes[1],
             selectedMoneySource: this.selectedSumDetail.sum_money_source?.money_source ?? null,
             linkTypes,
-            isCommentTab: true,
-            isLinkTab: false,
+            isCommentTab: this.openTab === 'comment',
+            isLinkTab: this.openTab === 'moneySource',
             cellComment: null,
             commentHovered: null,
             calculationHovered: null,
@@ -218,7 +218,7 @@ export default {
         }
     },
 
-    props: ['selectedSumDetail','projectId'],
+    props: ['selectedSumDetail','projectId','openTab'],
 
     emits: ['closed'],
     watch: {

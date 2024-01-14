@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\FileUpload;
 use App\Models\Comment;
-use App\Models\Project;
-use App\Models\ProjectFile;
+
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectFile;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,11 +27,11 @@ class ProjectFileController extends Controller
 
     public function __construct()
     {
-        $this->history = new NewHistoryService('App\Models\Project');
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
         $this->notificationService = new NotificationService();
     }
 
-    public function store(FileUpload $request, Project $project): RedirectResponse
+    public function store(FileUpload $request, Project $project, ProjectController $projectController): RedirectResponse
     {
         $this->authorize('view', $project);
 
@@ -69,7 +70,6 @@ class ProjectFileController extends Controller
         }
 
         $this->history->createHistory($project->id, 'Datei ' . $original_name . ' hinzugefügt', 'public_changes');
-        $projectController = new ProjectController();
         $projectController->setPublicChangesNotification($project->id);
 
         $projectFileUsers =  $projectFile->accessingUsers()->get();
@@ -186,12 +186,11 @@ class ProjectFileController extends Controller
         return Redirect::back();
     }
 
-    public function destroy(ProjectFile $projectFile): RedirectResponse
+    public function destroy(ProjectFile $projectFile, ProjectController $projectController): RedirectResponse
     {
         $this->authorize('view', $projectFile->project);
         $project = $projectFile->project()->first();
         $this->history->createHistory($project->id, 'Datei ' . $projectFile->name . ' gelöscht', 'public_changes');
-        $projectController = new ProjectController();
         $projectController->setPublicChangesNotification($project->id);
 
         $projectFileUsers =  $projectFile->accessingUsers()->get();

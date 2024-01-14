@@ -4,7 +4,7 @@
                        :days-with-events="daysWithEvents"
                        :projects="projects" :event-types="eventTypes" :rooms="rooms"
                        :vacations="vacations"></UserShiftPlan>
-        <Availability type="user" :calendar-data="calendarData" :date-to-show="dateToShow"
+        <Availability :availabilities="availabilities" :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate" type="user" :calendar-data="calendarData" :vacationSelectCalendar="vacationSelectCalendar" :createShowDate="createShowDate" :date-to-show="dateToShow"
                       :user="user_to_edit" :vacations="vacations"/>
     </UserEditHeader>
 </template>
@@ -41,7 +41,11 @@ export default {
         'vacations',
         'calendarData',
         'dateToShow',
-        'shifts'
+        'shifts',
+        'vacationSelectCalendar',
+        'createShowDate',
+        'showVacationsAndAvailabilitiesDate',
+        'availabilities'
     ],
     data() {
         return {

@@ -7,23 +7,26 @@ use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
 use App\Models\Comment;
+use App\Models\CompanyType;
 use App\Models\Contract;
 use App\Models\ContractModule;
-use App\Models\Project;
+use App\Models\ContractType;
+use App\Models\Currency;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Project\Models\Project;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -45,7 +48,10 @@ class ContractController extends Controller
         $contracts = Contract::all();
         return inertia('Contracts/ContractManagement', [
             'contracts' => ContractResource::collection($contracts),
-            'contract_modules' => ContractModuleResource::collection(ContractModule::all())
+            'contract_modules' => ContractModuleResource::collection(ContractModule::all()),
+            'contract_types' => ContractType::all(),
+            'company_types' => CompanyType::all(),
+            'currencies' => Currency::all(),
         ]);
     }
 

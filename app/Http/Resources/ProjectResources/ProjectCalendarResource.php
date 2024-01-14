@@ -4,10 +4,14 @@ namespace App\Http\Resources\ProjectResources;
 
 use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\UserResourceWithoutShifts;
-use App\Models\ProjectStates;
+
+use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @mixin \Artwork\Modules\Project\Models\Project
+ */
 class ProjectCalendarResource extends JsonResource
 {
     public static $wrap = null;

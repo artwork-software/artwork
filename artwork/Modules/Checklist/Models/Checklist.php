@@ -2,12 +2,12 @@
 
 namespace Artwork\Modules\Checklist\Models;
 
-use App\Models\Department;
-use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
-use Artwork\Modules\Project\Models\BelongsToProject;
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\Trails\BelongsToProject;
 use Artwork\Modules\User\Models\BelongsToUser;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -45,7 +45,7 @@ class Checklist extends Model
         return $this->hasMany(Task::class);
     }
 
-    public function users()
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class);
     }

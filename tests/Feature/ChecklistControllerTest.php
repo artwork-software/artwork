@@ -4,10 +4,8 @@ namespace Tests\Feature;
 
 use App\Enums\PermissionNameEnum;
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\Department;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Permission;
+use Artwork\Modules\Department\Models\Department;
 use Tests\TestCase;
 
 class ChecklistControllerTest extends TestCase

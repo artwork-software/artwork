@@ -1,9 +1,9 @@
 <?php
 
-use App\Models\Area;
-use App\Models\Room;
-use App\Models\RoomFile;
 use App\Models\User;
+use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomFile;
 use Illuminate\Http\UploadedFile;
 
 beforeEach(function () {

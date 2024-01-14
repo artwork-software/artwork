@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SumComment;
+use Artwork\Modules\Budget\Models\SumComment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

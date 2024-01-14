@@ -36,12 +36,15 @@
                                     </ListboxOptions>
                                 </transition>
                             </Listbox>
-                            <button @click="openSelectAddUsersModal = true" type="button" class="rounded-full bg-buttonBlue p-1 mr-1 text-white shadow-sm hover:bg-buttonHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
-                                <PlusIcon class="h-4 w-4" aria-hidden="true" />
-                            </button>
-                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                <span class="hind ml-1 my-auto">Lade neue Nutzer*innen ein</span>
+                            <div class="flex" v-if="this.$can('can manage workers') || this.hasAdminRole()">
+                                <button @click="openSelectAddUsersModal = true" type="button"
+                                        class="rounded-full bg-buttonBlue p-1 mr-1 text-white shadow-sm hover:bg-buttonHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
+                                    <PlusIcon class="h-4 w-4" aria-hidden="true"/>
+                                </button>
+                                <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
+                                    <span class="hind ml-1 my-auto">Lade neue Nutzer*innen ein</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -58,7 +61,8 @@
                         </div>
                     </div>
                     <ul role="list" class="mt-6 w-full">
-                        <li v-if="user_search_results.length < 1" v-for="(user,index) in userObjectsToShow" :key="user.email" class="py-6 flex justify-between">
+                        <li v-if="user_search_results.length < 1" v-for="(user,index) in userObjectsToShow"
+                            :key="user.email" class="py-6 flex justify-between">
                             <div class="flex">
                                 <img class="h-14 w-14 rounded-full object-cover flex-shrink-0 flex justify-start"
                                      :src="user.profile_photo_url ?? user.profile_image"
@@ -70,14 +74,14 @@
                                             {{ user.display_name ?? user.provider_name }}
                                             <span v-if="user.position || user.business">, </span>
                                         </Link>
-                                        <p class="ml-1 xxsDarkBold my-auto" >
+                                        <p class="ml-1 xxsDarkBold my-auto">
                                             <span v-if="user.business">{{ user.business }}, </span>
                                             <span v-if="user.position">{{ user.position }}</span></p>
                                     </div>
                                 </div>
                             </div>
                             <div class="flex">
-                                <div class="flex mr-8 items-center"  v-if="selectedFilter.type === 'users'">
+                                <div class="flex mr-8 items-center" v-if="selectedFilter.type === 'users'">
                                     <div class="-mr-3" v-for="department in user.departments?.slice(0,2)">
                                         <TeamIconCollection :data-tooltip-target="department.id"
                                                             class="h-10 w-10 rounded-full ring-2 ring-white"
@@ -120,7 +124,7 @@
                                         </Menu>
                                     </div>
                                 </div>
-                                <Menu as="div" class="my-auto relative"  v-if="hasAdminRole()">
+                                <Menu as="div" class="my-auto relative" v-if="hasAdminRole()">
                                     <div>
                                         <div class="flex">
                                             <MenuButton
@@ -147,7 +151,8 @@
                                                 leave-active-class="transition ease-in duration-75"
                                                 leave-from-class="transform opacity-100 scale-100"
                                                 leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none z-10">
+                                        <MenuItems
+                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none z-10">
                                             <div class="py-1">
                                                 <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a :href="checkLink(user)"
@@ -242,7 +247,7 @@
                                         </Menu>
                                     </div>
                                 </div>
-                                <Menu as="div" class="my-auto relative"  v-if="hasAdminRole()">
+                                <Menu as="div" class="my-auto relative" v-if="hasAdminRole()">
                                     <div>
                                         <div class="flex">
                                             <MenuButton
@@ -330,7 +335,7 @@
                     </div>
                     <div class="flex justify-between mt-6">
                         <AddButton text="Löschen" mode="modal" class="px-20 py-3"
-                                @click="deleteUser" />
+                                   @click="deleteUser"/>
                         <div class="flex my-auto">
                             <span @click="closeDeleteUserModal()"
                                   class="xsLight cursor-pointer">Nein, doch nicht</span>
@@ -377,7 +382,8 @@
         :roles="roles"
     />
 
-    <AddUsersModal v-if="openSelectAddUsersModal" @closeModal="openSelectAddUsersModal = false" @openUserModal="addingUser = true" />
+    <AddUsersModal v-if="openSelectAddUsersModal" @closeModal="openSelectAddUsersModal = false"
+                   @openUserModal="addingUser = true"/>
 </template>
 
 <script>
@@ -522,14 +528,14 @@ export default defineComponent({
         },
     },
     methods: {
-        checkLink(user){
-            if(user.type === 'freelancer'){
+        checkLink(user) {
+            if (user.type === 'freelancer') {
                 return route('freelancer.show', {freelancer: user.id});
             }
-            if( user.type === 'service_provider'){
+            if (user.type === 'service_provider') {
                 return route('service_provider.show', {serviceProvider: user.id});
             }
-            if(user.user === 'user'){
+            if (user.user === 'user') {
                 return route('user.edit.shiftplan', {user: user.id});
             }
 
@@ -580,7 +586,7 @@ export default defineComponent({
         },
         closeAddUserModal(bool) {
             this.addingUser = false;
-            if(bool){
+            if (bool) {
                 this.openSuccessModal();
             }
         },
@@ -600,7 +606,7 @@ export default defineComponent({
                             user.name = user.first_name + ' ' + user.last_name;
                         })
                     })
-                }else{
+                } else {
                     this.user_search_results = [];
                 }
             },

@@ -10,8 +10,9 @@ use App\Models\ContractType;
 use App\Models\Copyright;
 use App\Models\CostCenter;
 use App\Models\Currency;
-use App\Models\Department;
-use App\Models\Project;
+
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Project\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -338,7 +339,7 @@ class ContentSeeder extends Seeder
             'number_of_participants' => null,
         ]);
 
-        $projectController = new ProjectController();
+        $projectController = app()->get(ProjectController::class);
         $projectController->generateBasicBudgetValues($project);
 
 

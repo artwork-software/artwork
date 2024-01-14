@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\RoomPdfResource;
-use App\Models\Project;
-use App\Models\Room;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -42,7 +42,7 @@ class ExportPDFController extends Controller
             'personalFilters' => $showCalendar['personalFilters'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'user_filters' => $showCalendar['user_filters'],
-            'events' => $events = new CalendarEventCollectionResourceModel(
+            'events' => new CalendarEventCollectionResourceModel(
                 areas: $showCalendar['filterOptions']['areas'],
                 projects: new Collection(),
                 eventTypes: $showCalendar['filterOptions']['eventTypes'],

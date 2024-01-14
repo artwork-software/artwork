@@ -7,9 +7,9 @@ use App\Events\UserUpdated;
 use App\Http\Requests\AcceptInvitationRequest;
 use App\Http\Requests\StoreInvitationRequest;
 use App\Mail\InvitationCreated;
-use App\Models\Department;
 use App\Models\Invitation;
 use App\Models\User;
+use Artwork\Modules\Department\Models\Department;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\RedirectResponse;
@@ -74,8 +74,8 @@ class InvitationController extends Controller
             $invitation = Invitation::create([
                 'email' => $email,
                 'token' => $token['hash'],
-                'permissions' => json_encode($permissions),
-                'roles' => json_encode($roles)
+                'permissions' => $permissions,
+                'roles' => $roles
             ]);
 
             $invitation->departments()->sync(
@@ -139,7 +139,7 @@ class InvitationController extends Controller
     {
         /** @var Invitation $invitation */
         $invitation = Invitation::query()
-            ->where('email', request()->email)
+            ->where('email', $request->email)
             ->with('departments')
             ->firstOrFail();
 

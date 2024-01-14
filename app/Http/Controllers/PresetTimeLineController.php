@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PresetTimeLine;
-use App\Models\ShiftPreset;
+use Artwork\Modules\Shift\Models\PresetTimeLine;
+use Artwork\Modules\Shift\Models\ShiftPreset;
 use Illuminate\Http\Request;
 
 class PresetTimeLineController extends Controller
@@ -21,13 +21,16 @@ class PresetTimeLineController extends Controller
         $shiftPreset->timeLine()->create();
     }
 
+
     public function show(PresetTimeLine $presetTimeLine): void
     {
     }
 
+
     public function edit(PresetTimeLine $presetTimeLine): void
     {
     }
+
 
     public function update(Request $request): void
     {

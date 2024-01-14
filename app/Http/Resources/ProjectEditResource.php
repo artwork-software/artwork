@@ -2,9 +2,12 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Department;
+use Artwork\Modules\Department\Models\Department;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Project\Models\Project
+ */
 class ProjectEditResource extends JsonResource
 {
     public static $wrap = null;

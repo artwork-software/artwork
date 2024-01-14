@@ -4,7 +4,7 @@
 
         <div class="w-full flex my-auto items-center justify-between mb-3 mt-10">
             <div class="flex items-center justify-between">
-                <Listbox as="div" class="flex w-72" v-model="selectedFilter">
+                <Listbox as="div" class="flex w-72 ml-5" v-model="selectedFilter">
                     <ListboxButton
                         class="bg-white w-full relative py-2 cursor-pointer focus:outline-none">
                         <div class="flex items-center my-auto">
@@ -66,7 +66,7 @@
                 </div>
             </div>
             <div v-else>
-                <div class="rounded-md bg-red-50 p-4">
+                <div class="rounded-md bg-red-50 p-4 ml-5">
                     <div class="flex text-sm text-red-700">
                         Keine Schichtvorlagen vorhanden.
                     </div>

@@ -4,6 +4,9 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin \Artwork\Modules\Project\Models\Project
+ */
 class ProjectIndexAdminResource extends JsonResource
 {
     public static $wrap = null;

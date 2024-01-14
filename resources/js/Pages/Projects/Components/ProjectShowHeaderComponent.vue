@@ -1,6 +1,7 @@
 <template>
     <div class="ml-14 pr-14">
         <div class="flex flex-col">
+            <!-- if in group -->
             <div v-if="currentGroup" class="bg-secondaryHover -mb-6 z-20 w-fit pr-6 pb-0.5">
                 <div class="flex items-center">
                         <span v-if="!project.is_group">
@@ -97,10 +98,10 @@
                     v-if="firstEventInProject?.start_time">Uhr -</span> {{ lastEventInProject?.end_time }} <span
                     v-if="lastEventInProject?.end_time">Uhr</span>
                 </div>
-                <div v-if="RoomsWithAudience">
-                    Termine mit Publikum in: <span>{{ locationString }}</span>
+                <div v-if="roomsWithAudience">
+                    Termine mit Publikum in: <span>{{ locationString() }}</span>
                 </div>
-                <div v-if="!RoomsWithAudience && !(firstEventInProject && lastEventInProject)">
+                <div v-if="!roomsWithAudience && !(firstEventInProject && lastEventInProject)">
                     Noch keine Termine innerhalb dieses Projektes
                 </div>
             </div>
@@ -233,7 +234,7 @@ export default {
         'projectGroups',
         'firstEventInProject',
         'lastEventInProject',
-        'RoomsWithAudience',
+        'roomsWithAudience',
         'groupProjects',
         'openTab',
         'projectManagerIds',
@@ -265,7 +266,7 @@ export default {
                     name: 'Budget',
                     href: '#',
                     current: this.openTab === 'budget',
-                    show: this.hasAdminRole() || this.hasBudgetAccess() || this.projectManagerIds.includes(this.$page.props.user.id) || this.$canAny(['can manage global project budgets', 'access project budgets'])
+                    show: this.hasAdminRole() || this.hasBudgetAccess() || this.projectManagerIds.includes(this.$page.props.user.id) || this.$canAny(['can manage global project budgets','can manage all project budgets without docs'])
                 },
                 {name: 'Kommentare', href: '#', current: this.openTab === 'comment', show: true},
             ]
@@ -314,7 +315,7 @@ export default {
             this.closeDeleteProjectModal();
         },
         locationString() {
-            return Object.values(this.RoomsWithAudience).join(", ");
+            return Object.values(this.roomsWithAudience).join(", ");
         },
         changeTab(selectedTab) {
             if (selectedTab.name === 'Ablaufplan') {

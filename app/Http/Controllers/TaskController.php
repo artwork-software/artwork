@@ -7,7 +7,7 @@ use App\Enums\RoleNameEnum;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\TaskShowResource;
-use App\Models\Project;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\MoneySourceTask;
 use App\Models\Task;
@@ -167,11 +167,10 @@ class TaskController extends Controller
         }
 
         if ($checklist = $task->checklist()->first()) {
-            $this->history = new NewHistoryService('App\Models\Project');
-            $this->history->createHistory(
-                $checklist->project_id,
-                'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert'
-            );
+
+            $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
+            $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert');
+
 
             $this->createNotificationUpdateTask($task);
         }
@@ -212,11 +211,10 @@ class TaskController extends Controller
     public function destroy(Task $task): RedirectResponse
     {
         $checklist = $task->checklist()->first();
-        $this->history = new NewHistoryService('App\Models\Project');
-        $this->history->createHistory(
-            $checklist->project_id,
-            'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' gelöscht'
-        );
+
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
+        $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' gelöscht');
+
         $task->delete();
         return Redirect::back()->with('success', 'Task deleted');
     }

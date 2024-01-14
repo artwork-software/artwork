@@ -2,6 +2,11 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Availability\Models\Available;
+use Artwork\Modules\Availability\Models\HasAvailability;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Vacation\Models\GoesOnVacation;
+use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
@@ -31,10 +36,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $updated_at
  * @property int $can_work_shifts
  */
-class Freelancer extends Model
+class Freelancer extends Model implements Vacationer, Available
 {
     use HasFactory;
+    use GoesOnVacation;
+    use HasAvailability;
 
+    /**
+     * @var string[]
+     */
     protected $fillable = [
         'position',
         'profile_image',
@@ -98,9 +108,17 @@ class Freelancer extends Model
         return $this->last_name . ', ' . $this->first_name;
     }
 
-    public function vacations(): HasMany
+
+    public function getShiftsAttribute(): Collection
     {
-        return $this->hasMany(FreelancerVacation::class);
+        return $this->shifts()
+            ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
+            ->with(['event.room'])
+            ->get()
+            ->makeHidden(['allUsers'])
+            ->groupBy(function ($shift) {
+                return $shift->event->days_of_event;
+            });
     }
 
     public function assignedCrafts(): BelongsToMany
@@ -125,18 +143,6 @@ class Freelancer extends Model
     }
 
 
-    public function getShiftsAttribute(): Collection
-    {
-        return $this->shifts()
-            ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
-            ->with(['event.room'])
-            ->get()
-            ->makeHidden(['allUsers'])
-            ->groupBy(function ($shift) {
-                return $shift->event->days_of_event;
-            });
-    }
-
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
         $shiftsInDateRange = $this->shifts()
@@ -155,25 +161,5 @@ class Freelancer extends Model
         }
 
         return $plannedWorkingHours;
-    }
-
-    /**
-     * @return string[]
-     */
-    public function hasVacationDays(): array
-    {
-        $vacations = $this->vacations()->get();
-        $returnInterval = [];
-        foreach ($vacations as $vacation) {
-            $start = Carbon::parse($vacation->from);
-            $end = Carbon::parse($vacation->until);
-
-            $interval = CarbonPeriod::create($start, $end);
-
-            foreach ($interval as $date) {
-                $returnInterval[] = $date->format('Y-m-d');
-            }
-        }
-        return $returnInterval;
     }
 }

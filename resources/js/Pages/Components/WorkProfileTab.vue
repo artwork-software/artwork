@@ -198,7 +198,7 @@ export default {
                     }
 
                     if (desiredRoute) {
-                        this.craftSettingsForm.post(
+                        this.craftSettingsForm.patch(
                             route(desiredRoute, routeParameter),
                             {
                                 preserveScroll:true,
@@ -231,7 +231,13 @@ export default {
             }
 
             if (desiredRoute) {
-                this.workProfileForm.post(route(desiredRoute, routeParameter));
+                this.workProfileForm.patch(
+                    route(desiredRoute, routeParameter),
+                    {
+                        preserveScroll:true,
+                        preserveState:true
+                    }
+                );
             }
         },
         assignCraft() {
@@ -254,7 +260,7 @@ export default {
             }
 
             if (desiredRoute) {
-                Inertia.post(
+                Inertia.patch(
                     route(desiredRoute, routeParameter),
                     {
                         craftId: this.selectedCraftToAssign

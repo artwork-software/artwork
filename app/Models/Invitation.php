@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Department\Models\Department;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property array roles
  * @property string created_at
  * @property string updated_at
+ * @property \Illuminate\Database\Eloquent\Collection<\Artwork\Modules\Department\Models\Department> $departments
  */
 class Invitation extends Model
 {

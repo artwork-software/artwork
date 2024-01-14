@@ -24,7 +24,6 @@
                                    class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail*</label>
                         </div>
                         <jet-input-error :message="form.error" class="mt-2"/>
-
                         <div class="flex m-2">
                             <button
                                 :class="[emailInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
@@ -32,7 +31,6 @@
                                 <CheckIcon class="h-5 w-5"></CheckIcon>
                             </button>
                         </div>
-
                     </div>
                     <span v-for="(email,index) in form.user_emails"
                           class="flex mt-4 mr-1 rounded-full items-center sDark">
@@ -43,18 +41,17 @@
                             class="ml-1 mt-1 h-5 w-5 hover:text-error "/>
                     </button>
                     </span>
-                    <ul>
+                    <ul class="mt-4">
                         <li class="errorText" v-for="(error,key) in errors" :key="key">
                             {{ error }}
                         </li>
                     </ul>
-                    <span v-if="form.departments.length === 0" class="flex inline-flex mt-16 pt-1 -mr-3">
-
-                        </span>
+                    <span v-if="form.departments.length === 0" class="flex inline-flex mt-16 pt-1 -mr-3"></span>
                     <span class="flex inline-flex mt-4 -mr-3" v-for="team in form.departments">
-                                <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white object-cover"
-                                                    :iconName="team.svg_name"/>
-                        </span>
+                        <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white object-cover"
+                                            :iconName="team.svg_name"
+                        />
+                    </span>
                     <Disclosure as="div">
                         <div class="flex mt-4 mb-10">
                             <DisclosureButton>
@@ -92,15 +89,12 @@
                         </transition>
                     </Disclosure>
                     <div class="pb-5 my-2 border-gray-200 sm:pb-0">
-                        <h3 class="mt-6 mb-8 headline2">Nutzerrechte
-                            definieren</h3>
-
+                        <h3 class="mt-6 mb-8 headline2">Nutzerrechte definieren</h3>
                         <div class="mb-8">
                             <div v-for="role in roles">
                                 <Checkbox @click="changeRole(role)" :item="role"></Checkbox>
                             </div>
                         </div>
-
                     </div>
                     <div v-if="!this.form.roles.includes('artwork admin')" class="pb-5 my-2 border-gray-200 sm:pb-0">
                         <div v-on:click="showPresets = !showPresets">
@@ -111,13 +105,11 @@
                                 <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                             </h2>
                         </div>
-
                         <div class="mb-8" v-if="showPresets">
                             <div v-for="preset in presets">
                                 <Checkbox @click="usePreset(preset)" :item="preset"></Checkbox>
                             </div>
                         </div>
-
                     </div>
                     <div v-if="!this.form.roles.includes('artwork admin')">
                         <div v-on:click="showUserPermissions = !showUserPermissions">
@@ -130,32 +122,29 @@
                         </div>
                         <div v-if="showUserPermissions && this.form.role !== 'admin'"
                              class="flex flex-col">
-
                             <div v-for="(permissions, group) in all_permissions">
-
                                 <h3 class="headline6Light mb-2 mt-6">{{ group }}</h3>
-
                                 <div class="relative w-full flex items-center"
                                      v-for="(permission, index) in permissions" :key=index>
                                     <Checkbox @click="changePermission(permission)" class="w-full"
                                               :item="permission"></Checkbox>
                                 </div>
-
                             </div>
-
                         </div>
-
                     </div>
                 </div>
-
                 <div class="w-full items-center text-center">
-                    <AddButton :class="[form.processing || (form.user_emails.length === 0 && emailInput.length < 3) ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                               class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                               @click="addUser"
-                               :disabled=" form.processing || (form.user_emails.length === 0 && emailInput.length < 3)"
-                               text="Einladen" mode="modal"/>
+                    <AddButton :class="[
+                            form.processing || (form.user_emails.length === 0 && emailInput.length < 3) ?
+                                'bg-secondary':
+                                'bg-buttonBlue hover:bg-buttonHover focus:outline-none',
+                                'mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-secondaryHover'
+                        ]"
+                        @click="addUser"
+                        :disabled="form.processing || (form.user_emails.length === 0 && emailInput.length < 3)"
+                        text="Einladen"
+                        mode="modal"
+                    />
                 </div>
             </div>
         </template>
@@ -331,10 +320,10 @@ export default {
                     presetPermissions = ['view edit upload contracts', 'can see, edit and delete project contracts and docs'];
                     break;
                 case 'Budgetadmin':
-                    presetPermissions = ['access project budgets', 'can add and remove verified states'];
+                    presetPermissions = ['can manage global project budgets', 'can add and remove verified states'];
                     break;
                 case 'Disponent*in':
-                    presetPermissions = ['admin rooms', 'create, delete and update rooms'];
+                    presetPermissions = ['create, delete and update rooms'];
                     break;
                 case 'Finanzierungsquellenadmin':
                     presetPermissions = ['view edit add money_sources', 'can edit and delete money sources'];
@@ -349,9 +338,9 @@ export default {
                 permissions.forEach((permission) => {
                     if (presetPermissions.includes(permission.name)) {
                             permission.checked = !preset.checked;
-                            if(permission.checked){
+                            if (permission.checked){
                                 this.form.permissions.push(permission.name);
-                            }else{
+                            } else {
                                 if (this.form.permissions.includes(permission.name)) {
                                     this.form.permissions = this.form.permissions.filter(permissionName => permissionName !== permission.name);
                                 }
@@ -395,14 +384,9 @@ export default {
         },
     },
     setup() {
-
         return {
             presets
         }
     }
 }
 </script>
-
-<style scoped>
-
-</style>

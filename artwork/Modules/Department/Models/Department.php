@@ -2,7 +2,6 @@
 
 namespace Artwork\Modules\Department\Models;
 
-
 use App\Models\ChecklistTemplate;
 use App\Models\Invitation;
 use App\Models\User;

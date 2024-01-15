@@ -32,6 +32,9 @@
                             </button>
                         </div>
                     </div>
+                    <ul v-if="showInvalidEmailErrorText" class="mt-4">
+                        <li class="errorText">Dies ist keine gültige E-Mail Adresse.</li>
+                    </ul>
                     <span v-for="(email,index) in form.user_emails"
                           class="flex mt-4 mr-1 rounded-full items-center sDark">
                             {{ email }}
@@ -126,8 +129,10 @@
                                 <h3 class="headline6Light mb-2 mt-6">{{ group }}</h3>
                                 <div class="relative w-full flex items-center"
                                      v-for="(permission, index) in permissions" :key=index>
-                                    <Checkbox @click="changePermission(permission)" class="w-full"
-                                              :item="permission"></Checkbox>
+                                    <Checkbox @click="changePermission(permission)"
+                                              class="w-full"
+                                              :item="permission"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -148,7 +153,6 @@
                 </div>
             </div>
         </template>
-
     </jet-dialog-modal>
 </template>
 <script>
@@ -184,7 +188,7 @@ const presets = [
         name: 'Finanzierungsquellenadmin',
         name_de: 'Finanzierungsquellenadmin',
         tooltipText: '',
-        showIcon: false,
+        showIcon: false
     }
 ];
 
@@ -243,13 +247,22 @@ export default {
                 departments: [],
                 roles: [],
             }),
-            showGlobalRoles: true
+            showGlobalRoles: true,
+            showInvalidEmailErrorText: false
         }
     },
     computed: {
         errors() {
             return this.$page.props.errors;
         }
+    },
+    updated() {
+        //if component is updated set permissions to checked if they are contained in form
+        Object.values(this.all_permissions).forEach((permissions) => {
+            permissions.forEach((permission) => {
+                permission.checked = this.form.permissions.includes(permission.name);
+            });
+        });
     },
     methods: {
         closeUserModal(bool){
@@ -266,9 +279,14 @@ export default {
             this.closeModal(bool);
         },
         addEmailToInvitationArray() {
-            if (this.emailInput.indexOf(' ') === -1) {
-                this.form.user_emails.push(this.emailInput);
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(this.emailInput)) {
+                this.showInvalidEmailErrorText = true;
+                return;
             }
+
+            this.showInvalidEmailErrorText = false;
+            this.form.user_emails.push(this.emailInput);
             this.emailInput = "";
         },
         deleteEmailFromInvitationArray(index) {
@@ -294,7 +312,6 @@ export default {
                     role.checked = false;
                 }
             }
-
         },
         changePermission(permission) {
             if (!permission.checked) {
@@ -306,7 +323,6 @@ export default {
                     permission.checked = false;
                 }
             }
-
         },
         usePreset(preset) {
             // Get the preset permissions

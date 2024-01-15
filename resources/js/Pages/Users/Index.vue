@@ -42,7 +42,9 @@
                                     <PlusIcon class="h-4 w-4" aria-hidden="true"/>
                                 </button>
                                 <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
+                                    <div  class="mt-1 ml-2">
+                                        <SvgCollection svgName="arrowLeft"/>
+                                    </div>
                                     <span class="hind ml-1 my-auto">Lade neue Nutzer*innen ein</span>
                                 </div>
                             </div>
@@ -135,8 +137,8 @@
                                             </MenuButton>
                                             <div v-if="$page.props.can.show_hints && index === 0"
                                                  class="absolute flex w-40 ml-9">
-                                                <div>
-                                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
+                                                <div class="mt-1 ml-1">
+                                                    <SvgCollection svgName="arrowLeft"/>
                                                 </div>
                                                 <div class="flex">
                                                     <span
@@ -258,8 +260,8 @@
                                             </MenuButton>
                                             <div v-if="$page.props.can.show_hints && index === 0"
                                                  class="absolute flex w-40 ml-6">
-                                                <div>
-                                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
+                                                <div class="mt-1 ml-1">
+                                                    <SvgCollection svgName="arrowLeft"/>
                                                 </div>
                                                 <div class="flex">
                                                     <span

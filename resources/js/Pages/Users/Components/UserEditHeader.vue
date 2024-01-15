@@ -82,7 +82,6 @@ export default {
                 {id: 4, name: 'Nutzerrechte', href: '#', current: this.currentTab === 'permissions', has_permission: this.hasAdminRole()},
                 {id: 5, name: 'Arbeitsprofil', href: '#', current: this.currentTab === 'workProfile', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
             ],
-            currentTab: 1,
         }
     },
     methods: {

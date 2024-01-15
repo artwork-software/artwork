@@ -959,5 +959,5 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [ExportPDFController::class, 'download']
     )->name('calendar.export.pdf.download');
 
-    Route::post('/shit/multiedit/save', [ShiftController::class, 'saveMultiEdit'])->name('shift.multi.edit.save');
+    Route::post('/shift/multiedit/save', [ShiftController::class, 'saveMultiEdit'])->name('shift.multi.edit.save');
 });

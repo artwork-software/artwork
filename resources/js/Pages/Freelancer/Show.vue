@@ -56,7 +56,6 @@
                     </Menu>
                 </div>
             </div>
-
             <div class="mt-10">
                 <div class="hidden sm:block">
                     <div class="">
@@ -66,8 +65,6 @@
                     </div>
                 </div>
             </div>
-
-
         </div>
         <div class="mt-12 ml-14 mr-40">
             <!-- Einsatzplan -->
@@ -76,8 +73,16 @@
                                :days-with-events="daysWithEvents"
                                :projects="projects" :event-types="eventTypes" :rooms="rooms"
                                :vacations="vacations"></UserShiftPlan>
-                <Availability type="freelancer" :create-show-date="createShowDate" :show-vacations-and-availabilities-date="showVacationsAndAvailabilitiesDate" :vacation-select-calendar="vacationSelectCalendar" :calendar-data="calendarData" :date-to-show="dateToShow"
-                              :user="freelancer" :vacations="vacations"/>
+                <Availability type="freelancer"
+                              :create-show-date="createShowDate"
+                              :show-vacations-and-availabilities-date="showVacationsAndAvailabilitiesDate"
+                              :vacation-select-calendar="vacationSelectCalendar"
+                              :calendar-data="calendarData"
+                              :date-to-show="dateToShow"
+                              :user="freelancer"
+                              :vacations="vacations"
+                              :availabilities="availabilities"
+                />
             </div>
             <!-- Persönliche Daten -->
             <div v-if="currentTab === 2">
@@ -90,12 +95,10 @@
                             class="hidden"
                             @change="updatePhotoPreview"
                         >
-
                         <!-- Current Profile Photo -->
                         <div v-show="! photoPreview" class="mt-2">
                             <img :src="freelancer.profile_image" :alt="freelancer.first_name"  @click="selectNewPhoto" class="rounded-full h-20 w-20 object-cover cursor-pointer">
                         </div>
-
                         <!-- New Profile Photo Preview -->
                         <div v-show="photoPreview" class="mt-2" @click="selectNewPhoto">
                                 <span
@@ -118,7 +121,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                     <div class="col-span-1">
                         <input type="text" readonly class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8 bg-gray-200" placeholder="Freelancer" disabled value="Freelancer (extern)" />
@@ -146,7 +148,6 @@
                         <textarea rows="4" v-model="freelancerData.note" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Notiz" />
                     </div>
                 </div>
-
                 <AddButton class="mt-5 !ml-0" text="Änderung Speichern" :disabled="checkCanEdit" :readonly="checkCanEdit" type="secondary" @click="saveFreelancer" />
             </div>
             <div v-if="currentTab === 3">
@@ -156,14 +157,12 @@
                 <WorkProfileTab user-type="freelancer" :user="freelancer"/>
             </div>
         </div>
-
         <SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" title="Freelancer*in erfolgreich bearbeitet" description="Die Änderungen wurden erfolgreich gespeichert." button="Ok" />
     </AppLayout>
 </template>
 
 
 <script>
-import {defineComponent} from 'vue'
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -211,6 +210,7 @@ export default {
         'vacationSelectCalendar',
         'createShowDate',
         'showVacationsAndAvailabilitiesDate',
+        'availabilities'
     ],
     mounted() {
         this.showSidebar = true;
@@ -305,7 +305,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

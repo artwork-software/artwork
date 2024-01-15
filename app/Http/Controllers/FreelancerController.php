@@ -39,41 +39,32 @@ class FreelancerController extends Controller
     public function show(Freelancer $freelancer, CalendarController $shiftPlan): Response
     {
         $showCalendar = $shiftPlan->createCalendarDataForFreelancerShiftPlan($freelancer);
-        //$this->getAvailabilityData($freelancer, request('month'))
         $availabilityData = $this->calendarService
             ->getAvailabilityData(freelancer: $freelancer, month: request('month'));
 
         $selectedDate = Carbon::today();
         $selectedPeriodDate = Carbon::today();
-        $vacations = [];
+
         // get vacations of the selected date (request('showVacationsAndAvailabilities'))
         if (request('showVacationsAndAvailabilities')) {
             $selectedDate = Carbon::parse(request('showVacationsAndAvailabilities'));
             $selectedPeriodDate = Carbon::parse(request('vacationMonth'));
         }
 
-        $vacations = $freelancer->vacations()
-            ->where('date', $selectedDate)
-            ->orderBy('date', 'ASC')->get();
-
-        $availabilities = $freelancer->availabilities()
-            ->where('date', $selectedDate)
-            ->orderBy('date', 'ASC')->get();
-
-        $createShowDate = [
-            $selectedPeriodDate->locale('de')->isoFormat('MMMM YYYY'),
-            $selectedPeriodDate->copy()->startOfMonth()->toDate()
-        ];
-
         return inertia('Freelancer/Show', [
             'freelancer' => new FreelancerShowResource($freelancer),
             //needed for availability calendar
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
-            'vacations' => $vacations,
+            'vacations' => $freelancer->vacations()
+                ->where('date', $selectedDate)
+                ->orderBy('date', 'ASC')->get(),
             'vacationSelectCalendar' => $this->calendarService
                 ->createVacationAndAvailabilityPeriodCalendar(request('vacationMonth')),
-            'createShowDate' => $createShowDate,
+            'createShowDate' => [
+                $selectedPeriodDate->locale('de')->isoFormat('MMMM YYYY'),
+                $selectedPeriodDate->copy()->startOfMonth()->toDate()
+            ],
             'showVacationsAndAvailabilitiesDate' => $selectedDate->format('Y-m-d'),
             //needed for UserShiftPlan
             'dateValue' => $showCalendar['dateValue'],
@@ -87,6 +78,9 @@ class FreelancerController extends Controller
                 ->with(['event', 'event.project', 'event.room'])
                 ->orderBy('start', 'ASC')
                 ->get(),
+            'availabilities' => $freelancer->availabilities()
+                ->where('date', $selectedDate)
+                ->orderBy('date', 'ASC')->get()
         ]);
     }
 

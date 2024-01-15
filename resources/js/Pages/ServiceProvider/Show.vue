@@ -1,5 +1,5 @@
 <template>
-    <AppLayout title="Freelancer">
+    <AppLayout title="Dienstleister">
         <div class="w-full mt-12 ml-14 mr-40">
             <div class="flex justify-between w-full items-center">
                 <div class="group block flex-shrink-0">

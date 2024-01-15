@@ -31,7 +31,6 @@
             {{ day.day }}
         </div>
     </div>
-
 </template>
 
 <script>
@@ -51,10 +50,16 @@ export default defineComponent({
     },
     mixins: [Permissions],
     components: {TemporarilyHired, UserVacations, UserAvailabilityCalendar},
-    props:['calendarData','dateToShow','user', 'vacations','type', 'vacationSelectCalendar', 'createShowDate', 'showVacationsAndAvailabilitiesDate', 'availabilities'],
+    props: [
+        'calendarData',
+        'dateToShow',
+        'user',
+        'vacations',
+        'type',
+        'vacationSelectCalendar',
+        'createShowDate',
+        'showVacationsAndAvailabilitiesDate',
+        'availabilities'
+    ],
 })
 </script>
-
-<style scoped>
-
-</style>

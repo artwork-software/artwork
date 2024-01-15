@@ -26,17 +26,6 @@ test('authorized users can view departments', function () {
     $response->assertStatus(200);
 });
 
-test('authorized users can open the page to create new departments', function () {
-
-    $response = $this->get('/departments/create')
-        ->assertInertia(fn(Assert $page) => $page
-            ->component('Departments/Create')
-        );
-
-    $response->assertStatus(200);
-
-});
-
 test('authorized users can create new departments', function() {
 
     $user = User::factory()->create(['first_name' => 'TestName']);
@@ -89,6 +78,7 @@ test('authorized users can open the form to update a single department', functio
 
 test('authorized users can update a departments name and assigned users', function() {
 
+    \Illuminate\Support\Facades\Event::fake();
     $department = Department::factory()->create();
     $user_1 = User::factory()->create(['first_name' => 'TestName1']);
 

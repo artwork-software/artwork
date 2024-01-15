@@ -236,7 +236,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('project_files.update');
     Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download'])->name('download_file');
     Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy']);
-    Route::delete('/project_files/{id}/force_delete', [ProjectFileController::class, 'force_delete']);
+    Route::delete('/project_files/{id}/force_delete', [ProjectFileController::class, 'forceDelete']);
 
     //MoneySourceFiles
     Route::post('/money_sources/{money_source}/files', [MoneySourceFileController::class, 'store'])
@@ -354,7 +354,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/rooms/{room}/files', [RoomFileController::class, 'store'])->name('room_files.store');
     Route::get('/room_files/{room_file}', [RoomFileController::class, 'download'])->name('download_room_file');
     Route::delete('/room_files/{room_file}', [RoomFileController::class, 'destroy']);
-    Route::delete('/room_files/{id}/force_delete', [RoomFileController::class, 'force_delete']);
+    Route::delete('/room_files/{id}/force_delete', [RoomFileController::class, 'forceDelete']);
 
     //Room Categories
     Route::post('/rooms/categories', [RoomCategoryController::class, 'store'])
@@ -392,6 +392,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/events/{event}/by/notification', [EventController::class, 'destroyByNotification'])
         ->name('events.delete.by.notification');
     Route::delete('/events/{event}/shifts', [EventController::class, 'destroyShifts'])->name('events.shifts.delete');
+
+    //Route is doubly used. So only the second line (decline) applies
     Route::put('/event/requests/{event}', [EventController::class, 'acceptEvent'])->name('events.accept');
     Route::put('/event/requests/{event}', [EventController::class, 'declineEvent'])->name('events.decline');
     Route::post('/event/answer/{event}', [EventController::class, 'answerOnEvent'])->name('event.answer');

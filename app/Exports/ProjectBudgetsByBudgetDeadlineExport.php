@@ -3,7 +3,7 @@
 namespace App\Exports;
 
 use Artwork\Modules\Project\Models\Project;
-use App\Models\ProjectStates;
+use Artwork\Modules\Project\Models\ProjectStates;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\Exportable;

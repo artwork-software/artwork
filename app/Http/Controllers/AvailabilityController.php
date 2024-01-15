@@ -20,66 +20,32 @@ class AvailabilityController extends Controller
         private readonly AvailabilitySeriesService $availabilitySeriesService
     ) {
     }
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index(): \Illuminate\Http\Response
+
+    public function index():void
     {
         //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create(): \Illuminate\Http\Response
+    public function create(): void
     {
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request): \Illuminate\Http\Response
+    public function store(Request $request): void
     {
         //
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \Artwork\Modules\Availability\Models\Availability  $availability
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Availability $availability): \Illuminate\Http\Response
+    public function show(Availability $availability): void
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \Artwork\Modules\Availability\Models\Availability  $availability
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Availability $availability): \Illuminate\Http\Response
+    public function edit(Availability $availability): void
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Artwork\Modules\Availability\Models\Availability  $availability
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function update(UpdateAvailabilityRequest $updateAvailabilityRequest, Availability $availability): \Illuminate\Http\RedirectResponse
     {
         if ($updateAvailabilityRequest->validated()) {
@@ -109,12 +75,6 @@ class AvailabilityController extends Controller
         return redirect()->back();
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \Artwork\Modules\Availability\Models\Availability  $availability
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function destroy(Availability $availability): \Illuminate\Http\RedirectResponse
     {
         $this->availabilityService->delete($availability);

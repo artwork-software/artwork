@@ -2,25 +2,22 @@
 
 namespace Database\Factories\Artwork\Modules\Room\Models;
 
-use App\Models\RoomFile;
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomFile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\RoomFile>
- *    */
 
 class RoomFileFactory extends Factory
 {
-    /**
-     * @return array<string, mixed>
-     */
+    protected $model = RoomFile::class;
+
     public function definition(): array
     {
         return [
             "name" => "Datei.pdf",
             "basename" => Str::random(20) . "Datei.pdf",
-            "room_id" => 1
+            "room_id" => Room::factory()
         ];
     }
 }

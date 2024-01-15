@@ -202,11 +202,6 @@
 
     </div>
 
-    <pre>
-        {{ usersForShifts }}
-    </pre>
-
-
     <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
 </template>
 <script>

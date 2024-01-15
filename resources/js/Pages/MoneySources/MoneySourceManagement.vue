@@ -293,7 +293,7 @@
                                                                 <IconPin
                                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                     aria-hidden="true"/>
-                                                                Anpinnen
+                                                                {{moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.user.id) ? 'Anpinnung aufheben' : 'Anpinnen'}}
                                                             </a>
                                                         </MenuItem>
                                                         <MenuItem class="cursor-pointer" v-slot="{ active }"
@@ -629,8 +629,8 @@ export default defineComponent({
 
             // Grundlegender Vergleich für angepinnte Elemente
             const pinCompare = (a, b) => {
-                const isAPinned = a.pinned_by_users && a.pinned_by_users.includes(userId);
-                const isBPinned = b.pinned_by_users && b.pinned_by_users.includes(userId);
+                const isAPinned = a.pinned_by_users && a.pinned_by_users.includes(this.$page.props.user.id);
+                const isBPinned = b.pinned_by_users && b.pinned_by_users.includes(this.$page.props.user.id);
 
                 if (isAPinned && !isBPinned) return -1;
                 if (!isAPinned && isBPinned) return 1;

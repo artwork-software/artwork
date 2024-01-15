@@ -38,7 +38,7 @@ class AuthUserSeeder extends Seeder
         $user = User::create([
             'first_name' => 'Max',
             'last_name' => 'Schmidt',
-            'email' => 'max.mustermann@artwork.de',
+            'email' => 'max.mustermann@artwork.software',
             'phone_number' => null,
             'password' => Hash::make('TestPass1234!$'),
             'position' => 'Administrator',
@@ -72,7 +72,7 @@ class AuthUserSeeder extends Seeder
         $user = User::create([
             'first_name' => 'Lisa',
             'last_name' => 'Müller',
-            'email' => 'lisa.musterfrau@artwork.de',
+            'email' => 'lisa.musterfrau@artwork.software',
             'phone_number' => null,
             'password' => Hash::make('TestPass1234!$'),
             'position' => 'Technikerin',
@@ -108,7 +108,7 @@ class AuthUserSeeder extends Seeder
         $user = User::create([
             'first_name' => 'Anna',
             'last_name' => 'Admin',
-            'email' => 'anna.musterfrau@artwork.de',
+            'email' => 'anna.musterfrau@artwork.software',
             'phone_number' => null,
             'password' => Hash::make('TestPass1234!$'),
             'position' => 'Chefin',

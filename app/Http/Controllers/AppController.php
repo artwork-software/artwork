@@ -178,7 +178,9 @@ class AppController extends Controller
         }
 
         $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
-
+        $user->calendar_settings()->create();
+        $user->calendar_filter()->create();
+        $user->shift_calendar_filter()->create();
         $guard->login($user);
 
         $settings->setup_finished = true;

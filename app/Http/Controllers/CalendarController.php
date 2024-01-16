@@ -299,13 +299,13 @@ class CalendarController extends Controller
     {
         $currentDate = Carbon::now();
 
-        if (!is_null($this->userShiftCalendarFilter->start_date)) {
+        if (!is_null($this->userShiftCalendarFilter?->start_date)) {
             $this->startDate = Carbon::parse($this->userShiftCalendarFilter->start_date);
         } else {
             $this->startDate = $currentDate->copy()->startOfWeek()->startOfDay();
         }
 
-        if (!is_null($this->userShiftCalendarFilter->end_date)) {
+        if (!is_null($this->userShiftCalendarFilter?->end_date)) {
             $this->endDate = Carbon::parse($this->userShiftCalendarFilter->end_date);
         } else {
             $this->endDate = $currentDate->copy()->endOfWeek()->endOfDay();
@@ -377,13 +377,13 @@ class CalendarController extends Controller
     public function createCalendarDataForFreelancerShiftPlan(?Freelancer $freelancer = null): array
     {
         $currentDate = Carbon::now();
-        if (!is_null($this->userShiftCalendarFilter->start_date)) {
+        if (!is_null($this->userShiftCalendarFilter?->start_date)) {
             $this->startDate = Carbon::parse($this->userShiftCalendarFilter->start_date);
         } else {
             $this->startDate = $currentDate->copy()->startOfWeek()->startOfDay();
         }
 
-        if (!is_null($this->userShiftCalendarFilter->end_date)) {
+        if (!is_null($this->userShiftCalendarFilter?->end_date)) {
             $this->endDate = Carbon::parse($this->userShiftCalendarFilter->end_date);
         } else {
             $this->endDate = $currentDate->copy()->endOfWeek()->endOfDay();
@@ -457,13 +457,13 @@ class CalendarController extends Controller
     {
         $currentDate = Carbon::now();
         // Calculate the start of the Monday of the recent calendar week
-        if (!is_null($this->userShiftCalendarFilter->start_date)) {
+        if (!is_null($this->userShiftCalendarFilter?->start_date)) {
             $this->startDate = Carbon::parse($this->userShiftCalendarFilter->start_date);
         } else {
             $this->startDate = $currentDate->copy()->startOfWeek()->startOfDay();
         }
 
-        if (!is_null($this->userShiftCalendarFilter->end_date)) {
+        if (!is_null($this->userShiftCalendarFilter?->end_date)) {
             $this->endDate = Carbon::parse($this->userShiftCalendarFilter->end_date);
         } else {
             $this->endDate = $currentDate->copy()->endOfWeek()->endOfDay();
@@ -518,12 +518,12 @@ class CalendarController extends Controller
         $selectedDate = null;
 
         $currentDate = Carbon::now();
-        if (!is_null($userShiftCalendarFilter->start_date)) {
+        if (!is_null($userShiftCalendarFilter?->start_date)) {
             $this->startDate = Carbon::create($userShiftCalendarFilter->start_date)->startOfDay();
         } else {
             $this->startDate = $currentDate->copy()->startOfWeek()->startOfDay();
         }
-        if (!is_null($userShiftCalendarFilter->end_date)) {
+        if (!is_null($userShiftCalendarFilter?->end_date)) {
             $this->endDate = Carbon::create($userShiftCalendarFilter->end_date)->endOfDay();
         } else {
             $this->endDate = $currentDate->copy()->endOfWeek()->endOfDay();

@@ -143,11 +143,11 @@ class EventController extends Controller
         $shiftFilters = $shiftFilterController->index();
 
         if (
-            !is_null($this->userShiftCalendarFilter->start_date) &&
-            !is_null($this->userShiftCalendarFilter->end_date)
+            !is_null($this->userShiftCalendarFilter?->start_date) &&
+            !is_null($this->userShiftCalendarFilter?->end_date)
         ) {
-            $startDate = Carbon::create($this->userShiftCalendarFilter->start_date)->startOfDay();
-            $endDate = Carbon::create($this->userShiftCalendarFilter->end_date)->endOfDay();
+            $startDate = Carbon::create($this->userShiftCalendarFilter?->start_date)->startOfDay();
+            $endDate = Carbon::create($this->userShiftCalendarFilter?->end_date)->endOfDay();
         } else {
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();

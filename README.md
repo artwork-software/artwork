@@ -174,10 +174,21 @@ sail npm install
 sail artisan key:generate
 ```
 
-4. To migrate the database with fresh data, use the following command:
+4. To migrate the database with dummy data, use the following command:
 
 ```shell
 sail artisan migrate:fresh --seed
+```
+
+To Delete your current database use this command:
+```shell
+sail artisan migrate:fresh
+```
+
+If you want to set up the database fresh for production without dummy data, use this command to fill the database with the necessary tables:
+
+```shell
+sail artisan db:seed:production
 ```
 5. Start the queue using:
 
@@ -250,7 +261,7 @@ Feel free to use these commands to interact with the project and execute the nec
 Feel free to explore the features of Artwork and manage your projects effectively!
 
 # Test Instance
-If you use the docker installation you can use the following credentials to login to the test instance:
+If you use the docker installation and filled the database with dummy data you can use the following credentials to login to the test instance:
 
 For the admin account (with all permissions):
 Mail: anna.musterfrau@artwork.de

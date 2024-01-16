@@ -173,7 +173,6 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
-import {onErrorCaptured} from "vue";
 
 export default {
     name: "InviteUsersModal",

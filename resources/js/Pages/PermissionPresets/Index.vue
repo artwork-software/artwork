@@ -110,7 +110,7 @@
     />
     <success-modal
         v-if="showPermissionPresetSuccessModal"
-        title="Erfolgreiche Erstellung"
+        title="Erfolg"
         :description="showPermissionPresetSuccessModal"
         button="Schließen"
         @closed="closePermissionPresetSuccessModal"

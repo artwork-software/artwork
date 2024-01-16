@@ -3,6 +3,7 @@
 namespace Artwork\Core\Database\Repository;
 
 use Artwork\Core\Database\Models\Model;
+use Throwable;
 
 abstract class BaseRepository
 {
@@ -15,6 +16,14 @@ abstract class BaseRepository
     public function delete(Model $model): bool
     {
         return $model->delete();
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function deleteOrFail(Model $model): bool
+    {
+        return $model->deleteOrFail();
     }
 
     public function deleteByReference(Model $model, string $referenceName): void

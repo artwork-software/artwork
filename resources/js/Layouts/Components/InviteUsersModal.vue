@@ -108,9 +108,14 @@
                                 <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                             </h2>
                         </div>
-                        <div class="mb-8" v-if="showPresets">
-                            <div v-for="preset in presets">
-                                <Checkbox @click="usePreset(preset)" :item="preset"></Checkbox>
+                        <div class="mb-8 flex flex-col" v-if="showPresets">
+                            <div v-if="permission_presets.length > 0"
+                                 v-for="preset in permission_presets">
+                                <Checkbox @change="usePreset(preset)" :item="preset"></Checkbox>
+                            </div>
+                            <div v-else
+                                 class="xsLight">
+                                Es wurden noch keine Rechte-Presets angelegt.
                             </div>
                         </div>
                     </div>
@@ -129,8 +134,8 @@
                                 <h3 class="headline6Light mb-2 mt-6">{{ group }}</h3>
                                 <div class="relative w-full flex items-center"
                                      v-for="(permission, index) in permissions" :key=index>
-                                    <Checkbox @click="changePermission(permission)"
-                                              class="w-full"
+                                    <Checkbox @change="changePermission(permission)"
+                                              class="w-full h-auto"
                                               :item="permission"
                                     />
                                 </div>
@@ -140,13 +145,13 @@
                 </div>
                 <div class="w-full items-center text-center">
                     <AddButton :class="[
-                            form.processing || (form.user_emails.length === 0 && emailInput.length < 3) ?
+                            form.processing || (form.user_emails.length === 0) ?
                                 'bg-secondary':
                                 'bg-buttonBlue hover:bg-buttonHover focus:outline-none',
                                 'mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-secondaryHover'
                         ]"
                         @click="addUser"
-                        :disabled="form.processing || (form.user_emails.length === 0 && emailInput.length < 3)"
+                        :disabled="form.processing || (form.user_emails.length === 0)"
                         text="Einladen"
                         mode="modal"
                     />
@@ -158,40 +163,6 @@
 <script>
 
 import Permissions from "@/mixins/Permissions.vue";
-
-const presets = [
-    {
-        name: 'Standard User',
-        name_de: 'Standard-User',
-        tooltipText: '',
-        showIcon: false
-    },
-    {
-        name: 'Vertrags- & Dokumentenadmin',
-        name_de: 'Vertrags- & Dokumentenadmin',
-        tooltipText: '',
-        showIcon: false
-    },
-    {
-        name: 'Budgetadmin',
-        name_de: 'Budgetadmin',
-        tooltipText: '',
-        showIcon: false
-    },
-    {
-        name: 'Disponent*in',
-        name_de: 'Disponent*in',
-        tooltipText: '',
-        showIcon: false
-    },
-    {
-        name: 'Finanzierungsquellenadmin',
-        name_de: 'Finanzierungsquellenadmin',
-        tooltipText: '',
-        showIcon: false
-    }
-];
-
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import AddButton from "@/Layouts/Components/AddButton";
@@ -225,9 +196,10 @@ export default {
     props: {
         show: Boolean,
         closeModal: Function,
-        all_permissions: Array,
+        all_permissions: Object,
         departments: Array,
-        roles: Array
+        roles: Array,
+        permission_presets: Array
     },
     data() {
         return {
@@ -240,7 +212,7 @@ export default {
             showSearchbar: false,
             user_query: "",
             user_search_results: [],
-            showPresets:true,
+            showPresets: true,
             form: useForm({
                 user_emails: [],
                 permissions: [],
@@ -248,7 +220,8 @@ export default {
                 roles: [],
             }),
             showGlobalRoles: true,
-            showInvalidEmailErrorText: false
+            showInvalidEmailErrorText: false,
+            usedPermissionPresets: []
         }
     },
     computed: {
@@ -261,6 +234,15 @@ export default {
         Object.values(this.all_permissions).forEach((permissions) => {
             permissions.forEach((permission) => {
                 permission.checked = this.form.permissions.includes(permission.name);
+            });
+        });
+
+        //if there was a permission_preset used set it to checked
+        this.usedPermissionPresets.forEach((usedPreset) => {
+            this.permission_presets.forEach((permissionPreset) => {
+                if (usedPreset.id === permissionPreset.id) {
+                    permissionPreset.checked = true;
+                }
             });
         });
     },
@@ -314,75 +296,58 @@ export default {
             }
         },
         changePermission(permission) {
-            if (!permission.checked) {
+            if (permission.checked) {
                 this.form.permissions.push(permission.name);
-                permission.checked = true;
             } else {
-                if (this.form.permissions.includes(permission.name)) {
-                    this.form.permissions = this.form.permissions.filter(permissionName => permissionName !== permission.name);
-                    permission.checked = false;
-                }
+                this.form.permissions = this.form.permissions.filter(
+                    (permissionName) => permissionName !== permission.name
+                );
             }
         },
-        usePreset(preset) {
-            // Get the preset permissions
-            let presetPermissions = [];
-
-            switch (preset.name) {
-                case 'Standard User':
-                    presetPermissions = ['view projects', 'create and edit own project', 'request room occupancy','can see and download contract modules'];
-                    break;
-                case 'Vertrags- & Dokumentenadmin':
-                    presetPermissions = ['view edit upload contracts', 'can see, edit and delete project contracts and docs'];
-                    break;
-                case 'Budgetadmin':
-                    presetPermissions = ['can manage global project budgets', 'can add and remove verified states'];
-                    break;
-                case 'Disponent*in':
-                    presetPermissions = ['create, delete and update rooms'];
-                    break;
-                case 'Finanzierungsquellenadmin':
-                    presetPermissions = ['view edit add money_sources', 'can edit and delete money sources'];
-                    break;
-                default:
-                    // Invalid preset name
-                    return;
-            }
-
-            // Update the permissions based on the preset
+        usePreset(permissionPreset) {
+            //Check/Uncheck the permissions based on the given permissionPreset
             Object.values(this.all_permissions).forEach((permissions) => {
                 permissions.forEach((permission) => {
-                    if (presetPermissions.includes(permission.name)) {
-                            permission.checked = !preset.checked;
-                            if (permission.checked){
-                                this.form.permissions.push(permission.name);
-                            } else {
-                                if (this.form.permissions.includes(permission.name)) {
-                                    this.form.permissions = this.form.permissions.filter(permissionName => permissionName !== permission.name);
-                                }
-                            }
+                    if (permissionPreset.permissions.includes(permission.id)) {
+                        permission.checked = permissionPreset.checked;
+                        if (permission.checked){
+                            this.form.permissions.push(permission.name);
+                        } else {
+                            this.form.permissions = this.form.permissions.filter(
+                                (permissionName) => permissionName !== permission.name
+                            );
+                        }
                     }
                 });
             });
+
+            //append used preset to array, if there is an backend error it will get checked again
+            //see update lifecycle-hook
+            if (permissionPreset.checked) {
+                this.usedPermissionPresets.push(permissionPreset);
+            } else {
+                this.usedPermissionPresets = this.usedPermissionPresets.filter(
+                    (usedPermissionPreset) => usedPermissionPreset.id !== permissionPreset.id
+                );
+            }
         },
         addUser() {
-            if (this.emailInput.length >= 3) {
-                this.form.user_emails.push(this.emailInput);
-                this.emailInput = '';
-            }
-            this.form.post(route('invitations.store'), {
-                onSuccess: () => {
-                    this.closeUserModal(true);
-                    this.emailInput = "";
-                    this.form.user_emails = [];
-                    this.form.permissions = [];
-                    this.form.departments = [];
-                    this.form.role = '';
-                    this.departments.forEach((team) => {
-                        team.checked = false;
-                    })
+            this.form.post(
+                route('invitations.store'),
+                {
+                    onSuccess: () => {
+                        this.closeUserModal(true);
+                        this.emailInput = "";
+                        this.form.user_emails = [];
+                        this.form.permissions = [];
+                        this.form.departments = [];
+                        this.form.role = '';
+                        this.departments.forEach((team) => {
+                            team.checked = false;
+                        })
+                    }
                 }
-            });
+            );
         },
         uncheckRolesAndPermissions() {
             this.roles.forEach((role) => {
@@ -399,10 +364,5 @@ export default {
             })
         },
     },
-    setup() {
-        return {
-            presets
-        }
-    }
 }
 </script>

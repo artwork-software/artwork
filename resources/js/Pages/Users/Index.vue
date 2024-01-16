@@ -7,7 +7,7 @@
                         <div class="w-full flex my-auto items-center">
                             <Listbox as="div" class="flex" v-model="selectedFilter">
                                 <ListboxButton
-                                    class="bg-white w-full relative py-2 cursor-pointer focus:outline-none">
+                                    class="bg-white w-full relative cursor-pointer focus:outline-none">
                                     <div class="flex items-center my-auto">
                                         <h2 class="headline1">
                                             {{ selectedFilter.name }}</h2>
@@ -382,6 +382,7 @@
         :all_permissions="all_permissions"
         :departments="departments"
         :roles="roles"
+        :permission_presets="permission_presets"
     />
 
     <AddUsersModal v-if="openSelectAddUsersModal" @closeModal="openSelectAddUsersModal = false"
@@ -402,7 +403,6 @@ const roleCheckboxes = [
         showIcon: true,
         checked: false
     },
-
 ]
 
 import {defineComponent} from 'vue'
@@ -430,7 +430,6 @@ import JetInput from '@/Jetstream/Input.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
 import {InformationCircleIcon, XIcon} from "@heroicons/vue/outline";
-import {useForm} from "@inertiajs/inertia-vue3";
 import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
@@ -481,9 +480,23 @@ export default defineComponent({
         RadioGroupOption,
         Link,
         InputComponent,
-        InviteUsersModal, Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions, PlusIcon
+        InviteUsersModal,
+        Listbox,
+        ListboxButton,
+        ListboxLabel,
+        ListboxOption,
+        ListboxOptions,
+        PlusIcon
     },
-    props: ['users', 'departments', 'all_permissions', 'roles', 'freelancers', 'serviceProviders'],
+    props: [
+        'users',
+        'departments',
+        'all_permissions',
+        'roles',
+        'freelancers',
+        'serviceProviders',
+        'permission_presets'
+    ],
     data() {
         return {
             showUserPermissions: true,

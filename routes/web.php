@@ -35,6 +35,7 @@ use App\Http\Controllers\MoneySourceFileController;
 use App\Http\Controllers\MoneySourceReminderController;
 use App\Http\Controllers\MoneySourceTaskController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PermissionPresetController;
 use App\Http\Controllers\PresetShiftController;
 use App\Http\Controllers\PresetTimeLineController;
 use App\Http\Controllers\ProjectController;
@@ -960,4 +961,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     )->name('calendar.export.pdf.download');
 
     Route::post('/shift/multiedit/save', [ShiftController::class, 'saveMultiEdit'])->name('shift.multi.edit.save');
+
+    Route::resource('permission-presets', PermissionPresetController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->middleware('role:artwork admin');
 });

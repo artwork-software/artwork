@@ -15,6 +15,7 @@ use App\Models\ServiceProvider;
 use App\Models\User;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\PermissionPresets\Services\PermissionPresetService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
@@ -99,15 +100,16 @@ class UserController extends Controller
         ]);
     }
 
-    public function index(): Response|ResponseFactory
+    public function index(PermissionPresetService $permissionPresetService): Response|ResponseFactory
     {
         return inertia('Users/Index', [
             'users' => UserIndexResource::collection(User::all())->resolve(),
-            "all_permissions" => Permission::all()->groupBy('group'),
-            "departments" => Department::all(),
-            "roles" => Role::all(),
+            'all_permissions' => Permission::all()->groupBy('group'),
+            'departments' => Department::all(),
+            'roles' => Role::all(),
             'freelancers' => Freelancer::all(),
-            'serviceProviders' => ServiceProvider::all()
+            'serviceProviders' => ServiceProvider::all(),
+            'permission_presets' => $permissionPresetService->getPermissionPresets()
         ]);
     }
 

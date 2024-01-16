@@ -7,6 +7,7 @@ use Artwork\Modules\PermissionPresets\Models\PermissionPreset;
 use Artwork\Modules\PermissionPresets\Repositories\PermissionPresetRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
+use Throwable;
 
 class PermissionPresetSeeder extends Seeder
 {
@@ -20,17 +21,19 @@ class PermissionPresetSeeder extends Seeder
      * Run the database seeds.
      *
      * @return void
+     * @throws Throwable
      */
     public function run(): void
     {
         foreach ($this->permissionRepository->getPermissionsGroupedByPermissionGroup() as $permissionsByGroup) {
             /** @var Collection $permissionPresetData */
             $permissionPresetData = $permissionsByGroup->pluck('group', 'id');
-            $permissionPreset = new PermissionPreset([
-                'name' => $permissionPresetData->first(),
-                'permissions' => $permissionPresetData->keys()
-            ]);
-            $this->permissionPresetRepository->save($permissionPreset);
+            $this->permissionPresetRepository->saveOrFail(
+                new PermissionPreset([
+                    'name' => $permissionPresetData->first(),
+                    'permissions' => $permissionPresetData->keys()
+                ])
+            );
         }
     }
 }

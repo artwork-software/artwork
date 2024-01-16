@@ -34,7 +34,12 @@ class PermissionPresetService
      */
     public function createFromRequest(StorePermissionPresetRequest $storePermissionPresetRequest): void
     {
-        $this->permissionPresetRepository->createFromRequest($storePermissionPresetRequest);
+        $this->permissionPresetRepository->saveOrFail(
+            new PermissionPreset([
+                'name' => $storePermissionPresetRequest->get('name'),
+                'permissions' => $storePermissionPresetRequest->get('permissions')
+            ])
+        );
     }
 
     /**
@@ -44,7 +49,13 @@ class PermissionPresetService
         UpdatePermissionPresetRequest $updatePermissionPresetRequest,
         PermissionPreset $permissionPreset
     ): void {
-        $this->permissionPresetRepository->updateFromRequest($updatePermissionPresetRequest, $permissionPreset);
+        $this->permissionPresetRepository->updateOrFail(
+            $permissionPreset,
+            [
+                'name' => $updatePermissionPresetRequest->get('name'),
+                'permissions' => $updatePermissionPresetRequest->get('permissions')
+            ]
+        );
     }
 
     /**

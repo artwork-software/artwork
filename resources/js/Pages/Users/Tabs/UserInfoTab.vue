@@ -9,7 +9,6 @@
                                @change="updatePhotoPreview">
                         <div class="mt-1 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                             <div class="sm:col-span-3 flex items-end">
-
                                 <div @click="openChangePictureModal" class="mt-2">
                                     <img :src="this.user_to_edit.profile_photo_url" :alt="this.user_to_edit.first_name"
                                          class="rounded-full h-20 w-20 object-cover cursor-pointer">
@@ -454,13 +453,18 @@ export default {
                 "application/x-apple-diskimage",
             ]
 
-            if (forbiddenTypes.includes(this.$refs.photo.files[0].type)
-                || this.$refs.photo.files[0].type.match('video.*')
-                || this.$refs.photo.files[0].type === "") {
-                this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
-            } else {
-                this.changeProfilePicture()
+            if(this.$refs.photo.files[0]){
+                if (forbiddenTypes.includes(this.$refs.photo.files[0]?.type)
+                    || this.$refs.photo.files[0].type.match('video.*')
+                    || this.$refs.photo.files[0].type === "") {
+                    this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+                } else {
+                    this.changeProfilePicture()
+                }
+            }else{
+                this.closeChangePictureModal()
             }
+
 
         },
         changeProfilePicture() {

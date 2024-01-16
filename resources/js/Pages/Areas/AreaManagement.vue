@@ -471,7 +471,7 @@
 
                     <div class="w-full items-center text-center">
                         <AddButton :class="[editAreaForm.name.length === 0 ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                    class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
                             text-base tracking-wider font-bold shadow-sm text-secondaryHover"
                                    @click="editArea"
@@ -1298,9 +1298,13 @@ export default defineComponent({
             this.newRoomForm.start_date = null;
             this.newRoomForm.end_date = null;
             this.newRoomForm.temporary = false;
+            this.newRoomForm.everyone_can_book = false;
             this.newRoomForm.room_categories = [];
             this.newRoomForm.room_attributes = [];
             this.newRoomForm.adjoining_rooms = [];
+            this.newRoomForm.room_categoriesToDisplay = [];
+            this.newRoomForm.room_attributesToDisplay = [];
+            this.newRoomForm.adjoining_roomsToDisplay = [];
         },
         openEditAreaModal(area) {
             this.editAreaForm.id = area.id;

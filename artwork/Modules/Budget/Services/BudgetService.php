@@ -29,7 +29,7 @@ class BudgetService
             $columns[] = $this->budgetColumnService->createColumnInTable(table: $table, name: 'KTO', subName: '', type: 'empty');
             $columns[] = $this->budgetColumnService->createColumnInTable(table: $table, name: 'A', subName: '', type: 'empty');
             $columns[] = $this->budgetColumnService->createColumnInTable(table: $table, name: 'Position', subName: '', type: 'empty');
-            $columns[] = $this->budgetColumnService->createColumnInTable(table: $table, name: date('Y') . ' €', subName: '', type: 'empty');
+            $columns[] = $this->budgetColumnService->createColumnInTable(table: $table, name: date('Y') . ' €', subName: 'A', type: 'empty');
 
 
             $costMainPosition = $this->mainPositionService->createMainPosition(

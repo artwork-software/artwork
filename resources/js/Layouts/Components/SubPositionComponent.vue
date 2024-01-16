@@ -88,7 +88,7 @@
                                     </div>
                                     <img @click="handleCellClick(cell, 'calculation')" v-if="cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
                                     <img @click="handleCellClick(cell, 'moneysource')" v-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                                    <div @click="handleCellClick(cell)">
+                                    <div :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : ''" @click="handleCellClick(cell)">
                                     {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
                                     </div>
                                 </div>

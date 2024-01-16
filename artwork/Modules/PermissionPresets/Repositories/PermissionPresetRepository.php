@@ -15,32 +15,4 @@ class PermissionPresetRepository extends BaseRepository
     {
         return PermissionPreset::all(['id', 'name', 'permissions']);
     }
-
-    /**
-     * @throws Throwable
-     */
-    public function createFromRequest(StorePermissionPresetRequest $storePermissionPresetRequest): void
-    {
-        $permissionPreset = new PermissionPreset();
-        $permissionPreset->fill([
-            'name' => $storePermissionPresetRequest->get('name'),
-            'permissions' => $storePermissionPresetRequest->get('permissions')
-        ]);
-        $permissionPreset->saveOrFail();
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function updateFromRequest(
-        UpdatePermissionPresetRequest $updatePermissionPresetRequest,
-        PermissionPreset $permissionPreset
-    ): void {
-        $permissionPreset->updateOrFail(
-            [
-                'name' => $updatePermissionPresetRequest->get('name'),
-                'permissions' => $updatePermissionPresetRequest->get('permissions')
-            ]
-        );
-    }
 }

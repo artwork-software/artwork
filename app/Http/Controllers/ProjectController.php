@@ -245,7 +245,7 @@ class ProjectController extends Controller
 
 
 
-        $this->projectService->storeByRequest($request);
+        //$this->projectService->storeByRequest($request);
 
 
         $project = Project::create([

@@ -25,6 +25,8 @@ class ColumnService
         $column->name = $name;
         $column->linked_first_column = $linked_first_column;
         $column->linked_second_column = $linked_second_column;
+        $column->subName = $subName;
+        $column->type = $type;
         return $this->columnRepository->save($column);
     }
 }

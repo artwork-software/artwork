@@ -55,7 +55,6 @@
                     <a v-if="this.$page.props.impressumLink !== ''" target="_blank" :href="this.$page.props.impressumLink">
                         Impressum
                     </a>
-                    <!-- TODO: Wohin bei Default ? -->
                     <a target="_blank" v-else :href="this.$page.props.impressumLink">
                         Impressum
                     </a>
@@ -63,13 +62,11 @@
                     <a target="_blank" v-if="this.$page.props.privacyLink !== ''" :href="this.$page.props.privacyLink">
                         Datenschutz
                     </a>
-                    <!-- TODO: Wohin bei Default ? -->
                     <a target="_blank" v-else :href="this.$page.props.privacyLink">
                         Datenschutz
                     </a>
                     |
-                    <!-- TODO: Hier noch Link zu Über uns Page -->
-                    <a href="">
+                    <a target="_blank" href="https://artwork.software/">
                         Über das Tool
                     </a>
                 </div>

@@ -5,14 +5,14 @@
             <div class="mx-4">
                 <div>
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        Projekt Budgets exportieren
+                        Projekt-Budgets exportieren
                     </div>
                     <XIcon @click="this.close()"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
                 </div>
                 <div class="mt-4">
-                    <span class="text-sm">Alle Projekt Budgets, deren Budget-Stichtag sich zwischen den folgenden Datumsangaben befindet, werden exportiert.</span>
+                    <span class="text-sm xsLight">Alle Projekt-Budgets, deren Budget-Stichtag sich zwischen den folgenden Datumsangaben befindet, werden exportiert.</span>
                 </div>
                 <div class="mt-4 w-full flex flex-row">
                     <div class="w-1/2">

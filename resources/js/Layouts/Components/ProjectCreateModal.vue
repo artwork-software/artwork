@@ -220,15 +220,15 @@
                             </Listbox>
                         </div>
                         <div class="mt-4">
-                            <div>
-                                <span>Budget Stichtag:</span>
+                            <div class="xsLight">
+                                <span>Budget Stichtag</span>
                             </div>
                             <div class="flex mt-1">
                                 <input v-model="this.createProjectForm.budgetDeadline"
                                        id="budgetDeadline"
                                        type="date"
                                        required
-                                       class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                                       class="border-gray-300 inputMain xsDark placeholder-secondary placeholder:text-secondary disabled:border-none flex-grow"/>
                             </div>
                         </div>
                         <div class="w-full items-center text-center">

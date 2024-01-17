@@ -13,6 +13,15 @@ abstract class BaseRepository
         return $model;
     }
 
+    /**
+     * @throws Throwable
+     */
+    public function saveOrFail(Model $model): Model
+    {
+        $model->saveOrFail();
+        return $model;
+    }
+
     public function delete(Model $model): bool
     {
         return $model->delete();
@@ -31,4 +40,12 @@ abstract class BaseRepository
         $model->${$referenceName}()->delete();
     }
 
+    /**
+     * @throws Throwable
+     */
+    public function updateOrFail(Model $model, array $attributes): Model
+    {
+        $model->updateOrFail($attributes);
+        return $model;
+    }
 }

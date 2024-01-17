@@ -232,11 +232,7 @@
                                             line-height:1.5;
                                             text-align:left;
                                             color:#A7A6B1;">
-                                        Lorem ipsum dolor sit amet, consectetur adipisicing
-                                        elit. Adipisci alias amet architecto corporis
-                                        debitis dicta dignissimos distinctio dolores ea
-                                        inventore iste molestias officiis rem sint, sunt
-                                        suscipit ullam velit vero.
+                                        {{ app(\App\Models\GeneralSettings::class)->email_footer }}
                                     </div>
                                 </td>
                             </tr>
@@ -247,10 +243,10 @@
             </tr>
                 <tr>
                     <td align="left" style="font-size:0px;padding:25px 50px;word-break:break-word;">
-                        <a style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1;">
+                        <a href="{{app(\App\Models\GeneralSettings::class)->impressum_link}}" style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1;">
                             Impressum
                         </a>
-                        <a style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1; margin-left: 3em">
+                        <a href="{{app(\App\Models\GeneralSettings::class)->privacy_link}}" style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1; margin-left: 3em">
                             Datenschutz
                         </a>
                     </td>

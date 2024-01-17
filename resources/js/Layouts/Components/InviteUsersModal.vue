@@ -362,6 +362,10 @@ export default {
             this.all_permissions.Systemeinstellungen.forEach((permission) => {
                 permission.checked = false;
             })
+            this.usedPermissionPresets = [];
+            this.permission_presets.forEach((permission) => {
+                permission.checked = false;
+            })
         },
     },
 }

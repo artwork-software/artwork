@@ -64,6 +64,7 @@ use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\UserVacationsController;
+use App\Http\Controllers\VacationController;
 use App\Http\Middleware\CanEditProject;
 use App\Http\Middleware\CanViewRoom;
 use Illuminate\Support\Facades\Route;
@@ -951,8 +952,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/preset/{shiftPreset}/add', [\App\Http\Controllers\PresetTimeLineController::class, 'store'])
         ->name('preset.add.timeline.row');
 
-    Route::patch('/user/{user}/check/vacation', [\App\Http\Controllers\VacationController::class, 'checkVacation'])
+    Route::patch('/user/{user}/check/vacation', [VacationController::class, 'checkVacation'])
         ->name('user.check.vacation');
+    Route::patch('/freelancer/{freelancer}/check/vacation', [VacationController::class, 'checkVacationFreelancer'])
+        ->name('freelancer.check.vacation');
 
     Route::post('/calendar/export/pdf', [ExportPDFController::class, 'createPDF'])->name('calendar.export.pdf');
     Route::get(

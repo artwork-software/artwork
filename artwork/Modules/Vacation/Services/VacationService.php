@@ -26,13 +26,13 @@ class VacationService
 
     public function create(Vacationer $vacationer, $data): Vacation|Model
     {
-        $fristVacation = $vacationer->vacations()->create([
+        $firstVacation = $vacationer->vacations()->create([
             'start_time' => $data->start_time,
             'end_time' => $data->end_time,
             'date' => $data->date,
             'full_day' =>  $data->full_day,
             'comment' => $data->comment,
-            'is_serie' => $data->is_serie,
+            'is_serie' => $data->is_series,
         ]);
 
         if ($data->is_series) {
@@ -40,7 +40,7 @@ class VacationService
                 frequency: $data->series_repeat,
                 until: $data->series_repeat_until
             );
-            $fristVacation->update([
+            $firstVacation->update([
                 'series_id' => $vacationSeries->id
             ]);
 
@@ -78,10 +78,10 @@ class VacationService
         }
 
 
-        $this->createHistory($fristVacation, 'Verfügbarkeit hinzugefügt');
-        $this->announceChanges($fristVacation);
+        $this->createHistory($firstVacation, 'Verfügbarkeit hinzugefügt');
+        $this->announceChanges($firstVacation);
 
-        return $fristVacation;
+        return $firstVacation;
     }
 
     public function update($data, Vacation $vacation): Vacation

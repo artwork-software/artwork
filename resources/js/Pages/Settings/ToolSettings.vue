@@ -318,7 +318,6 @@ export default defineComponent({
             this.form.post(route('tool.update'))
         },
         changeEmailData() {
-            console.log(this.mailForm)
             this.mailForm.post(route('tool.updateMail'))
         },
     },

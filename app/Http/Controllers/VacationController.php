@@ -53,21 +53,47 @@ class VacationController extends Controller
         }
     }
 
-    public function checkVacation(Request $request, User $user): void
+    public function checkVacation(Request $request, ?User $user = null, ?Freelancer $freelancer = null): void
     {
         $day = Carbon::parse($request->day);
         if ($request->checked) {
-            $this->vacationService->deleteVacationInterval($user, $day, $day);
+            $endOfDay = Carbon::parse($request->day)->endOfDay();
+            $this->vacationService->deleteVacationInterval($user, $day, $endOfDay);
             return;
         }
         $vacations = $this->vacationService->findVacationWithinInterval($user, $day, $day);
         if ($vacations->count() === 0) {
-            $this->vacationService->create($user, $day, $day);
+            $createVacationRequest = new CreateVacationRequest([
+                'date' => $day,
+                'type' => 'vacation',
+                'full_day' => true,
+                'is_series' => false,
+                'comment' => '',
+            ]);
+            $this->vacationService->create($user, $createVacationRequest);
         }
 
         $shifts = $user->shifts()->where('event_start_day', $day)->get();
         foreach ($shifts as $shift) {
             $shift->users()->detach($user->id);
+        }
+    }
+
+    public function checkVacationFreelancer(Request $request, Freelancer $freelancer): void
+    {
+        $day = Carbon::parse($request->day);
+        if ($request->checked) {
+            $this->vacationService->deleteVacationInterval($freelancer, $day, $day);
+            return;
+        }
+        $vacations = $this->vacationService->findVacationWithinInterval($freelancer, $day, $day);
+        if ($vacations->count() === 0) {
+            $this->vacationService->create($freelancer, $day, $day);
+        }
+
+        $shifts = $freelancer->shifts()->where('event_start_day', $day)->get();
+        foreach ($shifts as $shift) {
+            $shift->users()->detach($freelancer->id);
         }
     }
 

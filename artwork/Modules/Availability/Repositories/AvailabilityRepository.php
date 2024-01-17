@@ -17,7 +17,7 @@ class AvailabilityRepository
     public function getVacationWithinInterval(Available $available, Carbon $from, Carbon $until): Collection
     {
         return $available->availabilities()
-            ->where('from', '<=', $from)->where('until', '>=', $until)
+            ->where('start_time', '<=', $from)->where('end_time', '>=', $until)
             ->get();
     }
 

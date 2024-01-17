@@ -17,12 +17,18 @@ class VacationRepository
     public function getVacationWithinInterval(Vacationer $vacationer, Carbon $from, Carbon $until): Collection
     {
         return $vacationer->vacations()
-            ->where('from', '<=', $from)->where('until', '>=', $until)
+            ->where('start_time', '<=', $from)->where('end_time', '>=', $until)
             ->get();
     }
 
     public function delete(Collection|Vacation $vacations): void
     {
+        if ($vacations instanceof Collection) {
+            $vacations->each(function ($vacation): void {
+                $vacation->delete();
+            });
+            return;
+        }
         $vacations->delete();
     }
 

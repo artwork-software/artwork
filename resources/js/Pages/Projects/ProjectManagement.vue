@@ -121,8 +121,173 @@
                                 </span>
                                 </span>
                     </div>
-                    <div v-for="(project,index) in filteredProjects" :key="project.id"
-                         class="mt-5 border-b-2 border-gray-200 w-full">
+
+                    <!-- new table  -->
+                    <div class="my-10 divide-y-2 divide-gray-200">
+                        <div class="grid grid-cols-10 grid-rows-1 gap-4 w-full py-4" v-for="(project,index) in sortedProjects" :key="project.id">
+                            <div class="flex items-start justify-center">
+                                <div class="flex justify-center items-center relative bg-gray-200 rounded-full h-12 w-12">
+                                    <img :src="'/storage/keyVisual/' + project.key_visual" alt="" class="rounded-full h-12 w-12" v-if="project.key_visual !== null">
+                                    <img src="/Svgs/IconSvgs/placeholder.svg" alt="" class="rounded-full h-5 w-5" v-else>
+                                    <div class="absolute flex items-center justify-center w-7 h-7" v-if="project.is_group">
+                                        <img src="Svgs/IconSvgs/icon_project_group.svg" alt="">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-span-6">
+                                <div>
+                                    <Link
+                                        v-if="
+                                                $can('view projects') ||
+                                                $can('management projects') ||
+                                                $can('write projects') ||
+                                                $role('artwork admin') ||
+                                                $role('budget admin') ||
+                                                checkPermission(project, 'edit') ||
+                                                checkPermission(project, 'view')"
+                                        :href="getEditHref(project)"
+                                        class="flex w-full my-auto">
+                                        <p class="xsDark flex items-center">
+                                            {{ truncate(project.name, 30, '...') }}
+                                        </p>
+                                    </Link>
+                                    <div v-else class="flex w-full my-auto">
+                                        <p class="xsDark flex items-center">
+                                            <span v-if="project.is_group">
+                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2"
+                                                     aria-hidden="true"/>
+                                            </span>
+                                            {{ truncate(project.name, 80, '...') }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div v-if="$role('artwork admin') || $can('write projects') || checkPermission(project, 'edit') || $can('view projects')" class="text-secondary flex flex-nowrap items-center ">
+                                    <div v-if="project.project_history.length" class="flex items-center">
+                                        <span class=" xxsLight">
+                                              zuletzt geändert:
+                                        </span>
+                                        <UserPopoverTooltip v-if="project.project_history[0].changes[0].changed_by"
+                                                            :user="project.project_history[0].changes[0].changed_by"
+                                                            :id="index" height="4" width="4" class="ml-2"/>
+                                        <span class="ml-2 xxsLight subpixel-antialiased">
+                                                {{ project.project_history[0].created_at }}
+                                            </span>
+                                        <button
+                                            class="ml-4 xxsLight subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
+                                            @click="openProjectHistoryModal(project)">
+                                            <ChevronRightIcon
+                                                class="-mr-0.5 h-4 w-4 group-hover:text-white"
+                                                aria-hidden="true"/>
+                                            Verlauf ansehen
+                                        </button>
+                                    </div>
+                                    <div v-else class="xxsLight">
+                                        Noch kein Verlauf verfügbar
+                                    </div>
+                                </div>
+                                <div class="xxsLight w-11/12">
+                                    {{ truncate(project.description, 300, '...') }}
+                                </div>
+
+                            </div>
+                            <div class="col-start-8 flex items-center">
+                                <span
+                                    class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep"
+                                    :class="project.state?.color">{{ project.state?.name }}</span>
+                            </div>
+                            <div class="col-start-9 flex items-center">
+                                <div class="flex items-top shrink-0 px-4">
+                                    <div class="-mr-3 " v-for="(user) in project.project_managers">
+                                        <UserPopoverTooltip :user="user" :id="user.id" height="8" width="8"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-start-10 flex items-center justify-end">
+                                <div class="flex items-start justify-between">
+                                    <div v-if="project.pinned_by_users && project.pinned_by_users.includes($page.props.user.id)"
+                                         class="flex items-center xxsLight subpixel-antialiased mt-1">
+                                        <IconPin class="h-5 w-5 mr-4 text-primary"/>
+                                    </div>
+                                    <Menu
+                                        v-if="this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || $role('artwork admin') || $can('delete projects') || $can('write projects')"
+                                        as="div" class="flex">
+                                        <div class="flex bg-tagBg p-0.5 rounded-full relative">
+                                            <div v-if="$page.props.can.show_hints && index === 0"
+                                                 class="absolute flex items-center w-40 right-1 -bottom-5">
+                                                <div class="flex">
+                                                    <span class="mr-2 hind mt-1">Bearbeite die Projekte</span>
+                                                </div>
+                                                <div>
+                                                    <SvgCollection svgName="arrowUpRight" class="ml-2 rotate-45"/>
+                                                </div>
+                                            </div>
+                                            <MenuButton
+                                                class="flex bg-tagBg p-0.5 rounded-full">
+                                                <DotsVerticalIcon
+                                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                                    aria-hidden="true"/>
+                                            </MenuButton>
+
+                                        </div>
+                                        <transition enter-active-class="transition ease-out duration-100"
+                                                    enter-from-class="transform opacity-0 scale-95"
+                                                    enter-to-class="transform opacity-100 scale-100"
+                                                    leave-active-class="transition ease-in duration-75"
+                                                    leave-from-class="transform opacity-100 scale-100"
+                                                    leave-to-class="transform opacity-0 scale-95">
+                                            <MenuItems
+                                                class="origin-top-right z-50 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                <div class="py-1">
+                                                    <MenuItem v-slot="{ active }"
+                                                              v-if="$role('artwork admin') || $can('write projects') || this.checkPermission(project, 'edit')">
+                                                        <a @click="openEditProjectModal(project)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
+                                                            <PencilAltIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Basisdaten bearbeiten
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem class="cursor-pointer" v-slot="{ active }">
+                                                        <a @click="pinProject(project)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <IconPin
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            {{project.pinned_by_users && project.pinned_by_users.includes($page.props.user.id) ? 'Anpinnung aufheben' : 'Anpinnen'}}
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem v-slot="{ active }"
+                                                              v-if="$role('artwork admin') || $can('write projects') || $can('management projects') || this.checkPermission(project, 'edit')">
+                                                        <a href="#" @click="duplicateProject(project)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <DuplicateIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Duplizieren
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem v-slot="{ active }"
+                                                              v-if="$role('artwork admin') || $can('delete projects') || this.checkPermission(project, 'delete')">
+                                                        <a href="#" @click="openDeleteProjectModal(project)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <TrashIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            In den Papierkorb legen
+                                                        </a>
+                                                    </MenuItem>
+                                                </div>
+                                            </MenuItems>
+                                        </transition>
+                                    </Menu>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--<div v-for="(project,index) in sortedProjects" :key="project.id"
+                         class="mt-5 border-b-2 border-gray-200 w-full hidden">
                         <div class="flex mb-5">
                             <div class="w-48 flex justify-center">
                                 <div
@@ -207,15 +372,19 @@
                                         <UserPopoverTooltip :user="user" :id="user.id" height="8" width="8"/>
                                     </div>
                                 </div>
-                                <div class="flex w-1/12 ml-4">
+                                <div class="flex w-1/12 items-center">
+                                    <div v-if="project.pinned_by_users && project.pinned_by_users.includes($page.props.user.id)"
+                                         class="flex items-center xxsLight subpixel-antialiased mt-1">
+                                        <IconPin class="h-5 w-5 mr-4 text-primary"/>
+                                    </div>
                                     <Menu
                                         v-if="this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || $role('artwork admin') || $can('delete projects') || $can('write projects')"
-                                        as="div" class="relative">
-                                        <div class="flex bg-tagBg p-0.5 rounded-full">
+                                        as="div" class="flex">
+                                        <div class="flex bg-tagBg p-0.5 rounded-full relative">
                                             <div v-if="$page.props.can.show_hints && index === 0"
-                                                 class="absolute flex w-40 right-5 bottom-5">
+                                                 class="absolute flex items-center w-40 right-1 -bottom-8">
                                                 <div class="flex">
-                                                    <span class="mr-2 hind mt-1">Bearbeite die Projekte</span>
+                                                    <span class="mr-2 hind">Bearbeite die Projekte</span>
                                                 </div>
                                                 <div>
                                                     <SvgCollection svgName="arrowUpRight" class="ml-2 rotate-45"/>
@@ -246,6 +415,15 @@
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
                                                             Basisdaten bearbeiten
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem class="cursor-pointer" v-slot="{ active }">
+                                                        <a @click="pinProject(project)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <IconPin
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            {{project.pinned_by_users && project.pinned_by_users.includes($page.props.user.id) ? 'Anpinnung aufheben' : 'Anpinnen'}}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }"
@@ -350,6 +528,7 @@
                         </div>
 
                     </div>
+                    -->
                 </div>
             </div>
         </div>
@@ -524,9 +703,11 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import ProjectExportBudgetsByBudgetDeadlineModal from "@/Layouts/Components/ProjectExportBudgetsByBudgetDeadlineModal.vue";
+import {IconPin} from "@tabler/icons-vue";
 
 export default defineComponent({
     components: {
+        IconPin,
         ProjectExportBudgetsByBudgetDeadlineModal,
         DocumentReportIcon,
         ProjectCreateModal,
@@ -650,6 +831,18 @@ export default defineComponent({
                 return project.name.toLowerCase().includes(this.project_search.toLowerCase());
             });
         },
+        // sort Projects by pinned_by_users array. if user id in array, project is pinned and in sort function it will be first
+        sortedProjects() {
+            return this.filteredProjects.sort((a, b) => {
+                if (a.pinned_by_users && a.pinned_by_users.includes(this.$page.props.user.id)) {
+                    return -1;
+                }
+                if (b.pinned_by_users && b.pinned_by_users.includes(this.$page.props.user.id)) {
+                    return 1;
+                }
+                return 0;
+            });
+        },
         groupPerProject() {
             let groupPerProject = [];
             this.projectGroups.forEach((projectGroup) => {
@@ -661,6 +854,9 @@ export default defineComponent({
         }
     },
     methods: {
+        pinProject(project) {
+            Inertia.post(route('project.pin', {project: project.id}));
+        },
         openCreateProjectModal() {
             this.createProject = true;
         },

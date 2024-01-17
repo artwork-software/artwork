@@ -74,12 +74,14 @@ class Project extends Model
         'register_by',
         'registration_deadline',
         'closed_society',
-        'budget_deadline'
+        'budget_deadline',
+        'pinned_by_users'
     ];
 
     protected $casts = [
         'registration_required' => 'boolean',
-        'closed_society' => 'boolean'
+        'closed_society' => 'boolean',
+        'pinned_by_users' => 'array',
     ];
 
     protected $with = ['shiftRelevantEventTypes', 'state'];

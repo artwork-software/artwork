@@ -53,6 +53,7 @@ class ProjectIndexShowResource extends JsonResource
             'isMemberOfADepartment' => $this->departments
                 ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'budget_deadline' => $this->budget_deadline,
+            'pinned_by_users' => $this->pinned_by_users
         ];
     }
 }

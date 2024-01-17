@@ -24,6 +24,8 @@ class GeneralSettings extends Settings
 
     public string $email_footer;
 
+    public string $business_email;
+
     public static function group(): string
     {
         return 'general';

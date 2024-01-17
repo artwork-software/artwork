@@ -29,9 +29,8 @@
                                 <jet-label for="password" value="Password" />
                                 <jet-input id="password" type="password" class="mt-1 block w-full" v-model="form.password" required autocomplete="new-password" />
                             </div>
-
                             <div class="flex items-center justify-end mt-4">
-                                <jet-button :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                                <jet-button class="bg-buttonBlue hover:bg-buttonHover" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                                     Passwort zurücksetzen
                                 </jet-button>
                             </div>

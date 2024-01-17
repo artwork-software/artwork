@@ -14,11 +14,9 @@ class VacationRepository
         return Vacation::where('vacationer_id', $id)->where('vacationer_type', $vacationer)->get();
     }
 
-    public function getVacationWithinInterval(Vacationer $vacationer, Carbon $from, Carbon $until): Collection
+    public function getVacationWithinInterval(Vacationer $vacationer, string $day): Collection
     {
-        return $vacationer->vacations()
-            ->where('start_time', '<=', $from)->where('end_time', '>=', $until)
-            ->get();
+        return $vacationer->vacations()->where('date', $day)->get();
     }
 
     public function delete(Collection|Vacation $vacations): void

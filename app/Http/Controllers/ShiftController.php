@@ -479,8 +479,8 @@ class ShiftController extends Controller
         // if shift longer when 10h send notification
         $vacations = $user
             ->vacations()
-            ->where('from', '<=', $shift->event_start_day)
-            ->where('until', '>=', $shift->event_end_day)
+            ->where('date', '<=', $shift->event_start_day)
+            ->where('date', '>=', $shift->event_end_day)
             ->get();
 
         if ($vacations->count() > 0) {

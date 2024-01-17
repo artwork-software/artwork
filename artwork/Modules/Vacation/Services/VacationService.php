@@ -136,14 +136,14 @@ class VacationService
         return $this->vacationRepository->getByIdAndModel($id, Freelancer::class);
     }
 
-    public function findVacationWithinInterval(Vacationer $vacationer, Carbon $from, Carbon $until): Collection
+    public function findVacationWithinInterval(Vacationer $vacationer, string $day): Collection
     {
-        return $this->vacationRepository->getVacationWithinInterval($vacationer, $from, $until);
+        return $this->vacationRepository->getVacationWithinInterval($vacationer, $day);
     }
 
-    public function deleteVacationInterval(Vacationer $vacationer, Carbon $from, Carbon $until): void
+    public function deleteVacationInterval(Vacationer $vacationer, string $day): void
     {
-        $this->vacationRepository->delete($this->findVacationWithinInterval($vacationer, $from, $until));
+        $this->vacationRepository->delete($this->findVacationWithinInterval($vacationer, $day));
     }
 
     public function delete(Vacation $vacation): void

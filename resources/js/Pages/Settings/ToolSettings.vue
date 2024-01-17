@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-xl ml-14 mr-40">
+        <div class="max-w-screen-xl ml-14 mr-40 mb-4">
             <div v-if="hasAdminRole() || $canAny(['change tool settings'])">
                 <h2 class="headline1 mb-2">Tooleinstellungen</h2>
                 <div class="headline3Light">
@@ -132,42 +132,58 @@
 
             <div v-if="hasAdminRole() || $canAny(['change tool settings'])">
                 <div class="mt-20">
-                    <h2 class="headline2 mb-2">Kommunikation & Rechtliches</h2>
-                    <div class="xsLight">
+                    <h2 class="headline2">Kommunikation & Rechtliches</h2>
+                    <div class="xsLight mt-4">
                         Definiere hier den Footer-Text für sämtliche System-E-Mails und gib' die Links zur
-                        Impressum- und Datenschutzseite deines Unternehmens an.
+                        Impressum- und Datenschutzseite deines Unternehmens an. Darüber hinaus kannst du eine
+                        E-Mail Adresse definieren die beim versenden von E-Mails verwendet wird.
                     </div>
-                    <div class="mt-8">
+                    <div class="mt-4">
                         <div class="mt-4 col-span-9 grid grid-cols-9">
                             <div class="sm:col-span-3">
-                                <div class="mt-1">
-                                    <input type="text"
-                                           :placeholder="$page.props.businessName"
-                                           v-model="mailForm.businessName"
-                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-span-9 grid grid-cols-9">
-                            <div class="sm:col-span-3">
-                                <div class="mt-1">
-                                    <inputComponent v-model="mailForm.impressumLink" placeholder="Link zum Impressum"/>
-                                </div>
+                                <inputComponent
+                                    v-model="mailForm.businessName"
+                                    placeholder="Unsere Organisation"
+                                />
                             </div>
                         </div>
                         <div class="mt-4 col-span-9 grid grid-cols-9">
                             <div class="sm:col-span-3">
-                                <div class="mt-1">
-                                    <inputComponent v-model="mailForm.privacyLink" placeholder="Link zum Datenschutz"/>
-                                </div>
+                                <inputComponent v-model="mailForm.impressumLink" placeholder="Link zum Impressum"/>
+                                <span v-if="showInvalidImpressumLinkErrorText"
+                                      class="errorText">
+                                    Keine gültige URL (Beispiel: http://google.de)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mt-4 col-span-9 grid grid-cols-9">
+                            <div class="sm:col-span-3">
+                                <inputComponent v-model="mailForm.privacyLink" placeholder="Link zum Datenschutz"/>
+                                <span v-if="showInvalidPrivacyLinkErrorText"
+                                      class="errorText">
+                                    Keine gültige URL (Beispiel: http://google.de)
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mt-4 col-span-9 grid grid-cols-9">
+                            <div class="sm:col-span-3">
+                                <inputComponent
+                                    v-model="mailForm.businessEmail"
+                                    placeholder="Geschäfts-E-Mail-Adresse"
+                                />
+                                <span v-if="showInvalidBusinessEmailAddressErrorText"
+                                      class="errorText">
+                                    Keine gültige E-Mail Adresse
+                                </span>
                             </div>
                         </div>
                         <div class="mt-4 col-span-9 grid grid-cols-9">
                             <div class="sm:col-span-8">
-                                            <textarea
-                                                placeholder="E-Mail-Footer"
-                                                v-model="mailForm.emailFooter" rows="4"
-                                                class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full placeholder:xsLight border border-gray-300 "/>
+                                <textarea
+                                    placeholder="E-Mail-Footer"
+                                    v-model="mailForm.emailFooter"
+                                    rows="4"
+                                    class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-2 w-full placeholder:xsLight border-2 border-gray-300 "/>
                             </div>
                         </div>
                     </div>
@@ -176,7 +192,6 @@
                     <AddButton @click.prevent="changeEmailData"
                                text="Änderungen speichern" mode="modal"/>
                 </div>
-
             </div>
         </div>
     </app-layout>
@@ -192,6 +207,7 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import {CheckIcon, XIcon} from "@heroicons/vue/solid";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import Permissions from "@/mixins/Permissions.vue";
+import {useForm} from "@inertiajs/inertia-vue3";
 
 export default defineComponent({
     mixins: [Permissions],
@@ -212,21 +228,22 @@ export default defineComponent({
             bigLogoPreview: null,
             smallLogoPreview: null,
             bannerPreview: null,
-            notificationImagePreview: null,
-            showSuccessModal: false,
-            form: this.$inertia.form({
+            form: useForm({
                 _method: 'PUT',
                 bigLogo: null,
                 smallLogo: null,
                 banner: null,
             }),
-            mailForm: this.$inertia.form({
-                _method: 'PUT',
+            mailForm: useForm({
                 businessName: this.$page.props.businessName,
                 impressumLink: this.$page.props.impressumLink,
                 privacyLink: this.$page.props.privacyLink,
                 emailFooter: this.$page.props.emailFooter,
-            })
+                businessEmail: this.$page.props.businessEmail
+            }),
+            showInvalidBusinessEmailAddressErrorText: false,
+            showInvalidImpressumLinkErrorText: false,
+            showInvalidPrivacyLinkErrorText: false
         }
     },
     methods: {
@@ -269,21 +286,6 @@ export default defineComponent({
                 this.uploadDocumentFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert."
             }
         },
-        closeSuccessModal(){
-            this.showSuccessModal = false;
-        },
-        getTimeOfDate(isoDate) {
-            if(isoDate.split(' ')[1]){
-                return isoDate.split(' ')[1].substring(0, 5);
-            }
-
-        },
-        getDateOfDate(isoDate) {
-            if(isoDate.split(' ')[0]){
-                return isoDate.split(' ')[0];
-            }
-
-        },
         uploadDraggedBigLogo(event) {
             this.validateTypeAndUpload(event.dataTransfer.files[0], 'bigLogo');
         },
@@ -302,9 +304,6 @@ export default defineComponent({
         selectNewBanner() {
             this.$refs.banner.click();
         },
-        selectNewNotificationImage() {
-          this.$refs.notificationImage.click();
-        },
         updateBannerPreview() {
             this.validateTypeAndUpload(this.$refs.banner.files[0], 'banner');
         },
@@ -315,11 +314,29 @@ export default defineComponent({
             this.validateTypeAndUpload(this.$refs.bigLogo.files[0], 'bigLogo');
         },
         changeLogos() {
-            this.form.post(route('tool.update'))
+            this.form.post(route('tool.update'));
         },
         changeEmailData() {
-            console.log(this.mailForm)
-            this.mailForm.post(route('tool.updateMail'))
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            this.showInvalidBusinessEmailAddressErrorText =
+                this.mailForm.businessEmail !== '' && !emailRegex.test(this.mailForm.businessEmail);
+
+            const urlRegex = /^http:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:[0-9]+)?(\/[^]*)?$/;
+            this.showInvalidImpressumLinkErrorText =
+                this.mailForm.impressumLink !== '' && !urlRegex.test(this.mailForm.impressumLink);
+            this.showInvalidPrivacyLinkErrorText =
+                this.mailForm.privacyLink !== '' && !urlRegex.test(this.mailForm.privacyLink);
+
+            if (
+                this.showInvalidBusinessEmailAddressErrorText ||
+                this.showInvalidImpressumLinkErrorText ||
+                this.showInvalidPrivacyLinkErrorText
+            ) {
+                return;
+            }
+
+            this.mailForm.patch(route('tool.updateMail'));
         },
     },
 })

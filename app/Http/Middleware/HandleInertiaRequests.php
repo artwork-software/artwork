@@ -53,6 +53,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $generalSettings = app(GeneralSettings::class);
+
         return array_merge(
             parent::share($request),
             array_merge(
@@ -63,10 +65,11 @@ class HandleInertiaRequests extends Middleware
                     'small_logo' => $this->smallLogo(),
                     'big_logo' => $this->bigLogo(),
                     'banner' => $this->banner(),
-                    'businessName' => app(GeneralSettings::class)->business_name,
-                    'impressumLink' => app(GeneralSettings::class)->impressum_link,
-                    'privacyLink' => app(GeneralSettings::class)->privacy_link,
-                    'emailFooter' => app(GeneralSettings::class)->email_footer,
+                    'businessName' => $generalSettings->business_name,
+                    'impressumLink' => $generalSettings->impressum_link,
+                    'privacyLink' => $generalSettings->privacy_link,
+                    'emailFooter' => $generalSettings->email_footer,
+                    'businessEmail' => $generalSettings->business_email,
                     'myMoneySources' => Auth::guest() ?
                         false :
                         Auth::user()->accessMoneySources()->get(['money_source_id']),

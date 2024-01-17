@@ -96,11 +96,9 @@ Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('r
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {
-        Route::get('/settings', function () {
-            return Inertia::render('Settings/ToolSettings');
-        })->name('tool.settings');
-        Route::put('/settings', [AppController::class, 'updateTool'])->name('tool.update');
-        Route::put('/settings/email', [AppController::class, 'updateEmailSettings'])->name('tool.updateMail');
+        Route::get('/settings', [AppController::class, 'toolSettingsIndex'])->name('tool.settings');
+        Route::put('/settings', [AppController::class, 'updateToolImages'])->name('tool.update');
+        Route::patch('/settings/email', [AppController::class, 'updateToolEmailSettings'])->name('tool.updateMail');
     });
 
     Route::group(['middleware' => ['can:can edit and delete money sources']], function (): void {

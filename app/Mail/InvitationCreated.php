@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\GeneralSettings;
 use App\Models\Invitation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -19,7 +20,12 @@ class InvitationCreated extends Mailable
 
     public function build(): InvitationCreated
     {
-        return $this->from("einladung@test.de", $this->user->first_name)
+        $settings = app(GeneralSettings::class);
+        return $this
+            ->from(
+                $settings->business_email !== '' ? $settings->business_email : 'noreply@artwork.de',
+                'Artwork'
+            )
             ->replyTo($this->user->email)
             ->subject("Einladung für das artwork")
             ->markdown('emails.invitations', ['token' => $this->token]);

@@ -13,6 +13,7 @@ use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use ZxcvbnPhp\Zxcvbn;
 use Illuminate\Http\RedirectResponse;
@@ -130,7 +131,12 @@ class AppController extends Controller
         return $settings->setup_finished ? Redirect::route('login') : inertia('Auth/Register');
     }
 
-    public function updateTool(Request $request, GeneralSettings $settings): RedirectResponse
+    public function toolSettingsIndex(): Response
+    {
+        return Inertia::render('Settings/ToolSettings');
+    }
+
+    public function updateToolImages(Request $request, GeneralSettings $settings): RedirectResponse
     {
         if (!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             throw new MethodNotAllowedHttpException(
@@ -190,27 +196,16 @@ class AppController extends Controller
         return redirect(RouteServiceProvider::HOME);
     }
 
-    public function updateEmailSettings(Request $request, GeneralSettings $settings): RedirectResponse
+    public function updateToolEmailSettings(Request $request, GeneralSettings $settings): RedirectResponse
     {
         if (!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
-            throw new MethodNotAllowedHttpException(['update'], 'Nur Admins können Email Einstellungen ändern');
+            throw new MethodNotAllowedHttpException(['update'], 'Nur Admins können E-Mail Einstellungen ändern');
         }
-
-        if ($request->businessName != $settings->business_name) {
-            $settings->business_name = $request->businessName;
-        }
-
-        if ($request->impressumLink != $settings->impressum_link) {
-            $settings->impressum_link = $request->impressumLink;
-        }
-
-        if ($request->privacyLink != $settings->privacy_link) {
-            $settings->privacy_link = $request->privacyLink;
-        }
-
-        if ($request->emailFooter != $settings->email_footer) {
-            $settings->email_footer = $request->emailFooter;
-        }
+        $settings->business_name = $request->get('businessName') ?? '';
+        $settings->impressum_link = $request->get('impressumLink') ?? '';
+        $settings->privacy_link = $request->get('privacyLink') ?? '';
+        $settings->email_footer = $request->get('emailFooter') ?? '';
+        $settings->business_email = $request->get('businessEmail') ?? '';
 
         $settings->save();
 

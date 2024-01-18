@@ -13,7 +13,7 @@
                         {{ notifications.length }}
                     </div>
                 </div>
-                <div @click="setAllOnRead(notifications)"
+                <div @click="setAllOnRead()"
                      class="flex cursor-pointer items-center justify-end linkText mr-8">
                     <img src="/Svgs/IconSvgs/icon_archive_blue.svg"
                          class="h-4 w-4 mr-2"
@@ -115,6 +115,7 @@
         :event_history="wantedHistory"
         @closed="closeEventHistoryModal"
     />
+
 </template>
 
 <script>
@@ -188,6 +189,9 @@ export default  {
             setOnReadForm: this.$inertia.form({
                 _method: 'PATCH',
                 notificationId: null
+            }),
+            setOnReadAll: useForm({
+                notificationIds: [],
             })
         }
     },
@@ -251,9 +255,28 @@ export default  {
         },
         setOnRead(notificationId) {
             this.setOnReadForm.notificationId = notificationId;
-            this.setOnReadForm.patch(route('notifications.setReadAt'));
+            this.setOnReadForm.patch(route('notifications.setReadAt'), {
+                preserveScroll: true,
+            });
         },
-        setAllOnRead(notifications) {
+        setAllOnRead() {
+            // filter all notifications that icon is not blue
+            const notifications = this.notifications.filter(notification => notification.data.icon !== 'blue');
+
+            // get all notification ids and push it in set on read all form
+            notifications.forEach(notification => {
+                this.setOnReadAll.notificationIds.push(notification.id);
+            });
+
+            // patch set on read all form
+            console.log(this.setOnReadAll.notificationIds);
+
+            this.setOnReadAll.patch(route('notifications.setReadAtAll'), {
+                preserveScroll: true,
+            });
+
+            /*console.log(notifications);
+            //return;
             if(!notifications){
                 return;
             }
@@ -261,7 +284,7 @@ export default  {
                 if (notification.data.icon !== 'blue') {
                     this.setOnRead(notification.id);
                 }
-            })
+            })*/
         },
         openAnswerEventRequestModal(notification, event, type) {
             this.requestToAnswer = event;

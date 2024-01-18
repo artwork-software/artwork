@@ -285,7 +285,8 @@ class EventController extends Controller
             ->notifications()
             ->select(['id', 'data->priority as priority', 'data'])
             ->whereDate('created_at', Carbon::now()->format('Y-m-d'))
-            ->withCasts(['created_at' => TimeAgoCast::class]);
+            ->withCasts(['created_at' => TimeAgoCast::class])
+            ->unread();
 
         if (request('openEditEvent')) {
             $event = Event::find(request('eventId'));

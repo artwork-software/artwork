@@ -349,9 +349,23 @@ class NotificationController extends Controller
     public function setOnRead(Request $request): void
     {
         $user = User::find(Auth::id());
-        $wantedNotification = $user->notifications->find($request->notificationId);
+        $wantedNotification = $user->notifications()->find($request->notificationId);
         $wantedNotification->read_at = now();
         $wantedNotification->save();
+    }
+
+    public function setOnReadAll(Request $request): void
+    {
+        //dd($request->notificationIds);
+        // get user
+        $user = User::find(Auth::id());
+        // get all notifications within ids in $request->notificationId
+        $notifications = $user->notifications()->whereIn('id', $request->notificationIds)->get();
+        // set all notifications to read
+        foreach ($notifications as $notification) {
+            $notification->read_at = now();
+            $notification->save();
+        }
     }
 
     public function store(): void

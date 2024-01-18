@@ -52,6 +52,10 @@ class Vacation extends Model
         'date_casted',
     ];
 
+    protected $with = [
+        'series',
+    ];
+
     public function vacations(): MorphTo
     {
         return $this->morphTo();

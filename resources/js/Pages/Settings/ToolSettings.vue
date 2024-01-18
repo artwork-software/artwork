@@ -45,7 +45,7 @@
                         </div>
                     </div>
 
-                    <div v-if="$page.props.can.show_hints" class="col-span-4 items-center flex">
+                    <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                         <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                         <span
                             class="ml-2 my-auto hind">Lade dein Logo als .svg, .png, .gif oder .jpg hoch.
@@ -79,7 +79,7 @@
 
                         </div>
                     </div>
-                    <div v-if="$page.props.can.show_hints" class="col-span-4 items-center flex">
+                    <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                         <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                         <span
                             class="hind ml-2 my-auto">Lade dein Logo als .svg, .png, .gif oder .jpg hoch.
@@ -116,7 +116,7 @@
                                    @change="updateBannerPreview">
                         </div>
                     </div>
-                    <div v-if="$page.props.can.show_hints" class="col-span-4 items-center flex">
+                    <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                         <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                         <span
                             class="ml-2 my-auto hind">Lade deine Illustration als .svg, .png, .gif oder .jpg hoch.

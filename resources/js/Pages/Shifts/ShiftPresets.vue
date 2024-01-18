@@ -36,7 +36,7 @@
                 <button @click="showAddShiftPresetModal = true" type="button" class="rounded-full bg-buttonBlue p-1 mr-1 text-white shadow-sm hover:bg-buttonHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
                     <PlusIcon class="h-4 w-4" aria-hidden="true" />
                 </button>
-                <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                <div v-if="this.$page.props.show_hints" class="flex mt-1">
                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                     <span class="hind ml-1 my-auto">Erstelle eine neue Schichtvorlage</span>
                 </div>

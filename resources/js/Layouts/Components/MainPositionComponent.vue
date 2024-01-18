@@ -52,7 +52,7 @@
                 </div>
                 <div class="flex flex-wrap w-8">
                     <div class="flex w-full">
-                        <Menu as="div" class="my-auto relative" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
+                        <Menu as="div" class="my-auto relative" v-if="this.$can('edit budget templates') || !table.is_template">
                               <!-- v-show="showMenu === 'MainPosition' + mainPosition.id" -->
                             <div class="flex">
                                 <MenuButton class="flex bg-tagBg p-0.5 rounded-full">
@@ -125,7 +125,7 @@
                 </div>
             </div>
         </div>
-        <div @click="addSubPosition(mainPosition.id)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+        <div @click="addSubPosition(mainPosition.id)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
             <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                 Unterposition
                 <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full" />
@@ -154,7 +154,7 @@
                 </td>
             </tr>
             </thead>
-            <div @click="addMainPosition(mainPosition)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+            <div @click="addMainPosition(mainPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                 <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                     Hauptposition
                     <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full" />

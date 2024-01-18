@@ -60,7 +60,7 @@
                             <DisclosureButton>
                                 <AddButton text="Zu Teams zuweisen" mode="page"/>
                             </DisclosureButton>
-                            <div v-if="$page.props.can.show_hints && form.departments.length === 0" class="flex mt-2">
+                            <div v-if="this.$page.props.show_hints && form.departments.length === 0" class="flex mt-2">
                                 <SvgCollection svgName="arrowLeft" class="mt-2 ml-2"/>
                                 <span class="hind ml-1 my-auto">Teile die Nutzer*innen direkt deinen Teams zu</span>
                             </div>

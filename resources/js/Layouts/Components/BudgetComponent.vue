@@ -3,7 +3,7 @@
         <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
                 {{ table.name }}
-                <Menu as="div" class="ml-4" v-if="this.$page.props.can.edit_budget_templates">
+                <Menu as="div" class="ml-4" v-if="this.$can('edit budget templates')">
                     <div class="flex">
                         <MenuButton
                             class="flex bg-tagBg p-0.5 rounded-full">
@@ -149,7 +149,7 @@
                                         </span>
                                     </div>
                                     <span  class="-mt-4" v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
-                                        <Listbox as="div" class="flex ml-2" v-model="column.color" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
+                                        <Listbox as="div" class="flex ml-2" v-model="column.color" v-if="this.$can('edit budget templates') || !table.is_template">
 
                                                 <transition leave-active-class="transition ease-in duration-100"
                                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
@@ -196,7 +196,7 @@
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
                             </div>
-                            <Menu as="div" v-show="showMenu === column.id" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
+                            <Menu as="div" v-show="showMenu === column.id" v-if="this.$can('edit budget templates') || !table.is_template">
                                 <div class="flex">
                                     <MenuButton
                                         class="flex bg-tagBg p-0.5 rounded-full">
@@ -295,7 +295,7 @@
                     <div class="text-white hidden xl:block ml-3 mt-3">
                         Neue Spalte
                     </div>
-                        <button @click="openAddColumnModal()" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="font-bold mr-2 ml-2 text-xl hover:bg-buttonHover p-1 mt-3 bg-secondary border-white border-2 hover:border-buttonBlue rounded-full items-center uppercase shadow-sm text-secondaryHover">
+                        <button @click="openAddColumnModal()" v-if="this.$can('edit budget templates') || !table.is_template" class="font-bold mr-2 ml-2 text-xl hover:bg-buttonHover p-1 mt-3 bg-secondary border-white border-2 hover:border-buttonBlue rounded-full items-center uppercase shadow-sm text-secondaryHover">
                             <PlusIcon class="h-4 w-4"></PlusIcon>
                         </button>
                         </div>
@@ -388,7 +388,7 @@
                         </Menu>
                         </div>
                         <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
-                             v-if="this.$page.props.can.edit_budget_templates || !table.is_template"
+                             v-if="this.$can('edit budget templates') || !table.is_template"
                              class="group w-[97%] bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                             <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                                 Hauptposition

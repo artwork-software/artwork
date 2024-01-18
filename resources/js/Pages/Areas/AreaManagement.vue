@@ -108,7 +108,7 @@
                                         <div>
                                             <AddButton @click="openAddAreaModal" text="Areal hinzufügen" mode="page"/>
                                         </div>
-                                        <div v-if="$page.props.can.show_hints" class="flex">
+                                        <div v-if="this.$page.props.show_hints" class="flex">
                                             <SvgCollection svgName="arrowLeft" class="ml-2 mt-4"/>
                                             <span
                                                 class="ml-1 mt-4 hind">Lege neue Areale an</span>
@@ -201,7 +201,7 @@
                                                 <AddButton @click="openAddRoomModal(area)" text="Raum hinzufügen"
                                                            mode="page"/>
                                             </div>
-                                            <div v-if="$page.props.can.show_hints" class="flex">
+                                            <div v-if="this.$page.props.show_hints" class="flex">
                                                 <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                                 <span
                                                     class="hind text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Räume an</span>
@@ -675,7 +675,7 @@
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                         <p :class="[newRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
                            class="ml-4 my-auto text-sm">Temporärer Raum</p>
-                        <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                        <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                             <span
                                 class="ml-1 my-auto hind">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
@@ -697,7 +697,7 @@
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                         <p :class="[newRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
                            class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
-                        <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                        <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                             <span
                                 class="ml-1 my-auto hind">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>
@@ -906,7 +906,7 @@
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                         <p :class="[editRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
                            class="ml-4 my-auto text-sm">Temporärer Raum</p>
-                        <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                        <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                             <span
                                 class="ml-1 my-auto hind">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
@@ -929,7 +929,7 @@
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                         <p :class="[editRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
                            class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
-                        <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                        <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                             <span
                                 class="ml-1 my-auto hind">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>

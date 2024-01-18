@@ -398,7 +398,7 @@
                                     @click="updateOrCreateEvent(event)"
                                 >
                                     {{
-                                        (isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects) ? 'Speichern' : 'Belegung anfragen'
+                                        (isAdmin || selectedRoom?.everyone_can_book) ? 'Speichern' : 'Belegung anfragen'
                                     }}
                                 </button>
                             </div>

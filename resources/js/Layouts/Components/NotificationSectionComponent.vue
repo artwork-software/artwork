@@ -72,12 +72,12 @@
     <event-without-room-new-request-component
         v-if="showEventWithoutRoomComponent"
         @closed="onEventWithoutRoomComponentClose()"
-        :showHints="$page.props?.can?.show_hints"
+        :showHints="this.$page.props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
         :event="this.eventToEdit"
         :projects="this.projects"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :isAdmin="this.hasAdminRole"
     />
     <!-- Event löschen Modal -->
     <confirmation-component

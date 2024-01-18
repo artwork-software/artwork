@@ -269,7 +269,7 @@
         :project="project"
         :event="selectedEvent"
         :wantedRoomId="wantedSplit"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :isAdmin="this.hasAdminRole()"
         :roomCollisions="roomCollisions"
     />
     <!-- Termine ohne Raum Modal -->
@@ -280,7 +280,7 @@
         :eventTypes="eventTypes"
         :rooms="rooms"
         :eventsWithoutRoom="this.filteredEvents"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :isAdmin="this.hasAdminRole()"
     />
 </template>
 

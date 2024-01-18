@@ -36,7 +36,7 @@
             <div v-if="projectFiles.length > 0">
                 <div v-for="projectFile in projectFiles">
                     <div
-                        v-if="projectFile.accessibleUsers.filter(user => user.id === $page.props.user.id).length > 0 || $page.props.is_admin"
+                        v-if="projectFile.accessibleUsers.filter(user => user.id === $page.props.user.id).length > 0 || this.hasAdminRole()"
                         class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
                     >
                         <DownloadIcon class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>

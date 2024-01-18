@@ -6,14 +6,14 @@
                     <h2 class="headline1">{{ room.name }}</h2>
                     <Menu as="div" class="my-auto relative ml-2">
                         <div class="flex"
-                             v-if="$role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin">
+                             v-if="this.hasAdminRole() || $canAny(['create, delete and update rooms']) || this.is_room_admin">
                             <MenuButton
                                 class="flex bg-tagBg p-0.5 rounded-full">
                                 <DotsVerticalIcon
                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
-                            <div v-if="$page.props.can.show_hints" class="absolute flex w-48 ml-12">
+                            <div v-if="this.$page.props.show_hints" class="absolute flex w-48 ml-12">
                                 <div>
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 </div>
@@ -245,7 +245,7 @@
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[editRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
                                class="ml-4 my-auto text-sm">Temporärer Raum</p>
-                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                            <div v-if="this.$page.props.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                                 <span
                                     class="ml-1 my-auto hind">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
@@ -268,7 +268,7 @@
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[editRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
                                class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
-                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                            <div v-if="this.$page.props.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                                 <span
                                     class="ml-1 my-auto hind">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>

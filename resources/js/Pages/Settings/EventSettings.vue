@@ -11,7 +11,7 @@
                 <div class="flex">
                     <h2 class="headline2 my-2">Termintypen</h2>
                     <AddButton @click="openAddEventTypeModal" text="Neuer Termintyp" mode="page"/>
-                    <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                    <div v-if="this.$page.props.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                         <span class="hind ml-1 my-auto">Erstelle neue Termintypen</span>
                     </div>
@@ -59,7 +59,7 @@
                                         class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                         aria-hidden="true"/>
                                 </MenuButton>
-                                <div v-if="$page.props.can.show_hints && index === 0" class="absolute flex w-40 ml-6">
+                                <div v-if="this.$page.props.show_hints && index === 0" class="absolute flex w-40 ml-6">
                                     <div>
                                         <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                     </div>

@@ -5,7 +5,7 @@
             <div class="flex items-center"
                  v-if="$role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                 <AddButton @click="openAddChecklistModal" text="Neue Checkliste" mode="page"/>
-                <div v-if="$page.props.can.show_hints" class="flex ml-2">
+                <div v-if="this.$page.props.show_hints" class="flex ml-2">
                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
                     <span
                         class="hind ml-1">Lege neue Checklisten an</span>
@@ -152,7 +152,7 @@
                                         <AddButton @click="openAddTaskModal(checklist)"
                                                    text="Neue Aufgabe" mode="page"/>
                                     </div>
-                                    <div v-if="$page.props.can.show_hints" class="flex">
+                                    <div v-if="this.$page.props.show_hints" class="flex">
                                         <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                         <span
                                             class="hind text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
@@ -363,7 +363,7 @@
                                     <AddButton @click="openAddTaskModal(checklist)" text="Neue Aufgabe"
                                                mode="page"/>
                                 </div>
-                                <div v-if="$page.props.can.show_hints" class="flex">
+                                <div v-if="this.$page.props.show_hints" class="flex">
                                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                     <span
                                         class="hind text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Aufgaben an</span>
@@ -868,7 +868,7 @@
                         </Switch>
                         <span class="ml-2 text-sm"
                               :class="checklistForm.private ? 'text-primary' : 'text-secondary'">Privat</span>
-                        <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                        <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="ml-2 mr-1 mt-1"/>
                             <span
                                 class="hind text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Private Liste - nur du kannst sie sehen</span>

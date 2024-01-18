@@ -192,6 +192,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
 
     //Projects
+    Route::post('/projects/{project}/pin', [ProjectController::class, 'pin'])->name('project.pin');
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects');
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])

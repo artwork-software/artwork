@@ -2973,4 +2973,10 @@ class ProjectController extends Controller
             )
             ->deleteFileAfterSend();
     }
+
+    public function pin(Project $project): RedirectResponse
+    {
+        $this->projectService->pin($project);
+        return Redirect::route('projects')->with('success', 'Project pinned.');
+    }
 }

@@ -197,7 +197,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])
         ->name('projects.search.single');
-    Route::get('/projects/trashed', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
+    Route::get('/trashedProjects', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'searchDepartmentsAndUsers'])
         ->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
@@ -346,7 +346,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Areas
     Route::get('/areas', [AreaController::class, 'index'])->name('areas.management');
-    Route::get('/areas/trashed', [AreaController::class, 'getTrashed'])->name('areas.trashed');
+    Route::get('/trashedAreas', [AreaController::class, 'getTrashed'])->name('areas.trashed');
     Route::post('/areas', [AreaController::class, 'store'])->name('areas.store');
     Route::post('/areas/{area}/duplicate', [AreaController::class, 'duplicate'])->name('areas.duplicate');
     Route::patch('/areas/{area}', [AreaController::class, 'update'])->name('areas.update');
@@ -358,7 +358,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //Rooms
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
-    Route::get('/rooms/trashed', [RoomController::class, 'getTrashed'])->name('rooms.trashed');
+    Route::get('/trashedRooms', [RoomController::class, 'getTrashed'])->name('rooms.trashed');
     Route::get('/rooms/free', [RoomController::class, 'getAllDayFree'])->name('rooms.free');
     Route::post('/rooms/{room}/duplicate', [RoomController::class, 'duplicate'])->name('rooms.duplicate');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])
@@ -403,7 +403,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     //Event Views
     Route::get('/calendar/view', [EventController::class, 'viewEventIndex'])->name('events');
     Route::get('/events/requests', [EventController::class, 'viewRequestIndex'])->name('events.requests');
-    Route::get('/events/trashed', [EventController::class, 'getTrashed'])->name('events.trashed');
+    Route::get('/trashedEvents', [EventController::class, 'getTrashed'])->name('events.trashed');
 
     // Event Api
     Route::get('/events', [EventController::class, 'eventIndex'])->name('events.index');
@@ -772,7 +772,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/states/{id}/force', [ProjectStatesController::class, 'forceDelete'])->name('state.force');
 
     // Project Settings
-    Route::get('projects/settings/trashed', [ProjectController::class, 'getTrashedSettings'])
+    Route::get('/trashedProjects/settings', [ProjectController::class, 'getTrashedSettings'])
         ->name('projects.settings.trashed');
 
     // Sub Event

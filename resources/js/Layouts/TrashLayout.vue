@@ -1,7 +1,7 @@
 <template>
     <div class="max-w-screen-xl">
         <div class="flex-wrap max-w-5xl">
-            <div class="flex flex-wrap mx-10">
+            <div class="flex flex-wrap mx-10 ml-14">
                 <h2 class="font-black text-primary font-lexend text-3xl w-full">Papierkorb</h2>
                 <p class="text-secondary tracking-tight leading-6 subpixel-antialiased mt-5">Du kannst Objekte aus deinem Papierkorb wieder herstellen oder endgültig
                     löschen. Nach 30 Tagen werden Objekte automatisch endgültig gelöscht.</p>

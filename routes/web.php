@@ -162,7 +162,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/users/{user}/terms', [UserController::class, 'editUserTerms'])->name('user.edit.terms');
     Route::get('/users/{user}/permissions', [UserController::class, 'editUserPermissions'])
         ->name('user.edit.permissions');
-    Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->can('can:can manage workers')
+    Route::get('/users/{user}/workProfile', [UserController::class, 'editUserWorkProfile'])->can('can manage workers')
         ->name('user.edit.workProfile');
     Route::patch('/users/{user}/edit', [UserController::class, 'update'])->name('user.update');
     Route::patch('/users/{user}/checklists', [UserController::class, 'updateChecklistStatus'])
@@ -240,7 +240,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('projects.show.calendar');
     Route::get('/projects/{project}/checklist', [ProjectController::class, 'projectChecklistTab'])
         ->name('projects.show.checklist');
-    Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])->name('projects.show.shift')->can('can:can plan shifts');
+    Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])->name('projects.show.shift')->can('can plan shifts');
     Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
         ->name('projects.export.budget');
     Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])
@@ -424,14 +424,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/events/{id}/restore', [EventController::class, 'restore'])->name('events.restore');
 
     //Shifts
-    Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])->name('shifts.plan')->can('can:can view shift plan');
+    Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])->name('shifts.plan')->can('can view shift plan');
     Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])->name('shifts.presets');
     Route::post('/shift/{shiftPreset}/preset/store', [ShiftPresetController::class, 'addNewShift'])
         ->name('shift.preset.store');
     Route::post('/shifts/commit', [EventController::class, 'commitShifts'])->name('shifts.commit');
 
     //EventTypes
-    Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management')->can('can:change event settings');
+    Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management')->can('change event settings');
     Route::post('/event_types', [EventTypeController::class, 'store'])->name('event_types.store');
     Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
     Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
@@ -697,7 +697,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('project.budget.reset.table');
 
     // Templates
-    Route::get('/templates/index', [BudgetTemplateController::class, 'index'])->name('templates.view.index')->can('can:view budget templates');
+    Route::get('/templates/index', [BudgetTemplateController::class, 'index'])->name('templates.view.index')->can('view budget templates');
 
     //CopyRight
     Route::post('/copyright', [CopyrightController::class, 'store'])->name('copyright.store');
@@ -794,7 +794,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('freelancer.change.profile-image');
     Route::post('freelancer/add', [FreelancerController::class, 'store'])->name('freelancer.add');
     Route::delete('freelancer/{freelancer}', [FreelancerController::class, 'destroy'])->name('freelancer.destroy');
-    Route::patch('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])->can('can:can manage workers')
+    Route::patch('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])->can('can manage workers')
         ->name('freelancer.update.workProfile');
     Route::patch('/freelancer/{freelancer}/terms', [FreelancerController::class, 'updateTerms'])
         ->name('freelancer.update.terms');
@@ -862,7 +862,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch(
         '/service-provider/{serviceProvider}/workProfile',
         [ServiceProviderController::class, 'updateWorkProfile']
-    )->name('service_provider.update.workProfile')->can('can:can manage workers');
+    )->name('service_provider.update.workProfile')->can('can manage workers');
     Route::patch(
         '/service-provider/{serviceProvider}/terms',
         [ServiceProviderController::class, 'updateTerms']

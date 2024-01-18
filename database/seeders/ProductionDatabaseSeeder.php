@@ -17,6 +17,7 @@ class ProductionDatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             SettingsSeeder::class,
+            PermissionPresetSeeder::class,
         ]);
         DB::table('event_types')->insert([
             'name' => 'Blocker',

@@ -315,7 +315,7 @@
                             </div>
                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
-                        <ListboxOptions class="w-[88%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                        <ListboxOptions class="w-[88%] bg-primary max-h-32 overflow-y-auto text-sm absolute z-50">
                             <ListboxOption v-for="room in rooms"
                                            class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
                                            :key="room.name"

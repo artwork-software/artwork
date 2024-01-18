@@ -18,9 +18,9 @@ class TaskDashboardResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'checklistName' => $this->checklist->name,
-            'projectName' => $this->checklist->project?->name,
-            'projectId' => $this->checklist->project?->id,
+            'checklistName' => $this->checklist?->name,
+            'projectName' => $this->checklist?->project?->name,
+            'projectId' => $this->checklist?->project?->id,
             'description' => $this->description,
             'deadline' => $this->deadline ? Carbon::parse($this->deadline)->format('d.m.Y, H:i') : null,
             'isDeadlineInFuture' => $this->deadline?->isFuture(),

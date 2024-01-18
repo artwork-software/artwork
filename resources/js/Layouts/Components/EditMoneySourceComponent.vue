@@ -20,7 +20,7 @@
                                 </div>
                                 <div v-for="(user,index) in moneySource.users">
                                     <NewUserToolTip :height="7" :width="7" v-if="user"
-                                                    :user="user" :id="index"/>
+                                                    :user="user" :id="index + 'moneySourceUser' + user.id"/>
                                 </div>
                             </div>
                         </div>
@@ -28,7 +28,7 @@
                             erstellt von
                             <div class="ml-1">
                             <NewUserToolTip :height="7" :width="7" v-if="moneySource.creator"
-                                            :user="moneySource.creator" :id="moneySource.creator.id"/>
+                                            :user="moneySource.creator" :id="moneySource.creator.id + 'creator'"/>
                             </div>
                         </div>
                     </div>

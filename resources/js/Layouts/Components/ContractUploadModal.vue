@@ -54,11 +54,11 @@
                                class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         <div
                             v-if="project_search_results.length > 0"
-                            class="bg-primary truncate sm:text-sm">
+                            class="bg-primary truncate sm:text-sm absolute z-20 w-[88%]">
                             <div v-for="(project, index) in project_search_results"
                                  :key="index"
                                  @click="selectProject(project)"
-                                 class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                                 class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer w-[88%]">
                                 {{ project.name }}
                             </div>
                         </div>

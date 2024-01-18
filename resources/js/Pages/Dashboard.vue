@@ -4,6 +4,7 @@
             <div class="headline1 mb-10">
                 Dashboard
             </div>
+            {{this.$can('change event settings')}}
 
 
             <div class="grid grid-cols-1 sm:grid-cols-5 gap-x-20">

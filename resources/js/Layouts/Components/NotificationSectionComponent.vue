@@ -254,6 +254,9 @@ export default  {
             this.setOnReadForm.patch(route('notifications.setReadAt'));
         },
         setAllOnRead(notifications) {
+            if(!notifications){
+                return;
+            }
             notifications.forEach((notification) => {
                 if (notification.data.icon !== 'blue') {
                     this.setOnRead(notification.id);

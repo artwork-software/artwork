@@ -167,9 +167,11 @@ class TaskController extends Controller
         }
 
         if ($checklist = $task->checklist()->first()) {
-
             $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-            $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert');
+            $this->history->createHistory(
+                $checklist->project_id,
+                'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert'
+            );
 
 
             $this->createNotificationUpdateTask($task);
@@ -213,7 +215,10 @@ class TaskController extends Controller
         $checklist = $task->checklist()->first();
 
         $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-        $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' gelöscht');
+        $this->history->createHistory(
+            $checklist->project_id,
+            'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' gelöscht'
+        );
 
         $task->delete();
         return Redirect::back()->with('success', 'Task deleted');

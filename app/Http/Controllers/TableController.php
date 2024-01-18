@@ -7,78 +7,37 @@ use Illuminate\Http\Request;
 
 class TableController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(): void
     {
         //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
         //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function store(Request $request): void
     {
         //
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \Artwork\Modules\Budget\Models\Table  $table
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Table $table)
+    public function show(Table $table): void
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \Artwork\Modules\Budget\Models\Table  $table
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Table $table)
+    public function edit(Table $table): void
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Artwork\Modules\Budget\Models\Table  $table
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, Table $table)
+    public function update(Request $request, Table $table): void
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \Artwork\Modules\Budget\Models\Table  $table
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Table $table)
+    public function destroy(Table $table): void
     {
         //
     }

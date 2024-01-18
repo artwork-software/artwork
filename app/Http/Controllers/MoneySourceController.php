@@ -512,6 +512,14 @@ class MoneySourceController extends Controller
 
         $newAmount = $moneySource->amount;
 
+        if ($request->is_group) {
+            foreach ($request->sub_money_source_ids as $sub_money_source_id) {
+                $money_source = MoneySource::find($sub_money_source_id);
+                $money_source->update(['group_id' => $moneySource->id]);
+            }
+        }
+
+
         if ($oldName !== $newName) {
             $this->history->createHistory($moneySource->id, 'Finanzierungsquellenname geändert');
         }
@@ -528,15 +536,8 @@ class MoneySourceController extends Controller
             $this->history->createHistory($moneySource->id, 'Beschreibung gelöscht');
         }
 
-        if ($oldAmount !== $newAmount) {
+        if (floatval($oldAmount) !== floatval($newAmount)) {
             $this->history->createHistory($moneySource->id, 'Ursprungsvolumen geändert');
-        }
-
-        if ($request->is_group) {
-            foreach ($request->sub_money_source_ids as $sub_money_source_id) {
-                $money_source = MoneySource::find($sub_money_source_id);
-                $money_source->update(['group_id' => $moneySource->id]);
-            }
         }
     }
 

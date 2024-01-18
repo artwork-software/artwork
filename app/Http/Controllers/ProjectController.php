@@ -2404,7 +2404,7 @@ class ProjectController extends Controller
     private function checkProjectBudgetDeadlineChanges(
         int $projectId,
         string|null $oldProjectBudgetDeadline,
-        string $newProjectBudgetDeadline
+        string|null $newProjectBudgetDeadline
     ): void {
         if ($oldProjectBudgetDeadline !== $newProjectBudgetDeadline) {
             $this->history->createHistory($projectId, 'Projekt Stichtag Budget geändert', 'public_changes');

@@ -53,7 +53,7 @@
                                     </div>
                                 </div>
 
-                                <div class="flex mt-10">
+                                <div class="flex mt-10" v-if="this.user.type === 0 || this.user.type === 1">
                                     <input v-model="checked"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
@@ -132,14 +132,29 @@ export default defineComponent({
             }
         },
         checkVacation(){
-            Inertia.patch(route('user.check.vacation', {user: this.user.element.id}), {
-                checked: this.checked,
-                day: this.day.full_day
-            }, {
-                onSuccess: () => {
-                    this.closeModal(true)
-                }
-            });
+            if(this.user.type === 0){
+                Inertia.patch(route('user.check.vacation', {user: this.user.element.id}), {
+                    checked: this.checked,
+                    day: this.day.full_day
+                }, {
+                    onSuccess: () => {
+                        this.closeModal(true)
+                    }
+                });
+            }else if(this.user.type === 1){
+                Inertia.patch(route('freelancer.check.vacation', {freelancer: this.user.element.id}), {
+                    checked: this.checked,
+                    day: this.day.full_day
+                }, {
+                    onSuccess: () => {
+                        this.closeModal(true)
+                    }
+                });
+            }else{
+                //Service Provider do not have vacations, so no function here
+                this.closeModal(true)
+            }
+
 
         }
     }

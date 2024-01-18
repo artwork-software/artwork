@@ -53,21 +53,59 @@ class VacationController extends Controller
         }
     }
 
-    public function checkVacation(Request $request, User $user): void
+    public function checkVacation(Request $request, User $user = null): void
     {
-        $day = Carbon::parse($request->day);
-        if ($request->checked) {
-            $this->vacationService->deleteVacationInterval($user, $day, $day);
+        $day = Carbon::parse($request->day)->format('Y-m-d');
+        $checked = $request->checked;
+
+        if ($checked) {
+            $this->vacationService->deleteVacationInterval($user, $day);
             return;
         }
-        $vacations = $this->vacationService->findVacationWithinInterval($user, $day, $day);
+
+        $vacations = $this->vacationService->findVacationWithinInterval($user, $day);
         if ($vacations->count() === 0) {
-            $this->vacationService->create($user, $day, $day);
+            $createVacationRequest = new CreateVacationRequest([
+                'date' => $day,
+                'type' => 'vacation',
+                'full_day' => true,
+                'is_series' => false,
+                'comment' => '',
+            ]);
+            $this->vacationService->create($user, $createVacationRequest);
         }
 
         $shifts = $user->shifts()->where('event_start_day', $day)->get();
         foreach ($shifts as $shift) {
             $shift->users()->detach($user->id);
+        }
+    }
+
+    public function checkVacationFreelancer(Request $request, Freelancer $freelancer): void
+    {
+        $day = Carbon::parse($request->day)->format('Y-m-d');
+        $checked = $request->checked;
+
+        if ($checked) {
+            $this->vacationService->deleteVacationInterval($freelancer, $day);
+            return;
+        }
+
+        $vacations = $this->vacationService->findVacationWithinInterval($freelancer, $day);
+        if ($vacations->count() === 0) {
+            $createVacationRequest = new CreateVacationRequest([
+                'date' => $day,
+                'type' => 'vacation',
+                'full_day' => true,
+                'is_series' => false,
+                'comment' => '',
+            ]);
+            $this->vacationService->create($freelancer, $createVacationRequest);
+        }
+
+        $shifts = $freelancer->shifts()->where('event_start_day', $day)->get();
+        foreach ($shifts as $shift) {
+            $shift->freelancer()->detach($freelancer->id);
         }
     }
 

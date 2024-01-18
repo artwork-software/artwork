@@ -362,7 +362,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/rooms/free', [RoomController::class, 'getAllDayFree'])->name('rooms.free');
     Route::post('/rooms/{room}/duplicate', [RoomController::class, 'duplicate'])->name('rooms.duplicate');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])
-        ->name('rooms.show')->middleware(['can:edit room', CanViewRoom::class]);
+        ->name('rooms.show')
     ;
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
     Route::put('/rooms/order', [RoomController::class, 'updateOrder']);

@@ -31,6 +31,7 @@ use App\Models\UserShiftCalendarFilter;
 use App\Support\Services\CollisionService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
@@ -65,7 +66,7 @@ class EventController extends Controller
     public function __construct(
         private readonly CollisionService $collisionService,
         private readonly NotificationService $notificationService,
-        private readonly ProjectService $projectService
+        private readonly BudgetService $budgetService
     ) {
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
@@ -325,7 +326,7 @@ class EventController extends Controller
         $firstEvent = Event::create($request->data());
         $this->adjoiningRoomsCheck($request, $firstEvent);
         if ($request->get('projectName')) {
-            $this->associateProject($request, $firstEvent);
+            $this->associateProject($request, $firstEvent, $this->budgetService);
         }
 
         $projectFirstEvent = $firstEvent->project()->first();
@@ -666,10 +667,10 @@ class EventController extends Controller
         }
     }
 
-    private function associateProject($request, $event, ProjectController $projectController): void
+    private function associateProject($request, $event, BudgetService $budgetService): void
     {
         $project = Project::create(['name' => $request->get('projectName')]);
-        $projectController->generateBasicBudgetValues($project);
+        $budgetService->generateBasicBudgetValues($project);
         $event->project()->associate($project);
         $event->save();
     }

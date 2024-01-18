@@ -828,7 +828,7 @@ export default {
             return this.rooms.find(room => room.id === this.event?.roomId)?.admins.some(admin => admin.id === this.$page.props.user.id) || false;
         },
         isCreator() {
-            return this.event ? this.event.created_by.id === this.$page.props.user.id : false
+            return this.event ? this.event.created_by?.id === this.$page.props.user.id : false
         },
     },
     methods: {

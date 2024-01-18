@@ -13,7 +13,7 @@
             <PopoverPanel class="absolute left-1/2 z-50 mt-2 -translate-x-1/2 transform px-4 sm:px-0 bg-primary ring-0">
                 <div class="shadow-lg ring-1 ring-black ring-opacity-5 p-3 max-w-96">
                     <div class="grid grid-cols-4 gap-x-2 items-center w-96 ">
-                        <div class="col-span-1 shrink-0 flex">
+                        <div class="col-span-1 shrink-0 flex pl-5">
                             <img class="mx-auto shrink-0 flex h-14 w-14 mt-2 object-cover rounded-full" :src="user.profile_photo_url" alt=""/>
                         </div>
                         <div class="col-span-3">

@@ -45,7 +45,8 @@
                             'change project settings',
                             'change event settings',
                             'change system notification',
-                            'view budget templates'
+                            'view budget templates',
+                            'create, delete and update rooms'
                         ]) || hasAdminRole()
                         ">
                             <MenuButton

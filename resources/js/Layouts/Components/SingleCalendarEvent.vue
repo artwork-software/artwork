@@ -491,7 +491,7 @@ export default {
             return this.rooms?.find(room => room.id === this.event.roomId)?.admins.some(admin => admin.id === this.$page.props.user.id) || false;
         },
         isCreator() {
-            return this.event?.created_by.id === this.$page.props.user.id
+            return this.event?.created_by?.id === this.$page.props.user.id
         },
         roomCanBeBookedByEveryone() {
             return this.rooms?.find(room => room.id === this.event.roomId).everyone_can_book

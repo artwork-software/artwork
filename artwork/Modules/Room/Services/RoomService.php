@@ -66,17 +66,30 @@ class RoomService
      * @param $newEndDate
      * @return void
      */
-    public function checkTemporaryChanges($roomId, $oldTemporary, $newTemporary, $oldStartDate, $newStartDate, $oldEndDate, $newEndDate): void
-    {
-        if($oldTemporary && !$newTemporary){
+    public function checkTemporaryChanges(
+        $roomId,
+        $oldTemporary,
+        $newTemporary,
+        $oldStartDate,
+        $newStartDate,
+        $oldEndDate,
+        $newEndDate
+    ): void {
+        if ($oldTemporary && !$newTemporary) {
             $this->history->createHistory($roomId, 'Temporärer Zeitraum gelöscht');
+            return;
         }
-        if($newTemporary && !$oldTemporary){
+        if ($newTemporary && !$oldTemporary) {
             $this->history->createHistory($roomId, 'Temporärer Zeitraum hinzugefügt');
+            return;
         }
 
-        if($oldStartDate !== $newStartDate || $oldEndDate !== $newEndDate){
-            $this->history->createHistory($roomId, 'Temporärer Zeitraum geändert');
+        // add check if temporary not changed
+        if ($oldTemporary && $newTemporary) {
+            if ($oldStartDate !== $newStartDate || $oldEndDate !== $newEndDate) {
+                $this->history->createHistory($roomId, 'Temporärer Zeitraum geändert');
+                return;
+            }
         }
     }
 
@@ -92,20 +105,20 @@ class RoomService
         $oldCategoryNames = [];
         $newCategoryIds = [];
 
-        foreach ($oldCategories as $oldCategory){
+        foreach ($oldCategories as $oldCategory) {
             $oldCategoryIds[$oldCategory->id] = $oldCategory->id;
             $oldCategoryNames[$oldCategory->id] = $oldCategory->name;
         }
 
-        foreach ($newCategories as $newCategory){
+        foreach ($newCategories as $newCategory) {
             $newCategoryIds[] = $newCategory->id;
-            if(!in_array($newCategory->id, $oldCategoryIds)){
+            if (!in_array($newCategory->id, $oldCategoryIds)) {
                 $this->history->createHistory($roomId, 'Kategorie ' . $newCategory->name . ' wurde hinzugefügt');
             }
         }
 
-        foreach ($oldCategoryIds as $oldCategoryId){
-            if(!in_array($oldCategoryId, $newCategoryIds)){
+        foreach ($oldCategoryIds as $oldCategoryId) {
+            if (!in_array($oldCategoryId, $newCategoryIds)) {
                 $this->history->createHistory($roomId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' wurde entfernt');
             }
         }
@@ -123,20 +136,20 @@ class RoomService
         $oldAttributeNames = [];
         $newAttributeIds = [];
 
-        foreach ($oldAttributes as $oldAttribute){
+        foreach ($oldAttributes as $oldAttribute) {
             $oldAttributeIds[] = $oldAttribute->id;
             $oldAttributeNames[$oldAttribute->id] = $oldAttribute->name;
         }
 
-        foreach ($newAttributes as $newAttribute){
+        foreach ($newAttributes as $newAttribute) {
             $newAttributeIds[] = $newAttribute->id;
-            if(!in_array($newAttribute->id, $oldAttributeIds)){
+            if (!in_array($newAttribute->id, $oldAttributeIds)) {
                 $this->history->createHistory($roomId, 'Attribut ' . $newAttribute->name . ' wurde hinzugefügt');
             }
         }
 
-        foreach ($oldAttributeIds as $oldAttributeId){
-            if(!in_array($oldAttributeId, $newAttributeIds)){
+        foreach ($oldAttributeIds as $oldAttributeId) {
+            if (!in_array($oldAttributeId, $newAttributeIds)) {
                 $this->history->createHistory($roomId, 'Attribut ' . $oldAttributeNames[$oldAttributeId] . ' wurde entfernt');
             }
         }
@@ -150,7 +163,7 @@ class RoomService
      */
     public function checkTitleChanges($roomId, $oldTitle, $newTitle): void
     {
-        if($oldTitle !== $newTitle){
+        if ($oldTitle !== $newTitle) {
             $this->history->createHistory($roomId, 'Raumname wurde geändert');
         }
     }
@@ -164,7 +177,7 @@ class RoomService
     public function checkDescriptionChanges($roomId, $oldDescription, $newDescription): void
     {
         // check changes in room description
-        if($oldDescription !== $newDescription){
+        if ($oldDescription !== $newDescription) {
             $this->history->createHistory($roomId, 'Beschreibung wurde geändert');
         }
     }
@@ -181,21 +194,21 @@ class RoomService
         $oldAdjoiningRoomIds = [];
         $oldAdjoiningRoomName = [];
 
-        foreach ($oldAdjoiningRooms as $oldAdjoiningRoom){
+        foreach ($oldAdjoiningRooms as $oldAdjoiningRoom) {
             $oldAdjoiningRoomIds[] = $oldAdjoiningRoom->id;
             $oldAdjoiningRoomName[$oldAdjoiningRoom->id] = $oldAdjoiningRoom->name;
         }
 
-        foreach ($newAdjoiningRooms as $newAdjoiningRoom){
+        foreach ($newAdjoiningRooms as $newAdjoiningRoom) {
             $newAdjoiningRoomIds[] = $newAdjoiningRoom->id;
-            if(!in_array($newAdjoiningRoom->id, $oldAdjoiningRoomIds)){
+            if (!in_array($newAdjoiningRoom->id, $oldAdjoiningRoomIds)) {
                 $this->history->createHistory($roomId, 'Nebenraum ' . $newAdjoiningRoom->name . ' wurde hinzugefügt');
             }
         }
 
-        foreach ($oldAdjoiningRoomIds as $oldAdjoiningRoomId){
-            if(!in_array($oldAdjoiningRoomId, $newAdjoiningRoomIds)){
-                $this->history->createHistory($roomId, 'Nebenraum ' . $oldAdjoiningRoomName[$oldAdjoiningRoomId]. ' wurde entfernt');
+        foreach ($oldAdjoiningRoomIds as $oldAdjoiningRoomId) {
+            if (!in_array($oldAdjoiningRoomId, $newAdjoiningRoomIds)) {
+                $this->history->createHistory($roomId, 'Nebenraum ' . $oldAdjoiningRoomName[$oldAdjoiningRoomId] . ' wurde entfernt');
             }
         }
     }
@@ -210,14 +223,14 @@ class RoomService
     {
         $roomAdminIdsBefore = [];
         $roomAdminIdsAfter = [];
-        foreach ($roomAdminsBefore as $roomAdminBefore){
+        foreach ($roomAdminsBefore as $roomAdminBefore) {
             $roomAdminIdsBefore[] = $roomAdminBefore->id;
         }
 
-        foreach ($roomAdminsAfter as $roomAdminAfter){
+        foreach ($roomAdminsAfter as $roomAdminAfter) {
             $roomAdminIdsAfter[] = $roomAdminAfter->id;
             // if added a new room admin, send notification to this user
-            if(!in_array($roomAdminAfter->id, $roomAdminIdsBefore)){
+            if (!in_array($roomAdminAfter->id, $roomAdminIdsBefore)) {
                 $notificationTitle = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
                 $user = User::find($roomAdminAfter->id);
                 $broadcastMessage = [
@@ -237,8 +250,8 @@ class RoomService
         }
 
         // check if user remove as room admin
-        foreach ($roomAdminIdsBefore as $roomAdminBefore){
-            if(!in_array($roomAdminBefore, $roomAdminIdsAfter)){
+        foreach ($roomAdminIdsBefore as $roomAdminBefore) {
+            if (!in_array($roomAdminBefore, $roomAdminIdsAfter)) {
                 $user = User::find($roomAdminBefore);
                 $notificationTitle = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
                 $broadcastMessage = [

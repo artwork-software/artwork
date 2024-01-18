@@ -12,7 +12,7 @@
                 <div class="text-secondary subpixel-antialiased relative z-5">
                     Hier kannst du nachvollziehen, was von wem wann geändert wurde.
                 </div>
-                <div class="flex w-full flex-wrap mt-4 max-h-96">
+                <div class="flex w-full flex-wrap mt-4 max-h-96 overflow-x-scroll">
                     <div class="flex items-center w-full my-1" v-for="(historyItem,index) in this.room_history">
                             <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                 {{ historyItem.created_at }}:

@@ -458,7 +458,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // Money Sources
     Route::get('/money_sources/settings', [MoneySourceController::class, 'showSettings'])
         ->name('money_sources.settings');
-    Route::get('/money_sources/search', [MoneySourceController::class, 'search'])->name('money_sources.search');
+    Route::get('/money_sources/search/money_source', [MoneySourceController::class, 'search'])
+        ->name('money_sources.search');
     Route::patch('/money_sources/{moneySource}', [MoneySourceController::class, 'update'])
         ->name('money_sources.update');
     Route::patch('/money_sources/{moneySource}/users', [MoneySourceController::class, 'updateUsers'])

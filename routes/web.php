@@ -229,10 +229,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
 
-    Route::middleware([CanEditProject::class])->group(function (): void {
-        Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])
-            ->name('projects.update_team');
-    });
+    Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])
+        ->name('projects.update_team');
+
 
     //ProjectTabs
     Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])->name('projects.show.info');
@@ -441,6 +440,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/collision/room', [RoomController::class, 'collisionsCount'])->name('collisions.room');
     Route::patch('/notifications', [NotificationController::class, 'setOnRead'])->name('notifications.setReadAt');
+    Route::patch('/notifications', [NotificationController::class, 'setOnReadAll'])->name('notifications.setReadAtAll');
     Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
     Route::patch('/user/settings/{setting}', [NotificationController::class, 'updateSetting'])
         ->name('notifications.settings');

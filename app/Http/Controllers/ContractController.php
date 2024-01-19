@@ -208,17 +208,18 @@ class ContractController extends Controller
         $contract->save();
 
         $project = $contract->project()->first();
-        $contractUsers =  $contract->accessingUsers()->get();
-        $notificationTitle = 'Ein Vertrag wurde geändert';
+        $contractUsers = $contract->accessingUsers()->get();
+
+        $notificationTitle = 'Ein Vertrag wurde für dich freigegeben';
         $broadcastMessage = [
             'id' => rand(1, 1000000),
-            'type' => 'error',
+            'type' => 'green',
             'message' => $notificationTitle
         ];
         $notificationDescription = [
             1 => [
                 'type' => 'string',
-                'title' => $original_name === '' ? $contract->name : $original_name,
+                'title' => $original_name,
                 'href' => null
             ],
             2 => [

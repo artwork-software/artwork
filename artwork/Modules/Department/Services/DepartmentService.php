@@ -24,19 +24,17 @@ class DepartmentService
      * @param DepartmentRepository $departmentRepository
      */
     public function __construct(
-        private readonly NotificationService  $notificationService,
-        private readonly UserService          $userService,
+        private readonly NotificationService $notificationService,
+        private readonly UserService $userService,
         private readonly DepartmentRepository $departmentRepository,
-    )
-    {
-
+    ) {
     }
 
     /**
      * @param string $query
      * @return Collection
      */
-    public function searchDepartments(string $query): Collection
+    public function searchDepartments(string $query): \Illuminate\Support\Collection
     {
         return $this->departmentRepository
             ->searchDepartments($query)
@@ -51,7 +49,7 @@ class DepartmentService
     }
 
     /**
-     * @return array
+     * @return array<string, mixed>
      */
     public function getDepartmentIndexResource(): array
     {
@@ -87,9 +85,8 @@ class DepartmentService
      */
     public function updateByRequest(
         UpdateDepartmentRequest $updateDepartmentRequest,
-        Department              $department
-    ): void
-    {
+        Department $department
+    ): void {
         $department->update($updateDepartmentRequest->only('name', 'svg_name'));
 
         $previousTeamMemberIds = $this->departmentRepository->getDepartmentUsers($department)->pluck('id');
@@ -179,8 +176,7 @@ class DepartmentService
         string $broadcastType,
         int $departmentId,
         User $user
-    ): void
-    {
+    ): void {
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon($icon);
         $this->notificationService->setPriority($priority);

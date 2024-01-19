@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Enums\RoleNameEnum;
 use App\Models\Category;
 use App\Models\Freelancer;
+use App\Models\GeneralSettings;
 use App\Models\ServiceProvider as ServiceProviderModel;
 use App\Policies\FreelancerPolicy;
 use App\Policies\ServiceProviderPolicy;
+use App\Policies\GeneralSettingsPolicy;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Comment;
@@ -53,7 +55,8 @@ class AuthServiceProvider extends ServiceProvider
         Area::class => AreaPolicy::class,
         Contract::class => ContractPolicy::class,
         Freelancer::class => FreelancerPolicy::class,
-        ServiceProviderModel::class => ServiceProviderPolicy::class
+        ServiceProviderModel::class => ServiceProviderPolicy::class,
+        GeneralSettings::class => GeneralSettingsPolicy::class
     ];
 
     public function boot(): void

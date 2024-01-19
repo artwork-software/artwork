@@ -255,7 +255,7 @@ export default {
         managementNavigation() {
             return [
                 {
-                    has_permission: this.checkPermissionGlobalMessageAndToolSettings(),
+                    has_permission: this.$can('change tool settings'),
                     name: 'Tool',
                     href: route('tool.settings'),
                     route: ['/tool/settings']
@@ -397,10 +397,6 @@ export default {
     },
     methods: {
         usePage,
-        checkPermissionGlobalMessageAndToolSettings() {
-            return this.$canAny(['change tool settings', 'change system notification'] || this.hasAdminRole());
-
-        },
         getTrashRoute() {
 
             if (this.$page.url === '/areas') {

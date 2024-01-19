@@ -28,6 +28,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
 use App\Models\UserShiftCalendarFilter;
+use App\Sage100\Sage100;
 use App\Support\Services\CollisionService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
@@ -242,6 +243,14 @@ class EventController extends Controller
 
     public function showDashboardPage(): Response
     {
+
+        dd(
+            app(Sage100::class)->getData([
+                "startIndex" => 1,
+                "count" => 10
+            ])
+        );
+
         $event = null;
         $tasks = Task::query()
             ->where('done', false)

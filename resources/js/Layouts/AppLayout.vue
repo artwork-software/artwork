@@ -94,7 +94,7 @@
 
         <div class="pl-2 flex flex-col">
             <!--   Top Menu     -->
-            <div class="sticky top-0 z-40 flex-shrink-0 flex h-24">
+            <div class="sticky top-0 z-40 flex-shrink-0 flex h-16">
                 <button type="button"
                         class="px-5 border-r border-primaryText text-primaryText focus:outline-none sm:hidden"
                         @click="openSideBarOnMobile">

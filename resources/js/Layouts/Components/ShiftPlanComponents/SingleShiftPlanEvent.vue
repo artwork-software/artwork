@@ -2,14 +2,31 @@
     <div>
         <div>
             <div>
-                <div class="text-secondaryHover xsWhiteBold px-1 py-1" :class="eventType.svg_name">
-                    {{ eventType.abbreviation }}: {{ project?.name }}
+                <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center"
+                     :class="eventType.svg_name">
+                    <div class="w-40 truncate">
+                        {{ eventType.abbreviation }}: {{ project?.name }}
+                    </div>
+                    <div v-if="areAllShiftsCommitted(event)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686" class="ml-1"
+                             viewBox="0 0 11.975 13.686">
+                            <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
+                                  d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
+                                  fill="#fcfcfb"/>
+                        </svg>
+                    </div>
                 </div>
             </div>
             <div class="bg-backgroundGray" :class="userForMultiEdit ? 'bg-blue-300/20' : 'bg-backgroundGray'">
                 <div v-for="shift in event.shifts" class="flex justify-between px-1">
                     <!-- Drop Element --->
-                    <ShiftDropElement @drop-feedback="getDropFeedback" :multiEditMode="multiEditMode" :craft-id="shift.craft.id" :userForMultiEdit="userForMultiEdit" :highlight-mode="highlightMode" :highlighted-id="highlightedId" :highlighted-type="highlightedType" :shift="shift" :show-room="showRoom" :room="room" :event="event"  :currentCount="shift.currentCount" :maxCount="shift.maxCount"  :free-employee-count="shift.empty_user_count" :free-master-count="shift.empty_master_count"/>
+                    <ShiftDropElement @drop-feedback="getDropFeedback" :multiEditMode="multiEditMode"
+                                      :craft-id="shift.craft.id" :userForMultiEdit="userForMultiEdit"
+                                      :highlight-mode="highlightMode" :highlighted-id="highlightedId"
+                                      :highlighted-type="highlightedType" :shift="shift" :show-room="showRoom"
+                                      :room="room" :event="event" :currentCount="shift.currentCount"
+                                      :maxCount="shift.maxCount" :free-employee-count="shift.empty_user_count"
+                                      :free-master-count="shift.empty_master_count"/>
                 </div>
             </div>
         </div>
@@ -43,12 +60,10 @@ export default defineComponent({
         'multiEditMode',
         'userForMultiEdit'
     ],
-    computed: {
-
-    },
+    computed: {},
     methods: {
         enableMultiEditModeForShifts() {
-            if(this.multiEditMode){
+            if (this.multiEditMode) {
                 this.isMultiEditMode = !this.isMultiEditMode;
             } else {
                 this.isMultiEditMode = false;
@@ -56,6 +71,9 @@ export default defineComponent({
         },
         getDropFeedback(event) {
             this.$emit('dropFeedback', event)
+        },
+        areAllShiftsCommitted(event) {
+            return event.shifts.every(shift => shift.is_committed);
         }
     },
     data() {
@@ -67,7 +85,7 @@ export default defineComponent({
     watch: {
         multiEditMode: {
             handler() {
-                if(!this.multiEditMode){
+                if (!this.multiEditMode) {
                     this.isMultiEditMode = false;
                 }
             },

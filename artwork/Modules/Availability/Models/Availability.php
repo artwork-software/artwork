@@ -49,8 +49,9 @@ class Availability extends Model
     ];
 
     protected $appends = [
-        'date_casted',
+        'date_casted', 'has_conflicts'
     ];
+
 
     public function availabilities(): MorphTo
     {
@@ -64,11 +65,21 @@ class Availability extends Model
     }
 
     protected $with = [
-        'series'
+        'series', 'conflicts'
     ];
+
+    public function getHasConflictsAttribute()
+    {
+        return $this->conflicts()->exists();
+    }
 
     public function series(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(AvailabilitySeries::class, 'id', 'series_id');
+    }
+
+    public function conflicts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AvailabilitiesConflict::class, 'availability_id', 'id');
     }
 }

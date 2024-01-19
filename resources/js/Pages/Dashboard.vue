@@ -125,11 +125,11 @@
                                 {{ notificationCount }}
                             </div>
                         </div>
-                        <div class="" >
+                        <div>
                             <div v-if="Object.values(notificationOfToday)?.length > 0">
                                 <div v-for="notificationGroup in Object.values(notificationOfToday)">
                                     <div v-for="(notification, index) in notificationGroup">
-                                        <div class="bg-white shadow-cardShadow p-3 mb-4" >
+                                        <div class="bg-white shadow-cardShadow mb-4 p-3" >
                                             <NotificationBlock :notification="notification" @setOnRead="setOnRead" :event="event" :event-types="eventTypes" :rooms="rooms"/>
                                         </div>
                                     </div>

@@ -32,13 +32,18 @@
                     </div>
                 </td>
                 <td class="col-span-1 cursor-pointer" v-for="day in week.days" :key="day" @click="showVacationsAndAvailabilities(day.day_formatted)">
-                    <div :class="{'text-gray-400' : day.notInMonth, 'bg-gray-900 rounded-full text-white' : day.day_formatted === showVacationsAndAvailabilitiesDate , 'line-through text-gray-800': day.onVacation &&  day.day_formatted !== showVacationsAndAvailabilitiesDate && !day.hasAvailability, 'text-gray-800': day.hasAvailability, 'text-green-500': day.isToday  }" class="p-6 flex items-center justify-center text-gray-400" >
+                    <div :class="{'text-gray-400' : day.notInMonth, 'bg-gray-900 rounded-full text-white' : day.day_formatted === showVacationsAndAvailabilitiesDate, 'bg-red-500 rounded-full text-white' : day.day_formatted === showVacationsAndAvailabilitiesDate && day.hasConflict, 'text-red-500' : day.hasConflict , 'line-through text-gray-800': day.onVacation &&  day.day_formatted !== showVacationsAndAvailabilitiesDate && !day.hasAvailability, 'text-gray-800': day.hasAvailability, 'text-green-500': day.isToday  }" class="p-6 flex items-center justify-center text-gray-400" >
                         {{ day.day }}
                     </div>
                 </td>
             </tr>
         </table>
     </div>
+
+
+    <pre>
+        {{ calendarData }}
+    </pre>
 </template>
 
 <script>

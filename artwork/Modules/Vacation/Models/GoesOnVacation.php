@@ -19,4 +19,5 @@ trait GoesOnVacation
         $vacations = $this->vacations;
         return $vacations->map(fn(Vacation $vacation) => $vacation->date)->toArray();
     }
+
 }

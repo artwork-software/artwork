@@ -23,6 +23,9 @@ class VacationRepository
     {
         if ($vacations instanceof Collection) {
             $vacations->each(function ($vacation): void {
+                $vacation->each(function ($vacationConflict): void {
+                    $vacationConflict->delete();
+                });
                 $vacation->delete();
             });
             return;

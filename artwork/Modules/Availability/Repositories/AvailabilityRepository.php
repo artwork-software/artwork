@@ -23,6 +23,9 @@ class AvailabilityRepository
 
     public function delete(Collection|Availability $availability): void
     {
+        $availability->each(function ($availabilityConflict): void {
+            $availabilityConflict->delete();
+        });
         $availability->delete();
     }
 

@@ -10,7 +10,10 @@ use App\Models\ServiceProvider;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Vacation\Models\VacationConflict;
+use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,8 +28,10 @@ class ShiftController extends Controller
 
     protected ?NotificationService $notificationService = null;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly AvailabilityConflictService $availabilityConflictService,
+        private readonly VacationConflictService $vacationConflictService,
+    ) {
         $this->history = new NewHistoryService('Artwork\Modules\Shift\Models\Shift');
         $this->notificationService = new NotificationService();
     }
@@ -264,7 +269,111 @@ class ShiftController extends Controller
             'is_committed',
         ]);
 
-        Shift::whereIn('id', $shiftIds)->update($updateData);
+        $shifts = Shift::whereIn('id', $shiftIds)->get();
+
+        foreach ($shifts as $shift) {
+            $shift->update($updateData);
+            if ($shift->is_committed) {
+                $users = $shift->users()->get();
+                foreach ($users as $user) {
+                    $vacations = $user
+                        ->vacations()
+                        ->get();
+                    $availabilities = $user
+                        ->availabilities()
+                        ->get();
+
+                    $notificationTitle = 'Konflikt mit deiner Schicht';
+                    $broadcastMessage = [
+                        'id' => rand(1, 1000000),
+                        'type' => 'success',
+                        'message' => $notificationTitle
+                    ];
+                    $notificationDescription = [
+                        1 => [
+                            'type' => 'string',
+                            'title' => Auth::user()->full_name . ' hat dich am ' .
+                                Carbon::parse($shift->event_start_day)->format('d.m.Y') . ' ' .
+                                $shift->start . ' - ' . $shift->end
+                                . ' eingeplant, entgegen deines ursprünglichen Eintrags.',
+                            'href' => null
+                        ],
+                    ];
+
+                    $this->notificationService->setTitle($notificationTitle);
+                    $this->notificationService->setIcon('red');
+                    $this->notificationService->setPriority(2);
+                    $this->notificationService
+                        ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
+                    $this->notificationService->setBroadcastMessage($broadcastMessage);
+                    $this->notificationService->setDescription($notificationDescription);
+                    $this->notificationService->setButtons(['see_shift']);
+                    $this->notificationService->setShiftId($shift->id);
+
+                    if ($vacations->count() > 0) {
+                        foreach ($vacations as $vacation) {
+                            // check if vacation is full_day
+                            if ($vacation->full_day) {
+                                $this->notificationService->setNotificationTo($user);
+                                $this->notificationService->createNotification();
+                            } else {
+                                // check if shift is on vacation time
+                                $start = Carbon::parse($vacation->start_time);
+                                $end = Carbon::parse($vacation->end_time);
+                                if (
+                                    $start->between($shift->start, $shift->end) ||
+                                    $end->between($shift->start, $shift->end)
+                                ) {
+                                    $this->vacationConflictService->create([
+                                        'vacation_id' => $vacation->id,
+                                        'shift_id' => $shift->id,
+                                        'user_name' => $user->full_name,
+                                        'date' => $shift->event_start_day,
+                                        'start_time' => $shift->start,
+                                        'end_time' => $shift->end,
+                                    ]);
+                                    $this->notificationService->setNotificationTo($user);
+                                    $this->notificationService->createNotification();
+                                }
+                            }
+                        }
+                    }
+
+                    if ($availabilities->count() > 0) {
+                        foreach ($availabilities as $availability) {
+                            // check if shift is before or after availability time
+                            $shiftStart = Carbon::parse($shift->start);
+                            $shiftEnd = Carbon::parse($shift->end);
+                            $availabilityStart = Carbon::parse($availability->start_time);
+                            $availabilityEnd = Carbon::parse($availability->end_time);
+
+                            if (
+                                $shiftEnd->lessThanOrEqualTo($availabilityStart) ||
+                                $shiftStart->greaterThanOrEqualTo($availabilityEnd)
+                            ) {
+                                $this->availabilityConflictService->create([
+                                    'availability_id' => $availability->id,
+                                    'shift_id' => $shift->id,
+                                    'user_name' => $user->full_name,
+                                    'date' => $shift->event_start_day,
+                                    'start_time' => $shift->start,
+                                    'end_time' => $shift->end,
+                                ]);
+                                $this->notificationService->setNotificationTo($user);
+                                $this->notificationService->createNotification();
+                            }
+                        }
+                    }
+                }
+            } else {
+                $vacationsConflict = VacationConflict::where('shift_id', $shift->id)->get();
+                foreach ($vacationsConflict as $vacationConflict) {
+                    $vacationConflict->delete();
+                }
+            }
+        }
+
+
         return Redirect::route('projects.show.shift', $projectId)->with('success', 'Shift updated');
     }
 

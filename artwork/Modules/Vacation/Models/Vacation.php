@@ -3,6 +3,8 @@
 namespace Artwork\Modules\Vacation\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use App\Models\Freelancer;
+use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -49,11 +51,11 @@ class Vacation extends Model
     ];
 
     protected $appends = [
-        'date_casted',
+        'date_casted'
     ];
 
     protected $with = [
-        'series',
+        'series', 'conflicts'
     ];
 
     public function vacations(): MorphTo
@@ -66,10 +68,59 @@ class Vacation extends Model
         return $this->hasOne(VacationSeries::class, 'id', 'series_id');
     }
 
+    public function conflicts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(VacationConflict::class, 'vacation_id', 'id');
+    }
 
     public function getDateCastedAttribute()
     {
         Carbon::setLocale('de');
         return Carbon::parse($this->date)->translatedFormat('D, d.m.Y');
     }
+
+    public function getShiftConflictAttribute(): array
+    {
+        $shifts = $this->getCommittedShifts();
+
+        //dd($shifts);
+        $shiftsWithConflict = [];
+        foreach ($shifts as $shift) {
+            if ($this->isShiftInConflict($shift)) {
+                $shiftsWithConflict[] = $shift;
+            }
+        }
+
+        return $shiftsWithConflict;
+    }
+
+    private function getCommittedShifts(): \Illuminate\Database\Eloquent\Collection|array
+    {
+        $model = $this->vacationer_type === Freelancer::class ? Freelancer::class : User::class;
+
+        return $model::find($this->vacationer_id)
+            ->shifts()
+            ->where('event_start_day', '<=', $this->date)
+            ->where('event_end_day', '>=', $this->date)
+            ->where('is_committed', true)
+            ->without(['users', 'freelancer', 'service_provider', 'craft'])
+            ->get();
+    }
+
+    private function isShiftInConflict($shift): bool
+    {
+        if ($this->full_day) {
+            return $this->date === $shift->event_start_day;
+        }
+
+        $date = Carbon::parse($this->date);
+        if (!$date->between($shift->event_start_day, $shift->event_end_day)) {
+            return false;
+        }
+        $start = Carbon::parse($this->start_time);
+        $end = Carbon::parse($this->end_time);
+        return $start->between($shift->start, $shift->end) ||
+            $end->between($shift->start, $shift->end);
+    }
+
 }

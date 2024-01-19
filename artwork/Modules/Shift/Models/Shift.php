@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
@@ -81,7 +82,7 @@ class Shift extends Model
         'is_committed' => 'boolean'
     ];
 
-    protected $with = ['craft'];
+    protected $with = ['craft', 'users', 'freelancer', 'service_provider'];
 
     protected $appends = [
         'break_formatted',
@@ -89,7 +90,6 @@ class Shift extends Model
         'empty_user_count',
         'empty_master_count',
         'master_count',
-        'allUsers',
         'currentCount',
         'maxCount',
         'infringement'
@@ -139,7 +139,25 @@ class Shift extends Model
 
     public function getCurrentCountAttribute(): int
     {
-        return $this->users->count() + $this->freelancer->count() + $this->service_provider->count();
+        $shiftId = $this->id;
+
+        // Zählen der Benutzer, die dem Shift zugeordnet sind
+        $userCount = DB::table('shift_user')
+            ->where('shift_id', $shiftId)
+            ->count();
+
+        // Zählen der Freelancer, die dem Shift zugeordnet sind
+        $freelancerCount = DB::table('shifts_freelancers')
+            ->where('shift_id', $shiftId)
+            ->count();
+
+        // Zählen der Dienstleister, die dem Shift zugeordnet sind
+        $serviceProviderCount = DB::table('shifts_service_providers')
+            ->where('shift_id', $shiftId)
+            ->count();
+
+        // Summe der gezählten Werte
+        return $userCount + $freelancerCount + $serviceProviderCount;
     }
 
     public function getMaxCountAttribute(): int
@@ -204,7 +222,7 @@ class Shift extends Model
 
     public function getHistoryAttribute(): Collection
     {
-        return $this->historyChanges();
+        return $this->historyChanges()->sortByDesc('created_at');
     }
 
     public function getMastersAttribute(): Collection
@@ -244,17 +262,5 @@ class Shift extends Model
             return true;
         }
         return false;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function getAllUsersAttribute(): array
-    {
-        return [
-            'users' => $this->users,
-            'freelancers' => $this->freelancer,
-            'service_providers' => $this->service_provider,
-        ];
     }
 }

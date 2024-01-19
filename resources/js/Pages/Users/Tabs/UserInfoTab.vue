@@ -61,8 +61,8 @@
                 <div class="sm:col-span-3">
                     <div class="mt-1">
                         <input type="text" v-model="this.user_to_edit.email"
-                               :disabled="!$page.props.is_admin"
-                               :class="$page.props.is_admin ? '' : 'bg-gray-100'"
+                               :disabled="!this.hasAdminRole()"
+                               :class="this.hasAdminRole() ? '' : 'bg-gray-100'"
                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                         <jet-input-error :message="userForm.errors.email" class="mt-2"/>
                     </div>
@@ -144,7 +144,7 @@
             </div>
         </div>
         <div class="">
-            <div class="flex mt-6" v-if="$page.props.is_admin">
+            <div class="flex mt-6" v-if="this.hasAdminRole()">
                 <span @click="resetPassword()" class="xsLight cursor-pointer">Passwort zurücksetzen</span>
             </div>
             <div v-if="password_reset_status" class="mb-4 font-medium text-sm text-green-600">
@@ -369,7 +369,7 @@ export default {
             this.openSuccessModal();
         },
         editUser() {
-            if (this.$page.props.is_admin) {
+            if (this.hasAdminRole()) {
                 this.userForm.email = this.user_to_edit.email;
             }
             if (!this.userForm.first_name || !this.userForm.last_name) {

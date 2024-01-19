@@ -42,7 +42,7 @@
                         <div>
                             <AddButton class="!ml-0" @click="openAddTaskModal()" text="Neue Aufgabe" mode="page"/>
                         </div>
-                        <div v-if="$page.props.can.show_hints" class="flex">
+                        <div v-if="this.$page.props.show_hints" class="flex">
                             <SvgCollection svgName="arrowLeft" class="ml-2"/>
                             <span
                                 class="hind text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>

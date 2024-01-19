@@ -126,7 +126,7 @@
                                     <p :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
                                        class=" ml-4 my-auto text-secondary">Wiederholungstermin</p>
                                 </div>
-                                <div class="flex py-1" v-if="$page.props.can.ma_manager || $page.props.can.shift_planner">
+                                <div class="flex py-1" v-if="this.$canAny(['can manage workers', 'can plan shifts'])">
                                     <input v-model="userCalendarSettings.work_shifts"
                                            type="checkbox"
                                            class="checkBoxOnDark"/>

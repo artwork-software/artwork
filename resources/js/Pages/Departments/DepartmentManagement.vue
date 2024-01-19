@@ -7,7 +7,7 @@
                         <div class="flex">
                             <h2 class="headline1 flex">Alle Teams</h2>
                             <AddButton class="mt-0" @click="openAddTeamModal" text="Team erstellen" mode="page"/>
-                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                            <div v-if="this.$page.props.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 <span
                                     class="ml-1 my-auto hind">Stelle neue Teams zusammen</span>
@@ -83,7 +83,7 @@
                                                 class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                 aria-hidden="true"/>
                                         </MenuButton>
-                                        <div v-if="$page.props.can.show_hints && index === 0"
+                                        <div v-if="this.$page.props.show_hints && index === 0"
                                              class="absolute flex w-40 ml-6">
                                             <div>
                                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
@@ -194,7 +194,7 @@
                                                 class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                 aria-hidden="true"/>
                                         </MenuButton>
-                                        <div v-if="$page.props.can.show_hints && index === 0"
+                                        <div v-if="this.$page.props.show_hints && index === 0"
                                              class="absolute flex w-40 ml-6">
                                             <div>
                                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>

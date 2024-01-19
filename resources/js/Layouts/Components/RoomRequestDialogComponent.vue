@@ -595,7 +595,7 @@ export default {
             return false;
         },
         openModal() {
-            this.canEdit = (!this.event?.id) || this.event?.canEdit || this.$page.props.can.create_and_edit_projects;
+            this.canEdit = (!this.event?.id) || this.event?.canEdit;
             if (!this.event) {
                 if (this.project) {
                     this.selectedProject = {id: this.project.id, name: this.project.name};

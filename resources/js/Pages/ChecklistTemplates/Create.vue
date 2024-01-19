@@ -43,7 +43,7 @@
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
-                        <div v-if="$page.props.can.show_hints" class="flex">
+                        <div v-if="this.$page.props.show_hints" class="flex">
                             <SvgCollection svgName="arrowLeft" class="ml-2"/>
                             <span
                                 class="ml-1 my-auto hind">Lege neue Aufgaben an</span>

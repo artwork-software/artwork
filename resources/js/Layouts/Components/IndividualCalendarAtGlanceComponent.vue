@@ -52,7 +52,7 @@
         :project="project"
         :event="selectedEvent"
         :wantedRoomId="wantedRoom"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :isAdmin="this.hasAdminRole()"
         :roomCollisions="roomCollisions"
     />
     <!-- Termine ohne Raum Modal -->
@@ -63,7 +63,7 @@
         :eventTypes="eventTypes"
         :rooms="rooms"
         :eventsWithoutRoom="this.eventsWithoutRoom"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :isAdmin="this.hasAdminRole()"
     />
 
     <div v-show="multiEdit"

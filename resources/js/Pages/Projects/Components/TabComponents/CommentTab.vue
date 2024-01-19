@@ -10,7 +10,7 @@
                             v-model="commentForm.text" rows="4"
                             class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary border-0  w-full"/>
                 <div class="absolute bottom-0 right-0 flex bg-white">
-                    <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                    <div v-if="this.$page.props.show_hints" class="flex mt-1">
                                 <span
                                     class="hind text-secondary tracking-tight ml-1 my-auto text-xl">Information veröffentlichen</span>
                         <SvgCollection svgName="smallArrowRight" class="ml-2 mt-1"/>

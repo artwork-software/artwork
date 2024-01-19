@@ -84,13 +84,13 @@
             <event-component
                 v-if="createEventComponentIsVisible"
                 @closed="onEventComponentClose()"
-                :showHints="$page.props?.can?.show_hints"
+                :showHints="this.$page.props.show_hints"
                 :eventTypes="eventTypes"
                 :rooms="rooms"
                 :project="project"
                 :event="selectedEvent"
                 :wantedRoomId="wantedRoom"
-                :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+                :isAdmin="this.hasAdminRole()"
                 :roomCollisions="roomCollisions"
             />
 
@@ -100,11 +100,11 @@
         <events-without-room-component
             v-if="showEventsWithoutRoomComponent"
             @closed="onEventsWithoutRoomComponentClose()"
-            :showHints="$page.props?.can?.show_hints"
+            :showHints="this.$page.props.show_hints"
             :eventTypes="eventTypes"
             :rooms="rooms"
             :eventsWithoutRoom="this.filteredEvents"
-            :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+            :isAdmin="this.hasAdminRole()"
         />
 
         <div v-show="multiEdit"

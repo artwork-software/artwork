@@ -8,7 +8,7 @@
                         <Link class="-mt-1" :href="route('checklist_templates.create')">
                             <AddButton text="Neue Vorlage" mode="page"/>
                         </Link>
-                        <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                        <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                             <span
                                 class="ml-1 mt-2 hind">Lege neue Checklistenvorlagen an</span>
@@ -51,7 +51,7 @@
                                             class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
                                             aria-hidden="true"/>
                                     </MenuButton>
-                                    <div v-if="$page.props.can.show_hints && index === 0"
+                                    <div v-if="this.$page.props.show_hints && index === 0"
                                          class="absolute flex w-40 ml-6">
                                         <div>
                                             <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
@@ -129,7 +129,7 @@
                                             class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
                                             aria-hidden="true"/>
                                     </MenuButton>
-                                    <div v-if="$page.props.can.show_hints && index === 0"
+                                    <div v-if="this.$page.props.show_hints && index === 0"
                                          class="absolute flex w-40 ml-6">
                                         <div>
                                             <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>

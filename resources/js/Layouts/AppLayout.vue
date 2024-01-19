@@ -104,14 +104,14 @@
                 <div class="px-4 pl-16 ml-3 flex w-full bg-white">
                     <div class="flex justify-start items-center">
                         <Switch @click="toggle_hints()"
-                                :class="[$page.props.can.show_hints ?
+                                :class="[$page.props.show_hints ?
                                         'bg-success' :
                                         'bg-gray-300',
                                         'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
                                     <span aria-hidden="true"
-                                          :class="[$page.props.can.show_hints ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
+                                          :class="[$page.props.show_hints ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
                         </Switch>
-                        <span v-if="$page.props.can.show_hints" class="ml-2 flex w-40">
+                        <span v-if="$page.props.show_hints" class="ml-2 flex w-40">
                                     <SvgCollection svgName="arrowLeft" class="mr-1"/>
                                     <span class="hind">Hilfe einblenden</span>
                                 </span>

@@ -110,14 +110,14 @@
     <room-request-dialog-component
         v-if="showRoomRequestDialogComponent"
         @closed="onDialogComponentClose"
-        :showHints="$page.props?.can?.show_hints"
+        :showHints="this.$page.props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
         show-comments="true"
         :project="project"
         :event="event"
         :wantedRoomId="wantedSplit"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :isAdmin="this.hasAdminRole()"
         :roomCollisions="roomCollisions"
     />
 
@@ -125,11 +125,11 @@
     <events-without-room-component
         v-if="showEventWithoutRoomComponent"
         @closed="onEventWithoutRoomComponentClose"
-        :showHints="$page.props?.can?.show_hints"
+        :showHints="this.$page.props.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
         :eventsWithoutRoom="[event]"
-        :isAdmin="$page.props.is_admin || $page.props.can.admin_rooms"
+        :isAdmin="this.hasAdminRole()"
         :removeNotificationOnAction="true"
     />
 

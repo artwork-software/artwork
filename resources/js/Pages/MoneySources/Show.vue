@@ -14,7 +14,7 @@
                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
-                            <div v-if="$page.props.can.show_hints" class="absolute flex w-48 ml-12">
+                            <div v-if="this.$page.props.show_hints" class="absolute flex w-48 ml-12">
                                 <div>
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 </div>

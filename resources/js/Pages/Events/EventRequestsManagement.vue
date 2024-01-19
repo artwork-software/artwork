@@ -46,11 +46,11 @@
                                         <div class="flex w-full xsDark whitespace-nowrap ml-4">
                                             {{eventRequest.name}}
                                         </div>
-                                        <button v-if="usePage().props.is_room_admin || usePage().props.is_admin" @click="openApproveRequestModal(eventRequest)" type="button"
+                                        <button v-if="this.hasAdminRole()" @click="openApproveRequestModal(eventRequest)" type="button"
                                                 class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none hover:bg-success">
                                             <CheckIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                         </button>
-                                        <button v-if="usePage().props.is_room_admin || usePage().props.is_admin" @click="openDeclineRequestModal(eventRequest)" type="button"
+                                        <button v-if="this.hasAdminRole()" @click="openDeclineRequestModal(eventRequest)" type="button"
                                                 class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none hover:bg-error">
                                             <XIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                         </button>

@@ -585,7 +585,7 @@
 
                 <div v-if="canEdit">
                     <div class="flex justify-center w-full py-4"
-                         v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects || roomAdminIds.includes(this.$page.props.user.id)) || this.hasAdminRole()">
+                         v-if="(isAdmin || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.user.id))">
                         <button
                             :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
                             :class="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || (this.startTime === null && !this.allDayEvent) || this.startDate === null  || (this.endTime === null && !this.allDayEvent) || this.endDate === null || (this.accept === false && this.optionAccept === false && adminComment === '') ? 'bg-secondary hover:bg-secondary' : 'cursor-pointer'"

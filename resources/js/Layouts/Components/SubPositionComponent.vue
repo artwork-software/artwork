@@ -20,7 +20,7 @@
             <div class="flex items-center justify-end">
                 <div class="flex flex-wrap w-8">
                     <div class="flex">
-                        <Menu as="div" class="my-auto relative" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
+                        <Menu as="div" class="my-auto relative" v-if="this.$can('edit budget templates') || !table.is_template">
                              <!-- v-show="showMenu === 'subPosition' + subPosition.id"-->
                             <div class="flex">
                                 <MenuButton class="flex bg-tagBg p-0.5 rounded-full">
@@ -71,7 +71,7 @@
         <table class="w-full" v-if="!subPosition.closed">
             <tbody class="bg-secondaryHover w-full">
             <div v-if="subPosition.sub_position_rows?.length > 0" v-for="(row,rowIndex) in subPosition.sub_position_rows">
-                <tr v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)" :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$page.props.can.edit_budget_templates || !table.is_template) ? 'border-buttonBlue ' : '']" @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null" class="bg-secondaryHover flex justify-between items-center border-2">
+                <tr v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)" :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-buttonBlue ' : '']" @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null" class="bg-secondaryHover flex justify-between items-center border-2">
                     <div class="flex items-center">
                         <td v-for="(cell,index) in row.cells"
                             v-show="!(cell.column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
@@ -94,7 +94,7 @@
                                 </div>
                             </div>
                             <div class="flex items-center" :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'" v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
-                                <input :ref="`cell-${cell.id}`" :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'" class="my-2 xsDark  appearance-none z-10" type="text" :disabled="!this.$page.props.can.edit_budget_templates && table.is_template" v-model="cell.value" @keypress="isNumber($event, index)" @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
+                                <input :ref="`cell-${cell.id}`" :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'" class="my-2 xsDark  appearance-none z-10" type="text" :disabled="!this.$can('edit budget templates') && table.is_template" v-model="cell.value" @keypress="isNumber($event, index)" @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
                                 <PlusCircleIcon v-if="index > 2" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
                             </div>
                             <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']" class="my-4 h-6 flex items-center justify-end" @click="cell.clicked = !cell.clicked && cell.column.is_locked" v-else>
@@ -107,7 +107,7 @@
                         </td>
                     </div>
                     <Menu as="div"
-                          :class="[hoveredRow === row.id ? '' : 'hidden', 'my-auto mr-0.5 relative']" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
+                          :class="[hoveredRow === row.id ? '' : 'hidden', 'my-auto mr-0.5 relative']" v-if="this.$can('edit budget templates') || !table.is_template">
                         <div class="flex">
                             <MenuButton
                                 class="flex bg-tagBg p-0.5 rounded-full">
@@ -175,14 +175,14 @@
                         </transition>
                     </Menu>
                 </tr>
-                <div @click="addRowToSubPosition(subPosition, row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
+                <div @click="addRowToSubPosition(subPosition, row)" v-if="this.$can('edit budget templates') || !table.is_template" class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
                     <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                         Zeile
                         <PlusCircleIcon class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
                     </div>
                 </div>
             </div>
-            <div v-else @click="addRowToSubPosition(subPosition, row)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+            <div v-else @click="addRowToSubPosition(subPosition, row)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                 <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                     Zeile
                     <PlusCircleIcon class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
@@ -201,7 +201,7 @@
                             <span>
                                 {{subPosition.columnSums[column.id]?.sum.toLocaleString() }}
                             </span>
-                            <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openSubPositionSumDetailModal(subPosition, column)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template">
+                            <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openSubPositionSumDetailModal(subPosition, column)" v-if="this.$can('edit budget templates') || !table.is_template">
                                 <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
                             </div>
                         </div>
@@ -210,7 +210,7 @@
             </tr>
             </tbody>
         </table>
-        <div @click="addSubPosition(mainPosition.id, subPosition)" v-if="this.$page.props.can.edit_budget_templates || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+        <div @click="addSubPosition(mainPosition.id, subPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
             <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                 Unterposition
                 <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full" />

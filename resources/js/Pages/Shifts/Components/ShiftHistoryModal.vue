@@ -71,7 +71,12 @@ export default {
     props: ['history'],
     emits: ['closed'],
     computed: {
-
+        // order history by date
+        history() {
+            return this.history.sort((a, b) => {
+                return dayjs(b.created_at).unix() - dayjs(a.created_at).unix()
+            })
+        }
     },
     data() {
         return {

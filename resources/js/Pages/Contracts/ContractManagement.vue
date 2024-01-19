@@ -28,11 +28,11 @@
                                         <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
                                     </div>
                                 </div>
-                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="contractsCopy.data.length !== 0">
+                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="contractsCopy?.data?.length !== 0">
                                     <ContractListItem @open-delete-contract-modal="openContractDeleteModal" @open-edit-contract-modal="openContractEditModal" :contract="contract" class="mb-6"></ContractListItem>
                                     <ContractDeleteModal :show="showContractDeleteModal === contract?.id"
                                                          :close-modal="closeContractDeleteModal" :contract="contract"/>
-                                    <ContractEditModal :show="showContractEditModal === contract?.id"
+                                    <ContractEditModal :contract-types="contract_types" :currencies="currencies" :company-types="company_types" :show="showContractEditModal === contract?.id"
                                                        :close-modal="closeContractEditModal" :contract="contract"/>
                                     <hr class="text-secondary">
                                 </div>

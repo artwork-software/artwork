@@ -8,8 +8,10 @@ use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Project\Models\Project;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Builder;
 use Laravel\Scout\Searchable;
 
 /**
@@ -60,10 +62,17 @@ class Department extends Model
         return $this->belongsToMany(ChecklistTemplate::class);
     }
 
+    public function scopeNameLike(Builder $builder, string $name): Builder
+    {
+        return $builder->where('name', 'like', $name . '%');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     public function toSearchableArray(): array
     {
         return [
-            'id' => $this->id,
             'name' => $this->name,
         ];
     }

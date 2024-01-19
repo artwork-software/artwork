@@ -180,13 +180,15 @@ class ProjectController extends Controller
      */
     public function searchDepartmentsAndUsers(SearchRequest $request): array
     {
-        // TODO: Hier bitte gucken wie man die Policy wieder zum laufen bekommt
-        /*$this->authorize('viewAny', Department::class);
-        $this->authorize('viewAny', User::class);*/
+        $query = $request->get('query');
 
         return [
-            'departments' => Department::search($request->input('query'))->get(),
-            'users' => UserIndexResource::collection(User::search($request->input('query'))->get())
+            //only show departments (teams) if corresponding permission is given, admins are handle by Gate::before
+            //in AuthServiceProvider already, can will return true then
+            'departments' => Auth::user()->can(PermissionNameEnum::TEAM_UPDATE->value) ?
+                Department::nameLike($query)->get() :
+                [],
+            'users' => User::nameOrLastNameLike($query)->get()
         ];
     }
 

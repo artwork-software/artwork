@@ -16,6 +16,7 @@ use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -370,7 +371,6 @@ class User extends Authenticatable implements Vacationer, Available
     public function toSearchableArray(): array
     {
         return [
-            'id' => $this->id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name
         ];
@@ -394,5 +394,12 @@ class User extends Authenticatable implements Vacationer, Available
         }
 
         return $plannedWorkingHours;
+    }
+
+    public function scopeNameOrLastNameLike(Builder $builder, string $name): Builder
+    {
+        return $builder
+            ->where('first_name', 'like', $name . '%')
+            ->orWhere('last_name', 'like', $name . '%');
     }
 }

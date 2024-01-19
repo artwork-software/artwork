@@ -268,11 +268,18 @@ export default {
         department_and_user_query: {
             handler() {
                 if (this.department_and_user_query.length > 0) {
-                    axios.get('/projects/users_departments/search', {
-                        params: {query: this.department_and_user_query}
-                    }).then(response => {
-                        this.department_and_user_search_results = response.data
-                    })
+                    axios.get(
+                        route('users_departments.search'),
+                        {
+                            params: {
+                                query: this.department_and_user_query
+                            }
+                        }
+                    ).then(
+                        response => {
+                            this.department_and_user_search_results = response.data
+                        }
+                    )
                 }
             },
             deep: true

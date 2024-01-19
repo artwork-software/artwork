@@ -9,7 +9,6 @@
 import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import UserEditHeader from "@/Pages/Users/Components/UserEditHeader.vue";
-import UserInfoTab from "@/Pages/Users/Tabs/UserInfoTab.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
 
 export default {

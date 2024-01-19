@@ -1,7 +1,9 @@
 <template>
     <UserEditHeader :current-tab="currentTab" :user_to_edit="user_to_edit">
-        <UserInfoTab :user_to_edit="user_to_edit" :password_reset_status="password_reset_status"
-                     :departments="departments"></UserInfoTab>
+        <UserInfoTab :user_to_edit="user_to_edit"
+                     :password_reset_status="password_reset_status"
+                     :departments="departments"
+        />
     </UserEditHeader>
 </template>
 

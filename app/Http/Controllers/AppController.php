@@ -9,12 +9,12 @@ use App\Http\Requests\UserCreateRequest;
 use App\Models\GeneralSettings;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
-use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use ZxcvbnPhp\Zxcvbn;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Response;
@@ -131,19 +131,22 @@ class AppController extends Controller
         return $settings->setup_finished ? Redirect::route('login') : inertia('Auth/Register');
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function toolSettingsIndex(): Response
     {
+        $this->authorize('view', GeneralSettings::class);
+
         return Inertia::render('Settings/ToolSettings');
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function updateToolImages(Request $request, GeneralSettings $settings): RedirectResponse
     {
-        if (!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
-            throw new MethodNotAllowedHttpException(
-                ['update'],
-                'Fehlende Berechtigung zum Ändern der Seiten Einstellungen'
-            );
-        }
+        $this->authorize('updateToolImages', $settings);
 
         $smallLogo = $request->file('smallLogo');
         $bigLogo = $request->file('bigLogo');
@@ -164,6 +167,24 @@ class AppController extends Controller
         $settings->save();
 
         return Redirect::back()->with('success', 'Fotos hinzugefügt');
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
+    public function updateToolEmailSettings(Request $request, GeneralSettings $settings): RedirectResponse
+    {
+        $this->authorize('updateToolEmailSettings', $settings);
+
+        $settings->business_name = $request->get('businessName') ?? '';
+        $settings->impressum_link = $request->get('impressumLink') ?? '';
+        $settings->privacy_link = $request->get('privacyLink') ?? '';
+        $settings->email_footer = $request->get('emailFooter') ?? '';
+        $settings->business_email = $request->get('businessEmail') ?? '';
+
+        $settings->save();
+
+        return Redirect::back()->with('success', 'Email Einstellungen angepasst');
     }
 
     public function createAdmin(
@@ -194,21 +215,5 @@ class AppController extends Controller
         $settings->save();
 
         return redirect(RouteServiceProvider::HOME);
-    }
-
-    public function updateToolEmailSettings(Request $request, GeneralSettings $settings): RedirectResponse
-    {
-        if (!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
-            throw new MethodNotAllowedHttpException(['update'], 'Nur Admins können E-Mail Einstellungen ändern');
-        }
-        $settings->business_name = $request->get('businessName') ?? '';
-        $settings->impressum_link = $request->get('impressumLink') ?? '';
-        $settings->privacy_link = $request->get('privacyLink') ?? '';
-        $settings->email_footer = $request->get('emailFooter') ?? '';
-        $settings->business_email = $request->get('businessEmail') ?? '';
-
-        $settings->save();
-
-        return Redirect::back()->with('success', 'Email Einstellungen angepasst');
     }
 }

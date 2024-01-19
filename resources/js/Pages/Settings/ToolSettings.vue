@@ -1,14 +1,13 @@
 <template>
     <app-layout>
         <div class="max-w-screen-xl ml-14 mr-40 mb-4">
-            <div v-if="hasAdminRole() || $canAny(['change tool settings'])">
+            <div>
                 <h2 class="headline1 mb-2">Tooleinstellungen</h2>
                 <div class="headline3Light">
                     Definiere globale Einstellungen für dein artwork.
                 </div>
             </div>
-
-            <form v-if="hasAdminRole() || $canAny(['change tool settings'])" @submit.prevent="changeLogos">
+            <form @submit.prevent="changeLogos">
                 <div class="mt-12 max-w-2xl">
                     <h2 class="headline2 my-2">Branding</h2>
                     <div class="xsLight">
@@ -17,13 +16,10 @@
                         artwork Logos und deine Login-Illustration hoch.
                     </div>
                 </div>
-
                 <jet-input-error :message="uploadDocumentFeedback"/>
-
                 <label class="block mt-6 mb-4 xsDark">
                     Logo groß (Upload per Klick oder Drag & Drop)
                 </label>
-
                 <div class="grid grid-cols-6 gap-x-12 items-center">
                     <div
                         class="flex col-span-2 justify-center border-2 w-80 cursor-pointer border-gray-300 bg-stone-50 border-dashed rounded-md p-2"
@@ -44,7 +40,6 @@
                                  class="rounded-md h-40 w-40">
                         </div>
                     </div>
-
                     <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                         <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                         <span
@@ -53,7 +48,6 @@
                         </span>
                     </div>
                 </div>
-
                 <label class="block mt-12 mb-4 xsDark">
                     Logo klein (Upload per Klick oder Drag & Drop)
                 </label>
@@ -71,12 +65,10 @@
                         <div class="xsLight flex my-auto h-40 items-center"
                              v-if="$page.props.small_logo === null && smallLogoPreview === null">
                             Ziehe hier dein kleines <br/> artwork Logo hin
-
                         </div>
                         <div class="cursor-pointer" v-else-if="!smallLogoPreview">
                             <img :src="$page.props.small_logo" alt="Logo"
                                  class="rounded-md h-40 w-40">
-
                         </div>
                     </div>
                     <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
@@ -87,7 +79,6 @@
                         </span>
                     </div>
                 </div>
-
                 <label class="block mt-12 mb-4 xsDark">
                     Login-Illustration </label>
                 <div class="grid grid-cols-6 gap-x-12 items-center">
@@ -123,14 +114,12 @@
                                 Die Illustration wird auf der Login-Seite genutzt.</span>
                     </div>
                 </div>
-
                 <div class="mt-6 items-center">
                     <AddButton @click.prevent="changeLogos"
                                text="Änderungen speichern" mode="modal"/>
                 </div>
             </form>
-
-            <div v-if="hasAdminRole() || $canAny(['change tool settings'])">
+            <div>
                 <div class="mt-20">
                     <h2 class="headline2">Kommunikation & Rechtliches</h2>
                     <div class="xsLight mt-4">
@@ -210,7 +199,6 @@ import Permissions from "@/mixins/Permissions.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 
 export default defineComponent({
-    mixins: [Permissions],
     components: {
         AddButton,
         AppLayout,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PermissionNameEnum;
 use App\Events\UserUpdated;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\EventTypeResource;
@@ -48,9 +49,7 @@ class UserController extends Controller
      */
     public function search(SearchRequest $request): array
     {
-        $this->authorize('viewAny', User::class);
-
-        return UserIndexResource::collection(User::search($request->input('query'))->get())->resolve();
+        return UserIndexResource::collection(User::nameOrLastNameLike($request->get('query'))->get())->resolve();
     }
 
     /**
@@ -74,7 +73,6 @@ class UserController extends Controller
      */
     public function resetUserPassword(Request $request): mixed
     {
-
         $this->authorize('update', User::class);
 
         $request->validate([Fortify::email() => 'required|email']);
@@ -154,7 +152,6 @@ class UserController extends Controller
             $selectedPeriodDate->locale('de')->isoFormat('MMMM YYYY'),
             $selectedPeriodDate->copy()->startOfMonth()->toDate()
         ];
-
 
         return inertia('Users/UserShiftPlanPage', [
             'user_to_edit' => new UserShowResource($user),
@@ -277,29 +274,25 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        $user->update($request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email'));
-
-        $user->departments()->sync(
-            collect($request->departments)
-                ->map(function ($department) {
-
-                    $this->authorize('update', Department::find($department['id']));
-
-                    return $department['id'];
-                })
+        $user->update(
+            $request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email')
         );
 
-        $user->syncPermissions($request->permissions);
-        $user->syncRoles($request->roles);
+        if (Auth::user()->can(PermissionNameEnum::TEAM_UPDATE->value)) {
+            $user->departments()->sync(
+                collect($request->departments)
+                    ->map(function ($department) {
+                        return $department['id'];
+                    })
+            );
+        }
 
         return Redirect::back()->with('success', 'Benutzer aktualisiert');
     }
 
     public function updateChecklistStatus(Request $request): RedirectResponse
     {
-        $user = Auth::user();
-
-        $user->update([
+        Auth::user()->update([
             'opened_checklists' => $request->opened_checklists
         ]);
 
@@ -308,9 +301,7 @@ class UserController extends Controller
 
     public function updateAreaStatus(Request $request): RedirectResponse
     {
-        $user = Auth::user();
-
-        $user->update([
+        Auth::user()->update([
             'opened_areas' => $request->opened_areas
         ]);
 

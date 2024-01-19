@@ -1,60 +1,59 @@
 <template>
     <div>
-        <div v-if="this.user_to_edit.id === $page.props.user.id" class="mb-8">
-                <div>
-                    <div class="col-span-6 sm:col-span-4">
-                        <!-- Profile Photo File Input -->
-                        <input type="file" class="hidden"
-                               ref="photo"
-                               @change="updatePhotoPreview">
-                        <div class="mt-1 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                            <div class="sm:col-span-3 flex items-end">
-                                <div @click="openChangePictureModal" class="mt-2">
-                                    <img :src="this.user_to_edit.profile_photo_url" :alt="this.user_to_edit.first_name"
-                                         class="rounded-full h-20 w-20 object-cover cursor-pointer">
-                                </div>
-
-                                <div class="mt-1 ml-5 flex-grow relative">
-                                    <input id="first_name" v-model="userForm.first_name" type="text"
-                                           class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                           placeholder="placeholder"/>
-                                    <label for="first_name"
-                                           class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
-                                </div>
+        <div v-if="this.isSignedInUser() || this.hasAdminRole()" class="mb-8">
+            <div>
+                <div class="col-span-6 sm:col-span-4">
+                    <!-- Profile Photo File Input -->
+                    <input type="file" class="hidden"
+                           ref="photo"
+                           @change="updatePhotoPreview">
+                    <div class="mt-1 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-3 flex items-end">
+                            <div @click="openChangePictureModal" class="mt-2">
+                                <img :src="this.user_to_edit.profile_photo_url" :alt="this.user_to_edit.first_name"
+                                     class="rounded-full h-20 w-20 object-cover cursor-pointer">
                             </div>
-
-                            <div class="sm:col-span-3 flex items-end">
-                                <div class="relative mt-1 w-full">
-                                    <input id="last_name" v-model="userForm.last_name" type="text"
-                                           class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0
-                                                   border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                           placeholder="placeholder"/>
-                                    <label for="last_name"
-                                           class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
-                                                   focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Nachname</label>
-                                </div>
+                            <div class="mt-1 ml-5 flex-grow relative">
+                                <input id="first_name" v-model="userForm.first_name" type="text"
+                                       class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                       placeholder="placeholder"/>
+                                <label for="first_name"
+                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
                             </div>
-
                         </div>
-                        <div v-if="hasNameError" class="text-error mt-1">{{ nameError }}</div>
-
+                        <div class="sm:col-span-3 flex items-end">
+                            <div class="relative mt-1 w-full">
+                                <input id="last_name" v-model="userForm.last_name" type="text"
+                                       class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0
+                                               border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                       placeholder="placeholder"/>
+                                <label for="last_name"
+                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
+                                               focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Nachname</label>
+                            </div>
+                        </div>
                     </div>
-
+                    <div v-if="hasNameError" class="text-error mt-1">{{ nameError }}</div>
                 </div>
+            </div>
         </div>
         <div>
             <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3">
                     <div class="mt-1">
-                        <div class="text-darkGray font-semibold px-3 py-2 border-2 w-full border-gray-300 shadow-sm" >
-                            {{ $page.props.businessName }}
-                        </div>
+                        <input disabled="disabled"
+                               type="text"
+                               :value="$page.props.businessName"
+                               class="bg-gray-100 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                     </div>
                 </div>
-
                 <div class="sm:col-span-3">
                     <div class="mt-1">
-                        <input :disabled="!this.$can('can manage workers')" :class="this.$can('can manage workers') ? '' : 'bg-gray-100'" type="text" v-model="userForm.position" placeholder="Position"
+                        <input :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
+                               :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
+                               type="text"
+                               v-model="userForm.position"
+                               placeholder="Position"
                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                     </div>
                 </div>
@@ -69,29 +68,34 @@
                 </div>
                 <div class="sm:col-span-3">
                     <div class="mt-1">
-                        <input :disabled="!this.$can('can manage workers')" :class="this.$can('can manage workers') ? '' : 'bg-gray-100'" type="text" v-model="userForm.phone_number"
+                        <input :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
+                               :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
+                               type="text"
+                               v-model="userForm.phone_number"
                                placeholder="Telefonnummer"
                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                     </div>
                 </div>
-
-
                 <div class="sm:col-span-6">
                     <div class="mt-1">
-                                            <textarea :disabled="!this.$can('can manage workers')" :class="this.$can('can manage workers') ? '' : 'bg-gray-100'" placeholder="Was sollten die anderen artwork-User wissen?"
-                                                      v-model="userForm.description" rows="5"
-                                                      class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                        <textarea :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
+                                  :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
+                                  placeholder="Was sollten die anderen artwork-User wissen?"
+                                  v-model="userForm.description"
+                                  rows="5"
+                                  class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                     </div>
                 </div>
-                <div class="sm:col-span-6 mt-4 flex inline-flex">
-                                        <span v-if="userForm.departments.length === 0"
-                                              class="text-secondary subpixel-antialiased my-auto mr-4">In keinem Team</span>
+                <div class="sm:col-span-6 mt-4 flex">
+                    <span v-if="userForm.departments.length === 0"
+                          class="text-secondary subpixel-antialiased my-auto mr-4">In keinem Team</span>
                     <span v-else class="flex -mr-3"
                           v-for="(team,index) in userForm.departments">
-                                            <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white"
-                                                                :iconName="team.svg_name"/>
-                                        </span>
-                    <Menu v-show="this.$can('can manage workers')" as="div" class="my-auto relative ml-5">
+                        <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white"
+                                            :iconName="team.svg_name"
+                        />
+                    </span>
+                    <Menu v-show="this.$can('teammanagement')" as="div" class="my-auto relative ml-5">
                         <div>
                             <MenuButton
                                 class="flex bg-tagBg p-0.5 rounded-full">
@@ -109,9 +113,7 @@
                             <MenuItems
                                 class="origin-top-right absolute p-4 mr-4 mt-2 w-80 shadow-lg bg-primary focus:outline-none">
                                 <div>
-
                                     <MenuItem v-slot="{ active }">
-
                                         <a href="#" @click="openChangeTeamsModal"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <PencilAltIcon
@@ -152,7 +154,6 @@
             </div>
         </div>
     </div>
-
     <jet-dialog-modal :show="showChangeTeamsModal" @close="closeChangeTeamsModal">
         <template #content>
             <img src="/Svgs/Overlays/illu_team_user.svg" class="-ml-6 -mt-8 mb-4"/>
@@ -168,21 +169,21 @@
                     den Teams zugeordneten <br/>Projekte einzusehen.
                 </div>
                 <div class="mt-8 mb-8">
-                        <span v-if="departments.length === 0"
-                              class="xsLight flex mb-6 mt-8 my-auto">Bisher sind keine Teams im Tool angelegt.</span>
+                    <span v-if="departments.length === 0"
+                          class="xsLight flex mb-6 mt-8 my-auto">Bisher sind keine Teams im Tool angelegt.</span>
                     <div v-for="team in departments">
-                                        <span class=" flex items-center pr-4 py-2 text-md">
-                                            <input :key="team.name" type="checkbox" :value="team" :id="team.id"
-                                                   v-model="team.checked"
-                                                   @change="teamChecked(team)"
-                                                   class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
-                                            <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
-                                                                :iconName="team.svg_name"/>
-                                            <span :class="[team.checked ? 'xsDark' : 'xsLight']"
-                                                  class="ml-2">
-                                            {{ team.name }}
-                                            </span>
-                                        </span>
+                        <span class=" flex items-center pr-4 py-2 text-md">
+                            <input :key="team.name" type="checkbox" :value="team" :id="team.id"
+                                   v-model="team.checked"
+                                   @change="teamChecked(team)"
+                                   class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
+                            <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
+                                                :iconName="team.svg_name"/>
+                            <span :class="[team.checked ? 'xsDark' : 'xsLight']"
+                                  class="ml-2">
+                            {{ team.name }}
+                            </span>
+                        </span>
                     </div>
                 </div>
                 <div class="w-full items-center text-center">
@@ -191,37 +192,8 @@
                                @click="saveNewTeams" text="Speichern" mode="modal"/>
                 </div>
             </div>
-
-        </template>
-
-    </jet-dialog-modal>
-
-    <!-- Success Modal
-    <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
-        <template #content>
-            <div class="mx-4">
-                <div class="headline1 my-2">
-                    Nutzer*in erfolgreich bearbeitet
-                </div>
-                <XIcon @click="closeSuccessModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
-                <div class="successText">
-                    Die Änderungen wurden erfolgreich gespeichert.
-                </div>
-                <div class="mt-6">
-                    <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="closeSuccessModal">
-                        <CheckIcon class="h-6 w-6 text-secondaryHover"/>
-                    </button>
-                </div>
-            </div>
-
         </template>
     </jet-dialog-modal>
-     Change Profile Picture Modal -->
-
     <jet-dialog-modal :show="showChangePictureModal" @close="closeChangePictureModal">
         <template #content>
             <div class="mx-4">
@@ -256,9 +228,7 @@
                             v-if="this.user_to_edit.profile_photo_url" />
                     </div>
                 </div>
-
                 <jet-input-error :message="updateProfilePictureFeedback" class="mt-2"/>
-
                 <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
                 <div class="mt-6">
                     <AddButton
@@ -268,16 +238,15 @@
                         @click="validateTypeAndChange" />
                 </div>
             </div>
-
         </template>
-
     </jet-dialog-modal>
-
-
-    <SuccessModal v-if="showSuccessModal" @close-modal="closeSuccessModal" title="Nutzer*in erfolgreich bearbeitet" description="Die Änderungen wurden erfolgreich gespeichert." button="Ok" />
+    <SuccessModal v-if="showSuccessModal"
+                  title="Nutzer*in erfolgreich bearbeitet"
+                  description="Die Änderungen wurden erfolgreich gespeichert."
+                  button="Ok"
+                  @closed="closeSuccessModal"
+    />
 </template>
-
-
 
 <script>
 
@@ -317,7 +286,7 @@ export default {
         return {
             showChangeTeamsModal: false,
             showSuccessModal: false,
-            nameError: '',
+            nameError: false,
             hasNameError: false,
             updateProfilePictureFeedback: "",
             photoPreview: null,
@@ -332,12 +301,6 @@ export default {
                 departments: this.user_to_edit.departments,
                 phone_number: this.user_to_edit.phone_number,
                 description: this.user_to_edit.description,
-                permissions: this.user_to_edit.permissions,
-                roles: this.user_to_edit.roles,
-                can_master: this.user_to_edit.can_master,
-                weekly_working_hours: this.user_to_edit.weekly_working_hours,
-                salary_per_hour: this.user_to_edit.salary_per_hour,
-                salary_description: this.user_to_edit.salary_description,
             }),
             resetPasswordForm: this.$inertia.form({
                 email: this.user_to_edit.email
@@ -350,6 +313,9 @@ export default {
         }
     },
     methods: {
+        isSignedInUser() {
+            return this.user_to_edit.id === this.$page.props.user.id;
+        },
         openChangeTeamsModal() {
             this.departments.forEach((team) => {
                 this.userForm.departments.forEach((userTeam) => {
@@ -377,12 +343,13 @@ export default {
                 this.hasNameError = true;
                 return; // Exit the function without making the API call
             }
-            this.userForm.patch(route('user.update', {user: this.user_to_edit.id}, {
+            this.userForm.patch(
+                route('user.update', {user: this.user_to_edit.id}), {
                 preserveScroll: true,
-            }));
-            this.nameError = '';
+                onSuccess: () => this.openSuccessModal()
+            });
+            this.nameError = false;
             this.hasNameError = false;
-            this.openSuccessModal()
         },
         resetPassword() {
             this.resetPasswordForm.post(route('user.reset.password'));
@@ -453,7 +420,7 @@ export default {
                 "application/x-apple-diskimage",
             ]
 
-            if(this.$refs.photo.files[0]){
+            if (this.$refs.photo.files[0]) {
                 if (forbiddenTypes.includes(this.$refs.photo.files[0]?.type)
                     || this.$refs.photo.files[0].type.match('video.*')
                     || this.$refs.photo.files[0].type === "") {
@@ -461,11 +428,9 @@ export default {
                 } else {
                     this.changeProfilePicture()
                 }
-            }else{
+            } else {
                 this.closeChangePictureModal()
             }
-
-
         },
         changeProfilePicture() {
             if (this.$refs.photo) {
@@ -475,7 +440,6 @@ export default {
                 preserveScroll: true,
                 onSuccess: () => (this.clearPhotoFileInput(), this.closeChangePictureModal()),
             });
-
         },
         deletePhoto() {
             this.$inertia.delete(route('current-user-photo.destroy'), {
@@ -494,8 +458,3 @@ export default {
     }
 }
 </script>
-
-
-<style scoped>
-
-</style>

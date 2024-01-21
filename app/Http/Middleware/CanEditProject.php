@@ -28,13 +28,15 @@ class CanEditProject
             return $next($request);
         }
 
-        if (!$project->users()->where('users.id', Auth::id())->first()->exists()) {
+        if ($project->users()->where('users.id', Auth::id())->first() === null) {
             return redirect()->back();
         }
 
-        if (!$project->users()->where('users.id', Auth::id())->first()->pivot->can_write) {
-            return redirect()->back();
+        if ($project->users()->where('users.id', Auth::id())->first()) {
+            if ($project->users()->where('users.id', Auth::id())->first()->pivot->can_write) {
+                return $next($request);
+            }
         }
-        return $next($request);
+        return redirect()->back();
     }
 }

@@ -1,11 +1,15 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Project\Models;
 
-use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Models\ProjectFile;
+use App\Models\Contract;
+use App\Models\MoneySourceFile;
+use App\Models\User;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Contract\Models\Traits\BelongsToContract;
+use Artwork\Modules\Project\Models\Traits\BelongsToProject;
+use Artwork\Modules\User\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -18,10 +22,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property string $created_at
  * @property string $updated_at
+ *
+ * @property-read Project $project
  */
 class Comment extends Model
 {
     use HasFactory;
+    use BelongsToProject;
+    use BelongsToUser;
+    use BelongsToContract;
 
     protected $fillable = [
         'text',
@@ -32,32 +41,17 @@ class Comment extends Model
         'user_id',
     ];
 
-    public function project(): BelongsTo
-    {
-        return $this->belongsTo(Project::class, 'project_id');
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
-    public function contract(): BelongsTo
-    {
-        return $this->belongsTo(Contract::class, 'contract_id');
-    }
-
     //@todo: fix phpcs error - refactor function name to projectFile
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function project_file(): BelongsTo
     {
-        return $this->belongsTo(ProjectFile::class, 'project_file_id');
+        return $this->belongsTo(ProjectFile::class, 'project_file_id', 'id', 'project_file');
     }
 
     //@todo: fix phpcs error - refactor function name to moneySourceFile
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function money_source_file(): BelongsTo
     {
-        return $this->belongsTo(MoneySourceFile::class, 'money_source_file_id');
+        return $this->belongsTo(MoneySourceFile::class, 'money_source_file_id', 'id', 'money_source_file');
     }
 }

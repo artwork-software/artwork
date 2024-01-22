@@ -2,10 +2,10 @@
 
 namespace Artwork\Modules\Project\Models;
 
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
-use Artwork\Modules\Project\Models\Trails\BelongsToProject;
+use Artwork\Modules\Project\Models\Traits\BelongsToProject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;

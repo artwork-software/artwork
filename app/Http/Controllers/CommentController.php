@@ -4,92 +4,64 @@ namespace App\Http\Controllers;
 
 use App\Enums\RoleNameEnum;
 use App\Http\Requests\StoreCommentRequest;
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\CommentService;
+use Artwork\Modules\Project\Services\ProjectService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
 class CommentController extends Controller
 {
-    protected ?NewHistoryService $history = null;
-
-    public function __construct()
+    public function __construct(
+        private readonly CommentService $commentService,
+        private readonly ProjectService $projectService
+    )
     {
         $this->authorizeResource(Comment::class);
-        $this->history = new NewHistoryService(Project::class);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
     public function create(): \Inertia\Response|\Inertia\ResponseFactory
     {
         return inertia('Comments/Create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     */
-    public function store(StoreCommentRequest $request)
+    public function store(StoreCommentRequest $request): \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
     {
-        $project = Project::where('id', $request->project_id)->first();
-        $user = User::where('id', Auth::id())->first();
+        $project = $this->projectService->findById($request->input('project_id'));
 
-        if ($project->users->contains(Auth::id()) || Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
-            Comment::create([
-                'text' => $request->text,
-                'user_id' => $request->user_id,
-                'project_id' => $request->project_id,
-            ]);
-        } elseif ($user->projects()->find($request->project_id) != null) {
-            if ($user->projects()->find($request->project_id)->pivot->is_manager == 1) {
-                Comment::create([
-                    'text' => $request->text,
-                    'user_id' => $request->user_id,
-                    'project_id' => $request->project_id,
-                ]);
-            }
-        } else {
-            return response()->json(['error' => 'Not authorized to create comments in this project.'], 403);
+        /** @var User $user */
+        $user = Auth::user();
+        $comment = null;
+        if ($user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) ||
+            $this->projectService->getUsersForProject($project)->contains($user) ||
+            $this->projectService->isManagerForProject($user, $project)
+        ) {
+            $comment = $this->commentService->create(
+                text: $request->text, user: $user, project: $project
+            );
         }
 
-        $this->history->createHistory($project->id, 'Kommentar hinzugefügt');
+        if (!$comment) {
+            return response()->json(['error' => 'Not authorized to create comments in this project.'], 403);
+        }
 
         return Redirect::back()->with('success', 'Comment created');
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Comment $comment
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function update(Request $request, Comment $comment): \Illuminate\Http\RedirectResponse
     {
-        $comment->update($request->only('text'));
+        $comment->text = $request->input('text');
+        $this->commentService->save($comment);
         return Redirect::back()->with('success', 'Comment updated');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param \App\Models\Comment $comment
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function destroy(Comment $comment): \Illuminate\Http\RedirectResponse
     {
-        $project = $comment->project()->first();
-        $this->history->createHistory($project->id, 'Kommentar gelöscht');
-        $comment->delete();
-
+        $this->commentService->delete($comment);
         return Redirect::back()->with('success', 'Comment deleted');
     }
 }

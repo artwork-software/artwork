@@ -1,7 +1,7 @@
 <?php
 
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\Event;
 use App\Models\Genre;
 use App\Models\Sector;

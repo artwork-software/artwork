@@ -15,9 +15,10 @@ class BenchmarkProjectSeeder extends Seeder
 {
     public function run(): void
     {
+        $faker = Factory::create('de_DE');
         $project = Project::create([
             'name' => 'Benchmark',
-            'description' => '36500 Events, 2 Events per Room per Day, 50 Rooms',
+            'description' => $faker->text,
             'shift_description' => '',
             'key_visual_path' => 'M8AUVkujRBdqQu9rbS2Gart.JPG',
             'state' => 4,
@@ -28,10 +29,12 @@ class BenchmarkProjectSeeder extends Seeder
             'closed_society' => false,
         ]);
 
+        /*
         Room::factory()
             //create 42 rooms additional to currently existing 8 = 50
             ->count(42)
             ->create();
+        */
 
         $startOfYear = Carbon::today()->startOfYear();
         $endOfYear = clone $startOfYear;
@@ -39,29 +42,48 @@ class BenchmarkProjectSeeder extends Seeder
         $dateRange = $startOfYear->range($endOfYear);
         $eventTypes = EventType::all()->pluck('name', 'id');
         $roomIds = Room::all()->pluck('id');
-        $faker = Factory::create('de_DE');
 
         //generate two events per room per day
         $dateRange->forEach(function (Carbon $startDate) use ($faker, $roomIds, $project, $eventTypes): void {
             $this->command->info('Create Events for Date: ' . $startDate->format('d.m.Y'));
-            foreach ($roomIds as $roomId) {
+            for ($x = 0; $x <= 1; $x++) {
                 $startDate->setHours($faker->numberBetween(8, 20));
                 $endDate = clone $startDate;
                 $endDate->addHours($faker->numberBetween(1, 10));
                 $eventName = $eventTypes->random();
+
                 Event::factory()
                     ->set('start_time', $startDate)
                     ->set('end_time', $endDate)
                     ->set('project_id', $project->id)
-                    ->set('room_id', $roomId)
+                    ->set('room_id', $roomIds->random())
                     ->set('eventName', $eventName)
                     ->set('event_type_id', $eventTypes->search($eventName))
                     ->set('allDay', $faker->boolean())
                     ->set('user_id', User::find(1)->id)
                     ->set('audience', $faker->boolean())
-                    ->count(2)
+                    ->count(1)
                     ->create();
             }
+
+//            foreach ($roomIds as $roomId) {
+//                $startDate->setHours($faker->numberBetween(8, 20));
+//                $endDate = clone $startDate;
+//                $endDate->addHours($faker->numberBetween(1, 10));
+//                $eventName = $eventTypes->random();
+//                Event::factory()
+//                    ->set('start_time', $startDate)
+//                    ->set('end_time', $endDate)
+//                    ->set('project_id', $project->id)
+//                    ->set('room_id', $roomId)
+//                    ->set('eventName', $eventName)
+//                    ->set('event_type_id', $eventTypes->search($eventName))
+//                    ->set('allDay', $faker->boolean())
+//                    ->set('user_id', User::find(1)->id)
+//                    ->set('audience', $faker->boolean())
+//                    ->count(2)
+//                    ->create();
+//            }
         });
     }
 }

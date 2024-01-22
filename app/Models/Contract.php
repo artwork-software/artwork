@@ -91,7 +91,8 @@ class Contract extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'creator_id');
+        return $this->belongsTo(User::class, 'creator_id', 'id', 'users')
+            ->without(['calender_settings', 'shifts', 'vacations', 'vacation_series', 'vacationer']);
     }
 
     public function tasks(): BelongsToMany

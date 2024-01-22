@@ -375,6 +375,9 @@ export default {
         closeModal: Function,
         projectId: Number,
         extraSettings: Array,
+        currencies: Array,
+        companyTypes: Array,
+        contractTypes: Array,
     },
     components: {
         ContractTaskForm,
@@ -407,15 +410,6 @@ export default {
         },
     },
     mounted() {
-        axios.get(route('contract_types.index')).then(res => {
-            this.contractTypes = res.data
-        })
-        axios.get(route('company_types.index')).then(res => {
-            this.companyTypes = res.data
-        })
-        axios.get(route('currencies.index')).then(res => {
-            this.currencies = res.data
-        })
         this.contract?.tasks.forEach(task => {
             this.tasks.push(task)
         })
@@ -499,17 +493,24 @@ export default {
             this.usersWithAccess.forEach((user) => {
                  userIds.push(user.id);
             })
+
+            console.log(userIds);
+
             this.contractForm.accessibleUsers = userIds;
             this.contractForm.tasks = this.tasks
-            this.contractForm.patch(this.route('contracts.update', this.contract.id));
+            this.contractForm.patch(this.route('contracts.update', this.contract.id), {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.closeModal()
+                },
+            });
 
-            this.closeModal()
+           // this.closeModal()
         },
     },
     data() {
         return {
-            companyTypes: [],
-            contractTypes: [],
             creatingNewTask: false,
             uploadDocumentFeedback: "",
             file: this.contract?.basename,
@@ -530,7 +531,7 @@ export default {
             tasks: [],
             errorText:null,
             showExtraSettings: false,
-            currencies: [],
+
             contractAmount: this.contract?.amount,
             contractForm: useForm({
                 file: this.contract?.basename,
@@ -544,7 +545,7 @@ export default {
                 has_power_of_attorney: this.contract?.has_power_of_attorney,
                 is_freed: this.contract?.is_freed,
                 description: this.contract?.description,
-                accessibleUsers: this.contract?.accessibleUsers,
+                accessibleUsers: this.contract ? this.contract.accessibleUsers : [],
                 tasks: this.contract?.tasks,
                 comment: this.comment
             }),

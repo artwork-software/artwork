@@ -488,7 +488,7 @@ export default {
                 is_freed: this.isFreed,
                 description: this.description,
                 accessibleUsers: this.usersWithAccess,
-                tasks: this.tasks
+                tasks: this.tasks,
             }),
         }
     },
@@ -597,13 +597,30 @@ export default {
             this.contractForm.accessibleUsers = userIds;
             this.contractForm.tasks = this.tasks
             if(this.projectId){
-                this.contractForm.post(this.route('contracts.store', this.projectId));
+                this.contractForm.post(this.route('contracts.store', this.projectId), {
+                    // TODO: Richtige einbauweise
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        this.resetValues();
+                        this.closeModal()
+                    },
+                });
             }else{
-                this.contractForm.post(this.route('contracts.store', this.selectedProject.id));
+                this.contractForm.post(this.route('contracts.store', this.selectedProject.id), {
+                    // TODO: Richtige einbauweise
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        this.resetValues();
+                        this.closeModal()
+                    },
+                });
             }
 
-            this.resetValues();
-            this.closeModal()
+            console.log(this.contractForm);
+
+            // TODO: Falsche einbauweise. Das leert die werte zu früh und somit bricht der Post/Patch ab
+            //this.resetValues();
+            //this.closeModal()
         }
     },
 }

@@ -50,36 +50,6 @@ test('users can update update other users', function () {
         'user_id' => $user_to_edit->id
     ]);
 
-    /** @todo App\Enums\PermissionNameEnum::USER_UPDATE does not exist in seeder */
-
-//    $user->removeRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
-//    $user->givePermissionTo(\App\Enums\PermissionNameEnum::USER_UPDATE->value, \App\Enums\PermissionNameEnum::DEPARTMENT_UPDATE->value);
-//
-//    $response = $this->patch(route('user.update', [$user_to_edit->id]), [
-//        "first_name" => "Miriam",
-//        "last_name" => "Seixas",
-//        "position" => "CEO",
-//        "phone_number" => "1337",
-//        "description" => null,
-//        "departments" => [$department]
-//    ]);
-//
-//    $response->assertRedirect();
-//
-//    $this->assertDatabaseHas('users', [
-//        "id" => $user_to_edit->id,
-//        "first_name" => "Miriam",
-//        "last_name" => "Seixas",
-//        "position" => "CEO",
-//        "phone_number" => "1337",
-//        "description" => null,
-//    ]);
-//
-//    $this->assertDatabaseHas('department_user', [
-//        'department_id' => $department->id,
-//        'user_id' => $user_to_edit->id
-//    ]);
-
 });
 
 test('users cannot update users without permission', function () {

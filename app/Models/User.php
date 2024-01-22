@@ -8,6 +8,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Notification\Models\NotificationSetting;
+use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Room\Models\Room;
@@ -61,7 +62,7 @@ use Spatie\Permission\Traits\HasRoles;
  *
  * @property Collection<\Artwork\Modules\Department\Models\Department> departments
  * @property Collection<\Artwork\Modules\Project\Models\Project> projects
- * @property Collection<\App\Models\Comment> comments
+ * @property Collection<\Artwork\Modules\Project\Models\Comment> comments
  * @property Collection<\App\Models\Checklist> private_checklists
  * @property Collection<\Room> created_rooms
  * @property Collection<\Room> admin_rooms

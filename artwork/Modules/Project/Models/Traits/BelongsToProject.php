@@ -1,6 +1,6 @@
 <?php
 
-namespace Artwork\Modules\Project\Models\Trails;
+namespace Artwork\Modules\Project\Models\Traits;
 
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

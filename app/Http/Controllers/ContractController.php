@@ -6,7 +6,7 @@ use App\Enums\NotificationConstEnum;
 use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\CompanyType;
 use App\Models\Contract;
 use App\Models\ContractModule;
@@ -17,10 +17,7 @@ use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Barryvdh\Debugbar\Facades\Debugbar;
-use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,15 +28,13 @@ use Inertia\Response;
 use Inertia\ResponseFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-use function Pest\Laravel\json;
-
 class ContractController extends Controller
 {
     protected ?NotificationService $notificationService = null;
 
     public function __construct()
     {
-        $this->authorizeResource(Contract::class);
+        //$this->authorizeResource(Contract::class);
         $this->notificationService = new NotificationService();
     }
 
@@ -105,7 +100,6 @@ class ContractController extends Controller
         if (!Storage::exists("contracts")) {
             Storage::makeDirectory("contracts");
         }
-
         $file = $request->file;
         $original_name = $file->getClientOriginalName();
         $basename = Str::random(20) . $original_name;
@@ -133,7 +127,7 @@ class ContractController extends Controller
 
         $contract->accessingUsers()->sync(collect($request->accessibleUsers));
         if (!in_array(Auth::id(), $request->accessibleUsers ?? [])) {
-            $contract->accessingUsers()->save(Auth::user());
+            $contract->accessingUsers()->attach(Auth::id());
         }
 
         $contractUsers =  $contract->accessingUsers()->get();
@@ -185,9 +179,8 @@ class ContractController extends Controller
     public function update(Contract $contract, ContractUpdateRequest $request): RedirectResponse
     {
         $original_name = '';
-        if ($request->get('accessibleUsers')) {
-            $contract->accessingUsers()->sync(collect($request->accessibleUsers));
-        }
+
+        $contract->accessingUsers()->sync(collect($request->accessibleUsers));
 
         if ($request->file('file')) {
             Storage::delete('contracts/' . $contract->basename);

@@ -12,7 +12,7 @@ use App\Policies\ServiceProviderPolicy;
 use App\Policies\GeneralSettingsPolicy;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\Contract;
 use App\Models\Genre;
 use App\Models\Invitation;

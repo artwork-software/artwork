@@ -1,7 +1,7 @@
 <?php
 
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\Task;
 use App\Models\User;
 use Artwork\Modules\Department\Models\Department;

@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Genre;

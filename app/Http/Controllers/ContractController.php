@@ -6,7 +6,7 @@ use App\Enums\NotificationConstEnum;
 use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\CompanyType;
 use App\Models\Contract;
 use App\Models\ContractModule;

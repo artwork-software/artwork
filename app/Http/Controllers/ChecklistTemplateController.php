@@ -83,9 +83,7 @@ class ChecklistTemplateController extends Controller
             'user_id' => $request->user_id
         ]);
 
-        $checklist_template->users()->sync(
-            $request->users
-        );
+        $checklist_template->users()->sync(Collection::make($request->users)->pluck('id'));
 
         if ($request->task_templates) {
             $checklist_template->task_templates()->createMany($request->task_templates);

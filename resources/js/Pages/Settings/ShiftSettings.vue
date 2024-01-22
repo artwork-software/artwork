@@ -152,7 +152,7 @@
             v-if="this.showShiftQualificationModal"
             :show="this.showShiftQualificationModal"
             :mode="this.shiftQualificationModalMode"
-            :qualification="this.shiftQualificationModalQualification"
+            :shift-qualification="this.shiftQualificationModalShiftQualification"
             @close="this.closeShiftQualificationModal"
         />
         <success-modal
@@ -234,7 +234,7 @@ export default defineComponent({
             craftToDelete: null,
             showShiftQualificationModal: false,
             shiftQualificationModalMode: null,
-            shiftQualificationModalQualification: null
+            shiftQualificationModalShiftQualification: null
         }
     },
     computed: {
@@ -258,14 +258,14 @@ export default defineComponent({
         }
     },
     methods: {
-        openShiftQualificationModal(mode, qualificationToEdit = null) {
+        openShiftQualificationModal(mode, shiftQualification = null) {
             this.shiftQualificationModalMode = mode;
-            this.shiftQualificationModalQualification = qualificationToEdit;
+            this.shiftQualificationModalShiftQualification = shiftQualification;
             this.showShiftQualificationModal = true;
         },
         closeShiftQualificationModal() {
             this.showShiftQualificationModal = false;
-            this.shiftQualificationModalQualification = null;
+            this.shiftQualificationModalShiftQualification = null;
             this.shiftQualificationModalMode = null;
         },
         closeAddCraftModal(){

@@ -22,7 +22,7 @@ class ShiftQualificationFactory extends Factory
     public function definition(): array
     {
         $availableIcons = Collection::make([
-            //see resources/js/Layouts/Components/ShiftQualificationModal.vue -> qualificationIcons
+            //see resources/js/Layouts/Components/ShiftQualificationModal.vue -> shiftQualificationIcons
             'academic-cap-icon',
             'bell-icon',
             'chat-icon',

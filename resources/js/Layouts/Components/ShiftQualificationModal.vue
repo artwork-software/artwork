@@ -13,24 +13,24 @@
                     {{
                         this.mode === 'create' ?
                             'Hier kannst du eine Qualifikation erstellen.' :
-                            'Hier kannst du die Qualifikation "' + this.qualification.name + '" bearbeiten.'
+                            'Hier kannst du die Qualifikation "' + this.shiftQualification.name + '" bearbeiten.'
                     }}
                 </div>
                 <div class="flex">
                     <Menu as="div" class="relative">
                         <div>
-                            <MenuButton :class="[shiftQualificationForm.icon === '' ? 'border border-gray-400' : '']"
+                            <MenuButton :class="[this.shiftQualificationForm.icon === '' ? 'border border-gray-400' : '']"
                                         class="items-center rounded-full focus:outline-none h-12 w-12">
-                                <label v-if="shiftQualificationForm.icon === null"
+                                <label v-if="this.shiftQualificationForm.icon === null"
                                        class="cursor-pointer text-gray-400 text-xs">
                                     Icon*
                                 </label>
-                                <ChevronDownIcon v-if="shiftQualificationForm.icon === null"
+                                <ChevronDownIcon v-if="this.shiftQualificationForm.icon === null"
                                                  class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"/>
                                 <ShiftQualificationIconCollection
-                                    v-if="shiftQualificationForm.icon !== null"
+                                    v-if="this.shiftQualificationForm.icon !== null"
                                     class="h-12 w-12"
-                                    :iconName=shiftQualificationForm.icon
+                                    :iconName=this.shiftQualificationForm.icon
                                     alt="Qualifikation-Icon"
                                 />
                             </MenuButton>
@@ -43,9 +43,9 @@
                                     leave-to-class="transform opacity-0 scale-95">
                             <MenuItems
                                 class="z-40 origin-top-right absolute h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                <MenuItem v-for="icon in this.qualificationIcons"
+                                <MenuItem v-for="shiftQualificationIcon in this.shiftQualificationIcons"
                                           v-slot="{ active }">
-                                    <div @click="shiftQualificationForm.icon = icon.iconName"
+                                    <div @click="this.shiftQualificationForm.icon = shiftQualificationIcon.iconName"
                                          :class="[
                                              active ?
                                              'bg-primaryHover text-secondaryHover' :
@@ -54,7 +54,7 @@
                                          ]">
                                         <ShiftQualificationIconCollection
                                             class="h-12 w-12 mx-auto cursor-pointer"
-                                            :iconName=icon.iconName
+                                            :iconName=shiftQualificationIcon.iconName
                                             alt="Qualifikation-Icon"
                                         />
                                     </div>
@@ -112,7 +112,7 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import Label from "@/Jetstream/Label.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
-const qualificationIcons = [
+const shiftQualificationIcons = [
     {iconName: 'academic-cap-icon'},
     {iconName: 'bell-icon'},
     {iconName: 'chat-icon'},
@@ -141,7 +141,7 @@ export default defineComponent({
     props: [
         'show',
         'mode',
-        'qualification'
+        'shiftQualification'
     ],
     emits: [
         'close'
@@ -149,9 +149,9 @@ export default defineComponent({
     data () {
         return {
             shiftQualificationForm: useForm({
-                icon: this.mode === 'edit' ? this.qualification.icon : null,
-                name: this.mode === 'edit' ? this.qualification.name : null,
-                available: this.mode === 'edit' ? this.qualification.available : null
+                icon: this.mode === 'edit' ? this.shiftQualification.icon : null,
+                name: this.mode === 'edit' ? this.shiftQualification.name : null,
+                available: this.mode === 'edit' ? this.shiftQualification.available : null
             })
         }
     },
@@ -164,7 +164,7 @@ export default defineComponent({
                     route(
                         'shift-qualifications.update',
                         {
-                            shift_qualification: this.qualification.id
+                            shift_qualification: this.shiftQualification.id
                         }
                     ),
                     {
@@ -189,7 +189,7 @@ export default defineComponent({
     },
     setup() {
         return {
-            qualificationIcons
+            shiftQualificationIcons
         }
     }
 });

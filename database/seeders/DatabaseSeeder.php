@@ -22,7 +22,8 @@ class DatabaseSeeder extends Seeder
             FreelancerSeeder::class,
             ServiceProviderSeeder::class,
             WalidRaadSeeder::class,
-            PermissionPresetSeeder::class
+            PermissionPresetSeeder::class,
+            ShiftQualificationSeeder::class,
         ]);
     }
 }

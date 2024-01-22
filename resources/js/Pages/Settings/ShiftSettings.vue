@@ -83,8 +83,6 @@
                     </div>
                 </li>
             </ul>
-
-
             <div class="mt-10">
                 <h4 class="mb-2 headline2">Schichtrelevante Termintypen</h4>
                 <p class="xsLight">
@@ -92,7 +90,6 @@
                     Diese werden dann automatisch im Projekttab „Schichten“ angezeigt.
                     Auf Projektebene kannst du weitere Termine als schichtrelevant definieren.
                 </p>
-
                 <div class="mt-3">
                     <Listbox as="div">
                         <div class="relative mt-2 w-1/2">
@@ -118,21 +115,61 @@
                         </div>
                     </Listbox>
                 </div>
-
                 <div class="mt-3 flex">
                     <div v-for="type in relevantEventTypes">
                         <TagComponent :method="removeRelevantEventType" :displayed-text="type.name" :property="type" />
                     </div>
-
                 </div>
-
             </div>
-
-
+            <div class="mt-10">
+                <h4 class="mb-2 headline2">Qualifitkationen</h4>
+                <p class="xsLight">Lege Qualifikationen an oder bearbeite sie</p>
+                <AddButton text="Neue Qualifikation" class="!ml-0 mt-5" @click="this.openShiftQualificationModal('create')"/>
+                <div class="mt-5">
+                    <div class="mb-5 xsLight" v-if="shiftQualifications.length === 0">
+                        Bisher wurden keine Qualifikationen angelegt.
+                    </div>
+                    <ul v-else role="list" class="w-full">
+                        <li v-for="(shiftQualification) in shiftQualifications"
+                            :key="shiftQualification.id"
+                            @click="openShiftQualificationModal('edit', shiftQualification)"
+                            class="cursor-pointer py-4 pr-4 flex justify-between items-center border-b-2"
+                        >
+                            <span class="sDark cursor-pointer">
+                                {{ shiftQualification.name }}
+                                <span v-if="shiftQualification.available"
+                                      class="xxsLight">
+                                    (Bei neuen Schichten berücksichtigt)
+                                </span>
+                            </span>
+                            <PencilAltIcon class="h-5 w-5" aria-hidden="true"/>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
-
+        <ShiftQualificationModal
+            v-if="this.showShiftQualificationModal"
+            :show="this.showShiftQualificationModal"
+            :mode="this.shiftQualificationModalMode"
+            :qualification="this.shiftQualificationModalQualification"
+            @close="this.closeShiftQualificationModal"
+        />
+        <success-modal
+            v-if="this.$page.props.flash.success?.shift_qualification"
+            title="Qualifikation"
+            :description="this.$page.props.flash.success?.shift_qualification"
+            button="Meldung schließen"
+            @closed="this.$page.props.flash.success.shift_qualification = null"
+        />
+        <error-component
+            v-if="this.$page.props.flash.error?.shift_qualification"
+            titel="Qualifikation"
+            :description="this.$page.props.flash.error?.shift_qualification"
+            @closed="this.$page.props.flash.error.shift_qualification = null"
+            confirm="Meldung schließen"
+        />
         <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" />
-
         <ConfirmDeleteModal title="Gewerk löschen" description="Bist du sicher, dass du das ausgewählte Gewerk löschen möchtest?" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
     </AppLayout>
 </template>
@@ -156,18 +193,38 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import AddCraftsModal from "@/Layouts/Components/AddCraftsModal.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import ShiftQualificationModal from "@/Layouts/Components/ShiftQualificationModal.vue";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     components: {
+        ErrorComponent,
+        SuccessModal,
+        ShiftQualificationModal,
         ConfirmDeleteModal,
         TagComponent,
         AddCraftsModal,
-        ChevronDownIcon, CheckIcon, ListboxButton, ListboxOption, ListboxOptions, Listbox,
-        PencilAltIcon, MenuItem, Menu, MenuButton, SvgCollection, MenuItems, DuplicateIcon, TrashIcon, DotsVerticalIcon,
-        AddButton, AppLayout
+        ChevronDownIcon,
+        CheckIcon,
+        ListboxButton,
+        ListboxOption,
+        ListboxOptions,
+        Listbox,
+        PencilAltIcon,
+        MenuItem,
+        Menu,
+        MenuButton,
+        SvgCollection,
+        MenuItems,
+        DuplicateIcon,
+        TrashIcon,
+        DotsVerticalIcon,
+        AddButton,
+        AppLayout
     },
-    props: ['crafts', 'eventTypes', 'usersWithPermission'],
+    props: ['crafts', 'eventTypes', 'usersWithPermission', 'shiftQualifications'],
     data(){
         return {
             selectedEventType: null,
@@ -175,6 +232,9 @@ export default defineComponent({
             craftToEdit: null,
             openConfirmDeleteModal: false,
             craftToDelete: null,
+            showShiftQualificationModal: false,
+            shiftQualificationModalMode: null,
+            shiftQualificationModalQualification: null
         }
     },
     computed: {
@@ -198,6 +258,16 @@ export default defineComponent({
         }
     },
     methods: {
+        openShiftQualificationModal(mode, qualificationToEdit = null) {
+            this.shiftQualificationModalMode = mode;
+            this.shiftQualificationModalQualification = qualificationToEdit;
+            this.showShiftQualificationModal = true;
+        },
+        closeShiftQualificationModal() {
+            this.showShiftQualificationModal = false;
+            this.shiftQualificationModalQualification = null;
+            this.shiftQualificationModalMode = null;
+        },
         closeAddCraftModal(){
             this.openAddCraftsModal = false;
             this.craftToEdit = null;

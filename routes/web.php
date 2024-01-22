@@ -53,6 +53,7 @@ use App\Http\Controllers\ServiceProviderController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\ShiftFilterController;
 use App\Http\Controllers\ShiftPresetController;
+use App\Http\Controllers\ShiftQualificationController;
 use App\Http\Controllers\ShiftSettingsController;
 use App\Http\Controllers\SubEventsController;
 use App\Http\Controllers\SumCommentController;
@@ -968,4 +969,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::resource('permission-presets', PermissionPresetController::class)
         ->only(['index', 'store', 'update', 'destroy'])
         ->middleware('role:artwork admin');
+
+    Route::resource('shift-qualifications', ShiftQualificationController::class)->only(['store', 'update']);
 });

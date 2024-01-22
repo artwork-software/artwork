@@ -17,6 +17,7 @@
                         <label for="teamName"
                                class="absolute left-0 text-gray-600 text-sm -top-2.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
                             der Checklistenvorlage</label>
+                        <span v-if="showEmptyTaskNameError" class="errorText">Sie müssen einen Namen eingeben.</span>
                     </div>
                 </div>
                 <div class="flex items-center mt-6 mr-8">
@@ -25,12 +26,12 @@
                             class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Nutzer*innen hinzugefügt</span>
                     </div>
                     <div v-else class="-mr-3 my-auto" v-for="(user, index) in templateForm.users">
-                        <img class="h-10 w-10 mr-2 object-cover rounded-full border border-2 border-white"
+                        <img class="h-10 w-10 mr-2 object-cover rounded-full border-2 border-white"
                              :class="index !== 0 ? '-ml-2' : ''"
                              :src="user.profile_photo_url"
                              alt=""/>
                     </div>
-                    <div @click="openChangeTeamsModal"
+                    <div @click="openChangeUsersModal"
                          class="text-secondary ml-4 flex items-center px-2 py-2 text-sm subpixel-antialiased cursor-pointer">
                         <PencilAltIcon
                             class="h-5 w-5 text-primaryText group-hover:text-white"
@@ -136,14 +137,14 @@
             </template>
         </jet-dialog-modal>
         <!-- Change Teams Modal -->
-        <jet-dialog-modal :show="showChangeTeamsModal" @close="closeChangeTeamsModal">
+        <jet-dialog-modal :show="showChangeUsersModal" @close="closeChangeUsersModal">
             <template #content>
                 <img src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Checklistenvorlage zuweisen
                     </div>
-                    <XIcon @click="closeChangeTeamsModal"
+                    <XIcon @click="closeChangeUsersModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
                     <div class="text-secondary tracking-tight leading-6 sub">
@@ -169,7 +170,7 @@
                                     <div v-for="(user, index) in user_search_results" :key="index"
                                          class="flex items-center cursor-pointer">
                                         <div class="flex-1 text-sm py-4">
-                                            <p @click="addUserToTeamsArray(user)"
+                                            <p @click="addUser(user)"
                                                class="flex items-center font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
                                                 <img class="h-5 w-5 mr-2 object-cover rounded-full"
                                                      :src="user.profile_photo_url"
@@ -193,20 +194,18 @@
                                      alt=""/>
                                 {{ user.first_name }} {{ user.last_name }}
                             </div>
-                            <button type="button" @click="deleteUserFromTemplate(user)">
-                                <span class="sr-only">Team aus Checklistenvorlage entfernen</span>
+                            <button type="button" @click="deleteUser(user)">
+                                <span class="sr-only">Benutzer aus Checklistenvorlage entfernen</span>
                                 <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
                             </button>
                         </span>
                     </div>
                     <AddButton
                         class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                        @click="closeChangeTeamsModal"
+                        @click="closeChangeUsersModal"
                         text="Zuweisen" mode="modal" />
                 </div>
-
             </template>
-
         </jet-dialog-modal>
     </app-layout>
 </template>
@@ -263,12 +262,10 @@ export default {
             user_query: "",
             addingTask: false,
             dragging: false,
-            showChangeTeamsModal: false,
+            showChangeUsersModal: false,
             user_search_results: [],
-            templateForm: this.$inertia.form({
-                _method: 'PATCH',
+            templateForm: useForm({
                 name: this.checklist_template.name,
-                //user who created the template
                 user_id: this.$page.props.user.id,
                 task_templates: this.checklist_template.task_templates? this.checklist_template.task_templates : [],
                 users: this.checklist_template.users? this.checklist_template.users : [],
@@ -278,15 +275,16 @@ export default {
             taskForm: useForm({
                 name: "",
                 description: "",
-            })
+            }),
+            showEmptyTaskNameError: false
         }
     },
     methods: {
-        openChangeTeamsModal(){
-            this.showChangeTeamsModal = true;
+        openChangeUsersModal(){
+            this.showChangeUsersModal = true;
         },
-        closeChangeTeamsModal(){
-            this.showChangeTeamsModal = false;
+        closeChangeUsersModal(){
+            this.showChangeUsersModal = false;
         },
         openAddTaskModal(){
             this.addingTask = true;
@@ -296,9 +294,6 @@ export default {
             this.newTaskName = "";
             this.newTaskDescription = "";
         },
-        deleteUserFromTemplate(user) {
-            this.templateForm.users.splice(this.templateForm.users.indexOf(user), 1);
-        },
         showSuccessButton() {
             this.showSuccess = true;
             setTimeout(() => {
@@ -306,10 +301,24 @@ export default {
             }, 1000)
         },
         editChecklistTemplate() {
-            this.templateForm.patch(route('checklist_templates.update',{checklist_template: this.checklist_template.id}));
+            if (this.templateForm.name === '') {
+                this.showEmptyTaskNameError = true;
+                return;
+            }
+
+            this.showEmptyTaskNameError = false;
+
+            this.templateForm.patch(
+                route(
+                    'checklist_templates.update',
+                    {
+                        checklist_template: this.checklist_template.id
+                    }
+                )
+            );
             this.showSuccessButton();
         },
-        addUserToTeamsArray(user) {
+        addUser(user) {
             for (let assignedUser of this.templateForm.users) {
                 //if team is already assigned do nothing
                 if (user.id === assignedUser.id) {
@@ -320,6 +329,9 @@ export default {
             this.templateForm.users.push(user);
             this.user_query = "";
             this.user_search_results = []
+        },
+        deleteUser(user) {
+            this.templateForm.users.splice(this.templateForm.users.indexOf(user), 1);
         },
         addTaskToTemplate(){
             this.templateForm.task_templates.push({name:this.newTaskName,description:this.newTaskDescription});
@@ -343,9 +355,6 @@ export default {
             },
             deep: true
         }
-    },
-    setup() {
-        return {}
     }
 }
 </script>

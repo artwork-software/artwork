@@ -255,7 +255,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/project_files/{project_file}', [ProjectFileController::class, 'update'])
         ->name('project_files.update');
     Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download'])->name('download_file');
-    Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy']);
+    Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy'])
+        ->name('project_files.destroy');
     Route::delete('/project_files/{id}/force_delete', [ProjectFileController::class, 'forceDelete']);
 
     //MoneySourceFiles
@@ -457,7 +458,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('global_notification.destroy');
 
     // Money Sources
-    Route::get('/money_sources/settings', [MoneySourceController::class, 'showSettings'])
+    Route::get('/settings/money_sources', [MoneySourceController::class, 'showSettings'])
         ->name('money_sources.settings');
     Route::get('/money_sources/search/money_source', [MoneySourceController::class, 'search'])
         ->name('money_sources.search');

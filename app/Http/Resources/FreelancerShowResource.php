@@ -28,7 +28,6 @@ class FreelancerShowResource extends JsonResource
             'street' => $this->street,
             'zip_code' => $this->zip_code,
             'location' => $this->location,
-            'can_master' => $this->can_master,
             'note' => $this->note,
             'salary_per_hour' => $this->salary_per_hour,
             'salary_description' => $this->salary_description,
@@ -40,6 +39,7 @@ class FreelancerShowResource extends JsonResource
                 fn($craft) => !$this->assignedCrafts->pluck('id')->contains($craft->id)
             )->toArray(),
             'vacations' => $this->vacations,
+            'shiftQualifications' => $this->shiftQualifications
         ];
     }
 }

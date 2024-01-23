@@ -2,8 +2,13 @@
 
 namespace Artwork\Modules\ShiftQualification\Models;
 
+use App\Models\Freelancer;
+use App\Models\ServiceProvider;
+use App\Models\User;
 use Artwork\Core\Database\Models\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ShiftQualification extends Model
 {
@@ -18,4 +23,40 @@ class ShiftQualification extends Model
     protected $casts = [
         'available' => 'boolean'
     ];
+
+    public function users(): BelongsToMany
+    {
+        return $this
+            ->belongsToMany(User::class, 'user_shift_qualifications')
+            ->using(UserShiftQualification::class);
+    }
+
+    public function freelancers(): BelongsToMany
+    {
+        return $this
+            ->belongsToMany(Freelancer::class, 'freelancer_shift_qualifications')
+            ->using(FreelancerShiftQualification::class);
+    }
+
+    public function serviceProviders(): BelongsToMany
+    {
+        return $this
+            ->belongsToMany(ServiceProvider::class, 'service_provider_shift_qualifications')
+            ->using(ServiceProviderShiftQualification::class);
+    }
+
+    public function scopeAvailable(Builder $builder): Builder
+    {
+        return $builder->where('available', true);
+    }
+
+    public function scopeOrderByCreationDateAscending(Builder $builder): Builder
+    {
+        return $builder->orderBy('created_at');
+    }
+
+    public function scopeMasterQualification(Builder $builder): Builder
+    {
+        return $builder->where('name', 'Meister');
+    }
 }

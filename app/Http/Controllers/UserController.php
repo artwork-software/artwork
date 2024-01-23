@@ -19,6 +19,10 @@ use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\PermissionPresets\Services\PermissionPresetService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\ShiftQualification\Http\Requests\UpdateUserShiftQualificationRequest;
+use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
+use Artwork\Modules\ShiftQualification\Services\UserShiftQualificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Foundation\Application;
@@ -196,13 +200,16 @@ class UserController extends Controller
         ]);
     }
 
-    public function editUserWorkProfile(User $user): Response|ResponseFactory
-    {
+    public function editUserWorkProfile(
+        User $user,
+        ShiftQualificationRepository $shiftQualificationRepository
+    ): Response|ResponseFactory {
         return inertia(
             'Users/UserWorkProfilePage',
             [
                 'userToEdit' => new UserWorkProfileResource($user),
                 'currentTab' => 'workProfile',
+                'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending()
             ]
         );
     }
@@ -332,8 +339,28 @@ class UserController extends Controller
 
         $user->update([
             'can_work_shifts' => $request->boolean('canBeAssignedToShifts'),
-            'can_master' => $request->boolean('canBeUsedAsMasterCraftsman')
         ]);
+
+        return Redirect::back();
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
+    public function updateShiftQualification(
+        User $user,
+        UpdateUserShiftQualificationRequest $request,
+        UserShiftQualificationService $userShiftQualificationService
+    ): RedirectResponse {
+        $this->authorize('updateWorkProfile', User::class);
+
+        if ($request->boolean('create')) {
+            //if useable is set to true create a new entry in pivot table
+            $userShiftQualificationService->createByRequestForUser($request, $user);
+        } else {
+            //if useable is set to false pivot table entry needs to be deleted
+            $userShiftQualificationService->deleteByRequestForUser($request, $user);
+        }
 
         return Redirect::back();
     }

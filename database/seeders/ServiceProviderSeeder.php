@@ -4,11 +4,19 @@ namespace Database\Seeders;
 
 use App\Models\Craft;
 use App\Models\ServiceProvider;
+use Artwork\Modules\ShiftQualification\Models\ServiceProviderShiftQualification;
+use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\ShiftQualification\Repositories\ServiceProviderShiftQualificationRepository;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
 
 class ServiceProviderSeeder extends Seeder
 {
+    public function __construct(
+        private readonly ServiceProviderShiftQualificationRepository $serviceProviderShiftQualificationRepository
+    ) {
+    }
+
     public function run(): void
     {
         $faker = Factory::create('de_DE');
@@ -31,6 +39,15 @@ class ServiceProviderSeeder extends Seeder
 
             if ($serviceProvider->can_work_shifts) {
                 $serviceProvider->assignedCrafts()->sync(Craft::all()->pluck('id'));
+            }
+
+            if ($serviceProvider->can_work_shifts && $faker->boolean) {
+                $this->serviceProviderShiftQualificationRepository->save(
+                    new ServiceProviderShiftQualification([
+                        'service_provider_id' => $serviceProvider->id,
+                        'shift_qualification_id' => ShiftQualification::query()->masterQualification()->first()->id
+                    ])
+                );
             }
 
             $serviceProvider->contacts()->create([

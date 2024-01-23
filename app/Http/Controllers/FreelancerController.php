@@ -10,6 +10,9 @@ use App\Models\Freelancer;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\ShiftQualification\Http\Requests\UpdateFreelancerShiftQualificationRequest;
+use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
+use Artwork\Modules\ShiftQualification\Services\FreelancerShiftQualificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
@@ -36,8 +39,11 @@ class FreelancerController extends Controller
         return Inertia::location(route('freelancer.show', $freelancer->id));
     }
 
-    public function show(Freelancer $freelancer, CalendarController $shiftPlan): Response
-    {
+    public function show(
+        Freelancer $freelancer,
+        CalendarController $shiftPlan,
+        ShiftQualificationRepository $shiftQualificationRepository
+    ): Response {
         $showCalendar = $shiftPlan->createCalendarDataForFreelancerShiftPlan($freelancer);
         $availabilityData = $this->calendarService
             ->getAvailabilityData(freelancer: $freelancer, month: request('month'));
@@ -80,7 +86,8 @@ class FreelancerController extends Controller
                 ->get(),
             'availabilities' => $freelancer->availabilities()
                 ->where('date', $selectedDate)
-                ->orderBy('date', 'ASC')->get()
+                ->orderBy('date', 'ASC')->get(),
+            'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending()
         ]);
     }
 
@@ -135,9 +142,29 @@ class FreelancerController extends Controller
         $this->authorize('updateWorkProfile', Freelancer::class);
 
         $freelancer->update([
-            'can_work_shifts' => $request->boolean('canBeAssignedToShifts'),
-            'can_master' => $request->boolean('canBeUsedAsMasterCraftsman')
+            'can_work_shifts' => $request->boolean('canBeAssignedToShifts')
         ]);
+
+        return Redirect::back();
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
+    public function updateShiftQualification(
+        Freelancer $freelancer,
+        UpdateFreelancerShiftQualificationRequest $request,
+        FreelancerShiftQualificationService $freelancerShiftQualificationService
+    ): RedirectResponse {
+        $this->authorize('updateWorkProfile', Freelancer::class);
+
+        if ($request->boolean('create')) {
+            //if useable is set to true create a new entry in pivot table
+            $freelancerShiftQualificationService->createByRequestForFreelancer($request, $freelancer);
+        } else {
+            //if useable is set to false pivot table entry needs to be deleted
+            $freelancerShiftQualificationService->deleteByRequestForFreelancer($request, $freelancer);
+        }
 
         return Redirect::back();
     }

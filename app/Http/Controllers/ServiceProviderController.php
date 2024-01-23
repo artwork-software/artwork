@@ -9,6 +9,9 @@ use App\Models\EventType;
 use App\Models\ServiceProvider;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\ShiftQualification\Http\Requests\UpdateServiceProviderShiftQualificationRequest;
+use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
+use Artwork\Modules\ShiftQualification\Services\ServiceProviderShiftQualificationService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,8 +40,11 @@ class ServiceProviderController extends Controller
         return Inertia::location(route('service_provider.show', $serviceProvider->id));
     }
 
-    public function show(ServiceProvider $serviceProvider, CalendarController $shiftPlan): Response
-    {
+    public function show(
+        ServiceProvider $serviceProvider,
+        CalendarController $shiftPlan,
+        ShiftQualificationRepository $shiftQualificationRepository
+    ): Response {
         $showCalendar = $shiftPlan->createCalendarDataForServiceProviderShiftPlan($serviceProvider);
 
         return Inertia::render('ServiceProvider/Show', [
@@ -54,6 +60,7 @@ class ServiceProviderController extends Controller
                 ->with(['event', 'event.project', 'event.room'])
                 ->orderBy('start', 'ASC')
                 ->get(),
+            'shiftQualifications' => $shiftQualificationRepository->getAllAvailableOrderedByCreationDateAscending()
         ]);
     }
 
@@ -110,9 +117,29 @@ class ServiceProviderController extends Controller
         $this->authorize('updateWorkProfile', ServiceProvider::class);
 
         $serviceProvider->update([
-            'can_work_shifts' => $request->boolean('canBeAssignedToShifts'),
-            'can_master' => $request->boolean('canBeUsedAsMasterCraftsman')
+            'can_work_shifts' => $request->boolean('canBeAssignedToShifts')
         ]);
+
+        return Redirect::back();
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
+    public function updateShiftQualification(
+        ServiceProvider $serviceProvider,
+        UpdateServiceProviderShiftQualificationRequest $request,
+        ServiceProviderShiftQualificationService $serviceProviderShiftQualificationService
+    ): RedirectResponse {
+        $this->authorize('updateWorkProfile', ServiceProvider::class);
+
+        if ($request->boolean('create')) {
+            //if useable is set to true create a new entry in pivot table
+            $serviceProviderShiftQualificationService->createByRequestForServiceProvider($request, $serviceProvider);
+        } else {
+            //if useable is set to false pivot table entry needs to be deleted
+            $serviceProviderShiftQualificationService->deleteByRequestForServiceProvider($request, $serviceProvider);
+        }
 
         return Redirect::back();
     }

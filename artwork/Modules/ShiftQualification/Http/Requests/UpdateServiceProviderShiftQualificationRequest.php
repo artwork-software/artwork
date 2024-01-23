@@ -4,7 +4,7 @@ namespace Artwork\Modules\ShiftQualification\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateShiftQualificationRequest extends FormRequest
+class UpdateServiceProviderShiftQualificationRequest extends FormRequest
 {
     /**
      * @return array<string, mixed>
@@ -12,9 +12,8 @@ class UpdateShiftQualificationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'icon' => 'string',
-            'name' => 'string',
-            'available' => 'boolean'
+            'shiftQualificationId' => 'int|exists:shift_qualifications,id',
+            'create' => 'boolean'
         ];
     }
 }

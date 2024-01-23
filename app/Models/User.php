@@ -13,6 +13,8 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\Checklist\Models\Checklist;
@@ -57,7 +59,6 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property boolean $project_management
- * @property boolean $can_master
  * @property boolean $can_work_shifts
  *
  * @property Collection<\Artwork\Modules\Department\Models\Department> departments
@@ -100,7 +101,6 @@ class User extends Authenticatable implements Vacationer, Available
         'temporary',
         'employStart',
         'employEnd',
-        'can_master',
         'can_work_shifts',
         'work_name',
         'work_description',
@@ -115,7 +115,6 @@ class User extends Authenticatable implements Vacationer, Available
         'opened_areas' => 'array',
         'toggle_hints' => 'boolean',
         'temporary' => 'boolean',
-        'can_master' => 'boolean',
         'can_work_shifts' => 'boolean',
     ];
 
@@ -320,6 +319,19 @@ class User extends Authenticatable implements Vacationer, Available
     public function assignedCrafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'users_assigned_crafts');
+    }
+
+    public function shiftQualifications(): BelongsToMany
+    {
+        return $this
+            ->belongsToMany(ShiftQualification::class, 'user_shift_qualifications')
+            ->using(UserShiftQualification::class);
+    }
+
+
+    public function hasMasterShiftQualification(): bool
+    {
+        return $this->shiftQualifications()->where('name', 'Meister')->count() === 1;
     }
 
     /**

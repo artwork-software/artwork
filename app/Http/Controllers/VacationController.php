@@ -23,7 +23,6 @@ class VacationController extends Controller
         private readonly AvailabilityService $availabilityService,
         private readonly VacationSeriesService $vacationSeriesService,
         private readonly AvailabilityConflictService $availabilityConflictService,
-        private readonly VacationConflictService $vacationConflictService,
     ) {
     }
 

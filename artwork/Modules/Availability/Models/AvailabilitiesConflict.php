@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Availability\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -33,12 +34,22 @@ class AvailabilitiesConflict extends Model
     protected $casts = [
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
-        'date' => 'datetime: d.m.Y',
+    ];
+
+    protected $appends = [
+        'date_casted'
     ];
 
     public function availability(): BelongsTo
     {
         return $this->belongsTo(Availability::class, 'availability_id', 'id', 'availabilities');
+    }
+
+
+    public function getDateCastedAttribute(): string
+    {
+        Carbon::setLocale('de');
+        return Carbon::parse($this->date)->translatedFormat('d.m.Y');
     }
 
 }

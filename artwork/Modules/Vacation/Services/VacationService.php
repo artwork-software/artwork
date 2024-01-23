@@ -143,35 +143,6 @@ class VacationService
         );
 
         return $vacation;
-
-        /*$oldFrom = $vacation->from;
-        $oldUntil = $vacation->until;
-
-        $vacation->from = $from;
-        $vacation->until = $until;
-        $vacation = $this->vacationRepository->save($vacation);
-
-        $newFrom = $vacation->from;
-        $newUntil = $vacation->until;
-
-        if ($oldFrom !== $newFrom) {
-            $this->createHistory(
-                $vacation,
-                'Verfügbarkeit geändert von ' . Carbon::parse($oldFrom)
-        ->format('d.m.Y') . ' zu ' . Carbon::parse($newFrom)->format('d.m.Y')
-            );
-        }
-
-        if ($oldUntil !== $newUntil) {
-            $this->createHistory(
-                $vacation,
-                'Verfügbarkeit geändert bis: ' . Carbon::parse($oldUntil)
-        ->format('d.m.Y') . ' zu ' . Carbon::parse($newUntil)->format('d.m.Y')
-            );
-        }
-        $this->announceChanges($vacation);
-
-        return $vacation;*/
     }
 
     public function findVacationsByUserId(int $id): Collection

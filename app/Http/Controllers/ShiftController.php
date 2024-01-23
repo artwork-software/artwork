@@ -388,11 +388,12 @@ class ShiftController extends Controller
                 foreach ($vacationsConflict as $vacationConflict) {
                     $vacationConflict->delete();
                 }
+                $availabilitiesConflict = AvailabilitiesConflict::where('shift_id', $shift->id)->get();
+                foreach ($availabilitiesConflict as $availabilityConflict) {
+                    $availabilityConflict->delete();
+                }
             }
-
-
         }
-
 
         return Redirect::route('projects.show.shift', $projectId)->with('success', 'Shift updated');
     }
@@ -565,6 +566,10 @@ class ShiftController extends Controller
                 'shift'
             );
             $this->vacationConflictService->checkVacationConflictsShifts(
+                shift: $shift,
+                user: $user
+            );
+            $this->availabilityConflictService->checkAvailabilityConflictsShifts(
                 shift: $shift,
                 user: $user
             );
@@ -856,6 +861,11 @@ class ShiftController extends Controller
                 shift: $shift,
                 user: $user
             );
+
+            $this->availabilityConflictService->checkAvailabilityConflictsShifts(
+                shift: $shift,
+                user: $user
+            );
         }
 
         $eventIdsOfUserShifts = $user->shifts()->get()->pluck('event.id')->all();
@@ -1097,6 +1107,11 @@ class ShiftController extends Controller
                 shift: $shift,
                 freelancer: $freelancer
             );
+
+            $this->availabilityConflictService->checkAvailabilityConflictsShifts(
+                shift: $shift,
+                freelancer: $freelancer
+            );
         }
         $eventIdsOfUserShifts = $freelancer->shifts()->get()->pluck('event.id')->all();
         $collidingShiftIds = $this
@@ -1157,6 +1172,11 @@ class ShiftController extends Controller
                 'shift'
             );
             $this->vacationConflictService->checkVacationConflictsShifts(
+                shift: $shift,
+                freelancer: $freelancer
+            );
+
+            $this->availabilityConflictService->checkAvailabilityConflictsShifts(
                 shift: $shift,
                 freelancer: $freelancer
             );
@@ -1292,6 +1312,11 @@ class ShiftController extends Controller
                 shift: $shift,
                 user: $user
             );
+
+            $this->availabilityConflictService->checkAvailabilityConflictsShifts(
+                shift: $shift,
+                user: $user
+            );
         }
         $shift->users()->detach($user->id);
 
@@ -1360,6 +1385,11 @@ class ShiftController extends Controller
                 'shift'
             );
             $this->vacationConflictService->checkVacationConflictsShifts(
+                shift: $shift,
+                freelancer: $freelancer
+            );
+
+            $this->availabilityConflictService->checkAvailabilityConflictsShifts(
                 shift: $shift,
                 freelancer: $freelancer
             );

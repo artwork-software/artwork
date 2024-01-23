@@ -88,12 +88,16 @@ class CalendarService
                 }
             }
 
-            // check if vacation and availability has shift conflict
-            foreach ($shifts as $shift) {
-                if ($currentDate->isSameDay($shift->event_start_day)) {
-                    if ($hasAvailability || $onVacation) {
-                        $hasConflict = true;
-                    }
+            // check if vacation and availability conflicts
+            foreach ($vacationDays as $vacationDay) {
+                if ($vacationDay->conflicts()->exists() && $currentDate->isSameDay($vacationDay->date)) {
+                    $hasConflict = true;
+                }
+            }
+
+            foreach ($availabilityDays as $availabilityDay) {
+                if ($availabilityDay->conflicts()->exists() && $currentDate->isSameDay($availabilityDay->date)) {
+                    $hasConflict = true;
                 }
             }
 

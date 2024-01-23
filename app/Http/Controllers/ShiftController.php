@@ -10,6 +10,7 @@ use App\Models\ServiceProvider;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Vacation\Models\VacationConflict;
@@ -267,12 +268,14 @@ class ShiftController extends Controller
         $shiftIds = $request->input('shifts');
         $updateData = $request->only([
             'is_committed',
+            'committing_user_id'
         ]);
 
         $shifts = Shift::whereIn('id', $shiftIds)->get();
 
         foreach ($shifts as $shift) {
             $shift->update($updateData);
+            $shiftCommittedBy = $shift->committedBy()->first();
             if ($shift->is_committed) {
                 $users = $shift->users()->get();
                 foreach ($users as $user) {
@@ -292,7 +295,7 @@ class ShiftController extends Controller
                     $notificationDescription = [
                         1 => [
                             'type' => 'string',
-                            'title' => Auth::user()->full_name . ' hat dich am ' .
+                            'title' => $shiftCommittedBy->full_name . ' hat dich am ' .
                                 Carbon::parse($shift->event_start_day)->format('d.m.Y') . ' ' .
                                 $shift->start . ' - ' . $shift->end
                                 . ' eingeplant, entgegen deines ursprünglichen Eintrags.',
@@ -314,6 +317,14 @@ class ShiftController extends Controller
                         foreach ($vacations as $vacation) {
                             // check if vacation is full_day
                             if ($vacation->full_day) {
+                                $this->vacationConflictService->create([
+                                    'vacation_id' => $vacation->id,
+                                    'shift_id' => $shift->id,
+                                    'user_name' => $shiftCommittedBy->full_name,
+                                    'date' => $shift->event_start_day,
+                                    'start_time' => $shift->start,
+                                    'end_time' => $shift->end,
+                                ]);
                                 $this->notificationService->setNotificationTo($user);
                                 $this->notificationService->createNotification();
                             } else {
@@ -327,7 +338,7 @@ class ShiftController extends Controller
                                     $this->vacationConflictService->create([
                                         'vacation_id' => $vacation->id,
                                         'shift_id' => $shift->id,
-                                        'user_name' => $user->full_name,
+                                        'user_name' => $shiftCommittedBy->full_name,
                                         'date' => $shift->event_start_day,
                                         'start_time' => $shift->start,
                                         'end_time' => $shift->end,
@@ -354,23 +365,32 @@ class ShiftController extends Controller
                                 $this->availabilityConflictService->create([
                                     'availability_id' => $availability->id,
                                     'shift_id' => $shift->id,
-                                    'user_name' => $user->full_name,
+                                    'user_name' => $shiftCommittedBy->full_name,
                                     'date' => $shift->event_start_day,
                                     'start_time' => $shift->start,
                                     'end_time' => $shift->end,
                                 ]);
                                 $this->notificationService->setNotificationTo($user);
                                 $this->notificationService->createNotification();
+                            } else {
+                                $availability->conflicts()->each(function ($conflict): void {
+                                    $conflict->delete();
+                                });
                             }
                         }
                     }
                 }
             } else {
+                $shift->update([
+                    'committing_user_id' => null
+                ]);
                 $vacationsConflict = VacationConflict::where('shift_id', $shift->id)->get();
                 foreach ($vacationsConflict as $vacationConflict) {
                     $vacationConflict->delete();
                 }
             }
+
+
         }
 
 
@@ -422,6 +442,18 @@ class ShiftController extends Controller
                     $this->notificationService->createNotification();
                 }
             }
+
+            // conflicts
+            $conflicts = VacationConflict::where('shift_id', $shift->id)->get();
+            $conflictsAvailability = AvailabilitiesConflict::where('shift_id', $shift->id)->get();
+
+            $conflicts->each(function ($conflict): void {
+                $conflict->delete();
+            });
+
+            $conflictsAvailability->each(function ($conflict): void {
+                $conflict->delete();
+            });
         } else {
             $notificationTitle = 'Schicht gelöscht  ' . $shift->event()->first()->project()->first()->name . ' ' .
                 $shift->craft()->first()->abbreviation;
@@ -531,6 +563,10 @@ class ShiftController extends Controller
                 'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde zur Schicht (' .
                     $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') hinzugefügt',
                 'shift'
+            );
+            $this->vacationConflictService->checkVacationConflictsShifts(
+                shift: $shift,
+                user: $user
             );
         }
 
@@ -816,6 +852,10 @@ class ShiftController extends Controller
                     $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') als Meister hinzugefügt',
                 'shift'
             );
+            $this->vacationConflictService->checkVacationConflictsShifts(
+                shift: $shift,
+                user: $user
+            );
         }
 
         $eventIdsOfUserShifts = $user->shifts()->get()->pluck('event.id')->all();
@@ -1053,6 +1093,10 @@ class ShiftController extends Controller
                     $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') hinzugefügt',
                 'shift'
             );
+            $this->vacationConflictService->checkVacationConflictsShifts(
+                shift: $shift,
+                freelancer: $freelancer
+            );
         }
         $eventIdsOfUserShifts = $freelancer->shifts()->get()->pluck('event.id')->all();
         $collidingShiftIds = $this
@@ -1111,6 +1155,10 @@ class ShiftController extends Controller
                 'Freelancer ' . $freelancer->getNameAttribute() . ' wurde zur Schicht (' .
                     $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') als Meister hinzugefügt',
                 'shift'
+            );
+            $this->vacationConflictService->checkVacationConflictsShifts(
+                shift: $shift,
+                freelancer: $freelancer
             );
         }
 
@@ -1240,6 +1288,10 @@ class ShiftController extends Controller
                     $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') entfernt',
                 'shift'
             );
+            $this->vacationConflictService->checkVacationConflictsShifts(
+                shift: $shift,
+                user: $user
+            );
         }
         $shift->users()->detach($user->id);
 
@@ -1306,6 +1358,10 @@ class ShiftController extends Controller
                 'Freelancer ' . $freelancer->getNameAttribute() . ' wurde von Schicht (' .
                 $shift->craft()->first()->abbreviation . ' - ' . $event->eventName . ') entfernt',
                 'shift'
+            );
+            $this->vacationConflictService->checkVacationConflictsShifts(
+                shift: $shift,
+                freelancer: $freelancer
             );
         }
         $shift->freelancer()->detach($freelancer->id);

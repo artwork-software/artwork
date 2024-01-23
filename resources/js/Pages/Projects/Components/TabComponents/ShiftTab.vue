@@ -280,7 +280,8 @@ export default defineComponent({
             this.$inertia.patch(route('update.shift.commitment'), {
                 project_id: this.$page.props.project.id,
                 shifts: this.eventsWithRelevant.flatMap(event => event.shifts.map(shift => shift.id)),
-                is_committed: this.hasUncommittedShift
+                is_committed: this.hasUncommittedShift,
+                committing_user_id: this.$page.props.user.id
             }, {
                 preserveScroll: true
             })

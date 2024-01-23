@@ -10,6 +10,7 @@ use App\Models\ServiceProvider;
 use App\Models\User;
 use Artwork\Modules\Craft\Models\Craft;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -55,6 +56,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read array $allUsers
  * @property-read bool $infringement
  * @property-read string $break_formatted
+ * @property-read \App\Models\User|null $committedBy
  */
 class Shift extends Model
 {
@@ -73,7 +75,8 @@ class Shift extends Model
         'is_committed',
         'shift_uuid',
         'event_start_day',
-        'event_end_day'
+        'event_end_day',
+        'committing_user_id'
     ];
 
     protected $casts = [
@@ -82,7 +85,7 @@ class Shift extends Model
         'is_committed' => 'boolean'
     ];
 
-    protected $with = ['craft', 'users', 'freelancer', 'service_provider'];
+    protected $with = ['craft', 'users', 'freelancer', 'service_provider', 'committedBy'];
 
     protected $appends = [
         'break_formatted',
@@ -94,6 +97,16 @@ class Shift extends Model
         'maxCount',
         'infringement'
     ];
+
+    public function committedBy(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'committing_user_id',
+            'id',
+            'users'
+        )->withoutEagerLoad(['calender_settings']);
+    }
 
     public function event(): BelongsTo
     {
@@ -262,5 +275,10 @@ class Shift extends Model
             return true;
         }
         return false;
+    }
+
+    public function scopeIsCommitted(Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('is_committed', true);
     }
 }

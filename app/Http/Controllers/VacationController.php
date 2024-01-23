@@ -10,6 +10,7 @@ use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Https\Requests\UpdateVacationRequest;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\VacationSeries;
+use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationSeriesService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
@@ -22,6 +23,7 @@ class VacationController extends Controller
         private readonly AvailabilityService $availabilityService,
         private readonly VacationSeriesService $vacationSeriesService,
         private readonly AvailabilityConflictService $availabilityConflictService,
+        private readonly VacationConflictService $vacationConflictService,
     ) {
     }
 
@@ -136,7 +138,6 @@ class VacationController extends Controller
                         $conflict->delete();
                     }
                 }
-                return redirect()->back();
             } else {
                 $this->vacationService->update(
                     data: $updateVacationRequest,

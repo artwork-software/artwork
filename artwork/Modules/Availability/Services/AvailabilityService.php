@@ -85,6 +85,7 @@ class AvailabilityService
 
 
 
+
         $this->createHistory($firstAvailable, 'Verfügbarkeit hinzugefügt');
         $this->announceChanges($firstAvailable);
 

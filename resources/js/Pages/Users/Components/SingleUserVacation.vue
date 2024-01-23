@@ -96,15 +96,11 @@
         </div>
         <div class="my-2.5 text-sm">
             <p v-for="conflict in vacation.conflicts">
-                {{ conflict.user_name }} hat dich am {{ conflict.date }} {{ conflict.start_time }} - {{ conflict.end_time }} eingeplant, entgegen deines ursprünglichen Eintrags.
+                {{ conflict.user_name }} hat dich am {{ conflict.date_casted }} {{ conflict.start_time }} - {{ conflict.end_time }} eingeplant, entgegen deines ursprünglichen Eintrags.
             </p>
         </div>
+
     </div>
-
-    <pre>
-        {{ vacation }}
-    </pre>
-
 
     <AddEditVacationsModal :createShowDate="createShowDate" :edit-vacation="vacation" :user="user" v-if="showEditVacationModal" :vacationSelectCalendar="vacationSelectCalendar" @closed="showEditVacationModal = false" />
 

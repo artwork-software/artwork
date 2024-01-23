@@ -39,11 +39,6 @@
             </tr>
         </table>
     </div>
-
-
-    <pre>
-        {{ calendarData }}
-    </pre>
 </template>
 
 <script>

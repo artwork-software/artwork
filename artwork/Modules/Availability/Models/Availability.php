@@ -49,13 +49,19 @@ class Availability extends Model
     ];
 
     protected $appends = [
-        'date_casted', 'has_conflicts'
+        'date_casted', 'has_conflicts', 'formatted_date'
     ];
 
 
     public function availabilities(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function getFormattedDateAttribute()
+    {
+        Carbon::setLocale('de');
+        return Carbon::parse($this->date)->translatedFormat('d.m.Y');
     }
 
     public function getDateCastedAttribute()

@@ -286,7 +286,8 @@ export default {
                     expectedWorkingHours: user.expectedWorkingHours,
                     vacations: user.vacations,
                     assigned_craft_ids: user.user.assigned_craft_ids,
-                    shift_ids_array: user.user.shift_ids_array
+                    shift_ids_array: user.user.shift_ids_array,
+                    availabilities: user.availabilities
                 })
             })
             this.freelancersForShifts.forEach((freelancer) => {
@@ -296,7 +297,8 @@ export default {
                     plannedWorkingHours: freelancer.plannedWorkingHours,
                     vacations: freelancer.vacations,
                     assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
-                    shift_ids_array: freelancer.freelancer.shift_ids_array
+                    shift_ids_array: freelancer.freelancer.shift_ids_array,
+                    availabilities: freelancer.availabilities
                 })
             })
             this.serviceProvidersForShifts.forEach((service_provider) => {

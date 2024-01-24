@@ -23,14 +23,14 @@ class AvailabilityService
         private readonly AvailabilityRepository $availabilityRepository,
         private readonly NewHistoryService $historyService,
         private readonly SchedulingController $scheduler, //@todo refactor
-        private readonly AvailabilitySeriesService $availabilitySeriesService
+        private readonly AvailabilitySeriesService $availabilitySeriesService,
+        private readonly AvailabilityConflictService $availabilityConflictService
     ) {
         $this->historyService->setModel(Availability::class);
     }
 
     public function create(Available $available, $data): Available|Model
     {
-
         $firstAvailable = $available->availabilities()->create([
             'start_time' => $data->start_time,
             'end_time' => $data->end_time,
@@ -39,6 +39,14 @@ class AvailabilityService
             'comment' => $data->comment,
             'is_series' => $data->is_series,
         ]);
+
+        $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
+            $firstAvailable->date,
+            $firstAvailable->available_type === User::class ?
+                User::find($firstAvailable->available_id) : null,
+            $firstAvailable->available_type === Freelancer::class ?
+                Freelancer::find($firstAvailable->available_id) : null,
+        );
 
         if ($data->is_series) {
             $availableSeries = $this->availabilitySeriesService->create(
@@ -55,7 +63,7 @@ class AvailabilityService
             if ($data->series_repeat === 'daily') {
                 while ($whileEndDate->addDay() < $series_until) {
                     $date = $whileEndDate->format('Y-m-d');
-                    $available->availabilities()->create([
+                    $newAvailability = $available->availabilities()->create([
                         'start_time' => $data->start_time,
                         'end_time' => $data->end_time,
                         'date' => $date,
@@ -64,12 +72,19 @@ class AvailabilityService
                         'is_series' => true,
                         'series_id' => $availableSeries->id
                     ]);
+                    $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
+                        $newAvailability->date,
+                        $newAvailability->available_type === User::class ?
+                            User::find($newAvailability->available_id) : null,
+                        $newAvailability->available_type === Freelancer::class ?
+                            Freelancer::find($newAvailability->available_id) : null,
+                    );
                 }
             }
             if ($data->series_repeat === 'weekly') {
                 while ($whileEndDate->addWeek() < $series_until) {
                     $date = $whileEndDate->format('Y-m-d');
-                    $available->availabilities()->create([
+                    $newAvailability = $available->availabilities()->create([
                         'start_time' => $data->start_time,
                         'end_time' => $data->end_time,
                         'date' => $date,
@@ -78,12 +93,16 @@ class AvailabilityService
                         'is_series' => true,
                         'series_id' => $availableSeries->id
                     ]);
+                    $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
+                        $newAvailability->date,
+                        $newAvailability->available_type === User::class ?
+                            User::find($newAvailability->available_id) : null,
+                        $newAvailability->available_type === Freelancer::class ?
+                            Freelancer::find($newAvailability->available_id) : null,
+                    );
                 }
             }
         }
-
-
-
 
         $this->createHistory($firstAvailable, 'Verfügbarkeit hinzugefügt');
         $this->announceChanges($firstAvailable);
@@ -100,7 +119,20 @@ class AvailabilityService
         $availability->comment = $data->comment;
         $availability->is_series = $data->is_series;
 
-        return $this->availabilityRepository->save($availability);
+
+
+        $newAvailability = $this->availabilityRepository->save($availability);
+
+
+        $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
+            $availability->date,
+            $availability->available_type === User::class ?
+                User::find($availability->available_id) : null,
+            $availability->available_type === Freelancer::class ?
+                Freelancer::find($availability->available_id) : null,
+        );
+
+        return $newAvailability;
 
         /*$oldFrom = $availability->from;
         $oldUntil = $availability->until;

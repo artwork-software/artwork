@@ -49,12 +49,19 @@ class Availability extends Model
     ];
 
     protected $appends = [
-        'date_casted',
+        'date_casted', 'has_conflicts', 'formatted_date'
     ];
+
 
     public function availabilities(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function getFormattedDateAttribute()
+    {
+        Carbon::setLocale('de');
+        return Carbon::parse($this->date)->translatedFormat('d.m.Y');
     }
 
     public function getDateCastedAttribute()
@@ -64,11 +71,21 @@ class Availability extends Model
     }
 
     protected $with = [
-        'series'
+        'series', 'conflicts'
     ];
+
+    public function getHasConflictsAttribute()
+    {
+        return $this->conflicts()->exists();
+    }
 
     public function series(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(AvailabilitySeries::class, 'id', 'series_id');
+    }
+
+    public function conflicts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AvailabilitiesConflict::class, 'availability_id', 'id');
     }
 }

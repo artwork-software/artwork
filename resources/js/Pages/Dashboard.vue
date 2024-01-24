@@ -123,15 +123,14 @@
                                 {{ notificationCount }}
                             </div>
                         </div>
-                        <div class="" >
+                        <div>
                             <div v-if="Object.values(notificationOfToday)?.length > 0">
                                 <div v-for="notificationGroup in Object.values(notificationOfToday)">
                                     <div v-for="(notification, index) in notificationGroup">
                                         <div class="bg-white shadow-cardShadow p-3 mb-4" >
-                                            <NotificationBlock :history-objects="historyObjects" :notification="notification" @setOnRead="setOnRead" :event="event" :event-types="eventTypes" :rooms="rooms"/>
+                                            <NotificationBlock :history-objects="historyObjects" :notification="notification" :event="event" :event-types="eventTypes" :rooms="rooms"/>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
                             <div v-else class="">

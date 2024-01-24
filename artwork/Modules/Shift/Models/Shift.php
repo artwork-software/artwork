@@ -10,11 +10,13 @@ use App\Models\ServiceProvider;
 use App\Models\User;
 use Artwork\Modules\Craft\Models\Craft;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
@@ -54,6 +56,7 @@ use Illuminate\Support\Collection;
  * @property-read array $allUsers
  * @property-read bool $infringement
  * @property-read string $break_formatted
+ * @property-read \App\Models\User|null $committedBy
  */
 class Shift extends Model
 {
@@ -72,7 +75,8 @@ class Shift extends Model
         'is_committed',
         'shift_uuid',
         'event_start_day',
-        'event_end_day'
+        'event_end_day',
+        'committing_user_id'
     ];
 
     protected $casts = [
@@ -81,7 +85,7 @@ class Shift extends Model
         'is_committed' => 'boolean'
     ];
 
-    protected $with = ['craft'];
+    protected $with = ['craft', 'users', 'freelancer', 'service_provider', 'committedBy'];
 
     protected $appends = [
         'break_formatted',
@@ -89,11 +93,20 @@ class Shift extends Model
         'empty_user_count',
         'empty_master_count',
         'master_count',
-        'allUsers',
         'currentCount',
         'maxCount',
         'infringement'
     ];
+
+    public function committedBy(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'committing_user_id',
+            'id',
+            'users'
+        )->withoutEagerLoad(['calender_settings']);
+    }
 
     public function event(): BelongsTo
     {
@@ -139,7 +152,25 @@ class Shift extends Model
 
     public function getCurrentCountAttribute(): int
     {
-        return $this->users->count() + $this->freelancer->count() + $this->service_provider->count();
+        $shiftId = $this->id;
+
+        // Zählen der Benutzer, die dem Shift zugeordnet sind
+        $userCount = DB::table('shift_user')
+            ->where('shift_id', $shiftId)
+            ->count();
+
+        // Zählen der Freelancer, die dem Shift zugeordnet sind
+        $freelancerCount = DB::table('shifts_freelancers')
+            ->where('shift_id', $shiftId)
+            ->count();
+
+        // Zählen der Dienstleister, die dem Shift zugeordnet sind
+        $serviceProviderCount = DB::table('shifts_service_providers')
+            ->where('shift_id', $shiftId)
+            ->count();
+
+        // Summe der gezählten Werte
+        return $userCount + $freelancerCount + $serviceProviderCount;
     }
 
     public function getMaxCountAttribute(): int
@@ -204,7 +235,7 @@ class Shift extends Model
 
     public function getHistoryAttribute(): Collection
     {
-        return $this->historyChanges();
+        return $this->historyChanges()->sortByDesc('created_at');
     }
 
     public function getMastersAttribute(): Collection
@@ -246,15 +277,8 @@ class Shift extends Model
         return false;
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function getAllUsersAttribute(): array
+    public function scopeIsCommitted(Builder $query): \Illuminate\Database\Eloquent\Builder
     {
-        return [
-            'users' => $this->users,
-            'freelancers' => $this->freelancer,
-            'service_providers' => $this->service_provider,
-        ];
+        return $query->where('is_committed', true);
     }
 }

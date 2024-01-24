@@ -294,6 +294,9 @@ class UserController extends Controller
             );
         }
 
+        $user->syncPermissions($request->permissions);
+        $user->syncRoles($request->roles);
+
         return Redirect::back()->with('success', 'Benutzer aktualisiert');
     }
 

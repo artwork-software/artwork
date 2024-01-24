@@ -191,6 +191,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/departments/{department}', [DepartmentController::class, 'show'])->name('departments.show');
     Route::get('/departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.profile');
     Route::patch('/departments/{department}', [DepartmentController::class, 'update'])->name('departments.edit');
+    Route::patch('/departments/{department}/remove/members', [DepartmentController::class, 'removeAllMembers'])
+        ->name('departments.remove.members');
     Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
 
     //Projects

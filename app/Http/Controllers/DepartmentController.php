@@ -106,6 +106,11 @@ class DepartmentController extends Controller
         return Redirect::route('departments', $department->id)->with('success', 'Department updated');
     }
 
+    public function removeAllMembers(Department $department){
+        $this->departmentService->removeAllMembers($department);
+        return Redirect::route('departments', $department->id)->with('success', 'Department updated');
+    }
+
     /**
      * Remove the specified resource from storage.
      *

@@ -5,15 +5,15 @@ namespace App\Models;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\ShiftQualification\Models\FreelancerShiftQualification;
+use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -31,7 +31,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $note
  * @property int $salary_per_hour
  * @property string $salary_description
- * @property int $can_master
  * @property string $created_at
  * @property string $updated_at
  * @property int $can_work_shifts
@@ -55,7 +54,6 @@ class Freelancer extends Model implements Vacationer, Available
         'street',
         'zip_code',
         'location',
-        'can_master',
         'note',
         'salary_per_hour',
         'salary_description',
@@ -69,8 +67,7 @@ class Freelancer extends Model implements Vacationer, Available
     ];
 
     protected $casts = [
-        'can_work_shifts' => 'boolean',
-        'can_master' => 'boolean'
+        'can_work_shifts' => 'boolean'
     ];
 
     public function shifts(): BelongsToMany
@@ -132,6 +129,18 @@ class Freelancer extends Model implements Vacationer, Available
     public function getAssignedCraftIdsAttribute(): array
     {
         return $this->assignedCrafts()->pluck('crafts.id')->toArray();
+    }
+
+    public function shiftQualifications(): BelongsToMany
+    {
+        return $this
+            ->belongsToMany(ShiftQualification::class, 'freelancer_shift_qualifications')
+            ->using(FreelancerShiftQualification::class);
+    }
+
+    public function hasMasterShiftQualification(): bool
+    {
+        return $this->shiftQualifications()->where('name', 'Meister')->count() === 1;
     }
 
     /**

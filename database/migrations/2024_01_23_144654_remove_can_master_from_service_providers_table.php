@@ -13,10 +13,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_commented_budget_items_settings', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('user_id')->unique()->constrained();
-            $table->boolean('exclude');
+        Schema::table('service_providers', function (Blueprint $table): void {
+            $table->dropColumn('can_master');
         });
     }
 
@@ -27,6 +25,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_commented_budget_items_settings');
+        Schema::table('service_providers', function (Blueprint $table): void {
+            $table->boolean('can_master')->default(false);
+        });
     }
 };

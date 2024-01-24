@@ -25,7 +25,6 @@ class ServiceProviderShowResource extends JsonResource
             'street' => $this->street,
             'zip_code' => $this->zip_code,
             'location' => $this->location,
-            'can_master' => $this->can_master,
             'note' => $this->note,
             'salary_per_hour' => $this->salary_per_hour,
             'salary_description' => $this->salary_description,
@@ -35,7 +34,8 @@ class ServiceProviderShowResource extends JsonResource
             'assignedCrafts' => $this->assignedCrafts,
             'assignableCrafts' => Craft::query()->get()->filter(
                 fn($craft) => !$this->assignedCrafts->pluck('id')->contains($craft->id)
-            )->toArray()
+            )->toArray(),
+            'shiftQualifications' => $this->shiftQualifications
         ];
     }
 }

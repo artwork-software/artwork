@@ -1,6 +1,6 @@
 <template>
     <UserEditHeader :current-tab="currentTab" :user_to_edit="userToEdit">
-        <WorkProfileTab user-type="user" :user="userToEdit"/>
+        <WorkProfileTab user-type="user" :user="userToEdit" :shift-qualifications="shiftQualifications"/>
     </UserEditHeader>
 </template>
 
@@ -13,6 +13,10 @@ export default {
         WorkProfileTab,
         UserEditHeader
     },
-    props: ['userToEdit', 'currentTab']
+    props: [
+        'userToEdit',
+        'currentTab',
+        'shiftQualifications',
+    ]
 }
 </script>

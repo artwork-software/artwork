@@ -10,6 +10,16 @@ class ShiftQualificationRepository extends BaseRepository
 {
     public function getAllOrderedByCreationDateAscending(): Collection
     {
-        return ShiftQualification::query()->orderBy('created_at')->get();
+        return ShiftQualification::query()
+            ->orderByCreationDateAscending()
+            ->get();
+    }
+
+    public function getAllAvailableOrderedByCreationDateAscending(): Collection
+    {
+        return ShiftQualification::query()
+            ->available()
+            ->orderByCreationDateAscending()
+            ->get();
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\ShiftQualification\Models\ServiceProviderShiftQualification;
+use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,7 +26,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $note
  * @property int $salary_per_hour
  * @property string $salary_description
- * @property int $can_master
  * @property string $created_at
  * @property string $updated_at
  * @property int $can_work_shifts
@@ -41,7 +42,6 @@ class ServiceProvider extends Model
         'street',
         'zip_code',
         'location',
-        'can_master',
         'note',
         'salary_per_hour',
         'salary_description',
@@ -55,8 +55,7 @@ class ServiceProvider extends Model
     protected $appends = ['name', 'type', 'profile_photo_url', 'assigned_craft_ids', 'shift_ids_array'];
 
     protected $casts = [
-        'can_work_shifts' => 'boolean',
-        'can_master' => 'boolean'
+        'can_work_shifts' => 'boolean'
     ];
 
     public function contacts(): HasMany
@@ -79,6 +78,18 @@ class ServiceProvider extends Model
     public function assignedCrafts(): BelongsToMany
     {
         return $this->belongsToMany(Craft::class, 'service_provider_assigned_crafts');
+    }
+
+    public function shiftQualifications(): BelongsToMany
+    {
+        return $this
+            ->belongsToMany(ShiftQualification::class, 'service_provider_shift_qualifications')
+            ->using(ServiceProviderShiftQualification::class);
+    }
+
+    public function hasMasterShiftQualification(): bool
+    {
+        return $this->shiftQualifications()->where('name', 'Meister')->count() === 1;
     }
 
     /**

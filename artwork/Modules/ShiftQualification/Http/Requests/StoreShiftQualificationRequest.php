@@ -6,12 +6,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreShiftQualificationRequest extends FormRequest
 {
-    public function authorize(): bool
-    {
-        //see Artwork\Modules\ShiftQualification\Policies\ShiftQualificationPolicy
-        return true;
-    }
-
     /**
      * @return array<string, mixed>
      */

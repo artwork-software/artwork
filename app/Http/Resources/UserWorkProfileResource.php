@@ -27,7 +27,6 @@ class UserWorkProfileResource extends JsonResource
             'profile_photo_url' => $this->profile_photo_url,
             'work_name' => $this->work_name,
             'work_description' => $this->work_description,
-            'can_master' => $this->can_master,
             'can_work_shifts' => $this->can_work_shifts,
             'accessibleCrafts' => Craft::query()
                 ->where('assignable_by_all', '=', true)
@@ -37,7 +36,8 @@ class UserWorkProfileResource extends JsonResource
             'assignedCrafts' => $this->assignedCrafts,
             'assignableCrafts' => Craft::query()->get()->filter(
                 fn($craft) => !$this->assignedCrafts->pluck('id')->contains($craft->id)
-            )->toArray()
+            )->toArray(),
+            'shiftQualifications' => $this->shiftQualifications
         ];
     }
 }

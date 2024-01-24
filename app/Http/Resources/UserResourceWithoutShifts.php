@@ -27,7 +27,7 @@ class UserResourceWithoutShifts extends JsonResource
             'business' => $this->business,
             'phone_number' => $this->phone_number,
             'project_management' => $this->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
-            'can_master' => $this->can_master,
+            'can_master' => $this->hasMasterShiftQualification(),
             'pivot_access_budget' => (bool)$this->pivot->access_budget,
             'pivot_is_manager' => (bool)$this->pivot->is_manager,
             'pivot_can_write' => (bool)$this->pivot->can_write,

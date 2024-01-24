@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -148,6 +149,11 @@ class Shift extends Model
             ->orderByPivot('is_master', 'desc')
             ->withCasts(['is_master' => 'boolean'])
             ->without(['contacts']);
+    }
+
+    public function shiftsQualifications(): HasMany
+    {
+        return $this->hasMany(ShiftsQualifications::class);
     }
 
     public function getCurrentCountAttribute(): int

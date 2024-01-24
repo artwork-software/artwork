@@ -22,6 +22,7 @@
                   :drop-users="dropUsers"
                   :users="project.users"
                   :event-types="eventTypes"
+                  :shift-qualifications="shiftQualifications"
         />
     </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
@@ -75,7 +76,8 @@ export default {
         'projectManagerIds',
         'projectDeleteIds',
         'access_budget',
-        'currentUserCrafts'
+        'currentUserCrafts',
+        'shiftQualifications'
     ],
     data() {
         return {

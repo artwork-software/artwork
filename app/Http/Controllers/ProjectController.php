@@ -27,7 +27,6 @@ use App\Http\Resources\ProjectResources\ProjectShiftResource;
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderDropResource;
 use App\Http\Resources\UserDropResource;
-use App\Http\Resources\UserIndexResource;
 use App\Models\Category;
 use App\Models\ChecklistTemplate;
 use App\Models\CollectingSociety;
@@ -63,9 +62,10 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
-use Artwork\Modules\Project\Services\ProjectGroupService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -1802,8 +1802,10 @@ class ProjectController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function projectShiftTab(Project $project): Response|ResponseFactory
-    {
+    public function projectShiftTab(
+        Project $project,
+        ShiftQualificationRepository $shiftQualificationRepository
+    ): Response|ResponseFactory {
         $project->load([
             'departments.users.departments',
             'managerUsers',
@@ -1855,6 +1857,12 @@ class ProjectController extends Controller
                 // Compare the 'start' values for ascending order
                 return strtotime($a['start']) - strtotime($b['start']);
             });
+
+            /** @var Shift $shift */
+            foreach ($event->shifts as $shift) {
+                $shift->load('shiftsQualifications');
+            }
+
             $eventsWithRelevant[$event->id] = [
                 'event' => $event,
                 'timeline' => $timeline,
@@ -1935,7 +1943,8 @@ class ProjectController extends Controller
             'access_budget' => $project->access_budget,
             'currentUserCrafts' => Auth::user()
                 ->crafts
-                ->merge(Craft::query()->where('assignable_by_all', '=', true)->get())
+                ->merge(Craft::query()->where('assignable_by_all', '=', true)->get()),
+            'shiftQualifications' => $shiftQualificationRepository->getAllOrderedByCreationDateAscending()
         ]);
     }
 

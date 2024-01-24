@@ -13,6 +13,7 @@ use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\Vacation\Models\VacationConflict;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
@@ -45,8 +46,11 @@ class ShiftController extends Controller
     {
     }
 
-    public function store(Request $request, Event $event): void
-    {
+    public function store(
+        Request $request,
+        Event $event,
+        ShiftsQualificationsService $shiftsQualificationsService
+    ): void {
         $shift = $event->shifts()->create($request->only([
             'start',
             'end',
@@ -61,6 +65,10 @@ class ShiftController extends Controller
             'event_start_day' => Carbon::parse($event->start_time)->format('Y-m-d'),
             'event_end_day' => Carbon::parse($event->end_time)->format('Y-m-d'),
         ]);
+
+        foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
+            $shiftsQualificationsService->createShiftsQualificationForShift($shift->id, $shiftsQualification);
+        }
 
         $shiftUuid = Str::uuid();
 
@@ -91,6 +99,12 @@ class ShiftController extends Controller
                         'event_start_day' => Carbon::parse($seriesEvent->start_time)->format('Y-m-d'),
                         'event_end_day' => Carbon::parse($seriesEvent->end_time)->format('Y-m-d'),
                     ]);
+                    foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
+                        $shiftsQualificationsService->createShiftsQualificationForShift(
+                            $newShift->id,
+                            $shiftsQualification
+                        );
+                    }
                 }
             }
         }
@@ -100,7 +114,6 @@ class ShiftController extends Controller
                 'shift_uuid' => $shiftUuid,
             ]);
         }
-
 
         if ($shift->infringement) {
             $notificationTitle = 'Schicht mit zu kurzer Pausenzeit angelegt ';
@@ -169,8 +182,11 @@ class ShiftController extends Controller
         return Redirect::route('shifts.plan')->with('success', 'Shift updated');
     }
 
-    public function updateShift(Request $request, Shift $shift): RedirectResponse
-    {
+    public function updateShift(
+        Request $request,
+        Shift $shift,
+        ShiftsQualificationsService $shiftsQualificationsService
+    ): RedirectResponse {
         $projectId =  $shift->event()->first()->project()->first()->id;
         if ($shift->is_committed) {
             $event = $shift->event;
@@ -249,6 +265,7 @@ class ShiftController extends Controller
                 }
             }
         }
+
         $shift->update($request->only([
             'start',
             'end',
@@ -258,6 +275,10 @@ class ShiftController extends Controller
             'number_masters',
             'description',
         ]));
+
+        foreach ($request->get('shiftsQualifications') as $shiftsQualification) {
+            $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);
+        }
 
         return Redirect::route('projects.show.shift', $projectId)->with('success', 'Shift updated');
     }

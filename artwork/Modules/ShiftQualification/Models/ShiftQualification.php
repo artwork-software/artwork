@@ -6,9 +6,11 @@ use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Shift\Models\ShiftsQualifications;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ShiftQualification extends Model
 {
@@ -43,6 +45,11 @@ class ShiftQualification extends Model
         return $this
             ->belongsToMany(ServiceProvider::class, 'service_provider_shift_qualifications')
             ->using(ServiceProviderShiftQualification::class);
+    }
+
+    public function shiftsQualifications(): HasMany
+    {
+        return $this->hasMany(ShiftsQualifications::class);
     }
 
     public function scopeAvailable(Builder $builder): Builder

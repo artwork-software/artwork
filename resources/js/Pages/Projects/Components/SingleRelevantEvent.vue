@@ -92,7 +92,8 @@
                                      :crafts="crafts"
                                      :currentUserCrafts="currentUserCrafts"
                                      :event="event.event"
-                                    @dropFeedback="dropFeedback"/>
+                                     :shift-qualifications="shiftQualifications"
+                                     @dropFeedback="dropFeedback"/>
         </div>
     </div>
 
@@ -116,7 +117,13 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 
 export default defineComponent({
     name: "SingleRelevantEvent",
-    props: ['event', 'crafts', 'eventTypes', 'currentUserCrafts'],
+    props: [
+        'event',
+        'crafts',
+        'eventTypes',
+        'currentUserCrafts',
+        'shiftQualifications'
+    ],
     emits: ['dropFeedback'],
     components: {
         SvgCollection,

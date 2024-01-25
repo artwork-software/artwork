@@ -10,6 +10,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class BenchmarkProjectSeeder extends Seeder
 {
@@ -52,7 +53,7 @@ class BenchmarkProjectSeeder extends Seeder
                 $endDate->addHours($faker->numberBetween(1, 10));
                 $eventName = $eventTypes->random();
 
-                Event::factory()
+                $eventsWithShift = Event::factory()
                     ->set('start_time', $startDate)
                     ->set('end_time', $endDate)
                     ->set('project_id', $project->id)
@@ -64,6 +65,19 @@ class BenchmarkProjectSeeder extends Seeder
                     ->set('audience', $faker->boolean())
                     ->count(1)
                     ->create();
+
+                foreach ($eventsWithShift as $eventWithShift) {
+                    $eventWithShift->shifts()->create([
+                        'start' => '10:00:00',
+                        'end' => '13:00:00',
+                        'break_minutes' => '11',
+                        'craft_id' => 1,
+                        'number_employees' => 3,
+                        'shift_uuid' => Str::uuid(),
+                        'event_start_day' => $eventWithShift->start_time->format('Y-m-d'),
+                        'event_end_day' => $eventWithShift->end_time->format('Y-m-d'),
+                    ]);
+                }
             }
 
 //            foreach ($roomIds as $roomId) {

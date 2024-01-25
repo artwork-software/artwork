@@ -1,0 +1,8 @@
+
+/* Alle Klassen in dieser css-Datei werden auf die gesamte Seite angewendet */
+
+/* Stil für den Ladespinner */
+#nprogress .spinner {
+    left: 50%; /* Links im Viewport */
+    z-index: 1031; /* Z-Index, um sicherzustellen, dass es über anderen Elementen liegt */
+}

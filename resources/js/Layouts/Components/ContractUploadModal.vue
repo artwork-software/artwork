@@ -545,39 +545,7 @@ export default {
         },
         clearTaskForm() {
             this.$refs.task_form.clearForm();
-        }
-        ,
-        resetValues() {
-            this.contractForm.file = null;
-            this.contractForm.contract_partner = null;
-            this.contractForm.company_type_id = null;
-            this.contractForm.contract_type_id = null;
-            this.contractForm.amount = '';
-            this.contractForm.ksk_liable = false;
-            this.contractForm.resident_abroad = false;
-            this.contractForm.has_power_of_attorney = false;
-            this.contractForm.is_freed = false;
-            this.contractForm.description = '';
-            this.contractForm.currency_id = 1;
-            this.contractForm.accessibleUsers = [];
-            this.contractForm.tasks = [];
-            this.file = null;
-            this.description = "";
-            this.contractPartner = '';
-            this.selectedLegalForm = null;
-            this.selectedContractType = null;
-            this.selectedCurrency = {id: 1, name: '€'};
-            this.user_search_results = [];
-            this.user_query = '';
-            this.usersWithAccess = [];
-            this.kskLiable = false;
-            this.isAbroad = false;
-            this.hasPowerOfAttorney = false;
-            this.isFreed = false;
-            this.tasks = [];
-            this.contractAmount = '';
-        }
-        ,
+        },
         storeContract() {
             this.contractForm.file = this.file;
             this.contractForm.contract_partner = this.contractPartner;
@@ -600,8 +568,8 @@ export default {
                 this.contractForm.post(this.route('contracts.store', this.projectId), {
                     // TODO: Richtige einbauweise
                     preserveScroll: true,
+                    preserveState: true,
                     onSuccess: () => {
-                        this.resetValues();
                         this.closeModal()
                     },
                 });
@@ -609,18 +577,12 @@ export default {
                 this.contractForm.post(this.route('contracts.store', this.selectedProject.id), {
                     // TODO: Richtige einbauweise
                     preserveScroll: true,
+                    preserveState: true,
                     onSuccess: () => {
-                        this.resetValues();
                         this.closeModal()
                     },
                 });
             }
-
-            console.log(this.contractForm);
-
-            // TODO: Falsche einbauweise. Das leert die werte zu früh und somit bricht der Post/Patch ab
-            //this.resetValues();
-            //this.closeModal()
         }
     },
 }

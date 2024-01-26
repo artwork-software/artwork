@@ -65,7 +65,7 @@
                     </div>
                     <div class="py-1">
                         <input type="text"
-                               v-model="this.contractPartner"
+                               v-model="contractForm.contract_partner"
                                id="eventTitle"
                                placeholder="Vertragspartner*"
                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
@@ -77,7 +77,7 @@
                             <ListboxButton v-if="selectedLegalForm !== null"
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
-                                <span class="block truncate items-center flex">
+                                <span class="truncate items-center flex">
                                             <span>{{ selectedLegalForm.name }}</span>
                                 </span>
                                     <span
@@ -129,7 +129,7 @@
                             <ListboxButton v-if="selectedContractType !== null"
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
-                                <span class="block truncate items-center flex">
+                                <span class="truncate items-center flex">
                                             <span>{{ selectedContractType.name }}</span>
                                 </span>
                                     <span
@@ -177,7 +177,7 @@
                     </div>
                     <div class="py-1 w-full flex">
                         <input type="number"
-                               v-model="this.contractAmount"
+                               v-model="contractForm.amount"
                                placeholder="Betrag* (Gage, Co-Produktionsbeitrag, etc.)"
                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         <Listbox as="div" class="flex h-12 w-24" v-model="selectedCurrency"
@@ -185,8 +185,8 @@
                             <ListboxButton
                                 class="pl-1 truncate h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
-                                <span class="block w-12 truncate items-center ml-3 flex">
-                                            <span>{{ selectedCurrency.name }}</span>
+                                <span class="w-12 truncate items-center ml-3 flex">
+                                    <span>{{ selectedCurrency.name }}</span>
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -223,37 +223,37 @@
                     </div>
                     <div class="my-2 mb-4">
                         <div class="flex items-center mb-2">
-                            <input id="hasGroup" type="checkbox" v-model="this.kskLiable"
+                            <input id="hasGroup" type="checkbox" v-model="contractForm.ksk_liable"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <label for="hasGroup" :class="this.kskLiable ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                            <label for="hasGroup" :class="contractForm.ksk_liable ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
                                 KSK-pflichtig
                             </label>
                         </div>
 
                         <div class="flex items-center mb-2">
-                            <input id="hasGroup" type="checkbox" v-model="this.isAbroad"
-                                   @click="this.hasPowerOfAttorney = false; this.isFreed = false"
+                            <input id="hasGroup" type="checkbox" v-model="contractForm.resident_abroad"
+                                   @click="contractForm.has_power_of_attorney = false; contractForm.is_freed = false"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <label for="hasGroup" :class="this.isAbroad ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                            <label for="hasGroup" :class="contractForm.resident_abroad ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
                                 Im Ausland ansässig
                             </label>
                         </div>
-                        <div class="ml-4" v-if="this.isAbroad">
+                        <div class="ml-4" v-if="contractForm.resident_abroad">
                             <div class="flex items-center mb-2">
-                                <input id="hasGroup" type="checkbox" v-model="this.hasPowerOfAttorney"
+                                <input id="hasGroup" type="checkbox" v-model="contractForm.has_power_of_attorney"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <label for="hasGroup"
-                                       :class="this.hasPowerOfAttorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                       :class="contractForm.has_power_of_attorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
                                     Vollmacht liegt vor
                                 </label>
                             </div>
                             <div class="flex items-center mb-2">
-                                <input id="hasGroup" type="checkbox" v-model="this.isFreed"
+                                <input id="hasGroup" type="checkbox" v-model="contractForm.is_freed"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <label for="hasGroup" :class="this.isFreed ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                <label for="hasGroup" :class="contractForm.is_freed ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
                                     Im Heimatland befreit
                                 </label>
@@ -264,7 +264,7 @@
                               id="description"
                               v-model="description"
                               rows="5"
-                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
 
                     <div class="my-1">
                         <div class="relative w-full">
@@ -361,13 +361,12 @@
                 <div class="justify-center flex w-full my-6">
                     <button
                         class="flex p-2 px-8 mt-1 items-center border border-transparent rounded-full shadow-sm  focus:outline-none"
-                        :class="(this.file === null || this.contractAmount === '' || this.contractPartner === '') || (!this.projectId && this.selectedProject === null)? 'bg-secondary text-white' : 'text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover'"
-                        :disabled="this.file === null || this.contractAmount === '' || this.contractPartner === '' || (!this.projectId && this.selectedProject === null)"
+                        :class="(file === null || contractForm.amount === '' || contractForm.contract_partner === '') || (!this.projectId && this.selectedProject === null)? 'bg-secondary text-white' : 'text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover'"
+                        :disabled="file === null || contractForm.amount === '' || contractForm.contract_partner === '' || (!this.projectId && this.selectedProject === null)"
                         @click="storeContract">Vertrag hochladen
                     </button>
                 </div>
             </div>
-
         </template>
 
     </jet-dialog-modal>
@@ -390,7 +389,9 @@ import Input from "@/Jetstream/Input.vue";
 export default {
     name: "ContractUploadModal",
     mixins: [Permissions],
-    props: {
+    emits: ['closeModal'],
+    props: ['show', 'projectId', 'extraSettings', 'budgetAccess', 'contractTypes', 'companyTypes', 'currencies'],
+    /*props: {
         show: Boolean,
         closeModal: Function,
         projectId: Number,
@@ -399,7 +400,7 @@ export default {
         contractTypes: Array,
         companyTypes: Array,
         currencies: Array,
-    },
+    },*/
     components: {
         Input,
         InputComponent,
@@ -469,30 +470,24 @@ export default {
             user_search_results: [],
             user_query: '',
             usersWithAccess: [],
-            kskLiable: false,
-            isAbroad: false,
-            hasPowerOfAttorney: false,
-            isFreed: false,
             showExtraSettings: false,
-            contractAmount: '',
             contractForm: useForm({
                 file: null,
-                contract_partner: this.contractPartner,
-                company_type_id: this.selectedLegalForm?.id,
-                contract_type_id: this.selectedContractType?.id,
-                amount: this.contractAmount,
-                currency_id: this.selectedCurrency?.id,
-                ksk_liable: this.kskLiable,
-                resident_abroad: this.isAbroad,
-                has_power_of_attorney: this.hasPowerOfAttorney,
-                is_freed: this.isFreed,
-                description: this.description,
-                accessibleUsers: this.usersWithAccess,
-                tasks: this.tasks,
+                contract_partner: '',
+                company_type_id: null,
+                contract_type_id: null,
+                amount: '',
+                currency_id: null,
+                ksk_liable: false,
+                resident_abroad: false,
+                has_power_of_attorney: false,
+                is_freed: false,
+                description: '',
+                accessibleUsers: [],
+                tasks: [],
             }),
         }
     },
-
     methods: {
         showError() {
             this.errorText = 'Du musst die Aufgabe einer Person mit Dokumentenzugriff zuweisen'
@@ -543,21 +538,17 @@ export default {
                 }
             }
         },
+        closeModal(){
+            this.contractForm.reset()
+            this.$emit('closeModal', true)
+        },
         clearTaskForm() {
             this.$refs.task_form.clearForm();
         },
         storeContract() {
             this.contractForm.file = this.file;
-            this.contractForm.contract_partner = this.contractPartner;
             this.contractForm.company_type_id = this.selectedLegalForm?.id;
             this.contractForm.contract_type_id = this.selectedContractType?.id;
-            this.contractForm.amount = this.contractAmount;
-            this.contractForm.ksk_liable = this.kskLiable;
-            this.contractForm.resident_abroad = this.isAbroad;
-            this.contractForm.has_power_of_attorney = this.hasPowerOfAttorney;
-            this.contractForm.is_freed = this.isFreed;
-            this.contractForm.description = this.description;
-            this.contractForm.currency_id = this.selectedCurrency.id;
             const userIds = [];
             this.usersWithAccess.forEach((user) => {
                 userIds.push(user.id);
@@ -567,18 +558,22 @@ export default {
             if(this.projectId){
                 this.contractForm.post(this.route('contracts.store', this.projectId), {
                     // TODO: Richtige einbauweise
+                    forceFormData: true,
                     preserveScroll: true,
                     preserveState: true,
                     onSuccess: () => {
+                        this.contractForm.reset()
                         this.closeModal()
                     },
                 });
             }else{
                 this.contractForm.post(this.route('contracts.store', this.selectedProject.id), {
                     // TODO: Richtige einbauweise
+                    forceFormData: true,
                     preserveScroll: true,
                     preserveState: true,
                     onSuccess: () => {
+                        this.contractForm.reset()
                         this.closeModal()
                     },
                 });

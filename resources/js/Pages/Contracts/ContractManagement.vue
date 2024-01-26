@@ -16,11 +16,6 @@
                                     </div>
 
                                 </div>
-
-                                <pre>
-                                    filters.costsFilter {{filters}}
-                                </pre>
-
                                 <div class="flex w-full mb-4" >
                                     <div v-for="filter in filters.costsFilter">
                                         <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
@@ -48,16 +43,13 @@
             </div>
         </div>
 
-        <pre>
-            {{filteredContracts}}
-        </pre>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ContractModuleSidenav :contractModules="contract_modules" @upload="this.show = true" />
         </BaseSidenav>
 
         <ContractUploadModal
             :show="showContractUploadModal"
-            :close-modal="closeContractUploadModal"
+            @close-modal="closeContractUploadModal"
             :company-types="company_types"
             :contract-types="contract_types"
             :currencies="currencies"
@@ -178,7 +170,6 @@ export default {
             this.showContractUploadModal = true
         },
         closeContractUploadModal() {
-            Inertia.reload();
             this.showContractUploadModal = false
         },
         removeFilter(filter) {

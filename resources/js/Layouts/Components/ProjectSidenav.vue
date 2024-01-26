@@ -74,9 +74,12 @@
                             @click="openContractUploadModal"/>
                 <ContractUploadModal
                     :show="showContractUploadModal"
-                    :close-modal="closeContractUploadModal"
+                    @close-modal="closeContractUploadModal"
                     :project-id="project.id"
                     :budget-access="accessBudget"
+                    :contract-types="contractTypes"
+                    :company-types="companyTypes"
+                    :currencies="currencies"
                 />
             </div>
             <div v-if="showContracts">
@@ -129,6 +132,7 @@
         </div>
     </div>
 
+
 </template>
 
 <script>
@@ -171,7 +175,21 @@ export default {
         ProjectCopyrightModal,
         Link
     },
-    props: {
+    props: [
+        'project',
+        'costCenter',
+        'projectFiles',
+        'contracts',
+        'moneySources',
+        'accessBudget',
+        'projectManagerIds',
+        'contractTypes',
+        'companyTypes',
+        'currencies',
+        'budgetAccess',
+        'copyright'
+    ],
+    /*props: {
         project: Object,
         costCenter: Object,
         copyright: Object,
@@ -180,7 +198,10 @@ export default {
         moneySources: Array,
         accessBudget: Array,
         projectManagerIds: Array,
-    },
+        contractTypes: Array,
+        companyTypes: Array,
+        currencies: Array
+    },*/
     data() {
         return {
             showFileDeleteModal: false,

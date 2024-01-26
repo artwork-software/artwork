@@ -188,6 +188,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     components: {
@@ -238,6 +239,10 @@ export default {
         },
         closeDeleteUserModal() {
             this.deletingUser = false;
+        },
+        deleteUser() {
+            Inertia.delete(`/users/${this.user_to_edit.id}`);
+            this.closeDeleteUserModal()
         },
     }
 }

@@ -48,6 +48,11 @@ class DepartmentService
             );
     }
 
+    public function removeAllMembers(Department $department): void
+    {
+        $this->departmentRepository->syncUsers($department, []);
+    }
+
     /**
      * @return array<string, mixed>
      */

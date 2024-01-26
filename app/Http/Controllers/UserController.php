@@ -402,6 +402,7 @@ class UserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
+        $user->departments()->detach();
         $user->delete();
 
         broadcast(new UserUpdated())->toOthers();

@@ -2085,6 +2085,9 @@ class ProjectController extends Controller
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projectMoneySources' => $project->moneySources()->get(),
             'states' => ProjectStates::all(),
+            'contractTypes' => ContractType::all()->toArray(),
+            'companyTypes' => CompanyType::all()->toArray(),
+            'currencies' => Currency::all()->toArray(),
         ]);
     }
 

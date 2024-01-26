@@ -35,8 +35,15 @@
                 :contracts="project.contracts"
                 :money-sources="projectMoneySources"
                 :access-budget="access_budget"
+                :currencies="currencies"
+                :contract-types="contractTypes"
+                :company-types="companyTypes"
             />
         </BaseSidenav>
+
+        <pre>
+            {{ $page }}
+        </pre>
     </app-layout>
 </template>
 
@@ -79,6 +86,9 @@ export default defineComponent({
         'projectWriteIds',
         'projectManagerIds',
         'projectDeleteIds',
+        'currencies',
+        'contractTypes',
+        'companyTypes'
     ],
     data() {
         return {

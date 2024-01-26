@@ -102,8 +102,8 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
         Permission::create([
             'name' => PermissionNameEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value,
-            'name_de' => "Darf zusätzlich sämtliche Verifizierungs-, oder festgeschriebene Status und gesperrte ' .
-                'Spalten aufheben.",
+            'name_de' => "Darf zusätzlich sämtliche verifizierungs-, oder festgeschriebenen Status
+             aufheben oder gesperrte Spalten entsperren.",
             'group' => 'Dokumente & Budget',
             'tooltipText' => 'Tooltip fehlt',
             'checked' => false

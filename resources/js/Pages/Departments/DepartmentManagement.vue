@@ -660,7 +660,7 @@ export default defineComponent({
             this.showSuccessModal('delete');
         },
         deleteAllTeamMembers() {
-            this.deleteMembersForm.patch(route('departments.edit', {department: this.teamToDeleteAllMembers.id}));
+            this.deleteMembersForm.patch(route('departments.remove.members', {department: this.teamToDeleteAllMembers.id}));
             this.closeDeleteAllTeamMembersModal();
         },
         getEditHref(department) {

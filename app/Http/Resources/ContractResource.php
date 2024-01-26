@@ -51,7 +51,7 @@ class ContractResource extends JsonResource
             'description' => $this->description,
             'accessibleUsers' => UserIndexResource::collection($this->getAccessibleUsers())->resolve(),
             'tasks' => Task::where('contract_id', $this->id)->get(),
-            'comments' => CommentResource::collection($this->comments)
+            'comments' => CommentResource::collection($this->comments)->resolve()
         ];
     }
 }

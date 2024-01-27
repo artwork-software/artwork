@@ -66,6 +66,7 @@ use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\UserVacationsController;
 use App\Http\Controllers\VacationController;
 use App\Http\Middleware\CanEditProject;
+use App\Http\Middleware\CanViewProject;
 use App\Http\Middleware\CanViewRoom;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -234,16 +235,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
 
     //ProjectTabs
-    Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])->name('projects.show.info');
+    Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])->name('projects.show.info')->middleware(CanViewProject::class);
     Route::get('/projects/{project}/calendar', [ProjectController::class, 'projectCalendarTab'])
-        ->name('projects.show.calendar');
+        ->name('projects.show.calendar')->middleware(CanViewProject::class);;
     Route::get('/projects/{project}/checklist', [ProjectController::class, 'projectChecklistTab'])
-        ->name('projects.show.checklist');
+        ->name('projects.show.checklist')->middleware(CanViewProject::class);;
     Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])->name('projects.show.shift')->can('can plan shifts');
     Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
         ->name('projects.export.budget');
     Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])
-        ->name('projects.show.comment');
+        ->name('projects.show.comment')->middleware(CanViewProject::class);;
 
     //Project Entrance & registration
     Route::patch('/projects/{project}/entrance', [ProjectController::class, 'updateEntranceData'])

@@ -65,6 +65,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
 use App\Http\Controllers\UserVacationsController;
 use App\Http\Controllers\VacationController;
+use App\Http\Middleware\CanEditMoneySource;
 use App\Http\Middleware\CanEditProject;
 use App\Http\Middleware\CanViewProject;
 use App\Http\Middleware\CanViewRoom;
@@ -103,7 +104,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('/settings/email', [AppController::class, 'updateToolEmailSettings'])->name('tool.updateMail');
     });
 
-    Route::group(['middleware' => ['can:can edit and delete money sources']], function (): void {
+    Route::group(['middleware' => CanEditMoneySource::class], function (): void {
         Route::get('/projects/{project}/budget', [ProjectController::class, 'projectBudgetTab'])
             ->name('projects.show.budget');
 

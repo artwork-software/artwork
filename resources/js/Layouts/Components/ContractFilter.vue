@@ -83,14 +83,10 @@ export default {
             this.$emit('filter', this.filter)
         }
     },
-    mounted() {
-        axios.get(route('contract_types.index')).then(res => {
-            this.contractTypes = res.data
-        })
-        axios.get(route('company_types.index')).then(res => {
-            this.companyTypes = res.data
-        })
-    },
+    props: [
+        'companyTypes',
+        'contractTypes'
+    ],
     data() {
         return {
             filter: {
@@ -108,8 +104,6 @@ export default {
                     "name": "Im Ausland ansässig"
                 }
             ],
-            companyTypes: [],
-            contractTypes: []
         }
     }
 }

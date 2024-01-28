@@ -179,6 +179,9 @@ class EventController extends Controller
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'expectedWorkingHours' => $expectedWorkingHours,
                 'vacations' => $vacations,
+                'availabilities' => $user->availabilities()
+                    ->whereBetween('date', [$startDate, $endDate])->get()
+                    ->groupBy('formatted_date'),
             ];
         }
 
@@ -202,6 +205,9 @@ class EventController extends Controller
                 ],
                 'vacations' => $vacations,
                 'plannedWorkingHours' => $plannedWorkingHours,
+                'availabilities' => $freelancer->availabilities()
+                    ->whereBetween('date', [$startDate, $endDate])->get()
+                    ->groupBy('formatted_date'),
             ];
         }
 

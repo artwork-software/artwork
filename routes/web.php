@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\BudgetTemplateController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
@@ -25,7 +26,6 @@ use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\ExportPDFController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
-use App\Http\Controllers\FreelancerVacationController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
@@ -53,6 +53,7 @@ use App\Http\Controllers\ServiceProviderController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\ShiftFilterController;
 use App\Http\Controllers\ShiftPresetController;
+use App\Http\Controllers\ShiftQualificationController;
 use App\Http\Controllers\ShiftSettingsController;
 use App\Http\Controllers\SubEventsController;
 use App\Http\Controllers\SumCommentController;
@@ -63,7 +64,6 @@ use App\Http\Controllers\UserCalendarFilterController;
 use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserShiftCalendarFilterController;
-use App\Http\Controllers\UserVacationsController;
 use App\Http\Controllers\VacationController;
 use App\Http\Middleware\CanEditMoneySource;
 use App\Http\Middleware\CanEditProject;
@@ -178,6 +178,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/users/reset-password', [UserController::class, 'resetUserPassword'])->name('user.reset.password');
     Route::patch('/users/{user}/updateCraftSettings', [UserController::class, 'updateCraftSettings'])
         ->name('user.update.craftSettings');
+    Route::patch('/users/{user}/shift-qualification', [UserController::class, 'updateShiftQualification'])
+        ->name('user.update.shift-qualification');
     Route::patch('/users/{user}/workProfile', [UserController::class, 'updateWorkProfile'])
         ->name('user.update.workProfile');
     Route::patch('/users/{user}/assignCraft', [UserController::class, 'assignCraft'])->name('user.assign.craft');
@@ -191,6 +193,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/departments/{department}', [DepartmentController::class, 'show'])->name('departments.show');
     Route::get('/departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.profile');
     Route::patch('/departments/{department}', [DepartmentController::class, 'update'])->name('departments.edit');
+    Route::patch('/departments/{department}/remove/members', [DepartmentController::class, 'removeAllMembers'])
+        ->name('departments.remove.members');
     Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
 
     //Projects
@@ -256,7 +260,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/project_files/{project_file}', [ProjectFileController::class, 'update'])
         ->name('project_files.update');
     Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download'])->name('download_file');
-    Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy']);
+    Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy'])
+        ->name('project_files.destroy');
     Route::delete('/project_files/{id}/force_delete', [ProjectFileController::class, 'forceDelete']);
 
     //MoneySourceFiles
@@ -425,14 +430,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/events/{id}/restore', [EventController::class, 'restore'])->name('events.restore');
 
     //Shifts
-    Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])->name('shifts.plan')->can('can view shift plan');
+    Route::get('/shifts/view', [EventController::class, 'viewShiftPlan'])
+        ->name('shifts.plan')
+        ->can('can view shift plan');
     Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])->name('shifts.presets');
     Route::post('/shift/{shiftPreset}/preset/store', [ShiftPresetController::class, 'addNewShift'])
         ->name('shift.preset.store');
     Route::post('/shifts/commit', [EventController::class, 'commitShifts'])->name('shifts.commit');
 
     //EventTypes
-    Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management')->can('change event settings');
+    Route::get('/event_types', [EventTypeController::class, 'index'])
+        ->name('event_types.management')
+        ->can('change event settings');
     Route::post('/event_types', [EventTypeController::class, 'store'])->name('event_types.store');
     Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
     Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
@@ -442,7 +451,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/collision/room', [RoomController::class, 'collisionsCount'])->name('collisions.room');
     Route::patch('/notifications', [NotificationController::class, 'setOnRead'])->name('notifications.setReadAt');
-    Route::patch('/notifications', [NotificationController::class, 'setOnReadAll'])->name('notifications.setReadAtAll');
+    Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])->name('notifications.setReadAtAll');
     Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
     Route::patch('/user/settings/{setting}', [NotificationController::class, 'updateSetting'])
         ->name('notifications.settings');
@@ -458,7 +467,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('global_notification.destroy');
 
     // Money Sources
-    Route::get('/money_sources/settings', [MoneySourceController::class, 'showSettings'])
+    Route::get('/settings/money_sources', [MoneySourceController::class, 'showSettings'])
         ->name('money_sources.settings');
     Route::get('/money_sources/search/money_source', [MoneySourceController::class, 'search'])
         ->name('money_sources.search');
@@ -492,7 +501,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
     Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
-    Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
+    Route::delete('/contracts/{contract}', [ContractController::class, 'destroy'])->name('contract.delete');
     Route::post('/contract', [ContractController::class, 'storeFile'])->name('contracts.store.file');
 
     //ContractModules
@@ -700,7 +709,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('project.budget.reset.table');
 
     // Templates
-    Route::get('/templates/index', [BudgetTemplateController::class, 'index'])->name('templates.view.index')->can('view budget templates');
+    Route::get('/templates/index', [BudgetTemplateController::class, 'index'])
+        ->name('templates.view.index')
+        ->can('view budget templates');
 
     //CopyRight
     Route::post('/copyright', [CopyrightController::class, 'store'])->name('copyright.store');
@@ -797,7 +808,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('freelancer.change.profile-image');
     Route::post('freelancer/add', [FreelancerController::class, 'store'])->name('freelancer.add');
     Route::delete('freelancer/{freelancer}', [FreelancerController::class, 'destroy'])->name('freelancer.destroy');
-    Route::patch('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])->can('can manage workers')
+    Route::patch('/freelancer/{freelancer}/workProfile', [FreelancerController::class, 'updateWorkProfile'])
+        ->can('can manage workers')
         ->name('freelancer.update.workProfile');
     Route::patch('/freelancer/{freelancer}/terms', [FreelancerController::class, 'updateTerms'])
         ->name('freelancer.update.terms');
@@ -805,6 +817,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         '/freelancer/{freelancer}/updateCraftSettings',
         [FreelancerController::class, 'updateCraftSettings']
     )->name('freelancer.update.craftSettings');
+    Route::patch(
+        '/freelancer/{freelancer}/shift-qualification',
+        [FreelancerController::class, 'updateShiftQualification']
+    )->name('freelancer.update.shift-qualification');
     Route::patch(
         '/freelancer/{freelancer}/assignCraft',
         [FreelancerController::class, 'assignCraft']
@@ -816,37 +832,33 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Vacation
 
-    Route::post('/freelancer/vacation/{freelancer}/add', [\App\Http\Controllers\VacationController::class, 'storeFreelancerVacation'])
+    Route::post('/freelancer/vacation/{freelancer}/add', [VacationController::class, 'storeFreelancerVacation'])
         ->name('freelancer.vacation.add');
-    Route::patch('/freelancer/vacation/{freelancerVacation}/update', [\App\Http\Controllers\VacationController::class, 'update'])
+    Route::patch('/freelancer/vacation/{freelancerVacation}/update', [VacationController::class, 'update'])
         ->name('freelancer.vacation.update');
-    Route::post('/freelancer/{freelancer}/masters', [\App\Http\Controllers\FreelancerController::class, 'update_freelancer_can_master'])
-        ->name('freelancer.update.can_master');
-    Route::post('/freelancer/{freelancer}/workings', [\App\Http\Controllers\FreelancerController::class, 'update_work_data'])
-        ->name('freelancer.update.work_data');
-    Route::delete('/freelancer/vacation/{freelancerVacation}/delete', [\App\Http\Controllers\VacationController::class, 'destroy'])
+    Route::delete('/freelancer/vacation/{freelancerVacation}/delete', [VacationController::class, 'destroy'])
         ->name('freelancer.vacation.delete');
 
 
     // vacation and availability
-    Route::patch('/update/vacation/{vacation}', [\App\Http\Controllers\VacationController::class, 'update'])
+    Route::patch('/update/vacation/{vacation}', [VacationController::class, 'update'])
         ->name('update.vacation');
 
-    Route::patch('/update/availability/{availability}', [\App\Http\Controllers\AvailabilityController::class, 'update'])
+    Route::patch('/update/availability/{availability}', [AvailabilityController::class, 'update'])
         ->name('update.availability');
 
-    Route::delete('/delete/availability/{availability}', [\App\Http\Controllers\AvailabilityController::class, 'destroy'])
+    Route::delete('/delete/availability/{availability}', [AvailabilityController::class, 'destroy'])
         ->name('delete.availability');
 
-    Route::delete('/delete/vacation/{vacation}', [\App\Http\Controllers\VacationController::class, 'destroy'])
+    Route::delete('/delete/vacation/{vacation}', [VacationController::class, 'destroy'])
         ->name('delete.vacation');
 
     // delete.availability.series
-    Route::delete('/delete/availability/series/{availabilitySeries}', [\App\Http\Controllers\AvailabilityController::class, 'destroySeries'])
+    Route::delete('/delete/availability/series/{availabilitySeries}', [AvailabilityController::class, 'destroySeries'])
         ->name('delete.availability.series');
 
     // delete.vacation.series
-    Route::delete('/delete/vacation/series/{vacationSeries}', [\App\Http\Controllers\VacationController::class, 'destroySeries'])
+    Route::delete('/delete/vacation/series/{vacationSeries}', [VacationController::class, 'destroySeries'])
         ->name('delete.vacation.series');
 
 
@@ -875,6 +887,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [ServiceProviderController::class, 'updateCraftSettings']
     )->name('service_provider.update.craftSettings');
     Route::patch(
+        '/service-provider/{serviceProvider}/shift-qualification',
+        [ServiceProviderController::class, 'updateShiftQualification']
+    )->name('service_provider.update.shift-qualification');
+    Route::patch(
         '/service-provider/{serviceProvider}/assignCraft',
         [ServiceProviderController::class, 'assignCraft']
     )->name('service_provider.assign.craft');
@@ -897,9 +913,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Vacation
 
-    Route::post('/user/vacation/{user}/add', [\App\Http\Controllers\VacationController::class, 'store'])->name('user.vacation.add');
-    Route::patch('/user/vacation/{userVacations}/update', [\App\Http\Controllers\VacationController::class, 'update'])->name('user.vacation.update');
-    Route::delete('/user/vacation/{userVacations}/delete', [\App\Http\Controllers\VacationController::class, 'destroy'])->name('user.vacation.delete');
+    Route::post('/user/vacation/{user}/add', [VacationController::class, 'store'])->name('user.vacation.add');
+    Route::patch('/user/vacation/{userVacations}/update', [VacationController::class, 'update'])
+        ->name('user.vacation.update');
+    Route::delete('/user/vacation/{userVacations}/delete', [VacationController::class, 'destroy'])
+        ->name('user.vacation.delete');
 
 
     Route::group(['prefix' => 'settings'], function (): void {
@@ -934,24 +952,20 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])
         ->name('preset.add.timeline.row');
 
-
-    Route::get('/shift/template/search', [\App\Http\Controllers\ShiftPresetController::class, 'search'])
-        ->name('shift.template.search');
-
     Route::post(
         '/shift/{event}/{shiftPreset}/import/preset/',
-        [\App\Http\Controllers\ShiftPresetController::class, 'import']
+        [ShiftPresetController::class, 'import']
     )
         ->name('shift.preset.import');
 
-    Route::patch('/preset/timeline/update', [\App\Http\Controllers\PresetTimeLineController::class, 'update'])
+    Route::patch('/preset/timeline/update', [PresetTimeLineController::class, 'update'])
         ->name('preset.timeline.update');
     Route::delete(
         '/preset/timeline/{presetTimeLine}/delete',
-        [\App\Http\Controllers\PresetTimeLineController::class, 'destroy']
+        [PresetTimeLineController::class, 'destroy']
     )
         ->name('preset.delete.timeline.row');
-    Route::post('/preset/{shiftPreset}/add', [\App\Http\Controllers\PresetTimeLineController::class, 'store'])
+    Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])
         ->name('preset.add.timeline.row');
 
     Route::patch('/user/{user}/check/vacation', [VacationController::class, 'checkVacation'])
@@ -970,4 +984,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::resource('permission-presets', PermissionPresetController::class)
         ->only(['index', 'store', 'update', 'destroy'])
         ->middleware('role:artwork admin');
+
+    Route::resource('shift-qualifications', ShiftQualificationController::class)->only(['store', 'update']);
 });

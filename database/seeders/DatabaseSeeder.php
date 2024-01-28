@@ -18,11 +18,12 @@ class DatabaseSeeder extends Seeder
             SettingsSeeder::class,
             ContentSeeder::class,
             CraftSeed::class,
+            ShiftQualificationSeeder::class,
             AuthUserSeeder::class,
             FreelancerSeeder::class,
             ServiceProviderSeeder::class,
             WalidRaadSeeder::class,
-            PermissionPresetSeeder::class
+            PermissionPresetSeeder::class,
         ]);
     }
 }

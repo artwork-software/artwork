@@ -6,7 +6,7 @@ use App\Enums\NotificationConstEnum;
 use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\CompanyType;
 use App\Models\Contract;
 use App\Models\ContractModule;
@@ -20,6 +20,7 @@ use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
@@ -40,9 +41,15 @@ class ContractController extends Controller
 
     public function viewIndex(): Response|ResponseFactory
     {
-        $contracts = Contract::all();
+        // get all contracts where i am creator or i am accessing user
+        $contracts = Contract::where('creator_id', Auth::id())->get();
+        $accessing_contracts = Contract::whereHas('accessingUsers', function ($query): void {
+            $query->where('user_id', Auth::id());
+        })->get();
+        $contracts = $contracts->merge($accessing_contracts);
+
         return inertia('Contracts/ContractManagement', [
-            'contracts' => ContractResource::collection($contracts),
+            'contracts' => ContractResource::collection($contracts)->resolve(),
             'contract_modules' => ContractModuleResource::collection(ContractModule::all()),
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
@@ -166,7 +173,7 @@ class ContractController extends Controller
 
         $contract->save();
 
-        return Redirect::back();
+        return Redirect::route('contracts.view.index')->with('success', 'Project created.');
     }
 
     public function download(Contract $contract): StreamedResponse

@@ -276,7 +276,7 @@
                                               class="flex mr-5 rounded-full items-center font-bold text-primary">
                                         <div class="flex items-center">
                                             <img class="flex h-11 w-11 rounded-full object-cover"
-                                                 :src="user.profile_photo_url"
+                                                 :src="user?.profile_photo_url"
                                                  alt=""/>
                                             <span class="flex ml-4 sDark">
                                             {{ user.first_name }} {{ user.last_name }}
@@ -335,7 +335,7 @@
                 <div class="w-full mb-4 mt-8 -px-12">
                     <div v-for="comment in comments">
                         <div class="flex items-center">
-                            <img :src="comment.user.profile_photo_url" alt="profile_photo"
+                            <img :src="comment.user?.profile_photo_url" alt="profile_photo"
                                  class="h-5 w-5 mr-2 rounded-2xl"/>
                             <div class="text-secondary text-sm">{{comment.created_at}}</div>
                         </div>

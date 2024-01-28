@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user_exclude_hidden_items');
+        Schema::dropIfExists('user_commented_budget_items_settings');
     }
 };

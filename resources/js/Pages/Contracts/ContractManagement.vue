@@ -9,26 +9,25 @@
                                 <div class="flex justify-between w-full mb-6">
                                     <h2 class="headline1">Verträge</h2>
                                     <div class="flex">
-                                        <ContractFilter class="ml-auto" @filter="filterContracts" />
+                                        <ContractFilter :company-types="company_types" :contract-types="contract_types" class="ml-auto" @filter="setFilters" />
                                     </div>
                                     <div>
                                         <AddButton @click="openContractUploadModal" text="Neu" mode="page"/>
                                     </div>
 
                                 </div>
-
                                 <div class="flex w-full mb-4" >
-                                    <div v-for="filter in costNames">
+                                    <div v-for="filter in filters.costsFilter">
                                         <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
                                     </div>
-                                    <div v-for="filter in companyTypeNames">
+                                    <div v-for="filter in filters.companyTypesFilter">
                                         <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
                                     </div>
-                                    <div v-for="filter in contractTypeNames">
+                                    <div v-for="filter in filters.contractTypesFilter">
                                         <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
                                     </div>
                                 </div>
-                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="contractsCopy?.data?.length !== 0">
+                                <div v-for="contract in filteredContracts" class="mt-6 w-full">
                                     <ContractListItem @open-delete-contract-modal="openContractDeleteModal" @open-edit-contract-modal="openContractEditModal" :contract="contract" class="mb-6"></ContractListItem>
                                     <ContractDeleteModal :show="showContractDeleteModal === contract?.id"
                                                          :close-modal="closeContractDeleteModal" :contract="contract"/>
@@ -36,26 +35,27 @@
                                                        :close-modal="closeContractEditModal" :contract="contract"/>
                                     <hr class="text-secondary">
                                 </div>
-                                <div v-else class="text-secondary">
-                                    <p>Bisher wurden für dich noch keine Verträge freigegeben.</p>
-                                </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ContractModuleSidenav :contractModules="contract_modules" @upload="this.show = true" />
         </BaseSidenav>
+
+        <ContractUploadModal
+            :show="showContractUploadModal"
+            @close-modal="closeContractUploadModal"
+            :company-types="company_types"
+            :contract-types="contract_types"
+            :currencies="currencies"
+        />
     </app-layout>
-    <ContractUploadModal
-        :show="showContractUploadModal"
-        :close-modal="closeContractUploadModal"
-        :company-types="company_types"
-        :contract-types="contract_types"
-        :currencies="currencies"
-    />
+
 </template>
 
 <script>
@@ -94,13 +94,9 @@ export default {
         'contract_types',
         'currencies'
     ],
-    mounted() {
-        this.filterContracts()
-    },
     data() {
         return {
             show: false,
-            contractsCopy: this.contracts,
             filters: {},
             costNames: [],
             companyTypeNames: [],
@@ -108,45 +104,61 @@ export default {
             showContractUploadModal: false,
             showContractDeleteModal: null,
             showContractEditModal: null,
+        }
+    },
+    computed: {
+        filteredContracts(){
+            let filteredContracts = this.contracts;
+            if(this.filters.costsFilter?.length > 0) {
+                filteredContracts = filteredContracts.filter((contract) => {
+                    let costsFilter = this.filters.costsFilter.filter((costFilter) => costFilter.id === 'KSK-pflichtig');
+                    if(costsFilter !== null && costsFilter.length > 0) {
+                        if(costsFilter[0].checked && contract.ksk_liable) {
+                            return contract;
+                        }
+                    }
+                    costsFilter = this.filters.costsFilter.filter((costFilter) => costFilter.name === 'Im Ausland ansässig');
+                    if(costsFilter !== null && costsFilter.length > 0) {
+                        if(costsFilter[0].checked && contract.resident_abroad) {
+                            return contract;
+                        }
+                    }
+                })
+            }
+            if(this.filters.companyTypesFilter?.length > 0) {
+                filteredContracts = filteredContracts.filter((contract) => {
+                    let companyTypeFilter = this.filters.companyTypesFilter.filter((companyTypeFilter) => companyTypeFilter.name === contract.company_type?.name);
+                    if(companyTypeFilter !== null && companyTypeFilter.length > 0) {
+                        if(companyTypeFilter[0].checked) {
+                            return contract;
+                        }
+                    }
+                })
+            }
 
+            if(this.filters.contractTypesFilter?.length > 0) {
+                filteredContracts = filteredContracts.filter((contract) => {
+                    let contractTypeFilter = this.filters.contractTypesFilter.filter((contractTypeFilter) => contractTypeFilter.name === contract.contract_type?.name);
+                    if(contractTypeFilter !== null && contractTypeFilter.length > 0) {
+                        if(contractTypeFilter[0].checked) {
+                            return contract;
+                        }
+                    }
+                })
+            }
+
+            return filteredContracts;
         }
     },
     methods: {
-        async filterContracts(filters = null) {
-            this.contractsCopy.data = [];
-            if(filters && (filters?.costsFilter ||
-                filters?.companyTypesFilter ||
-                filters?.contractTypesFilter)){
-                this.filters = filters
-                this.costNames = filters.costsFilter.map(cost => cost.name)
-                this.companyTypeNames = filters.companyTypesFilter.map(companyType => companyType.name)
-                this.contractTypeNames = filters.contractTypesFilter.map(contractType => contractType.name)
-            }
-            await axios.get('/contracts/', { params: {
-                costsFilter: { array: this.costNames },
-                companyTypesFilter: { array: this.getArrayOfIds(this.filters.companyTypesFilter) },
-                contractTypesFilter: { array: this.getArrayOfIds(this.filters.contractTypesFilter) },
-            }})
-            .then(res => {
-                if(this.$can('can see, edit and delete project contracts and docs') || this.hasAdminRole()){
-                    this.contractsCopy.data = res.data.contracts
-                }else{
-                    res.data.contracts.forEach(contract => {
-                        if(contract.creator?.id === this.$page.props.user.id) {
-                            this.contractsCopy.data.push(contract)
-                        }else if(contract.accessibleUsers.map(user => user.id).includes(this.$page.props.user.id)) {
-                            this.contractsCopy.data.push(contract)
-                        }
-                    })
-                }
-            })
+        setFilters(filter){
+            this.filters = filter
         },
         openContractEditModal(contract) {
             this.showContractEditModal = contract.id
         },
         closeContractEditModal() {
             this.showContractEditModal = null;
-            Inertia.reload({only: ['contracts']})
         },
         openContractDeleteModal(contract) {
             this.showContractDeleteModal = contract.id
@@ -154,43 +166,23 @@ export default {
         closeContractDeleteModal() {
             this.showContractDeleteModal = null;
         },
-        getArrayOfIds(array) {
-            let ids = []
-            if(array){
-                array.forEach(item => {
-                    ids.push(item.id)
-                })
-            }
-            return ids
-        },
         openContractUploadModal() {
             this.showContractUploadModal = true
         },
         closeContractUploadModal() {
             this.showContractUploadModal = false
-            Inertia.reload({only: ['contracts']})
         },
         removeFilter(filter) {
-            let costFilter = this.filters.costsFilter.filter((costFilter) => costFilter.name === filter);
-            if(costFilter !== null && costFilter.length > 0) {
-                this.filters.costsFilter = this.filters.costsFilter
-                    .filter(filterItem => filterItem.name !== filter)
-                costFilter[0].checked = false;
+            // check if filter is in costsFilter or companyTypesFilter or contractTypesFilter and remove the filter from the array
+            if(this.filters.costsFilter?.length > 0) {
+                this.filters.costsFilter = this.filters.costsFilter.filter((costFilter) => costFilter.id !== filter.id);
             }
-            let companyTypeFilter = this.filters.companyTypesFilter.filter((companyTypesFilter) => companyTypesFilter.name === filter)
-
-            if(companyTypeFilter !== null && companyTypeFilter.length > 0) {
-                this.filters.companyTypesFilter = this.filters.companyTypesFilter
-                    .filter(filterItem => filterItem.name !== filter)
-                companyTypeFilter[0].checked = false;
+            if(this.filters.companyTypesFilter?.length > 0) {
+                this.filters.companyTypesFilter = this.filters.companyTypesFilter.filter((companyTypeFilter) => companyTypeFilter.name !== filter.name);
             }
-            let contractTypeFilter = this.filters.contractTypesFilter.filter((contractTypesFilter) => contractTypesFilter.name === filter)
-            if(contractTypeFilter  !== null && contractTypeFilter.length > 0) {
-                this.filters.contractTypesFilter = this.filters.contractTypesFilter
-                    .filter(filterItem => filterItem.name !== filter)
-                contractTypeFilter[0].checked = false;
+            if(this.filters.contractTypesFilter?.length > 0) {
+                this.filters.contractTypesFilter = this.filters.contractTypesFilter.filter((contractTypeFilter) => contractTypeFilter.name !== filter.name);
             }
-            this.filterContracts(this.filters)
         }
     }
 }

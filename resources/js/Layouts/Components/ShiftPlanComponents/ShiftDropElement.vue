@@ -18,15 +18,15 @@ export default defineComponent({
                 freelancerIds: [],
                 providerIds: []
             }
-            this.shift.allUsers.users.forEach(user => {
+            this.shift.users.forEach(user => {
                 ids.userIds.push(user.id)
             })
 
-            this.shift.allUsers.freelancers?.forEach((freelancer) => {
+            this.shift.freelancers?.forEach((freelancer) => {
                 ids.freelancerIds.push(freelancer.id)
             })
 
-            this.shift.allUsers.service_providers?.forEach((provider) => {
+            this.shift.service_providers?.forEach((provider) => {
                 ids.providerIds.push(provider.id)
             })
 

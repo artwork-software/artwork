@@ -42,8 +42,11 @@
                                 </div>
                                 <div v-for="shift in user.element.shifts[day.full_day]">
                                     <div class="flex items-center justify-between group mb-2" :id="'shift-' + shift.id">
-                                        <div class="flex text-sm">
-                                            {{ shift.craft?.abbreviation }} {{ shift.start }} - {{ shift.end }} | {{ shift.event.room?.name }} | {{ shift.event.event_type?.abbreviation }}: {{ findProjectById(shift.event.project_id)?.name }}
+                                        <div>
+                                            <div class="flex text-sm">
+                                                {{ shift.craft?.abbreviation }} {{ shift.start }} - {{ shift.end }} | {{ shift.event.room?.name }} | {{ shift.event.event_type?.abbreviation }}: {{ findProjectById(shift.event.project_id)?.name }}
+                                            </div>
+                                            <p class="text-sm" v-if="shift.description">&bdquo;{{ shift.description }}&rdquo;</p>
                                         </div>
                                         <div class="hidden group-hover:block cursor-pointer">
                                             <button type="button" @click="removeUserFromShift(shift.id)">
@@ -51,6 +54,26 @@
                                             </button>
                                         </div>
                                     </div>
+                                </div>
+
+
+                                <div class="mt-5 text-sm">
+                                    <h3 class="font-bold mb-3">Eingetragene Verfügbarkeiten</h3>
+
+                                    <div class="my-2" v-for="availability in user?.availabilities[day.full_day]">
+                                        <div>
+                                            <div class="flex items-center">
+                                                <div>
+                                                    {{ availability.date_casted }}
+                                                </div>
+                                                <div v-if="!availability.full_day">
+                                                    , {{ availability.start_time }} - {{ availability.end_time }}
+                                                </div>
+                                            </div>
+                                            <p v-if="availability.comment">&bdquo;{{ availability.comment }}&rdquo;</p>
+                                        </div>
+                                    </div>
+
                                 </div>
 
                                 <div class="flex mt-10" v-if="this.user.type === 0 || this.user.type === 1">
@@ -66,6 +89,7 @@
                                            class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none"
                                            text="Speichern"/>
                             </div>
+
                         </DialogPanel>
                     </TransitionChild>
                 </div>

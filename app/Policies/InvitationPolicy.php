@@ -12,22 +12,22 @@ class InvitationPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->can('invite users');
+        return $user->can(PermissionNameEnum::MA_MANAGER->value);
     }
 
     public function create(User $user): bool
     {
-        return $user->can(PermissionNameEnum::USER_UPDATE->value);
+        return $user->can(PermissionNameEnum::MA_MANAGER->value);
     }
 
     public function update(User $user): bool
     {
-        return $user->can(PermissionNameEnum::USER_UPDATE->value);
+        return $user->can(PermissionNameEnum::MA_MANAGER->value);
     }
 
     public function delete(User $user): bool
     {
-        return $user->can(PermissionNameEnum::USER_UPDATE->value);
+        return $user->can(PermissionNameEnum::MA_MANAGER->value);
     }
 
     public function restore(): void

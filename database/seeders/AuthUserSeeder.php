@@ -8,6 +8,9 @@ use App\Enums\RoleNameEnum;
 use App\Models\Craft;
 use App\Models\GeneralSettings;
 use App\Models\User;
+use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
+use Artwork\Modules\ShiftQualification\Repositories\UserShiftQualificationRepository;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
@@ -16,6 +19,11 @@ use Illuminate\Support\Facades\Storage;
 
 class AuthUserSeeder extends Seeder
 {
+    public function __construct(
+        private readonly UserShiftQualificationRepository $userShiftQualificationRepository
+    ) {
+    }
+
     /**
      * Run the database seeds.
      *
@@ -51,6 +59,14 @@ class AuthUserSeeder extends Seeder
             'can_work_shifts' => Factory::create('de_DE')->boolean()
         ]);
 
+        $masterShiftQualificationId = ShiftQualification::query()->masterQualification()->first()->id;
+        $this->userShiftQualificationRepository->save(
+            new UserShiftQualification([
+                'user_id' => $user->id,
+                'shift_qualification_id' => $masterShiftQualificationId
+            ])
+        );
+
         if ($user->can_work_shifts) {
             $user->assignedCrafts()->sync(Craft::all()->pluck('id'));
         }
@@ -83,6 +99,12 @@ class AuthUserSeeder extends Seeder
             'opened_areas' => [],
             'profile_photo_path' => '/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg'
         ]);
+        $this->userShiftQualificationRepository->save(
+            new UserShiftQualification([
+                'user_id' => $user->id,
+                'shift_qualification_id' => $masterShiftQualificationId
+            ])
+        );
         $user->calendar_settings()->create();
         $user->calendar_filter()->create();
         $user->shift_calendar_filter()->create();
@@ -120,7 +142,12 @@ class AuthUserSeeder extends Seeder
             'opened_areas' => [],
             'profile_photo_path' => '/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg'
         ]);
-
+        $this->userShiftQualificationRepository->save(
+            new UserShiftQualification([
+                'user_id' => $user->id,
+                'shift_qualification_id' => $masterShiftQualificationId
+            ])
+        );
         $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
         $user->calendar_filter()->create();
         $user->shift_calendar_filter()->create();

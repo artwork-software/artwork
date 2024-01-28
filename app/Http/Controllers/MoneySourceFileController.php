@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\MoneySource;
 use App\Models\MoneySourceFile;
 use App\Support\Services\NewHistoryService;

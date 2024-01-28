@@ -12,6 +12,17 @@ class UserPolicy
 {
     use HandlesAuthorization;
 
+
+    public function viewAny(): bool
+    {
+        return true;
+    }
+
+
+    public function view(): bool
+    {
+        return true;
+    }
     public function update(User $user): bool
     {
         return $user->can(PermissionNameEnum::USER_UPDATE->value) ||

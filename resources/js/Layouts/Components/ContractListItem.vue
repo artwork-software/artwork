@@ -103,7 +103,7 @@ export default {
             link.click();
         },
         getEditHref(project) {
-            return route('projects.show.info', {project: project.id});
+            //return route('projects.show.info', {project: project?.id});
         },
     }
 }

@@ -15,7 +15,7 @@ use Tests\TestCase;
 */
 
 uses(TestCase::class, \Illuminate\Foundation\Testing\DatabaseTransactions::class)->beforeEach(function () {
-})->in('Feature');
+})->in('Feature', 'Unit');
 
 /*
 |--------------------------------------------------------------------------

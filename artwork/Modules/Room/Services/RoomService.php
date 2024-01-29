@@ -9,15 +9,18 @@ use App\Support\Services\NotificationService;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 class RoomService
 {
-    protected ?NewHistoryService $history = null;
-
-    public function __construct(private readonly RoomRepository $roomRepository, private readonly NotificationService $notificationService)
+    public function __construct(
+        private readonly RoomRepository $roomRepository,
+        private readonly NotificationService $notificationService,
+        private readonly NewHistoryService $history
+    )
     {
-        $this->history = new NewHistoryService(Room::class);
+        $this->history->setModel(Room::class);
     }
 
     public function delete(Room $room): bool
@@ -255,7 +258,7 @@ class RoomService
                 $user = User::find($roomAdminBefore);
                 $notificationTitle = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => random_int(1, 1000000),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];
@@ -274,5 +277,10 @@ class RoomService
     public function deleteAllByArea(Area $area): void
     {
         $this->roomRepository->deleteByReference($area, 'rooms');
+    }
+
+    public function getAllWithoutTrashed(): Collection
+    {
+        return $this->roomRepository->allWithoutTrashed();
     }
 }

@@ -8,7 +8,7 @@ use Carbon\Carbon;
 
 class CalendarService
 {
-    public function createVacationAndAvailabilityPeriodCalendar($month = null)
+    public function createVacationAndAvailabilityPeriodCalendar($month = null): \Illuminate\Support\Collection
     {
         $date = Carbon::today();
         $daysInMonth = $date->daysInMonth;
@@ -56,7 +56,6 @@ class CalendarService
             $availabilityDays = $user->availabilities()->orderBy('date', 'ASC')->get();
             $shifts = $user->shifts()->where('is_committed', true)->get();
         }
-
 
         $currentMonth = Carbon::now()->startOfMonth();
 

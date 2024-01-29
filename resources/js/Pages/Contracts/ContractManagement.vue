@@ -113,13 +113,6 @@
             :currencies="currencies"
         />
 
-        <pre>
-            {{ this.filter.contractTypesFilter }}
-        </pre>
-
-        <pre>
-            {{ filteredContracts }}
-        </pre>
     </app-layout>
 
 </template>
@@ -280,22 +273,30 @@ export default {
             this.showContractUploadModal = false
         },
         removeFilter(filter) {
-            // remove filter from filter object
+            // uncheck filter in filter object
             if(filter.type === 'cost') {
-                this.filter.costsFilter = this.filter.costsFilter.filter((cost) => {
-                    return cost.name !== filter.name
+                this.filter.costsFilter.forEach((cost) => {
+                    if(cost.name === filter.name) {
+                        cost.checked = false;
+                    }
                 })
             }
             if(filter.type === 'company_type') {
-                this.filter.companyTypesFilter = this.filter.companyTypesFilter.filter((companyType) => {
-                    return companyType.name !== filter.name
+                this.filter.companyTypesFilter.forEach((companyType) => {
+                    if(companyType.name === filter.name) {
+                        companyType.checked = false;
+                    }
                 })
             }
+
             if(filter.type === 'contract_type') {
-                this.filter.contractTypesFilter = this.filter.contractTypesFilter.filter((contractType) => {
-                    return contractType.name !== filter.name
+                this.filter.contractTypesFilter.forEach((contractType) => {
+                    if(contractType.name === filter.name) {
+                        contractType.checked = false;
+                    }
                 })
             }
+
         }
     }
 }

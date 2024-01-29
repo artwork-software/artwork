@@ -25,9 +25,7 @@ use Illuminate\Support\Facades\Auth;
 class CalendarController extends Controller
 {
     protected ?Carbon $startDate = null;
-
     protected ?Carbon $endDate = null;
-
     private ?Authenticatable $user;
     private ?UserCalendarFilter $userCalendarFilter;
     private ?UserShiftCalendarFilter $userShiftCalendarFilter;
@@ -85,7 +83,7 @@ class CalendarController extends Controller
                 $query->where('user_id', $userId);
             });
         }])->whereHas('shifts.users', function ($query) use ($userId): void {
-                $query->where('user_id', $userId);
+            $query->where('user_id', $userId);
         })->get();
 
         $eventsToday = $events->filter(function ($event) use ($today) {
@@ -158,7 +156,8 @@ class CalendarController extends Controller
         ?Room $room = null,
         $startDate = null,
         $endDate = null
-    ): array {
+    ): array
+    {
         $calendarType = 'individual';
         $selectedDate = null;
         if (!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
@@ -542,7 +541,43 @@ class CalendarController extends Controller
                 'is_monday' => $period->isMonday(),
             ];
         }
-
+//        $roomsWithEvents = $this->filterRooms($this->startDate, $this->endDate, true)
+//            ->with([
+//                'events.event_type',
+//                'events.comments',
+//                'events.shifts',
+//                'events.room',
+//                'events.subEvents',
+//                'events.series',
+//                'events.subEvents.type',
+//                'events.project',
+//                'events.project.departments',
+//                'events.project.users',
+//                'events.project.managerUsers',
+//                'events.creator',
+//                'events' => function ($query): void {
+//                    $this->filterEvents($query, null, null, null, null, true)->orderBy('start_time', 'ASC');
+//                }])
+//            ->get();
+//        $roomEvents = collect();
+//        foreach ($roomsWithEvents as $room) {
+//            $eventsForRoom = [];
+//            /** @var Collection $eventsForRoom */
+//            foreach($calendarPeriod as $date) {
+//                $eventsForRoom[$date->format('d.m.')] = ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection([])];
+//            }
+//            $actualEvents = [];
+//            $room->events()->where('start_time', '>=', $calendarPeriod->start)
+//                ->where('end_time', '<=', $calendarPeriod->end)
+//                ->each(function (Event $event) use (&$actualEvents) {
+//                    $dateKey = $event->start_time->format('d.m.');
+//                    $actualEvents[$dateKey][] = $event;
+//                });
+//            foreach($actualEvents as $key => $value) {
+//                $eventsForRoom[$key] =  ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection($value)];
+//            }
+//            $roomEvents->add(collect($eventsForRoom));
+//        }
         $roomsWithEvents = $this->filterRooms($this->startDate, $this->endDate, true)
             ->with([
                 'events.event_type',
@@ -613,7 +648,8 @@ class CalendarController extends Controller
         ?Room $room,
         ?Project $project,
         $shiftPlan = false
-    ): mixed {
+    ): mixed
+    {
         $user = Auth::user();
         if (!$shiftPlan) {
             $calendarFilter = $user->calendar_filter()->first();
@@ -647,7 +683,7 @@ class CalendarController extends Controller
                     ->when($roomCategoryIds, fn(Builder $roomBuilder) => $roomBuilder
                         ->whereHas('categories', fn(Builder $roomCategoryBuilder) => $roomCategoryBuilder
                             ->whereIn('room_categories.id', $roomCategoryIds)))
-                        ->without(['admins']))
+                    ->without(['admins']))
             )
             ->unless(empty($eventTypeIds), function ($builder) use ($eventTypeIds) {
                 return $builder->whereIn('event_type_id', array_map('intval', $eventTypeIds))
@@ -748,35 +784,35 @@ class CalendarController extends Controller
                                                     $startDate,
                                                     $endDate
                                                 ): void {
-                                                $event_query
-                                                    ->when(
-                                                        $startDate,
-                                                        fn(Builder $builder) => $builder->whereBetween(
-                                                            'start_time',
-                                                            [$startDate, $endDate]
+                                                    $event_query
+                                                        ->when(
+                                                            $startDate,
+                                                            fn(Builder $builder) => $builder->whereBetween(
+                                                                'start_time',
+                                                                [$startDate, $endDate]
+                                                            )
                                                         )
-                                                    )
-                                                    ->when(
-                                                        $endDate,
-                                                        fn(Builder $builder) => $builder->whereBetween(
-                                                            'end_time',
-                                                            [$startDate, $endDate]
+                                                        ->when(
+                                                            $endDate,
+                                                            fn(Builder $builder) => $builder->whereBetween(
+                                                                'end_time',
+                                                                [$startDate, $endDate]
+                                                            )
                                                         )
-                                                    )
-                                                    ->unless(
-                                                        is_null($adjoiningNotLoud),
-                                                        fn(Builder $builder) => $builder->where(
-                                                            'events.is_loud',
-                                                            false
+                                                        ->unless(
+                                                            is_null($adjoiningNotLoud),
+                                                            fn(Builder $builder) => $builder->where(
+                                                                'events.is_loud',
+                                                                false
+                                                            )
                                                         )
-                                                    )
-                                                    ->unless(
-                                                        is_null($adjoiningNoAudience),
-                                                        fn(Builder $builder) => $builder->where(
-                                                            'events.audience',
-                                                            false
-                                                        )
-                                                    );
+                                                        ->unless(
+                                                            is_null($adjoiningNoAudience),
+                                                            fn(Builder $builder) => $builder->where(
+                                                                'events.audience',
+                                                                false
+                                                            )
+                                                        );
                                                 }
                                             );
                                         }

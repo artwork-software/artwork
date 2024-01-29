@@ -161,9 +161,7 @@ class EventController extends Controller
                 $query->whereNotNull('shifts.id')->without('crafts');
             })->whereBetween('start_time', [$startDate, $endDate])->without(['series'])
             ->get();
-
         $users = User::where('can_work_shifts', true)->without(['roles', 'permissions', 'calendar_settings'])->get();
-
         $usersWithPlannedWorkingHours = [];
 
         //get the diff of startDate and endDate in days, +1 to include the current date
@@ -248,7 +246,6 @@ class EventController extends Controller
             'freelancersForShifts' => $freelancersWithPlannedWorkingHours,
             'serviceProvidersForShifts' => $serviceProvidersWithPlannedWorkingHours,
             'history' => $historyElements,
-
         ]);
     }
 

@@ -5,6 +5,8 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+//@todo remove php.ini hacks
+ini_set('max_execution_time', 300);
 /*
 |--------------------------------------------------------------------------
 | Check If The Application Is Under Maintenance

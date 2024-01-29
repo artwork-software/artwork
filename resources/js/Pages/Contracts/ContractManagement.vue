@@ -61,7 +61,6 @@
 
                                             </div>
                                         </BaseFilter>
-                                        <ContractFilter :company-types="typedCompanyTypes" :remove-filter="filtersToRemove" :contract-types="typedContractTypes"  class="ml-auto hidden" @filter="setFilters" />
                                     </div>
                                     <div>
                                         <AddButton @click="openContractUploadModal" text="Neu" mode="page"/>
@@ -113,6 +112,14 @@
             :contract-types="contract_types"
             :currencies="currencies"
         />
+
+        <pre>
+            {{ this.filter.contractTypesFilter }}
+        </pre>
+
+        <pre>
+            {{ filteredContracts }}
+        </pre>
     </app-layout>
 
 </template>
@@ -187,6 +194,7 @@ export default {
     mounted() {
         this.filter.companyTypesFilter = this.company_types.map((companyType) => {
             return {
+                id: companyType.id,
                 name: companyType.name,
                 checked: false,
                 type: 'company_type'
@@ -194,6 +202,7 @@ export default {
         });
         this.filter.contractTypesFilter = this.contract_types.map((contractType) => {
             return {
+                id: contractType.id,
                 name: contractType.name,
                 checked: false,
                 type: 'contract_type'
@@ -222,7 +231,7 @@ export default {
             this.filter.companyTypesFilter.forEach((companyType) => {
                 if(companyType.checked) {
                     filteredContracts = filteredContracts.filter((contract) => {
-                        return contract.company_type.name === companyType.name
+                        return contract?.company_type?.id === companyType?.id
                     })
                 }
             })
@@ -230,7 +239,7 @@ export default {
             this.filter.contractTypesFilter.forEach((contractType) => {
                 if(contractType.checked) {
                     filteredContracts = filteredContracts.filter((contract) => {
-                        return contract.contract_type.name === contractType.name
+                        return contract?.contract_type?.id === contractType?.id
                     })
                 }
             })

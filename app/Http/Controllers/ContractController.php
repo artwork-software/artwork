@@ -47,7 +47,7 @@ class ContractController extends Controller
             $query->where('user_id', Auth::id());
         })->get();
         $contracts = $contracts->merge($accessing_contracts);
-
+        //dd(ContractResource::collection($contracts)->resolve());
         return inertia('Contracts/ContractManagement', [
             'contracts' => ContractResource::collection($contracts)->resolve(),
             'contract_modules' => ContractModuleResource::collection(ContractModule::all()),

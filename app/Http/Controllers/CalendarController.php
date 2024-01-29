@@ -541,43 +541,6 @@ class CalendarController extends Controller
                 'is_monday' => $period->isMonday(),
             ];
         }
-//        $roomsWithEvents = $this->filterRooms($this->startDate, $this->endDate, true)
-//            ->with([
-//                'events.event_type',
-//                'events.comments',
-//                'events.shifts',
-//                'events.room',
-//                'events.subEvents',
-//                'events.series',
-//                'events.subEvents.type',
-//                'events.project',
-//                'events.project.departments',
-//                'events.project.users',
-//                'events.project.managerUsers',
-//                'events.creator',
-//                'events' => function ($query): void {
-//                    $this->filterEvents($query, null, null, null, null, true)->orderBy('start_time', 'ASC');
-//                }])
-//            ->get();
-//        $roomEvents = collect();
-//        foreach ($roomsWithEvents as $room) {
-//            $eventsForRoom = [];
-//            /** @var Collection $eventsForRoom */
-//            foreach($calendarPeriod as $date) {
-//                $eventsForRoom[$date->format('d.m.')] = ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection([])];
-//            }
-//            $actualEvents = [];
-//            $room->events()->where('start_time', '>=', $calendarPeriod->start)
-//                ->where('end_time', '<=', $calendarPeriod->end)
-//                ->each(function (Event $event) use (&$actualEvents) {
-//                    $dateKey = $event->start_time->format('d.m.');
-//                    $actualEvents[$dateKey][] = $event;
-//                });
-//            foreach($actualEvents as $key => $value) {
-//                $eventsForRoom[$key] =  ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection($value)];
-//            }
-//            $roomEvents->add(collect($eventsForRoom));
-//        }
         $roomsWithEvents = $this->filterRooms($this->startDate, $this->endDate, true)
             ->with([
                 'events.event_type',
@@ -595,16 +558,53 @@ class CalendarController extends Controller
                 'events' => function ($query): void {
                     $this->filterEvents($query, null, null, null, null, true)->orderBy('start_time', 'ASC');
                 }])
-            ->get()
-            ->map(fn($room) => collect($calendarPeriod)
-                ->mapWithKeys(fn($date) => [
-                    $date->format('d.m.') => [
-                        'roomName' => $room->name,
-                        'events' => CalendarShowEventResource::collection(
-                            $this->getEventsByDate($date, $room)
-                        )
-                    ]
-                ]));
+            ->get();
+        $roomEvents = collect();
+        foreach ($roomsWithEvents as $room) {
+            $eventsForRoom = [];
+            /** @var Collection $eventsForRoom */
+            foreach($calendarPeriod as $date) {
+                $eventsForRoom[$date->format('d.m.')] = ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection([])];
+            }
+            $actualEvents = [];
+            $room->events()->where('start_time', '>=', $calendarPeriod->start)
+                ->where('end_time', '<=', $calendarPeriod->end)
+                ->each(function (Event $event) use (&$actualEvents) {
+                    $dateKey = $event->start_time->format('d.m.');
+                    $actualEvents[$dateKey][] = $event;
+                });
+            foreach($actualEvents as $key => $value) {
+                $eventsForRoom[$key] =  ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection($value)];
+            }
+            $roomEvents->add(collect($eventsForRoom));
+        }
+//        $roomsWithEvents = $this->filterRooms($this->startDate, $this->endDate, true)
+//            ->with([
+//                'events.event_type',
+//                'events.comments',
+//                'events.shifts',
+//                'events.room',
+//                'events.subEvents',
+//                'events.series',
+//                'events.subEvents.type',
+//                'events.project',
+//                'events.project.departments',
+//                'events.project.users',
+//                'events.project.managerUsers',
+//                'events.creator',
+//                'events' => function ($query): void {
+//                    $this->filterEvents($query, null, null, null, null, true)->orderBy('start_time', 'ASC');
+//                }])
+//            ->get()
+//            ->map(fn($room) => collect($calendarPeriod)
+//                ->mapWithKeys(fn($date) => [
+//                    $date->format('d.m.') => [
+//                        'roomName' => $room->name,
+//                        'events' => CalendarShowEventResource::collection(
+//                            $this->getEventsByDate($date, $room)
+//                        )
+//                    ]
+//                ]));
 
         return [
             'days' => $periodArray,

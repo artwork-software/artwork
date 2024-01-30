@@ -240,18 +240,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
 
     //ProjectTabs
-    Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])->name('projects.show.info');//->middleware(CanViewProject::class);
+    Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])->name('projects.show.info')->middleware(CanViewProject::class);
     Route::get('/projects/{project}/calendar', [ProjectController::class, 'projectCalendarTab'])
-        ->name('projects.show.calendar')//->middleware(CanViewProject::class);
+        ->name('projects.show.calendar')->middleware(CanViewProject::class);
     ;
     Route::get('/projects/{project}/checklist', [ProjectController::class, 'projectChecklistTab'])
-        ->name('projects.show.checklist')//->middleware(CanViewProject::class);
+        ->name('projects.show.checklist')->middleware(CanViewProject::class);
     ;
     Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])->name('projects.show.shift')->can('can plan shifts');
     Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
         ->name('projects.export.budget');
     Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])
-        ->name('projects.show.comment')//->middleware(CanViewProject::class);
+        ->name('projects.show.comment')->middleware(CanViewProject::class);
     ;
 
     //Project Entrance & registration
@@ -371,7 +371,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/rooms/free', [RoomController::class, 'getAllDayFree'])->name('rooms.free');
     Route::post('/rooms/{room}/duplicate', [RoomController::class, 'duplicate'])->name('rooms.duplicate');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])
-        ->name('rooms.show')// ->middleware(CanViewRoom::class);
+        ->name('rooms.show')->middleware(CanViewRoom::class);
     ;
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
     Route::put('/rooms/order', [RoomController::class, 'updateOrder']);

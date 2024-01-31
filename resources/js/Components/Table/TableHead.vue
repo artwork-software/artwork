@@ -1,18 +1,12 @@
 <script>
 export default {
     name: "TableHead",
-    props: ['days'],
-    data() {
-        return {
-            showHeadLine: true,
-        }
-    },
 }
 </script>
 
 <template>
     <thead>
-        <tr class="flex w-full bg-secondaryHover">
+        <tr class="flex w-full bg-secondaryHover stickyHeader">
             <slot />
         </tr>
     </thead>

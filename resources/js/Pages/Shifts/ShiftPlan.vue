@@ -18,12 +18,12 @@
                 />
             </div>
             <div :style="{ '--dynamic-height': windowHeight + 'px' }">
-                <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-auto' : '',' max-h-[var(--dynamic-height)] overflow-y-auto overflow-x-scroll ']">
+                <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll ']">
                     <Table>
                         <template #head>
-                            <TableHead class="">
-                                <th class="sticky top-0 z-10" :style="{width: 164 + 'px', maxWidth: 164 + 'px'}"></th>
-                                <th v-for="day in days" :style="{minWidth: 200 + 'px'}" class="sticky top-0 z-10 h-16 py-3 border-r-4 border-secondaryHover truncate">
+                            <TableHead>
+                                <th class="z-0" :style="{width: 164 + 'px', maxWidth: 164 + 'px'}"></th>
+                                <th v-for="day in days" :style="{minWidth: 200 + 'px'}" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
                                     <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
                                         {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
                                     </div>

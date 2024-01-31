@@ -9,24 +9,82 @@
                                 <div class="flex justify-between w-full mb-6">
                                     <h2 class="headline1">Verträge</h2>
                                     <div class="flex">
-                                        <ContractFilter :company-types="company_types" :contract-types="contract_types" class="ml-auto" @filter="setFilters" />
+                                        <BaseFilter>
+                                            <div class="inline-flex border-none justify-end w-full">
+                                                <button class="flex" @click="resetContractFilter">
+                                                    <XIcon class="w-3 mr-1 mt-0.5"/>
+                                                    <label class="text-xs">Zurücksetzen</label>
+                                                </button>
+                                            </div>
+                                            <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                                                <BaseFilterDisclosure title="Zusatzkosten">
+                                                    <div v-for="(filter, index) in filter.costsFilter">
+                                                        <div class="relative flex items-center">
+                                                            <div class="flex items-center">
+                                                                <input v-model="filter.checked" :id="'costs-' + index" aria-describedby="candidates-description" name="candidates" type="checkbox" class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none" />
+                                                            </div>
+                                                            <div class="text-sm leading-6">
+                                                                <label :for="'costs-' + index" :class="[filter.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']" class="ml-1.5 subpixel-antialiased align-text-middle">{{ filter.name }}</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </BaseFilterDisclosure>
+
+                                                <hr class="border-gray-500 rounded-full mt-2 mb-2">
+                                                <BaseFilterDisclosure title="Rechtsform">
+                                                    <div v-for="(filter, index) in filter.companyTypesFilter">
+                                                        <div class="relative flex items-center">
+                                                            <div class="flex items-center">
+                                                                <input v-model="filter.checked" :id="'costs-' + index" aria-describedby="candidates-description" name="candidates" type="checkbox" class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none" />
+                                                            </div>
+                                                            <div class="text-sm leading-6">
+                                                                <label :for="'costs-' + index" :class="[filter.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']" class="ml-1.5 subpixel-antialiased align-text-middle">{{ filter.name }}</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </BaseFilterDisclosure>
+
+                                                <hr class="border-gray-500 rounded-full mt-2 mb-2">
+                                                <BaseFilterDisclosure title="Vertragsart">
+                                                    <div v-for="(filter, index) in filter.contractTypesFilter">
+                                                        <div class="relative flex items-center">
+                                                            <div class="flex items-center">
+                                                                <input v-model="filter.checked" :id="'costs-' + index" aria-describedby="candidates-description" name="candidates" type="checkbox" class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none" />
+                                                            </div>
+                                                            <div class="text-sm leading-6">
+                                                                <label :for="'costs-' + index" :class="[filter.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']" class="ml-1.5 subpixel-antialiased align-text-middle">{{ filter.name }}</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </BaseFilterDisclosure>
+
+                                            </div>
+                                        </BaseFilter>
                                     </div>
                                     <div>
                                         <AddButton @click="openContractUploadModal" text="Neu" mode="page"/>
                                     </div>
 
                                 </div>
+
+                                <!-- filter tags -->
                                 <div class="flex w-full mb-4" >
-                                    <div v-for="filter in filters.costsFilter">
-                                        <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
+                                    <div v-for="filter in filter.costsFilter">
+                                        <BaseFilterTag v-if="filter.checked" :filter="filter" @remove-filter="removeFilter(filter)" />
                                     </div>
-                                    <div v-for="filter in filters.companyTypesFilter">
-                                        <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
+                                    <div v-for="filter in filter.companyTypesFilter">
+                                        <BaseFilterTag v-if="filter.checked" :filter="filter" @remove-filter="removeFilter(filter)" />
                                     </div>
-                                    <div v-for="filter in filters.contractTypesFilter">
-                                        <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
+                                    <div v-for="filter in filter.contractTypesFilter">
+                                        <BaseFilterTag v-if="filter.checked" :filter="filter" @remove-filter="removeFilter(filter)" />
                                     </div>
                                 </div>
+
+                                <div v-if="filteredContracts.length === 0" class="w-full text-secondary text-center">
+                                    <h2 class="text-secondary">Keine Verträge vorhanden</h2>
+                                </div>
+
                                 <div v-for="contract in filteredContracts" class="mt-6 w-full">
                                     <ContractListItem @open-delete-contract-modal="openContractDeleteModal" @open-edit-contract-modal="openContractEditModal" :contract="contract" class="mb-6"></ContractListItem>
                                     <ContractDeleteModal :show="showContractDeleteModal === contract?.id"
@@ -54,6 +112,7 @@
             :contract-types="contract_types"
             :currencies="currencies"
         />
+
     </app-layout>
 
 </template>
@@ -70,12 +129,17 @@ import ContractUploadModal from "@/Layouts/Components/ContractUploadModal.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import ContractDeleteModal from "@/Layouts/Components/ContractDeleteModal.vue";
 import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue";
-import {Inertia} from "@inertiajs/inertia";
+import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
+import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
+import {XIcon} from "@heroicons/vue/outline";
+import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList.vue";
 
 export default {
     mixins: [Permissions],
     name: "ContractManagement",
     components: {
+        BaseFilterCheckboxList, XIcon, BaseFilterDisclosure,
+        BaseFilter,
         ContractEditModal,
         ContractDeleteModal,
         AddButton,
@@ -85,7 +149,7 @@ export default {
         ContractModuleSidenav,
         ContractListItem,
         BaseSidenav,
-        AppLayout
+        AppLayout,
     },
     props: [
         'contracts',
@@ -97,60 +161,96 @@ export default {
     data() {
         return {
             show: false,
-            filters: {},
+            //filters: {},
             costNames: [],
             companyTypeNames: [],
             contractTypeNames: [],
             showContractUploadModal: false,
             showContractDeleteModal: null,
             showContractEditModal: null,
+            //filtersToRemove: null,
+            filter: {
+                costsFilter: [{
+                    name: 'KSK-pflichtig',
+                    checked: false,
+                    type: 'cost'
+                }, {
+                    name: 'Im Ausland ansässig',
+                    checked: false,
+                    type: 'cost'
+                }],
+                companyTypesFilter: [],
+                contractTypesFilter: []
+            },
         }
+    },
+    mounted() {
+        this.filter.companyTypesFilter = this.company_types.map((companyType) => {
+            return {
+                id: companyType.id,
+                name: companyType.name,
+                checked: false,
+                type: 'company_type'
+            }
+        });
+        this.filter.contractTypesFilter = this.contract_types.map((contractType) => {
+            return {
+                id: contractType.id,
+                name: contractType.name,
+                checked: false,
+                type: 'contract_type'
+            }
+        });
     },
     computed: {
         filteredContracts(){
             let filteredContracts = this.contracts;
-            if(this.filters.costsFilter?.length > 0) {
-                filteredContracts = filteredContracts.filter((contract) => {
-                    let costsFilter = this.filters.costsFilter.filter((costFilter) => costFilter.id === 'KSK-pflichtig');
-                    if(costsFilter !== null && costsFilter.length > 0) {
-                        if(costsFilter[0].checked && contract.ksk_liable) {
-                            return contract;
-                        }
+            // filter by costs
+            this.filter.costsFilter.forEach((cost) => {
+                if(cost.checked) {
+                    if(cost.name === 'KSK-pflichtig') {
+                        filteredContracts = filteredContracts.filter((contract) => {
+                            return contract.ksk_liable
+                        })
                     }
-                    costsFilter = this.filters.costsFilter.filter((costFilter) => costFilter.name === 'Im Ausland ansässig');
-                    if(costsFilter !== null && costsFilter.length > 0) {
-                        if(costsFilter[0].checked && contract.resident_abroad) {
-                            return contract;
-                        }
+                    if(cost.name === 'Im Ausland ansässig') {
+                        filteredContracts = filteredContracts.filter((contract) => {
+                            return contract.resident_abroad
+                        })
                     }
-                })
-            }
-            if(this.filters.companyTypesFilter?.length > 0) {
-                filteredContracts = filteredContracts.filter((contract) => {
-                    let companyTypeFilter = this.filters.companyTypesFilter.filter((companyTypeFilter) => companyTypeFilter.name === contract.company_type?.name);
-                    if(companyTypeFilter !== null && companyTypeFilter.length > 0) {
-                        if(companyTypeFilter[0].checked) {
-                            return contract;
-                        }
-                    }
-                })
-            }
-
-            if(this.filters.contractTypesFilter?.length > 0) {
-                filteredContracts = filteredContracts.filter((contract) => {
-                    let contractTypeFilter = this.filters.contractTypesFilter.filter((contractTypeFilter) => contractTypeFilter.name === contract.contract_type?.name);
-                    if(contractTypeFilter !== null && contractTypeFilter.length > 0) {
-                        if(contractTypeFilter[0].checked) {
-                            return contract;
-                        }
-                    }
-                })
-            }
-
+                }
+            })
+            // filter by company type
+            this.filter.companyTypesFilter.forEach((companyType) => {
+                if(companyType.checked) {
+                    filteredContracts = filteredContracts.filter((contract) => {
+                        return contract?.company_type?.id === companyType?.id
+                    })
+                }
+            })
+            // filter by contract type
+            this.filter.contractTypesFilter.forEach((contractType) => {
+                if(contractType.checked) {
+                    filteredContracts = filteredContracts.filter((contract) => {
+                        return contract?.contract_type?.id === contractType?.id
+                    })
+                }
+            })
             return filteredContracts;
-        }
+        },
     },
     methods: {
+        resetContractFilter() {
+            this.filter.costsFilter.forEach((cost) => {
+                cost.checked = false;
+            })
+            this.filter.companyTypesFilter.forEach((companyType) => {
+                companyType.checked = false;
+            })
+            this.filter.contractTypesFilter.forEach((contractType) => {
+                contractType.checked = false;
+            })
+        },
         setFilters(filter){
             this.filters = filter
         },
@@ -173,16 +273,30 @@ export default {
             this.showContractUploadModal = false
         },
         removeFilter(filter) {
-            // check if filter is in costsFilter or companyTypesFilter or contractTypesFilter and remove the filter from the array
-            if(this.filters.costsFilter?.length > 0) {
-                this.filters.costsFilter = this.filters.costsFilter.filter((costFilter) => costFilter.id !== filter.id);
+            // uncheck filter in filter object
+            if(filter.type === 'cost') {
+                this.filter.costsFilter.forEach((cost) => {
+                    if(cost.name === filter.name) {
+                        cost.checked = false;
+                    }
+                })
             }
-            if(this.filters.companyTypesFilter?.length > 0) {
-                this.filters.companyTypesFilter = this.filters.companyTypesFilter.filter((companyTypeFilter) => companyTypeFilter.name !== filter.name);
+            if(filter.type === 'company_type') {
+                this.filter.companyTypesFilter.forEach((companyType) => {
+                    if(companyType.name === filter.name) {
+                        companyType.checked = false;
+                    }
+                })
             }
-            if(this.filters.contractTypesFilter?.length > 0) {
-                this.filters.contractTypesFilter = this.filters.contractTypesFilter.filter((contractTypeFilter) => contractTypeFilter.name !== filter.name);
+
+            if(filter.type === 'contract_type') {
+                this.filter.contractTypesFilter.forEach((contractType) => {
+                    if(contractType.name === filter.name) {
+                        contractType.checked = false;
+                    }
+                })
             }
+
         }
     }
 }

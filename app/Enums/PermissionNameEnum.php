@@ -28,7 +28,6 @@ enum PermissionNameEnum : string
     case VIEW_BUDGET_TEMPLATES = 'view budget templates';
     case UPDATE_BUDGET_TEMPLATES = 'edit budget templates';
     case CHECKLIST_UPDATE = 'update checklists';
-    case PROJECT_UPDATE = 'create and edit projects';
     case MA_MANAGER = 'can manage workers';
     case SHIFT_PLANNER = 'can plan shifts';
     case GLOBAL_PROJECT_BUDGET_ADMIN = 'can manage global project budgets';

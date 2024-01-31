@@ -4,6 +4,7 @@ namespace Artwork\Core\Database\Repository;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
+use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
 abstract class BaseRepository

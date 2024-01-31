@@ -250,7 +250,7 @@
             </div>
         </div>
     </div>
-    <div v-show="event.subEvents.length > 0">
+    <div v-show="event.subEvents?.length > 0">
         <div v-for="subEvent in event.subEvents" class="mb-1">
             <div class="w-full relative group rounded-lg border-l-[6px] border-[#A7A6B115]">
                 <div

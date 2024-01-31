@@ -118,8 +118,6 @@ class EventController extends Controller
             $eventsAtAGlance = $calendarController->getEventsAtAGlance($startDate, $endDate);
         }
 
-
-
         return inertia('Events/EventManagement', [
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'calendar' => $showCalendar['roomsWithEvents'],
@@ -161,9 +159,7 @@ class EventController extends Controller
                 $query->whereNotNull('shifts.id')->without('crafts');
             })->whereBetween('start_time', [$startDate, $endDate])->without(['series'])
             ->get();
-
         $users = User::where('can_work_shifts', true)->without(['roles', 'permissions', 'calendar_settings'])->get();
-
         $usersWithPlannedWorkingHours = [];
 
         //get the diff of startDate and endDate in days, +1 to include the current date
@@ -248,7 +244,6 @@ class EventController extends Controller
             'freelancersForShifts' => $freelancersWithPlannedWorkingHours,
             'serviceProvidersForShifts' => $serviceProvidersWithPlannedWorkingHours,
             'history' => $historyElements,
-
         ]);
     }
 

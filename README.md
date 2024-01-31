@@ -264,11 +264,11 @@ Feel free to explore the features of Artwork and manage your projects effectivel
 If you use the docker installation and filled the database with dummy data you can use the following credentials to login to the test instance:
 
 For the admin account (with all permissions):
-Mail: anna.musterfrau@artwork.de
+Mail: anna.musterfrau@artwork.software
 Password: TestPass1234!$
 
 For the user account (with limited permissions):
-Mail: lisa.musterfrau@artwork.de
+Mail: lisa.musterfrau@artwork.software
 Password: TestPass1234!$
 
 a full documentation of all features will be released and found here, when we have finished developement of version 1.0

@@ -892,7 +892,7 @@ export default {
                     this.selectedFrequency = frequency
                 }
             })
-            this.selectedProject = {id: this.event.project?.id, name: this.event.project?.name};
+            this.selectedProject = {id: this.event.projectId, name: this.event.projectName};
             if (this.selectedProject.id) {
                 this.showProjectInfo = true;
             }

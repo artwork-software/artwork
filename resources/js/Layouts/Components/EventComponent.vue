@@ -24,7 +24,8 @@
                     <div v-else class="flex items-center">
                         erstellt von
                         <div v-if="this.event.created_by">
-                            <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="7" width="7" class="ml-2"/>
+                            <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="7"
+                                                width="7" class="ml-2"/>
                         </div>
                         <div class="xsLight ml-3" v-else>
                             gelöschte Nutzer:in
@@ -121,7 +122,9 @@
                     </div>
                     <div v-if="this.event.created_by" class="flex items-center w-1/2">
                         <p class="truncate xsLight subpixel-antialiased max-w-60">
-                            erstellt von <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="9" width="9" class="ml-2"/>
+                            erstellt von
+                            <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="9"
+                                                width="9" class="ml-2"/>
                         </p>
                     </div>
                 </div>
@@ -282,7 +285,9 @@
                     </div>
                 </div>
                 <div v-else-if="event?.is_series" class="xsLight mt-2">Termin ist Teil eines Wiederholungstermines</div>
-                <div v-if="event?.is_series" class="xsLight mb-2">Turnus: {{ selectedFrequency.name }} bis zum {{ convertDateFormat(seriesEndDate) }}</div>
+                <div v-if="event?.is_series" class="xsLight mb-2">Turnus: {{ selectedFrequency.name }} bis zum
+                    {{ convertDateFormat(seriesEndDate) }}
+                </div>
                 <!--    Room    -->
                 <div class="pt-1 mb-4" v-if="canEdit">
                     <Listbox as="div" v-model="selectedRoom" id="room" v-if="canEdit && selectedRoom">
@@ -300,7 +305,7 @@
                                            v-slot="{ active, selected }">
                                 <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
                                     {{ room.name }} <img
-                                    v-if="this.roomCollisions ? this.roomCollisions[room.id] > 0 : false"
+                                    v-if="this.roomCollisionArray ? this.roomCollisionArray[room.id] > 0 : false"
                                     src="/Svgs/IconSvgs/icon_warning_white.svg"
                                     class="h-4 w-4 mx-2" alt="conflictIcon"/>
                                 </div>
@@ -774,6 +779,7 @@ export default {
             optionAccept: false,
             disableEventTypeSelector: false,
             selectedOption: options[0].name,
+            roomCollisionArray: this.roomCollisions,
             answerRequestForm: useForm({
                 accepted: false,
             }),
@@ -835,7 +841,7 @@ export default {
     methods: {
         convertDateFormat(dateString) {
             const parts = dateString.split('-');
-            return parts[2] + "." + parts[1] + "." +parts[0];
+            return parts[2] + "." + parts[1] + "." + parts[0];
         },
         checkButtonDisabled() {
             if (this.series) {
@@ -958,7 +964,7 @@ export default {
                         end: this.event?.end,
                     }
                 })
-                    .then(response => this.roomCollisions = response.data);
+                    .then(response => this.roomCollisionArray = response.data);
             }
 
 
@@ -974,20 +980,31 @@ export default {
          * @returns {Promise<void>}
          */
         async checkCollisions() {
-            if (!(this.startTime && this.startDate && this.endTime && this.endDate && this.selectedRoom)) {
+            if (this.startTime && this.startDate && this.endTime && this.endDate) {
+                let startFull = this.formatDate(this.startDate, this.startTime);
+                let endFull = this.formatDate(this.endDate, this.endTime);
+                if (this.selectedRoom) {
+                    await axios
+                        .get('/events/collision', {
+                            params: {
+                                start: startFull,
+                                end: endFull,
+                                roomId: this.selectedRoom?.id,
+                            }
+                        })
+                        .then(response => this.collisionCount = response.data);
+                }
+                await axios.post('/collision/room', {
+                    params: {
+                        start: startFull,
+                        end: endFull,
+                    }
+                }).then(response => this.roomCollisionArray = response.data);
+            } else {
                 this.collisionCount = 0
-                return;
             }
 
-            await axios
-                .get('/events/collision', {
-                    params: {
-                        start: this.formatDate(this.startDate, this.startTime),
-                        end: this.formatDate(this.endDate, this.endTime),
-                        roomId: this.selectedRoom?.id,
-                    }
-                })
-                .then(response => this.collisionCount = response.data);
+
         },
         checkYear(date) {
             return (parseInt(date.split('-')[0]) > 1900);

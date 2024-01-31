@@ -2,6 +2,7 @@
     <div class="w-full flex flex-col">
 
 
+
         <ShiftHeader>
             <div class="ml-5 bg-white flex-grow">
                 <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
@@ -16,43 +17,50 @@
                                       :user_filters="user_filters"
                 />
             </div>
-            <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow"
-                 :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' mt-8 max-h-[34rem]' : ' mt-24','overflow-x-scroll ']">
-                <table class="w-full bg-white">
-                    <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
-                    <div>
-                        <tr class="flex w-full bg-secondaryHover stickyHeader">
-                            <th class="z-0" :style="{minWidth: 164 + 'px'}"></th>
-                            <th v-for="day in days" :style="{minWidth: 200 + 'px'}"
-                                class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
-                                <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
-                                    {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
-                                </div>
-                            </th>
-                        </tr>
-                        <tbody class="w-full pt-3">
-                        <tr v-for="(room,index) in shiftPlan" class="w-full flex">
-                            <th class="xsDark flex items-center -mt-2 h-28 w-44"
-                                :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
-                                <Link class="flex font-semibold items-center ml-4">
-                                    {{ room[days[0].day].roomName }}
-                                </Link>
-                            </th>
-                            <td v-for="day in days" :style="{minWidth: 200 + 'px'}"
-                                class="max-h-28 overflow-y-auto cell">
-                                <div v-for="event in room[day.day].events.data" class="mb-1">
-                                    <SingleShiftPlanEvent @dropFeedback="showDropFeedback" :multiEditMode="multiEditMode" :user-for-multi-edit="userForMultiEdit" :highlightMode="highlightMode" :highlighted-id="idToHighlight" :highlighted-type="typeToHighlight" :eventType="this.findEventTypeById(event.eventTypeId)"
-                                                          :project="this.findProjectById(event.projectId)"
-                                                          :event="event" v-if="event.shifts.length > 0"/>
-                                </div>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </div>
-                </table>
+            <div :style="{ '--dynamic-height': windowHeight + 'px' }">
+                <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-auto' : '',' max-h-[var(--dynamic-height)] overflow-y-auto overflow-x-scroll ']">
+                    <Table>
+                        <template #head>
+                            <TableHead class="">
+                                <th class="sticky top-0 z-10" :style="{width: 164 + 'px', maxWidth: 164 + 'px'}"></th>
+                                <th v-for="day in days" :style="{minWidth: 200 + 'px'}" class="sticky top-0 z-10 h-16 py-3 border-r-4 border-secondaryHover truncate">
+                                    <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
+                                        {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
+                                    </div>
+                                </th>
+                            </TableHead>
+                        </template>
+                        <template #body>
+                            <TableBody>
+                                <tr v-for="(room,index) in shiftPlan" class="w-full flex">
+                                    <th class="xsDark flex items-center -mt-2 h-28 w-44"
+                                        :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
+                                        <Link class="flex font-semibold items-center ml-4">
+                                            {{ room[days[0].day].roomName }}
+                                        </Link>
+                                    </th>
+                                    <td v-for="day in days" :style="{minWidth: 200 + 'px'}" class="max-h-28 overflow-y-auto cell">
+                                        <div v-for="event in room[day.day].events.data" class="mb-1">
+                                            <SingleShiftPlanEvent
+                                                @dropFeedback="showDropFeedback"
+                                                :multiEditMode="multiEditMode"
+                                                :user-for-multi-edit="userForMultiEdit"
+                                                :highlightMode="highlightMode"
+                                                :highlighted-id="idToHighlight"
+                                                :highlighted-type="typeToHighlight"
+                                                :eventType="this.findEventTypeById(event.eventTypeId)"
+                                                :project="this.findProjectById(event.projectId)"
+                                                :event="event" v-if="event.shifts.length > 0" >
+                                            </SingleShiftPlanEvent>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </TableBody>
+                        </template>
+                    </Table>
+                </div>
             </div>
-            <div id="userOverview" class="w-full">
-                <vue-resizable min-height="600" :active="['t']">
+            <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="{ height: userOverviewHeight + 'px'}">
                     <div class="flex justify-center overflow-y-scroll">
                         <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
                              class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">
@@ -70,10 +78,16 @@
                                     </g>
                                 </svg>
                             </div>
-
+                        </div>
+                        <div v-if="showUserOverview" @mousedown="startResize" :class="showUserOverview ? '' : 'fixed bottom-0 '"
+                             class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary"
+                            title="Halte und Ziehen um die Größe zu verändern">
+                            <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
+                                <SelectorIcon class="h-3 w-6 text-gray-400" />
+                            </div>
                         </div>
                     </div>
-                <div ref="userOverview" class="w-full bg-primary overflow-x-scroll fixed z-30 h-[29rem] overflow-y-scroll" v-show="showUserOverview">
+                <div ref="userOverview" class="w-full bg-primary overflow-x-scroll z-30 overflow-y-scroll" v-show="showUserOverview" :style="{ height: userOverviewHeight + 'px'}">
                     <table class="w-full text-white overflow-y-scroll">
                         <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                         <div>
@@ -173,7 +187,6 @@
                         </div>
                     </table>
                 </div>
-                </vue-resizable>
             </div>
 
 
@@ -229,12 +242,18 @@ import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
 import {Switch} from "@headlessui/vue";
 import MultiEditUserCell from "@/Pages/Shifts/Components/MultiEditUserCell.vue";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
-import VueResizable from 'vue-resizable'
+import Table from "@/Components/Table/Table.vue";
+import TableHead from "@/Components/Table/TableHead.vue";
+import TableBody from "@/Components/Table/TableBody.vue";
+import { SelectorIcon } from "@heroicons/vue/solid";
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        TableBody,
+        TableHead,
+        Table,
         ChevronDownIcon,
         SideNotification,
         MultiEditUserCell,
@@ -250,7 +269,7 @@ export default {
         AppLayout,
         ShiftPlanFunctionBar,
         HighlightUserCell,
-        VueResizable
+        SelectorIcon
     },
     props: [
         'events',
@@ -270,10 +289,35 @@ export default {
         'user_filters',
         'crafts'
     ],
+    data() {
+        return {
+            showUserOverview: this.$can('can plan shifts') || this.hasAdminRole(),
+            isFullscreen: false,
+            showHistoryModal: false,
+            showUserShifts: false,
+            userToShow: null,
+            dayToShow: null,
+            highlightMode: false,
+            idToHighlight: null,
+            typeToHighlight: null,
+            multiEditMode: false,
+            checkedShiftsForMultiEdit: [],
+            userForMultiEdit: null,
+            multiEditFeedback: null,
+            dropFeedback: null,
+            closedCrafts:[],
+            userOverviewHeight: 400,
+            startY: 0,
+            startHeight: 0,
+            windowHeight: window.innerHeight
+        }
+    },
     mounted() {
         // Listen for scroll events on both sections
         this.$refs.shiftPlan.addEventListener('scroll', this.syncScrollShiftPlan);
         this.$refs.userOverview.addEventListener('scroll', this.syncScrollUserOverview);
+        window.addEventListener('resize', this.updateHeight);
+        this.updateHeight();
     },
     computed: {
         dropUsers() {
@@ -485,34 +529,65 @@ export default {
             } else {
                 this.closedCrafts.push(id);
             }
+        },
+        startResize(event) {
+            event.preventDefault();
+            this.startY = event.clientY;
+            this.startHeight = this.userOverviewHeight;
+
+            document.addEventListener('mousemove', this.resizing);
+            document.addEventListener('mouseup', this.stopResize);
+        },
+        resizing(event) {
+            const currentY = event.clientY;
+            const diff = this.startY - currentY;
+            if (this.startHeight + diff < 100) {
+                this.userOverviewHeight = 100;
+                this.updateHeight()
+                return;
+            }
+
+            if((window.innerHeight - 200) - (this.startHeight + diff) < 200){
+                this.userOverviewHeight = (window.innerHeight - 200) - 200;
+                this.updateHeight()
+                return;
+            }
+
+            this.userOverviewHeight = this.startHeight + diff;
+            this.updateHeight()
+        },
+        stopResize(event) {
+            event.preventDefault();
+            document.removeEventListener('mousemove', this.resizing);
+            document.removeEventListener('mouseup', this.stopResize);
+        },
+        updateHeight() {
+            if(!this.showUserOverview){
+                this.windowHeight = (window.innerHeight - 250);
+            } else {
+                this.windowHeight = (window.innerHeight - 200) - this.userOverviewHeight;
+            }
+
         }
     },
-    data() {
-        return {
-            showUserOverview: this.$can('can plan shifts') || this.hasAdminRole(),
-            isFullscreen: false,
-            showHistoryModal: false,
-            showUserShifts: false,
-            userToShow: null,
-            dayToShow: null,
-            highlightMode: false,
-            idToHighlight: null,
-            typeToHighlight: null,
-            multiEditMode: false,
-            checkedShiftsForMultiEdit: [],
-            userForMultiEdit: null,
-            multiEditFeedback: null,
-            dropFeedback: null,
-            closedCrafts:[],
-        }
+    beforeUnmount() {
+        window.removeEventListener('resize', this.updateHeight);
+        document.removeEventListener('mousemove', this.resizing);
+        document.removeEventListener('mouseup', this.stopResize);
     },
+
     beforeDestroy() {
-        // Remove event listeners when component is destroyed
         this.$refs.shiftPlan.removeEventListener('scroll', this.syncScrollShiftPlan);
         this.$refs.userOverview.removeEventListener('scroll', this.syncScrollUserOverview);
     },
 
     watch: {
+        showUserOverview: {
+            handler() {
+                this.updateHeight();
+            },
+            deep: true
+        },
         shiftPlan: {
             handler() {
                 this.checkedShiftsForMultiEdit = [];

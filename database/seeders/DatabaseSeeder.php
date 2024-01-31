@@ -24,9 +24,6 @@ class DatabaseSeeder extends Seeder
             ServiceProviderSeeder::class,
             WalidRaadSeeder::class,
             PermissionPresetSeeder::class,
-            //@todo remove before merge to dev
-            BenchmarkProjectSeeder::class,
-            Benchmark2022ProjectSeeder::class
         ]);
     }
 }

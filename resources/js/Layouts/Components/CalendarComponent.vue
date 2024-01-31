@@ -631,21 +631,11 @@ export default {
 
         onEventComponentClose() {
             this.createEventComponentIsVisible = false;
-            Inertia.reload({
-                data: {
-                    startDate: this.dateValue[0],
-                    endDate: this.dateValue[1],
-                }
-            })
+            Inertia.reload();
         },
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;
-            Inertia.reload({
-                data: {
-                    start_date: this.dateValue[0],
-                    end_date: this.dateValue[1],
-                }
-            })
+            Inertia.reload();
         },
         scrollToNine() {
             if (this.currentView === 'month') {

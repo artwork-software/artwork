@@ -539,7 +539,20 @@ export default {
             }
         },
         closeModal(){
-            this.contractForm.reset()
+            this.contractForm.reset();
+            this.selectedProject = null;
+            this.selectedLegalForm = null;
+            this.selectedContractType = null;
+            this.selectedCurrency = {id: 1, name: '€'};
+            this.file = null;
+            this.description = "";
+            this.user_query = '';
+            this.usersWithAccess = [];
+            this.showExtraSettings = false;
+            this.creatingNewTask = false;
+            this.tasks = [];
+            this.uploadDocumentFeedback = "";
+            this.errorText = null;
             this.$emit('closeModal', true)
         },
         clearTaskForm() {

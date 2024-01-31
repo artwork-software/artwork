@@ -412,11 +412,12 @@
                                             {{ project.name }}
                                         </div>
                                     </div>
-                                    <p class="text-xs text-red-800">{{ error?.projectId?.join('. ') }}</p>
-                                    <p class="text-xs text-red-800">{{ error?.projectName?.join('. ') }}</p>
+
                                 </div>
                             </div>
                         </div>
+                        <p class="text-xs text-red-800">{{ error?.projectId?.join('. ') }}</p>
+                        <p class="text-xs text-red-800">{{ error?.projectName?.join('. ') }}</p>
                         <!--    Description    -->
                         <div class="py-2">
                     <textarea v-if="canEdit" placeholder="Was gibt es bei dem Termin zu beachten?"
@@ -1204,7 +1205,7 @@ export default {
                 projectId: this.showProjectInfo ? this.selectedProject?.id : null,
                 projectName: this.showProjectInfo ? this.creatingProject ? this.projectName : '' : '',
                 eventTypeId: this.selectedEventType?.id,
-                projectIdMandatory: this.showProjectInfo ? this.selectedEventType?.project_mandatory && !this.creatingProject : false,
+                projectIdMandatory: this.selectedEventType?.project_mandatory && !this.creatingProject,
                 creatingProject: this.showProjectInfo ? this.creatingProject : false,
                 declinedRoomId: this.declinedRoomId,
                 is_series: this.series,

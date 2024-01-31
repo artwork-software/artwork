@@ -114,6 +114,7 @@ class AuthUserSeeder extends Seeder
             PermissionNameEnum::EVENT_REQUEST->value,
             PermissionNameEnum::CONTRACT_SEE_DOWNLOAD->value,
             PermissionNameEnum::SHIFT_PLANNER->value,
+            PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value
             //PermissionNameEnum::VIEW_BUDGET_TEMPLATES->value,
         ]);
 

@@ -40,10 +40,6 @@
                 :company-types="companyTypes"
             />
         </BaseSidenav>
-
-        <pre>
-            {{ $page }}
-        </pre>
     </app-layout>
 </template>
 

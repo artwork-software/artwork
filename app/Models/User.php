@@ -13,6 +13,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
@@ -148,14 +149,8 @@ class User extends Authenticatable implements Vacationer, Available
 
     public function shifts(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Shift::class,
-            'shift_user',
-            'user_id',
-            'shift_id'
-        )->withPivot(['is_master'])
-            ->orderByPivot('is_master', 'desc')
-            ->withCasts(['is_master' => 'boolean']);
+        return $this->belongsToMany(Shift::class, 'shift_user')
+            ->using(ShiftUser::class);
     }
 
     public function getShiftsAttribute(): Collection
@@ -326,12 +321,6 @@ class User extends Authenticatable implements Vacationer, Available
         return $this
             ->belongsToMany(ShiftQualification::class, 'user_shift_qualifications')
             ->using(UserShiftQualification::class);
-    }
-
-
-    public function hasMasterShiftQualification(): bool
-    {
-        return $this->shiftQualifications()->where('name', 'Meister')->count() === 1;
     }
 
     /**

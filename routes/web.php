@@ -554,22 +554,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project.download.keyVisual');
 
         // POST
-        Route::post('/{shift}/add/user/{user}', [ShiftController::class, 'addShiftUser'])->name('add.shift.user');
-        Route::post('/{shift}/add/{user}/master', [ShiftController::class, 'addShiftMaster'])->name('add.shift.master');
-        Route::post('/{shift}/add/freelancer/{freelancer}', [ShiftController::class, 'addShiftFreelancer'])
-            ->name('add.shift.freelancer');
-        Route::post(
-            '/{shift}/add/freelancer/{freelancer}/master',
-            [ShiftController::class, 'addShiftFreelancerMaster']
-        )->name('add.shift.freelancer.master');
-        Route::post(
-            '/{shift}/add/provider/{serviceProvider}',
-            [ShiftController::class, 'addShiftProvider']
-        )->name('add.shift.provider');
-        Route::post(
-            '/{shift}/add/provider/{serviceProvider}/master',
-            [ShiftController::class, 'addShiftProviderMaster']
-        )->name('add.shift.provider.master');
+        Route::post('/{shift}/assign', [ShiftController::class, 'assignToShift'])
+            ->name('shift.assignUserByType');
+
         Route::post('/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
         Route::post('/{event}/shift/store', [ShiftController::class, 'store'])->name('event.shift.store');
         Route::post('/sums/money-source', [SumDetailsController::class, 'store'])
@@ -588,8 +575,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('shifts.removeFreelancer');
         Route::delete('/{shift}/remove/provider/{serviceProvider}', [ShiftController::class, 'removeProvider'])
             ->name('shifts.removeProvider');
-        Route::delete('/{shift}/remove/employees/master', [ShiftController::class, 'clearEmployeesAndMaster'])
-            ->name('shifts.clearEmployeesAndMaster');
         Route::delete('/{shift}/destroy', [ShiftController::class, 'destroy'])->name('shifts.destroy');
         Route::delete('/timeline/delete/{timeLine}', [ProjectController::class, 'deleteTimeLineRow'])
             ->name('delete.timeline.row');
@@ -598,6 +583,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::delete('/group', [ProjectController::class, 'deleteProjectFromGroup'])->name('projects.group.delete');
         Route::delete('/{project}/delete/keyVisual', [ProjectController::class, 'deleteKeyVisual'])
             ->name('project.delete.keyVisual');
+        Route::delete('/removeFromShift/{usersPivotId}/type/{userType}', [ShiftController::class, 'removeFromShift'])
+            ->name('shift.removeUserByType');
+        Route::delete('/removeAllShiftUsers/{shift}', [ShiftController::class, 'removeAllShiftUsers'])
+            ->name('shift.removeAllUsers');
 
         Route::group(['prefix' => 'budget'], function (): void {
             // GET

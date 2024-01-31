@@ -5,6 +5,7 @@ namespace App\Models;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftFreelancer;
 use Artwork\Modules\ShiftQualification\Models\FreelancerShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
@@ -72,15 +73,9 @@ class Freelancer extends Model implements Vacationer, Available
 
     public function shifts(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Shift::class,
-            'shifts_freelancers',
-            'freelancer_id',
-            'shift_id'
-        )->withPivot(['is_master'])
-            ->orderByPivot('is_master', 'desc')
-            ->withCasts(['is_master' => 'boolean'])
-            ->without(['users', 'freelancer']);
+        return $this
+            ->belongsToMany(Shift::class, 'shifts_freelancers')
+            ->using(ShiftFreelancer::class);
     }
 
     public function getProfilePhotoUrlAttribute(): string
@@ -136,11 +131,6 @@ class Freelancer extends Model implements Vacationer, Available
         return $this
             ->belongsToMany(ShiftQualification::class, 'freelancer_shift_qualifications')
             ->using(FreelancerShiftQualification::class);
-    }
-
-    public function hasMasterShiftQualification(): bool
-    {
-        return $this->shiftQualifications()->where('name', 'Meister')->count() === 1;
     }
 
     /**

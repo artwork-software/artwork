@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\ShiftQualification\Models\ServiceProviderShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Carbon\Carbon;
@@ -65,14 +66,9 @@ class ServiceProvider extends Model
 
     public function shifts(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Shift::class,
-            'shifts_service_providers',
-            'service_provider_id',
-            'shift_id'
-        )->withPivot(['is_master'])
-            ->orderByPivot('is_master', 'desc')
-            ->withCasts(['is_master' => 'boolean']);
+        return $this
+            ->belongsToMany(Shift::class, 'shifts_service_providers')
+            ->using(ShiftServiceProvider::class);
     }
 
     public function assignedCrafts(): BelongsToMany
@@ -85,11 +81,6 @@ class ServiceProvider extends Model
         return $this
             ->belongsToMany(ShiftQualification::class, 'service_provider_shift_qualifications')
             ->using(ServiceProviderShiftQualification::class);
-    }
-
-    public function hasMasterShiftQualification(): bool
-    {
-        return $this->shiftQualifications()->where('name', 'Meister')->count() === 1;
     }
 
     /**

@@ -87,6 +87,7 @@ export default {
     computed: {
         dropUsers(){
             const users = [];
+
             this.usersForShifts.forEach((user) => {
                 users.push({
                     element: user.user,

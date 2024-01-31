@@ -13,7 +13,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -392,7 +392,7 @@ class RoomService
         $this->roomRepository->deleteByReference($area, 'rooms');
     }
 
-    public function getAllWithoutTrashed(): Collection
+    public function getAllWithoutTrashed(): EloquentCollection
     {
         return $this->roomRepository->allWithoutTrashed();
     }

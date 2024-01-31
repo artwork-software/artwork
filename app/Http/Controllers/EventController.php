@@ -118,8 +118,6 @@ class EventController extends Controller
             $eventsAtAGlance = $calendarController->getEventsAtAGlance($startDate, $endDate);
         }
 
-
-
         return inertia('Events/EventManagement', [
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'calendar' => $showCalendar['roomsWithEvents'],

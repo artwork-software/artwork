@@ -80,7 +80,7 @@
                             </div>
                         </div>
                         <div v-if="showUserOverview" @mousedown="startResize" :class="showUserOverview ? '' : 'fixed bottom-0 '"
-                             class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary"
+                             class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-primary"
                             title="Halte und Ziehen um die Größe zu verändern">
                             <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                                 <SelectorIcon class="h-3 w-6 text-gray-400" />
@@ -535,8 +535,10 @@ export default {
             this.startY = event.clientY;
             this.startHeight = this.userOverviewHeight;
 
+
             document.addEventListener('mousemove', this.resizing);
             document.addEventListener('mouseup', this.stopResize);
+
         },
         resizing(event) {
             const currentY = event.clientY;
@@ -568,6 +570,14 @@ export default {
                 this.windowHeight = (window.innerHeight - 200) - this.userOverviewHeight;
             }
 
+            if (window.innerHeight - 200 < 400) {
+                this.userOverviewHeight = window.innerHeight - 300;
+            }
+
+            // check if userOverviewHeight is not smaller than 100
+            if (this.userOverviewHeight < 100) {
+                this.userOverviewHeight = 100;
+            }
         }
     },
     beforeUnmount() {

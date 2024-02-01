@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Freelancer;
 use App\Models\User;
+use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Availability\Services\AvailabilityService;
 use Artwork\Modules\Vacation\Https\Requests\CreateVacationRequest;
 use Artwork\Modules\Vacation\Https\Requests\UpdateVacationRequest;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\VacationSeries;
+use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Artwork\Modules\Vacation\Services\VacationSeriesService;
 use Artwork\Modules\Vacation\Services\VacationService;
 use Carbon\Carbon;
@@ -19,7 +21,8 @@ class VacationController extends Controller
     public function __construct(
         private readonly VacationService $vacationService,
         private readonly AvailabilityService $availabilityService,
-        private readonly VacationSeriesService $vacationSeriesService
+        private readonly VacationSeriesService $vacationSeriesService,
+        private readonly AvailabilityConflictService $availabilityConflictService,
     ) {
     }
 
@@ -109,8 +112,10 @@ class VacationController extends Controller
         }
     }
 
-    public function update(UpdateVacationRequest $updateVacationRequest, Vacation $vacation): \Illuminate\Http\RedirectResponse
-    {
+    public function update(
+        UpdateVacationRequest $updateVacationRequest,
+        Vacation $vacation
+    ): \Illuminate\Http\RedirectResponse {
         if ($updateVacationRequest->validated()) {
             if ($updateVacationRequest->type_before_update !== $updateVacationRequest->type) {
                 if ($updateVacationRequest->type === 'available') {
@@ -126,8 +131,12 @@ class VacationController extends Controller
                         );
                     }
                     $this->vacationService->delete($vacation);
+                    $conflicts = $vacation->conflicts()->get();
+                    foreach ($conflicts as $conflict) {
+                        $this->availabilityConflictService->create($conflict->toArray());
+                        $conflict->delete();
+                    }
                 }
-                return redirect()->back();
             } else {
                 $this->vacationService->update(
                     data: $updateVacationRequest,

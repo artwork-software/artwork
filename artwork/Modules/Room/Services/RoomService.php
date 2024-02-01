@@ -3,21 +3,30 @@
 namespace Artwork\Modules\Room\Services;
 
 use App\Enums\NotificationConstEnum;
+use App\Http\Resources\CalendarShowEventResource;
+use App\Models\Event;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
+use Carbon\CarbonPeriod;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class RoomService
 {
-    protected ?NewHistoryService $history = null;
-
-    public function __construct(private readonly RoomRepository $roomRepository, private readonly NotificationService $notificationService)
+    public function __construct(
+        private readonly RoomRepository $roomRepository,
+        private readonly NotificationService $notificationService,
+        private readonly NewHistoryService $history
+    )
     {
-        $this->history = new NewHistoryService(Room::class);
+        $this->history->setModel(Room::class);
     }
 
     public function delete(Room $room): bool
@@ -40,6 +49,112 @@ class RoomService
         $this->roomRepository->save($new_room);
 
         return $new_room;
+    }
+
+    public function filterRooms($startDate, $endDate, $shiftPlan = false): Builder
+    {
+        $user = Auth::user();
+        if (!$shiftPlan) {
+            $calendarFilter = $user->calendar_filter()->first();
+        } else {
+            $calendarFilter = $user->shift_calendar_filter()->first();
+        }
+
+        $roomIds = $calendarFilter->rooms ?? null;
+        $areaIds = $calendarFilter->areas ?? null;
+        $roomAttributeIds = $calendarFilter->room_attributes ?? null;
+        $roomCategoryIds = $calendarFilter->room_categories ?? null;
+        $adjoiningNoAudience = $calendarFilter->adjoining_no_audience ?? null;
+        $adjoiningNotLoud = $calendarFilter->adjoining_not_loud ?? null;
+
+        return Room::query()
+            ->unless(
+                is_null($roomIds),
+                fn(\Illuminate\Database\Eloquent\Builder $builder) => $builder->whereIn('id', $roomIds)
+            )
+            ->unless(
+                is_null($roomAttributeIds),
+                fn(Builder $builder) => $builder->whereHas(
+                    'attributes',
+                    function ($query) use ($roomAttributeIds): void {
+                        $query->whereIn('room_attributes.id', $roomAttributeIds);
+                    }
+                )
+            )
+            ->unless(
+                is_null($areaIds),
+                fn(Builder $builder) => $builder->whereIn('area_id', $areaIds)
+            )
+            ->unless(
+                is_null($roomCategoryIds),
+                fn(Builder $builder) => $builder->whereHas(
+                    'categories',
+                    function ($query) use ($roomCategoryIds): void {
+                        $query->whereIn('room_categories.id', $roomCategoryIds);
+                    }
+                )
+            )
+            ->where(
+                function ($query) use ($adjoiningNotLoud, $adjoiningNoAudience, $startDate, $endDate): void {
+                    $query->where(
+                        function ($subQuery) use ($adjoiningNotLoud, $adjoiningNoAudience, $startDate, $endDate): void {
+                            $subQuery->unless(
+                                is_null($adjoiningNoAudience) && is_null($adjoiningNotLoud),
+                                fn(Builder $builder) => $builder
+                                    ->whereRelation(
+                                        'adjoining_rooms',
+                                        function ($adjoining_room_query) use (
+                                            $adjoiningNoAudience,
+                                            $adjoiningNotLoud,
+                                            $startDate,
+                                            $endDate
+                                        ): void {
+                                            $adjoining_room_query->whereRelation(
+                                                'events',
+                                                function ($event_query) use (
+                                                    $adjoiningNoAudience,
+                                                    $adjoiningNotLoud,
+                                                    $startDate,
+                                                    $endDate
+                                                ): void {
+                                                    $event_query
+                                                        ->when(
+                                                            $startDate,
+                                                            fn(Builder $builder) => $builder->whereBetween(
+                                                                'start_time',
+                                                                [$startDate, $endDate]
+                                                            )
+                                                        )
+                                                        ->when(
+                                                            $endDate,
+                                                            fn(Builder $builder) => $builder->whereBetween(
+                                                                'end_time',
+                                                                [$startDate, $endDate]
+                                                            )
+                                                        )
+                                                        ->unless(
+                                                            is_null($adjoiningNotLoud),
+                                                            fn(Builder $builder) => $builder->where(
+                                                                'events.is_loud',
+                                                                false
+                                                            )
+                                                        )
+                                                        ->unless(
+                                                            is_null($adjoiningNoAudience),
+                                                            fn(Builder $builder) => $builder->where(
+                                                                'events.audience',
+                                                                false
+                                                            )
+                                                        );
+                                                }
+                                            );
+                                        }
+                                    )
+                            );
+                        }
+                    )->orWhereDoesntHave('adjoining_rooms');
+                }
+            );
     }
 
     public function createByRequest(Request $request): Room
@@ -74,7 +189,8 @@ class RoomService
         $newStartDate,
         $oldEndDate,
         $newEndDate
-    ): void {
+    ): void
+    {
         if ($oldTemporary && !$newTemporary) {
             $this->history->createHistory($roomId, 'Temporärer Zeitraum gelöscht');
             return;
@@ -255,7 +371,7 @@ class RoomService
                 $user = User::find($roomAdminBefore);
                 $notificationTitle = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
                 $broadcastMessage = [
-                    'id' => rand(1, 1000000),
+                    'id' => random_int(1, 1000000),
                     'type' => 'error',
                     'message' => $notificationTitle
                 ];
@@ -274,5 +390,46 @@ class RoomService
     public function deleteAllByArea(Area $area): void
     {
         $this->roomRepository->deleteByReference($area, 'rooms');
+    }
+
+    public function getAllWithoutTrashed(): EloquentCollection
+    {
+        return $this->roomRepository->allWithoutTrashed();
+    }
+
+    public function collectEventsForRoom(Room $room, CarbonPeriod $calendarPeriod): Collection
+    {
+        $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
+        $actualEvents = [];
+        $room->events()->where('start_time', '>=', $calendarPeriod->start)
+            ->where('end_time', '<=', $calendarPeriod->end)
+            ->each(function (Event $event) use (&$actualEvents) {
+                $dateKey = $event->start_time->format('d.m.');
+                $actualEvents[$dateKey][] = $event;
+            });
+        foreach ($actualEvents as $key => $value) {
+            $eventsForRoom[$key] = ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection($value)];
+        }
+        return collect($eventsForRoom);
+    }
+
+    public function collectEventsForRooms(array|Collection $roomsWithEvents, CarbonPeriod $calendarPeriod): Collection
+    {
+        $roomEvents = collect();
+
+        foreach ($roomsWithEvents as $room) {
+            $roomEvents->add($this->collectEventsForRoom($room, $calendarPeriod));
+        }
+        return $roomEvents;
+    }
+
+    private function fillPeriodWithEmptyEventData(Room $room, CarbonPeriod $calendarPeriod): array
+    {
+        $eventsForRoom = [];
+        /** @var Collection $eventsForRoom */
+        foreach ($calendarPeriod as $date) {
+            $eventsForRoom[$date->format('d.m.')] = ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection([])];
+        }
+        return $eventsForRoom;
     }
 }

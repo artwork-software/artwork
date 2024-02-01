@@ -3,7 +3,7 @@
 namespace Artwork\Modules\Budget\Models;
 
 use Artwork\Core\Database\Models\Model;
-use Artwork\Modules\Project\Models\Trails\BelongsToProject;
+use Artwork\Modules\Project\Models\Traits\BelongsToProject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;

@@ -54,14 +54,19 @@
                 <span class="text-secondary">Darf zu Schichten eingeteilt werden</span>
             </SwitchLabel>
         </SwitchGroup>
-        <SwitchGroup as="div" class="flex items-center">
-            <Switch v-model="craftSettingsForm.canBeUsedAsMasterCraftsman"
-                    :class="[craftSettingsForm.canBeUsedAsMasterCraftsman ? 'bg-indigo-600' : 'bg-secondary', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+        <div class="mt-2 headline6Light">
+            Schicht-Qualifikationen
+        </div>
+        <hr class="mb-2">
+        <SwitchGroup v-for="shiftQualification in computedShiftQualifications" as="div" class="flex items-center">
+            <Switch v-model="shiftQualification.toggled"
+                    @update:modelValue="this.updateUserShiftQualification(shiftQualification)"
+                    :class="[shiftQualification.toggled ? 'bg-indigo-600' : 'bg-secondary', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
                 <span aria-hidden="true"
-                      :class="[craftSettingsForm.canBeUsedAsMasterCraftsman ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                      :class="[shiftQualification.toggled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
             </Switch>
             <SwitchLabel as="span" class="ml-2 text-sm">
-                <span class="text-secondary">Als Meister einsetzbar</span>
+                <span class="text-secondary">Als {{shiftQualification.name}} einsetzbar</span>
             </SwitchLabel>
         </SwitchGroup>
     </div>
@@ -145,6 +150,7 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch, SwitchGro
 import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon} from "@heroicons/vue/outline";
 import {Inertia} from "@inertiajs/inertia";
+import {reactive} from "vue";
 
 export default {
     components: {
@@ -161,7 +167,7 @@ export default {
         Input
     },
     mixins: [Permissions],
-    props: ['userType', 'user'],
+    props: ['userType', 'user', 'shiftQualifications'],
     data() {
         return {
             workProfileForm: useForm({
@@ -169,10 +175,31 @@ export default {
                 workDescription: this.user.work_description
             }),
             craftSettingsForm: useForm({
-                canBeAssignedToShifts: this.user.can_work_shifts,
-                canBeUsedAsMasterCraftsman: this.user.can_master
+                canBeAssignedToShifts: this.user.can_work_shifts
             }),
             selectedCraftToAssign: null
+        }
+    },
+    computed: {
+        computedShiftQualifications() {
+            let computedShiftQualifications = [];
+
+            this.shiftQualifications.forEach(
+                (shiftQualification) => {
+                    let computedShiftQualification = {
+                        id: shiftQualification.id,
+                        name: shiftQualification.name,
+                    };
+
+                    let userShiftQualificationById = this.user.shiftQualifications.find(
+                        (userShiftQualification) => userShiftQualification.id === shiftQualification.id
+                    );
+                    computedShiftQualification.toggled = typeof userShiftQualificationById !== 'undefined';
+                    computedShiftQualifications.push(reactive(computedShiftQualification));
+                }
+            );
+
+            return computedShiftQualifications;
         }
     },
     watch: {
@@ -211,6 +238,39 @@ export default {
         }
     },
     methods: {
+        updateUserShiftQualification(shiftQualification) {
+            let desiredRoute = null,
+                routeParameter = null;
+
+            switch (this.userType) {
+                case 'user':
+                    desiredRoute = 'user.update.shift-qualification';
+                    routeParameter = {user: this.user.id};
+                    break;
+                case 'freelancer':
+                    desiredRoute = 'freelancer.update.shift-qualification';
+                    routeParameter = {freelancer: this.user.id};
+                    break;
+                case 'serviceProvider':
+                    desiredRoute = 'service_provider.update.shift-qualification';
+                    routeParameter = {serviceProvider: this.user.id};
+                    break;
+            }
+
+            if (desiredRoute) {
+                Inertia.patch(
+                    route(desiredRoute, routeParameter),
+                    {
+                        shiftQualificationId: shiftQualification.id,
+                        create: shiftQualification.toggled
+                    },
+                    {
+                        preserveScroll:true,
+                        preserveState:true
+                    }
+                );
+            }
+        },
         updateWorkProfile() {
             let desiredRoute = null,
                 routeParameter = null;

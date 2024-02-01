@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\FileUpload;
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;

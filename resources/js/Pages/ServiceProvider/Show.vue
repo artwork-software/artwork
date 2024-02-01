@@ -173,7 +173,10 @@
                 </div>
             </div>
             <div v-if="currentTab === 4">
-                <WorkProfileTab user-type="serviceProvider" :user="serviceProvider"/>
+                <WorkProfileTab user-type="serviceProvider"
+                                :user="serviceProvider"
+                                :shift-qualifications="shiftQualifications"
+                />
             </div>
         </div>
         <SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" title="Dienstleister erfolgreich bearbeitet" description="Die Änderungen wurden erfolgreich gespeichert." button="Ok" />
@@ -227,6 +230,7 @@ export default defineComponent({
         'eventTypes',
         'projects',
         'totalPlannedWorkingHours',
+        'shiftQualifications'
     ],
     mounted() {
         this.showSidebar = true;

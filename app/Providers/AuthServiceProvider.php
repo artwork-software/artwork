@@ -12,7 +12,7 @@ use App\Policies\ServiceProviderPolicy;
 use App\Policies\GeneralSettingsPolicy;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\Contract;
 use App\Models\Genre;
 use App\Models\Invitation;
@@ -35,6 +35,8 @@ use App\Policies\UserPolicy;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\ShiftQualification\Policies\ShiftQualificationPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -56,7 +58,8 @@ class AuthServiceProvider extends ServiceProvider
         Contract::class => ContractPolicy::class,
         Freelancer::class => FreelancerPolicy::class,
         ServiceProviderModel::class => ServiceProviderPolicy::class,
-        GeneralSettings::class => GeneralSettingsPolicy::class
+        GeneralSettings::class => GeneralSettingsPolicy::class,
+        ShiftQualification::class => ShiftQualificationPolicy::class
     ];
 
     public function boot(): void

@@ -58,7 +58,7 @@
                                 class="border-t-2 border-dashed"
                                 :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
                                 v-for="room in calendarData">
-                                <div class="py-0.5 pr-2 overflow-hidden" v-for="event in room[day.day].data">
+                                <div class="py-0.5 pr-2 overflow-hidden" v-for="event in room[day.day].events.data">
                                     <!-- <CalendarEventTooltip :show-tooltip="event.hovered" :event="event"> -->
                                     <SingleCalendarEvent
                                         class="relative"
@@ -299,7 +299,7 @@ export default {
             const eventArray = [];
             this.days.forEach((day) => {
                 this.calendarData.forEach((room) => {
-                    room[day.day].data.forEach((event) => {
+                    room[day.day].events.data.forEach((event) => {
                         if (event.clicked) {
                             if (!eventArray.includes(event.id)) {
                                 eventArray.push(event.id)

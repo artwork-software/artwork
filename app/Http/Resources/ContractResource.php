@@ -18,8 +18,15 @@ class ContractResource extends JsonResource
         $project = Project::where('id', $this->project_id)->with(['users'])->first();
         foreach ($project->users as $user) {
             if ($user->pivot->is_manager) {
-                if (!in_array($user, $usersWithAccess)) {
-                    $usersWithAccess[] = $user;
+                // check if user->id is already in $usersWithAccess
+                $userExists = false;
+                foreach ($usersWithAccess as $userWithAccess) {
+                    if ($userWithAccess->id === $user->id) {
+                        $userExists = true;
+                    }
+                }
+                if (!$userExists) {
+                    array_push($usersWithAccess, $user);
                 }
             }
         }
@@ -51,7 +58,7 @@ class ContractResource extends JsonResource
             'description' => $this->description,
             'accessibleUsers' => UserIndexResource::collection($this->getAccessibleUsers())->resolve(),
             'tasks' => Task::where('contract_id', $this->id)->get(),
-            'comments' => CommentResource::collection($this->comments)
+            'comments' => CommentResource::collection($this->comments)->resolve()
         ];
     }
 }

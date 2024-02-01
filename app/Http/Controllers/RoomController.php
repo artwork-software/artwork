@@ -13,6 +13,7 @@ use App\Models\Event;
 use App\Models\EventType;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Collision\Service\CollisionService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Artwork\Modules\Room\Models\RoomCategory;
@@ -29,7 +30,10 @@ use Inertia\ResponseFactory;
 
 class RoomController extends Controller
 {
-    public function __construct(protected RoomService $roomService)
+    public function __construct(
+        protected readonly RoomService $roomService,
+        protected readonly CollisionService $collisionService
+    )
     {
     }
 
@@ -297,17 +301,10 @@ class RoomController extends Controller
     {
         $startDate = Carbon::parse($request['params']['start'])->setTimezone(config('app.timezone'));
         $endDate = Carbon::parse($request['params']['end'])->setTimezone(config('app.timezone'));
-
-        $rooms = Room::all();
         $collisions = [];
-        foreach ($rooms as $room) {
-            $collisions[$room->id] = [
-                Event::query()
-                    ->whereOccursBetween($startDate, $endDate, true)
-                    ->where('room_id', $room->id)->count()
-            ];
-        }
-
+        $this->roomService->getAllWithoutTrashed()->each(function(Room $room) use (&$collisions, $startDate, $endDate){
+            $collisions[$room->id] = $this->collisionService->findCollisionCountForRoom($room, $startDate, $endDate);
+        });
         return $collisions;
     }
 }

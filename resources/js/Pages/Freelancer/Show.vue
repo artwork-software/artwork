@@ -154,7 +154,7 @@
                 <UserTermsTab user_type="freelancer" :user_to_edit="freelancer"></UserTermsTab>
             </div>
             <div v-if="currentTab === 4">
-                <WorkProfileTab user-type="freelancer" :user="freelancer"/>
+                <WorkProfileTab user-type="freelancer" :user="freelancer" :shift-qualifications="shiftQualifications"/>
             </div>
         </div>
         <SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" title="Freelancer*in erfolgreich bearbeitet" description="Die Änderungen wurden erfolgreich gespeichert." button="Ok" />
@@ -210,7 +210,8 @@ export default {
         'vacationSelectCalendar',
         'createShowDate',
         'showVacationsAndAvailabilitiesDate',
-        'availabilities'
+        'availabilities',
+        'shiftQualifications'
     ],
     mounted() {
         this.showSidebar = true;

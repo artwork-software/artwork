@@ -4,11 +4,19 @@ namespace Database\Seeders;
 
 use App\Models\Craft;
 use App\Models\Freelancer;
+use Artwork\Modules\ShiftQualification\Models\FreelancerShiftQualification;
+use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\ShiftQualification\Repositories\FreelancerShiftQualificationRepository;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
 
 class FreelancerSeeder extends Seeder
 {
+    public function __construct(
+        private readonly FreelancerShiftQualificationRepository $freelancerShiftQualificationRepository
+    ) {
+    }
+
     /**
      * Run the database seeds.
      *
@@ -38,6 +46,15 @@ class FreelancerSeeder extends Seeder
 
             if ($freelancer->can_work_shifts) {
                 $freelancer->assignedCrafts()->sync(Craft::all()->pluck('id'));
+            }
+
+            if ($freelancer->can_work_shifts && $faker->boolean) {
+                $this->freelancerShiftQualificationRepository->save(
+                    new FreelancerShiftQualification([
+                        'freelancer_id' => $freelancer->id,
+                        'shift_qualification_id' => ShiftQualification::query()->masterQualification()->first()->id
+                    ])
+                );
             }
         }
     }

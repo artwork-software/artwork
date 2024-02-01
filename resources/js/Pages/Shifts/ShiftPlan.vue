@@ -1,5 +1,7 @@
 <template>
     <div class="w-full flex flex-col">
+
+
         <ShiftHeader>
             <div class="ml-5 bg-white flex-grow">
                 <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
@@ -178,7 +180,7 @@
 
             <show-user-shifts-modal v-if="showUserShifts" @closed="showUserShifts = false" :user="userToShow"
                                     :day="dayToShow" :projects="projects" />
-            <ShiftHistoryModal :history="history[0]" v-if="showHistoryModal" @closed="showHistoryModal = false"/>
+            <ShiftHistoryModal :history="history" v-if="showHistoryModal" @closed="showHistoryModal = false"/>
 
         </ShiftHeader>
 
@@ -201,6 +203,7 @@
         </div>
 
     </div>
+
 
     <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
 </template>
@@ -283,7 +286,8 @@ export default {
                     expectedWorkingHours: user.expectedWorkingHours,
                     vacations: user.vacations,
                     assigned_craft_ids: user.user.assigned_craft_ids,
-                    shift_ids_array: user.user.shift_ids_array
+                    shift_ids_array: user.user.shift_ids_array,
+                    availabilities: user.availabilities
                 })
             })
             this.freelancersForShifts.forEach((freelancer) => {
@@ -293,7 +297,8 @@ export default {
                     plannedWorkingHours: freelancer.plannedWorkingHours,
                     vacations: freelancer.vacations,
                     assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
-                    shift_ids_array: freelancer.freelancer.shift_ids_array
+                    shift_ids_array: freelancer.freelancer.shift_ids_array,
+                    availabilities: freelancer.availabilities
                 })
             })
             this.serviceProvidersForShifts.forEach((service_provider) => {

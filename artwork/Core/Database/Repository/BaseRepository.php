@@ -3,11 +3,13 @@
 namespace Artwork\Core\Database\Repository;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Core\Database\Models\Pivot;
+use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
 abstract class BaseRepository
 {
-    public function save(Model $model): Model
+    public function save(Model|Pivot $model): Model|Pivot
     {
         $model->save();
         return $model;
@@ -16,13 +18,13 @@ abstract class BaseRepository
     /**
      * @throws Throwable
      */
-    public function saveOrFail(Model $model): Model
+    public function saveOrFail(Model|Pivot $model): Model|Pivot
     {
         $model->saveOrFail();
         return $model;
     }
 
-    public function delete(Model $model): bool
+    public function delete(Model|Pivot $model): bool
     {
         return $model->delete();
     }
@@ -30,12 +32,12 @@ abstract class BaseRepository
     /**
      * @throws Throwable
      */
-    public function deleteOrFail(Model $model): bool
+    public function deleteOrFail(Model|Pivot $model): bool
     {
         return $model->deleteOrFail();
     }
 
-    public function deleteByReference(Model $model, string $referenceName): void
+    public function deleteByReference(Model|Pivot $model, string $referenceName): void
     {
         $model->${$referenceName}()->delete();
     }
@@ -43,7 +45,7 @@ abstract class BaseRepository
     /**
      * @throws Throwable
      */
-    public function updateOrFail(Model $model, array $attributes): Model
+    public function updateOrFail(Model|Pivot $model, array $attributes): Model|Pivot
     {
         $model->updateOrFail($attributes);
         return $model;

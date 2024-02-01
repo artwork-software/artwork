@@ -49,7 +49,7 @@ export default {
     },
     methods: {
         destroy() {
-            this.$inertia.delete(`/contracts/${this.contract.id}`);
+            this.$inertia.delete(route('contract.delete', this.contract.id));
             this.closeModal()
         },
     }

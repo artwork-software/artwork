@@ -1,8 +1,9 @@
 <template>
-    <div class="bg-backgroundGray mt-6 pb-6">
-        <div class=" ml-14 pt-3 pr-14">
-            <div class="flex justify-between items-center mt-4">
+    <div class="bg-backgroundGray mt-6 pb-6 ">
+        <div class=" ml-14 pt-3 pr-14 ">
+            <div class="flex justify-between items-center mt-4 stickyHeader p-4">
             <div class="flex items-center gap-6">
+                <div class="flex w-full justify-between">
                 <SwitchGroup as="div" class="flex items-center" v-if="eventsWithRelevant?.length > 0 && (this.$can('can commit shifts') || this.hasAdminRole())">
                     <Switch v-model="hasUncommittedShift"
                             @update:modelValue="updateCommitmentOfShifts"
@@ -33,7 +34,7 @@
                 </div>
             </div>
             <div>
-                <div @click="userWindow = !userWindow">
+                <div ref="userWindowButton" @click="openUserWindow()">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24.162" height="17.536" viewBox="0 0 24.162 17.536">
                         <g id="public" transform="translate(-6.127 0.378)">
                             <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(6.877 0.372)">
@@ -57,26 +58,32 @@
                         </g>
                     </svg>
                 </div>
-                <transition
-                    enter-active-class="transition ease-out duration-100"
-                    enter-from-class="transform opacity-0 scale-95"
-                    enter-to-class="transform opacity-100 scale-100"
-                    leave-active-class="transition ease-in duration-75"
-                    leave-from-class="transform opacity-100 scale-100"
-                    leave-to-class="transform opacity-0 scale-95">
-                    <div
-                        class="z-40 origin-top-right absolute right-10 px-4 py-2 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none"
-                        v-show="userWindow" ref="containerRef">
-                        <div class="flex items-center justify-between">
-                            <div class="flex gap-4 items-center" @click="openFilter = !openFilter">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="21.496" height="19.496"
-                                     viewBox="0 0 21.496 19.496">
-                                    <path id="Icon_feather-filter" data-name="Icon feather-filter"
-                                          d="M23,4.5H3l8,9.458V20.5l4,2V13.958Z" transform="translate(-2.25 -3.75)"
-                                          fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round"
-                                          stroke-width="1.5"/>
-                                </svg>
-                                <span v-if="openFilter">
+
+            </div>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <transition
+                enter-active-class="transition ease-out duration-100"
+                enter-from-class="transform opacity-0 scale-95"
+                enter-to-class="transform opacity-100 scale-100"
+                leave-active-class="transition ease-in duration-75"
+                leave-from-class="transform opacity-100 scale-100"
+                leave-to-class="transform opacity-0 scale-95">
+                <div
+                    class="z-40 origin-top-right absolute right-10 px-4 py-2 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    v-show="userWindow" ref="containerRef">
+                    <div class="flex items-center justify-between">
+                        <div class="flex gap-4 items-center" @click="openFilter = !openFilter">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="21.496" height="19.496"
+                                 viewBox="0 0 21.496 19.496">
+                                <path id="Icon_feather-filter" data-name="Icon feather-filter"
+                                      d="M23,4.5H3l8,9.458V20.5l4,2V13.958Z" transform="translate(-2.25 -3.75)"
+                                      fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round"
+                                      stroke-width="1.5"/>
+                            </svg>
+                            <span v-if="openFilter">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="9.177" height="6.003"
                                      viewBox="0 0 9.177 6.003">
                                     <g id="headline" transform="translate(66.076 -18.911) rotate(180)">
@@ -86,7 +93,7 @@
                                     </g>
                                 </svg>
                             </span>
-                                <span v-else>
+                            <span v-else>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="9.177" height="6.003"
                                      viewBox="0 0 9.177 6.003">
                                     <g id="headline" transform="translate(-56.898 24.914)">
@@ -96,62 +103,59 @@
                                     </g>
                                 </svg>
                             </span>
-                            </div>
-                            <div>
-                                <XIcon class="h-6 w-6 text-white" @click="userWindow = !userWindow"/>
-                            </div>
                         </div>
-                        <div class="" v-if="openFilter">
-                            <div class="my-5">
-                                <div class="flex w-full mb-3">
-                                    <input v-model="showIntern"
-                                           type="checkbox"
-                                           class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
-                                    <div :class="[showIntern ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
-                                        Interne Mitarbeiter*innen
-                                    </div>
-                                </div>
-                                <div class="flex w-full mb-3">
-                                    <input v-model="showExtern"
-                                           type="checkbox"
-                                           class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
-                                    <div :class="[showExtern ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
-                                        Externe Mitarbeiter*innen
-                                    </div>
-                                </div>
-                                <div class="flex w-full mb-3">
-                                    <input v-model="showProvider"
-                                           type="checkbox"
-                                           class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
-                                    <div :class="[showProvider ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
-                                        Dienstleister
-                                    </div>
-                                </div>
-                                <div class="flex w-full mb-3" v-for="craft in crafts" :key="craft.id">
-                                    <input type="checkbox"
-                                           class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"
-                                           v-model="activeCraftFilters"
-                                           :id="'craft-' + craft.id"
-                                           :value="craft.id"
-                                    />
-                                    <div :class="[false ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
-                                        {{craft.name}}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="my-2 h-0.5 w-full bg-[#3A374D]">
-                            </div>
-                        </div>
-                        <div @mousedown="preventContainerDrag" class="max-h-72 shiftUserWindow">
-                            <div v-for="user in filteredUsers">
-                                <DragElement :item="user.element" :plannedHours="user.plannedWorkingHours" :expected-hours="user.expectedWorkingHours" :type="user.type"/>
-                            </div>
+                        <div>
+                            <XIcon class="h-6 w-6 text-white" @click="userWindow = !userWindow"/>
                         </div>
                     </div>
-                </transition>
-            </div>
-        </div>
-        <div class="mt-5">
+                    <div class="" v-if="openFilter">
+                        <div class="my-5">
+                            <div class="flex w-full mb-3">
+                                <input v-model="showIntern"
+                                       type="checkbox"
+                                       class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
+                                <div :class="[showIntern ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                    Interne Mitarbeiter*innen
+                                </div>
+                            </div>
+                            <div class="flex w-full mb-3">
+                                <input v-model="showExtern"
+                                       type="checkbox"
+                                       class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
+                                <div :class="[showExtern ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                    Externe Mitarbeiter*innen
+                                </div>
+                            </div>
+                            <div class="flex w-full mb-3">
+                                <input v-model="showProvider"
+                                       type="checkbox"
+                                       class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"/>
+                                <div :class="[showProvider ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                    Dienstleister
+                                </div>
+                            </div>
+                            <div class="flex w-full mb-3" v-for="craft in crafts" :key="craft.id">
+                                <input type="checkbox"
+                                       class="cursor-pointer h-5 w-5 text-success border-2 border-gray-300 focus:ring-0 active:ring-0"
+                                       v-model="activeCraftFilters"
+                                       :id="'craft-' + craft.id"
+                                       :value="craft.id"
+                                />
+                                <div :class="[false ? 'xsWhiteBold' : 'xsLight', 'my-auto ml-2']">
+                                    {{craft.name}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="my-2 h-0.5 w-full bg-[#3A374D]">
+                        </div>
+                    </div>
+                    <div @mousedown="preventContainerDrag" class="max-h-72 shiftUserWindow">
+                        <div v-for="user in filteredUsers">
+                            <DragElement :item="user.element" :plannedHours="user.plannedWorkingHours" :expected-hours="user.expectedWorkingHours" :type="user.type"/>
+                        </div>
+                    </div>
+                </div>
+            </transition>
             <div class="xsDark" v-if="eventsWithRelevant.length === 0">
                 Bisher gibt es für dieses Projekt keine schichtrelevanten Termine.
             </div>
@@ -163,6 +167,7 @@
                                 @dropFeedback="showDropFeedback"/>
         </div>
         </div>
+
     </div>
 
     <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
@@ -275,7 +280,8 @@ export default defineComponent({
             this.$inertia.patch(route('update.shift.commitment'), {
                 project_id: this.$page.props.project.id,
                 shifts: this.eventsWithRelevant.flatMap(event => event.shifts.map(shift => shift.id)),
-                is_committed: this.hasUncommittedShift
+                is_committed: this.hasUncommittedShift,
+                committing_user_id: this.$page.props.user.id
             }, {
                 preserveScroll: true
             })
@@ -305,6 +311,29 @@ export default defineComponent({
         },
         preventContainerDrag(event) {
             event.stopPropagation();
+        },
+        openUserWindow() {
+            if (this.userWindow) {
+                this.userWindow = !this.userWindow;
+            } else {
+                const container = this.$refs.containerRef;
+                const button = this.$refs.userWindowButton;
+
+                // Berechnen Sie den Abstand des Buttons vom oberen Rand des Viewports
+                const buttonRect = button.getBoundingClientRect();
+
+                // Berücksichtigen Sie den Scroll-Stand des Fensters
+                const scrollX = window.scrollX;
+                const scrollY = window.scrollY;
+
+                // Berechnen Sie die neue linke und obere Position des Containers
+                const containerLeft = buttonRect.left + scrollX - 330;
+                const containerTop = buttonRect.top + scrollY + button.offsetHeight;
+
+                container.style.left = `${containerLeft}px`;
+                container.style.top = `${containerTop}px`;
+                this.userWindow = !this.userWindow;
+            }
         }
     },
 })
@@ -333,6 +362,14 @@ export default defineComponent({
 
 ::-webkit-scrollbar-thumb:hover {
     background-color: #a8bbbf;
+}
+.stickyHeader {
+    position: sticky;
+    position: -webkit-sticky;
+    display: block;
+    top: 60px;
+    z-index: 21;
+    background-color: #F5F5F3;
 }
 
 </style>

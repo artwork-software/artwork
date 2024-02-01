@@ -24,6 +24,9 @@ class VacationSeriesService
     public function deleteSeries(VacationSeries $vacationSeries): void
     {
         $vacationSeries->vacations()->each(function ($vacation): void {
+            $vacation->each(function ($vacationConflict): void {
+                $vacationConflict->delete();
+            });
             $vacation->delete();
         });
     }

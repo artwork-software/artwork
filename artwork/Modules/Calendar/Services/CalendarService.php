@@ -8,7 +8,7 @@ use Carbon\Carbon;
 
 class CalendarService
 {
-    public function createVacationAndAvailabilityPeriodCalendar($month = null)
+    public function createVacationAndAvailabilityPeriodCalendar($month = null): \Illuminate\Support\Collection
     {
         $date = Carbon::today();
         $daysInMonth = $date->daysInMonth;
@@ -44,16 +44,18 @@ class CalendarService
     {
         $vacationDays = [];
         $availabilityDays = [];
+        $shifts = [];
         if ($freelancer) {
             $vacationDays = $freelancer->vacations()->orderBy('date', 'ASC')->get();
             $availabilityDays = $freelancer->availabilities()->orderBy('date', 'ASC')->get();
+            $shifts = $freelancer->shifts()->where('is_committed', true)->get();
         }
 
         if ($user) {
             $vacationDays = $user->vacations()->orderBy('date', 'ASC')->get();
             $availabilityDays = $user->availabilities()->orderBy('date', 'ASC')->get();
+            $shifts = $user->shifts()->where('is_committed', true)->get();
         }
-
 
         $currentMonth = Carbon::now()->startOfMonth();
 
@@ -70,6 +72,7 @@ class CalendarService
         while ($currentDate <= $endDate) {
             $onVacation = false;
             $hasAvailability = false;
+            $hasConflict = false;
             $weekNumber = $currentDate->weekOfYear;
             $day = $currentDate->day;
             foreach ($vacationDays as $vacationDay) {
@@ -84,6 +87,20 @@ class CalendarService
                 }
             }
 
+            // check if vacation and availability conflicts
+            foreach ($vacationDays as $vacationDay) {
+                if ($vacationDay->conflicts()->exists() && $currentDate->isSameDay($vacationDay->date)) {
+                    $hasConflict = true;
+                }
+            }
+
+            foreach ($availabilityDays as $availabilityDay) {
+                if ($availabilityDay->conflicts()->exists() && $currentDate->isSameDay($availabilityDay->date)) {
+                    $hasConflict = true;
+                }
+            }
+
+
             if (!isset($calendarData[$weekNumber])) {
                 $calendarData[$weekNumber] = ['weekNumber' => $weekNumber, 'days' => []];
             }
@@ -95,6 +112,7 @@ class CalendarService
                 'notInMonth' => $notInMonth,
                 'onVacation' => $onVacation,
                 'hasAvailability' => $hasAvailability,
+                'hasConflict' => $hasConflict,
                 'day_formatted' => $currentDate->format('Y-m-d'),
                 'isToday' => $currentDate->isToday(),
             ];

@@ -162,9 +162,7 @@ class EventController extends Controller
                 $query->whereNotNull('shifts.id')->without('crafts');
             })->whereBetween('start_time', [$startDate, $endDate])->without(['series'])
             ->get();
-
         $users = User::where('can_work_shifts', true)->without(['roles', 'permissions', 'calendar_settings'])->get();
-
         $usersWithPlannedWorkingHours = [];
 
         //get the diff of startDate and endDate in days, +1 to include the current date
@@ -180,6 +178,9 @@ class EventController extends Controller
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'expectedWorkingHours' => $expectedWorkingHours,
                 'vacations' => $vacations,
+                'availabilities' => $user->availabilities()
+                    ->whereBetween('date', [$startDate, $endDate])->get()
+                    ->groupBy('formatted_date'),
             ];
         }
 
@@ -203,8 +204,18 @@ class EventController extends Controller
                 ],
                 'vacations' => $vacations,
                 'plannedWorkingHours' => $plannedWorkingHours,
+                'availabilities' => $freelancer->availabilities()
+                    ->whereBetween('date', [$startDate, $endDate])->get()
+                    ->groupBy('formatted_date'),
             ];
         }
+
+        $historyElements = $events->flatMap(function ($event) {
+            return $event->shifts->flatMap(function ($shift) {
+                // Sort each shift's historyChanges by created_at in descending order
+                return $shift->historyChanges()->sortByDesc('created_at');
+            });
+        })->all();
 
         $serviceProvidersWithPlannedWorkingHours = [];
 
@@ -235,11 +246,7 @@ class EventController extends Controller
             'usersForShifts' => $usersWithPlannedWorkingHours,
             'freelancersForShifts' => $freelancersWithPlannedWorkingHours,
             'serviceProvidersForShifts' => $serviceProvidersWithPlannedWorkingHours,
-            'history' => $events->flatMap(function ($event) {
-                return $event->shifts->map(function ($shift) {
-                    return $shift->historyChanges();
-                });
-            })->all(),
+            'history' => $historyElements,
         ]);
     }
 
@@ -292,10 +299,44 @@ class EventController extends Controller
             ->select(['id', 'data->priority as priority', 'data'])
             ->whereDate('created_at', Carbon::now()->format('Y-m-d'))
             ->withCasts(['created_at' => TimeAgoCast::class])
-            ->unread();
+            ->where('read_at', null);
 
         if (request('openEditEvent')) {
             $event = Event::find(request('eventId'));
+        }
+
+        $historyObjects = [];
+
+        // reload functions
+        if (request('showHistory')) {
+            if (request('historyType') === 'project') {
+                $project = Project::find(request('modelId'));
+                $historyComplete = $project->historyChanges()->all();
+                foreach ($historyComplete as $history) {
+                    $historyObjects[] = [
+                        'changes' => json_decode($history->changes),
+                        'created_at' => $history->created_at->diffInHours() < 24
+                            ? $history->created_at->diffForHumans()
+                            : $history->created_at->format('d.m.Y, H:i'),
+                    ];
+                }
+            }
+
+            //dd($historyObjects);
+
+            if (request('historyType') === 'event') {
+                $event = Event::find(request('modelId'));
+                $historyComplete = $event->historyChanges()->all();
+                foreach ($historyComplete as $history) {
+                    $historyObjects[] = [
+                        'changes' => json_decode($history->changes),
+                        'created_at' => $history->created_at->diffInHours() < 24
+                            ? $history->created_at->diffForHumans()
+                            : $history->created_at->format('d.m.Y, H:i'),
+                    ];
+                }
+            }
+
         }
 
         return inertia('Dashboard', [
@@ -307,7 +348,8 @@ class EventController extends Controller
             'notificationCount' => $notification->count(),
             'event' => $event !== null ? new CalendarEventResource($event) : null,
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-            'rooms' => Room::all()
+            'rooms' => Room::all(),
+            'historyObjects' => $historyObjects,
         ]);
     }
 

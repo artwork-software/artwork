@@ -6,7 +6,7 @@ use App\Enums\NotificationConstEnum;
 use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\CompanyType;
 use App\Models\Contract;
 use App\Models\ContractModule;
@@ -17,12 +17,10 @@ use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Barryvdh\Debugbar\Facades\Debugbar;
-use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
@@ -31,23 +29,27 @@ use Inertia\Response;
 use Inertia\ResponseFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-use function Pest\Laravel\json;
-
 class ContractController extends Controller
 {
     protected ?NotificationService $notificationService = null;
 
     public function __construct()
     {
-        $this->authorizeResource(Contract::class);
+        //$this->authorizeResource(Contract::class);
         $this->notificationService = new NotificationService();
     }
 
     public function viewIndex(): Response|ResponseFactory
     {
-        $contracts = Contract::all();
+        // get all contracts where i am creator or i am accessing user
+        $contracts = Contract::where('creator_id', Auth::id())->get();
+        $accessing_contracts = Contract::whereHas('accessingUsers', function ($query): void {
+            $query->where('user_id', Auth::id());
+        })->get();
+        $contracts = $contracts->merge($accessing_contracts);
+        //dd(ContractResource::collection($contracts)->resolve());
         return inertia('Contracts/ContractManagement', [
-            'contracts' => ContractResource::collection($contracts),
+            'contracts' => ContractResource::collection($contracts)->resolve(),
             'contract_modules' => ContractModuleResource::collection(ContractModule::all()),
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
@@ -105,7 +107,6 @@ class ContractController extends Controller
         if (!Storage::exists("contracts")) {
             Storage::makeDirectory("contracts");
         }
-
         $file = $request->file;
         $original_name = $file->getClientOriginalName();
         $basename = Str::random(20) . $original_name;
@@ -133,7 +134,7 @@ class ContractController extends Controller
 
         $contract->accessingUsers()->sync(collect($request->accessibleUsers));
         if (!in_array(Auth::id(), $request->accessibleUsers ?? [])) {
-            $contract->accessingUsers()->save(Auth::user());
+            $contract->accessingUsers()->attach(Auth::id());
         }
 
         $contractUsers =  $contract->accessingUsers()->get();
@@ -172,7 +173,7 @@ class ContractController extends Controller
 
         $contract->save();
 
-        return Redirect::back();
+        return Redirect::route('contracts.view.index')->with('success', 'Project created.');
     }
 
     public function download(Contract $contract): StreamedResponse
@@ -185,9 +186,8 @@ class ContractController extends Controller
     public function update(Contract $contract, ContractUpdateRequest $request): RedirectResponse
     {
         $original_name = '';
-        if ($request->get('accessibleUsers')) {
-            $contract->accessingUsers()->sync(collect($request->accessibleUsers));
-        }
+
+        $contract->accessingUsers()->sync(collect($request->accessibleUsers));
 
         if ($request->file('file')) {
             Storage::delete('contracts/' . $contract->basename);

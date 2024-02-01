@@ -73,7 +73,6 @@ class NotificationController extends Controller
                 }
             }
 
-
             if (request('historyType') === 'vacations') {
                 $vacations = $this->vacationService->findVacationsByUserId(request('modelId'));
 

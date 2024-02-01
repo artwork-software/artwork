@@ -146,7 +146,7 @@
         </div>
     </div>
 
-
+    <ConfirmDeleteModal title="Datei löschen" description="Bist du sicher, dass du die ausgewählte Datei aus dem Projekt löschen willst?" @closed="closeConfirmDeleteModal" @delete="deleteFile" v-if="deletingFile" />
 </template>
 
 <script>
@@ -159,9 +159,10 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {nextTick} from "vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 export default{
-    components: {PencilAltIcon, XCircleIcon, DocumentTextIcon, SvgCollection, XIcon, JetInputError},
+    components: {ConfirmDeleteModal, PencilAltIcon, XCircleIcon, DocumentTextIcon, SvgCollection, XIcon, JetInputError},
     props: [
         'project',
         'projectWriteIds',
@@ -311,6 +312,17 @@ export default{
             this.deletingFile = true;
             this.project_file = project_file
         },
+        closeConfirmDeleteModal() {
+            this.deletingFile = false;
+            this.project_file = null;
+        },
+        deleteFile() {
+            this.$inertia.delete(route('project_files.destroy', {project_file: this.project_file.id}), {
+                preserveScroll: true,
+                preserveState: true
+            })
+            this.closeConfirmDeleteModal()
+        }
     }
 }
 </script>

@@ -15,9 +15,9 @@ class CanViewRoom
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+     *
      */
-    public function handle(Request $request, Closure $next): \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
+    public function handle(Request $request, Closure $next)
     {
         $room = $request->route('room');
 
@@ -27,8 +27,10 @@ class CanViewRoom
         ) {
             return $next($request);
         }
-        if ($room->users()->where('users.id', Auth::id())->first()->pivot->is_admin) {
-            return $next($request);
+        if ($room->users()->where('users.id', Auth::id())->first()) {
+            if ($room->users()->where('users.id', Auth::id())->first()->pivot->is_admin) {
+                return $next($request);
+            }
         }
 
         return redirect()->back();

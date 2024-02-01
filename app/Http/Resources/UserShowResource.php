@@ -31,7 +31,6 @@ class UserShowResource extends JsonResource
             'temporary' => $this->temporary,
             'employStart' => $this->employStart,
             'employEnd' => $this->employEnd,
-            'can_master' => $this->can_master,
             'can_work_shifts' => $this->can_work_shifts,
             'work_name' => $this->work_name,
             'work_description' => $this->work_description,

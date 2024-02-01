@@ -18,7 +18,9 @@ class ProductionDatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             SettingsSeeder::class,
             PermissionPresetSeeder::class,
+            ShiftQualificationSeeder::class
         ]);
+
         DB::table('event_types')->insert([
             'name' => 'Blocker',
             'svg_name' => 'eventType0',

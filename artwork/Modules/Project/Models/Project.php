@@ -4,7 +4,7 @@ namespace Artwork\Modules\Project\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Models\Category;
-use App\Models\Comment;
+use Artwork\Modules\Project\Models\Comment;
 use App\Models\Contract;
 use App\Models\Copyright;
 use App\Models\CostCenter;
@@ -187,7 +187,7 @@ class Project extends Model
 
     public function comments(): HasMany
     {
-        return $this->hasMany(Comment::class);
+        return $this->hasMany(Comment::class, 'project_id', 'id');
     }
 
     public function sectors(): BelongsToMany

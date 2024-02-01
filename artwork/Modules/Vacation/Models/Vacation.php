@@ -3,6 +3,8 @@
 namespace Artwork\Modules\Vacation\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
+use App\Models\Freelancer;
+use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -49,11 +51,11 @@ class Vacation extends Model
     ];
 
     protected $appends = [
-        'date_casted',
+        'date_casted', 'has_conflicts'
     ];
 
     protected $with = [
-        'series',
+        'series', 'conflicts'
     ];
 
     public function vacations(): MorphTo
@@ -66,10 +68,20 @@ class Vacation extends Model
         return $this->hasOne(VacationSeries::class, 'id', 'series_id');
     }
 
+    public function conflicts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(VacationConflict::class, 'vacation_id', 'id');
+    }
 
-    public function getDateCastedAttribute()
+    public function getDateCastedAttribute(): string
     {
         Carbon::setLocale('de');
         return Carbon::parse($this->date)->translatedFormat('D, d.m.Y');
     }
+
+    public function getHasConflictsAttribute(): bool
+    {
+        return $this->conflicts()->exists();
+    }
+
 }

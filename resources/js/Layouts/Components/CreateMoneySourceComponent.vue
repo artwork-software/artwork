@@ -362,7 +362,7 @@
                         <div class="mb-2">
                             <div class="relative w-full">
                                 <div class="w-full">
-                                    <input id="userSearch" v-model="moneySource_query" type="text" autocomplete="off"
+                                    <input id="moneySourceSearch" v-model="moneySource_query" type="text" autocomplete="off"
                                            placeholder="Welche Finanzierungsquellen gehören zu dieser Gruppe?"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>

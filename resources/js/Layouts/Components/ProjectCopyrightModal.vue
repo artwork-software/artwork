@@ -14,7 +14,7 @@
                 </div>
                 <input :placeholder="[costCenterName ? costCenterName : 'Name des Kostenträgers']"
                        id="title"
-                       v-model="costCenterName"
+                       v-model="costCenterForm.name"
                        class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                 <div class="flex items-center mb-3 mt-4">
                     <input type="checkbox" v-model="ownCopyright"
@@ -92,11 +92,14 @@
                         text="Speichern"
                         mode="modal"
                         class="px-6 py-3"
-                        :disabled="copyright?.collecting_society === null || this.collectingSociety === null || costCenterForm.name === null || costCenterName === '' ||costCenterForm.description === null"
+                        :disabled="copyright?.collecting_society === null || this.collectingSociety === null || costCenterForm.name === null ||costCenterForm.description === null"
                         @click="updateData"
                     />
                 </div>
 
+                <pre>
+                    {{ costCenterForm }}
+                </pre>
             </div>
         </template>
     </jet-dialog-modal>
@@ -171,7 +174,7 @@ export default {
             //this.collectingSociety = collectingSociety
         },
         updateData() {
-            this.costCenterForm.name = this.costCenterName
+            //this.costCenterForm.name = this.costCenterName
             this.costCenterForm.description = this.description
             if(this.costCenter === null || this.costCenter.id === null){
                 this.costCenterForm.post(route('costCenter.store'));

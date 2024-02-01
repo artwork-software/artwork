@@ -36,6 +36,7 @@ use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\Shift\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -67,7 +68,8 @@ class EventController extends Controller
     public function __construct(
         private readonly CollisionService $collisionService,
         private readonly NotificationService $notificationService,
-        private readonly BudgetService $budgetService
+        private readonly BudgetService $budgetService,
+        private readonly Sage100Service $sage100Service,
     ) {
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
@@ -244,12 +246,7 @@ class EventController extends Controller
     public function showDashboardPage(): Response
     {
 
-        dd(
-            app(Sage100::class)->getData([
-                "startIndex" => 1,
-                "count" => 10
-            ])
-        );
+        dd($this->sage100Service->getData(500));
 
         $event = null;
         $tasks = Task::query()

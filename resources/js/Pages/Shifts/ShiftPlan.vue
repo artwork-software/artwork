@@ -21,6 +21,7 @@
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll ']">
                     <Table>
                         <template #head>
+                            <div class="stickyHeader">
                             <TableHead>
                                 <th class="z-0" :style="{width: 164 + 'px', maxWidth: 164 + 'px'}"></th>
                                 <th v-for="day in days" :style="{minWidth: 200 + 'px'}" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
@@ -29,6 +30,7 @@
                                     </div>
                                 </th>
                             </TableHead>
+                            </div>
                         </template>
                         <template #body>
                             <TableBody>

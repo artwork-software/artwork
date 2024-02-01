@@ -1640,7 +1640,7 @@ class ProjectController extends Controller
     }
     public function projectCalendarTab(Project $project, CalendarController $calendar): Response|ResponseFactory
     {
-        $showCalendar = $calendar->createCalendarData('', $project);
+        $showCalendar = $calendar->createCalendarData(type: '', project: $project);
 
         $project->load([
             'access_budget',

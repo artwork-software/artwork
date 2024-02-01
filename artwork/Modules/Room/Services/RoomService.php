@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Carbon\CarbonPeriod;
@@ -24,8 +25,7 @@ class RoomService
         private readonly RoomRepository $roomRepository,
         private readonly NotificationService $notificationService,
         private readonly NewHistoryService $history
-    )
-    {
+    ) {
         $this->history->setModel(Room::class);
     }
 
@@ -189,8 +189,7 @@ class RoomService
         $newStartDate,
         $oldEndDate,
         $newEndDate
-    ): void
-    {
+    ): void {
         if ($oldTemporary && !$newTemporary) {
             $this->history->createHistory($roomId, 'Temporärer Zeitraum gelöscht');
             return;
@@ -397,28 +396,30 @@ class RoomService
         return $this->roomRepository->allWithoutTrashed();
     }
 
-    public function collectEventsForRoom(Room $room, CarbonPeriod $calendarPeriod): Collection
+    public function collectEventsForRoom(Room $room, CarbonPeriod $calendarPeriod, ?Project $project = null): Collection
     {
         $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
         $actualEvents = [];
         $room->events()->where('start_time', '>=', $calendarPeriod->start)
             ->where('end_time', '<=', $calendarPeriod->end)
-            ->each(function (Event $event) use (&$actualEvents) {
+            ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
+            ->each(function (Event $event) use (&$actualEvents): void {
                 $dateKey = $event->start_time->format('d.m.');
                 $actualEvents[$dateKey][] = $event;
             });
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection($value)];
         }
+        //dd(collect($eventsForRoom));
         return collect($eventsForRoom);
     }
 
-    public function collectEventsForRooms(array|Collection $roomsWithEvents, CarbonPeriod $calendarPeriod): Collection
+    public function collectEventsForRooms(array|Collection $roomsWithEvents, CarbonPeriod $calendarPeriod, ?Project $project = null): Collection
     {
         $roomEvents = collect();
 
         foreach ($roomsWithEvents as $room) {
-            $roomEvents->add($this->collectEventsForRoom($room, $calendarPeriod));
+            $roomEvents->add($this->collectEventsForRoom($room, $calendarPeriod, $project));
         }
         return $roomEvents;
     }

@@ -2820,14 +2820,9 @@ class ProjectController extends Controller
 
             $img = Image::make($file);
 
-            $height = $img->height();
-            $width = $img->width();
-            $ratio = $width / $height;
-
-            if ($ratio < 4 || $ratio > 8) {
+            if ($img->width() < 1080 || $img->height() < 1080) {
                 throw ValidationException::withMessages([
-                    'key_visual' => 'Das Key Visual sollte mindestens 4 und maximal 8 mal so breit wie hoch sein. ' .
-                        'Im Idealfall 1150px breit und 200px hoch.'
+                    'key_visual' => 'Die Abmessungen des Key Visuals sollte mindestens 1080x1080px betragen.'
                 ]);
             }
 

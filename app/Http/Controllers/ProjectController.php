@@ -1735,7 +1735,7 @@ class ProjectController extends Controller
                 eventTypes: $showCalendar['filterOptions']['eventTypes'],
                 roomCategories: $showCalendar['filterOptions']['roomCategories'],
                 roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
-                events: $calendar->getEventsOfDay($project),
+                events: $calendar->getEventsOfInterval($startDate, $endDate, $project),
                 filter: Filter::query()->where('user_id', Auth::id())->get(),
             ),
             'filterOptions' => $showCalendar["filterOptions"],

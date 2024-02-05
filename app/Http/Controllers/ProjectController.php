@@ -33,6 +33,7 @@ use App\Models\ChecklistTemplate;
 use App\Models\CollectingSociety;
 use App\Models\CompanyType;
 use App\Models\ContractType;
+use App\Models\CostCenter;
 use App\Models\Currency;
 use App\Models\Event;
 use App\Models\EventType;
@@ -254,7 +255,6 @@ class ProjectController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'number_of_participants' => $request->number_of_participants,
-            'cost_center' => $request->cost_center,
             'budget_deadline' => $request->budgetDeadline
         ]);
 
@@ -1578,7 +1578,7 @@ class ProjectController extends Controller
             'writeUsers',
             'project_files',
             'copyright',
-            'cost_center',
+            'costCenter',
             'sectors',
             'users.departments',
             'state',
@@ -1951,10 +1951,11 @@ class ProjectController extends Controller
             'project_files',
             'contracts',
             'copyright',
-            'cost_center',
+            'costCenter',
             'users.departments',
             'state',
-            'delete_permission_users'
+            'delete_permission_users',
+            'collectingSociety'
         ]);
 
         $columns = $project->table()->first()->columns()->get();
@@ -2079,6 +2080,7 @@ class ProjectController extends Controller
             'contractTypes' => ContractType::all()->toArray(),
             'companyTypes' => CompanyType::all()->toArray(),
             'currencies' => Currency::all()->toArray(),
+            'collectingSocieties' => CollectingSociety::all()->toArray(),
         ]);
     }
 
@@ -2656,7 +2658,6 @@ class ProjectController extends Controller
             'name' => '(Kopie) ' . $project->name,
             'description' => $project->description,
             'number_of_participants' => $project->number_of_participants,
-            'cost_center' => $project->cost_center,
         ]);
         $historyService->projectUpdated($newProject);
 
@@ -2983,5 +2984,38 @@ class ProjectController extends Controller
     {
         $this->projectService->pin($project);
         return Redirect::route('projects')->with('success', 'Project pinned.');
+    }
+
+    public function updateCopyright(Request $request, Project $project): RedirectResponse
+    {
+        $oldCostCenter = $project->cost_center_id;
+        if (!empty($request->cost_center_name)) {
+            $costCenter = CostCenter::firstOrCreate(['name' => $request->cost_center_name]);
+        }
+        $project->update([
+            'cost_center_id' => $costCenter->id ?? null,
+            'own_copyright' => $request->own_copyright,
+            'live_music' => $request->live_music,
+            'collecting_society_id' => $request->collecting_society_id,
+            'law_size' => $request->law_size,
+            'cost_center_description' => $request->description,
+        ]);
+
+        $this->checkProjectCostCenterChanges($project->id, $oldCostCenter, $costCenter->id ?? null);
+
+        return Redirect::back()->with('success', 'Project updated.');
+    }
+
+    private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter): void
+    {
+        if ($newCostCenter === null && $oldCostCenter !== null) {
+            $this->history->createHistory($projectId, 'Kostenträger gelöscht');
+        }
+        if ($oldCostCenter === null && $newCostCenter !== null) {
+            $this->history->createHistory($projectId, 'Kostenträger hinzugefügt');
+        }
+        if ($oldCostCenter !== $newCostCenter && $oldCostCenter !== null && $newCostCenter !== null) {
+            $this->history->createHistory($projectId, 'Kostenträger geändert');
+        }
     }
 }

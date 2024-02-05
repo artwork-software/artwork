@@ -37,7 +37,7 @@ class ProjectIndexResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'number_of_participants' => $this->number_of_participants,
-            'cost_center' => $this->cost_center,
+            'cost_center' => $this->costCenter,
             'sector' => $this->sector,
             'category' => $this->category,
             'genre' => $this->genre,

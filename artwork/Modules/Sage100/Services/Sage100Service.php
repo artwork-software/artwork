@@ -17,7 +17,7 @@ class Sage100Service
     {
         return app(Sage100::class)->getData([
             "startIndex" => 0,
-            "count" => $count
+            "count" => $count,
         ]);
     }
 

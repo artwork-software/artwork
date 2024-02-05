@@ -720,9 +720,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/copyright', [CopyrightController::class, 'store'])->name('copyright.store');
     Route::patch('/copyright/{copyright}', [CopyrightController::class, 'update'])->name('copyright.update');
 
-    //Cost Center
-    Route::post('/cost_center', [CostCenterController::class, 'store'])->name('costCenter.store');
-    Route::patch('/cost_center/{costCenter}', [CostCenterController::class, 'update'])->name('costCenter.update');
+    Route::post('/project/{project}/copyright/update', [ProjectController::class, 'updateCopyright'])
+        ->name('project.copyright.update');
 
     // ContractTypes
     Route::get('/contract_types', [ContractTypeController::class, 'index'])->name('contract_types.index');

@@ -16,8 +16,6 @@ use App\Http\Controllers\CompanyTypeController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\ContractTypeController;
-use App\Http\Controllers\CopyrightController;
-use App\Http\Controllers\CostCenterController;
 use App\Http\Controllers\CraftController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DepartmentController;
@@ -716,9 +714,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('templates.view.index')
         ->can('view budget templates');
 
-    //CopyRight
-    Route::post('/copyright', [CopyrightController::class, 'store'])->name('copyright.store');
-    Route::patch('/copyright/{copyright}', [CopyrightController::class, 'update'])->name('copyright.update');
 
     Route::post('/project/{project}/copyright/update', [ProjectController::class, 'updateCopyright'])
         ->name('project.copyright.update');

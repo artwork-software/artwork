@@ -200,7 +200,7 @@ class CalendarController extends Controller
         $eventsWithoutRooms = [];
 
         if (!empty($room)) {
-            $better = $this->roomService->collectEventsForRoom($room, $calendarPeriod);
+            $better = $this->roomService->collectEventsForRoom($room, $calendarPeriod, $project);
         } else {
             if (!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
                 $startDate = Carbon::create($this->userCalendarFilter->start_date)->startOfDay();
@@ -238,7 +238,7 @@ class CalendarController extends Controller
             $better = $this->filterRooms($startDate, $endDate)
                 ->with($relations)
                 ->get();
-            $better = $this->roomService->collectEventsForRooms($better, $calendarPeriod);
+            $better = $this->roomService->collectEventsForRooms($better, $calendarPeriod, $project);
 
             $events = Event::hasNoRoom()->get();
 
@@ -542,10 +542,13 @@ class CalendarController extends Controller
         ];
     }
 
-    public function getEventsOfDay(?Project $project = null): Collection
+    public function getEventsOfInterval($startDate, $endDate, ?Project $project = null): Collection
     {
         $all_events = Event::query();
-        $filteredEvents = $this->filterEvents($all_events, null, null, null, $project);
+        $startDate = Carbon::parse($startDate)->startOfDay();
+        $endDate = Carbon::parse($endDate)->endOfDay();
+
+        $filteredEvents = $this->filterEvents($all_events, $startDate, $endDate, null, $project);
         return $filteredEvents->get();
     }
 
@@ -573,6 +576,7 @@ class CalendarController extends Controller
         $shiftPlan = false
     ): mixed
     {
+
         $user = Auth::user();
         if (!$shiftPlan) {
             $calendarFilter = $user->calendar_filter()->first();
@@ -592,7 +596,7 @@ class CalendarController extends Controller
         $roomCategoryIds = $calendarFilter->room_categories ?? null;
 
         return $query
-            ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project?->id))
+            ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project->id))
             ->when($room, fn(EventBuilder $builder) => $builder->where('room_id', $room->id))
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),

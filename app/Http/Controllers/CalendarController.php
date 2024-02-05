@@ -542,10 +542,13 @@ class CalendarController extends Controller
         ];
     }
 
-    public function getEventsOfDay(?Project $project = null): Collection
+    public function getEventsOfInterval($startDate, $endDate, ?Project $project = null): Collection
     {
         $all_events = Event::query();
-        $filteredEvents = $this->filterEvents($all_events, null, null, null, $project);
+        $startDate = Carbon::parse($startDate)->startOfDay();
+        $endDate = Carbon::parse($endDate)->endOfDay();
+
+        $filteredEvents = $this->filterEvents($all_events, $startDate, $endDate, null, $project);
         return $filteredEvents->get();
     }
 

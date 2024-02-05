@@ -1,10 +1,11 @@
 <?php
 
-namespace Artwork\Modules\Shift\Models;
+namespace Artwork\Modules\ShiftPresetTimeline\Models;
 
 use App\Casts\TimeWithoutSeconds;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $created_at
  * @property string $updated_at
  */
-class PresetTimeLine extends Model
+class ShiftPresetTimeline extends Model
 {
     use HasFactory;
 
@@ -34,6 +35,11 @@ class PresetTimeLine extends Model
 
     public function shiftPreset(): BelongsTo
     {
-        return $this->belongsTo(ShiftPreset::class);
+        return $this->belongsTo(
+            ShiftPreset::class,
+            'shift_preset_id',
+            'id',
+            'shift_presets'
+        );
     }
 }

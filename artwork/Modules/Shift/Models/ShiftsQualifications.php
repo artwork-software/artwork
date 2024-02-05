@@ -7,6 +7,11 @@ use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property int $shift_id
+ * @property int $shift_qualification_id
+ * @property int $value
+ */
 class ShiftsQualifications extends Model
 {
     protected $fillable = [

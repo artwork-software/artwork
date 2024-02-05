@@ -5,7 +5,6 @@
                              leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"/>
             </TransitionChild>
-
             <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <TransitionChild as="template" enter="ease-out duration-300"
@@ -30,7 +29,6 @@
                                 <p class="xsLight subpixel-antialiased">
                                     Möchtest du die Vorlage auf alle Termine dieses Typs in diesem Projekt anwenden?
                                 </p>
-
                                 <div class="mt-10">
                                     <SwitchGroup as="div" class="flex items-center font-bold mb-3">
                                         <SwitchLabel as="span" class="mr-3 text-sm">
@@ -43,7 +41,6 @@
                                             <span :class="presetForm.all === true ? 'font-bold text-gray-900' : 'font-normal text-gray-500'">Auf alle ({{ event_type.abbreviation }}) anwenden</span>
                                         </SwitchLabel>
                                     </SwitchGroup>
-
                                     <div class="mb-2">
                                         <div class="relative w-full">
                                             <div class="w-full">

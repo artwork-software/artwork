@@ -41,7 +41,6 @@ use App\Models\Genre;
 use App\Models\MoneySource;
 use App\Models\Sector;
 use App\Models\ServiceProvider;
-use App\Models\TimeLine;
 use App\Models\User;
 use App\Support\Services\HistoryService;
 use App\Support\Services\MoneySourceThresholdReminderService;
@@ -66,6 +65,7 @@ use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
+use Artwork\Modules\Timeline\Models\Timeline;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -2164,7 +2164,7 @@ class ProjectController extends Controller
     public function updateTimeLines(Request $request): void
     {
         foreach ($request->timelines as $timeline) {
-            $findTimeLine = TimeLine::find($timeline['id']);
+            $findTimeLine = Timeline::find($timeline['id']);
             $findTimeLine->update([
                 'start' => $timeline['start'],
                 'end' => $timeline['end'],
@@ -2893,7 +2893,7 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
-    public function deleteTimeLineRow(TimeLine $timeLine): void
+    public function deleteTimeLineRow(Timeline $timeLine): void
     {
         $timeLine->delete();
     }

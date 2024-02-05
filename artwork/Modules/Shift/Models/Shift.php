@@ -12,7 +12,7 @@ use Artwork\Modules\Craft\Models\Craft;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -57,6 +57,7 @@ use Illuminate\Support\Collection;
  * @property-read bool $infringement
  * @property-read string $break_formatted
  * @property-read \App\Models\User|null $committedBy
+ * @property-read Collection<ShiftsQualifications> $shiftsQualifications
  */
 class Shift extends Model
 {
@@ -102,12 +103,22 @@ class Shift extends Model
 
     public function event(): BelongsTo
     {
-        return $this->belongsTo(Event::class)->without(['series']);
+        return $this->belongsTo(
+            Event::class,
+            'event_id',
+            'id',
+            'events'
+        )->without(['series']);
     }
 
     public function craft(): BelongsTo
     {
-        return $this->belongsTo(Craft::class)->without(['users']);
+        return $this->belongsTo(
+            Craft::class,
+            'craft_id',
+            'id',
+            'crafts'
+        )->without(['users']);
     }
 
     public function users(): BelongsToMany

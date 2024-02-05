@@ -437,7 +437,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('shifts.plan')
         ->can('can view shift plan');
     Route::get('/shifts/presets', [ShiftPresetController::class, 'index'])->name('shifts.presets');
-    Route::post('/shift/{shiftPreset}/preset/store', [ShiftPresetController::class, 'addNewShift'])
+    Route::post('/shift/{shiftPreset}/preset/store', [PresetShiftController::class, 'store'])
         ->name('shift.preset.store');
     Route::post('/shifts/commit', [EventController::class, 'commitShifts'])->name('shifts.commit');
 
@@ -937,8 +937,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/shift/template/search', [ShiftPresetController::class, 'search'])->name('shift.template.search');
     Route::post('/shift/{event}/{shiftPreset}/import/preset/', [ShiftPresetController::class, 'import'])
         ->name('shift.preset.import');
-    Route::patch('/preset/timeline/update', [PresetTimeLineController::class, 'update'])
-        ->name('preset.timeline.update');
     Route::delete('/preset/timeline/{presetTimeLine}/delete', [PresetTimeLineController::class, 'destroy'])
         ->name('preset.delete.timeline.row');
     Route::post('/preset/{shiftPreset}/add', [PresetTimeLineController::class, 'store'])

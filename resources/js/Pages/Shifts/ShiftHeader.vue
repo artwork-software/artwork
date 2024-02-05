@@ -3,15 +3,10 @@
         <div class="ml-9 max-h-screen overflow-hidden">
            <div class="ml-5">
                <h2 class="headline1">Dienstpläne & Schichtvorlagen</h2>
-
                <ShiftTabs />
-
            </div>
             <slot></slot>
         </div>
-
-
-
     </app-layout>
 </template>
 <script>
@@ -24,8 +19,3 @@ export default defineComponent({
     components: {AppLayout, ShiftTabs}
 })
 </script>
-
-
-<style scoped>
-
-</style>

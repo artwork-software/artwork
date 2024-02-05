@@ -1,7 +1,5 @@
 <template>
-
     <div class="mb-3">
-        <!-- Event Header -->
         <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm" :class="preset.event_type.svg_name">
             <div class="flex items-center uppercase">
                 {{ preset.event_type.abbreviation }} | {{ preset.name }}
@@ -19,7 +17,6 @@
                                 class=" flex-shrink-0 h-4 w-4 my-auto"
                                 aria-hidden="true"/>
                         </MenuButton>
-
                     </div>
                     <transition enter-active-class="transition ease-out duration-100"
                                 enter-from-class="transform opacity-0 scale-95"
@@ -57,23 +54,34 @@
                 </Menu>
             </div>
         </div>
-
         <div class="flex justify-start mt-3 overflow-x-scroll gap-3 h-full" v-if="showShift">
-
-            <PresetTimeLine :time-line="preset.time_line" :preset-id="preset.id" />
-            <div class="w-[175px]" v-for="shift in preset.shifts">
-                <SinglePresetShift :shift="shift"/>
+            <PresetTimeLine :time-line="preset.timeline" :preset-id="preset.id" />
+            <div class="w-[175px]" v-for="presetShift in preset.shifts">
+                <SinglePresetShift :preset-shift="presetShift" :shift-qualifications="shiftQualifications"/>
             </div>
-            <!-- Empty -->
-            <div class="w-[175px] flex items-center justify-center border-2 border-dashed" @click="showAddShiftPresetModal = true">
+            <div class="w-[175px] flex items-center justify-center border-2 border-dashed"
+                 @click="showAddShiftPresetModal = true">
                 <PlusCircleIcon class="h-4 w-4 rounded-full bg-backgroundBlue"/>
             </div>
         </div>
     </div>
-
-    <AddEditShiftPresetModal :crafts="crafts" :preset-id="preset.id" v-if="showAddShiftPresetModal" @closed="showAddShiftPresetModal = false" />
-    <AddShiftPresetModal :event_types="event_types" v-if="showEditShiftModal" @closed="showEditShiftModal = false" :preset="preset" />
-    <ConfirmDeleteModal v-if="showConfirmDeleteModal" title="Schichtvorlage löschen" description="Möchten sie die Schichtvorlage löschen?" @closed="showConfirmDeleteModal = false" @delete="deletePreset" />
+    <AddEditShiftPresetModal v-if="showAddShiftPresetModal"
+                             :crafts="crafts"
+                             :preset-id="preset.id"
+                             :shift-qualifications="shiftQualifications"
+                             @closed="showAddShiftPresetModal = false"
+    />
+    <AddShiftPresetModal v-if="showEditShiftModal"
+                         :event_types="event_types"
+                         :preset="preset"
+                         @closed="showEditShiftModal = false"
+    />
+    <ConfirmDeleteModal v-if="showConfirmDeleteModal"
+                        title="Schichtvorlage löschen"
+                        description="Möchten sie die Schichtvorlage löschen?"
+                        @closed="showConfirmDeleteModal = false"
+                        @delete="deletePreset"
+    />
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -83,7 +91,8 @@ import {
     ChevronUpIcon,
     DotsVerticalIcon,
     DuplicateIcon,
-    PlusCircleIcon, TrashIcon,
+    PlusCircleIcon,
+    TrashIcon,
     XIcon
 } from "@heroicons/vue/outline";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
@@ -99,10 +108,12 @@ export default defineComponent({
     name: "SingleShiftPreset",
     components: {
         SvgCollection,
-        TrashIcon, DuplicateIcon,
+        TrashIcon,
+        DuplicateIcon,
         AddEditShiftPresetModal,
         SinglePresetShift,
-        PlusCircleIcon, SingleShift,
+        PlusCircleIcon,
+        SingleShift,
         PresetTimeLine,
         ChevronDownIcon,
         AddShiftPresetModal,
@@ -110,9 +121,18 @@ export default defineComponent({
         ChevronUpIcon,
         XIcon,
         DotsVerticalIcon,
-        TimeLineShiftsComponent, Menu, MenuItems, MenuItem, MenuButton
+        TimeLineShiftsComponent,
+        Menu,
+        MenuItems,
+        MenuItem,
+        MenuButton
     },
-    props: ['preset', 'crafts', 'event_types'],
+    props: [
+        'preset',
+        'crafts',
+        'event_types',
+        'shiftQualifications'
+    ],
     data() {
         return {
             showShift: false,
@@ -124,7 +144,8 @@ export default defineComponent({
     methods: {
         deletePreset(){
             this.$inertia.delete(route('destroy.shift.preset', {shiftPreset: this.preset.id}), {
-                preserveScroll: true
+                preserveScroll: true,
+                onSuccess: () => this.showConfirmDeleteModal = false
             })
         },
         duplicatePreset(){
@@ -137,7 +158,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-
 .eventType0 {
     background-color: #A7A6B115;
     stroke: #7F7E88;

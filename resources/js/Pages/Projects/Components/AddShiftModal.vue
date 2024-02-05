@@ -339,44 +339,23 @@ export default defineComponent({
 
             this.appendComputedShiftQualificationsToShiftForm();
 
+            let onSuccess = () => {
+                this.shiftForm.reset();
+                this.closeModal(true);
+            };
+
             if(this.shiftForm.id !== null && this.shiftForm.id !== undefined){
                 this.shiftForm.patch(route('event.shift.update', this.shift.id), {
                     preserveScroll: true,   // preserve scroll position
                     preserveState: true,    // preserve the state of the form
-                    onSuccess: () => {
-                        this.shiftForm.start = null;
-                        this.shiftForm.end = null;
-                        this.shiftForm.break_minutes = null;
-                        this.shiftForm.craft_id = null;
-                        this.shiftForm.number_employees = null;
-                        this.shiftForm.number_masters = null;
-                        this.shiftForm.description = '';
-                        this.shiftForm.changeAll = false;
-                        this.shiftForm.seriesId = null;
-                        this.shiftForm.changes_start = null;
-                        this.shiftForm.changes_end = null;
-                        this.closeModal(true);  // close the modal
-                    }
-                })
+                    onSuccess: onSuccess
+                });
             } else {
                 this.shiftForm.post(route('event.shift.store', this.event.id), {
                     preserveScroll: true,   // preserve scroll position
                     preserveState: true,    // preserve the state of the form
-                    onSuccess: () => {
-                        this.shiftForm.start = null;
-                        this.shiftForm.end = null;
-                        this.shiftForm.break_minutes = null;
-                        this.shiftForm.craft_id = null;
-                        this.shiftForm.number_employees = null;
-                        this.shiftForm.number_masters = null;
-                        this.shiftForm.description = '';
-                        this.shiftForm.changeAll = false;
-                        this.shiftForm.seriesId = null;
-                        this.shiftForm.changes_start = null;
-                        this.shiftForm.changes_end = null;
-                        this.closeModal(true);  // close the modal
-                    }
-                })
+                    onSuccess: onSuccess
+                });
             }
         }
     },

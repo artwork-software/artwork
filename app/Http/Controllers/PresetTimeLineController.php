@@ -2,49 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\Shift\Models\PresetTimeLine;
-use Artwork\Modules\Shift\Models\ShiftPreset;
+use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
+use Artwork\Modules\ShiftPresetTimeline\Models\ShiftPresetTimeline;
 use Illuminate\Http\Request;
 
 class PresetTimeLineController extends Controller
 {
-    public function index(): void
-    {
-    }
-
-    public function create(): void
-    {
-    }
-
     public function store(ShiftPreset $shiftPreset): void
     {
-        $shiftPreset->timeLine()->create();
+        $shiftPreset->timeline()->create();
     }
-
-
-    public function show(PresetTimeLine $presetTimeLine): void
-    {
-    }
-
-
-    public function edit(PresetTimeLine $presetTimeLine): void
-    {
-    }
-
 
     public function update(Request $request): void
     {
         foreach ($request->timelines as $timeline) {
-            $findTimeLine = PresetTimeLine::find($timeline['id']);
+            $findTimeLine = ShiftPresetTimeline::find($timeline['id']);
             $findTimeLine->update([
                 'start' => $timeline['start'],
                 'end' => $timeline['end'],
-                'description' => $timeline['description']
+                'description' => nl2br($timeline['description_without_html'])
             ]);
         }
     }
 
-    public function destroy(PresetTimeLine $presetTimeLine): void
+    public function destroy(ShiftPresetTimeline $presetTimeLine): void
     {
         $presetTimeLine->delete();
     }

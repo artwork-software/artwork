@@ -1,12 +1,9 @@
-
-
 <template>
     <TransitionRoot as="template" :show="open">
         <Dialog as="div" class="relative z-50" @close="closeModal">
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
             </TransitionChild>
-
             <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
@@ -25,7 +22,6 @@
                                 <p class="xsLight subpixel-antialiased">
                                     Lege fest wie lange deine Schicht dauert und wie viele Personen in deiner Schicht arbeiten sollen.
                                 </p>
-
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                                         <div>
@@ -36,7 +32,6 @@
                                                    required
                                             />
                                             <span class="text-xs text-red-500" v-show="helpTexts.start.length > 0">{{ helpTexts.start }}</span>
-
                                         </div>
                                         <div>
                                             <input type="time"
@@ -47,7 +42,6 @@
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                             <span class="text-xs text-red-500" v-show="helpTexts.end.length > 0">{{ helpTexts.end }}</span>
                                             <span class="text-xs text-red-500" v-show="helpTexts.time.length > 0">{{ helpTexts.time }}</span>
-
                                         </div>
                                         <div>
                                             <input type="number"
@@ -59,7 +53,6 @@
                                             />
                                             <span class="text-xs text-red-500" v-show="helpTexts.breakText.length > 0">{{ helpTexts.breakText }}</span>
                                         </div>
-
                                         <div>
                                             <Listbox as="div" v-model="selectedCraft">
                                                 <div class="relative">
@@ -69,16 +62,14 @@
                                                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                                         </span>
                                                     </ListboxButton>
-
                                                     <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                                         <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                                                             <ListboxOption as="template" v-for="craft in crafts" :key="craft.id" :value="craft" v-slot="{ active, selected }">
                                                                 <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                                     <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ craft.name }} ({{ craft.abbreviation }})</span>
-
                                                                     <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                <CheckIcon class="h-5 w-5" aria-hidden="true" />
-                                            </span>
+                                                                        <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                                                                    </span>
                                                                 </li>
                                                             </ListboxOption>
                                                         </ListboxOptions>
@@ -87,21 +78,17 @@
                                             </Listbox>
                                             <span class="text-xs text-red-500" v-show="helpTexts.craftText.length > 0">{{ helpTexts.craftText }}</span>
                                         </div>
-                                        <input type="number"
-                                               placeholder="Anzahl Mitarbeiter*innen"
-                                               v-model="shiftForm.number_employees"
-                                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                        />
-                                        <input type="number"
-                                               placeholder="Anzahl Meister*innen"
-                                               v-model="shiftForm.number_masters"
-                                               maxlength="3"
-                                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                        <span class="text-xs text-red-500" v-show="helpTexts.employeeText.length > 0">{{ helpTexts.employeeText }}</span>
-                                        <span class="text-xs text-red-500" v-show="helpTexts.masterText.length > 0">{{ helpTexts.masterText }}</span>
-
+                                        <div v-for="computedShiftQualification in this.computedShiftQualifications"
+                                             v-show="this.canComputedShiftQualificationBeShown(computedShiftQualification)">
+                                            <input v-if="this.canComputedShiftQualificationBeShown(computedShiftQualification)"
+                                                   v-model="computedShiftQualification.value"
+                                                   type="number"
+                                                   :placeholder="'Anzahl ' + computedShiftQualification.name"
+                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                            />
+                                        </div>
                                         <div class="mt-2 col-span-2">
-                                            <textarea v-model="shiftForm.description" placeholder="Gibt es wichtige Informationen zu dieser Schicht?" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
+                                            <textarea v-model="shiftForm.description" placeholder="Gibt es wichtige Informationen zu dieser Schicht?" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300" />
                                         </div>
                                     </div>
                                 </div>
@@ -124,9 +111,11 @@ import Permissions from "@/mixins/Permissions.vue";
 import {
     Dialog,
     DialogPanel,
-    DialogTitle, Listbox,
+    DialogTitle,
+    Listbox,
     ListboxButton,
-    ListboxOption, ListboxOptions,
+    ListboxOption,
+    ListboxOptions,
     TransitionChild,
     TransitionRoot
 } from "@headlessui/vue";
@@ -140,171 +129,187 @@ export default defineComponent({
     mixins: [Permissions],
     components: {
         ConfirmationModal,
-        CheckIcon, ChevronDownIcon,
+        CheckIcon,
+        ChevronDownIcon,
         Input,
         AddButton,
         Dialog,
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel, PlusCircleIcon, ListboxButton, ListboxOption, ListboxOptions, Listbox
+        XIcon,
+        DialogPanel,
+        PlusCircleIcon,
+        ListboxButton,
+        ListboxOption,
+        ListboxOptions,
+        Listbox
     },
-    props: ['crafts', 'preset', 'edit', 'presetId'],
+    props: ['crafts', 'presetShift', 'edit', 'presetId', 'shiftQualifications'],
     data(){
         return {
             open: true,
             shiftForm: useForm({
-                id: this.preset ? this.preset.id : null,
-                start: this.preset ? this.preset.start : null,
-                end: this.preset ? this.preset.end : null,
-                break_minutes: this.preset ? this.preset.break_minutes : null,
-                craft_id: this.preset ? this.preset.craft.id : null,
-                number_employees: this.preset ? this.preset.number_employees : null,
-                number_masters: this.preset ? this.preset.number_masters : null,
-                description: this.preset ? this.preset.description : '',
+                id: this.presetShift ? this.presetShift.id : null,
+                start: this.presetShift ? this.presetShift.start : null,
+                end: this.presetShift ? this.presetShift.end : null,
+                break_minutes: this.presetShift ? this.presetShift.break_minutes : null,
+                craft_id: this.presetShift ? this.presetShift.craft.id : null,
+                description: this.presetShift ? this.presetShift.description : '',
+                presetShiftsQualifications: []
             }),
-            selectedCraft: this.preset ? this.preset.craft : null,
+            selectedCraft: this.presetShift ? this.presetShift.craft : null,
             helpTexts: {
                 craftText: '',
                 breakText: '',
                 start: '',
                 end: '',
                 time: '',
-                employeeText:'',
-                masterText:'',
             },
             showChangeAllModal: false
         }
     },
     emits: ['closed'],
+    computed: {
+        computedShiftQualifications() {
+            let computedShiftQualifications = [];
+
+            this.shiftQualifications.forEach((shiftQualification) => {
+                //on edit lookup qualifications already assigned to shift for their values
+                let foundShiftsQualification = this.edit ?
+                    this.presetShift.shifts_qualifications.find(
+                        (shiftsQualification) => shiftsQualification.shift_qualification_id === shiftQualification.id
+                    ) :
+                    undefined;
+                //push with given value or empty string
+                computedShiftQualifications.push({
+                    id: shiftQualification.id,
+                    name: shiftQualification.name,
+                    available: shiftQualification.available,
+                    value: typeof foundShiftsQualification !== 'undefined' ? foundShiftsQualification.value : ''
+                });
+            });
+
+            return computedShiftQualifications;
+        },
+    },
     methods: {
+        canComputedShiftQualificationBeShown(computedShiftQualification) {
+            //computedShiftQualification is shown if its either available or the modal is opened for edit and the
+            //given shift contains the shift_qualification_id already, even if it's not available for new shifts anymore
+            return computedShiftQualification.available ||
+                (this.edit && this.shiftContainsComputedShiftQualification(computedShiftQualification));
+        },
+        shiftContainsComputedShiftQualification(computedShiftQualification) {
+            //if shift contains shift qualficiation id return true to show it even if it's not available anymore
+            //it also gets appended to patch request then but not to create requests
+            return typeof this.presetShift.shifts_qualifications.find(
+                (shiftsQualification) => shiftsQualification.shift_qualification_id === computedShiftQualification.id
+            ) !== 'undefined'
+        },
+        appendComputedShiftQualificationsToShiftForm() {
+            this.computedShiftQualifications.forEach(
+                (computedShiftQualification) => {
+                    //only append if they also can be shown
+                    if (this.canComputedShiftQualificationBeShown(computedShiftQualification)) {
+                        this.shiftForm.presetShiftsQualifications.push({
+                            shift_qualification_id: computedShiftQualification.id,
+                            value: computedShiftQualification.value
+                        });
+                    }
+                }
+            );
+        },
         closeModal(bool){
             this.$emit('closed', bool);
         },
         saveShift(){
             this.shiftForm.craft_id = this.selectedCraft?.id;
 
-            if(this.shiftForm.start > this.shiftForm.start){
+            if (this.shiftForm.start > this.shiftForm.start) {
                 this.helpTexts.time = 'Die Schicht kann nicht vor dem Termin starten.';
                 return;
             } else {
                 this.helpTexts.time = '';
             }
 
-            if ( this.shiftForm.start === null ){
+            if (this.shiftForm.start === null){
                 this.helpTexts.start = 'Bitte gib einen Startzeitpunkt an.';
                 return;
             } else {
                 this.helpTexts.start = '';
             }
 
-            if ( this.shiftForm.end === null ){
+            if (this.shiftForm.end === null){
                 this.helpTexts.end = 'Bitte gib einen Endzeitpunkt an.';
                 return;
             } else {
                 this.helpTexts.end = '';
             }
 
-            if ( this.selectedCraft === null ){
+            if (this.selectedCraft === null){
                 this.helpTexts.craftText = 'Bitte wähle ein Gewerk aus.';
                 return;
             } else {
                 this.helpTexts.craftText = '';
             }
 
-            if ( this.shiftForm.break_minutes === null ){
+            if (this.shiftForm.break_minutes === null){
                 this.helpTexts.breakText = 'Bitte gib eine Pausenzeit an.';
                 return;
             } else {
                 this.helpTexts.breakText = '';
             }
 
-            // check if break positive
-            if(this.shiftForm.break_minutes < 0){
+            if (this.shiftForm.break_minutes < 0) {
                 this.helpTexts.breakText = 'Die Pausenzeit kann nicht negativ sein.';
                 return;
             } else {
                 this.helpTexts.breakText = '';
             }
 
-            // check if break is not longer than shift
-            if(this.shiftForm.break_minutes >= (this.shiftForm.end - this.shiftForm.start)){
+            if (this.shiftForm.break_minutes >= (this.shiftForm.end - this.shiftForm.start)) {
                 this.helpTexts.breakText = 'Die Pausenzeit kann nicht länger als die Schicht sein.';
                 return;
             } else {
                 this.helpTexts.breakText = '';
             }
 
-            // check if number of employees is not negative
-            if(this.shiftForm.number_employees < 0){
-                this.helpTexts.employeeText = 'Die Anzahl der Mitarbeiter:innen kann nicht negativ sein.';
-                return;
-            } else {
-                this.helpTexts.employeeText = '';
-            }
-
-            // check if number of masters is not negative
-            if(this.shiftForm.number_masters < 0){
-                this.helpTexts.masterText = 'Die Anzahl der Meister:innen kann nicht negativ sein.';
-                return;
-            } else {
-                this.helpTexts.masterText = '';
-            }
-
-
-            if(this.shiftForm.start >= this.shiftForm.end ){
+            if (this.shiftForm.start >= this.shiftForm.end) {
                 this.helpTexts.time = 'Der Endzeitpunkt muss nach dem Startzeitpunkt liegen.';
                 return;
             } else {
                 this.helpTexts.time = '';
             }
 
-            // set the craft id
             this.shiftForm.craft_id = this.selectedCraft.id;
 
-            if(this.shiftForm.number_employees === '' || this.shiftForm.number_employees === null){
-                this.shiftForm.number_employees = 0;
-            }
+            this.appendComputedShiftQualificationsToShiftForm();
 
-            if(this.shiftForm.number_masters === '' || this.shiftForm.number_masters === null){
-                this.shiftForm.number_masters = 0;
-            }
+            let onSuccess = () => {
+                this.shiftForm.start = null;
+                this.shiftForm.end = null;
+                this.shiftForm.break_minutes = null;
+                this.shiftForm.craft_id = null;
+                this.shiftForm.description = '';
+                this.shiftForm.shiftsQualifications = [];
+                this.closeModal(true);
+            };
 
-            if(this.shiftForm.id !== null && this.shiftForm.id !== undefined){
-                this.shiftForm.patch(route('shift.preset.update', {presetShift: this.preset.id}), {
-                    preserveScroll: true,   // preserve scroll position
-                    preserveState: true,    // preserve the state of the form
-                    onSuccess: () => {
-                        this.shiftForm.start = null;
-                        this.shiftForm.end = null;
-                        this.shiftForm.break_minutes = null;
-                        this.shiftForm.craft_id = null;
-                        this.shiftForm.number_employees = null;
-                        this.shiftForm.number_masters = null;
-                        this.shiftForm.description = '';
-                        this.closeModal(true);  // close the modal
-                    }
+            if (this.shiftForm.id !== null && this.shiftForm.id !== undefined) {
+                this.shiftForm.patch(route('shift.preset.update', {presetShift: this.presetShift.id}), {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: onSuccess
                 })
             } else {
                 this.shiftForm.post(route('shift.preset.store', this.presetId), {
-                    preserveScroll: true,   // preserve scroll position
-                    preserveState: true,    // preserve the state of the form
-                    onSuccess: () => {
-                        this.shiftForm.start = null;
-                        this.shiftForm.end = null;
-                        this.shiftForm.break_minutes = null;
-                        this.shiftForm.craft_id = null;
-                        this.shiftForm.number_employees = null;
-                        this.shiftForm.number_masters = null;
-                        this.shiftForm.description = '';
-                        this.closeModal(true);  // close the modal
-                    }
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess: onSuccess
                 })
             }
         }
     }
 })
 </script>
-<style scoped>
-
-</style>

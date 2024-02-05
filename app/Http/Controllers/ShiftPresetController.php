@@ -3,239 +3,84 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use App\Models\EventType;
-
-use Artwork\Modules\Craft\Models\Craft;
-use Artwork\Modules\Shift\Models\ShiftPreset;
+use Artwork\Modules\Craft\EventTypeService;
+use Artwork\Modules\Craft\Services\CraftService;
+use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
+use Artwork\Modules\ShiftPreset\Services\ShiftPresetService;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ShiftPresetController extends Controller
 {
-    public function index()
+    public function __construct(
+        private readonly CraftService $craftService,
+        private readonly EventTypeService $eventTypeService,
+        private readonly ShiftQualificationService $shiftQualificationService,
+        private readonly ShiftPresetService $shiftPresetService,
+        private readonly EventService $eventService
+    ) {
+    }
+
+    public function index(): Response
     {
-        $shiftPresets = ShiftPreset::with(['event_type', 'shifts', 'timeLine'])->get();
-
-        foreach ($shiftPresets as $shiftPreset) {
-            $timeline = $shiftPreset->timeLine()->get()->toArray();
-
-            usort($timeline, function ($a, $b) {
-                if ($a['start'] === null && $b['start'] === null) {
-                    return 0;
-                } elseif ($a['start'] === null) {
-                    return 1; // $a should come later in the array
-                } elseif ($b['start'] === null) {
-                    return -1; // $b should come later in the array
-                }
-
-                // Compare the 'start' values for ascending order
-                return strtotime($a['start']) - strtotime($b['start']);
-            });
-
-            $shiftPreset->setRelation('timeLine', collect($timeline));
-        }
-
-
         return Inertia::render('Shifts/ShiftPresets', [
-            'shiftPresets' => $shiftPresets,
-            'crafts' => Craft::all(),
-            'event_types' => EventType::all()
+            'shiftPresets' => $this->shiftPresetService->getAllShiftPresetsWithSortedTimelines(),
+            'shiftQualifications' => $this->shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'crafts' => $this->craftService->getAll(),
+            'event_types' => $this->eventTypeService->getAll()
         ]);
     }
 
-    public function create(): void
+    public function store(Request $request, Event $event): void
     {
-    }
-
-    public function store(Event $event, Request $request): void
-    {
-        $shifts = $event->shifts()->get();
-        $timeLines = $event->timeline()->get();
-
-        $shiftPreset = ShiftPreset::create([
-            'name' => $request->name,
-            'event_type_id' => $request->event_type_id
-        ]);
-
-        foreach ($shifts as $shift) {
-            $shiftPreset->shifts()->create([
-                'start' => $shift->start,
-                'end' => $shift->end,
-                'break_minutes' => $shift->break_minutes,
-                'craft_id' => $shift->craft_id,
-                'number_employees' => $shift->number_employees,
-                'number_masters' => $shift->number_masters,
-                'description' => $shift->description,
-                'is_committed' => $shift->is_committed
-            ]);
-        }
-
-        foreach ($timeLines as $timeLine) {
-            $shiftPreset->timeLine()->create([
-                'start' => $timeLine->start,
-                'end' => $timeLine->end,
-                'description' => $timeLine->description,
-            ]);
-        }
-    }
-
-
-    public function show(ShiftPreset $shiftPreset): void
-    {
-    }
-
-    public function edit(ShiftPreset $shiftPreset): void
-    {
-    }
-
-    public function update(Request $request, ShiftPreset $shiftPreset): void
-    {
-        $shiftPreset->update($request->only(['name', 'event_type_id']));
-    }
-
-    public function destroy(ShiftPreset $shiftPreset): void
-    {
-        $shiftPreset->delete();
+        $this->shiftPresetService->storeFromEventAndRequest($event, $request);
     }
 
     public function duplicate(ShiftPreset $shiftPreset): void
     {
-        $shifts = $shiftPreset->shifts()->get();
-        $timeLines = $shiftPreset->timeline()->get();
-
-        $shiftPreset = ShiftPreset::create([
-            'name' => $shiftPreset->name . ' (Kopie)',
-            'event_type_id' => $shiftPreset->event_type_id
-        ]);
-
-        foreach ($shifts as $shift) {
-            $shiftPreset->shifts()->create([
-                'start' => $shift->start,
-                'end' => $shift->end,
-                'break_minutes' => $shift->break_minutes,
-                'craft_id' => $shift->craft_id,
-                'number_employees' => $shift->number_employees,
-                'number_masters' => $shift->number_masters,
-                'description' => $shift->description,
-                'is_committed' => $shift->is_committed
-            ]);
-        }
-
-        foreach ($timeLines as $timeLine) {
-            $shiftPreset->timeLine()->create([
-                'start' => $timeLine->start,
-                'end' => $timeLine->end,
-                'description' => $timeLine->description,
-            ]);
-        }
+        $this->shiftPresetService->duplicateShiftPreset($shiftPreset);
     }
 
-    public function addNewShift(Request $request, ShiftPreset $shiftPreset): void
+    public function update(Request $request, ShiftPreset $shiftPreset): void
     {
-        $shiftPreset->shifts()->create([
-            'start' => $request->start,
-            'end' => $request->end,
-            'break_minutes' => $request->break_minutes,
-            'craft_id' => $request->craft_id,
-            'number_employees' => $request->number_employees,
-            'number_masters' => $request->number_masters,
-            'description' => $request->description,
-            'is_committed' => $request->is_committed
-        ]);
+        $this->shiftPresetService->updateFromRequest($shiftPreset, $request);
+    }
+
+    public function destroy(ShiftPreset $shiftPreset): void
+    {
+        $this->shiftPresetService->delete($shiftPreset);
     }
 
     public function storeEmpty(Request $request): void
     {
-        ShiftPreset::create([
-            'name' => $request->name,
-            'event_type_id' => $request->event_type_id
-        ]);
+        $this->shiftPresetService->createFromRequest($request);
     }
 
-    public function search(Request $request)
+    public function search(Request $request): Collection
     {
-        $query = $request->input('query');
-
-        // Assuming you also have an 'eventTypeId' parameter in your request
-        $eventTypeId = $request->input('eventTypeId');
-
-        // Perform a full-text search using Laravel Scout
-        $shiftPresets = ShiftPreset::search($query);
-
-        $returnArray = [];
-
-        foreach ($shiftPresets->get() as $shiftPreset) {
-            if ($shiftPreset->event_type_id == $eventTypeId) {
-                array_push($returnArray, $shiftPreset);
-            }
-        }
-
-        return $returnArray;
+        return $this->shiftPresetService->findByNameAndEventTypeId(
+            $request->get('query'),
+            $request->get('eventTypeId')
+        );
     }
 
-    public function import(Request $request, Event $event, ShiftPreset $shiftPreset): void
-    {
-        if ($request->all === true) {
-            $project = $event->project()->first();
-
-            $eventsByProject = $project->events()->where('event_type_id', $shiftPreset->event_type_id)->get();
-
-            foreach ($eventsByProject as $eventByProject) {
-                $eventByProject->shifts()->delete();
-                $eventByProject->timeline()->delete();
-
-                $shifts = $shiftPreset->shifts()->get();
-                $timeLines = $shiftPreset->timeline()->get();
-
-                foreach ($shifts as $shift) {
-                    $eventByProject->shifts()->create([
-                        'start' => $shift->start,
-                        'end' => $shift->end,
-                        'break_minutes' => $shift->break_minutes,
-                        'craft_id' => $shift->craft_id,
-                        'number_employees' => $shift->number_employees,
-                        'number_masters' => $shift->number_masters,
-                        'description' => $shift->description,
-                        'is_committed' => false
-                    ]);
-                }
-
-                foreach ($timeLines as $timeLine) {
-                    $eventByProject->timeline()->create([
-                        'start' => $timeLine->start,
-                        'end' => $timeLine->end,
-                        'description' => $timeLine->description,
-                    ]);
-                }
-            }
-        } else {
-            $event->shifts()->delete();
-            $event->timeline()->delete();
-
-            $shifts = $shiftPreset->shifts()->get();
-            $timeLines = $shiftPreset->timeline()->get();
-
-            foreach ($shifts as $shift) {
-                $event->shifts()->create([
-                    'start' => $shift->start,
-                    'end' => $shift->end,
-                    'break_minutes' => $shift->break_minutes,
-                    'craft_id' => $shift->craft_id,
-                    'number_employees' => $shift->number_employees,
-                    'number_masters' => $shift->number_masters,
-                    'description' => $shift->description,
-                    'is_committed' => false
-                ]);
-            }
-
-            foreach ($timeLines as $timeLine) {
-                $event->timeline()->create([
-                    'start' => $timeLine->start,
-                    'end' => $timeLine->end,
-                    'description' => $timeLine->description,
-                ]);
-            }
+    public function import(
+        Request $request,
+        Event $event,
+        ShiftPreset $shiftPreset
+    ): void {
+        if (!$request->boolean('all')) {
+            $this->eventService->importShiftPreset($event, $shiftPreset);
+            return;
         }
+
+        $this->eventService->importShiftPresetForEventsOfProjectByEventType(
+            $shiftPreset,
+            $event->project_id
+        );
     }
 }

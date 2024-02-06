@@ -63,7 +63,7 @@
                 </div>
             </div>
             <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="{ height: userOverviewHeight + 'px'}">
-                    <div class="flex justify-center overflow-y-scroll">
+                    <div class="flex justify-center overflow-y-scroll mt-5">
                         <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
                              class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">
                             <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
@@ -199,7 +199,7 @@
 
         </ShiftHeader>
 
-        <div class="fixed bottom-1 w-full" v-if="multiEditMode">
+        <div class="fixed bottom-1 w-full z-40" v-if="multiEditMode">
             <div v-show="multiEditFeedback" class="flex items-center justify-center text-red-500 my-2">
                 {{ multiEditFeedback }}
             </div>

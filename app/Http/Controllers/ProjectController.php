@@ -1640,7 +1640,7 @@ class ProjectController extends Controller
     }
     public function projectCalendarTab(Project $project, CalendarController $calendar): Response|ResponseFactory
     {
-        $showCalendar = $calendar->createCalendarData('', $project);
+        $showCalendar = $calendar->createCalendarData(type: '', project: $project);
 
         $project->load([
             'access_budget',
@@ -1735,7 +1735,7 @@ class ProjectController extends Controller
                 eventTypes: $showCalendar['filterOptions']['eventTypes'],
                 roomCategories: $showCalendar['filterOptions']['roomCategories'],
                 roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
-                events: $calendar->getEventsOfDay($project),
+                events: $calendar->getEventsOfInterval($startDate, $endDate, $project),
                 filter: Filter::query()->where('user_id', Auth::id())->get(),
             ),
             'filterOptions' => $showCalendar["filterOptions"],
@@ -2821,14 +2821,9 @@ class ProjectController extends Controller
 
             $img = Image::make($file);
 
-            $height = $img->height();
-            $width = $img->width();
-            $ratio = $width / $height;
-
-            if ($ratio < 4 || $ratio > 8) {
+            if ($img->width() < 1080 || $img->height() < 1080) {
                 throw ValidationException::withMessages([
-                    'key_visual' => 'Das Key Visual sollte mindestens 4 und maximal 8 mal so breit wie hoch sein. ' .
-                        'Im Idealfall 1150px breit und 200px hoch.'
+                    'key_visual' => 'Die Abmessungen des Key Visuals sollte mindestens 1080x1080px betragen.'
                 ]);
             }
 

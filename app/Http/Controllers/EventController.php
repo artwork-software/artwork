@@ -93,14 +93,23 @@ class EventController extends Controller
                 $this->userCalendarFilter->start_date,
                 $this->userCalendarFilter->end_date
             );
+
+            $eventsOfDay = collect();
+
+            if($this->userCalendarFilter->start_date === $this->userCalendarFilter->end_date) {
+                $eventsOfDay = Collection::make(CalendarEventResource::collection($calendarController->getEventsOfInterval(
+                    $this->userCalendarFilter->start_date,
+                    $this->userCalendarFilter->end_date
+                ))->resolve());
+            }
+
             $events = new CalendarEventCollectionResourceModel(
                 areas: $showCalendar['filterOptions']['areas'],
                 projects: $showCalendar['filterOptions']['projects'],
                 eventTypes: $showCalendar['filterOptions']['eventTypes'],
                 roomCategories: $showCalendar['filterOptions']['roomCategories'],
                 roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
-                events: Collection::make(CalendarEventResource::collection($calendarController->getEventsOfDay())
-                    ->resolve()),
+                events: $eventsOfDay,
                 filter: Filter::where('user_id', Auth::id())->get(),
             );
         } else {

@@ -1522,12 +1522,12 @@ class ProjectController extends Controller
                 ->first();
 
             if ($column->type == 'sum') {
-                $sum = (int)$firstRowValue + (int)$secondRowValue;
+                $sum = (float)$firstRowValue + (float)$secondRowValue;
                 $updateColumn->update([
                     'value' => $sum
                 ]);
             } else {
-                $sum = (int)$firstRowValue - (int)$secondRowValue;
+                $sum = (float)$firstRowValue - (float)$secondRowValue;
                 $updateColumn->update([
                     'value' => $sum
                 ]);
@@ -1965,7 +1965,11 @@ class ProjectController extends Controller
             if ($column->type === 'difference' || $column->type === 'sum') {
                 $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
                 $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
-                $calculateName = $firstName . ' + ' . $secondName;
+                if ($column->type === 'difference') {
+                    $calculateName = $firstName . ' - ' . $secondName;
+                } else {
+                    $calculateName = $firstName . ' + ' . $secondName;
+                }
             }
             $calculateNames[$column->id] = $calculateName;
         }

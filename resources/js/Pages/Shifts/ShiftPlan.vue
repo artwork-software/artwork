@@ -62,7 +62,7 @@
                     </Table>
                 </div>
             </div>
-            <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="{ height: userOverviewHeight - 30 + 'px'}">
+            <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="showUserOverview ?{ height: userOverviewHeight - 30 + 'px'} : {height: 20 + 'px'}">
                     <div class="flex justify-center overflow-y-scroll">
                         <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
                              class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">
@@ -89,7 +89,7 @@
                             </div>
                         </div>
                     </div>
-                <div ref="userOverview" class="w-full bg-primary overflow-x-scroll z-30 overflow-y-scroll" v-show="showUserOverview" :style="{ height: userOverviewHeight + 'px'}">
+                <div ref="userOverview" class="w-full bg-primary overflow-x-scroll z-30 overflow-y-scroll" v-show="showUserOverview" :style="showUserOverview ?{ height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
                     <table class="w-full text-white overflow-y-scroll">
                         <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                         <div>

@@ -9,10 +9,10 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
-        "ext-gd": "*",
-        "ext-zip": "*",
-        "ext-pdo": "*",
         "ext-curl": "*",
+        "ext-gd": "*",
+        "ext-pdo": "*",
+        "ext-zip": "*",
         "antonrom00/laravel-model-changes-history": "dev-master",
         "barryvdh/laravel-dompdf": "^2.0",
         "beyondcode/laravel-websockets": "^1.13.1",
@@ -32,11 +32,12 @@
         "pestphp/pest": "^v1.22.2",
         "pestphp/pest-plugin-laravel": "^v1.3.0",
         "pusher/pusher-php-server": "7.0.2",
+        "sentry/sentry-laravel": "^4.2",
         "spatie/laravel-permission": "^5.5.16",
         "spatie/laravel-settings": "^2.5.0",
+        "symfony/event-dispatcher": "^v6.1.0",
         "symfony/http-client": "^v6.1.7",
         "symfony/mailgun-mailer": "^v6.1.0",
-        "symfony/event-dispatcher": "^v6.1.0",
         "tightenco/ziggy": "^v1.5.0"
     },
     "require-dev": {

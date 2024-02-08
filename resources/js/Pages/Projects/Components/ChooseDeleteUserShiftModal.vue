@@ -25,13 +25,13 @@
                                 </p>
 
                                 <SwitchGroup as="div" class="flex items-center mt-4">
-                                    <SwitchLabel as="span" class="mr-3 text-sm" :class="bufferForReturn.onlyThisDay ? 'text-gray-400' : 'font-bold'">
+                                    <SwitchLabel as="span" class="mr-3 text-sm" :class="this.removeFromSingleShift ? 'text-gray-400' : 'font-bold'">
                                         Für diese und alle nachfolgenden Schichten
                                     </SwitchLabel>
-                                    <Switch v-model="bufferForReturn.onlyThisDay " :class="[bufferForReturn.onlyThisDay ? 'bg-indigo-600' : 'bg-indigo-600', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
-                                        <span aria-hidden="true" :class="[bufferForReturn.onlyThisDay  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                                    <Switch v-model="this.removeFromSingleShift" :class="[this.removeFromSingleShift ? 'bg-indigo-600' : 'bg-indigo-600', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
+                                        <span aria-hidden="true" :class="[this.removeFromSingleShift  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                     </Switch>
-                                    <SwitchLabel as="span" class="ml-3 text-sm" :class="bufferForReturn.onlyThisDay ? 'font-bold' : 'text-gray-400'">
+                                    <SwitchLabel as="span" class="ml-3 text-sm" :class="this.removeFromSingleShift ? 'font-bold' : 'text-gray-400'">
                                         Nur für diese Schicht
                                     </SwitchLabel>
 
@@ -72,19 +72,16 @@ export default {
             open: true,
             clickedAll: false,
             clickedSingle: false,
-            bufferForReturn: {
-                onlyThisDay: this.buffer ? this.buffer.onlyThisDay : false,
-            }
+            removeFromSingleShift: false,
         }
     },
-    props: ['event', 'buffer'],
     emits: ['close-modal', 'returnBuffer'],
     methods: {
         closed(){
             this.$emit('close-modal')
         },
         returnBuffer(){
-            this.$emit('returnBuffer', this.bufferForReturn)
+            this.$emit('returnBuffer', this.removeFromSingleShift)
         }
     }
 }

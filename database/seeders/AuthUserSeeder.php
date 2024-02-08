@@ -56,10 +56,18 @@ class AuthUserSeeder extends Seeder
             'opened_checklists' => [],
             'opened_areas' => [],
             'profile_photo_path' => '/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
-            'can_work_shifts' => Factory::create('de_DE')->boolean()
+            'can_work_shifts' => true
         ]);
 
-        $masterShiftQualificationId = ShiftQualification::query()->masterQualification()->first()->id;
+        $workerShiftQualificationId = ShiftQualification::workerQualification()->first()->id;
+        $this->userShiftQualificationRepository->save(
+            new UserShiftQualification([
+                'user_id' => $user->id,
+                'shift_qualification_id' => $workerShiftQualificationId
+            ])
+        );
+
+        $masterShiftQualificationId = ShiftQualification::masterQualification()->first()->id;
         $this->userShiftQualificationRepository->save(
             new UserShiftQualification([
                 'user_id' => $user->id,
@@ -142,6 +150,12 @@ class AuthUserSeeder extends Seeder
             'opened_areas' => [],
             'profile_photo_path' => '/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg'
         ]);
+        $this->userShiftQualificationRepository->save(
+            new UserShiftQualification([
+                'user_id' => $user->id,
+                'shift_qualification_id' => $workerShiftQualificationId
+            ])
+        );
         $this->userShiftQualificationRepository->save(
             new UserShiftQualification([
                 'user_id' => $user->id,

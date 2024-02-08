@@ -1,7 +1,5 @@
 <template>
     <ShiftHeader>
-
-
         <div class="w-full flex my-auto items-center justify-between mb-3 mt-10">
             <div class="flex items-center justify-between">
                 <Listbox as="div" class="flex w-72 ml-5" v-model="selectedFilter">
@@ -58,11 +56,14 @@
                 </div>
             </div>
         </div>
-
         <div class="w-full">
             <div v-if="filteredShiftPresets.length > 0">
                 <div v-for="preset in filteredShiftPresets">
-                    <SingleShiftPreset :preset="preset" :crafts="crafts" :event_types="event_types"/>
+                    <SingleShiftPreset :preset="preset"
+                                       :crafts="crafts"
+                                       :event_types="event_types"
+                                       :shift-qualifications="shiftQualifications"
+                    />
                 </div>
             </div>
             <div v-else>
@@ -73,8 +74,6 @@
                 </div>
             </div>
         </div>
-
-
         <AddShiftPresetModal :event_types="event_types" v-if="showAddShiftPresetModal" @closed="showAddShiftPresetModal = false" />
     </ShiftHeader>
 </template>
@@ -94,13 +93,27 @@ export default defineComponent({
     name: "ShiftPresets",
     components: {
         Input,
-        InputComponent, XIcon, SearchIcon,
+        InputComponent,
+        XIcon,
+        SearchIcon,
         AddShiftPresetModal,
-        ChevronDownIcon, SvgCollection, PlusIcon,
+        ChevronDownIcon,
+        SvgCollection,
+        PlusIcon,
         SingleShiftPreset,
-        ShiftHeader, Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
+        ShiftHeader,
+        Listbox,
+        ListboxButton,
+        ListboxLabel,
+        ListboxOption,
+        ListboxOptions
     },
-    props: ['shiftPresets', 'crafts', 'event_types'],
+    props: [
+        'shiftPresets',
+        'crafts',
+        'event_types',
+        'shiftQualifications'
+    ],
     data(){
         return {
             selectedFilter: {
@@ -114,15 +127,20 @@ export default defineComponent({
     },
     computed: {
         filteredShiftPresets(){
-            if(this.selectedFilter.id === 0){
-                if(this.preset_search.length > 0 ){
-                    return this.shiftPresets.filter(preset => preset.name.toLowerCase().includes(this.preset_search.toLowerCase()))
+            if (this.selectedFilter.id === 0) {
+                if (this.preset_search.length > 0) {
+                    return this.shiftPresets.filter(
+                        preset => preset.name.toLowerCase().includes(this.preset_search.toLowerCase())
+                    )
                 } else {
                     return this.shiftPresets
                 }
             } else {
-                if(this.preset_search.length > 0 ){
-                    return this.shiftPresets.filter(preset => preset.name.toLowerCase().includes(this.preset_search.toLowerCase()) && preset.event_type.id === this.selectedFilter.id)
+                if (this.preset_search.length > 0) {
+                    return this.shiftPresets.filter(
+                        preset => preset.name.toLowerCase().includes(this.preset_search.toLowerCase()) &&
+                            preset.event_type.id === this.selectedFilter.id
+                    )
                 } else {
                     return this.shiftPresets.filter(preset => preset.event_type.id === this.selectedFilter.id)
                 }
@@ -137,8 +155,3 @@ export default defineComponent({
     }
 })
 </script>
-
-
-<style scoped>
-
-</style>

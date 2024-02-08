@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Timeline\Models;
 
 use App\Casts\TimeWithoutSeconds;
+use App\Models\Event;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $created_at
  * @property string $updated_at
  */
-class TimeLine extends Model
+class Timeline extends Model
 {
     use HasFactory;
 
@@ -34,6 +35,11 @@ class TimeLine extends Model
 
     public function event(): BelongsTo
     {
-        return $this->belongsTo(Event::class);
+        return $this->belongsTo(
+            Event::class,
+            'event_id',
+            'id',
+            'events'
+        );
     }
 }

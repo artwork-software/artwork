@@ -6,12 +6,18 @@ use Artwork\Modules\ShiftQualification\Http\Requests\StoreShiftQualificationRequ
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateShiftQualificationRequest;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
+use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
 class ShiftQualificationService
 {
     public function __construct(private readonly ShiftQualificationRepository $shiftQualificationRepository)
     {
+    }
+
+    public function getAllOrderedByCreationDateAscending(): Collection
+    {
+        return $this->shiftQualificationRepository->getAllOrderedByCreationDateAscending();
     }
 
     /**
@@ -36,5 +42,14 @@ class ShiftQualificationService
         $this->shiftQualificationRepository->saveOrFail(
             $shiftQualification->fill($updateShiftQualificationRequest->only('icon', 'name', 'available'))
         );
+    }
+
+    public function isStillAvailable(int $shiftQualificationId): bool
+    {
+        if ($shiftQualification = $this->shiftQualificationRepository->findById($shiftQualificationId)) {
+            return $shiftQualification->available;
+        }
+
+        return false;
     }
 }

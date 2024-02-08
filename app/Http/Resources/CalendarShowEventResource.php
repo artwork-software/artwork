@@ -48,7 +48,7 @@ class CalendarShowEventResource extends JsonResource
             //'project' => new ProjectInEventResource($this->project),
             'allDay' => $this->allDay,
             // to display rooms as split
-            'shifts' => $this->shifts,
+            'shifts' => $this->shifts()->with(['shiftsQualifications'])->get(),
         ];
     }
 }

@@ -1,14 +1,11 @@
 <template>
     <div class=" flex items-center justify-between px-4 text-white text-xs relative bg-gray-500">
         <div class="h-9 flex items-center">
-            {{ shift.craft.abbreviation }}
-            (0/{{ shift.number_employees }})
-            <span class="ml-1" v-if="shift.number_masters > 0">
-                 (0/{{ shift.number_masters }})
-            </span>
+            {{ presetShift.craft.abbreviation }}
+            (0/{{ computedMaxWorkerCount }})
         </div>
         <div class="absolute flex items-center right-0">
-            <div v-if="!shift.break_minutes" class="h-9 bg-red-500 flex items-center w-fit right-0 p-3">
+            <div v-if="!presetShift.break_minutes" class="h-9 bg-red-500 flex items-center w-fit right-0 p-3">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12.21" height="12.2" viewBox="0 0 12.21 12.2">
                     <g id="Gruppe_1639" data-name="Gruppe 1639" transform="translate(-523.895 -44.9)" opacity="0.9">
                         <path id="Icon_metro-warning" data-name="Icon metro-warning"
@@ -26,7 +23,6 @@
                                 class=" flex-shrink-0 h-4 w-4 my-auto"
                                 aria-hidden="true"/>
                         </MenuButton>
-
                     </div>
                     <transition enter-active-class="transition ease-out duration-100"
                                 enter-from-class="transform opacity-0 scale-95"
@@ -47,7 +43,7 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                    <a href="#" @click="deleteShift(shift.id)"
+                                    <a href="#" @click="deleteShift(presetShift.id)"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -64,30 +60,28 @@
     </div>
     <div class="mt-1 h-[calc(100%-2.7rem)] bg-gray-200 p-1 max-h-96 overflow-x-scroll">
         <p class="text-xs mb-1">
-            {{ shift.start }} - {{ shift.end }}
-            <span v-if="shift.break_minutes">| {{ shift.break_formatted }}</span>
+            {{ presetShift.start }} - {{ presetShift.end }}
+            <span v-if="presetShift.break_minutes">| {{ presetShift.break_formatted }}</span>
         </p>
-        <p class="text-xs mb-3">{{ shift.description }}</p>
-        <div v-for="(user) in shift.number_masters">
-            <div class="flex items-center gap-2 p-1 hover:bg-gray-50/40 rounded cursor-pointer">
-                <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
-                <span class="text-xs">Unbesetzt</span>
-                <span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13.2" height="10.8" viewBox="0 0 13.2 10.8">
-                        <path id="Icon_awesome-crown" data-name="Icon awesome-crown" d="M9.9,8.4H2.1a.3.3,0,0,0-.3.3v.6a.3.3,0,0,0,.3.3H9.9a.3.3,0,0,0,.3-.3V8.7A.3.3,0,0,0,9.9,8.4Zm1.2-6a.9.9,0,0,0-.9.9.882.882,0,0,0,.083.371l-1.358.814A.6.6,0,0,1,8.1,4.268L6.568,1.594a.9.9,0,1,0-1.136,0L3.9,4.267a.6.6,0,0,1-.829.218L1.719,3.671A.9.9,0,1,0,.9,4.2a.919.919,0,0,0,.144-.015L2.4,7.8H9.6l1.356-3.615A.919.919,0,0,0,11.1,4.2a.9.9,0,0,0,0-1.8Z" transform="translate(0.6 0.6)" fill="none" stroke="#82818a" stroke-width="1.2"/>
-                    </svg>
-                </span>
-            </div>
-        </div>
-        <div v-for="(user) in shift.number_employees">
-            <div class="flex items-center gap-2 p-1 hover:bg-gray-50/40 rounded cursor-pointer">
-                <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
-                <span class="text-xs">Unbesetzt</span>
+        <p class="text-xs mb-3">{{ presetShift.description }}</p>
+        <div v-for="shiftsQualification in this.presetShift.shifts_qualifications">
+            <div v-for="(count) in shiftsQualification.value">
+                <div class="flex items-center gap-2 p-1 hover:bg-gray-50/40 rounded cursor-pointer">
+                    <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
+                    <span class="text-xs">Unbesetzt</span>
+                    <ShiftQualificationIconCollection
+                        class="w-5 h-5"
+                        :icon-name="this.getShiftQualificationById(shiftsQualification.shift_qualification_id).icon"/>
+                </div>
             </div>
         </div>
     </div>
-
-    <AddEditShiftPresetModal :preset="shift" v-if="showEditShiftModal" @closed="showEditShiftModal = false"/>
+    <AddEditShiftPresetModal v-if="showEditShiftModal"
+                             :preset-shift="presetShift"
+                             :shift-qualifications="shiftQualifications"
+                             :edit="true"
+                             @closed="showEditShiftModal = false"
+    />
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -98,37 +92,52 @@ import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import dayjs from "dayjs";
 import {Menu, MenuItems, MenuItem, MenuButton} from "@headlessui/vue";
 import AddEditShiftPresetModal from "@/Pages/Shifts/Components/AddEditShiftPresetModal.vue";
+import {Inertia} from "@inertiajs/inertia";
+import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 
 export default defineComponent({
     name: "SinglePresetShift",
-    computed: {
-        dayjs() {
-            return dayjs
-        }
-    },
     data(){
         return {
             showEditShiftModal: false
         }
     },
     components: {
+        ShiftQualificationIconCollection,
         AddEditShiftPresetModal,
-        AddShiftModal, DropElement, XIcon, DotsVerticalIcon, TrashIcon, DuplicateIcon,
-        Menu, MenuItems, MenuItem, MenuButton
+        AddShiftModal,
+        DropElement,
+        XIcon,
+        DotsVerticalIcon,
+        TrashIcon,
+        DuplicateIcon,
+        Menu,
+        MenuItems,
+        MenuItem,
+        MenuButton
     },
-    props: ['shift'],
+    props: ['presetShift', 'shiftQualifications'],
     methods: {
         deleteShift(){
-            this.$inertia.delete(route('preset.shift.destroy', {presetShift: this.shift.id}))
+            Inertia.delete(route('preset.shift.destroy', {presetShift: this.presetShift.id}))
         },
-        editPreset(){
+        getShiftQualificationById(id) {
+            return this.shiftQualifications.find((shiftQualification) => shiftQualification.id === id);
+        },
+    },
+    computed: {
+        dayjs() {
+            return dayjs
+        },
+        computedMaxWorkerCount() {
+            let maxWorkerCount = 0;
 
-        }
-    }
+            this.presetShift.shifts_qualifications.forEach(
+                (shiftsQualification) => maxWorkerCount += shiftsQualification.value
+            );
+
+            return maxWorkerCount;
+        },
+    },
 })
 </script>
-
-
-<style scoped>
-
-</style>

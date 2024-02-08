@@ -6,12 +6,10 @@
                    <h2 class="headline1">Dienstpläne & Schichtvorlagen</h2>
                </div>
                <ShiftTabs />
+
            </div>
             <slot></slot>
         </div>
-
-
-
     </app-layout>
 </template>
 <script>
@@ -30,8 +28,3 @@ export default defineComponent({
     },
 })
 </script>
-
-
-<style scoped>
-
-</style>

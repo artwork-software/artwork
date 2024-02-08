@@ -5,6 +5,7 @@ namespace App\Models;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftFreelancer;
 use Artwork\Modules\ShiftQualification\Models\FreelancerShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
@@ -63,7 +64,11 @@ class Freelancer extends Model implements Vacationer, Available
     ];
 
     protected $appends = [
-        'name', 'display_name', 'type', 'profile_photo_url', 'assigned_craft_ids', 'shift_ids_array'
+        'name',
+        'display_name',
+        'type',
+        'profile_photo_url',
+        'assigned_craft_ids'
     ];
 
     protected $casts = [
@@ -72,15 +77,9 @@ class Freelancer extends Model implements Vacationer, Available
 
     public function shifts(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Shift::class,
-            'shifts_freelancers',
-            'freelancer_id',
-            'shift_id'
-        )->withPivot(['is_master'])
-            ->orderByPivot('is_master', 'desc')
-            ->withCasts(['is_master' => 'boolean'])
-            ->without(['users', 'freelancer']);
+        return $this
+            ->belongsToMany(Shift::class, 'shifts_freelancers')
+            ->using(ShiftFreelancer::class);
     }
 
     public function getProfilePhotoUrlAttribute(): string
@@ -138,17 +137,11 @@ class Freelancer extends Model implements Vacationer, Available
             ->using(FreelancerShiftQualification::class);
     }
 
-    public function hasMasterShiftQualification(): bool
-    {
-        return $this->shiftQualifications()->where('name', 'Meister')->count() === 1;
-    }
-
-    /**
-     * @return array<int>
-     */
-    public function getShiftIdsArrayAttribute(): array
-    {
-        return $this->shifts()->pluck('shifts.id')->toArray();
+    public function getShiftIdsBetweenStartDateAndEndDate(
+        Carbon $startDate,
+        Carbon $endDate
+    ): \Illuminate\Support\Collection {
+        return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 
 

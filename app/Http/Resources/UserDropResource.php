@@ -20,9 +20,9 @@ class UserDropResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'profile_photo_url' => $this->profile_photo_url,
-            'can_master' => $this->hasMasterShiftQualification(),
             'can_work_shifts' => $this->can_work_shifts,
             'assigned_crafts_ids' => $this->assignedCrafts->pluck('id'),
+            'shift_qualifications' => $this->shiftQualifications()->get(['id', 'name', 'available'])
         ];
     }
 }

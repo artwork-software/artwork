@@ -27,12 +27,10 @@ class UserIndexResource extends JsonResource
             'business' => $this->business,
             'phone_number' => $this->phone_number,
             'project_management' => $this->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
-            'can_master' => $this->hasMasterShiftQualification(),
             'shifts' => $this->getShiftsAttribute(),
             'display_name' => $this->getDisplayNameAttribute(),
             'type' => $this->getTypeAttribute(),
             'assigned_craft_ids' => $this->getAssignedCraftIdsAttribute(),
-            'shift_ids_array' => $this->getShiftIdsArrayAttribute(),
         ];
     }
 }

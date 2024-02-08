@@ -1,58 +1,109 @@
+<template>
+    <div class="w-full cursor-pointer">
+        <div :class="[
+                highlightMode && !isIdHighlighted(highlightedId, highlightedType) ?
+                    'opacity-30' :
+                    '',
+                multiEditMode ?
+                'text-[10px] my-1' :
+                ''
+             ]"
+             class="flex items-center xsLight text-shiftText subpixel-antialiased"
+             @dragover="onDragOver"
+             @drop="onDrop"
+        >
+            <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
+                <input v-model="shift.isCheckedForMultiEdit"
+                       id="comments"
+                       aria-describedby="comments-description"
+                       name="comments"
+                       type="checkbox"
+                       class="h-5 w-5 border-gray-300 text-green-600 focus:ring-green-600 mr-1"
+                />
+            </div>
+            <div class="flex items-center justify-between"
+                 @click="this.showQualificationRowExpander = !this.showQualificationRowExpander">
+                <div class="flex items-center">
+                    <div>
+                        {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
+                    </div>
+                    <div v-if="!showRoom" class="ml-0.5 " :class="multiEditMode ? 'text-[10px]' : 'text-xs'">
+                        ({{ this.computedUsedWorkerCount }}/{{ this.computedMaxWorkerCount}})
+                    </div>
+                    <div v-else-if="room" class="truncate">
+                        , {{room?.name}}
+                    </div>
+                </div>
+                <div v-if="computedUsedWorkerCount === computedMaxWorkerCount">
+                    <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                </div>
+            </div>
+        </div>
+        <div class="w-full" v-if="showQualificationRowExpander">
+            <div class="w-full flex flex-row flex-wrap">
+                <div v-for="(computedShiftsQualificationWithWorkerCount) in this.computedShiftsQualificationsWithWorkerCount"
+                    class="flex xsLight items-center">
+                    {{computedShiftsQualificationWithWorkerCount.workerCount}}/{{computedShiftsQualificationWithWorkerCount.maxWorkerCount}}
+                    <ShiftQualificationIconCollection
+                        class="h-4 w-4 text-black mx-1"
+                        :icon-name="this.getShiftQualificationById(computedShiftsQualificationWithWorkerCount.shift_qualification_id).icon"
+                    />
+                </div>
+            </div>
+        </div>
+    </div>
+    <ChooseUserSeriesShift
+        v-if="this.showChooseUserSeriesShiftModal"
+        @close-modal="this.showChooseUserSeriesShiftModal = false"
+        @returnBuffer="this.setSeriesShiftData"
+    />
+    <MultipleShiftQualificationSlotsAvailable
+        v-if="this.showMultipleShiftQualificationSlotsAvailableModal"
+        :show="this.showMultipleShiftQualificationSlotsAvailableModal"
+        :available-shift-qualification-slots="this.showMultipleShiftQualificationSlotsAvailableModalSlots"
+        :dropped-user="this.showMultipleShiftQualificationSlotsAvailableModalDroppedUser"
+        @close="this.closeMultipleShiftQualificationSlotsAvailableModal"
+    />
+</template>
+
 <script>
-import {defineComponent} from 'vue'
+import {defineComponent} from 'vue';
 import {CheckIcon} from "@heroicons/vue/outline";
 import VueMathjax from "vue-mathjax-next";
 import ChooseUserSeriesShift from "@/Pages/Projects/Components/ChooseUserSeriesShift.vue";
 import Helper from "../../../mixins/Helper.vue";
+import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
+import MultipleShiftQualificationSlotsAvailable from "@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 export default defineComponent({
-    name: "ShiftDropElement",
-    components: {ChooseUserSeriesShift, CheckIcon, VueMathjax},
-    props: ['shift','showRoom', 'craftId','event','room', 'maxCount', 'currentCount', 'freeEmployeeCount', 'freeMasterCount','highlightMode','highlightedId','highlightedType', 'multiEditMode', 'userForMultiEdit'],
+    components: {
+        MultipleShiftQualificationSlotsAvailable,
+        ShiftQualificationIconCollection,
+        ChooseUserSeriesShift,
+        CheckIcon,
+        VueMathjax
+    },
+    props: [
+        'shift',
+        'showRoom',
+        'craftId',
+        'event',
+        'room',
+        'maxCount',
+        'currentCount',
+        'freeEmployeeCount',
+        'freeMasterCount',
+        'highlightMode',
+        'highlightedId',
+        'highlightedType',
+        'multiEditMode',
+        'userForMultiEdit',
+        'shiftQualifications'
+    ],
     emits: ['dropFeedback'],
     mixins: [Helper],
-    computed: {
-        shiftUserIds(){
-            const ids = {
-                userIds: [],
-                freelancerIds: [],
-                providerIds: []
-            }
-            this.shift.users.forEach(user => {
-                ids.userIds.push(user.id)
-            })
-
-            this.shift.freelancers?.forEach((freelancer) => {
-                ids.freelancerIds.push(freelancer.id)
-            })
-
-            this.shift.service_providers?.forEach((provider) => {
-                ids.providerIds.push(provider.id)
-            })
-
-            return ids;
-        },
-        checkIfUserIsInCraft(){
-            return this.userForMultiEdit.assigned_craft_ids.includes(this.shift.craft.id)
-        },
-    },
-    watch: {
-        multiEditMode: {
-            handler() {
-                if(!this.multiEditMode){
-                    this.shift.isCheckedForMultiEdit = false;
-                }
-            },
-            deep: true
-        },
-        userForMultiEdit: {
-            handler(){
-                this.shift.isCheckedForMultiEdit = this.userForMultiEdit?.shift_ids_array.includes(this.shift.id)
-            },
-            deep: true
-        }
-    },
-    data(){
+    data() {
         return {
             showChooseUserSeriesShiftModal: false,
             buffer: {
@@ -63,110 +114,123 @@ export default defineComponent({
             },
             selectedUser: null,
             dropFeedback: null,
+            showQualificationRowExpander: false,
+            showMultipleShiftQualificationSlotsAvailableModal: false,
+            showMultipleShiftQualificationSlotsAvailableModalSlots: null,
+            showMultipleShiftQualificationSlotsAvailableModalDroppedUser: null
+        }
+    },
+    computed: {
+        computedMaxWorkerCount() {
+            let maxWorkerCount = 0;
+
+            this.shift.shifts_qualifications.forEach(
+                (shiftsQualification) => maxWorkerCount += shiftsQualification.value
+            );
+
+            return maxWorkerCount;
+        },
+        computedUsedWorkerCount() {
+            return this.shift.users.length + this.shift.freelancer.length + this.shift.service_provider.length;
+        },
+        computedShiftsQualificationsWithWorkerCount() {
+            let shiftsQualificationsWithWorkerCount = [];
+
+            this.shift.shifts_qualifications.forEach((shiftsQualification) => {
+                let assignedUserCount = 0;
+
+                this.shift.users.forEach((user) => {
+                    if (user.pivot.shift_qualification_id === shiftsQualification.shift_qualification_id) {
+                        assignedUserCount++;
+                    }
+                });
+
+                this.shift.freelancer.forEach((freelancer) => {
+                    if (freelancer.pivot.shift_qualification_id === shiftsQualification.shift_qualification_id) {
+                        assignedUserCount++;
+                    }
+                });
+
+                this.shift.service_provider.forEach((serviceProvider) => {
+                    if (serviceProvider.pivot.shift_qualification_id === shiftsQualification.shift_qualification_id) {
+                        assignedUserCount++;
+                    }
+                });
+
+                shiftsQualificationsWithWorkerCount.push({
+                    shift_qualification_id: shiftsQualification.shift_qualification_id,
+                    maxWorkerCount: shiftsQualification.value,
+                    workerCount: assignedUserCount
+                });
+            });
+
+            return shiftsQualificationsWithWorkerCount;
+        },
+        shiftUserIds() {
+            const ids = {
+                userIds: [],
+                freelancerIds: [],
+                providerIds: []
+            }
+            this.shift.users.forEach(user => {
+                ids.userIds.push(user.id)
+            })
+
+            this.shift.freelancer.forEach((freelancer) => {
+                ids.freelancerIds.push(freelancer.id)
+            })
+
+            this.shift.service_provider.forEach((provider) => {
+                ids.providerIds.push(provider.id)
+            })
+
+            return ids;
+        },
+        checkIfUserIsInCraft() {
+            return this.userForMultiEdit.assigned_craft_ids.includes(this.shift.craft.id);
+        },
+    },
+    watch: {
+        multiEditMode: {
+            handler() {
+                if (!this.multiEditMode) {
+                    this.shift.isCheckedForMultiEdit = false;
+                }
+            },
+            deep: true
+        },
+        userForMultiEdit: {
+            handler() {
+                this.shift.isCheckedForMultiEdit = this.userForMultiEdit ?
+                    this.userForMultiEdit.shift_ids.includes(this.shift.id) :
+                    false;
+            },
+            deep: true
         }
     },
     methods: {
-        gcd(a, b) {
-            return (b) ? this.gcd(b, a % b) : a;
-        },
-        /*decimalToFraction(decimal) {
-            let wholePart = Math.floor(decimal);
-            decimal = decimal - wholePart;
-
-            if (decimal === parseInt(decimal)) {
-                if (decimal < 1) {
-                    return `${wholePart}`;
-                }
-                return `${parseInt(decimal)}/1`;
-            } else {
-                let precision = this.getFirstDigitAfterDecimal(decimal) === 3 ? 3 : 1000; // The desired precision for the fraction
-                let top = Math.round(decimal * precision);
-                let bottom = precision;
-
-                let x = this.gcd(top, bottom);
-                return `${wholePart} ${top / x}/${bottom / x}`;
-            }
-        },*/
-        getFirstDigitAfterDecimal(number) {
-            const decimalPart = number.toString().split('.')[1];
-            if (decimalPart && decimalPart.length > 0) {
-                return parseInt(decimalPart[0]);
-            }
-            return null; // Return null if there is no decimal part
-        },
-        convertToMathJax(fraction) {
-            const parts = fraction.split(' ');
-
-            if (parts.length === 1) {
-                return `${parts[0]}`;
-            } else {
-                const wholePart = parts[0] > 0
-                    ? parts[0]
-                    : "";
-                const fractionParts = parts[1].split('/');
-                const numerator = fractionParts[0];
-                const denominator = fractionParts[1];
-                return `${wholePart}$\\frac{${numerator}}{${denominator}}$`;
-            }
-        },
         onDragOver(event) {
             event.preventDefault();
         },
         onDrop(event) {
             event.preventDefault();
-            this.selectedUser = event.dataTransfer.getData('application/json');
-            if(this.event.is_series){
-                this.showChooseUserSeriesShiftModal = true
-            } else {
-                this.saveUser();
+
+            this.droppedUser = JSON.parse(event.dataTransfer.getData('application/json'));
+
+            if (this.event.is_series) {
+                this.showChooseUserSeriesShiftModal = true;
+                return;
             }
-        },
-        changeBuffer(buffer){
-            this.buffer = buffer
-            this.showChooseUserSeriesShiftModal = false
+
             this.saveUser();
         },
-        decimalToFraction(decimal) {
-            // Überprüfen, ob die Zahl bereits eine ganze Zahl ist
-            if (decimal % 1 === 0) {
-                // Zahl ist eine ganze Zahl, also einfach zurückgeben
-                return decimal.toString();
-            } else {
-                // Die Zahl ist eine Dezimalzahl, also in Bruch umwandeln
-                const tolerance = 1.0E-6;
-                let numerator = 1;
-                let denominator = 1;
-                let lower_n = 0;
-                let lower_d = 1;
-                let upper_n = 1;
-                let upper_d = 0;
-                let fraction = decimal;
-
-                while (denominator <= 10000 && Math.abs(numerator / denominator - fraction) > tolerance) {
-                    if (fraction < numerator / denominator) {
-                        upper_n = numerator;
-                        upper_d = denominator;
-                        denominator = lower_d + upper_d;
-                        numerator = lower_n + upper_n;
-                    } else {
-                        lower_n = numerator;
-                        lower_d = denominator;
-                        denominator = lower_d + upper_d;
-                        numerator = lower_n + upper_n;
-                    }
-                }
-
-                // Vereinfache den Bruch, falls möglich
-                const gcd = function(a, b) {
-                    if (!b) return a;
-                    return gcd(b, a % b);
-                };
-                const greatestCommonDivisor = gcd(numerator, denominator);
-                numerator /= greatestCommonDivisor;
-                denominator /= greatestCommonDivisor;
-
-                return `${numerator}/${denominator}`;
-            }
+        getShiftQualificationById(id) {
+            return this.shiftQualifications.find((shiftQualification) => shiftQualification.id === id);
+        },
+        setSeriesShiftData(seriesShiftData) {
+            this.showChooseUserSeriesShiftModal = false;
+            this.seriesShiftData = seriesShiftData;
+            this.saveUser();
         },
         isIdHighlighted(highlightedId, highlightedType) {
             // Map the highlightedType to the correct property in shiftUserIds
@@ -176,153 +240,219 @@ export default defineComponent({
                 2: 'providerIds'
             };
 
-
-            if(highlightedId){
+            if (highlightedId) {
                 // Get the correct array from shiftUserIds based on the highlightedType
                 const arrayToCheck = this.shiftUserIds[typeMap[highlightedType]];
 
                 // Check if the array contains the highlightedId
                 return arrayToCheck.includes(highlightedId);
-            }else{
+            } else {
                 return false;
             }
-
         },
-        saveUser(){
-            let dropElement = this.selectedUser;
-            dropElement = JSON.parse(dropElement)[0];
-
-            console.log(dropElement);
-
-            if(dropElement.craft_ids && !dropElement.craft_ids.includes(this.craftId)){
-                this.dropFeedback = 'Nutzer*in kann nicht zu Schichten von diesem Gewerk zugewiesen werden.';
-                this.$emit('dropFeedback', this.dropFeedback);
+        saveUser() {
+            if (this.droppedUserCannotBeAssignedToCraft(this.droppedUser)) {
+                this.dropFeedbackUserCannotBeAssignedToCraft(this.droppedUser.type);
                 return;
             }
 
-            if(this.maxCount === this.currentCount){
+            if (this.droppedUserAlreadyWorksOnShift(this.droppedUser)) {
+                this.dropFeedbackUserAlreadyWorksOnShift(this.droppedUser.type);
                 return;
             }
 
-            if(dropElement.master && this.freeMasterCount === 0 && this.freeEmployeeCount === 0){
+            if (this.droppedUserHasNoQualifications(this.droppedUser)) {
+                this.dropFeedbackUserHasNoQualifications(this.droppedUser.type);
                 return;
             }
 
-            if(!dropElement.master && this.freeEmployeeCount === 0){
-                return;
-            }
+            if (this.droppedUser.shift_qualifications.length === 1) {
+                let availableSlot = this.computedShiftsQualificationsWithWorkerCount.find(
+                    (shiftsQualification) =>
+                        shiftsQualification.shift_qualification_id === this.droppedUser.shift_qualifications[0].id &&
+                        shiftsQualification.workerCount < shiftsQualification.maxWorkerCount
+                );
 
-            if(dropElement.type === 0){
-                if(this.shiftUserIds.userIds.includes(dropElement.id)){
+                if (
+                    typeof availableSlot === 'undefined' ||
+                    availableSlot.workerCount === availableSlot.maxWorkerCount
+                ) {
+                    this.dropFeedbackNoSlotsForQualification(this.droppedUser.type);
                     return;
+                }
+
+                this.assignUser(this.droppedUser, availableSlot.shift_qualification_id);
+            } else {
+                let availableShiftQualificationSlots = [];
+
+                this.droppedUser.shift_qualifications.forEach((userShiftQualification) => {
+                    this.computedShiftsQualificationsWithWorkerCount.forEach((shiftsQualification) => {
+                        if (
+                            userShiftQualification.id === shiftsQualification.shift_qualification_id &&
+                            shiftsQualification.workerCount < shiftsQualification.maxWorkerCount
+                        ) {
+                            availableShiftQualificationSlots.push(userShiftQualification);
+                        }
+                    })
+                });
+
+                if (availableShiftQualificationSlots.length === 0) {
+                    this.dropFeedbackNoSlotsForQualification(this.droppedUser.type);
+                    return;
+                }
+
+                if (availableShiftQualificationSlots.length === 1) {
+                    this.assignUser(
+                        this.droppedUser,
+                        availableShiftQualificationSlots[0].id
+                    );
+                    return;
+                }
+
+                //show select modal by availableSlots
+                this.openMultipleShiftQualificationSlotsAvailableModal(
+                    this.droppedUser,
+                    availableShiftQualificationSlots
+                );
+            }
+        },
+        droppedUserAlreadyWorksOnShift(droppedUser) {
+            if (droppedUser.type === 0) {
+                if (this.shiftUserIds.userIds.includes(droppedUser.id)) {
+                    return true;
                 }
             }
 
-            if(dropElement.type === 1){
-                if(this.shiftUserIds.freelancerIds.includes(dropElement.id)){
-                    return;
+            if (droppedUser.type === 1) {
+                if (this.shiftUserIds.freelancerIds.includes(droppedUser.id)) {
+                    return true;
                 }
             }
 
-            if(dropElement.type === 2){
-                if(this.shiftUserIds.providerIds.includes(dropElement.id)){
-                    return;
+            if (droppedUser.type === 2) {
+                if (this.shiftUserIds.providerIds.includes(droppedUser.id)) {
+                    return true;
                 }
             }
 
-            if(dropElement.master && dropElement.type === 0 && this.freeMasterCount > 0){
-                this.$inertia.post(route('add.shift.master', {shift: this.shift.id, user: dropElement.id}), {
-                        user_id: dropElement.id,
-                        chooseData: this.buffer
-                    }, {
-                        preserveState: true,
-                        preserveScroll: true,
-                    }
-                )
+            return false;
+        },
+        dropFeedbackUserAlreadyWorksOnShift(userType) {
+            let userDescription = '';
 
-            } else if (dropElement.type === 0 && !dropElement.master || this.freeMasterCount === 0 && dropElement.master ) {
-                this.$inertia.post(route('add.shift.user', {shift: this.shift.id, user: dropElement.id}), {
-                        chooseData: this.buffer
-                    }, {
-                        preserveState: true,
-                        preserveScroll: true,
-                    }
-                )
+            switch (userType) {
+                case 0:
+                    userDescription = 'Mitarbeiter*in';
+                    break;
+                case 1:
+                    userDescription = 'Externe/r Mitarbeiter*in';
+                    break;
+                case 2:
+                    userDescription = 'Dienstleister*in';
+                    break;
             }
 
-            if(dropElement.type === 1 && !dropElement.master){
-                this.$inertia.post(route('add.shift.freelancer', {shift: this.shift.id, freelancer: dropElement.id}), {
-                        chooseData: this.buffer
-                    }, {
-                        preserveState: true,
-                        preserveScroll: true,
-                    }
-                )
-            } else if (dropElement.type === 1 && dropElement.master) {
-                this.$inertia.post(route('add.shift.freelancer.master', {shift: this.shift.id, freelancer: dropElement.id}), {
-                        freelancer_id: dropElement.id,
-                        chooseData: this.buffer
-                    }, {
-                        preserveState: true,
-                        preserveScroll: true,
-                    }
-                )
+            this.$emit(
+                'dropFeedback',
+                userDescription + ' bereits zur Schicht eingeteilt.'
+            );
+        },
+        droppedUserCannotBeAssignedToCraft(droppedUser) {
+            return droppedUser.craft_ids && !droppedUser.craft_ids.includes(this.craftId);
+        },
+        dropFeedbackUserCannotBeAssignedToCraft(userType) {
+            let userDescription = '';
+
+            switch (userType) {
+                case 0:
+                    userDescription = 'Mitarbeiter*in';
+                    break;
+                case 1:
+                    userDescription = 'Externe/r Mitarbeiter*in';
+                    break;
+                case 2:
+                    userDescription = 'Dienstleister*in';
+                    break;
             }
 
-            if(dropElement.type === 2 && dropElement.master){
-                this.$inertia.post(route('add.shift.provider.master', {shift: this.shift.id, serviceProvider: dropElement.id}), {
-                        service_provider_id: dropElement.id,
-                        chooseData: this.buffer
-                    }, {
-                        preserveState: true,
-                        preserveScroll: true,
-                    }
-                )
-            } else if (dropElement.type === 2 && !dropElement.master) {
-                this.$inertia.post(route('add.shift.provider', {shift: this.shift.id, serviceProvider: dropElement.id}), {
-                        chooseData: this.buffer
-                    }, {
-                        preserveState: true,
-                        preserveScroll: true,
-                    }
-                )
+            this.$emit(
+                'dropFeedback',
+                userDescription + ' kann nicht zu Schichten von diesem Gewerk zugewiesen werden.'
+            );
+        },
+        droppedUserHasNoQualifications(droppedUser) {
+            return droppedUser.shift_qualifications.length === 0;
+        },
+        dropFeedbackUserHasNoQualifications(userType) {
+            let userDescription = '';
+
+            switch (userType) {
+                case 0:
+                    userDescription = 'Mitarbeiter*in';
+                    break;
+                case 1:
+                    userDescription = 'Externe/r Mitarbeiter*in';
+                    break;
+                case 2:
+                    userDescription = 'Dienstleister*in';
+                    break;
             }
+
+            this.$emit(
+                'dropFeedback',
+                userDescription + ' besitzt keine zugewiesenen Qualifikationen und kann daher nicht' +
+                    ' zugeordnet werden.'
+            );
+        },
+        dropFeedbackNoSlotsForQualification(userType) {
+            let userDescription = '';
+
+            switch (userType) {
+                case 0:
+                    userDescription = 'diesem/dieser Mitarbeiter*in';
+                    break;
+                case 1:
+                    userDescription = 'diesem/dieser externe Mitarbeiter*in';
+                    break;
+                case 2:
+                    userDescription = 'diesem/dieser Dienstleister*in';
+                    break;
+            }
+
+            this.$emit(
+                'dropFeedback',
+                'Es gibt keine Position die von ' + userDescription +
+                ' mit den verfügbaren Qualifikationen besetzt werden kann.'
+            );
+        },
+        openMultipleShiftQualificationSlotsAvailableModal(droppedUser, availableShiftQualificationSlots) {
+            this.showMultipleShiftQualificationSlotsAvailableModalDroppedUser = droppedUser;
+            this.showMultipleShiftQualificationSlotsAvailableModalSlots = availableShiftQualificationSlots;
+            this.showMultipleShiftQualificationSlotsAvailableModal = true;
+        },
+        closeMultipleShiftQualificationSlotsAvailableModal(droppedUser, selectedShiftQualificationId) {
+            this.showMultipleShiftQualificationSlotsAvailableModal = false;
+            this.showMultipleShiftQualificationSlotsAvailableModalSlots = null;
+            this.showMultipleShiftQualificationSlotsAvailableModalDroppedUser = null;
+
+            if (droppedUser && selectedShiftQualificationId) {
+                this.assignUser(droppedUser, selectedShiftQualificationId);
+            }
+        },
+        assignUser(droppedUser, shiftQualificationId) {
+            Inertia.post(
+                route('shift.assignUserByType', {shift: this.shift.id}),
+                {
+                    userId: droppedUser.id,
+                    userType: droppedUser.type,
+                    shiftQualificationId: shiftQualificationId,
+                    seriesShiftData: this.seriesShiftData
+                },
+                {
+                    preserveScroll: true
+                }
+            )
         }
     }
 })
 </script>
-
-<template>
-
-    <div :class="[highlightMode && !isIdHighlighted(highlightedId, highlightedType) ? 'opacity-30' : '', shift.empty_user_count === 0 && shift.empty_master_count === 0 && multiEditMode ? 'hidden' : '', multiEditMode ? 'text-[10px] my-1' : '']" class="flex items-center xsLight text-shiftText subpixel-antialiased" @dragover="onDragOver" @drop="onDrop">
-        <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
-            <input v-model="shift.isCheckedForMultiEdit" id="comments" aria-describedby="comments-description" name="comments" type="checkbox" class="h-5 w-5 border-gray-300 text-green-600 focus:ring-green-600 mr-1" />
-        </div>
-        <div class="flex items-center justify-between">
-            <div class="flex items-center">
-                <div>
-                    {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
-                </div>
-                <div v-if="!showRoom" class="ml-0.5 " :class="multiEditMode ? 'text-[10px]' : 'text-xs'">
-                    ({{ decimalToCommonFraction(shift.user_count) }}/{{ shift.number_employees }}
-                    <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)
-                </div>
-                <div v-else-if="room" class="truncate">
-                    , {{room?.name}}
-                </div>
-            </div>
-            <div v-if="shift.empty_user_count === 0 && shift.empty_master_count === 0">
-                <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
-            </div>
-        </div>
-
-    </div>
-
-
-    <ChooseUserSeriesShift v-if="showChooseUserSeriesShiftModal" @close-modal="showChooseUserSeriesShiftModal = false" @returnBuffer="changeBuffer" />
-
-</template>
-
-<style scoped>
-
-</style>

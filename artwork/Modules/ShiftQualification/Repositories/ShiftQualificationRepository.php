@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ShiftQualificationRepository extends BaseRepository
 {
+    public function findById(int $id): ShiftQualification|null
+    {
+        return ShiftQualification::find($id);
+    }
+
     public function getAllOrderedByCreationDateAscending(): Collection
     {
         return ShiftQualification::query()

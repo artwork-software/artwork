@@ -81,21 +81,17 @@
                                             </Listbox>
                                             <span class="text-xs text-red-500" v-show="helpTexts.craftText.length > 0">{{ helpTexts.craftText }}</span>
                                         </div>
-                                        <input type="number"
-                                               placeholder="Anzahl Mitarbeiter*innen"
-                                               v-model="shiftForm.number_employees"
-                                               @change="checkUserCount"
-                                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                        />
-                                        <input type="number"
-                                               placeholder="Anzahl Meister*innen"
-                                               v-model="shiftForm.number_masters"
-                                               @change="checkMasterCount"
-                                               maxlength="3"
-                                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                        <div v-for="computedShiftQualification in this.computedShiftQualifications"
+                                             v-show="this.canComputedShiftQualificationBeShown(computedShiftQualification)">
+                                            <input v-if="this.canComputedShiftQualificationBeShown(computedShiftQualification)"
+                                                   v-model="computedShiftQualification.value"
+                                                   type="number"
+                                                   :placeholder="'Anzahl ' + computedShiftQualification.name"
+                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                            />
+                                        </div>
                                         <span class="text-xs text-red-500" v-show="helpTexts.employeeText.length > 0">{{ helpTexts.employeeText }}</span>
                                         <span class="text-xs text-red-500" v-show="helpTexts.masterText.length > 0">{{ helpTexts.masterText }}</span>
-
                                         <div class="mt-2 col-span-2">
                                             <textarea v-model="shiftForm.description" placeholder="Gibt es wichtige Informationen zu dieser Schicht?" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300" />
                                         </div>
@@ -154,7 +150,15 @@ export default defineComponent({
         ListboxOptions,
         Listbox
     },
-    props: ['event', 'crafts', 'shift', 'edit', 'buffer', 'currentUserCrafts'],
+    props: [
+        'event',
+        'crafts',
+        'shift',
+        'edit',
+        'buffer',
+        'currentUserCrafts',
+        'shiftQualifications'
+    ],
     data(){
         return {
             open: true,
@@ -172,6 +176,7 @@ export default defineComponent({
                 seriesId: null,
                 changes_start: null,
                 changes_end: null,
+                shiftsQualifications: []
             }),
             selectedCraft: this.shift ? this.shift.craft : null,
             helpTexts: {
@@ -233,6 +238,32 @@ export default defineComponent({
             } else {
                 this.helpTexts.masterText = '';
             }
+        },
+        appendComputedShiftQualificationsToShiftForm() {
+            this.computedShiftQualifications.forEach(
+                (computedShiftQualification) => {
+                    //only append if they also can be shown
+                    if (this.canComputedShiftQualificationBeShown(computedShiftQualification)) {
+                        this.shiftForm.shiftsQualifications.push({
+                            shift_qualification_id: computedShiftQualification.id,
+                            value: computedShiftQualification.value
+                        });
+                    }
+                }
+            );
+        },
+        canComputedShiftQualificationBeShown(computedShiftQualification) {
+            //computedShiftQualification is shown if its either available or the modal is opened for edit and the
+            //given shift contains the shift_qualification_id already, even if it's not available for new shifts anymore
+            return computedShiftQualification.available ||
+                (this.edit && this.shiftContainsComputedShiftQualification(computedShiftQualification));
+        },
+        shiftContainsComputedShiftQualification(computedShiftQualification) {
+            //if shift contains shift qualficiation id return true to show it even if it's not available anymore
+            //it also gets appended to patch request then but not to create requests
+            return typeof this.shift.shifts_qualifications.find(
+                (shiftsQualification) => shiftsQualification.shift_qualification_id === computedShiftQualification.id
+            ) !== 'undefined'
         },
         saveShift(){
             if(this.event.is_series){
@@ -305,48 +336,51 @@ export default defineComponent({
             if(this.shiftForm.number_masters === '' || this.shiftForm.number_masters === null){
                 this.shiftForm.number_masters = 0;
             }
+
+            this.appendComputedShiftQualificationsToShiftForm();
+
+            let onSuccess = () => {
+                this.shiftForm.reset();
+                this.closeModal(true);
+            };
+
             if(this.shiftForm.id !== null && this.shiftForm.id !== undefined){
                 this.shiftForm.patch(route('event.shift.update', this.shift.id), {
                     preserveScroll: true,   // preserve scroll position
                     preserveState: true,    // preserve the state of the form
-                    onSuccess: () => {
-                        this.shiftForm.start = null;
-                        this.shiftForm.end = null;
-                        this.shiftForm.break_minutes = null;
-                        this.shiftForm.craft_id = null;
-                        this.shiftForm.number_employees = null;
-                        this.shiftForm.number_masters = null;
-                        this.shiftForm.description = '';
-                        this.shiftForm.changeAll = false;
-                        this.shiftForm.seriesId = null;
-                        this.shiftForm.changes_start = null;
-                        this.shiftForm.changes_end = null;
-                        this.closeModal(true);  // close the modal
-                    }
-                })
+                    onSuccess: onSuccess
+                });
             } else {
                 this.shiftForm.post(route('event.shift.store', this.event.id), {
                     preserveScroll: true,   // preserve scroll position
                     preserveState: true,    // preserve the state of the form
-                    onSuccess: () => {
-                        this.shiftForm.start = null;
-                        this.shiftForm.end = null;
-                        this.shiftForm.break_minutes = null;
-                        this.shiftForm.craft_id = null;
-                        this.shiftForm.number_employees = null;
-                        this.shiftForm.number_masters = null;
-                        this.shiftForm.description = '';
-                        this.shiftForm.changeAll = false;
-                        this.shiftForm.seriesId = null;
-                        this.shiftForm.changes_start = null;
-                        this.shiftForm.changes_end = null;
-                        this.closeModal(true);  // close the modal
-                    }
-                })
+                    onSuccess: onSuccess
+                });
             }
         }
     },
     computed: {
+        computedShiftQualifications() {
+            let computedShiftQualifications = [];
+
+            this.shiftQualifications.forEach((shiftQualification) => {
+                //on edit lookup qualifications already assigned to shift for their values
+                let foundShiftsQualification = this.edit ?
+                    this.shift.shifts_qualifications.find(
+                        (shiftsQualification) => shiftsQualification.shift_qualification_id === shiftQualification.id
+                    ) :
+                    undefined;
+                //push with given value or empty string
+                computedShiftQualifications.push({
+                    id: shiftQualification.id,
+                    name: shiftQualification.name,
+                    available: shiftQualification.available,
+                    value: typeof foundShiftsQualification !== 'undefined' ? foundShiftsQualification.value : ''
+                });
+            });
+
+            return computedShiftQualifications;
+        },
         selectableCrafts() {
             let crafts = [];
             if (this.selectedCraft) {

@@ -3,13 +3,16 @@
 namespace Database\Factories;
 
 use App\Models\Event;
-use App\Models\TimeLine;
+use Artwork\Modules\Timeline\Models\Timeline;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TimeLineFactory extends Factory
 {
-    protected $model = TimeLine::class;
+    protected $model = Timeline::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
         return [

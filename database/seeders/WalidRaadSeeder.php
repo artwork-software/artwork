@@ -11,6 +11,8 @@ use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHeadline;
 use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -486,80 +488,149 @@ class WalidRaadSeeder extends Seeder
             'allDay' => false
         ]);
 
-        $eventWithShift->shifts()->create([
+        /** @var Shift $shift */
+        $shift = $eventWithShift->shifts()->create([
             'start' => '10:00:00',
             'end' => '13:00:00',
             'break_minutes' => '11',
             'craft_id' => 1,
-            'number_employees' => 3,
             'shift_uuid' => Str::uuid(),
             'event_start_day' => $eventWithShift->start_time->format('Y-m-d'),
             'event_end_day' => $eventWithShift->end_time->format('Y-m-d'),
         ]);
 
-        $event1 = $eventWithManyShifts->shifts()->create([
+        $workerShiftQualification = ShiftQualification::where('name', 'Mitarbeiter')->get()->first();
+        $masterShiftQualification = ShiftQualification::where('name', 'Meister')->get()->first();
+
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $workerShiftQualification->id,
+                'value' => 2
+            ]
+        );
+
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $masterShiftQualification->id,
+                'value' => 2
+            ]
+        );
+
+        $shift = $eventWithManyShifts->shifts()->create([
             'start' => '08:00:00',
             'end' => '10:00:00',
             'break_minutes' => '5',
             'craft_id' => 1,
-            'number_employees' => 5,
-            'number_masters' => 1,
             'shift_uuid' => Str::uuid(),
             'event_start_day' => $eventWithManyShifts->start_time->format('Y-m-d'),
             'event_end_day' => $eventWithManyShifts->end_time->format('Y-m-d'),
         ]);
 
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $workerShiftQualification->id,
+                'value' => fake()->numberBetween(0, 3) ?: null
+            ]
+        );
 
-        $eventWithManyShifts->shifts()->create([
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $masterShiftQualification->id,
+                'value' => fake()->numberBetween(0, 3) ?: null
+            ]
+        );
+
+        $shift = $eventWithManyShifts->shifts()->create([
             'start' => '10:00:00',
             'end' => '15:00:00',
             'break_minutes' => '5',
             'craft_id' => 1,
-            'number_employees' => 2,
-            'number_masters' => 1,
             'shift_uuid' => Str::uuid(),
             'event_start_day' => $eventWithManyShifts->start_time->format('Y-m-d'),
             'event_end_day' => $eventWithManyShifts->end_time->format('Y-m-d'),
         ]);
 
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $workerShiftQualification->id,
+                'value' => fake()->numberBetween(0, 3) ?: null
+            ]
+        );
 
-        $eventWithManyShifts->shifts()->create([
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $masterShiftQualification->id,
+                'value' => fake()->numberBetween(0, 3) ?: null
+            ]
+        );
+
+        $shift = $eventWithManyShifts->shifts()->create([
             'start' => '15:00:00',
             'end' => '19:00:00',
             'break_minutes' => '60',
             'craft_id' => 1,
-            'number_employees' => 1,
-            'number_masters' => 0,
             'shift_uuid' => Str::uuid(),
             'event_start_day' => $eventWithManyShifts->start_time->format('Y-m-d'),
             'event_end_day' => $eventWithManyShifts->end_time->format('Y-m-d'),
         ]);
 
-        $eventWithManyShifts->shifts()->create([
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $workerShiftQualification->id,
+                'value' => fake()->numberBetween(0, 3) ?: null
+            ]
+        );
+
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $masterShiftQualification->id,
+                'value' => fake()->numberBetween(0, 3) ?: null
+            ]
+        );
+
+        $shift = $eventWithManyShifts->shifts()->create([
             'start' => '10:00:00',
             'end' => '12:00:00',
             'break_minutes' => '1',
             'craft_id' => 1,
-            'number_employees' => 2,
-            'number_masters' => 1,
             'shift_uuid' => Str::uuid(),
             'event_start_day' => $eventWithManyShifts->start_time->format('Y-m-d'),
             'event_end_day' => $eventWithManyShifts->end_time->format('Y-m-d'),
         ]);
 
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $workerShiftQualification->id,
+                'value' => fake()->numberBetween(0, 3) ?: null
+            ]
+        );
+
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $masterShiftQualification->id,
+                'value' => fake()->numberBetween(0, 3) ?: null
+            ]
+        );
 
         $eventWithManyShifts->shifts()->create([
             'start' => '10:00:00',
             'end' => '20:00:00',
             'break_minutes' => '2',
             'craft_id' => 1,
-            'number_employees' => 1,
-            'number_masters' => 1,
             'shift_uuid' => Str::uuid(),
             'event_start_day' => $eventWithManyShifts->start_time->format('Y-m-d'),
             'event_end_day' => $eventWithManyShifts->end_time->format('Y-m-d'),
         ]);
-
 
         $firstArea = Area::find(1);
 

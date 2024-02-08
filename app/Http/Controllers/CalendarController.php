@@ -61,7 +61,7 @@ class CalendarController extends Controller
             $query->whereHas('users', function ($query) use ($userId): void {
                 $query->where('user_id', $userId);
             });
-        }])->whereHas('shifts.users', function ($query) use ($userId): void {
+        }, 'shifts.shiftsQualifications'])->whereHas('shifts.users', function ($query) use ($userId): void {
             $query->where('user_id', $userId);
         })->get();
 
@@ -107,11 +107,11 @@ class CalendarController extends Controller
         $today = $date_of_day->format('d.m.Y');
 
         $events = Event::with(['shifts' => function ($query) use ($serviceProviderId): void {
-            $query->whereHas('service_provider', function ($query) use ($serviceProviderId): void {
+            $query->whereHas('serviceProvider', function ($query) use ($serviceProviderId): void {
                 $query->where('service_provider_id', $serviceProviderId);
             });
         }])
-            ->whereHas('shifts.service_provider', function ($query) use ($serviceProviderId): void {
+            ->whereHas('shifts.serviceProvider', function ($query) use ($serviceProviderId): void {
                 $query->where('service_provider_id', $serviceProviderId);
             })
             ->get();

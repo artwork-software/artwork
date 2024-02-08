@@ -2,21 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Builders\EventBuilder;
 use App\Casts\TimeAgoCast;
 use App\Enums\NotificationConstEnum;
 use App\Events\OccupancyUpdated;
-use App\Http\Requests\EventIndexRequest;
 use App\Http\Requests\EventStoreRequest;
 use App\Http\Requests\EventUpdateRequest;
-use App\Http\Resources\CalendarEventCollectionResource;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
+use App\Http\Resources\FreelancerShiftPlanResource;
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
-use App\Http\Resources\ServiceProviderShiftResource;
+use App\Http\Resources\ServiceProviderShiftPlanResource;
 use App\Http\Resources\TaskDashboardResource;
-use App\Http\Resources\UserIndexResource;
+use App\Http\Resources\UserShiftPlanResource;
 use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
@@ -33,9 +31,9 @@ use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -144,11 +142,14 @@ class EventController extends Controller
         ]);
     }
 
-    public function viewShiftPlan(CalendarController $shiftPlan): Response
-    {
+    public function viewShiftPlan(
+        CalendarController $shiftPlan,
+        ShiftQualificationService $shiftQualificationService
+    ): Response {
         $this->user = Auth::user();
         $this->userShiftCalendarFilter = $this->user->shift_calendar_filter()->first();
         $showCalendar = $shiftPlan->createCalendarDataForShiftPlan($this->userShiftCalendarFilter);
+
         $shiftFilterController = new ShiftFilterController();
         $shiftFilters = $shiftFilterController->index();
 
@@ -156,31 +157,37 @@ class EventController extends Controller
             !is_null($this->userShiftCalendarFilter?->start_date) &&
             !is_null($this->userShiftCalendarFilter?->end_date)
         ) {
-            $startDate = Carbon::create($this->userShiftCalendarFilter?->start_date)->startOfDay();
-            $endDate = Carbon::create($this->userShiftCalendarFilter?->end_date)->endOfDay();
+            $startDate = Carbon::create($this->userShiftCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($this->userShiftCalendarFilter->end_date)->endOfDay();
         } else {
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
 
-        $events = Event::with(['shifts','event_type', 'room'])
+        $events = Event::with(['shifts', 'event_type', 'room'])
             ->whereHas('shifts', function ($query): void {
                 $query->whereNotNull('shifts.id')->without('crafts');
             })->whereBetween('start_time', [$startDate, $endDate])->without(['series'])
             ->get();
-        $users = User::where('can_work_shifts', true)->without(['roles', 'permissions', 'calendar_settings'])->get();
         $usersWithPlannedWorkingHours = [];
 
         //get the diff of startDate and endDate in days, +1 to include the current date
         $diffInDays = $startDate->diffInDays($endDate) + 1;
 
-        foreach ($users as $user) {
+        /** @var User $user */
+        foreach (
+            User::where('can_work_shifts', true)
+                ->without(['roles', 'permissions', 'calendar_settings'])
+                ->get() as $user
+        ) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
             $vacations = $user->hasVacationDays();
             $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
 
             $usersWithPlannedWorkingHours[] = [
-                'user' => UserIndexResource::make($user),
+                'user' => UserShiftPlanResource::make($user)
+                    ->setStartDate($startDate)
+                    ->setEndDate($endDate),
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'expectedWorkingHours' => $expectedWorkingHours,
                 'vacations' => $vacations,
@@ -194,20 +201,14 @@ class EventController extends Controller
 
         $freelancers = Freelancer::where('can_work_shifts', true)->get();
 
+        /** @var Freelancer $freelancer */
         foreach ($freelancers as $freelancer) {
             $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
             $vacations = $freelancer->hasVacationDays();
             $freelancersWithPlannedWorkingHours[] = [
-                'freelancer' => [
-                    'resource' => 'FreelancerShiftResource',
-                    'id' => $freelancer->id,
-                    'first_name' => $freelancer->first_name,
-                    'last_name' => $freelancer->last_name,
-                    'profile_photo_url' => $freelancer->profile_image,
-                    'shifts' => $freelancer->getShiftsAttribute(),
-                    'assigned_craft_ids' => $freelancer->getAssignedCraftIdsAttribute(),
-                    'shift_ids_array' => $freelancer->getShiftIdsArrayAttribute(),
-                ],
+                'freelancer' => FreelancerShiftPlanResource::make($freelancer)
+                    ->setStartDate($startDate)
+                    ->setEndDate($endDate),
                 'vacations' => $vacations,
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'availabilities' => $freelancer->availabilities()
@@ -225,13 +226,14 @@ class EventController extends Controller
 
         $serviceProvidersWithPlannedWorkingHours = [];
 
-        $service_providers = ServiceProvider::where('can_work_shifts', true)->get();
-
-        foreach ($service_providers as $service_provider) {
-            $plannedWorkingHours = $service_provider->plannedWorkingHours($startDate, $endDate);
+        /** @var ServiceProvider $serviceProvider */
+        foreach (ServiceProvider::where('can_work_shifts', true)->get() as $serviceProvider) {
+            $plannedWorkingHours = $serviceProvider->plannedWorkingHours($startDate, $endDate);
 
             $serviceProvidersWithPlannedWorkingHours[] = [
-                'service_provider' => ServiceProviderShiftResource::make($service_provider),
+                'service_provider' => ServiceProviderShiftPlanResource::make($serviceProvider)
+                    ->setStartDate($startDate)
+                    ->setEndDate($endDate),
                 'plannedWorkingHours' => $plannedWorkingHours,
             ];
         }
@@ -253,6 +255,7 @@ class EventController extends Controller
             'freelancersForShifts' => $freelancersWithPlannedWorkingHours,
             'serviceProvidersForShifts' => $serviceProvidersWithPlannedWorkingHours,
             'history' => $historyElements,
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending()
         ]);
     }
 

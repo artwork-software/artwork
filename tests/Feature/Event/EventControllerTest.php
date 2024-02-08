@@ -1,25 +1,24 @@
 <?php
 
-use App\Models\User;
 use App\Models\Event;
-use App\Models\UserCalendarFilter;
-use App\Models\UserShiftCalendarFilter;
-use App\Models\UserCalendarSettings;
-use App\Notifications\EventNotification;
-use App\Notifications\RoomNotification;
-use App\Notifications\RoomRequestNotification;
-use Artwork\Modules\Room\Models\Room;
-use Inertia\Testing\AssertableInertia;
+use App\Models\EventComments;
 use App\Models\Freelancer;
 use App\Models\FreelancerVacation;
 use App\Models\Task;
+use App\Models\User;
+use App\Models\UserCalendarFilter;
+use App\Models\UserCalendarSettings;
+use App\Models\UserShiftCalendarFilter;
+use App\Notifications\RoomNotification;
+use App\Notifications\RoomRequestNotification;
 use Artwork\Modules\Checklist\Models\Checklist;
-use Illuminate\Support\Facades\Event as EventFacade;
-use App\Models\EventComments;
-use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
-use App\Models\TimeLine;
+use Artwork\Modules\Timeline\Models\Timeline;
+use Illuminate\Support\Facades\Event as EventFacade;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
+use Inertia\Testing\AssertableInertia;
 
 use function Pest\Faker\faker;
 use function Pest\Laravel\assertDatabaseHas;
@@ -435,7 +434,7 @@ test('collisions', function (Event $event) {
 test('destroy shifts', function () {
     $event = Event::factory()->create();
     $shift = Shift::factory()->create(['event_id' => $event->id]);
-    $timeline = TimeLine::factory()->create(['event_id' => $event->id]);
+    $timeline = Timeline::factory()->create(['event_id' => $event->id]);
 
     assertDatabaseHas('shifts', ['id' => $shift->id, 'event_id' => $event->id]);
     assertDatabaseHas('time_lines', ['id' => $timeline->id, 'event_id' => $event->id]);

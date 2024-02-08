@@ -162,15 +162,25 @@
                                 </div>
                                 <span class="flex w-full eventTime">
                         <span v-if="event.start.getDay() === event.end.getDay()"
-                              class="items-center eventTime">{{ event.start.formatTime("HH:mm") }} - {{
-                                event.end.formatTime("HH:mm")
-                            }}
+                              class="items-center eventTime">
+                            <span v-if="event.allDay">
+                            ganztägig
+                            </span>
+                            <span v-else>
+                                {{ event.start.formatTime("HH:mm") }} - {{
+                                    event.end.formatTime("HH:mm")
+                                }}
+                            </span>
+
                         </span>
                         <span class="flex w-full eventTime" v-else>
                             <span class="text-error mx-1">
                         !
                         </span>
-                            <span class="items-center eventTime">
+                            <span v-if="event.allDay">
+                             {{event.start.format("DD.MM.")}} - {{ event.end.format("DD.MM.")}} ganztägig
+                            </span>
+                            <span v-else class="items-center eventTime">
                                 {{ event.start.format("DD.MM. HH:mm") }} - {{
                                     event.end.format("DD.MM. HH:mm")
                                 }}
@@ -686,11 +696,23 @@ export default {
             this.$refs.vuecal.next();
             this.dateValue[0] = this.addOneDay(this.dateValue[0]);
             this.dateValue[1] = this.addOneDay(this.dateValue[1]);
+            Inertia.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+                start_date:  this.dateValue[0],
+                end_date: this.dateValue[1],
+            },{
+                preserveScroll: true
+            })
         },
         previousDay() {
             this.$refs.vuecal.previous();
             this.dateValue[0] = this.subtractOneDay(this.dateValue[0]);
             this.dateValue[1] = this.subtractOneDay(this.dateValue[1]);
+            Inertia.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
+                start_date:  this.dateValue[0],
+                end_date: this.dateValue[1],
+            },{
+                preserveScroll: true
+            })
         },
         formatDate(date) {
             return new Date((new Date(date)).getTime() - ((new Date(date)).getTimezoneOffset() * 60000)).toISOString().slice(0, 10);

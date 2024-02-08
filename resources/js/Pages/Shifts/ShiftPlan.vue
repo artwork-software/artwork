@@ -14,8 +14,8 @@
                                       :user_filters="user_filters"
                 />
             </div>
-            <div :style="{ '--dynamic-height': windowHeight + 'px' }">
-                <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll ']">
+            <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
+                <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
                     <Table>
                         <template #head>
                             <div class="stickyHeader">
@@ -62,8 +62,8 @@
                     </Table>
                 </div>
             </div>
-            <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="{ height: userOverviewHeight + 'px'}">
-                    <div class="flex justify-center overflow-y-scroll mt-5">
+            <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="showUserOverview ?{ height: userOverviewHeight - 30 + 'px'} : {height: 20 + 'px'}">
+                    <div class="flex justify-center overflow-y-scroll">
                         <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
                              class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">
                             <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
@@ -92,7 +92,7 @@
                 <div v-show="showUserOverview"
                      ref="userOverview"
                      class="w-full bg-primary overflow-x-scroll z-30 overflow-y-scroll"
-                     :style="{ height: userOverviewHeight + 'px'}">
+                     :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
                     <table class="w-full text-white overflow-y-scroll">
                         <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                         <div>

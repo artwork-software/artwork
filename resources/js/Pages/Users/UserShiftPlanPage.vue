@@ -1,11 +1,26 @@
 <template>
     <UserEditHeader :current-tab="currentTab" :user_to_edit="user_to_edit">
-        <UserShiftPlan type="user" :totalPlannedWorkingHours="totalPlannedWorkingHours" :weeklyWorkingHours="this.user_to_edit.weekly_working_hours" :date-value="dateValue"
-                       :days-with-events="daysWithEvents"
-                       :projects="projects" :event-types="eventTypes" :rooms="rooms"
-                       :vacations="vacations"></UserShiftPlan>
-        <Availability :availabilities="availabilities" :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate" type="user" :calendar-data="calendarData" :vacationSelectCalendar="vacationSelectCalendar" :createShowDate="createShowDate" :date-to-show="dateToShow"
-                      :user="user_to_edit" :vacations="vacations"/>
+        <UserShiftPlan type="user"
+                       :totalPlannedWorkingHours="this.totalPlannedWorkingHours"
+                       :weeklyWorkingHours="this.user_to_edit.weekly_working_hours"
+                       :date-value="this.dateValue"
+                       :days-with-events="this.daysWithEvents"
+                       :projects="this.projects"
+                       :event-types="this.eventTypes"
+                       :rooms="this.rooms"
+                       :vacations="this.vacations"
+                       :shift-qualifications="this.shiftQualifications"
+        />
+        <Availability :availabilities="availabilities"
+                      :showVacationsAndAvailabilitiesDate="showVacationsAndAvailabilitiesDate"
+                      type="user"
+                      :calendar-data="calendarData"
+                      :vacationSelectCalendar="vacationSelectCalendar"
+                      :createShowDate="createShowDate"
+                      :date-to-show="dateToShow"
+                      :user="user_to_edit"
+                      :vacations="vacations"
+        />
     </UserEditHeader>
 </template>
 
@@ -45,7 +60,8 @@ export default {
         'vacationSelectCalendar',
         'createShowDate',
         'showVacationsAndAvailabilitiesDate',
-        'availabilities'
+        'availabilities',
+        'shiftQualifications'
     ],
     data() {
         return {

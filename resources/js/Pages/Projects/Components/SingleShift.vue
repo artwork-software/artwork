@@ -38,7 +38,6 @@
                                     class=" flex-shrink-0 h-4 w-4 my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
-
                         </div>
                         <transition enter-active-class="transition ease-out duration-100"
                                     enter-from-class="transform opacity-0 scale-95"

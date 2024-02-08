@@ -2,11 +2,16 @@
 
 namespace App\Http\Resources;
 
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ServiceProviderShiftResource extends JsonResource
+class ServiceProviderShiftPlanResource extends JsonResource
 {
     public static $wrap = null;
+
+    private Carbon $startDate;
+
+    private Carbon $endDate;
 
     /**
      * @return array<string, mixed>
@@ -21,7 +26,20 @@ class ServiceProviderShiftResource extends JsonResource
             'profile_photo_url' => $this->profile_image,
             'shifts' => $this->getShiftsAttribute(),
             'assigned_craft_ids' => $this->getAssignedCraftIdsAttribute(),
-            'shift_ids_array' => $this->getShiftIdsArrayAttribute(),
+            'shift_ids' => $this->getShiftIdsBetweenStartDateAndEndDate($this->startDate, $this->endDate),
+            'shift_qualifications' => $this->shiftQualifications
         ];
+    }
+
+    public function setStartDate(Carbon $startDate): self
+    {
+        $this->startDate = $startDate;
+        return $this;
+    }
+
+    public function setEndDate(Carbon $endDate): self
+    {
+        $this->endDate = $endDate;
+        return $this;
     }
 }

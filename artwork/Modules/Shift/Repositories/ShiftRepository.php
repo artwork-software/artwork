@@ -12,6 +12,11 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ShiftRepository extends BaseRepository
 {
+    public function getById(int $shiftId): Shift|null
+    {
+        return Shift::find($shiftId);
+    }
+
     public function getShiftsByUuid(string $shiftUuid): Collection
     {
         return Shift::allByUuid($shiftUuid)->get();

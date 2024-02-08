@@ -64,7 +64,7 @@ use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
-use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -1804,7 +1804,7 @@ class ProjectController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function projectShiftTab(
         Project $project,
-        ShiftQualificationRepository $shiftQualificationRepository
+        ShiftQualificationService $shiftQualificationService
     ): Response|ResponseFactory {
         $project->load([
             'departments.users.departments',
@@ -1944,7 +1944,7 @@ class ProjectController extends Controller
             'currentUserCrafts' => Auth::user()
                 ->crafts
                 ->merge(Craft::query()->where('assignable_by_all', '=', true)->get()),
-            'shiftQualifications' => $shiftQualificationRepository->getAllOrderedByCreationDateAscending()
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending()
         ]);
     }
 

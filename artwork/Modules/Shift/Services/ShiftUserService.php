@@ -40,7 +40,7 @@ class ShiftUserService
         Shift $shift,
         int $userId,
         int $shiftQualificationId,
-        array|null $seriesShiftData
+        array|null $seriesShiftData = null
     ): void {
         $shiftUserPivot = $this->shiftUserRepository->createForShift(
             $shift->id,
@@ -447,6 +447,17 @@ class ShiftUserService
                 //for each pivot which is deleted
                 $this->removeFromShift($user->pivot, true);
             }
+        );
+    }
+
+    public function removeFromShiftByUserIdAndShiftId(int $userId, int $shiftId): void
+    {
+        $this->removeFromShift(
+            $this->shiftUserRepository->findByUserIdAndShiftId(
+                $userId,
+                $shiftId
+            ),
+            true
         );
     }
 

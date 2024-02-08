@@ -25,8 +25,6 @@ use Illuminate\Support\Collection;
  * @property string $end
  * @property int $break_minutes
  * @property int $craft_id
- * @property int $number_employees
- * @property int $number_masters
  * @property string $description
  * @property bool $is_committed
  * @property string|null $shift_uuid
@@ -37,22 +35,11 @@ use Illuminate\Support\Collection;
  * @property-read \Artwork\Modules\Craft\Models\Craft $craft
  * @property-read \App\Models\Event $event
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Freelancer[] $freelancer
- * @property-read int|null $freelancer_count
- * @property-read int $currentCount
- * @property-read int $empty_master_count
- * @property-read int $empty_user_count
- * @property-read int $maxCount
- * @property-read float $master_count
- * @property-read int $user_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $users
- * @property-read int|null $users_count
  * @property-read \Illuminate\Support\Collection $history
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ServiceProvider[] $serviceProvider
- * @property-read int|null $service_provider_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $masters
- * @property-read int|null $masters_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $employees
- * @property-read int|null $employees_count
  * @property-read array $allUsers
  * @property-read bool $infringement
  * @property-read string $break_formatted

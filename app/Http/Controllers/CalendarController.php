@@ -61,7 +61,7 @@ class CalendarController extends Controller
             $query->whereHas('users', function ($query) use ($userId): void {
                 $query->where('user_id', $userId);
             });
-        }])->whereHas('shifts.users', function ($query) use ($userId): void {
+        }, 'shifts.shiftsQualifications'])->whereHas('shifts.users', function ($query) use ($userId): void {
             $query->where('user_id', $userId);
         })->get();
 

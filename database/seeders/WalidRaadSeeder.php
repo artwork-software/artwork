@@ -499,12 +499,21 @@ class WalidRaadSeeder extends Seeder
             'event_end_day' => $eventWithShift->end_time->format('Y-m-d'),
         ]);
 
-        $firstShiftQualification = ShiftQualification::query()->first();
+        $workerShiftQualification = ShiftQualification::where('name', 'Mitarbeiter')->get()->first();
+        $masterShiftQualification = ShiftQualification::where('name', 'Meister')->get()->first();
 
         $shift->shiftsQualifications()->create(
             [
                 'shift_id' => $shift->id,
-                'shift_qualification_id' => $firstShiftQualification->id,
+                'shift_qualification_id' => $workerShiftQualification->id,
+                'value' => 2
+            ]
+        );
+
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $masterShiftQualification->id,
                 'value' => 2
             ]
         );
@@ -522,7 +531,15 @@ class WalidRaadSeeder extends Seeder
         $shift->shiftsQualifications()->create(
             [
                 'shift_id' => $shift->id,
-                'shift_qualification_id' => $firstShiftQualification->id,
+                'shift_qualification_id' => $workerShiftQualification->id,
+                'value' => fake()->numberBetween(0, 3) ?: null
+            ]
+        );
+
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $masterShiftQualification->id,
                 'value' => fake()->numberBetween(0, 3) ?: null
             ]
         );
@@ -540,7 +557,15 @@ class WalidRaadSeeder extends Seeder
         $shift->shiftsQualifications()->create(
             [
                 'shift_id' => $shift->id,
-                'shift_qualification_id' => $firstShiftQualification->id,
+                'shift_qualification_id' => $workerShiftQualification->id,
+                'value' => fake()->numberBetween(0, 3) ?: null
+            ]
+        );
+
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $masterShiftQualification->id,
                 'value' => fake()->numberBetween(0, 3) ?: null
             ]
         );
@@ -558,7 +583,15 @@ class WalidRaadSeeder extends Seeder
         $shift->shiftsQualifications()->create(
             [
                 'shift_id' => $shift->id,
-                'shift_qualification_id' => $firstShiftQualification->id,
+                'shift_qualification_id' => $workerShiftQualification->id,
+                'value' => fake()->numberBetween(0, 3) ?: null
+            ]
+        );
+
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $masterShiftQualification->id,
                 'value' => fake()->numberBetween(0, 3) ?: null
             ]
         );
@@ -576,7 +609,15 @@ class WalidRaadSeeder extends Seeder
         $shift->shiftsQualifications()->create(
             [
                 'shift_id' => $shift->id,
-                'shift_qualification_id' => $firstShiftQualification->id,
+                'shift_qualification_id' => $workerShiftQualification->id,
+                'value' => fake()->numberBetween(0, 3) ?: null
+            ]
+        );
+
+        $shift->shiftsQualifications()->create(
+            [
+                'shift_id' => $shift->id,
+                'shift_qualification_id' => $masterShiftQualification->id,
                 'value' => fake()->numberBetween(0, 3) ?: null
             ]
         );

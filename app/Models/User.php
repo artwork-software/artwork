@@ -29,7 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
@@ -131,8 +131,7 @@ class User extends Authenticatable implements Vacationer, Available
         'full_name',
         'type',
         'formatted_vacation_days',
-        'assigned_craft_ids',
-        'shift_ids_array'
+        'assigned_craft_ids'
     ];
 
     protected $with = ['calendar_settings'];
@@ -331,12 +330,11 @@ class User extends Authenticatable implements Vacationer, Available
         return $this->assignedCrafts()->pluck('crafts.id')->toArray();
     }
 
-    /**
-     * @return array<int>
-     */
-    public function getShiftIdsArrayAttribute(): array
-    {
-        return $this->shifts()->pluck('shifts.id')->toArray();
+    public function getShiftIdsBetweenStartDateAndEndDate(
+        Carbon $startDate,
+        Carbon $endDate
+    ): \Illuminate\Support\Collection {
+        return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 
     /**

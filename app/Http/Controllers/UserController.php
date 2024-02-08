@@ -20,8 +20,8 @@ use Artwork\Modules\PermissionPresets\Services\PermissionPresetService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\ShiftQualification\Http\Requests\UpdateUserShiftQualificationRequest;
-use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\ShiftQualification\Services\UserShiftQualificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -125,8 +125,11 @@ class UserController extends Controller
         ]);
     }
 
-    public function editUserShiftplan(User $user, CalendarController $shiftPlan): Response|ResponseFactory
-    {
+    public function editUserShiftplan(
+        User $user,
+        CalendarController $shiftPlan,
+        ShiftQualificationService $shiftQualificationService
+    ): Response|ResponseFactory {
         $showCalendar = $shiftPlan->createCalendarDataForUserShiftPlan($user);
         //$this->getAvailabilityData($user, request('month'))
         $availabilityData = $this->calendarService
@@ -179,6 +182,7 @@ class UserController extends Controller
                 ->with(['event', 'event.project', 'event.room'])
                 ->orderBy('start', 'ASC')
                 ->get(),
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending()
         ]);
     }
 

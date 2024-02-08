@@ -43,4 +43,9 @@ class ShiftUser extends Pivot
             ->where('shift_id', $shiftId)
             ->where('shift_qualification_id', $shiftQualificationId);
     }
+
+    public function scopeByUserIdAndShiftId(Builder $builder, int $userId, int $shiftId): Builder
+    {
+        return $builder->where('user_id', $userId)->where('shift_id', $shiftId);
+    }
 }

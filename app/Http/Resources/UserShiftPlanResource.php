@@ -3,11 +3,16 @@
 namespace App\Http\Resources;
 
 use App\Enums\PermissionNameEnum;
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class UserIndexResource extends JsonResource
+class UserShiftPlanResource extends JsonResource
 {
     public static $wrap = null;
+
+    private Carbon $startDate;
+
+    private Carbon $endDate;
 
     /**
      * @return array<string, mixed>
@@ -31,6 +36,20 @@ class UserIndexResource extends JsonResource
             'display_name' => $this->getDisplayNameAttribute(),
             'type' => $this->getTypeAttribute(),
             'assigned_craft_ids' => $this->getAssignedCraftIdsAttribute(),
+            'shift_ids' => $this->getShiftIdsBetweenStartDateAndEndDate($this->startDate, $this->endDate),
+            'shift_qualifications' => $this->shiftQualifications
         ];
+    }
+
+    public function setStartDate(Carbon $startDate): self
+    {
+        $this->startDate = $startDate;
+        return $this;
+    }
+
+    public function setEndDate(Carbon $endDate): self
+    {
+        $this->endDate = $endDate;
+        return $this;
     }
 }

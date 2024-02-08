@@ -494,47 +494,49 @@ class ShiftController extends Controller
         $shift->delete();
     }
 
-    public function saveMultiEdit(Request $request): void
-    {
-        $shifts = $request->shifts;
-        $user = null;
-        $freelancer = null;
-        $serviceProvider = null;
-        $modelShifts = null;
+    public function saveMultiEdit(
+        Request $request,
+        ShiftService $shiftService,
+        ShiftUserService $shiftUserService,
+        ShiftFreelancerService $shiftFreelancerService,
+        ShiftServiceProviderService $shiftServiceProviderService,
+    ): void {
+        $shiftsToHandle = $request->get('shiftsToHandle', ['assignToShift' => [], 'removeFromShift' => []]);
 
-        if ($request->user['type'] === 0) {
-            $user = User::find($request->user['id']);
-            $modelShifts = $user->shifts()->get()->pluck('id')->all();
-            // remove all shifts from user
-            $user->shifts()->detach($modelShifts);
+        if (empty($shiftsToHandle['assignToShift']) && empty($shiftsToHandle['removeFromShift'])) {
+            return;
         }
 
-        if ($request->user['type'] === 1) {
-            $freelancer = Freelancer::find($request->user['id']);
-            $modelShifts = $freelancer->shifts()->get()->pluck('id')->all();
-            // remove all shifts from freelancer
-            $freelancer->shifts()->detach($modelShifts);
+        $serviceToUse = match ($request->get('userType')) {
+            0 => $shiftUserService,
+            1 => $shiftFreelancerService,
+            2 => $shiftServiceProviderService,
+            default => null
+        };
+
+        if ($serviceToUse === null) {
+            return;
         }
 
-        if ($request->user['type'] === 2) {
-            $serviceProvider = ServiceProvider::find($request->user['id']);
-            $modelShifts = $serviceProvider->shifts()->get()->pluck('id')->all();
-            // remove all shifts from service provider
-            $serviceProvider->shifts()->detach($modelShifts);
+        foreach ($shiftsToHandle['removeFromShift'] as $shiftIdToRemove) {
+            $serviceToUse->removeFromShiftByUserIdAndShiftId(
+                $request->get('userTypeId'),
+                $shiftIdToRemove
+            );
         }
 
-        foreach ($shifts as $shift => $key) {
-            $shift = Shift::find($key);
-            if ($request->user['type'] === 0) {
-                $this->addShiftUser(shift: $shift, user: $user, request: $request);
-            }
-            if ($request->user['type'] === 1) {
-                $this->addShiftFreelancer(shift: $shift, freelancer: $freelancer, request: $request);
+        foreach ($shiftsToHandle['assignToShift'] as $shiftToAssign) {
+            $shift = $shiftService->getById($shiftToAssign['shiftId']);
+
+            if (!$shift instanceof Shift) {
+                continue;
             }
 
-            if ($request->user['type'] === 2) {
-                $this->addShiftProvider(shift: $shift, serviceProvider: $serviceProvider, request: $request);
-            }
+            $serviceToUse->assignToShift(
+                $shift,
+                $request->get('userTypeId'),
+                $shiftToAssign['shiftQualificationId'],
+            );
         }
     }
 
@@ -545,34 +547,23 @@ class ShiftController extends Controller
         ShiftFreelancerService $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService
     ): RedirectResponse {
-        $seriesShiftData = $request->get('seriesShiftData');
+        $serviceToUse = match ($request->get('userType')) {
+            0 => $shiftUserService,
+            1 => $shiftFreelancerService,
+            2 => $shiftServiceProviderService,
+            default => null
+        };
 
-        switch ($request->get('userType')) {
-            case 0:
-                $shiftUserService->assignToShift(
-                    $shift,
-                    $request->get('userId'),
-                    $request->get('shiftQualificationId'),
-                    $seriesShiftData
-                );
-                break;
-            case 1:
-                $shiftFreelancerService->assignToShift(
-                    $shift,
-                    $request->get('userId'),
-                    $request->get('shiftQualificationId'),
-                    $seriesShiftData
-                );
-                break;
-            case 2:
-                $shiftServiceProviderService->assignToShift(
-                    $shift,
-                    $request->get('userId'),
-                    $request->get('shiftQualificationId'),
-                    $seriesShiftData
-                );
-                break;
+        if ($serviceToUse === null) {
+            return Redirect::back();
         }
+
+        $serviceToUse->assignToShift(
+            $shift,
+            $request->get('userId'),
+            $request->get('shiftQualificationId'),
+            $request->get('seriesShiftData')
+        );
 
         return Redirect::back();
     }
@@ -585,19 +576,21 @@ class ShiftController extends Controller
         ShiftFreelancerService $shiftFreelancerService,
         ShiftServiceProviderService $shiftServiceProviderService
     ): RedirectResponse {
-        $removeFromSingleShift = $request->boolean('removeFromSingleShift');
+        $serviceToUse = match ($userType) {
+            0 => $shiftUserService,
+            1 => $shiftFreelancerService,
+            2 => $shiftServiceProviderService,
+            default => null
+        };
 
-        switch ($userType) {
-            case 0:
-                $shiftUserService->removeFromShift($usersPivotId, $removeFromSingleShift);
-                break;
-            case 1:
-                $shiftFreelancerService->removeFromShift($usersPivotId, $removeFromSingleShift);
-                break;
-            case 2:
-                $shiftServiceProviderService->removeFromShift($usersPivotId, $removeFromSingleShift);
-                break;
+        if ($serviceToUse === null) {
+            return Redirect::back();
         }
+
+        $serviceToUse->removeFromShift(
+            $usersPivotId,
+            $request->boolean('removeFromSingleShift')
+        );
 
         return Redirect::back();
     }

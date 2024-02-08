@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Illuminate\Database\Seeder;
 
 class ShiftQualificationSeeder extends Seeder
@@ -14,6 +15,12 @@ class ShiftQualificationSeeder extends Seeder
      */
     public function run(): void
     {
+        ShiftQualification::create([
+            'icon' => 'user-icon',
+            'name' => 'Mitarbeiter',
+            'available' => true
+        ]);
+
         ShiftQualification::create([
             'icon' => 'academic-cap-icon',
             'name' => 'Meister',

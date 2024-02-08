@@ -36,7 +36,7 @@ class ShiftServiceProviderService
         Shift $shift,
         int $serviceProviderId,
         int $shiftQualificationId,
-        array|null $seriesShiftData
+        array|null $seriesShiftData = null
     ): void {
         $shiftFreelancerPivot = $this->shiftServiceProviderRepository->createForShift(
             $shift->id,
@@ -208,6 +208,17 @@ class ShiftServiceProviderService
             function (ServiceProvider $serviceProvider): void {
                 $this->removeFromShift($serviceProvider->pivot, true);
             }
+        );
+    }
+
+    public function removeFromShiftByUserIdAndShiftId(int $freelancerId, int $shiftId): void
+    {
+        $this->removeFromShift(
+            $this->shiftServiceProviderRepository->findByUserIdAndShiftId(
+                $freelancerId,
+                $shiftId
+            ),
+            true
         );
     }
 }

@@ -64,7 +64,11 @@ class Freelancer extends Model implements Vacationer, Available
     ];
 
     protected $appends = [
-        'name', 'display_name', 'type', 'profile_photo_url', 'assigned_craft_ids', 'shift_ids_array'
+        'name',
+        'display_name',
+        'type',
+        'profile_photo_url',
+        'assigned_craft_ids'
     ];
 
     protected $casts = [
@@ -133,12 +137,11 @@ class Freelancer extends Model implements Vacationer, Available
             ->using(FreelancerShiftQualification::class);
     }
 
-    /**
-     * @return array<int>
-     */
-    public function getShiftIdsArrayAttribute(): array
-    {
-        return $this->shifts()->pluck('shifts.id')->toArray();
+    public function getShiftIdsBetweenStartDateAndEndDate(
+        Carbon $startDate,
+        Carbon $endDate
+    ): \Illuminate\Support\Collection {
+        return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 
 

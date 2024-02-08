@@ -53,7 +53,12 @@ class ServiceProvider extends Model
 
     protected $with = ['contacts'];
 
-    protected $appends = ['name', 'type', 'profile_photo_url', 'assigned_craft_ids', 'shift_ids_array'];
+    protected $appends = [
+        'name',
+        'type',
+        'profile_photo_url',
+        'assigned_craft_ids'
+    ];
 
     protected $casts = [
         'can_work_shifts' => 'boolean'
@@ -91,12 +96,11 @@ class ServiceProvider extends Model
         return $this->assignedCrafts()->pluck('crafts.id')->toArray();
     }
 
-    /**
-     * @return array<int>
-     */
-    public function getShiftIdsArrayAttribute(): array
-    {
-        return $this->shifts()->pluck('shifts.id')->toArray();
+    public function getShiftIdsBetweenStartDateAndEndDate(
+        Carbon $startDate,
+        Carbon $endDate
+    ): \Illuminate\Support\Collection {
+        return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 
     public function getNameAttribute(): string

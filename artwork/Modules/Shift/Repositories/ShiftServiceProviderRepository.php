@@ -31,4 +31,9 @@ class ShiftServiceProviderRepository extends BaseRepository
     {
         return ShiftServiceProvider::allByShiftIdAndShiftQualificationId($shiftId, $shiftQualificationId)->count();
     }
+
+    public function findByUserIdAndShiftId(int $userId, int $shiftId): ShiftServiceProvider
+    {
+        return ShiftServiceProvider::byUserIdAndShiftId($userId, $shiftId)->first();
+    }
 }

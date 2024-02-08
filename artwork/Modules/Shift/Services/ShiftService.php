@@ -16,6 +16,11 @@ class ShiftService
     {
     }
 
+    public function getById(int $shiftId): Shift|null
+    {
+        return $this->shiftRepository->getById($shiftId);
+    }
+
     public function createFromShiftPresetShiftForEvent(PresetShift $presetShift, int $eventId): Shift
     {
         $shift = new Shift([

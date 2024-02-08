@@ -67,6 +67,11 @@ class ShiftQualification extends Model
         return $builder->orderBy('created_at');
     }
 
+    public function scopeWorkerQualification(Builder $builder): Builder
+    {
+        return $builder->where('name', 'Mitarbeiter');
+    }
+
     public function scopeMasterQualification(Builder $builder): Builder
     {
         return $builder->where('name', 'Meister');

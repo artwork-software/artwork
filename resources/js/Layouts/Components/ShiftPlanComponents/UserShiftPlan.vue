@@ -8,11 +8,13 @@
                                           :dateValue="dateValue"></UserShiftPlanFunctionBar>
             </div>
             <div class="overflow-x-auto flex">
-                <div class="flex flex-wrap w-full">
-                    <div class="w-1/7 h-48 mx-1" :style="{minWidth: 200 + 'px'}"
+                <div class="w-full grid grid-cols-7">
+                    <div class="h-48 mx-1"
                          v-for="day in daysWithVacationAndEvents">
                         <div class="calendarRoomHeader">
-                            {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-0.5">(KW{{ day.week_number }})</span>
+                            {{ day.day_string }} {{ day.full_day }}
+                            <br>
+                            <span v-if="day.is_monday" class="text-[10px] font-normal ml-0.5">(KW{{ day.week_number }})</span>
                             <span class="text-shiftText subpixel-antialiased">
                                 (<span
                                 :class="day.shiftDurationWarning? 'text-error': ''">{{
@@ -25,11 +27,16 @@
                                 nicht verfügbar
                             </div>
                         </div>
-                        <div v-for="event in day.events" class="flex">
-                            <SingleShiftPlanEvent :eventType="this.findEventTypeById(event.event_type_id)"
+                        <div v-for="event in day.events" class="flex w-full">
+                            <SingleShiftPlanEvent class="w-full"
+                                                  :eventType="this.findEventTypeById(event.event_type_id)"
                                                   :project="this.findProjectById(event.projectId)"
-                                                  :room="this.findRoomById(event.room_id)" :event="event"
-                                                  :showRoom="true" :show-duration-info="true" />
+                                                  :room="this.findRoomById(event.room_id)"
+                                                  :event="event"
+                                                  :showRoom="true"
+                                                  :show-duration-info="true"
+                                                  :shift-qualifications="this.shiftQualifications"
+                            />
                         </div>
                     </div>
                 </div>
@@ -39,12 +46,7 @@
 </template>
 
 <script>
-import {defineComponent} from 'vue'
-import UserAvailabilityCalendar from "@/Pages/Users/Components/UserAvailabilityCalendar.vue";
-import UserVacations from "@/Pages/Users/Components/UserVacations.vue";
-import TemporarilyHired from "@/Pages/Users/Components/TemporarilyHired.vue";
 import Permissions from "@/mixins/Permissions.vue";
-import dayjs from "dayjs";
 import UserShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlanFunctionBar.vue";
 import ShiftPlanFunctionBar from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFunctionBar.vue";
 import {Inertia} from "@inertiajs/inertia";
@@ -85,7 +87,18 @@ export default {
             });
         },
     },
-    props: ['daysWithEvents', 'dateValue', 'projects', 'eventTypes', 'rooms', 'vacations', 'weeklyWorkingHours', 'type','totalPlannedWorkingHours'],
+    props: [
+        'daysWithEvents',
+        'dateValue',
+        'projects',
+        'eventTypes',
+        'rooms',
+        'vacations',
+        'weeklyWorkingHours',
+        'type',
+        'totalPlannedWorkingHours',
+        'shiftQualifications'
+    ],
     methods: {
         previousTimeRange() {
             const dayDifference = this.calculateDateDifference();

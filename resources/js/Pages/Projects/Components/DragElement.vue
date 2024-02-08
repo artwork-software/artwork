@@ -47,10 +47,10 @@ export default defineComponent({
                 'application/json',
                 JSON.stringify(
                     {
-                      id: this.item.id,
-                      type: this.type,
-                      craft_ids: this.item.assigned_craft_ids,
-                      shift_qualifications: this.item.shift_qualifications
+                        id: this.item.id,
+                        type: this.type,
+                        craft_ids: this.item.assigned_craft_ids,
+                        shift_qualifications: this.item.shift_qualifications
                     }
                 )
             );

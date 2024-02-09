@@ -49,7 +49,7 @@
                                             <p class="text-sm" v-if="shift.description">&bdquo;{{ shift.description }}&rdquo;</p>
                                         </div>
                                         <div class="hidden group-hover:block cursor-pointer">
-                                            <button type="button" @click="removeUserFromShift(shift.id)">
+                                            <button type="button" @click="removeUserFromShift(shift.id, shift.pivot.id)">
                                                 <SvgCollection svg-name="xMarkIcon" />
                                             </button>
                                         </div>
@@ -57,10 +57,10 @@
                                 </div>
 
 
-                                <div class="mt-5 text-sm">
+                                <div class="mt-5 text-sm" v-if="user.availabilities">
                                     <h3 class="font-bold mb-3">Eingetragene Verfügbarkeiten</h3>
 
-                                    <div class="my-2" v-for="availability in user?.availabilities[day.full_day]">
+                                    <div class="my-2" v-for="availability in user.availabilities[day.full_day]">
                                         <div>
                                             <div class="flex items-center">
                                                 <div>
@@ -116,7 +116,8 @@ export default defineComponent({
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel
+        XIcon,
+        DialogPanel
     },
     data(){
         return {
@@ -133,30 +134,28 @@ export default defineComponent({
         findProjectById(projectId) {
             return this.projects.find(project => project.id === projectId);
         },
-        removeUserFromShift(shift){
-            const shiftContainer = document.getElementById('shift-' + shift);
-            if(this.user.element.resource === 'ServiceProviderShiftResource'){
-                Inertia.delete(route('shifts.removeProvider', {shift: shift, serviceProvider: this.user.element.id}), {
-                    onSuccess: () => {
-                        shiftContainer.remove()
+        removeUserFromShift(shiftId, usersPivotId) {
+            Inertia.delete(
+                route(
+                    'shift.removeUserByType',
+                    {
+                        usersPivotId: usersPivotId,
+                        userType: this.user.type
                     }
-                })
-            } else if(this.user.element.resource === 'FreelancerShiftResource'){
-                Inertia.delete(route('shifts.removeFreelancer', {shift: shift, freelancer: this.user.element.id}), {
+                ),
+                {
+                    data: {
+                        removeFromSingleShift: true
+                    },
+                    preserveScroll: true,
                     onSuccess: () => {
-                        shiftContainer.remove()
+                        document.getElementById('shift-' + shiftId).remove()
                     }
-                })
-            } else {
-                Inertia.delete(route('shifts.removeUser', {shift: shift, user: this.user.element.id}), {
-                    onSuccess: () => {
-                        shiftContainer.remove()
-                    }
-                })
-            }
+                }
+            );
         },
-        checkVacation(){
-            if(this.user.type === 0){
+        checkVacation() {
+            if (this.user.type === 0) {
                 Inertia.patch(route('user.check.vacation', {user: this.user.element.id}), {
                     checked: this.checked,
                     day: this.day.full_day
@@ -165,7 +164,7 @@ export default defineComponent({
                         this.closeModal(true)
                     }
                 });
-            }else if(this.user.type === 1){
+            } else if(this.user.type === 1) {
                 Inertia.patch(route('freelancer.check.vacation', {freelancer: this.user.element.id}), {
                     checked: this.checked,
                     day: this.day.full_day
@@ -174,19 +173,11 @@ export default defineComponent({
                         this.closeModal(true)
                     }
                 });
-            }else{
+            } else {
                 //Service Provider do not have vacations, so no function here
                 this.closeModal(true)
             }
-
-
         }
     }
-
 })
 </script>
-
-
-<style scoped>
-
-</style>

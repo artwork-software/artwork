@@ -287,7 +287,7 @@ import {Inertia} from "@inertiajs/inertia";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import ShiftHistoryModal from "@/Pages/Shifts/Components/ShiftHistoryModal.vue";
-import ShowUserShiftsModal from "@/Pages/Shifts/Components/showUserShiftsModal.vue";
+import ShowUserShiftsModal from "@/Pages/Shifts/Components/ShowUserShiftsModal.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
 import {Switch} from "@headlessui/vue";
@@ -394,7 +394,6 @@ export default {
                     expectedWorkingHours: user.expectedWorkingHours,
                     vacations: user.vacations,
                     assigned_craft_ids: user.user.assigned_craft_ids,
-                    shift_ids_array: user.user.shift_ids_array,
                     availabilities: user.availabilities
                 })
             })
@@ -405,7 +404,6 @@ export default {
                     plannedWorkingHours: freelancer.plannedWorkingHours,
                     vacations: freelancer.vacations,
                     assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
-                    shift_ids_array: freelancer.freelancer.shift_ids_array,
                     availabilities: freelancer.availabilities
                 })
             })
@@ -414,8 +412,7 @@ export default {
                     element: service_provider.service_provider,
                     type: 2,
                     plannedWorkingHours: service_provider.plannedWorkingHours,
-                    assigned_craft_ids: service_provider.service_provider.assigned_craft_ids,
-                    shift_ids_array: service_provider.service_provider.shift_ids_array
+                    assigned_craft_ids: service_provider.service_provider.assigned_craft_ids
                 })
             })
             return users;

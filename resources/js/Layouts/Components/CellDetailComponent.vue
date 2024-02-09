@@ -381,7 +381,7 @@ export default {
         moneySource_query: {
             handler() {
                 if (this.moneySource_query.length > 0) {
-                    axios.get('/money_sources/search', {
+                    axios.get('/money_sources/search/money_source', {
                         params: {query: this.moneySource_query, projectId: this.projectId}
                     }).then(response => {
                         this.moneySource_search_results = response.data.filter((moneySource) => moneySource.is_group === 0 || moneySource.is_group === false)

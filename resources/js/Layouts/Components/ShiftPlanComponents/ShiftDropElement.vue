@@ -137,6 +137,10 @@ export default defineComponent({
             let shiftsQualificationsWithWorkerCount = [];
 
             this.shift.shifts_qualifications.forEach((shiftsQualification) => {
+                if (shiftsQualification.value === null || shiftsQualification.value === 0) {
+                    return;
+                }
+
                 let assignedUserCount = 0;
 
                 this.shift.users.forEach((user) => {

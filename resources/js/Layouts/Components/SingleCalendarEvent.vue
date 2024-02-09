@@ -152,12 +152,25 @@
                             </div>
                         </div>
                         <div v-else class="items-center">
+                            <div v-if="new Date(event.start).toDateString() !== new Date(event.end).toDateString()">
                             <span class="text-error">
                                 {{ new Date(event.start).toDateString() !== new Date(event.end).toDateString() ? '!' : '' }}
                             </span>
-                            {{
-                                new Date(event.start).format("HH:mm") + ' - ' + new Date(event.end).format("HH:mm")
-                            }}
+                                {{
+                                    new Date(event.start).format("DD.MM. HH:mm") + ' - ' + new Date(event.end).format("DD.MM. HH:mm")
+                                }}
+                            </div>
+                            <div v-else>
+                                <div v-if="atAGlance">
+                                    {{new Date(event.start).format("DD.MM. HH:mm") + ' - ' + new Date(event.end).format("HH:mm")}}
+                                </div>
+                                <div v-else>
+                                    {{
+                                        new Date(event.start).format("HH:mm") + ' - ' + new Date(event.end).format("HH:mm")
+                                    }}
+                                </div>
+
+                            </div>
                         </div>
                     </div>
                 </div>

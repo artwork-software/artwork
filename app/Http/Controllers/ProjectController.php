@@ -2829,13 +2829,17 @@ class ProjectController extends Controller
     {
         $oldKeyVisual = $project->key_visual_path;
         if ($request->file('keyVisual')) {
+            $request->validate([
+                'keyVisual' => ['max:' . 1_024 * 100]
+            ]);
+
             $file = $request->file('keyVisual');
 
             $img = Image::make($file);
 
-            if ($img->width() < 1080 || $img->height() < 1080) {
+            if ($img->width() < 1080) {
                 throw ValidationException::withMessages([
-                    'key_visual' => 'Die Abmessungen des Key Visuals sollte mindestens 1080x1080px betragen.'
+                    'keyVisual' => 'Die Breite des Key Visuals sollte mindestens 1080px betragen.'
                 ]);
             }
 

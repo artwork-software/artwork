@@ -247,7 +247,7 @@ export default{
                 this.keyVisualForm.keyVisual = file
                 this.keyVisualForm.post(route('projects_key_visual.update', {project: this.project.id}), {
                         onError: error => {
-                            this.uploadKeyVisualFeedback = error.key_visual
+                            this.uploadKeyVisualFeedback = error.keyVisual
                         }
                 }
                 );

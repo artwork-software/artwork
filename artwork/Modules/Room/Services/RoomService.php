@@ -427,7 +427,6 @@ class RoomService
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection($value)];
         }
-        //dd(collect($eventsForRoom));
         return collect($eventsForRoom);
     }
 

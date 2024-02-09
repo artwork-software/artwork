@@ -573,11 +573,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('project.sum.money.source.update');
 
         // DELETE
-        Route::delete('/{shift}/remove/user/{user}', [ShiftController::class, 'removeUser'])->name('shifts.removeUser');
-        Route::delete('/{shift}/remove/freelancer/{freelancer}', [ShiftController::class, 'removeFreelancer'])
-            ->name('shifts.removeFreelancer');
-        Route::delete('/{shift}/remove/provider/{serviceProvider}', [ShiftController::class, 'removeProvider'])
-            ->name('shifts.removeProvider');
         Route::delete('/{shift}/destroy', [ShiftController::class, 'destroy'])->name('shifts.destroy');
         Route::delete('/timeline/delete/{timeLine}', [ProjectController::class, 'deleteTimeLineRow'])
             ->name('delete.timeline.row');

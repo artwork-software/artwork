@@ -181,7 +181,6 @@ class EventController extends Controller
                 ->get() as $user
         ) {
             $plannedWorkingHours = $user->plannedWorkingHours($startDate, $endDate);
-            $vacations = $user->hasVacationDays();
             $expectedWorkingHours = ($user->weekly_working_hours / 7) * $diffInDays;
 
             $usersWithPlannedWorkingHours[] = [
@@ -190,7 +189,7 @@ class EventController extends Controller
                     ->setEndDate($endDate),
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'expectedWorkingHours' => $expectedWorkingHours,
-                'vacations' => $vacations,
+                'vacations' => $user->hasVacationDays(),
                 'availabilities' => $user->availabilities()
                     ->whereBetween('date', [$startDate, $endDate])->get()
                     ->groupBy('formatted_date'),
@@ -204,12 +203,11 @@ class EventController extends Controller
         /** @var Freelancer $freelancer */
         foreach ($freelancers as $freelancer) {
             $plannedWorkingHours = $freelancer->plannedWorkingHours($startDate, $endDate);
-            $vacations = $freelancer->hasVacationDays();
             $freelancersWithPlannedWorkingHours[] = [
                 'freelancer' => FreelancerShiftPlanResource::make($freelancer)
                     ->setStartDate($startDate)
                     ->setEndDate($endDate),
-                'vacations' => $vacations,
+                'vacations' => $freelancer->hasVacationDays(),
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'availabilities' => $freelancer->availabilities()
                     ->whereBetween('date', [$startDate, $endDate])->get()

@@ -149,7 +149,8 @@ class User extends Authenticatable implements Vacationer, Available
     public function shifts(): BelongsToMany
     {
         return $this->belongsToMany(Shift::class, 'shift_user')
-            ->using(ShiftUser::class);
+            ->using(ShiftUser::class)
+            ->withPivot('id', 'shift_qualification_id');
     }
 
     public function getShiftsAttribute(): Collection

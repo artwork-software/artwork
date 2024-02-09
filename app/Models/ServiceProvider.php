@@ -73,7 +73,8 @@ class ServiceProvider extends Model
     {
         return $this
             ->belongsToMany(Shift::class, 'shifts_service_providers')
-            ->using(ShiftServiceProvider::class);
+            ->using(ShiftServiceProvider::class)
+            ->withPivot('id', 'shift_qualification_id');
     }
 
     public function assignedCrafts(): BelongsToMany

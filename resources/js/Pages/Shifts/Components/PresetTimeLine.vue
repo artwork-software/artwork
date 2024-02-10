@@ -5,8 +5,6 @@
                 TIMELINE
             </div>
         </div>
-
-
         <div class="mt-1">
             <div v-if="timeLine?.length === 0 || timeLine === null" class="text-xs bg-gray-900 p-2 text-white my-1 cursor-pointer" @click="showAddTimeLineModal = true">
                 <p class="text-xs">
@@ -16,12 +14,11 @@
             <div v-for="(time, index) in timeLine">
                 <div class="text-xs bg-gray-900 p-2 text-white my-1"  v-if="time.start !== null && time.end !== null" @click="showAddTimeLineModal = true">
                     {{ time.start }} - {{ time.end }}
-                    <p class="text-xs">{{ time.description }}</p>
+                    <p class="text-xs" v-html="time.description"></p>
                 </div>
             </div>
         </div>
     </div>
-
     <AddEditTimeLineModal v-if="showAddTimeLineModal" :preset-id="presetId" :timeLine="timeLine" @closed="showAddTimeLineModal = false"/>
 </template>
 <script>
@@ -39,8 +36,3 @@ export default defineComponent({
     }
 })
 </script>
-
-
-<style scoped>
-
-</style>

@@ -7,6 +7,7 @@ use App\Builders\EventBuilder;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Timeline\Models\Timeline;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use DateTimeInterface;
@@ -43,6 +44,8 @@ use Illuminate\Support\Collection;
  * @property string $deleted_at
  * @property bool $accepted
  * @property string $option_string
+ * @property \Illuminate\Database\Eloquent\Collection<Shift> $shifts
+ * @property \Illuminate\Database\Eloquent\Collection<Timeline> $timeline
  */
 class Event extends Model
 {
@@ -89,7 +92,9 @@ class Event extends Model
     ];
 
     protected $appends = [
-        'days_of_event', 'start_time_without_day', 'end_time_without_day'
+        'days_of_event',
+        'start_time_without_day',
+        'end_time_without_day'
     ];
 
     public function comments(): HasMany
@@ -114,7 +119,7 @@ class Event extends Model
 
     public function timeline(): HasMany
     {
-        return $this->hasMany(TimeLine::class);
+        return $this->hasMany(Timeline::class);
     }
 
     public function shifts(): HasMany
@@ -244,5 +249,15 @@ class Event extends Model
     public function scopeHasNoRoom(Builder $builder): Builder
     {
         return $builder->whereNull('room_id');
+    }
+
+    public function scopeByProjectId(Builder $builder, int $projectId): Builder
+    {
+        return $builder->where('project_id', $projectId);
+    }
+
+    public function scopeByEventTypeId(Builder $builder, int $eventTypeId): Builder
+    {
+        return $builder->where('event_type_id', $eventTypeId);
     }
 }

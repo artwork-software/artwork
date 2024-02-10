@@ -52,7 +52,7 @@ import {defineComponent} from 'vue'
 import {Link} from "@inertiajs/inertia-vue3";
 import SingleShiftPlanEvent from "@/Layouts/Components/ShiftPlanComponents/SingleShiftPlanEvent.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
-import ShowUserShiftsModal from "@/Pages/Shifts/Components/showUserShiftsModal.vue";
+import ShowUserShiftsModal from "@/Pages/Shifts/Components/ShowUserShiftsModal.vue";
 
 export default defineComponent({
     name: "ShiftPlanUserOverview",

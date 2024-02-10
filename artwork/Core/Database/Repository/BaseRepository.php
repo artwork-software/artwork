@@ -42,6 +42,12 @@ abstract class BaseRepository
         $model->${$referenceName}()->delete();
     }
 
+    public function update(Model|Pivot $model, array $attributes): Model|Pivot
+    {
+        $model->update($attributes);
+        return $model;
+    }
+
     /**
      * @throws Throwable
      */

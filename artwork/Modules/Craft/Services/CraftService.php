@@ -6,11 +6,17 @@ use Artwork\Modules\Craft\Http\Requests\CraftStoreRequest;
 use Artwork\Modules\Craft\Http\Requests\CraftUpdateRequest;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Repositories\CraftRepository;
+use Illuminate\Database\Eloquent\Collection;
 
 class CraftService
 {
     public function __construct(private readonly CraftRepository $craftRepository)
     {
+    }
+
+    public function getAll(): Collection
+    {
+        return $this->craftRepository->getAll();
     }
 
     public function storeByRequest(CraftStoreRequest $craftStoreRequest): void

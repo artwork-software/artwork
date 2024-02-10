@@ -173,7 +173,8 @@
                 @foreach($rooms as $room)
                     <td class="{{ $day['is_weekend'] ? 'weekend' : '' }}">
                         @foreach($calendar as $calendarEvent)
-                            @foreach($calendarEvent[$day['day']] as $event)
+                            @foreach($calendarEvent[$day['day']]['events'] as $event)
+                                @if(is_object($event) && isset($event->room_id))
                                 @if($room->id === $event->room_id)
                                     <div class="{{ $event->event_type->svg_name }}" style="font-size: 8px; border-bottom: 1px solid black; padding: 2px;">
                                         <div>
@@ -187,6 +188,7 @@
                                             @endif
                                         </div>
                                     </div>
+                                @endif
                                 @endif
                             @endforeach
                         @endforeach

@@ -2,65 +2,41 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\Shift\Models\PresetShift;
+use Artwork\Modules\PresetShift\Models\PresetShift;
+use Artwork\Modules\PresetShift\Services\PresetShiftService;
+use Artwork\Modules\PresetShift\Services\PresetShiftsShiftsQualificationsService;
 use Illuminate\Http\Request;
 
 class PresetShiftController extends Controller
 {
-    public function index(): void
-    {
+    public function __construct(
+        private readonly PresetShiftService $presetShiftService,
+        private readonly PresetShiftsShiftsQualificationsService $presetShiftsShiftsQualificationsService
+    ) {
     }
 
-    public function create(): void
+    public function store(int $shiftPreset, Request $request): void
     {
+        $presetShiftId = $this->presetShiftService->createFromRequestForShiftPreset($shiftPreset, $request);
+
+        foreach ($request->get('presetShiftsQualifications') as $presetShiftsQualification) {
+            $this->presetShiftsShiftsQualificationsService->createShiftsQualificationsForPresetShift(
+                $presetShiftId,
+                $presetShiftsQualification
+            );
+        }
     }
 
-    public function store(Request $request): void
-    {
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \Artwork\Modules\Shift\Models\PresetShift  $presetShift
-     */
-    public function show(PresetShift $presetShift): void
-    {
-    }
-
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \Artwork\Modules\Shift\Models\PresetShift  $presetShift
-     *
-     */
-    public function edit(PresetShift $presetShift): void
-    {
-    }
-
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Artwork\Modules\Shift\Models\PresetShift  $presetShift
-     */
     public function update(Request $request, PresetShift $presetShift): void
     {
-        $presetShift->update(
-            $request->only(
-                [
-                    'start',
-                    'end',
-                    'break_minutes',
-                    'craft_id',
-                    'number_employees',
-                    'number_masters',
-                    'description'
-                ]
-            )
-        );
+        $this->presetShiftService->updateFromRequest($presetShift, $request);
+
+        foreach ($request->get('presetShiftsQualifications') as $presetShiftsQualification) {
+            $this->presetShiftsShiftsQualificationsService->updateShiftsQualificationForShift(
+                $presetShift->id,
+                $presetShiftsQualification
+            );
+        }
     }
 
     public function destroy(PresetShift $presetShift): void

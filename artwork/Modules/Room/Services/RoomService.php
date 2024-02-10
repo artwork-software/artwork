@@ -400,17 +400,33 @@ class RoomService
     {
         $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
         $actualEvents = [];
-        $room->events()->where('start_time', '>=', $calendarPeriod->start)
-            ->where('end_time', '<=', $calendarPeriod->end)
+        $room->events()
+            ->where(function ($query) use ($calendarPeriod): void {
+                $query->where(function ($q) use ($calendarPeriod): void {
+                    // Events, die vor der Periode beginnen und nach der Periode enden
+                    $q->where('start_time', '<', $calendarPeriod->start)
+                        ->where('end_time', '>', $calendarPeriod->end);
+                })->orWhere(function ($q) use ($calendarPeriod): void {
+                    // Events, die innerhalb der Periode starten oder enden
+                    $q->whereBetween('start_time', [$calendarPeriod->start, $calendarPeriod->end])
+                        ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
+                });
+            })
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
-            ->each(function (Event $event) use (&$actualEvents): void {
-                $dateKey = $event->start_time->format('d.m.');
-                $actualEvents[$dateKey][] = $event;
+            ->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
+                // Erstelle einen Zeitraum für das Event, der innerhalb der gewünschten Periode liegt
+                $eventStart = $event->start_time->isBefore($calendarPeriod->start) ? $calendarPeriod->start : $event->start_time;
+                $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
+                $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
+
+                foreach ($eventPeriod as $date) {
+                    $dateKey = $date->format('d.m.');
+                    $actualEvents[$dateKey][] = $event;
+                }
             });
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection($value)];
         }
-        //dd(collect($eventsForRoom));
         return collect($eventsForRoom);
     }
 

@@ -13,6 +13,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Models\ShiftUser;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
@@ -28,7 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
@@ -130,8 +131,7 @@ class User extends Authenticatable implements Vacationer, Available
         'full_name',
         'type',
         'formatted_vacation_days',
-        'assigned_craft_ids',
-        'shift_ids_array'
+        'assigned_craft_ids'
     ];
 
     protected $with = ['calendar_settings'];
@@ -148,14 +148,9 @@ class User extends Authenticatable implements Vacationer, Available
 
     public function shifts(): BelongsToMany
     {
-        return $this->belongsToMany(
-            Shift::class,
-            'shift_user',
-            'user_id',
-            'shift_id'
-        )->withPivot(['is_master'])
-            ->orderByPivot('is_master', 'desc')
-            ->withCasts(['is_master' => 'boolean']);
+        return $this->belongsToMany(Shift::class, 'shift_user')
+            ->using(ShiftUser::class)
+            ->withPivot('id', 'shift_qualification_id');
     }
 
     public function getShiftsAttribute(): Collection
@@ -328,12 +323,6 @@ class User extends Authenticatable implements Vacationer, Available
             ->using(UserShiftQualification::class);
     }
 
-
-    public function hasMasterShiftQualification(): bool
-    {
-        return $this->shiftQualifications()->where('name', 'Meister')->count() === 1;
-    }
-
     /**
      * @return array<int>
      */
@@ -342,12 +331,11 @@ class User extends Authenticatable implements Vacationer, Available
         return $this->assignedCrafts()->pluck('crafts.id')->toArray();
     }
 
-    /**
-     * @return array<int>
-     */
-    public function getShiftIdsArrayAttribute(): array
-    {
-        return $this->shifts()->pluck('shifts.id')->toArray();
+    public function getShiftIdsBetweenStartDateAndEndDate(
+        Carbon $startDate,
+        Carbon $endDate
+    ): \Illuminate\Support\Collection {
+        return $this->shifts()->eventStartDayAndEventEndDayBetween($startDate, $endDate)->pluck('shifts.id');
     }
 
     /**

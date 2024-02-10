@@ -1,4 +1,3 @@
-
 <template>
     <div class="flex items-center gap-2">
         <div class="flex items-center ml-2">
@@ -44,22 +43,24 @@ import {defineComponent} from 'vue'
 
 export default defineComponent({
     name: "MultiEditUserCell",
-    props: ['item', 'type','plannedHours','expectedHours', 'userForMultiEdit', 'multiEditMode'],
-    data() {
-        return {
-
-        }
-    },
+    props: [
+        'item',
+        'type',
+        'plannedHours',
+        'expectedHours',
+        'userForMultiEdit',
+        'multiEditMode'
+    ],
     watch: {
         userForMultiEdit: {
-            handler(){
+            handler() {
                 this.item.checkedForMultiEdit = this.userForMultiEdit?.id === this.item?.id && this.userForMultiEdit?.type === this.type;
             },
             deep: true
         },
         multiEditMode: {
-            handler(){
-                if(!this.multiEditMode) {
+            handler() {
+                if (!this.multiEditMode) {
                     this.item.checkedForMultiEdit = false
                 }
             },
@@ -69,18 +70,26 @@ export default defineComponent({
     emits: ['addUserToMultiEdit'],
     methods: {
         changeUserForMultiEdit() {
-            if(this.item.checkedForMultiEdit){
+            if (this.item.checkedForMultiEdit) {
                 this.item.checkedForMultiEdit = false
                 this.$emit('addUserToMultiEdit', null)
                 return
             }
-            const returnValue = {
-                id: this.item.id,
-                type: this.type,
-                assigned_craft_ids: this.item.assigned_craft_ids,
-                shift_ids_array: this.item.shift_ids_array
-            }
-            this.$emit('addUserToMultiEdit', returnValue)
+
+            this.$emit(
+                'addUserToMultiEdit',
+                {
+                    id: this.item.id,
+                    type: this.type,
+                    display_name: this.item.first_name && this.item.last_name ?
+                        this.item.first_name + ' ' + this.item.last_name :
+                        this.item.provider_name,
+                    profile_photo_url: this.item.profile_photo_url,
+                    assigned_craft_ids: this.item.assigned_craft_ids,
+                    shift_ids: this.item.shift_ids,
+                    shift_qualifications: this.item.shift_qualifications
+                }
+            );
         }
     }
 })

@@ -40,11 +40,20 @@ import {defineComponent} from 'vue'
 
 export default defineComponent({
     name: "DragElement",
-    props: ['item', 'type','plannedHours','expectedHours'],
+    props: ['item', 'type', 'plannedHours', 'expectedHours'],
     methods: {
         onDragStart(event) {
-
-            event.dataTransfer.setData('application/json', JSON.stringify([{id: this.item.id, master: this.item.can_master, type: this.type, craft_ids: this.item.assigned_craft_ids }])); // only pass the id
+            event.dataTransfer.setData(
+                'application/json',
+                JSON.stringify(
+                    {
+                        id: this.item.id,
+                        type: this.type,
+                        craft_ids: this.item.assigned_craft_ids,
+                        shift_qualifications: this.item.shift_qualifications
+                    }
+                )
+            );
         }
     }
 })

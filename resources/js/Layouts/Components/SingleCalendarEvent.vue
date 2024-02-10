@@ -1,7 +1,7 @@
 <template>
     <div :class="[event.class, textStyle]"
-         :style="{ width: width + 'px', height: totalHeight - heightSubtraction(event) * zoomFactor + 'px' }"
-         class="px-1 py-0.5 rounded-lg relative group">
+         :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoomFactor + 'px' }"
+         class="rounded-lg relative group">
         <div v-if="zoomFactor > 0.4"
              class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-indigo-500/50'">
@@ -57,7 +57,7 @@
             </div>
         </div>
 
-        <div class="px-1 py-0.5 ">
+        <div class="px-1 py-1 ">
             <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
                  class="flex justify-between ">
                 <div v-if="!project" class="flex items-center">
@@ -152,12 +152,25 @@
                             </div>
                         </div>
                         <div v-else class="items-center">
+                            <div v-if="new Date(event.start).toDateString() !== new Date(event.end).toDateString()">
                             <span class="text-error">
                                 {{ new Date(event.start).toDateString() !== new Date(event.end).toDateString() ? '!' : '' }}
                             </span>
-                            {{
-                                new Date(event.start).format("HH:mm") + ' - ' + new Date(event.end).format("HH:mm")
-                            }}
+                                {{
+                                    new Date(event.start).format("DD.MM. HH:mm") + ' - ' + new Date(event.end).format("DD.MM. HH:mm")
+                                }}
+                            </div>
+                            <div v-else>
+                                <div v-if="atAGlance">
+                                    {{new Date(event.start).format("DD.MM. HH:mm") + ' - ' + new Date(event.end).format("HH:mm")}}
+                                </div>
+                                <div v-else>
+                                    {{
+                                        new Date(event.start).format("HH:mm") + ' - ' + new Date(event.end).format("HH:mm")
+                                    }}
+                                </div>
+
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -240,13 +253,12 @@
                 </div>
             </div>
         </div>
-        <div v-if="$page.props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs">
+        <div v-if="$page.props.user.calendar_settings.work_shifts" class="ml-1 pb-1 text-xs">
             <div v-for="shift in event.shifts">
                 <span>{{ shift.craft.abbreviation }}</span>
-                (
-                <VueMathjax :formula="convertToMathJax(decimalToFraction(shift.user_count ? shift.user_count : 0))"/>
-                /{{ shift.number_employees }}
-                <span v-if="shift.number_masters > 0">| {{ shift.master_count }}/{{ shift.number_masters }}</span>)
+                <span>
+                    &nbsp;({{ this.getCurrentShiftWorkerCount(shift) }}/{{ this.getMaxShiftWorkerCount(shift) }})
+                </span>
             </div>
         </div>
     </div>
@@ -396,7 +408,6 @@
             </div>
         </div>
     </div>
-
     <AddSubEventModal
         v-if="showAddSubEventModal"
         @close="closeAddSubModal"
@@ -404,7 +415,6 @@
         :event-types="eventTypes"
         :sub-event-to-edit="subEventToEdit"
     />
-
     <ConfirmDeleteModal
         v-if="deleteComponentVisible"
         :title="deleteTitle"
@@ -412,15 +422,12 @@
         @closed="closeConfirmModal"
         @delete="deleteEvent"
     />
-
     <DeclineEventModal
         :request-to-decline="event"
         :event-types="eventTypes"
         @closed="showDeclineEventModal = false"
         v-if="showDeclineEventModal"
     />
-
-
 </template>
 
 <script>
@@ -438,7 +445,6 @@ import {Link} from "@inertiajs/inertia-vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
-
 
 export default {
     mixins: [Permissions],
@@ -514,6 +520,18 @@ export default {
         }
     },
     methods: {
+        getCurrentShiftWorkerCount(shift) {
+            return shift.users.length + shift.freelancer.length + shift.service_provider.length;
+        },
+        getMaxShiftWorkerCount(shift) {
+            let shiftWorkerCountByShiftsQualifications = 0;
+
+            shift.shifts_qualifications.forEach((shiftsQualification) => {
+                shiftWorkerCountByShiftsQualifications += shiftsQualification.value;
+            });
+
+            return shiftWorkerCountByShiftsQualifications;
+        },
         gcd(a, b) {
             return (b) ? this.gcd(b, a % b) : a;
         },

@@ -12,11 +12,11 @@ use Artwork\Modules\Craft\Models\Craft;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * @property int $id
@@ -25,8 +25,6 @@ use Illuminate\Support\Facades\DB;
  * @property string $end
  * @property int $break_minutes
  * @property int $craft_id
- * @property int $number_employees
- * @property int $number_masters
  * @property string $description
  * @property bool $is_committed
  * @property string|null $shift_uuid
@@ -37,26 +35,16 @@ use Illuminate\Support\Facades\DB;
  * @property-read \Artwork\Modules\Craft\Models\Craft $craft
  * @property-read \App\Models\Event $event
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Freelancer[] $freelancer
- * @property-read int|null $freelancer_count
- * @property-read int $currentCount
- * @property-read int $empty_master_count
- * @property-read int $empty_user_count
- * @property-read int $maxCount
- * @property-read float $master_count
- * @property-read int $user_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $users
- * @property-read int|null $users_count
  * @property-read \Illuminate\Support\Collection $history
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ServiceProvider[] $service_provider
- * @property-read int|null $service_provider_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ServiceProvider[] $serviceProvider
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $masters
- * @property-read int|null $masters_count
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $employees
- * @property-read int|null $employees_count
  * @property-read array $allUsers
  * @property-read bool $infringement
  * @property-read string $break_formatted
  * @property-read \App\Models\User|null $committedBy
+ * @property-read Collection<ShiftsQualifications> $shiftsQualifications
  */
 class Shift extends Model
 {
@@ -69,8 +57,6 @@ class Shift extends Model
         'end',
         'break_minutes',
         'craft_id',
-        'number_employees',
-        'number_masters',
         'description',
         'is_committed',
         'shift_uuid',
@@ -85,16 +71,10 @@ class Shift extends Model
         'is_committed' => 'boolean'
     ];
 
-    protected $with = ['craft', 'users', 'freelancer', 'service_provider', 'committedBy'];
+    protected $with = ['craft', 'users', 'freelancer', 'serviceProvider', 'committedBy'];
 
     protected $appends = [
         'break_formatted',
-        'user_count',
-        'empty_user_count',
-        'empty_master_count',
-        'master_count',
-        'currentCount',
-        'maxCount',
         'infringement'
     ];
 
@@ -110,152 +90,57 @@ class Shift extends Model
 
     public function event(): BelongsTo
     {
-        return $this->belongsTo(Event::class)->without(['series']);
+        return $this->belongsTo(
+            Event::class,
+            'event_id',
+            'id',
+            'events'
+        )->without(['series']);
     }
 
     public function craft(): BelongsTo
     {
-        return $this->belongsTo(Craft::class)->without(['users']);
+        return $this->belongsTo(
+            Craft::class,
+            'craft_id',
+            'id',
+            'crafts'
+        )->without(['users']);
     }
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'shift_user', 'shift_id', 'user_id')
-            ->withPivot(['is_master', 'shift_count'])
-            ->orderByPivot('is_master', 'desc')
-            ->withCasts(['is_master' => 'boolean'])
-            ->without(['calender_settings']);
+        return $this
+            ->belongsToMany(User::class, 'shift_user')
+            ->using(ShiftUser::class)
+            ->withPivot(['id', 'shift_qualification_id', 'shift_count'])
+            ->without('calendar_settings');
     }
 
     public function freelancer(): BelongsToMany
     {
-        return $this->belongsToMany(Freelancer::class, 'shifts_freelancers', 'shift_id', 'freelancer_id')
-            ->withPivot(['is_master', 'shift_count'])
-            ->orderByPivot('is_master', 'desc')
-            ->withCasts(['is_master' => 'boolean']);
+        return $this
+            ->belongsToMany(Freelancer::class, 'shifts_freelancers')
+            ->using(ShiftFreelancer::class)
+            ->withPivot(['id', 'shift_qualification_id', 'shift_count']);
     }
 
-    //@todo: fix phpcs error - refactor function name to serviceProvider
-    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    public function service_provider(): BelongsToMany
+    public function serviceProvider(): BelongsToMany
     {
-        return $this->belongsToMany(
-            ServiceProvider::class,
-            'shifts_service_providers',
-            'shift_id',
-            'service_provider_id'
-        )->withPivot(['is_master', 'shift_count'])
-            ->orderByPivot('is_master', 'desc')
-            ->withCasts(['is_master' => 'boolean'])
-            ->without(['contacts']);
+        return $this
+            ->belongsToMany(ServiceProvider::class, 'shifts_service_providers')
+            ->using(ShiftServiceProvider::class)
+            ->withPivot(['id', 'shift_qualification_id', 'shift_count']);
     }
 
-    public function getCurrentCountAttribute(): int
+    public function shiftsQualifications(): HasMany
     {
-        $shiftId = $this->id;
-
-        // Zählen der Benutzer, die dem Shift zugeordnet sind
-        $userCount = DB::table('shift_user')
-            ->where('shift_id', $shiftId)
-            ->count();
-
-        // Zählen der Freelancer, die dem Shift zugeordnet sind
-        $freelancerCount = DB::table('shifts_freelancers')
-            ->where('shift_id', $shiftId)
-            ->count();
-
-        // Zählen der Dienstleister, die dem Shift zugeordnet sind
-        $serviceProviderCount = DB::table('shifts_service_providers')
-            ->where('shift_id', $shiftId)
-            ->count();
-
-        // Summe der gezählten Werte
-        return $userCount + $freelancerCount + $serviceProviderCount;
-    }
-
-    public function getMaxCountAttribute(): int
-    {
-        return $this->number_employees + $this->number_masters;
-    }
-
-    public function getMasterCountAttribute(): float
-    {
-        return $this->getWorkerCount(true);
-    }
-
-    public function getEmptyMasterCountAttribute(): float
-    {
-        $masterCount = $this->number_masters - $this->getWorkerCount(true);
-        return $masterCount;
-    }
-
-    public function getEmptyUserCountAttribute(): float
-    {
-        return $this->number_employees - $this->getWorkerCount();
-    }
-
-    protected function getWorkerCount($is_master = false): float
-    {
-
-        $users = $this->users()
-            ->wherePivot('is_master', $is_master)
-            ->without(['calender_settings'])
-            ->get();
-
-        $serviceProviders = $this->service_provider()
-            ->wherePivot('is_master', $is_master)
-            ->get();
-
-        $freelancers = $this->freelancer()
-            ->wherePivot('is_master', $is_master)
-            ->get();
-
-        $totalCount = 0;
-
-        foreach ($users as $user) {
-            $totalCount += 1 / $user->pivot->shift_count;
-        }
-
-        foreach ($serviceProviders as $serviceProvider) {
-            $totalCount += 1 / $serviceProvider->pivot->shift_count;
-        }
-
-        foreach ($freelancers as $freelancer) {
-            $totalCount += 1 / $freelancer->pivot->shift_count;
-        }
-
-        return $totalCount;
-    }
-
-
-    public function getUserCountAttribute(): float
-    {
-        return $this->getWorkerCount();
+        return $this->hasMany(ShiftsQualifications::class);
     }
 
     public function getHistoryAttribute(): Collection
     {
         return $this->historyChanges()->sortByDesc('created_at');
-    }
-
-    public function getMastersAttribute(): Collection
-    {
-        $masterUsers = $this->users()->wherePivot('is_master', true)->without(['calender_settings'])->get();
-        $masterFreelancers = $this->freelancer()->wherePivot('is_master', true)->get();
-        $masterServiceProviders = $this->service_provider()->wherePivot('is_master', true)->get();
-
-        return $masterUsers->concat((array)$masterFreelancers)->concat((array)$masterServiceProviders);
-    }
-
-
-    public function getEmployeesAttribute(): Collection
-    {
-        return $this->users()
-            ->wherePivot('is_master', false)
-            ->without(['calender_settings'])
-            ->get()
-            ->merge($this->freelancer()->wherePivot('is_master', false)->get())
-            ->merge($this->service_provider()->wherePivot('is_master', false)->get());
     }
 
     public function getBreakFormattedAttribute(): string
@@ -277,8 +162,45 @@ class Shift extends Model
         return false;
     }
 
-    public function scopeIsCommitted(Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeIsCommitted(Builder $query): Builder
     {
         return $query->where('is_committed', true);
+    }
+
+    public function scopeAllByUuid(Builder $builder, string $shiftUuid): Builder
+    {
+        return $builder->where('shift_uuid', $shiftUuid);
+    }
+
+    public function scopeEventStartDayAndEventEndDayBetween(
+        Builder $builder,
+        Carbon $eventStartDay,
+        Carbon $eventEndDay
+    ): Builder {
+        return $builder
+            ->whereBetween('event_start_day', [$eventStartDay, $eventEndDay])
+            ->orWhereBetween('event_end_day', [$eventStartDay, $eventEndDay]);
+    }
+
+    public function scopeStartAndEndOverlap(Builder $builder, string $start, string $end): Builder
+    {
+        return $builder
+            ->whereBetween('start', [$start, $end])
+            ->orWhereBetween('end', [$start, $end])
+            ->orWhere(function (Builder $builder) use ($start, $end): void {
+                $builder
+                    ->where('start', '>', $start)
+                    ->where('end', '<', $end);
+            })
+            ->orWhere(function (Builder $builder) use ($start, $end): void {
+                $builder
+                    ->where('start', '<', $start)
+                    ->where('end', '>', $end);
+            });
+    }
+
+    public function scopeEventIdInArray(Builder $builder, array $eventIds): Builder
+    {
+        return $builder->whereIntegerInRaw('event_id', $eventIds);
     }
 }

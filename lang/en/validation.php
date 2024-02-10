@@ -144,6 +144,9 @@ return [
             'rule-name' => 'custom-message',
         ],
         'user_emails.*' => 'Eine der Mails wurde schon registriert. Entferne sie und versuche es dann erneut.',
+        'keyVisual' => [
+            'max' => "Das Key Visual sollte eine Größe von :max kilobyte nicht überschreiten"
+        ]
     ],
 
     /*

@@ -421,7 +421,7 @@ class NotificationService
         }
     }
 
-    public function checkIfUserInMoreThanTeenShifts(User $user, Shift $shift): stdClass
+    public function checkIfUserInMoreThanTenShifts(User $user, Shift $shift): stdClass
     {
         $shifts = $user->shifts()
             ->whereBetween(

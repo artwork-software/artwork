@@ -164,7 +164,9 @@
                                  :currentUserCrafts="currentUserCrafts"
                                  :event="event"
                                  :event-types="eventTypes"
-                                @dropFeedback="showDropFeedback"/>
+                                 :shift-qualifications="shiftQualifications"
+                                 @dropFeedback="showDropFeedback"
+            />
         </div>
         </div>
 
@@ -188,7 +190,15 @@ import SideNotification from "@/Layouts/Components/General/SideNotification.vue"
 
 export default defineComponent({
     name: "ShiftTab",
-    props: ['eventsWithRelevant', 'crafts', 'users', 'dropUsers', 'eventTypes', 'currentUserCrafts'],
+    props: [
+        'eventsWithRelevant',
+        'crafts',
+        'users',
+        'dropUsers',
+        'eventTypes',
+        'currentUserCrafts',
+        'shiftQualifications'
+    ],
     mixins: [Permissions],
     components: {
         SideNotification,

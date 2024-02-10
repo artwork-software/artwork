@@ -1,8 +1,5 @@
 <template>
     <div class="w-full flex flex-col">
-
-
-
         <ShiftHeader>
             <div class="ml-5 bg-white flex-grow">
                 <ShiftPlanFunctionBar @previousTimeRange="previousTimeRange"
@@ -17,19 +14,19 @@
                                       :user_filters="user_filters"
                 />
             </div>
-            <div :style="{ '--dynamic-height': windowHeight + 'px' }">
-                <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll ']">
+            <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
+                <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
                     <Table>
                         <template #head>
                             <div class="stickyHeader">
-                                <TableHead>
-                                    <th class="z-0" :style="{width: 164 + 'px', maxWidth: 164 + 'px'}"></th>
-                                    <th v-for="day in days" :style="{minWidth: 200 + 'px'}" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
-                                        <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
-                                            {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
-                                        </div>
-                                    </th>
-                                </TableHead>
+                            <TableHead>
+                                <th class="z-0" style="width:164px;"></th>
+                                <th v-for="day in days" style="width:200px;" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
+                                    <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
+                                        {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
+                                    </div>
+                                </th>
+                            </TableHead>
                             </div>
                         </template>
                         <template #body>
@@ -41,10 +38,10 @@
                                             {{ room[days[0].day].roomName }}
                                         </Link>
                                     </th>
-                                    <td v-for="day in days" :style="{minWidth: 200 + 'px'}" class="max-h-28 overflow-y-auto cell">
+                                    <td v-for="day in days" style="width:200px;" class="max-h-28 overflow-y-auto cell">
                                         <div v-for="event in room[day.day].events.data" class="mb-1">
                                             <SingleShiftPlanEvent
-                                                @dropFeedback="showDropFeedback"
+                                                v-if="event.shifts.length > 0"
                                                 :multiEditMode="multiEditMode"
                                                 :user-for-multi-edit="userForMultiEdit"
                                                 :highlightMode="highlightMode"
@@ -52,7 +49,10 @@
                                                 :highlighted-type="typeToHighlight"
                                                 :eventType="this.findEventTypeById(event.eventTypeId)"
                                                 :project="this.findProjectById(event.projectId)"
-                                                :event="event" v-if="event.shifts.length > 0" >
+                                                :event="event"
+                                                :shift-qualifications="shiftQualifications"
+                                                @dropFeedback="showDropFeedback"
+                                            >
                                             </SingleShiftPlanEvent>
                                         </div>
                                     </td>
@@ -62,8 +62,8 @@
                     </Table>
                 </div>
             </div>
-            <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="{ height: userOverviewHeight + 'px'}">
-                    <div class="flex justify-center overflow-y-scroll mt-5">
+            <div id="userOverview" class="w-full fixed bottom-0 z-30"  :style="showUserOverview ?{ height: userOverviewHeight - 30 + 'px'} : {height: 20 + 'px'}">
+                    <div class="flex justify-center overflow-y-scroll">
                         <div v-if="this.$can('can plan shifts') || this.hasAdminRole()" @click="showCloseUserOverview" :class="showUserOverview ? '' : 'fixed bottom-0 '"
                              class="flex h-5 w-8 justify-center items-center cursor-pointer bg-primary">
                             <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
@@ -89,7 +89,10 @@
                             </div>
                         </div>
                     </div>
-                <div ref="userOverview" class="w-full bg-primary overflow-x-scroll z-30 overflow-y-scroll" v-show="showUserOverview" :style="{ height: userOverviewHeight + 'px'}">
+                <div v-show="showUserOverview"
+                     ref="userOverview"
+                     class="w-full bg-primary overflow-x-scroll z-30 overflow-y-scroll"
+                     :style="showUserOverview ? { height: userOverviewHeight + 'px'} : {height: 20 + 'px'}">
                     <table class="w-full text-white overflow-y-scroll">
                         <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                         <div>
@@ -123,104 +126,150 @@
                                 </th>
                             </tr>
                             <tbody class="w-full pt-3" v-for="craft in craftsToDisplay">
-                            <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility(craft.id)">
-                                {{craft.name}}
-                                <ChevronDownIcon
-                                    :class="closedCrafts.includes(craft.id) ? '' : 'rotate-180 transform'"
-                                    class="h-4 w-4 mt-0.5"
-                                />
-                            </tr>
-                            <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users" class="w-full flex">
-                                <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
-                                    <DragElement v-if="!highlightMode && !multiEditMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
-                                                 :planned-hours="user.plannedWorkingHours" :type="user.type"/>
-                                    <MultiEditUserCell v-else-if="multiEditMode && !highlightMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
-                                                       :planned-hours="user.plannedWorkingHours" :type="user.type" @addUserToMultiEdit="addUserToMultiEdit" :userForMultiEdit="userForMultiEdit" :multiEditMode="multiEditMode" />
-                                    <HighlightUserCell v-else :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false" :item="user.element" :expected-hours="user.expectedWorkingHours"
-                                                       :planned-hours="user.plannedWorkingHours" :type="user.type"
-                                                       @highlightShiftsOfUser="highlightShiftsOfUser"/>
-                                </th>
-                                <td v-for="day in days">
-                                    <div :class="highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : ''"
-                                        class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
-                                        @click="openShowUserShiftModal(user, day)">
-                                        <span v-for="shift in user.element?.shifts[day.full_day]" v-if="!user.vacations?.includes(day.without_format)">
-                                            {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
-                                        </span>
-                                        <span v-else class="h-full flex justify-center items-center">
-                                            nicht verfügbar
-                                        </span>
-
-                                    </div>
-
-                                </td>
-                            </tr>
+                                <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility(craft.id)">
+                                    {{craft.name}}
+                                    <ChevronDownIcon
+                                        :class="closedCrafts.includes(craft.id) ? '' : 'rotate-180 transform'"
+                                        class="h-4 w-4 mt-0.5"
+                                    />
+                                </tr>
+                                <tr v-if="!closedCrafts.includes(craft.id)" v-for="(user,index) in craft.users" class="w-full flex">
+                                    <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1"
+                                        :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
+                                        <DragElement v-if="!highlightMode && !multiEditMode"
+                                                     :item="user.element"
+                                                     :expected-hours="user.expectedWorkingHours"
+                                                     :planned-hours="user.plannedWorkingHours"
+                                                     :type="user.type"
+                                        />
+                                        <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
+                                                           :item="user.element"
+                                                           :expected-hours="user.expectedWorkingHours"
+                                                           :planned-hours="user.plannedWorkingHours"
+                                                           :type="user.type"
+                                                           :userForMultiEdit="userForMultiEdit"
+                                                           :multiEditMode="multiEditMode"
+                                                           @addUserToMultiEdit="addUserToMultiEdit"
+                                        />
+                                        <HighlightUserCell v-else
+                                                           :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
+                                                           :item="user.element"
+                                                           :expected-hours="user.expectedWorkingHours"
+                                                           :planned-hours="user.plannedWorkingHours"
+                                                           :type="user.type"
+                                                           @highlightShiftsOfUser="highlightShiftsOfUser"
+                                        />
+                                    </th>
+                                    <td v-for="day in days">
+                                        <div :class="highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : ''"
+                                            class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
+                                            @click="openShowUserShiftModal(user, day)">
+                                            <span v-for="shift in user.element?.shifts[day.full_day]" v-if="!user.vacations?.includes(day.without_format)">
+                                                {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                            </span>
+                                            <span v-else class="h-full flex justify-center items-center">
+                                                nicht verfügbar
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
                             </tbody>
                             <tbody>
-                            <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility('noCraft')">
-                                Ohne Gewerkszuordnung
-                                <ChevronDownIcon
-                                    :class="closedCrafts.includes('noCraft') ? '' : 'rotate-180 transform'"
-                                    class="h-4 w-4 mt-0.5"
-                                />
-                            </tr>
-                            <tr v-if="!closedCrafts.includes('noCraft')" v-for="(user,index) in usersWithNoCrafts" class="w-full flex">
-                                <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
-                                    <DragElement v-if="!highlightMode && !multiEditMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
-                                                 :planned-hours="user.plannedWorkingHours" :type="user.type"/>
-                                    <MultiEditUserCell v-else-if="multiEditMode && !highlightMode" :item="user.element" :expected-hours="user.expectedWorkingHours"
-                                                       :planned-hours="user.plannedWorkingHours" :type="user.type" @addUserToMultiEdit="addUserToMultiEdit" :userForMultiEdit="userForMultiEdit" :multiEditMode="multiEditMode" />
-                                    <HighlightUserCell v-else :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false" :item="user.element" :expected-hours="user.expectedWorkingHours"
-                                                       :planned-hours="user.plannedWorkingHours" :type="user.type"
-                                                       @highlightShiftsOfUser="highlightShiftsOfUser"/>
-                                </th>
-                                <td v-for="day in days">
-                                    <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"  @click="openShowUserShiftModal(user, day)">
-                                        <span v-for="shift in user.element?.shifts[day.full_day]" v-if="!user.vacations?.includes(day.without_format)">
-                                            {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
-                                        </span>
-                                        <span v-else class="h-full flex justify-center items-center">
-                                            nicht verfügbar
-                                        </span>
-                                    </div>
-                                </td>
-                            </tr>
+                                <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility('noCraft')">
+                                    Ohne Gewerkszuordnung
+                                    <ChevronDownIcon
+                                        :class="closedCrafts.includes('noCraft') ? '' : 'rotate-180 transform'"
+                                        class="h-4 w-4 mt-0.5"
+                                    />
+                                </tr>
+                                <tr v-if="!closedCrafts.includes('noCraft')" v-for="(user,index) in usersWithNoCrafts" class="w-full flex">
+                                    <th class="stickyYAxisNoMarginLeft flex items-center text-right -mt-2 pr-1" :class="[multiEditMode ? '' : 'w-48', index % 2 === 0 ? '' : '']">
+                                        <DragElement v-if="!highlightMode && !multiEditMode"
+                                                     :item="user.element"
+                                                     :expected-hours="user.expectedWorkingHours"
+                                                     :planned-hours="user.plannedWorkingHours"
+                                                     :type="user.type"
+                                        />
+                                        <MultiEditUserCell v-else-if="multiEditMode && !highlightMode"
+                                                           :item="user.element"
+                                                           :expected-hours="user.expectedWorkingHours"
+                                                           :planned-hours="user.plannedWorkingHours"
+                                                           :type="user.type"
+                                                           :userForMultiEdit="userForMultiEdit"
+                                                           :multiEditMode="multiEditMode"
+                                                           @addUserToMultiEdit="addUserToMultiEdit"
+                                        />
+                                        <HighlightUserCell v-else
+                                                           :highlighted-user="idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight  : false"
+                                                           :item="user.element"
+                                                           :expected-hours="user.expectedWorkingHours"
+                                                           :planned-hours="user.plannedWorkingHours"
+                                                           :type="user.type"
+                                                           @highlightShiftsOfUser="highlightShiftsOfUser"/>
+                                    </th>
+                                    <td v-for="day in days">
+                                        <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"  @click="openShowUserShiftModal(user, day)">
+                                            <span v-if="!user.vacations?.includes(day.without_format)"
+                                                  v-for="shift in user.element?.shifts[day.full_day]">
+                                                {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                            </span>
+                                            <span v-else class="h-full flex justify-center items-center">
+                                                nicht verfügbar
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
                             </tbody>
                         </div>
                     </table>
                 </div>
             </div>
-
-
-
-            <show-user-shifts-modal v-if="showUserShifts" @closed="showUserShifts = false" :user="userToShow"
-                                    :day="dayToShow" :projects="projects" />
-            <ShiftHistoryModal :history="history" v-if="showHistoryModal" @closed="showHistoryModal = false"/>
-
+            <show-user-shifts-modal v-if="showUserShifts"
+                                    @closed="showUserShifts = false"
+                                    :user="userToShow"
+                                    :day="dayToShow"
+                                    :projects="projects"
+            />
+            <ShiftHistoryModal v-if="showHistoryModal"
+                               :history="history"
+                               @closed="showHistoryModal = false"
+            />
         </ShiftHeader>
-
         <div class="fixed bottom-1 w-full z-40" v-if="multiEditMode">
             <div v-show="multiEditFeedback" class="flex items-center justify-center text-red-500 my-2">
                 {{ multiEditFeedback }}
             </div>
             <div class="flex items-center justify-center gap-4">
                 <div>
-                    <button type="button" @click="multiEditMode = false" class="rounded-full bg-gray-100 px-14 py-3 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    <button type="button"
+                            @click="multiEditMode = false"
+                            class="rounded-full bg-gray-100 px-14 py-3 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                         Abbrechen
                     </button>
                 </div>
                 <div>
-                    <button type="button" @click="saveMultiEdit" class="rounded-full bg-indigo-900 px-14 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    <button type="button"
+                            @click="initializeMultiEditSave"
+                            :disabled="this.userForMultiEdit === null && this.checkedShiftsForMultiEdit.length === 0"
+                            :class="[
+                                this.userForMultiEdit === null && this.checkedShiftsForMultiEdit.length === 0 ?
+                                'bg-gray-600' :
+                                'cursor-pointer bg-buttonBlue hover:bg-buttonHover',
+                                'rounded-full px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+                            ]">
                         Speichern
                     </button>
                 </div>
             </div>
         </div>
-
     </div>
-
-
     <SideNotification v-if="dropFeedback" type="error" :text="dropFeedback" @close="dropFeedback = null"/>
+    <ShiftsQualificationsAssignmentModal v-if="this.showShiftsQualificationsAssignmentModal"
+                                         :show="this.showShiftsQualificationsAssignmentModal"
+                                         :user="this.userForMultiEdit"
+                                         :shifts="this.showShiftsQualificationsAssignmentModalShifts"
+                                         @close="this.closeShiftsQualificationsAssignmentModal"
+    />
 </template>
 <script>
 
@@ -238,7 +287,7 @@ import {Inertia} from "@inertiajs/inertia";
 import ShiftTabs from "@/Pages/Shifts/Components/ShiftTabs.vue";
 import ShiftHeader from "@/Pages/Shifts/ShiftHeader.vue";
 import ShiftHistoryModal from "@/Pages/Shifts/Components/ShiftHistoryModal.vue";
-import ShowUserShiftsModal from "@/Pages/Shifts/Components/showUserShiftsModal.vue";
+import ShowUserShiftsModal from "@/Pages/Shifts/Components/ShowUserShiftsModal.vue";
 import DragElement from "@/Pages/Projects/Components/DragElement.vue";
 import HighlightUserCell from "@/Pages/Shifts/Components/HighlightUserCell.vue";
 import {Switch} from "@headlessui/vue";
@@ -248,11 +297,13 @@ import Table from "@/Components/Table/Table.vue";
 import TableHead from "@/Components/Table/TableHead.vue";
 import TableBody from "@/Components/Table/TableBody.vue";
 import { SelectorIcon } from "@heroicons/vue/solid";
+import ShiftsQualificationsAssignmentModal from "@/Layouts/Components/ShiftPlanComponents/ShiftsQualificationsAssignmentModal.vue";
 
 export default {
     name: "ShiftPlan",
     mixins: [Permissions],
     components: {
+        ShiftsQualificationsAssignmentModal,
         TableBody,
         TableHead,
         Table,
@@ -260,12 +311,16 @@ export default {
         SideNotification,
         MultiEditUserCell,
         Switch,
-        DragElement, ShowUserShiftsModal,
+        DragElement,
+        ShowUserShiftsModal,
         ShiftHistoryModal,
         ShiftHeader,
         ShiftTabs,
         ShiftPlanUserOverview,
-        Link, CalendarFunctionBar, SingleCalendarEvent, EventComponent,
+        Link,
+        CalendarFunctionBar,
+        SingleCalendarEvent,
+        EventComponent,
         SingleShiftPlanEvent,
         LightBulbIcon,
         AppLayout,
@@ -289,7 +344,8 @@ export default {
         'freelancersForShifts',
         'serviceProvidersForShifts',
         'user_filters',
-        'crafts'
+        'crafts',
+        'shiftQualifications'
     ],
     data() {
         return {
@@ -305,13 +361,19 @@ export default {
             multiEditMode: false,
             checkedShiftsForMultiEdit: [],
             userForMultiEdit: null,
-            multiEditFeedback: null,
+            multiEditFeedback: '',
             dropFeedback: null,
             closedCrafts:[],
             userOverviewHeight: 400,
             startY: 0,
             startHeight: 0,
-            windowHeight: window.innerHeight
+            windowHeight: window.innerHeight,
+            shiftsToHandleOnMultiEdit: {
+                assignToShift: [],
+                removeFromShift: []
+            },
+            showShiftsQualificationsAssignmentModal: false,
+            showShiftsQualificationsAssignmentModalShifts: []
         }
     },
     mounted() {
@@ -332,7 +394,6 @@ export default {
                     expectedWorkingHours: user.expectedWorkingHours,
                     vacations: user.vacations,
                     assigned_craft_ids: user.user.assigned_craft_ids,
-                    shift_ids_array: user.user.shift_ids_array,
                     availabilities: user.availabilities
                 })
             })
@@ -343,7 +404,6 @@ export default {
                     plannedWorkingHours: freelancer.plannedWorkingHours,
                     vacations: freelancer.vacations,
                     assigned_craft_ids: freelancer.freelancer.assigned_craft_ids,
-                    shift_ids_array: freelancer.freelancer.shift_ids_array,
                     availabilities: freelancer.availabilities
                 })
             })
@@ -352,8 +412,7 @@ export default {
                     element: service_provider.service_provider,
                     type: 2,
                     plannedWorkingHours: service_provider.plannedWorkingHours,
-                    assigned_craft_ids: service_provider.service_provider.assigned_craft_ids,
-                    shift_ids_array: service_provider.service_provider.shift_ids_array
+                    assigned_craft_ids: service_provider.service_provider.assigned_craft_ids
                 })
             })
             return users;
@@ -371,23 +430,6 @@ export default {
                 !user.assigned_craft_ids || user.assigned_craft_ids?.length === 0
             );
         },
-        computedUserOverviewMaxHeight() {
-            const minHeight = 33; // Minimum max height in rem
-            const baseHeight = 52; // Base max height when there's 1 room
-
-            // Calculate the adjusted max height based on the number of rooms
-            // Adjust this value as needed based on your requirements
-            const adjustmentPerRoom = 6.8; // Adjust this value as needed
-
-            const totalRooms = this.rooms.length;
-            let calculatedHeight = baseHeight - (adjustmentPerRoom * (totalRooms - 1));
-
-            // Ensure the calculated height is not less than the minimum height
-            calculatedHeight = Math.max(minHeight, calculatedHeight);
-
-            // Return the max height as a string with "rem" unit
-            return `${calculatedHeight}rem`;
-        },
     },
     methods: {
         showDropFeedback(feedback) {
@@ -401,9 +443,6 @@ export default {
         },
         findEventTypeById(eventTypeId) {
             return this.eventTypes.find(eventType => eventType.id === eventTypeId);
-        },
-        showUserOverviewBar(isOpen) {
-            this.showUserOverview = isOpen;
         },
         openFullscreen() {
             let elem = document.getElementById('shiftPlan');
@@ -496,34 +535,172 @@ export default {
             this.idToHighlight = id;
             this.typeToHighlight = type;
         },
-        addUserToMultiEdit(item){
-            if(item === null){
+        addUserToMultiEdit(item) {
+            if (item === null) {
                this.userForMultiEdit = [];
             }
             this.userForMultiEdit = item;
         },
-        saveMultiEdit(){
-            this.multiEditFeedback = '';
-            if(this.userForMultiEdit === null){
+        initializeMultiEditSave() {
+            if (this.userForMultiEdit === null) {
                 this.multiEditFeedback = 'Bitte wähle einen Nutzer*in aus!';
                 return;
             }
-            if(this.checkedShiftsForMultiEdit.length === 0){
-                this.multiEditFeedback = 'Bitte wähle mindestens eine Schicht aus!';
+
+            //check if existing shifts are not contained anymore
+            this.userForMultiEdit.shift_ids.forEach((shiftId) => {
+                let checkedShift = this.checkedShiftsForMultiEdit.find((checkedShift) => checkedShift.id === shiftId);
+                if (typeof checkedShift === 'undefined') {
+                    this.shiftsToHandleOnMultiEdit.removeFromShift.push(shiftId);
+                }
+            });
+
+            //check if user has any shift qualifications
+            if (this.userForMultiEdit.shift_qualifications.length > 0) {
+                //iterate checked shifts
+                this.checkedShiftsForMultiEdit.forEach((checkedShift) => {
+                    //if user is not already assigned to shift
+                    if (!this.userForMultiEdit.shift_ids.includes(checkedShift.id)) {
+                        //if user only has one shift qualification
+                        if (this.userForMultiEdit.shift_qualifications.length === 1) {
+                            if (
+                                !this.hasShiftsQualificationFreeSlots(
+                                    checkedShift,
+                                    this.userForMultiEdit.shift_qualifications[0].id
+                                )
+                            ) {
+                                //no free slots available for given shift qualification
+                                return;
+                            }
+                            this.shiftsToHandleOnMultiEdit.assignToShift.push({
+                                shiftId: checkedShift.id,
+                                shiftQualificationId: this.userForMultiEdit.shift_qualifications[0].id
+                            });
+                            return;
+                        }
+                        //if user has multiple shift qualifications
+                        let availableShiftQualificationSlots = [];
+                        this.userForMultiEdit.shift_qualifications.forEach((userShiftQualification) => {
+                            checkedShift.shifts_qualifications.forEach((shiftsQualification) => {
+                                if (
+                                    userShiftQualification.id === shiftsQualification.shift_qualification_id &&
+                                    this.hasShiftsQualificationFreeSlots(checkedShift, userShiftQualification.id)
+                                ) {
+                                    availableShiftQualificationSlots.push(userShiftQualification);
+                                }
+                            });
+                        });
+
+                        //when no slots available return
+                        if (availableShiftQualificationSlots.length === 0) {
+                            return;
+                        }
+
+                        //if only one slot is available it will be assigned
+                        if (availableShiftQualificationSlots.length === 1) {
+                            this.shiftsToHandleOnMultiEdit.assignToShift.push({
+                                shiftId: checkedShift.id,
+                                shiftQualificationId: availableShiftQualificationSlots[0].id
+                            });
+                            return;
+                        }
+
+                        //multiple slots are available, prepare shift qualification assignment modal
+                        this.showShiftsQualificationsAssignmentModalShifts.push({
+                            shift: checkedShift,
+                            availableSlots: availableShiftQualificationSlots
+                        });
+                    }
+                });
+            }
+
+            //open shifts qualifications assignment modal
+            if (this.showShiftsQualificationsAssignmentModalShifts.length > 0) {
+                this.showShiftsQualificationsAssignmentModal = true;
                 return;
             }
 
+            this.saveMultiEdit();
+        },
+        closeShiftsQualificationsAssignmentModal(closedForAssignment, assignedShifts) {
+            this.showShiftsQualificationsAssignmentModal = false;
+            this.showShiftsQualificationsAssignmentModalShifts = [];
+
+            if (!closedForAssignment) {
+                return;
+            }
+
+            assignedShifts.forEach((shiftToBeAssigned) => {
+                this.shiftsToHandleOnMultiEdit.assignToShift.push({
+                    shiftId: shiftToBeAssigned.shiftId,
+                    shiftQualificationId: shiftToBeAssigned.shiftQualificationId
+                });
+            });
+
+            this.saveMultiEdit();
+        },
+        saveMultiEdit() {
+            if (
+                this.shiftsToHandleOnMultiEdit.assignToShift.length === 0 &&
+                this.shiftsToHandleOnMultiEdit.removeFromShift.length === 0
+            ) {
+                this.resetMultiEditMode();
+                return;
+            }
 
             Inertia.post(route('shift.multi.edit.save'), {
-                shifts: this.checkedShiftsForMultiEdit,
-                user: this.userForMultiEdit
+                userType: this.userForMultiEdit.type,
+                userTypeId: this.userForMultiEdit.id,
+                shiftsToHandle: this.shiftsToHandleOnMultiEdit
             }, {
                 preserveScroll: true,
                 preserveState: true,
-                onFinish: () => {
-                    this.multiEditMode = false;
+                onFinish: this.resetMultiEditMode
+            });
+        },
+        resetMultiEditMode() {
+            this.multiEditMode = false;
+            this.shiftsToHandleOnMultiEdit = {
+                assignToShift: [],
+                removeFromShift: []
+            }
+        },
+        hasShiftsQualificationFreeSlots(shift, shiftQualificationId) {
+            let shiftsQualificationById = shift.shifts_qualifications.find((shiftsQualification) => {
+                return shiftsQualification.shift_qualification_id === shiftQualificationId;
+            });
+
+            if (shiftsQualificationById.value === null || shiftsQualificationById.value === 0) {
+                return false;
+            }
+
+            return this.determineUsedShiftsQualificationSlots(
+                shift,
+                shiftQualificationId
+            ) < shiftsQualificationById.value;
+        },
+        determineUsedShiftsQualificationSlots(shift, shiftQualificationId) {
+            let assignedUserCount = 0;
+
+            shift.users.forEach((user) => {
+                if (user.pivot.shift_qualification_id === shiftQualificationId) {
+                    assignedUserCount++;
                 }
-            })
+            });
+
+            shift.freelancer.forEach((freelancer) => {
+                if (freelancer.pivot.shift_qualification_id === shiftQualificationId) {
+                    assignedUserCount++;
+                }
+            });
+
+            shift.service_provider.forEach((serviceProvider) => {
+                if (serviceProvider.pivot.shift_qualification_id === shiftQualificationId) {
+                    assignedUserCount++;
+                }
+            });
+
+            return assignedUserCount;
         },
         changeCraftVisibility(id) {
             if (this.closedCrafts.includes(id)) {
@@ -537,10 +714,8 @@ export default {
             this.startY = event.clientY;
             this.startHeight = this.userOverviewHeight;
 
-
             document.addEventListener('mousemove', this.resizing);
             document.addEventListener('mouseup', this.stopResize);
-
         },
         resizing(event) {
             const currentY = event.clientY;
@@ -551,7 +726,7 @@ export default {
                 return;
             }
 
-            if((window.innerHeight - 200) - (this.startHeight + diff) < 200){
+            if ((window.innerHeight - 200) - (this.startHeight + diff) < 200) {
                 this.userOverviewHeight = (window.innerHeight - 200) - 200;
                 this.updateHeight()
                 return;
@@ -587,12 +762,10 @@ export default {
         document.removeEventListener('mousemove', this.resizing);
         document.removeEventListener('mouseup', this.stopResize);
     },
-
     beforeDestroy() {
         this.$refs.shiftPlan.removeEventListener('scroll', this.syncScrollShiftPlan);
         this.$refs.userOverview.removeEventListener('scroll', this.syncScrollUserOverview);
     },
-
     watch: {
         showUserOverview: {
             handler() {
@@ -603,12 +776,13 @@ export default {
         shiftPlan: {
             handler() {
                 this.checkedShiftsForMultiEdit = [];
+
                 this.shiftPlan.forEach((room) => {
                     this.days.forEach((day) => {
                         room[day.day].events.data.forEach((event) => {
                             event.shifts.forEach((shift) => {
                                 if (shift.isCheckedForMultiEdit) {
-                                    this.checkedShiftsForMultiEdit.push(shift.id)
+                                    this.checkedShiftsForMultiEdit.push(shift);
                                 }
                             })
                         })
@@ -622,7 +796,7 @@ export default {
                 if (!this.multiEditMode) {
                     this.userForMultiEdit = null;
                     this.dropUsers.forEach((user) => {
-                        user.element.checkedForMultiEdit = false
+                        user.element.checkedForMultiEdit = false;
                     })
                 }
             },
@@ -631,7 +805,6 @@ export default {
     }
 
 }
-
 </script>
 
 <style scoped>
@@ -640,7 +813,6 @@ export default {
 .cell {
     overflow: overlay;
 }
-
 
 ::-webkit-scrollbar {
     width: 16px;
@@ -684,7 +856,4 @@ export default {
     left: 0;
     z-index: 22;
 }
-
 </style>
-
-

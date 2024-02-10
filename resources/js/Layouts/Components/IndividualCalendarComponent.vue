@@ -58,8 +58,7 @@
                                 class="border-t-2 border-dashed"
                                 :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
                                 v-for="room in calendarData">
-                                <div class="py-0.5 pr-2 overflow-hidden" v-for="event in room[day.day].events.data">
-                                    <!-- <CalendarEventTooltip :show-tooltip="event.hovered" :event="event"> -->
+                                <div class="py-0.5" v-for="event in room[day.day].events.data">
                                     <SingleCalendarEvent
                                         class="relative"
                                         :project="event.project"
@@ -73,7 +72,6 @@
                                         @open-edit-event-modal="openEditEventModal"
                                         @check-event="updateCheckedEvents"
                                     />
-                                    <!-- </CalendarEventTooltip> -->
                                 </div>
                             </td>
                         </tr>

@@ -87,6 +87,7 @@
                                </div>
                            </div>
                        </div>
+                       <jet-input-error :message="uploadKeyVisualFeedback"/>
                    </div>
                     <div class="flex w-full items-center my-4">
                         <h3 class="sDark"> Dokumente </h3>
@@ -176,6 +177,7 @@ export default{
                 keyVisual: null,
             }),
             uploadDocumentFeedback: "",
+            uploadKeyVisualFeedback: "",
             documentForm: useForm({
                 file: null
             }),
@@ -233,7 +235,7 @@ export default{
             this.validateTypeAndUploadKeyVisual(event.dataTransfer.files[0], 'keyVisual');
         },
         validateTypeAndUploadKeyVisual(file, type) {
-            this.uploadDocumentFeedback = "";
+            this.uploadKeyVisualFeedback = "";
             const allowedTypes = [
                 "image/jpeg",
                 "image/svg+xml",
@@ -245,12 +247,12 @@ export default{
                 this.keyVisualForm.keyVisual = file
                 this.keyVisualForm.post(route('projects_key_visual.update', {project: this.project.id}), {
                         onError: error => {
-                            this.uploadDocumentFeedback = error.key_visual
+                            this.uploadKeyVisualFeedback = error.keyVisual
                         }
                 }
                 );
             } else {
-                this.uploadDocumentFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert."
+                this.uploadKeyVisualFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert."
             }
         },
         downloadKeyVisual() {

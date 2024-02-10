@@ -402,7 +402,7 @@ export default {
             })
         },
         isNumber(event, index) {
-            if (index > 2 && !(new RegExp('^([0-9])$')).test(event.key)) {
+            if (index > 2 && !(new RegExp('^([0-9.])$')).test(event.key)) {
                 event.preventDefault();
             }
         },

@@ -27,7 +27,6 @@ use App\Http\Resources\ProjectResources\ProjectShiftResource;
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderDropResource;
 use App\Http\Resources\UserDropResource;
-use App\Http\Resources\UserIndexResource;
 use App\Models\Category;
 use App\Models\ChecklistTemplate;
 use App\Models\CollectingSociety;
@@ -43,7 +42,6 @@ use App\Models\Genre;
 use App\Models\MoneySource;
 use App\Models\Sector;
 use App\Models\ServiceProvider;
-use App\Models\TimeLine;
 use App\Models\User;
 use App\Support\Services\HistoryService;
 use App\Support\Services\MoneySourceThresholdReminderService;
@@ -65,9 +63,11 @@ use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
-use Artwork\Modules\Project\Services\ProjectGroupService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Artwork\Modules\Timeline\Models\Timeline;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -1523,12 +1523,12 @@ class ProjectController extends Controller
                 ->first();
 
             if ($column->type == 'sum') {
-                $sum = (int)$firstRowValue + (int)$secondRowValue;
+                $sum = (float)$firstRowValue + (float)$secondRowValue;
                 $updateColumn->update([
                     'value' => $sum
                 ]);
             } else {
-                $sum = (int)$firstRowValue - (int)$secondRowValue;
+                $sum = (float)$firstRowValue - (float)$secondRowValue;
                 $updateColumn->update([
                     'value' => $sum
                 ]);
@@ -1802,8 +1802,10 @@ class ProjectController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function projectShiftTab(Project $project): Response|ResponseFactory
-    {
+    public function projectShiftTab(
+        Project $project,
+        ShiftQualificationService $shiftQualificationService
+    ): Response|ResponseFactory {
         $project->load([
             'departments.users.departments',
             'managerUsers',
@@ -1855,6 +1857,12 @@ class ProjectController extends Controller
                 // Compare the 'start' values for ascending order
                 return strtotime($a['start']) - strtotime($b['start']);
             });
+
+            /** @var Shift $shift */
+            foreach ($event->shifts as $shift) {
+                $shift->load('shiftsQualifications');
+            }
+
             $eventsWithRelevant[$event->id] = [
                 'event' => $event,
                 'timeline' => $timeline,
@@ -1935,7 +1943,8 @@ class ProjectController extends Controller
             'access_budget' => $project->access_budget,
             'currentUserCrafts' => Auth::user()
                 ->crafts
-                ->merge(Craft::query()->where('assignable_by_all', '=', true)->get())
+                ->merge(Craft::query()->where('assignable_by_all', '=', true)->get()),
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending()
         ]);
     }
 
@@ -1965,7 +1974,11 @@ class ProjectController extends Controller
             if ($column->type === 'difference' || $column->type === 'sum') {
                 $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
                 $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
-                $calculateName = $firstName . ' + ' . $secondName;
+                if ($column->type === 'difference') {
+                    $calculateName = $firstName . ' - ' . $secondName;
+                } else {
+                    $calculateName = $firstName . ' + ' . $secondName;
+                }
             }
             $calculateNames[$column->id] = $calculateName;
         }
@@ -2176,7 +2189,7 @@ class ProjectController extends Controller
     public function updateTimeLines(Request $request): void
     {
         foreach ($request->timelines as $timeline) {
-            $findTimeLine = TimeLine::find($timeline['id']);
+            $findTimeLine = Timeline::find($timeline['id']);
             $findTimeLine->update([
                 'start' => $timeline['start'],
                 'end' => $timeline['end'],
@@ -2836,13 +2849,17 @@ class ProjectController extends Controller
     {
         $oldKeyVisual = $project->key_visual_path;
         if ($request->file('keyVisual')) {
+            $request->validate([
+                'keyVisual' => ['max:' . 1_024 * 100]
+            ]);
+
             $file = $request->file('keyVisual');
 
             $img = Image::make($file);
 
-            if ($img->width() < 1080 || $img->height() < 1080) {
+            if ($img->width() < 1080) {
                 throw ValidationException::withMessages([
-                    'key_visual' => 'Die Abmessungen des Key Visuals sollte mindestens 1080x1080px betragen.'
+                    'keyVisual' => 'Die Breite des Key Visuals sollte mindestens 1080px betragen.'
                 ]);
             }
 
@@ -2899,7 +2916,7 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
-    public function deleteTimeLineRow(TimeLine $timeLine): void
+    public function deleteTimeLineRow(Timeline $timeLine): void
     {
         $timeLine->delete();
     }

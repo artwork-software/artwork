@@ -113,6 +113,7 @@ import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualific
 import Label from "@/Jetstream/Label.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 const shiftQualificationIcons = [
+    {iconName: 'user-icon'},
     {iconName: 'academic-cap-icon'},
     {iconName: 'bell-icon'},
     {iconName: 'chat-icon'},

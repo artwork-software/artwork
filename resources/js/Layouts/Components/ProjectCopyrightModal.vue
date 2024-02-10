@@ -142,7 +142,10 @@ export default {
     },
     methods: {
         updateData() {
-            this.projectRightForm.collecting_society_id = this.collectingSociety.id;
+            if(this.projectRightForm.own_copyright) {
+                this.projectRightForm.collecting_society_id = this.collectingSociety.id;
+            }
+
             this.projectRightForm.post(route('project.copyright.update', this.project.id), {
                 preserveScroll: true,
                 onSuccess: () => {

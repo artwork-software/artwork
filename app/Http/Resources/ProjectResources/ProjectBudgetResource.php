@@ -46,7 +46,6 @@ class ProjectBudgetResource extends JsonResource
                 ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'key_visual_path' => $this->key_visual_path,
             'cost_center' => $this->costCenter,
-            'copyright' => new CopyrightResource($this->copyright),
             'moneySources' => $this->moneySources,
             'project_files' => ProjectFileResource::collection($this->project_files),
             'contracts' => ContractResource::collection($this->contracts),

@@ -1,7 +1,7 @@
 <template>
     <div :class="hideProjectHeader ? 'px-5' : 'mt-6 px-5  bg-lightBackgroundGray'">
         <div class="flex bg-lightBackgroundGray w-[95%]">
-            <BudgetComponent :hide-project-header="hideProjectHeader" @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation" :table="budget.table" :columnCalculatedNames="budget.columnCalculatedNames" :project="project" :selectedCell="budget.selectedCell"
+            <BudgetComponent :sage-not-assigned="sageNotAssigned" :hide-project-header="hideProjectHeader" @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation" :table="budget.table" :columnCalculatedNames="budget.columnCalculatedNames" :project="project" :selectedCell="budget.selectedCell"
                              :selectedRow="budget.selectedRow" :templates="budget.templates"
                              :selected-sum-detail="budget.selectedSumDetail"
                              :money-sources="moneySources" :budget-access="projectWriteIds"
@@ -28,7 +28,8 @@ export default{
         'moneySources',
         'projectWriteIds',
         'projectManagerIds',
-        'hideProjectHeader'
+        'hideProjectHeader',
+        'sageNotAssigned'
     ],
     emits: ['changeProjectHeaderVisualisation'],
     data() {

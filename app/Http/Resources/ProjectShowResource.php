@@ -57,7 +57,6 @@ class ProjectShowResource extends JsonResource
             'registration_deadline' => $this->registration_deadline,
             'closed_society' => $this->closed_society,
             'cost_center' => $this->costCenter,
-            'copyright' => new CopyrightResource($this->copyright),
             'moneySources' => $this->money_sources,
             'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),

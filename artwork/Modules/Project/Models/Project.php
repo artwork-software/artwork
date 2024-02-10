@@ -7,7 +7,6 @@ use App\Models\Category;
 use App\Models\CollectingSociety;
 use Artwork\Modules\Project\Models\Comment;
 use App\Models\Contract;
-use App\Models\Copyright;
 use App\Models\CostCenter;
 use App\Models\Event;
 use App\Models\EventType;
@@ -66,7 +65,6 @@ class Project extends Model
         'shift_description',
         'number_of_participants',
         'cost_center_id',
-        'copyright_id',
         'key_visual_path',
         'state',
         'num_of_guests',
@@ -117,11 +115,6 @@ class Project extends Model
     public function shift_contact(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_shift_contacts');
-    }
-
-    public function copyright(): HasOne
-    {
-        return $this->hasOne(Copyright::class);
     }
 
     public function users(): BelongsToMany

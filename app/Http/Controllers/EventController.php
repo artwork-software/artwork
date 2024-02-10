@@ -262,8 +262,8 @@ class EventController extends Controller
     public function showDashboardPage(): Response
     {
         $sage = $this->sage100Service->getData(500);
-        dd($this->sage100Service->importDataToBudget());
-
+        $this->sage100Service->importDataToBudget();
+        //dd($sage);
         $event = null;
         $tasks = Task::query()
             ->where('done', false)

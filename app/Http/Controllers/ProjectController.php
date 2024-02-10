@@ -55,6 +55,7 @@ use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\MainPositionDetails;
+use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\SubpositionSumDetail;
@@ -1506,7 +1507,7 @@ class ProjectController extends Controller
         foreach ($rows as $row) {
             $column = Column::find($row->column_id);
 
-            if ($column->type === 'empty') {
+            if ($column->type === 'empty' || $column->type === 'sage') {
                 continue;
             }
             $firstRowValue = ColumnCell::where('column_id', $column->linked_first_column)
@@ -1577,7 +1578,6 @@ class ProjectController extends Controller
             'managerUsers',
             'writeUsers',
             'project_files',
-            'copyright',
             'costCenter',
             'sectors',
             'users.departments',
@@ -1950,7 +1950,6 @@ class ProjectController extends Controller
             'writeUsers',
             'project_files',
             'contracts',
-            'copyright',
             'costCenter',
             'users.departments',
             'state',
@@ -2024,6 +2023,22 @@ class ProjectController extends Controller
         //load commented budget items setting for given user
         Auth::user()->load(['commentedBudgetItemsSetting']);
 
+        $sageNotAssigned = SageNotAssignedData::where('project_id', $project->id)
+            ->orWhere('project_id', null)->get();
+        $projectsGroup = collect();
+        $globalGroup = collect();
+
+        $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project): void {
+            if ($item->project_id === null) {
+                $globalGroup->push($item);
+            } elseif ($item->project_id === $project->id) {
+                $projectsGroup->push($item);
+            }
+        });
+
+        //dd($projectsGroup, $globalGroup);
+
+
         /** @var Collection $roomsWithAudience */
         $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
 
@@ -2081,6 +2096,10 @@ class ProjectController extends Controller
             'companyTypes' => CompanyType::all()->toArray(),
             'currencies' => Currency::all()->toArray(),
             'collectingSocieties' => CollectingSociety::all()->toArray(),
+            'sageNotAssigned' => [
+                'projectsGroup' => $projectsGroup,
+                'globalGroup' => $globalGroup
+            ],
         ]);
     }
 

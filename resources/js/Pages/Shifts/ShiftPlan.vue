@@ -22,14 +22,14 @@
                     <Table>
                         <template #head>
                             <div class="stickyHeader">
-                            <TableHead>
-                                <th class="z-0" :style="{width: 164 + 'px', maxWidth: 164 + 'px'}"></th>
-                                <th v-for="day in days" :style="{minWidth: 200 + 'px'}" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
-                                    <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
-                                        {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
-                                    </div>
-                                </th>
-                            </TableHead>
+                                <TableHead>
+                                    <th class="z-0" :style="{width: 164 + 'px', maxWidth: 164 + 'px'}"></th>
+                                    <th v-for="day in days" :style="{minWidth: 200 + 'px'}" class="z-20 h-16 py-3 border-r-4 border-secondaryHover truncate">
+                                        <div class="flex calendarRoomHeader font-semibold ml-4 mt-2">
+                                            {{ day.day_string }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
+                                        </div>
+                                    </th>
+                                </TableHead>
                             </div>
                         </template>
                         <template #body>

@@ -599,6 +599,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('project.budget.main-position.add');
             Route::post('/sub-position-row/add', [ProjectController::class, 'addSubPositionRow'])
                 ->name('project.budget.sub-position-row.add');
+
+            // drop sage data
+            Route::post('/drop/sage', [ProjectController::class, 'dropSageData'])
+                ->name('project.budget.drop.sage');
+
             Route::post('/cell/{columnCell}/comment/add', [CellCommentsController::class, 'store'])
                 ->name('project.budget.cell.comment.store');
             Route::post('/row/{row}/comment/add', [RowCommentController::class, 'store'])

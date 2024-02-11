@@ -1374,6 +1374,36 @@ class ProjectController extends Controller
         ]);
     }
 
+    public function dropSageData(Request $request){
+        $table = Table::find($request->table_id);
+        $columns = $table->columns()->get();
+        $subPosition = SubPosition::find($request->sub_position_id);
+
+        SubPositionRow::query()
+            ->where('sub_position_id', $request->sub_position_id)
+            ->where('position', '>', $request->positionBefore)
+            ->increment('position');
+
+        $subPositionRow = $subPosition->subPositionRows()->create([
+            'commented' => false,
+            'position' => $request->positionBefore + 1
+        ]);
+
+        $firstThreeColumns = $columns->shift(3);
+
+        $subPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
+            'value' => '',
+            'linked_money_source_id' => null,
+            'verified_value' => ''
+        ]);
+
+        $subPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => 0,
+            'verified_value' => null,
+            'linked_money_source_id' => null,
+        ]);
+    }
+
     public function addMainPosition(Request $request): void
     {
         $table = Table::find($request->table_id);

@@ -175,6 +175,8 @@
                         </transition>
                     </Menu>
                 </tr>
+                <!-- add drop element for sage data -->
+                <SageDataDropElement :row="row" :tableId="table.id" :sub-position-id="subPosition.id"/>
                 <div @click="addRowToSubPosition(subPosition, row)" v-if="this.$can('edit budget templates') || !table.is_template" class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
                     <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                         Zeile
@@ -188,6 +190,7 @@
                     <PlusCircleIcon class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
                 </div>
             </div>
+            <SageDataDropElement :row="row" :tableId="table.id" :sub-position-id="subPosition.id"/>
             <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
                 <td class="w-28"></td>
                 <td class="w-28"></td>
@@ -236,11 +239,13 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {nextTick} from "vue";
 import Permissions from "@/mixins/Permissions.vue";
+import SageDataDropElement from "@/Pages/Projects/Components/SageDataDropElement.vue";
 
 export default {
     mixins: [Permissions],
     name: "SubPositionComponent",
     components: {
+        SageDataDropElement,
         PlusCircleIcon,
         ChevronUpIcon,
         ChevronDownIcon,

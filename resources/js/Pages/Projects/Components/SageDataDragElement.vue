@@ -9,7 +9,7 @@ export default {
         onDragStart(event) {
             //event.preventDefault();
             event.dataTransfer.setData('text/plain', JSON.stringify(this.sageData));
-            console.log('drag start', this.sageData);
+            //console.log('drag start', this.sageData);
         }
     }
 }
@@ -23,7 +23,7 @@ export default {
        <div class="w-28">
            {{ sageData.kst }}
        </div>
-       <div class="w-64">
+       <div class="w-64 truncate">
            {{ sageData.description }}
        </div>
        <div class="w-52 text-right">

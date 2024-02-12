@@ -30,4 +30,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'sage100' => [
+        'domain' => env('SAGE_100_DOMAIN'),
+        'data_endpoint' => env('SAGE_100_ENDPOINT'),
+        'user' => env('SAGE_USER'),
+        'password' => env('SAGE_PW')
+    ]
+
 ];

@@ -33,11 +33,10 @@ class ContentSeeder extends Seeder
         $this->seedDepartments();
         $this->seedRooms();
         $this->seedEventsAndEventTypes();
+        $this->seedCostCenters();
         $this->seedProjects();
         $this->seedRoomCategories();
         $this->seedRoomAttributes();
-        $this->seedCostCenters();
-        $this->seedCopyrights();
         $this->seedCurrencies();
     }
 
@@ -337,6 +336,7 @@ class ContentSeeder extends Seeder
                 'Awards gibt THE DAN DAW SHOW in der Regie von Mark Maughan einen Einblick in die glänzende und ' .
                 'schweißtreibende Zerrissenheit, mit Scham zu leben und gleichzeitig vor Stolz zu strotzen.',
             'number_of_participants' => null,
+            'cost_center_id' => 1
         ]);
 
         $projectController = app()->get(ProjectController::class);
@@ -363,6 +363,7 @@ class ContentSeeder extends Seeder
                 'meisten von ihnen leben heute über die ganze Welt verstreut und weit von den Orten entfernt, zu ' .
                 'denen sie sich ursprünglich zugehörig fühlten.',
             'number_of_participants' => null,
+            'cost_center_id' => 1
         ]);
 
         $second_project->project_histories()->create([
@@ -416,19 +417,6 @@ class ContentSeeder extends Seeder
     {
         CostCenter::create([
             'name' => '123456',
-            'description' => 'Some description',
-            'project_id' => 1
-        ]);
-    }
-
-    private function seedCopyrights(): void
-    {
-        Copyright::create([
-            'own_copyright' => true,
-            'live_music' => true,
-            'collecting_society_id' => 1,
-            'law_size' => 'small',
-            'project_id' => 1
         ]);
     }
 }

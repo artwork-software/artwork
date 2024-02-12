@@ -26,12 +26,14 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
 use App\Models\UserShiftCalendarFilter;
+use App\Sage100\Sage100;
 use App\Support\Services\CollisionService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Carbon\Carbon;
@@ -64,7 +66,8 @@ class EventController extends Controller
     public function __construct(
         private readonly CollisionService $collisionService,
         private readonly NotificationService $notificationService,
-        private readonly BudgetService $budgetService
+        private readonly BudgetService $budgetService,
+        private readonly Sage100Service $sage100Service,
     ) {
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
@@ -259,6 +262,9 @@ class EventController extends Controller
 
     public function showDashboardPage(): Response
     {
+        $sage = $this->sage100Service->getData(500);
+        dd($this->sage100Service->importDataToBudget());
+
         $event = null;
         $tasks = Task::query()
             ->where('done', false)

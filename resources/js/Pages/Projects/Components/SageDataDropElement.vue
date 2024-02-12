@@ -30,7 +30,7 @@ export default {
                 table_id: this.tableId,
                 sub_position_id: this.subPositionId,
                 positionBefore: this.row ? this.row.position : -1,
-                data: data,
+                sage_data_id: data.id,
             }, {
                 preserveScroll: true,
                 preserveState: true,

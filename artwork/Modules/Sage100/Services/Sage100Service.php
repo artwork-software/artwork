@@ -107,9 +107,7 @@ class Sage100Service
                         ]);
                     }
                 }
-
                 $foundedKTO = ColumnCell::where('value', $item['SaKto'])->get();
-
                 if ($foundedKTO->count() > 1) {
                     foreach ($foundedKTO as $kto) {
                         $foundedKST = ColumnCell::where('value', $item['KstStelle'])
@@ -174,5 +172,129 @@ class Sage100Service
                     });
             }
         }
+    }
+
+    public function dropData($request): void
+    {
+        $table = Table::find($request->table_id);
+        $columns = $table->columns()->whereNot('type', 'sage')->get();
+        $subPosition = SubPosition::find($request->sub_position_id);
+        $project = $table->project()->first();
+        $check = $table->columns()->where('type', 'sage')->exists();
+        $sageData = SageNotAssignedData::find($request->sage_data_id);
+        $sageColumn = null;
+        if (!$check) {
+            $sageColumn = $this->columnService->createColumnInTable(
+                table:      $project->table()->first(),
+                name:       'Sage Abgleich',
+                subName:    '-',
+                type:       'sage'
+            );
+
+            $this->columnService->setColumnSubName(
+                table_id:   $project->table()->first()->id
+            );
+            $subPositionRows = SubPositionRow::whereHas(
+                'subPosition.mainPosition',
+                function (Builder $query) use ($project): void {
+                    $query->where('table_id', $project->table()->first()->id);
+                }
+            )->pluck('id');
+
+
+            foreach ($subPositionRows as $subPositionRow) {
+                $sageColumn->subPositionRows()->attach($subPositionRow, [
+                    'value' => 0,
+                    'verified_value' => null,
+                    'linked_money_source_id' => null,
+                    'commented' => SubPositionRow::find($subPositionRow)->commented
+                ]);
+            }
+
+            $subPositions = SubPosition::whereHas(
+                'mainPosition',
+                function (Builder $query) use ($project): void {
+                    $query->where('table_id', $project->table()->first()->id);
+                }
+            )->get();
+
+
+            $sageColumn->subPositionSumDetails()->createMany(
+                $subPositions->map(fn($subPosition) => [
+                    'sub_position_id' => $subPosition->id
+                ])->all()
+            );
+
+            $mainPositions = MainPosition::where('table_id', $project->table()->first()->id)->get();
+
+            $sageColumn->mainPositionSumDetails()->createMany(
+                $mainPositions->map(fn($mainPosition) => [
+                    'main_position_id' => $mainPosition->id
+                ])->all()
+            );
+
+            $sageColumn->budgetSumDetails()->create([
+                'type' => 'COST'
+            ]);
+
+            $sageColumn->budgetSumDetails()->create([
+                'type' => 'EARNING'
+            ]);
+        }
+
+        SubPositionRow::query()
+            ->where('sub_position_id', $request->sub_position_id)
+            ->where('position', '>', $request->positionBefore)
+            ->increment('position');
+
+
+        $subPositionRow = $subPosition->subPositionRows()->create([
+            'commented' => false,
+            'position' => $request->positionBefore + 1
+        ]);
+
+        $firstThreeColumns = $columns->shift(3);
+        foreach ($firstThreeColumns as $column) {
+            if ($column->name === 'KTO') {
+                $subPositionRow->columns()->attach($column->id, [
+                    'value' => $sageData->kto,
+                    'verified_value' => null,
+                    'linked_money_source_id' => null,
+                ]);
+            } elseif ($column->name === 'KST') {
+                $subPositionRow->columns()->attach($column->id, [
+                    'value' => $sageData->kst,
+                    'verified_value' => null,
+                    'linked_money_source_id' => null,
+                ]);
+            } elseif ($column->name === 'Beschreibung') {
+                $subPositionRow->columns()->attach($column->id, [
+                    'value' => $sageData->description,
+                    'verified_value' => null,
+                    'linked_money_source_id' => null,
+                ]);
+            }
+        }
+
+        // create columns for the rest of the columns without sage column
+        $subPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => 0,
+            'verified_value' => null,
+            'linked_money_source_id' => null,
+        ]);
+
+
+        if ($sageColumn === null) {
+            $sageColumn = $project->table()->first()->columns()->where('type', 'sage')->first();
+        }
+
+        $sageColumn->subPositionRows()->attach($subPositionRow->id, [
+            'value' => $sageData->amount,
+            'verified_value' => null,
+            'linked_money_source_id' => null,
+            'commented' => $subPositionRow->commented
+        ]);
+
+        $sageData->delete();
     }
 }

@@ -65,6 +65,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
@@ -101,6 +102,7 @@ class ProjectController extends Controller
     public function __construct(
         private readonly ProjectService $projectService,
         private readonly BudgetService $budgetService,
+        private readonly Sage100Service $sage100Service,
     ) {
         // init notification controller
         $this->notificationService = new NotificationService();
@@ -1375,33 +1377,7 @@ class ProjectController extends Controller
     }
 
     public function dropSageData(Request $request){
-        $table = Table::find($request->table_id);
-        $columns = $table->columns()->get();
-        $subPosition = SubPosition::find($request->sub_position_id);
-
-        SubPositionRow::query()
-            ->where('sub_position_id', $request->sub_position_id)
-            ->where('position', '>', $request->positionBefore)
-            ->increment('position');
-
-        $subPositionRow = $subPosition->subPositionRows()->create([
-            'commented' => false,
-            'position' => $request->positionBefore + 1
-        ]);
-
-        $firstThreeColumns = $columns->shift(3);
-
-        $subPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
-            'value' => '',
-            'linked_money_source_id' => null,
-            'verified_value' => ''
-        ]);
-
-        $subPositionRow->columns()->attach($columns->pluck('id'), [
-            'value' => 0,
-            'verified_value' => null,
-            'linked_money_source_id' => null,
-        ]);
+        $this->sage100Service->dropData($request);
     }
 
     public function addMainPosition(Request $request): void

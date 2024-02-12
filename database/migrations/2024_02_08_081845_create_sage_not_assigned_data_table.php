@@ -22,7 +22,6 @@ return new class extends Migration
             $table->string('cost_center')->nullable();
             $table->string('description')->nullable();
             $table->string('amount')->nullable();
-
             $table->timestamps();
         });
     }

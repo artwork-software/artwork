@@ -45,7 +45,6 @@ class Sage100
     /**
      * @return array<object>
      */
-
     public function getData(array $query = []): array
     {
         // carbon 2021-11-08T00:00:00+01:00

@@ -8,6 +8,7 @@ use App\Models\Freelancer;
 use App\Models\GeneralSettings;
 use App\Models\ServiceProvider as ServiceProviderModel;
 use App\Policies\FreelancerPolicy;
+use App\Policies\SageApiSettingsPolicy;
 use App\Policies\ServiceProviderPolicy;
 use App\Policies\GeneralSettingsPolicy;
 use Artwork\Modules\Checklist\Models\Checklist;
@@ -35,6 +36,7 @@ use App\Policies\UserPolicy;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Policies\ShiftQualificationPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -59,7 +61,8 @@ class AuthServiceProvider extends ServiceProvider
         Freelancer::class => FreelancerPolicy::class,
         ServiceProviderModel::class => ServiceProviderPolicy::class,
         GeneralSettings::class => GeneralSettingsPolicy::class,
-        ShiftQualification::class => ShiftQualificationPolicy::class
+        ShiftQualification::class => ShiftQualificationPolicy::class,
+        SageApiSettings::class => SageApiSettingsPolicy::class
     ];
 
     public function boot(): void

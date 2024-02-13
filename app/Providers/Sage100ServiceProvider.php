@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Sage100\Sage100;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Support\ServiceProvider;
 
 class Sage100ServiceProvider extends ServiceProvider
@@ -13,11 +14,12 @@ class Sage100ServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->app->bind(Sage100::class, function () {
+            $sageApiSettings = app(SageApiSettingsService::class)->getFirst();
             return new Sage100(
-                config('services.sage100.domain'),
-                config('services.sage100.data_endpoint'),
-                config('services.sage100.user'),
-                config('services.sage100.password')
+                $sageApiSettings->host,
+                $sageApiSettings->endpoint,
+                $sageApiSettings->user,
+                $sageApiSettings->password
             );
         });
     }

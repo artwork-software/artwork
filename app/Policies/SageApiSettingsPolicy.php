@@ -5,7 +5,7 @@ namespace App\Policies;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class GeneralSettingsPolicy
+class SageApiSettingsPolicy
 {
     use HandlesAuthorization;
 
@@ -14,12 +14,7 @@ class GeneralSettingsPolicy
         return $user->can('change tool settings');
     }
 
-    public function updateImages(User $user): bool
-    {
-        return $user->can('change tool settings');
-    }
-
-    public function updateEmailSettings(User $user): bool
+    public function updateInterfaceSettings(User $user): bool
     {
         return $user->can('change tool settings');
     }

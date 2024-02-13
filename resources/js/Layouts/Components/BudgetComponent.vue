@@ -307,7 +307,7 @@
 
 
         <!-- Sage not assigned -->
-        <SageNotAssignedData :sage-not-assigned="sageNotAssigned" />
+        <SageNotAssignedData v-if="$page.props.sageApiEnabled" :sage-not-assigned="sageNotAssigned" />
 
 
 

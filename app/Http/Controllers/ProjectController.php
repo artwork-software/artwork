@@ -66,6 +66,7 @@ use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sage100\Services\Sage100Service;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
@@ -103,6 +104,7 @@ class ProjectController extends Controller
         private readonly ProjectService $projectService,
         private readonly BudgetService $budgetService,
         private readonly Sage100Service $sage100Service,
+        private readonly SageApiSettingsService $sageApiSettingsService,
     ) {
         // init notification controller
         $this->notificationService = new NotificationService();
@@ -2041,19 +2043,23 @@ class ProjectController extends Controller
 
         //load commented budget items setting for given user
         Auth::user()->load(['commentedBudgetItemsSetting']);
-
-        $sageNotAssigned = SageNotAssignedData::where('project_id', $project->id)
-            ->orWhere('project_id', null)->get();
         $projectsGroup = collect();
         $globalGroup = collect();
 
-        $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project): void {
-            if ($item->project_id === null) {
-                $globalGroup->push($item);
-            } elseif ($item->project_id === $project->id) {
-                $projectsGroup->push($item);
-            }
-        });
+        if ($this->sageApiSettingsService->getFirst()->enabled) {
+            $sageNotAssigned = SageNotAssignedData::where('project_id', $project->id)
+                ->orWhere('project_id', null)->get();
+
+
+            $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project): void {
+                if ($item->project_id === null) {
+                    $globalGroup->push($item);
+                } elseif ($item->project_id === $project->id) {
+                    $projectsGroup->push($item);
+                }
+            });
+        }
+
 
         //dd($projectsGroup, $globalGroup);
 

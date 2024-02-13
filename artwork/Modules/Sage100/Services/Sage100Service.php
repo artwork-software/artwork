@@ -14,6 +14,7 @@ use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 class Sage100Service
 {
@@ -28,7 +29,9 @@ class Sage100Service
 
     public function getData(int $count)
     {
+        // carbon 2021-11-08T00:00:00+01:00
         return app(Sage100::class)->getData([
+            //"where" => "Buchungsdatum gt '" . Carbon::now()->subYears(2) . "'",
             "startIndex" => 0,
             "count" => $count,
         ]);
@@ -36,8 +39,7 @@ class Sage100Service
 
     public function importDataToBudget(): void
     {
-        $data = $this->getData(100);
-        //dd($data);
+        $data = $this->getData(250);
         $foundedProjects = [];
         $addedData = [];
         foreach ($data as $item) {
@@ -134,13 +136,11 @@ class Sage100Service
                     $singleKTO = $foundedKTO->first();
                     $foundedKST = ColumnCell::where('value', $item['KstStelle'])->first();
                     $sageColumn = $project->table()->first()->columns()->where('type', 'sage')->first();
-                    //dd($singleKTO?->sub_position_row_id, $foundedKST?->sub_position_row_id);
                     if ($singleKTO && $foundedKST) {
                         if ($singleKTO?->sub_position_row_id === $foundedKST?->sub_position_row_id) {
                             $sageColumn->subPositionRows()->updateExistingPivot($singleKTO->sub_position_row_id, [
                                 'value' => $item['Buchungsbetrag']
                             ]);
-                            //dd('hier');
                         } else {
                             $sageColumn->subPositionRows()->attach($singleKTO->sub_position_row_id, [
                                 'value' => $item['Buchungsbetrag'],

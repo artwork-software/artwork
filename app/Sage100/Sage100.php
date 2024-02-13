@@ -3,6 +3,7 @@
 namespace App\Sage100;
 
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 
 class Sage100
@@ -47,6 +48,7 @@ class Sage100
 
     public function getData(array $query = []): array
     {
+        // carbon 2021-11-08T00:00:00+01:00
         return $this->client()
             ->get($this->endpoint, $query)
             ->json('$resources');

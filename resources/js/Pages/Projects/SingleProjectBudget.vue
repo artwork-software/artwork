@@ -22,11 +22,12 @@
                        :project="project"
                        :budget="budget"
                        :money-sources="moneySources"
+                       :sage-not-assigned="sageNotAssigned"
             />
         </ProjectShowHeaderComponent>
 
 
-        <BudgetTab @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation" :hideProjectHeader="hideProjectHeader" :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :budget="budget" :money-sources="moneySources" v-else ></BudgetTab>
+        <BudgetTab @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation" :sage-not-assigned="sageNotAssigned"  :hideProjectHeader="hideProjectHeader" :projectWriteIds="projectWriteIds" :projectManagerIds="projectManagerIds" :project="project" :budget="budget" :money-sources="moneySources" v-else ></BudgetTab>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSidenav
                 :project="project"
@@ -41,6 +42,7 @@
                 :collecting-societies="collectingSocieties"
             />
         </BaseSidenav>
+
     </app-layout>
 </template>
 
@@ -86,7 +88,8 @@ export default defineComponent({
         'currencies',
         'contractTypes',
         'companyTypes',
-        'collectingSocieties'
+        'collectingSocieties',
+        'sageNotAssigned'
     ],
     data() {
         return {

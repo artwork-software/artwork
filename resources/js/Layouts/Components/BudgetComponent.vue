@@ -304,8 +304,15 @@
                 </thead>
             </table>
         </div>
+
+
+        <!-- Sage not assigned -->
+        <SageNotAssignedData :sage-not-assigned="sageNotAssigned" />
+
+
+
         <div class="w-full flex mb-6">
-            <div class="flex flex-wrap w-full bg-secondaryHover border border-2 border-gray-300">
+            <div class="flex flex-wrap w-full bg-secondaryHover border-2 border-gray-300">
                 <div class="w-full flex">
                     <div class="bg-secondaryHover ml-5 w-full" v-if="costsOpened">
                         <div :class="table.columns?.length > 5 ? 'mr-5' : 'w-[97%]'" class="flex justify-between my-10">
@@ -823,11 +830,13 @@ import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue"
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SumDetailComponent from "@/Layouts/Components/SumDetailComponent.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import SageNotAssignedData from "@/Pages/Projects/Components/SageNotAssignedData.vue";
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions],
     components: {
+        SageNotAssignedData,
         ZoomInIcon, ZoomOutIcon,
         SwitchGroup,
         SwitchLabel,
@@ -938,7 +947,7 @@ export default {
         }
     },
 
-    props: ['hideProjectHeader','selectedSumDetail','columnCalculatedNames','table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager', 'columns'],
+    props: ['hideProjectHeader','selectedSumDetail','columnCalculatedNames','table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager', 'columns', 'sageNotAssigned'],
     emits: ['changeProjectHeaderVisualisation'],
     computed: {
         tablesToShow: function () {
@@ -1024,6 +1033,7 @@ export default {
         },
     },
     methods: {
+
         updateColumnCommented(columnId, bool) {
             Inertia.patch(
                 route(

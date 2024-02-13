@@ -27,4 +27,36 @@ class ColumnService
         $column->type = $type;
         return $this->columnRepository->save($column);
     }
+
+
+    public function setColumnSubName(int $table_id): void
+    {
+        $table = Table::find($table_id);
+        $columns = $table->columns()->get();
+
+        $count = 1;
+
+        foreach ($columns as $column) {
+            // Skip columns without subname
+            if ($column->subName === null || empty($column->subName)) {
+                continue;
+            }
+            $column->update([
+                'subName' => $this->getNameFromNumber($count)
+            ]);
+            $count++;
+        }
+    }
+
+    public function getNameFromNumber(int $num): string
+    {
+        $numeric = ($num - 1) % 26;
+        $letter = chr(65 + $numeric);
+        $num2 = intval(($num - 1) / 26);
+        if ($num2 > 0) {
+            return $this->getNameFromNumber($num2) . $letter;
+        } else {
+            return $letter;
+        }
+    }
 }

@@ -7,7 +7,6 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\CollectingSociety;
 use App\Models\CompanyType;
 use App\Models\ContractType;
-use App\Models\Copyright;
 use App\Models\CostCenter;
 use App\Models\Currency;
 

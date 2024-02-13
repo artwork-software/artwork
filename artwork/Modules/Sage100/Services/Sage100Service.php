@@ -24,7 +24,7 @@ class Sage100Service
     public function importDataToBudget(): void
     {
         $data = $this->getData(1000);
-        dd($data);
+
         foreach ($data as $item) {
             //dd($item['KstTraeger']);
             $projects = $this->projectService->getProjectsByCostCenter($item['KstTraeger']);

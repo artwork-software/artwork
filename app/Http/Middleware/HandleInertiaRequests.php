@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
 use App\Models\GeneralSettings;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,7 +49,8 @@ class HandleInertiaRequests extends Middleware
                 'flash' => [
                     'success' => fn() => $request->session()->get('success'),
                     'error' => fn() => $request->session()->get('error')
-                ]
+                ],
+                'sageApiEnabled' => app(SageApiSettingsService::class)->getFirst()?->enabled ?? false
             ]
         );
     }

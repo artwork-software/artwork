@@ -44,7 +44,6 @@ class Sage100
     /**
      * @return array<object>
      */
-
     public function getData(array $query = []): array
     {
         return $this->client()

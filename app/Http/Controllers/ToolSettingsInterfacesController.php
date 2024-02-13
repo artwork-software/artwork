@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Console\Commands\GetSage100Data;
 use App\Models\GeneralSettings;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -52,5 +54,10 @@ class ToolSettingsInterfacesController extends Controller
         }
 
         return Redirect::back()->with('success', 'Sage-Schnittstelleneinstellungen erfolgreich aktualisiert.');
+    }
+
+    public function initializeSage(): int
+    {
+        return Artisan::call(GetSage100Data::class, ['count' => 1000]);
     }
 }

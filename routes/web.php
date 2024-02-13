@@ -112,6 +112,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.interfaces');
         Route::post('/interfaces', [ToolSettingsInterfacesController::class, 'createOrUpdate'])
             ->name('tool.interfaces.sage.update');
+        Route::post('/interfaces/sage/initialize', [ToolSettingsInterfacesController::class, 'initializeSage'])
+            ->name('tool.interfaces.sage.initialize');
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {

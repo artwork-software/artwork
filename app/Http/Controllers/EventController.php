@@ -67,7 +67,6 @@ class EventController extends Controller
         private readonly CollisionService $collisionService,
         private readonly NotificationService $notificationService,
         private readonly BudgetService $budgetService,
-        private readonly Sage100Service $sage100Service,
     ) {
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
@@ -94,11 +93,12 @@ class EventController extends Controller
 
             $eventsOfDay = collect();
 
-            if($this->userCalendarFilter->start_date === $this->userCalendarFilter->end_date) {
-                $eventsOfDay = Collection::make(CalendarEventResource::collection($calendarController->getEventsOfInterval(
-                    $this->userCalendarFilter->start_date,
-                    $this->userCalendarFilter->end_date
-                ))->resolve());
+            if ($this->userCalendarFilter->start_date === $this->userCalendarFilter->end_date) {
+                $eventsOfDay = Collection::make(CalendarEventResource::collection($calendarController
+                    ->getEventsOfInterval(
+                        $this->userCalendarFilter->start_date,
+                        $this->userCalendarFilter->end_date
+                    ))->resolve());
             }
 
             $events = new CalendarEventCollectionResourceModel(
@@ -262,9 +262,6 @@ class EventController extends Controller
 
     public function showDashboardPage(): Response
     {
-        $sage = $this->sage100Service->getData(500);
-        $this->sage100Service->importDataToBudget();
-        //dd($sage);
         $event = null;
         $tasks = Task::query()
             ->where('done', false)
@@ -346,7 +343,6 @@ class EventController extends Controller
                     ];
                 }
             }
-
         }
 
         return inertia('Dashboard', [
@@ -457,7 +453,7 @@ class EventController extends Controller
         if (!empty($firstEvent->project()->get())) {
             $eventProject = $firstEvent->project()->first();
 
-            if($eventProject){
+            if ($eventProject) {
                 $projectHistory = new NewHistoryService('Artwork\Modules\Project\Models\Project');
                 $projectHistory->createHistory($eventProject->id, 'Ablaufplan hinzugefügt');
             }

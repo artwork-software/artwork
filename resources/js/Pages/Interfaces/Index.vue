@@ -73,6 +73,13 @@
                      confirm="Meldung schließen"
                      @closed="this.$page.props.flash.error = null;"
     />
+
+    <SuccessModal v-if="showSuccessInitializeSageImport"
+                  title="Sage Import"
+                  description="Der Import wurde erfolgreich gestartet."
+                  button="Meldung schließen"
+                  @closed="showSuccessInitializeSageImport = false;"
+    />
 </template>
 
 <script>
@@ -112,6 +119,7 @@ export default defineComponent({
             showEndpointErrorText: false,
             showUserErrorText: false,
             showPasswordErrorText: false,
+            showSuccessInitializeSageImport: false,
             sageForm: useForm({
                 host: this.sageSettings ? this.sageSettings.host : null,
                 endpoint: this.sageSettings ? this.sageSettings.endpoint : null,
@@ -123,7 +131,14 @@ export default defineComponent({
         }
     },
     methods: {
-        initializeSageImport() {},
+        initializeSageImport() {
+            this.$inertia.post(route('tool.interfaces.sage.initialize'), {
+
+            }, {
+                preserveScroll: true,
+                preserveState: true,
+            });
+        },
         saveSageInterface(closedToSave) {
             this.showConfirmationComponent = false;
 

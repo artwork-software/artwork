@@ -7,14 +7,27 @@ use App\Console\Commands\DailyDeleteCalendarExportPDFs;
 use App\Console\Commands\DeadLine;
 use App\Console\Commands\DeleteExpiredNotificationForAll;
 use App\Console\Commands\DeleteNotifications;
+use App\Console\Commands\GetSage100Data;
 use App\Console\Commands\NotificationScheduling;
 use App\Console\Commands\RemoveTempRooms;
 use App\Console\Commands\SendNotificationEmailSummaries;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
+    public function __construct(
+        private readonly SageApiSettingsService $sageApiSettingsService,
+        Application $app,
+        Dispatcher $events
+    ) {
+        parent::__construct($app, $events);
+    }
+
+
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('model:prune')->daily();
@@ -36,6 +49,13 @@ class Kernel extends ConsoleKernel
         $schedule->command(CreateMoneySourceExpirationReminderNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();
+
+        // sage api
+        if ($this->sageApiSettingsService->getFirst()->enabled) {
+            $schedule->command(GetSage100Data::class)->dailyAt(
+                $this->sageApiSettingsService->getFirst()->fetchTime ?? '08:00'
+            )->runInBackground();
+        }
     }
 
     protected function commands(): void

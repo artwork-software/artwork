@@ -7,7 +7,7 @@ use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 
 class SageApiSettingsRepository extends BaseRepository
 {
-    public function getFirst(): SageApiSettings|null
+    public function getFirst(): \Artwork\Core\Database\Models\Model|\Closure
     {
         return SageApiSettings::query()->get()->first();
     }

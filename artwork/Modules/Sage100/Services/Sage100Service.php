@@ -37,9 +37,9 @@ class Sage100Service
         ]);
     }
 
-    public function importDataToBudget(): void
+    public function importDataToBudget($count): void
     {
-        $data = $this->getData(250);
+        $data = $this->getData($count);
         $foundedProjects = [];
         $addedData = [];
         foreach ($data as $item) {
@@ -116,12 +116,14 @@ class Sage100Service
                             ->where('sub_position_row_id', $kto->sub_position_row_id)->get();
                         if ($foundedKST->count() > 1) {
                             foreach ($foundedKST as $kst) {
-                                if ($kto->sub_position_row_id === $kst->sub_position_row_id) {
-                                    $sageColumn = $project->table()->first()->columns()->where('type', 'sage')->first();
-                                    $sageColumn->subPositionRows()->updateExistingPivot($kto->sub_position_row_id, [
-                                        'value' => $item['Buchungsbetrag']
-                                    ]);
-                                }
+                                SageNotAssignedData::where('sage_id', $item['ID'])
+                                    ->firstOr(function () use ($project, $item): bool|int {
+                                        $modelObject = $this->sageNotAssignedDataService->store($item);
+                                        return $modelObject->update([
+                                            'project_id' => $project->id
+                                        ]);
+                                    });
+                                $addedData[] = $item;
                             }
                         } else {
                             if ($kto->sub_position_row_id === $foundedKST->first()->sub_position_row_id) {
@@ -129,6 +131,15 @@ class Sage100Service
                                 $sageColumn->subPositionRows()->updateExistingPivot($kto->sub_position_row_id, [
                                     'value' => $item['Buchungsbetrag']
                                 ]);
+                            } else {
+                                SageNotAssignedData::where('sage_id', $item['ID'])
+                                    ->firstOr(function () use ($project, $item): bool|int {
+                                        $modelObject = $this->sageNotAssignedDataService->store($item);
+                                        return $modelObject->update([
+                                            'project_id' => $project->id
+                                        ]);
+                                    });
+                                $addedData[] = $item;
                             }
                         }
                     }
@@ -136,31 +147,48 @@ class Sage100Service
                     $singleKTO = $foundedKTO->first();
                     $foundedKST = ColumnCell::where('value', $item['KstStelle'])->first();
                     $sageColumn = $project->table()->first()->columns()->where('type', 'sage')->first();
+                    //dd($singleKTO?->sub_position_row_id, $foundedKST?->sub_position_row_id);
                     if ($singleKTO && $foundedKST) {
                         if ($singleKTO?->sub_position_row_id === $foundedKST?->sub_position_row_id) {
                             $sageColumn->subPositionRows()->updateExistingPivot($singleKTO->sub_position_row_id, [
                                 'value' => $item['Buchungsbetrag']
                             ]);
+                            //dd('hier');
                         } else {
-                            $sageColumn->subPositionRows()->attach($singleKTO->sub_position_row_id, [
-                                'value' => $item['Buchungsbetrag'],
-                                'verified_value' => null,
-                                'linked_money_source_id' => null,
-                                'commented' => SubPositionRow::find($singleKTO->sub_position_row_id)->commented
-                            ]);
+                            SageNotAssignedData::where('sage_id', $item['ID'])
+                                ->firstOr(function () use ($project, $item): bool|int {
+                                    $modelObject = $this->sageNotAssignedDataService->store($item);
+                                    return $modelObject->update([
+                                        'project_id' => $project->id
+                                    ]);
+                                });
+                            $addedData[] = $item;
                         }
+                    } else {
+                        SageNotAssignedData::where('sage_id', $item['ID'])
+                            ->firstOr(function () use ($project, $item): bool|int {
+                                $modelObject = $this->sageNotAssignedDataService->store($item);
+                                return $modelObject->update([
+                                    'project_id' => $project->id
+                                ]);
+                            });
+                        $addedData[] = $item;
                     }
                 }
 
 
 
                 $foundedProjects[] = $project->id;
-                $modelObject = $this->sageNotAssignedDataService->store($item);
-                $modelObject->update([
-                    'project_id' => $project->id
-                ]);
-                // add data to addedData array to check if data was added
-                $addedData[] = $item;
+                if (!in_array($item, $addedData)) {
+                    SageNotAssignedData::where('sage_id', $item['ID'])
+                        ->firstOr(function () use ($project, $item): bool|int {
+                            $modelObject = $this->sageNotAssignedDataService->store($item);
+                            return $modelObject->update([
+                                'project_id' => $project->id
+                            ]);
+                        });
+                    $addedData[] = $item;
+                }
             }
 
             // check if item is in addedData array and if not add it

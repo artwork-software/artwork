@@ -2046,7 +2046,7 @@ class ProjectController extends Controller
         $projectsGroup = collect();
         $globalGroup = collect();
 
-        if ($this->sageApiSettingsService->getFirst()->enabled) {
+        if ($this->sageApiSettingsService->getFirst()?->enabled) {
             $sageNotAssigned = SageNotAssignedData::where('project_id', $project->id)
                 ->orWhere('project_id', null)->get();
 

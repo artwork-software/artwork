@@ -53,6 +53,15 @@ class ToolSettingsInterfacesController extends Controller
             );
         }
 
+        if (!$sageApiSettingsService->testConnection()) {
+            return Redirect::back()->with(
+                'error',
+                'Sage-Schnittstelleneinstellungen wurden erfolgreich akutalisiert, aber der Verbindungstest ist ' .
+                    'fehlgeschlagen, Bitte überprüfe die Schnittstelleneinstellungen und stelle sicher, dass die ' .
+                    'Schnittstelle erreichbar ist.'
+            );
+        }
+
         return Redirect::back()->with('success', 'Sage-Schnittstelleneinstellungen erfolgreich aktualisiert.');
     }
 

@@ -29,9 +29,10 @@ class Sage100Service
 
     public function getData(int $count)
     {
-        // carbon 2021-11-08T00:00:00+01:00
+        $date = '24.08.2023';
         return app(Sage100::class)->getData([
-            //"where" => "Buchungsdatum gt '" . Carbon::now()->subYears(2) . "'",
+//            "where" => "Buchungsdatum gt '" . $date . "'",
+//            "orderBy" => "Buchungsdatum asc",
             "startIndex" => 0,
             "count" => $count,
         ]);

@@ -16,10 +16,10 @@ class Sage100ServiceProvider extends ServiceProvider
         $this->app->bind(Sage100::class, function () {
             $sageApiSettings = app(SageApiSettingsService::class)->getFirst();
             return new Sage100(
-                $sageApiSettings->host,
-                $sageApiSettings->endpoint,
-                $sageApiSettings->user,
-                $sageApiSettings->password
+                $sageApiSettings?->host,
+                $sageApiSettings?->endpoint,
+                $sageApiSettings?->user,
+                $sageApiSettings?->password
             );
         });
     }

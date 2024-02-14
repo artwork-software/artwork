@@ -103,7 +103,6 @@ class ProjectController extends Controller
     public function __construct(
         private readonly ProjectService $projectService,
         private readonly BudgetService $budgetService,
-        private readonly Sage100Service $sage100Service,
         private readonly SageApiSettingsService $sageApiSettingsService,
     ) {
         // init notification controller
@@ -1378,8 +1377,9 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function dropSageData(Request $request){
-        $this->sage100Service->dropData($request);
+    public function dropSageData(Request $request, Sage100Service $sage100Service): void
+    {
+        $sage100Service->dropData($request);
     }
 
     public function addMainPosition(Request $request): void

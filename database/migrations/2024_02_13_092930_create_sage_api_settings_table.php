@@ -19,6 +19,7 @@ return new class extends Migration
             $table->longText('endpoint');
             $table->longText('user');
             $table->longText('password');
+            $table->date('bookingDate')->nullable();
             $table->string('fetchTime')->nullable();
             $table->boolean('enabled');
             $table->timestamps();

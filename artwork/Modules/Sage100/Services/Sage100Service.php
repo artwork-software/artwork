@@ -9,36 +9,24 @@ use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
-use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Carbon;
 
 class Sage100Service
 {
     public function __construct(
         private readonly ProjectService $projectService,
-        private readonly BudgetService $budgetService,
         private readonly ColumnService $columnService,
-        private readonly SageNotAssignedDataService $sageNotAssignedDataService
+        private readonly SageNotAssignedDataService $sageNotAssignedDataService,
+        private readonly SageApiSettingsService $sageApiSettingsService
     ) {
     }
 
-
-    public function getData(int $count)
-    {
-        $date = '24.08.2023';
-        return app(Sage100::class)->getData([
-//            "where" => "Buchungsdatum gt '" . $date . "'",
-//            "orderBy" => "Buchungsdatum asc",
-            "startIndex" => 0,
-            "count" => $count,
-        ]);
-    }
-
-    public function importDataToBudget($count): void
+    public function importDataToBudget(int|null $count): int
     {
         $data = $this->getData($count);
         $foundedProjects = [];
@@ -201,6 +189,14 @@ class Sage100Service
                     });
             }
         }
+
+        if (!empty($data)) {
+            $lastDataset = array_pop($data);
+            if (!is_null($lastDataset) && isset($lastDataset['Buchungsdatum'])) {
+                $this->sageApiSettingsService->updateBookingDate(Carbon::parse($lastDataset['Buchungsdatum']));
+            }
+        }
+        return 0;
     }
 
     public function dropData($request): void
@@ -325,5 +321,30 @@ class Sage100Service
         ]);
 
         $sageData->delete();
+    }
+
+    private function getData(int|null $count)
+    {
+        return app(Sage100::class)->getData($this->buildQuery($count));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function buildQuery(int|null $count): array
+    {
+        $query = [];
+
+        if ($count) {
+            $query['startIndex'] = 0;
+            $query['count'] = $count;
+        }
+
+        if ($desiredBookingDate = $this->sageApiSettingsService->getFirst()?->bookingDate) {
+            $query['where'] = 'Buchungsdatum gt "' . Carbon::parse($desiredBookingDate)->format('d.m.Y') . '"';
+            $query['orderBy'] = 'Buchungsdatum asc';
+        }
+
+        return $query;
     }
 }

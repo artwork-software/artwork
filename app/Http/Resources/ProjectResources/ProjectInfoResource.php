@@ -39,6 +39,7 @@ class ProjectInfoResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
+            'description_without_html' => strip_tags($this->description),
             'project_headlines' => ProjectHeadlineResource::collection($this->headlines->sortBy('order'))->resolve(),
             'isMemberOfADepartment' => $this->departments
                 ->contains(fn ($department) => $department->users->contains(Auth::user())),

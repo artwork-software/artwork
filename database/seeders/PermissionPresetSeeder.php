@@ -10,10 +10,12 @@ use Illuminate\Database\Seeder;
 
 class PermissionPresetSeeder extends Seeder
 {
-    public function __construct(
-        private readonly PermissionRepository $permissionRepository,
-        private readonly PermissionPresetRepository $permissionPresetRepository
-    ) {
+    private readonly PermissionRepository $permissionRepository;
+    private readonly PermissionPresetRepository $permissionPresetRepository;
+    public function __construct()
+    {
+        $this->permissionRepository = app(PermissionRepository::class);
+        $this->permissionPresetRepository = app(PermissionPresetRepository::class);
     }
 
     /**

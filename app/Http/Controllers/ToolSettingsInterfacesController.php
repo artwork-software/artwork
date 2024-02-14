@@ -56,7 +56,7 @@ class ToolSettingsInterfacesController extends Controller
         if (!$sageApiSettingsService->testConnection()) {
             return Redirect::back()->with(
                 'error',
-                'Sage-Schnittstelleneinstellungen wurden erfolgreich akutalisiert, aber der Verbindungstest ist ' .
+                'Sage-Schnittstelleneinstellungen wurden erfolgreich aktualisiert, aber der Verbindungstest ist ' .
                     'fehlgeschlagen, Bitte überprüfe die Schnittstelleneinstellungen und stelle sicher, dass die ' .
                     'Schnittstelle erreichbar ist.'
             );
@@ -65,8 +65,12 @@ class ToolSettingsInterfacesController extends Controller
         return Redirect::back()->with('success', 'Sage-Schnittstelleneinstellungen erfolgreich aktualisiert.');
     }
 
-    public function initializeSage(): int
+    public function initializeSage(): RedirectResponse
     {
-        return Artisan::call(GetSage100Data::class, ['count' => 1000]);
+        if (Artisan::call(GetSage100Data::class) === 0) {
+            return Redirect::back()->with('success', 'Sage-Import wurde erfolgreich ausgeführt');
+        }
+
+        return Redirect::back()->with('error', 'Sage-Import konnte nicht ausgeführt werden, bitte erneut versuchen');
     }
 }

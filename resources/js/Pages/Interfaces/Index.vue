@@ -11,8 +11,13 @@
                     <span class="ml-1 my-auto hind">Datenabruf aus Sage erneut ausführen&nbsp;</span>
                     <SvgCollection svgName="smallArrowRight" class="h-6 w-6 ml-2 mr-2"/>
                 </div>
-                <RefreshIcon class="cursor-pointer w-10 h-10 bg-buttonBlue rounded-full text-white p-2"
-                             @click="initializeSageImport"
+                <RefreshIcon :class="[
+                                !this.sageInterfaceIsConfigured() ?
+                                    'bg-gray-600 cursor-not-allowed' :
+                                    'bg-buttonBlue cursor-pointer',
+                                'w-10 h-10 rounded-full text-white p-2'
+                             ]"
+                             @click="this.initializeSageImport"
                 />
             </div>
         </div>
@@ -30,10 +35,22 @@
             />
             <div class="errorText" v-if="showPasswordErrorText">Das Passwort muss angegeben werden.</div>
             <div class="flex flex-col xsLight gap-3">
+                <div class="flex items-center justify-end w-full">
+                    <div class="group relative">
+                        <InformationCircleIcon class="w-5 h-5 mr-1"/>
+                        <div class="hidden group-hover:flex absolute z-10 top-5 left-5 w-96 h-auto bg-gray-600 text-white p-2">
+                            Wird nach dem Import der Daten automatisch auf das letzte Buchungsdatum der bereits importierten Daten angepasst.
+                        </div>
+                    </div>
+                    <span>Daten ab diesem Buchungsdatum abfragen&nbsp;</span>
+                    <input v-model="this.sageForm.bookingDate"
+                           type="date"
+                           class="text-center border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none"
+                    />
+                </div>
                 <div class="flex items-center justify-end">
-                    Abfrage täglich um&nbsp;
+                    <span>Abfrage täglich um&nbsp;</span>
                     <input v-model="this.sageForm.fetchTime"
-                           id="fetchTime"
                            type="time"
                            style="width:82px;"
                            class="text-center border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none"
@@ -62,7 +79,7 @@
                             @closed="this.saveSageInterface"
     />
     <success-modal v-if="this.$page.props.flash.success"
-                   title="Schnittstellenänderungen"
+                   title="Schnittstelle Sage"
                    :description="this.$page.props.flash.success"
                    button="Meldung schließen"
                    @closed="this.$page.props.flash.success = null;"
@@ -72,13 +89,6 @@
                      :description="this.$page.props.flash.error"
                      confirm="Meldung schließen"
                      @closed="this.$page.props.flash.error = null;"
-    />
-
-    <SuccessModal v-if="showSuccessInitializeSageImport"
-                  title="Sage Import"
-                  description="Der Import wurde erfolgreich gestartet."
-                  button="Meldung schließen"
-                  @closed="showSuccessInitializeSageImport = false;"
     />
 </template>
 
@@ -90,7 +100,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import Input from "@/Jetstream/Input.vue";
-import {RefreshIcon} from "@heroicons/vue/solid";
+import {RefreshIcon, InformationCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
@@ -107,7 +117,8 @@ export default defineComponent({
         AppLayout,
         ToolSettingsHeader,
         InputComponent,
-        RefreshIcon
+        RefreshIcon,
+        InformationCircleIcon
     },
     props: [
         'sageSettings'
@@ -119,25 +130,37 @@ export default defineComponent({
             showEndpointErrorText: false,
             showUserErrorText: false,
             showPasswordErrorText: false,
-            showSuccessInitializeSageImport: false,
             sageForm: useForm({
                 host: this.sageSettings ? this.sageSettings.host : null,
                 endpoint: this.sageSettings ? this.sageSettings.endpoint : null,
                 user: this.sageSettings ? this.sageSettings.user : null,
                 password: this.sageSettings ? this.sageSettings.password : null,
+                bookingDate: this.sageSettings ? this.sageSettings.bookingDate : null,
                 fetchTime: this.sageSettings ? this.sageSettings.fetchTime : null,
                 enabled: this.sageSettings ? this.sageSettings.enabled : false
             })
         }
     },
     methods: {
+        sageInterfaceIsConfigured() {
+            return typeof this.sageSettings?.host !== 'undefined' &&
+                typeof this.sageSettings?.endpoint !== 'undefined' &&
+                typeof this.sageSettings?.user !== 'undefined' &&
+                typeof this.sageSettings?.password !== 'undefined';
+        },
         initializeSageImport() {
-            this.$inertia.post(route('tool.interfaces.sage.initialize'), {
+            if (!this.sageInterfaceIsConfigured()) {
+                return;
+            }
 
-            }, {
-                preserveScroll: true,
-                preserveState: true,
-            });
+            this.$inertia.post(
+                route('tool.interfaces.sage.initialize'),
+                {},
+                {
+                    preserveScroll: true,
+                    preserveState: false
+                }
+            );
         },
         saveSageInterface(closedToSave) {
             this.showConfirmationComponent = false;
@@ -160,7 +183,13 @@ export default defineComponent({
                 return;
             }
 
-            this.sageForm.post(route('tool.interfaces.sage.update'));
+            this.sageForm.post(
+                route('tool.interfaces.sage.update'),
+                {
+                    preserveScroll: true,
+                    preserveState: false
+                }
+            );
         }
     }
 });

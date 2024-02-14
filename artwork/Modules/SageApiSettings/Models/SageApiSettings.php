@@ -8,20 +8,22 @@ use Artwork\Core\Database\Models\Model;
  * @property int $id
  * @property string $host
  * @property string $endpoint
- * @property string $apiKey
  * @property string $user
  * @property string $password
- * @property int $fetchTime
+ * @property string|null $bookingDate
+ * @property string|null $fetchTime
  * @property bool $enabled
+ * @property string $created_at
+ * @property string $updated_at
  */
 class SageApiSettings extends Model
 {
     protected $fillable = [
         'host',
         'endpoint',
-        'apiKey',
         'user',
         'password',
+        'bookingDate',
         'fetchTime',
         'enabled'
     ];

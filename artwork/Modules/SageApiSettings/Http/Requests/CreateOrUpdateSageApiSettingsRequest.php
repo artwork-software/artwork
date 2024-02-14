@@ -25,9 +25,10 @@ class CreateOrUpdateSageApiSettingsRequest extends FormRequest
     {
         return [
             'host' => 'string',
-            'endpoint' => 'string|nullable',
-            'user' => 'string|nullable',
-            'password' => 'string|nullable',
+            'endpoint' => 'string',
+            'user' => 'string',
+            'password' => 'string',
+            'bookingDate' => 'date|nullable',
             'fetchTime' => 'string|nullable',
             'enabled' => 'boolean'
         ];

@@ -6,6 +6,7 @@ use App\Sage100\Sage100;
 use Artwork\Modules\SageApiSettings\Http\Requests\CreateOrUpdateSageApiSettingsRequest;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Repositories\SageApiSettingsRepository;
+use Carbon\Carbon;
 use Throwable;
 
 class SageApiSettingsService
@@ -45,5 +46,10 @@ class SageApiSettingsService
     public function testConnection(): bool
     {
         return app(Sage100::class)->testConnection();
+    }
+
+    public function updateBookingDate(Carbon $carbon): void
+    {
+        $this->sageApiSettingsRepository->update($this->getFirst(), ['bookingDate' => $carbon->format('Y-m-d')]);
     }
 }

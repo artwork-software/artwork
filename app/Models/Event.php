@@ -53,7 +53,7 @@ class Event extends Model
     use HasFactory;
     use SoftDeletes;
 
-    protected $with = ['series', 'event_type'];
+    protected $with = ['series', 'event_type', 'subEvents'];
 
     protected $fillable = [
         'name',

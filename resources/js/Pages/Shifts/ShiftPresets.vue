@@ -56,7 +56,7 @@
                 </div>
             </div>
         </div>
-        <div class="w-full">
+        <div class="w-full px-5 min-h-screen">
             <div v-if="filteredShiftPresets.length > 0">
                 <div v-for="preset in filteredShiftPresets">
                     <SingleShiftPreset :preset="preset"

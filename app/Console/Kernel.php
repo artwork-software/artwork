@@ -8,6 +8,7 @@ use App\Console\Commands\DeadLine;
 use App\Console\Commands\DeleteExpiredNotificationForAll;
 use App\Console\Commands\DeleteNotifications;
 use App\Console\Commands\NotificationScheduling;
+use App\Console\Commands\RemoveExpiredInvitations;
 use App\Console\Commands\RemoveTempRooms;
 use App\Console\Commands\SendNotificationEmailSummaries;
 use Illuminate\Console\Scheduling\Schedule;
@@ -36,6 +37,7 @@ class Kernel extends ConsoleKernel
         $schedule->command(CreateMoneySourceExpirationReminderNotificationsCommand::class)
             ->dailyAt('01:00')
             ->runInBackground();
+        $schedule->command(RemoveExpiredInvitations::class)->dailyAt('01:00')->runInBackground();
     }
 
     protected function commands(): void

@@ -26,17 +26,56 @@
                                     <div class="mb-4" v-for="time in timeLine">
                                         <SingleTimeLine :time="time" :preset="true"/>
                                     </div>
-                                    <div class="group h-1">
-                                        <div class="mt-5 w-full h-1 border-b-2 border-dashed !flex items-center justify-center relative cursor-pointer hidden group-hover:block" @click="addTime">
+                                    <div class="w-full flex group">
+                                        <div v-if="showAddTimeLineForm" class="grid grid-cols-1 sm:grid-cols-2 w-full gap-2">
+                                            <div>
+                                                <input type="text"
+                                                       onfocus="(this.type='time')"
+                                                       placeholder="Start*"
+                                                       v-model="addTimeLineForm.start"
+                                                       class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                       required
+                                                       @focusout="checkTime()"
+                                                />
+                                            </div>
+                                            <div>
+                                                <input type="text"
+                                                       onfocus="(this.type='time')"
+                                                       placeholder="Ende*"
+                                                       v-model="addTimeLineForm.end"
+                                                       maxlength="3"
+                                                       required
+                                                       class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                       @focusout="checkTime()"
+                                                />
+                                            </div>
+                                            <span class="mt-2 text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</span>
+                                            <div class="mt-2 col-span-2">
+                                                <textarea
+                                                    v-model="addTimeLineForm.description"
+                                                    rows="4"
+                                                    name="comment"
+                                                    id="comment"
+                                                    class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div class="hidden group-hover:block ml-3">
+                                            <XCircleIcon @click="showAddTimeLineForm = false" class="mt-2 h-5 w-5 text-buttonBlue hover:text-error cursor-pointer"/>
+                                        </div>
+                                    </div>
+                                    <div class="h-1">
+                                        <div
+                                            class="mt-5 w-full h-1 border-b-2 border-dashed !flex items-center justify-center relative cursor-pointer hidden group-hover:block" @click="showAddTimeLineForm = true">
                                             <div class="absolute flex items-center justify-center w-full ">
-                                                <PlusCircleIcon class="h-6 w-6" />
+                                                <PlusCircleIcon class="h-6 w-6"/>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
-                                <AddButton mode="modal" text="Speichern" @click="updateTimes"/>
+                                <AddButton mode="modal" text="Speichern" @click="saveTimeLines"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -47,12 +86,13 @@
 </template>
 <script>
 import {defineComponent} from 'vue'
-import {XIcon} from "@heroicons/vue/solid";
+import {XCircleIcon, XIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import {PlusCircleIcon} from "@heroicons/vue/outline";
 import SingleTimeLine from "@/Pages/Projects/Components/SingleTimeLine.vue";
 import Input from "@/Jetstream/Input.vue";
+import {useForm} from "@inertiajs/inertia-vue3";
 
 export default defineComponent({
     name: "AddEditTimeLineModal",
@@ -64,13 +104,19 @@ export default defineComponent({
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel, PlusCircleIcon
+        XIcon, DialogPanel, PlusCircleIcon, XCircleIcon
     },
     props: ['presetId', 'timeLine'],
     data(){
         return {
             open: true,
             helpText: '',
+            showAddTimeLineForm: this.timeLine.length === 0,
+            addTimeLineForm: useForm({
+                start: null,
+                end: null,
+                description: null
+            }),
         }
     },
     emits: ['closed'],
@@ -78,21 +124,64 @@ export default defineComponent({
         closeModal(bool){
             this.$emit('closed', bool);
         },
+        saveTimeLines() {
+            let hasInvalid = false;
+            this.timeLine.forEach(function (timeline) {
+                if (timeline.start >= timeline.end) {
+                    hasInvalid = true;
+                }
+            });
+            if (!hasInvalid) {
+                console.log('is valid')
+                if (this.showAddTimeLineForm) {
+                    if (this.checkTime()) {
+                        this.addTimeLineForm.post(
+                            route('preset.add.timeline.row', {shiftPreset: this.presetId}),
+                            {
+                                preserveState: true,
+                                preserveScroll: true,
+                                onFinish: () => {
+                                    console.log('before')
+                                    //handle existing timelines which may be updated
+                                    this.updateTimes();
+                                }
+                            }
+                        );
+                    }
+                    return;
+                }
+                console.log('update')
+                //handle existing timelines which may be updated
+                this.updateTimes();
+            }
+        },
         updateTimes(){
+            console.log('in update');
             this.$inertia.patch(route('preset.timeline.update'), {
                 timelines: this.timeLine
             }, {
+                preserveState: true,
+                preserveScroll: true,
                 onFinish: () => {
                     this.closeModal(true);
                 }
             })
         },
-        addTime(){
-            this.$inertia.post(route('preset.add.timeline.row', {shiftPreset: this.presetId}))
-        },
         deleteTime(index){
             this.$inertia.delete(route('preset.delete.timeline.row', index))
         },
+        checkTime() {
+            if (this.addTimeLineForm.start === null || this.addTimeLineForm.end === null) {
+                this.helpText = 'Bitte fülle beide Felder aus.';
+                return false;
+            } else if (this.addTimeLineForm.start >= this.addTimeLineForm.end) {
+                this.helpText = 'Die Startzeit muss vor der Endzeit liegen.';
+                return false;
+            } else {
+                this.helpText = '';
+                return true;
+            }
+        }
 
     }
 })

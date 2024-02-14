@@ -5,7 +5,7 @@ namespace Artwork\Modules\SageApiSettings\Models;
 use Artwork\Core\Database\Models\Model;
 
 /**
-* @property int $id
+ * @property int $id
  * @property string $host
  * @property string $endpoint
  * @property string $apiKey

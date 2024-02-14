@@ -50,11 +50,11 @@ class Kernel extends ConsoleKernel
             ->dailyAt('01:00')
             ->runInBackground();
 
-        // sage api
-        if ($this->sageApiSettingsService->getFirst()->enabled) {
-            $schedule->command(GetSage100Data::class)->dailyAt(
-                $this->sageApiSettingsService->getFirst()->fetchTime ?? '08:00'
-            )->runInBackground();
+        $sageApiSettings = $this->sageApiSettingsService->getFirst();
+        if (!is_null($sageApiSettings) && $sageApiSettings->enabled) {
+            $schedule->command(GetSage100Data::class)
+                ->dailyAt($sageApiSettings->fetchTime ?? '08:00')
+                ->runInBackground();
         }
     }
 

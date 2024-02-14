@@ -3,42 +3,43 @@
 namespace App\Sage100;
 
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class Sage100
 {
-    public string $domain;
+    public ?string $domain;
 
-    protected PendingRequest $client;
+    private ?string $endpoint;
 
-    protected string $endpoint;
+    private ?string $user;
 
-    protected string $user;
-
-    protected string $password;
+    private ?string $password;
 
     public function __construct(
-        string $domain,
-        string $endpoint,
-        string $user,
-        string $password
+        ?string $domain,
+        ?string $endpoint,
+        ?string $user,
+        ?string $password
     ) {
         $this->domain = $domain;
         $this->endpoint = $endpoint;
         $this->user = $user;
         $this->password = $password;
-        $this->client = Http::baseUrl($domain)->acceptJson();
     }
 
-    protected function client(): PendingRequest
+    private function client(): PendingRequest|null
     {
+        if (is_null($this->domain) || is_null($this->user) || is_null($this->password) || is_null($this->endpoint)) {
+            return null;
+        }
+
         return Http::baseUrl($this->domain)
             ->withBasicAuth($this->user, $this->password)
-            ->acceptJson()
             ->withOptions([
                 'verify' => false
             ])
+            ->acceptJson()
             ->throw();
     }
 
@@ -47,9 +48,39 @@ class Sage100
      */
     public function getData(array $query = []): array
     {
-        // carbon 2021-11-08T00:00:00+01:00
-        return $this->client()
-            ->get($this->endpoint, $query)
-            ->json('$resources');
+        $client = $this->client();
+
+        if (!$client instanceof PendingRequest) {
+            Log::info('SageAPI-Client requested without necessary parameters. Return empty results.');
+
+            return [];
+        }
+
+        try {
+            return $client
+                ->get($this->endpoint, $query)
+                ->json('$resources');
+        } catch (\Throwable $t) {
+            Log::error('SageAPI-Call erroneous for reason: ' . $t->getMessage());
+
+            return [];
+        }
+    }
+
+    public function testConnection(): bool
+    {
+        try {
+            return $this->client()->get(
+                $this->endpoint,
+                [
+                    "startIndex" => 0,
+                    "count" => 1,
+                ]
+            )->status() === 200;
+        } catch (\Throwable $t) {
+            Log::error('SageAPI-Call connection test failed for reason: ' . $t->getMessage());
+
+            return false;
+        }
     }
 }

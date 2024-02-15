@@ -19,7 +19,12 @@ class ServiceProviderContactsController extends Controller
 
     public function store(ServiceProvider $serviceProvider): void
     {
-        $serviceProvider->contacts()->create();
+        $serviceProvider->contacts()->create([
+            'first_name' => '',
+            'last_name' => '',
+            'email' => '',
+            'phone_number' => ''
+        ]);
     }
 
     public function show(): void

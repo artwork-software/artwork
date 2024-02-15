@@ -1565,7 +1565,7 @@ class EventController extends Controller
         $event = Event::onlyTrashed()->findOrFail($id);
 
         $this->authorize('delete', $event);
-
+        $event->subEvents()->forceDelete();
         $event->forceDelete();
 
         broadcast(new OccupancyUpdated())->toOthers();
@@ -1576,6 +1576,7 @@ class EventController extends Controller
     public function restore(int $id): RedirectResponse
     {
         $event = Event::onlyTrashed()->findOrFail($id);
+        $event->subEvents()->restore();
         $event->restore();
         broadcast(new OccupancyUpdated())->toOthers();
 

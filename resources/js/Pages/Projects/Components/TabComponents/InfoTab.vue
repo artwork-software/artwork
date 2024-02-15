@@ -8,16 +8,13 @@
                     <div class="sDark"> Kurzbeschreibung</div>
                     <div v-if="descriptionClicked === false"
                          class="mt-2 subpixel-antialiased text-secondary"
-                         @click="handleDescriptionClick()">
-                        {{
-                            project.description ? project.description : 'Hier klicken um Text hinzuzufügen'
-                        }}
+                         @click="handleDescriptionClick()" v-html="project.description ? project.description : 'Hier klicken um Text hinzuzufügen'">
                     </div>
-                    <textarea v-else v-model="project.description" type="text"
+                    <textarea v-else v-model="project.description_without_html" type="text"
                               @focusout="updateDescription()"
                               :ref="`description-${this.project.id}`"
                               class="w-full border-gray-300 text-primary h-40"
-                              :placeholder="project.description || 'Hier klicken um Text hinzuzufügen'"/>
+                              :placeholder="project.description_without_html || 'Hier klicken um Text hinzuzufügen'"/>
                 </div>
                 <!-- Individual Projectinformation -->
                 <div v-for="headline in project.project_headlines" class="mt-7">
@@ -218,7 +215,7 @@ export default{
         },
         updateDescription() {
             this.$inertia.patch(route('projects.update_description', this.project.id), {
-                description: this.project.description
+                description: this.project.description_without_html
             }, {
                 preserveScroll: true,
                 preserveState: true

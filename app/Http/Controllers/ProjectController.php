@@ -257,7 +257,7 @@ class ProjectController extends Controller
 
         $project = Project::create([
             'name' => $request->name,
-            'description' => $request->description,
+            'description' => nl2br($request->description),
             'number_of_participants' => $request->number_of_participants,
             'budget_deadline' => $request->budgetDeadline
         ]);
@@ -2324,8 +2324,10 @@ class ProjectController extends Controller
     public function updateDescription(Request $request, Project $project): JsonResponse|RedirectResponse
     {
         $oldDescription = $project->description;
-        $update_properties = $request->only('description');
-        $project->fill($update_properties);
+
+        $project->update([
+            'description' => nl2br($request->description)
+        ]);
 
         $project->save();
         $newDescription = $project->description;
@@ -2702,6 +2704,8 @@ class ProjectController extends Controller
             'name' => '(Kopie) ' . $project->name,
             'description' => $project->description,
             'number_of_participants' => $project->number_of_participants,
+            'cost_center' => $project->cost_center,
+            'state' => $project->state,
         ]);
         $historyService->projectUpdated($newProject);
 
@@ -2716,7 +2720,13 @@ class ProjectController extends Controller
         $newProject->departments()->sync($project->departments->pluck('id'));
         $newProject->users()->sync($project->users->pluck('id'));
 
+
         $historyService->updateHistory($project, config('history.project.duplicated'));
+
+        // copy project headlines to the newProject
+        $project->headlines()->each(function ($headline) use ($newProject): void {
+            $newProject->headlines()->attach($headline->id, ['text' => $headline->pivot->text]);
+        });
 
         return Redirect::route('projects.show.info', $newProject->id)->with('success', 'Project created.');
     }

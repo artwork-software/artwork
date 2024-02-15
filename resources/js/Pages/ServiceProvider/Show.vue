@@ -269,7 +269,6 @@ export default defineComponent({
     methods: {
         addContact(){
             Inertia.post(route('service-provider.contact.store', this.serviceProvider.id), {
-
             }, {
                 preserveState: true, preserveScroll: true
             })

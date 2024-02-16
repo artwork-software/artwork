@@ -78,7 +78,7 @@
                 </div>
                 <div class="col-span-full">
                     <Listbox as="div" class="w-44" v-model="selectedLanguage">
-                        <ListboxLabel class="block text-sm font-bold leading-6 text-gray-900">Anwendungssprache</ListboxLabel>
+                        <ListboxLabel class="block text-sm font-bold leading-6 text-gray-900">{{ $t('Application language')}}</ListboxLabel>
                         <div class="relative mt-2">
                             <ListboxButton class="relative w-full cursor-default shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block border-gray-300 text-start py-2 px-3">
                                 <span class="block truncate">{{ selectedLanguage?.name }}</span>
@@ -313,6 +313,14 @@ export default {
         'password_reset_status',
         'departments'
     ],
+    watch: {
+        selectedLanguage: {
+            handler() {
+                document.documentElement.lang = this.selectedLanguage.id;
+            },
+            deep: true
+        }
+    },
     data() {
         return {
             showChangeTeamsModal: false,

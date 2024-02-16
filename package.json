@@ -39,6 +39,7 @@
         "laravel-permission-to-vuejs": "^3.0.1",
         "mathjax": "^2.7.2",
         "vue-cal": "^4.8.0",
+        "vue-i18n": "^9.9.1",
         "vue-mathjax-next": "^0.0.4",
         "vue-tailwind-datepicker": "^1.4.3",
         "vuedraggable": "^4.1.0",

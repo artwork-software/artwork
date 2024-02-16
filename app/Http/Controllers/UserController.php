@@ -31,6 +31,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
@@ -303,6 +304,8 @@ class UserController extends Controller
         if ($request->roles) {
             $user->syncRoles($request->roles);
         }
+
+        Session::put('locale', $user->language);
 
         return Redirect::back()->with('success', 'Benutzer aktualisiert');
     }

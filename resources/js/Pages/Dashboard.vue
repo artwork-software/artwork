@@ -208,7 +208,7 @@
                                 <div class="p-6 flex justify-start">
                                     <div class="bg-gray-50 p-2 text-center">
                                         <p class="text-sm text-gray-500">
-                                            Du hast keine offenen Aufgaben.
+                                            {{ $t('You have no open tasks.')}}
                                         </p>
                                     </div>
                                 </div>

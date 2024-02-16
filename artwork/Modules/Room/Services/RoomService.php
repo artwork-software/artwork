@@ -349,8 +349,8 @@ class RoomService
                 //$notificationTitle = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
                 $user = User::find($roomAdminAfter->id);
                 $notificationTitle = __(
-                    'notifications.room_admin_added',
-                    ['roomName' => $room->name]
+                    'notifications.room.leader.add',
+                    ['room' => $room->name],
                     $user->language
                 );
                 $broadcastMessage = [
@@ -373,7 +373,12 @@ class RoomService
         foreach ($roomAdminIdsBefore as $roomAdminBefore) {
             if (!in_array($roomAdminBefore, $roomAdminIdsAfter)) {
                 $user = User::find($roomAdminBefore);
-                $notificationTitle = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
+                //$notificationTitle = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
+                $notificationTitle = __(
+                    'notifications.room.leader.remove',
+                    ['room' => $room->name],
+                    $user->language
+                );
                 $broadcastMessage = [
                     'id' => random_int(1, 1000000),
                     'type' => 'error',

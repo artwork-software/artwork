@@ -46,6 +46,7 @@ return [
         'deleted_where_locked' => 'Schicht gelöscht trotz Festschreibung :projectName :craftAbbreviation',
         'shift_staffing' => 'Neue Schichtbesetzung :projectName :craftAbbreviation',
         'conflict_shift' => 'Schichtkonflikt :date :from - :to',
+        'conflict_shift_withName' => 'Schichtkonflikt :date :craftName :craftAbbreviation',
         'your_short_break' => 'Du wurdest mit zu kurzer Ruhepause geplant',
         'worker_short_break' => 'Mitarbeiter*in mit zu kurzer Ruhepause geplant',
         'more_than_ten_days' => 'Du wurdest mehr als 10 Tage am Stück eingeplant',
@@ -86,7 +87,7 @@ return [
         'concerns_shift' => 'Betrifft Schicht: ',
         'your_shift' => 'Deine Schicht: ',
         'not_available' => ':username ist nicht verfügbar',
-        'time_period' => 'Zeitraum:',
+        'time_period' => 'Zeitraum: :from :to',
         'concerns_time_period' => 'Betrifft Zeitraum: :start - :end',
     ],
     'department' => [

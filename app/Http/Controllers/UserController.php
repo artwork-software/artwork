@@ -286,7 +286,7 @@ class UserController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $user->update(
-            $request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email')
+            $request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email', 'language')
         );
 
         if (Auth::user()->can(PermissionNameEnum::TEAM_UPDATE->value)) {
@@ -297,9 +297,12 @@ class UserController extends Controller
                     })
             );
         }
-
-        $user->syncPermissions($request->permissions);
-        $user->syncRoles($request->roles);
+        if ($request->permissions) {
+            $user->syncPermissions($request->permissions);
+        }
+        if ($request->roles) {
+            $user->syncRoles($request->roles);
+        }
 
         return Redirect::back()->with('success', 'Benutzer aktualisiert');
     }

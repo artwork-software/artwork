@@ -346,8 +346,13 @@ class RoomService
             $roomAdminIdsAfter[] = $roomAdminAfter->id;
             // if added a new room admin, send notification to this user
             if (!in_array($roomAdminAfter->id, $roomAdminIdsBefore)) {
-                $notificationTitle = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
+                //$notificationTitle = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
                 $user = User::find($roomAdminAfter->id);
+                $notificationTitle = __(
+                    'notifications.room_admin_added',
+                    ['roomName' => $room->name]
+                    $user->language
+                );
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',

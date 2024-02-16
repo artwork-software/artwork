@@ -76,6 +76,33 @@
                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                     </div>
                 </div>
+                <div class="col-span-full">
+                    <Listbox as="div" class="w-44" v-model="selectedLanguage">
+                        <ListboxLabel class="block text-sm font-bold leading-6 text-gray-900">Anwendungssprache</ListboxLabel>
+                        <div class="relative mt-2">
+                            <ListboxButton class="relative w-full cursor-default shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block border-gray-300 text-start py-2 px-3">
+                                <span class="block truncate">{{ selectedLanguage?.name }}</span>
+                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                                  <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                                </span>
+                            </ListboxButton>
+
+                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" v-for="language in languages" :key="language.id" :value="language" v-slot="{ active, selected }">
+                                        <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ language.name }}</span>
+
+                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                                            </span>
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
+                        </div>
+                    </Listbox>
+                </div>
                 <div class="sm:col-span-6">
                     <div class="mt-1">
                         <textarea :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
@@ -250,7 +277,7 @@
 
 <script>
 
-import {CheckIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
+import {CheckIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon, ChevronDownIcon } from "@heroicons/vue/outline";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
@@ -259,6 +286,9 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue';
+
+
 
 export default {
     components: {
@@ -275,6 +305,7 @@ export default {
         MenuButton,
         MenuItem,
         MenuItems,
+        Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions,ChevronDownIcon
     },
     mixins: [Permissions],
     props: [
@@ -301,6 +332,7 @@ export default {
                 departments: this.user_to_edit.departments,
                 phone_number: this.user_to_edit.phone_number,
                 description: this.user_to_edit.description,
+                language: this.user_to_edit.language
             }),
             resetPasswordForm: this.$inertia.form({
                 email: this.user_to_edit.email
@@ -309,8 +341,17 @@ export default {
                 show: true,
                 status: "success",
                 text: "Nutzer wurde erfolgreich bearbeitet"
-            }
+            },
+            languages: [
+                { id: 'de', name: 'Deutsch' },
+                { id: 'en', name: 'Englisch' },
+            ],
+            // set the default selected language to the user's language
+            selectedLanguage: null
         }
+    },
+    mounted() {
+        this.selectedLanguage = this.languages.find(language => language.id === this.user_to_edit.language);
     },
     methods: {
         isSignedInUser() {
@@ -335,6 +376,7 @@ export default {
             this.openSuccessModal();
         },
         editUser() {
+            this.userForm.language = this.selectedLanguage.id;
             if (this.hasAdminRole()) {
                 this.userForm.email = this.user_to_edit.email;
             }

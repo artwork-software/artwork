@@ -45,6 +45,7 @@
         "barryvdh/laravel-ide-helper": "^v2.12.3",
         "fakerphp/faker": "^v1.20.0",
         "larastan/larastan": "^2.0",
+        "laravel-lang/common": "^4.0",
         "laravel/sail": "^v1.16.2",
         "mockery/mockery": "^1.5.1",
         "nunomaduro/collision": "^v6.3.1",

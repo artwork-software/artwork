@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
+use App\Models\Task;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\Event;
 use App\Models\Scheduling;
-
 use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Notification\Models\GlobalNotification;
@@ -85,7 +85,12 @@ class SchedulingController extends Controller
                     }
                     $deadline = new DateTime($privateChecklistTask->deadline);
                     if ($deadline <= Carbon::now()->addDay() && $deadline >= Carbon::now()) {
-                        $notificationTitle = 'Deadline von ' . $privateChecklistTask->name . ' ist morgen erreicht';
+                        $notificationTitle = __(
+                            'notification.scheduling.deadline_tomorrow',
+                            ['checklist' => $privateChecklistTask->name],
+                            $user->language
+                        );
+                        //$notificationTitle = 'Deadline von ' . $privateChecklistTask->name . ' ist morgen erreicht';
                         $broadcastMessage = [
                             'id' => rand(1, 1000000),
                             'type' => 'error',
@@ -102,7 +107,12 @@ class SchedulingController extends Controller
                         $this->notificationService->createNotification();
                     }
                     if ($deadline <= now()) {
-                        $notificationTitle = $privateChecklistTask->name . ' hat ihre Deadline überschritten';
+                        $notificationTitle = __(
+                            'notification.scheduling.deadline_over',
+                            ['checklist' => $privateChecklistTask->name],
+                            $user->language
+                        );
+                        //$notificationTitle = $privateChecklistTask->name . ' hat ihre Deadline überschritten';
                         $broadcastMessage = [
                             'id' => rand(1, 1000000),
                             'type' => 'error',
@@ -158,7 +168,12 @@ class SchedulingController extends Controller
             foreach ($userForNotify[$taskDeadline['id']] as $userToNotify) {
                 $user = User::find($userToNotify);
                 if ($taskDeadline['type'] === 'DEADLINE_REACHED') {
-                    $notificationTitle = $taskDeadline['title'] . ' hat die Deadline überschritten';
+                    $notificationTitle = __(
+                        'notification.scheduling.deadline_over',
+                        ['checklist' => $taskDeadline['title']],
+                        $user->language
+                    );
+                    //$notificationTitle = $taskDeadline['title'] . ' hat die Deadline überschritten';
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'error',
@@ -175,7 +190,12 @@ class SchedulingController extends Controller
                     $this->notificationService->createNotification();
                 }
                 if ($taskDeadline['type'] === 'DEADLINE_NOT_REACHED') {
-                    $notificationTitle = 'Deadline von ' . $task->name . ' ist morgen erreicht';
+                    $notificationTitle = __(
+                        'notification.scheduling.deadline_tomorrow',
+                        ['checklist' => $task->name],
+                        $user->language
+                    );
+                    //$notificationTitle = 'Deadline von ' . $task->name . ' ist morgen erreicht';
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'error',
@@ -209,7 +229,12 @@ class SchedulingController extends Controller
             $user = User::find($schedule->user_id);
             switch ($schedule->type) {
                 case 'TASK_ADDED':
-                    $notificationTitle = $schedule->count . ' neue Aufgaben für dich';
+                    $notificationTitle = __(
+                        'notification.scheduling.new_tasks',
+                        ['count' => $schedule->count],
+                        $user->language
+                    );
+                    //$notificationTitle = $schedule->count . ' neue Aufgaben für dich';
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -225,7 +250,12 @@ class SchedulingController extends Controller
                     break;
                 case 'PROJECT_CHANGES':
                     $project = Project::find($schedule->model_id);
-                    $notificationTitle = 'Es gab Änderungen an ' . $project->name;
+                    $notificationTitle = __(
+                        'notification.scheduling.changes_project',
+                        ['project' => $project->name],
+                        $user->language
+                    );
+                    //$notificationTitle = 'Es gab Änderungen an ' . $project->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -245,7 +275,12 @@ class SchedulingController extends Controller
                     break;
                 case 'TASK_CHANGES':
                     $task = Task::find($schedule->model_id);
-                    $notificationTitle = 'Änderungen an ' . $task?->name;
+                    $notificationTitle = __(
+                        'notification.scheduling.changes_task',
+                        ['task' => $task?->name],
+                        $user->language
+                    );
+                    //$notificationTitle = 'Änderungen an ' . $task?->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -264,7 +299,12 @@ class SchedulingController extends Controller
                     break;
                 case 'ROOM_CHANGES':
                     $room = Room::find($schedule->model_id);
-                    $notificationTitle = 'Änderungen an ' . $room?->name;
+                    $notificationTitle = __(
+                        'notification.scheduling.changes_room',
+                        ['room' => $room?->name],
+                        $user->language
+                    );
+                    //$notificationTitle = 'Änderungen an ' . $room?->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -282,7 +322,12 @@ class SchedulingController extends Controller
                     break;
                 case 'EVENT_CHANGES':
                     $event = Event::find($schedule->model_id);
-                    $notificationTitle = 'Termin geändert';
+                    $notificationTitle = __(
+                        'notification.scheduling.changes_event',
+                        [],
+                        $user->language
+                    );
+                    //$notificationTitle = 'Termin geändert';
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -329,7 +374,12 @@ class SchedulingController extends Controller
                     break;
                 case 'PUBLIC_CHANGES':
                     $project = Project::find($schedule->model_id);
-                    $notificationTitle = 'Es gab öffentlichkeitsarbeitsrelevante Änderungen an ' . $project->name;
+                    $notificationTitle = __(
+                        'notification.scheduling.public_changes_project',
+                        ['project' => $project->name],
+                        $user->language
+                    );
+                    //$notificationTitle = 'Es gab öffentlichkeitsarbeitsrelevante Änderungen an ' . $project->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -351,7 +401,12 @@ class SchedulingController extends Controller
                 case 'VACATION_CHANGES':
                     // Verfügbarkeit geändert {Vorname Name}
                     $user = User::find($schedule->model_id);
-                    $notificationTitle = 'Verfügbarkeit geändert';
+                    $notificationTitle = __(
+                        'notification.scheduling.changes_vacation',
+                        [],
+                        $user->language
+                    );
+                    //$notificationTitle = 'Verfügbarkeit geändert';
                     $broadcastMessage = [
                         'id' => random_int(1, 1000000),
                         'type' => 'success',

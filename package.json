@@ -35,6 +35,7 @@
         "@tabler/icons-vue": "^2.43.0",
         "@vuepic/vue-datepicker": "^3.2.2",
         "dayjs": "^1.11.7",
+        "flag-icons": "^7.1.0",
         "laravel-permission-to-vuejs": "^3.0.1",
         "mathjax": "^2.7.2",
         "vue-cal": "^4.8.0",

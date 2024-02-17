@@ -329,55 +329,20 @@
 
         </jet-dialog-modal>
         <!-- Success Modal - Delete project -->
-        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="font-black text-primary font-lexend text-3xl my-2">
-                        Projekt gelöscht
-                    </div>
-                    <XIcon @click="closeSuccessModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
-                        Das Projekt {{ nameOfDeletedProject }} wurde gelöscht.
-                    </div>
-                    <div class="mt-6">
-                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-24 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="closeSuccessModal">
-                            <CheckIcon class="h-6 w-12 text-secondaryHover"/>
-                        </button>
-                    </div>
-                </div>
-
-            </template>
-        </jet-dialog-modal>
-        <!-- Success Modal -->
-        <jet-dialog-modal :show="showSuccessModal2" @close="closeSuccessModal2">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="font-black text-primary font-lexend text-3xl my-2">
-                        Projekt erstellt
-                    </div>
-                    <XIcon @click="closeSuccessModal2"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
-                        Das Projekt wurde erfolgreich angelegt.
-                    </div>
-                    <div class="mt-6">
-                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-24 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="closeSuccessModal2">
-                            <CheckIcon class="h-6 w-12 text-secondaryHover"/>
-                        </button>
-                    </div>
-                </div>
-
-            </template>
-        </jet-dialog-modal>
+        <SuccessModal
+            :show="showSuccessModal"
+            @closed="closeSuccessModal"
+            title="Projekt gelöscht"
+            :description="'Das Projekt' +  nameOfDeletedProject + 'wurde gelöscht.'"
+            button="Schließen"
+            />
+        <SuccessModal
+            :show="showSuccessModal2"
+            @closed="closeSuccessModal2"
+            title="Projekt erstellt"
+            description="Das Projekt wurde erfolgreich angelegt."
+            button="Schließen"
+            />
         <project-data-edit-modal
             v-if="editingProject"
             :show="editingProject"
@@ -460,9 +425,11 @@ import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue"
 import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import ProjectExportBudgetsByBudgetDeadlineModal from "@/Layouts/Components/ProjectExportBudgetsByBudgetDeadlineModal.vue";
 import {IconPin} from "@tabler/icons-vue";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 
 export default defineComponent({
     components: {
+        SuccessModal,
         IconPin,
         ProjectExportBudgetsByBudgetDeadlineModal,
         DocumentReportIcon,

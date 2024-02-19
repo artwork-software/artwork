@@ -115,29 +115,13 @@
     </div>
 
     <!-- Success Modal -->
-    <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
-        <template #content>
-            <div class="mx-4">
-                <div class="headline1 my-2">
-                    Nutzer*in erfolgreich bearbeitet
-                </div>
-                <XIcon @click="closeSuccessModal"
-                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                       aria-hidden="true"/>
-                <div class="successText">
-                    Die Änderungen wurden erfolgreich gespeichert.
-                </div>
-                <div class="mt-6">
-                    <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="closeSuccessModal">
-                        <CheckIcon class="h-6 w-6 text-secondaryHover"/>
-                    </button>
-                </div>
-            </div>
-
-        </template>
-    </jet-dialog-modal>
+    <SuccessModal
+        :show="showSuccessModal"
+        @closed="closeSuccessModal"
+        title="Nutzer*in erfolgreich bearbeitet"
+        description="Die Änderungen wurden erfolgreich gespeichert."
+        button="Schließen"
+    />
     <!-- Nutzer*in löschen Modal -->
     <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
         <template #content>
@@ -189,9 +173,11 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {Inertia} from "@inertiajs/inertia";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 
 export default {
     components: {
+        SuccessModal,
         JetDialogModal, CheckIcon,
         XIcon,
         PencilAltIcon,

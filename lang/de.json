@@ -232,5 +232,16 @@
     "You may not leave a team that you created.": "Sie können ein von Ihnen erstelltes Team nicht verlassen.",
     "Your email address is unverified.": "Ihre E-Mail-Adresse ist nicht verifiziert.",
     "You have no open tasks." : "Du hast keine offenen Aufgaben.",
-    "Application language" : "Anwendungssprache"
+    "Application language" : "Anwendungssprache",
+    "You don't have any shifts today.": "Du hast heute keine Schichten.",
+    "There are no new announcements for today.": "Es liegen für heute keine neuen Mitteilungen vor.",
+    "You have no appointments today.": "Du hast heute keine Termine.",
+    "Today's appointments": "Termine heute",
+    "to calendar": "zum Kalender",
+    "Shifts today": "Schichten heute",
+    "to the shift plan": "zum Schichtplan",
+    "Notifications today": "Benachrichtigungen heute",
+    "Go to the notifications": "Zu den Benachrichtigungen",
+    "Next tasks": "Nächste Aufgaben",
+    "To the task overview": "zur Aufgabenübersicht",
 }

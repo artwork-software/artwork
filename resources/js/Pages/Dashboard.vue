@@ -11,7 +11,7 @@
                         <!-- Termin Widget -->
                         <div class="flex justify-between items-center w-fit gap-x-5 mb-5">
                             <div>
-                                <h3 class=" tracking-widest uppercase font-semibold text-base">Termine heute</h3>
+                                <h3 class=" tracking-widest uppercase font-semibold text-base">{{ $t("Today's appointments")}}</h3>
                             </div>
                             <div class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
                                 {{ eventsOfDay?.length ?? 0 }}
@@ -52,20 +52,20 @@
                                 <div class="flex justify-start">
                                     <div class="bg-gray-50 p-2">
                                         <p class="text-sm text-gray-500">
-                                            Du hast heute keine Termine.
+                                            {{ $t("You have no appointments today.")}}
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="flex justify-end mt-3">
-                            <a :href="route('events')" class="text-indigo-800 underline font-semibold text-sm">zum Kalender</a>
+                            <a :href="route('events')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("to calendar")}}</a>
                         </div>
                     </div>
                     <div>
                         <div class="flex justify-between items-center w-fit gap-x-5 mb-5">
                             <div>
-                                <h3 class=" tracking-widest uppercase font-semibold text-base">Schichten heute</h3>
+                                <h3 class=" tracking-widest uppercase font-semibold text-base">{{ $t("Shifts today")}}</h3>
                             </div>
                             <div class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
                                 {{ shiftsOfDay?.length ?? 0 }}
@@ -101,14 +101,14 @@
                                 <div class="flex justify-start">
                                     <div class="bg-gray-50 p-2 text-center">
                                         <p class="text-sm text-gray-500">
-                                            Du hast heute keine Schichten.
+                                            {{ $t("You don't have any shifts today.")}}
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="flex justify-end mt-3">
-                            <a :href="route('shifts.plan')" class="text-indigo-800 underline font-semibold text-sm">zum Schichtplan</a>
+                            <a :href="route('shifts.plan')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("to the shift plan")}}</a>
                         </div>
                     </div>
                 </div>
@@ -117,7 +117,7 @@
                         <!-- Notification Widget -->
                         <div class="flex justify-between items-center w-fit gap-x-5 mb-5">
                             <div>
-                                <h3 class=" tracking-widest uppercase font-semibold text-base">Benachrichtigungen heute</h3>
+                                <h3 class=" tracking-widest uppercase font-semibold text-base">{{ $t("Notifications today")}}</h3>
                             </div>
                             <div class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
                                 {{ notificationCount }}
@@ -151,19 +151,19 @@
                                         </g>
                                     </svg>
                                     <div class="xsLight">
-                                        Es liegen für heute keine neuen Mitteilungen vor.
+                                        {{ $t("There are no new announcements for today.")}}
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="flex justify-end mt-3">
-                            <a :href="route('notifications.index')" class="text-indigo-800 underline font-semibold text-sm">Zu den Benachrichtigungen</a>
+                            <a :href="route('notifications.index')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("Go to the notifications")}}</a>
                         </div>
                     </div>
                     <div>
                         <div class="flex justify-between items-center w-fit gap-x-5 mb-5">
                             <div>
-                                <h3 class=" tracking-widest uppercase font-semibold text-base">Nächste Aufgaben</h3>
+                                <h3 class=" tracking-widest uppercase font-semibold text-base">{{ $t("Next tasks")}}</h3>
                             </div>
                             <div class="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">
                                 {{ tasks?.length ?? 0 }}
@@ -218,7 +218,7 @@
                             </div>
                         </div>
                         <div class="flex justify-end mt-3">
-                            <a :href="route('tasks.own')" class="text-indigo-800 underline font-semibold text-sm">zur Aufgabenübersicht</a>
+                            <a :href="route('tasks.own')" class="text-indigo-800 underline font-semibold text-sm">{{ $t("To the task overview")}}</a>
                         </div>
                     </div>
                 </div>

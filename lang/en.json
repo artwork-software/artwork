@@ -237,5 +237,16 @@
     "You may not leave a team that you created.": "You may not leave a team that you created.",
     "Your email address is unverified.": "Your email address is unverified.",
     "You have no open tasks." : "You have no open tasks.",
-    "Application language" : "Application language"
+    "Application language" : "Application language",
+    "You don't have any shifts today.": "You don't have any shifts today.",
+    "There are no new announcements for today.": "There are no new announcements for today.",
+    "You have no appointments today.": "You have no appointments today.",
+    "Today's appointments": "Today's appointments",
+    "to calendar": "to calendar",
+    "Shifts today": "Shifts today",
+    "to the shift plan": "to the shift plan",
+    "Notifications today": "Notifications today",
+    "Go to the notifications": "Go to the notifications",
+    "Next tasks": "Next tasks",
+    "To the task overview": "To the task overview"
 }

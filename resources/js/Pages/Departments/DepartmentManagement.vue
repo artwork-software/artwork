@@ -442,29 +442,13 @@
 
         </jet-dialog-modal>
         <!-- Success Modal -->
-        <jet-dialog-modal :show="showSuccess" @close="closeSuccessModal">
-            <template #content>
-                <div class="mx-4">
-                    <div class="headline1 my-2">
-                        {{ this.successHeading }}
-                    </div>
-                    <XIcon @click="closeSuccessModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="successText">
-                        Die Änderungen wurden erfolgreich gespeichert.
-                    </div>
-                    <div class="mt-6">
-                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="closeSuccessModal">
-                            <CheckIcon class="h-6 w-6 text-secondaryHover"/>
-                        </button>
-                    </div>
-                </div>
-
-            </template>
-        </jet-dialog-modal>
+        <SuccessModal
+            :show="showSuccess"
+            @closed="closeSuccessModal"
+            :title="this.successHeading"
+            description="Die Änderungen wurden erfolgreich gespeichert."
+            button="Schließen"
+        />
     </UserHeader>
 </template>
 
@@ -512,6 +496,7 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import Permissions from "@/mixins/Permissions.vue";
 import UserHeader from "@/Pages/Users/UserHeader.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -547,6 +532,7 @@ const iconMenuItems = [
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        SuccessModal,
         UserPopoverTooltip,
         UserHeader,
         AddButton,

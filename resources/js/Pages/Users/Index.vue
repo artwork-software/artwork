@@ -349,30 +349,13 @@
 
         </jet-dialog-modal>
         <!-- Success Modal -->
-        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="headline1 my-2">
-                        Nutzer*innen eingeladen
-                    </div>
-                    <XIcon @click="closeSuccessModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="successText">
-                        Die Nutzer*innen haben eine Einladungs-E-Mail erhalten.
-                    </div>
-                    <div class="mt-6">
-                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="closeSuccessModal">
-                            <CheckIcon class="h-6 w-6 text-secondaryHover"/>
-                        </button>
-                    </div>
-                </div>
-
-            </template>
-        </jet-dialog-modal>
+        <SuccessModal
+            :open="showSuccessModal"
+            @closed="closeSuccessModal"
+            title="Nutzer*innen eingeladen"
+            description="Die Nutzer*innen haben eine Einladungs-E-Mail erhalten."
+            button="Okay"
+            />
     </UserHeader>
 
     <!-- Nutzer*innen einladen Modal -->
@@ -440,10 +423,12 @@ import InviteUsersModal from "@/Layouts/Components/InviteUsersModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import UserHeader from "@/Pages/Users/UserHeader.vue";
 import AddUsersModal from "@/Pages/Users/Components/AddUsersModal.vue";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        SuccessModal,
         AddUsersModal,
         AddButton,
         FlowbiteModal,

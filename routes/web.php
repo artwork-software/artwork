@@ -45,6 +45,7 @@ use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\RowCommentController;
+use App\Http\Controllers\SageAssignedDataCommentController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\ServiceProviderContactsController;
 use App\Http\Controllers\ServiceProviderController;
@@ -690,7 +691,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('project.budget.column.update.commented');
 
             // DELETE
-            Route::delete('/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])
+            Route::delete('/sub-position-row/{subPositionRow}', [ProjectController::class, 'deleteRow'])
                 ->name('project.budget.sub-position-row.delete');
             Route::delete('/cell/comment/{cellComment}', [CellCommentsController::class, 'destroy'])
                 ->name('project.budget.cell.comment.delete');
@@ -706,6 +707,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('project.budget.sub-position.delete');
             Route::delete('/table/{table}', [ProjectController::class, 'deleteTable'])
                 ->name('project.budget.table.delete');
+
+            Route::resource('sageAssignedDataComments', SageAssignedDataCommentController::class)
+                ->only(['store', 'destroy']);
         });
     });
 

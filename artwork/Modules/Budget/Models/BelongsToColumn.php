@@ -8,6 +8,6 @@ trait BelongsToColumn
 {
     public function column(): BelongsTo
     {
-        return $this->belongsTo(Column::class, 'column_id', 'id', 'column');
+        return $this->belongsTo(Column::class, 'column_id', 'id', 'columns');
     }
 }

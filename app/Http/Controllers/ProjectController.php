@@ -48,17 +48,24 @@ use App\Support\Services\MoneySourceThresholdReminderService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
-use Artwork\Modules\Budget\Models\CellCalculations;
+use Artwork\Modules\Budget\Models\CellCalculation;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\MainPositionDetails;
+use Artwork\Modules\Budget\Models\SageAssignedDataComment;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
-use Artwork\Modules\Budget\Models\SubpositionSumDetail;
+use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetService;
+use Artwork\Modules\Budget\Services\ColumnService;
+use Artwork\Modules\Budget\Services\MainPositionService;
+use Artwork\Modules\Budget\Services\SageAssignedDataCommentService;
+use Artwork\Modules\Budget\Services\SubPositionRowService;
+use Artwork\Modules\Budget\Services\SubPositionService;
+use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
@@ -72,6 +79,7 @@ use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -473,23 +481,50 @@ class ProjectController extends Controller
 
         $firstThreeColumns = $columns->shift(3);
 
-        $costSubPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
-            'value' => "",
-            'verified_value' => "",
-            'linked_money_source_id' => null,
-        ]);
+        foreach ($firstThreeColumns as $firstThreeColumn) {
+            $costSubPositionRow->cells()->create(
+                [
+                    'column_id' => $firstThreeColumn->id,
+                    'sub_position_row_id' => $costSubPositionRow->id,
+                    'value' => 0,
+                    'verified_value' => "",
+                    'linked_money_source_id' => null,
+                ]
+            );
+        }
 
-        $earningSubPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
-            'value' => "",
-            'verified_value' => "",
-            'linked_money_source_id' => null,
-        ]);
+        foreach ($firstThreeColumns as $firstThreeColumn) {
+            $earningSubPositionRow->cells()->create(
+                [
+                    'column_id' => $firstThreeColumn->id,
+                    'sub_position_row_id' => $earningSubPositionRow->id,
+                    'value' => 0,
+                    'verified_value' => "",
+                    'linked_money_source_id' => null,
+                ]
+            );
+        }
 
-        $costSubPositionRow->columns()->attach($columns->pluck('id'), [
-            'value' => 0,
-            'verified_value' => null,
-            'linked_money_source_id' => null,
-        ]);
+        foreach ($columns as $column) {
+            $costSubPositionRow->cells()->create(
+                [
+                    'column_id' => $column->id,
+                    'sub_position_row_id' => $costSubPositionRow->id,
+                    'value' => 0,
+                    'verified_value' => null,
+                    'linked_money_source_id' => null,
+                ]
+            );
+            $earningSubPositionRow->cells()->create(
+                [
+                    'column_id' => $column->id,
+                    'sub_position_row_id' => $earningSubPositionRow->id,
+                    'value' => 0,
+                    'verified_value' => null,
+                    'linked_money_source_id' => null,
+                ]
+            );
+        }
 
         $costMainPosition->mainPositionSumDetails()->create([
             'column_id' => $columns->first()->id
@@ -515,12 +550,6 @@ class ProjectController extends Controller
         BudgetSumDetails::create([
             'column_id' => $columns->first()->id,
             'type' => 'EARNING'
-        ]);
-
-        $earningSubPositionRow->columns()->attach($columns->pluck('id'), [
-            'value' => 0,
-            'verified_value' => null,
-            'linked_money_source_id' => null,
         ]);
     }
 
@@ -1032,9 +1061,9 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
-    public function resetTable(Project $project): RedirectResponse
+    public function resetTable(Project $project, TableService $tableService): RedirectResponse
     {
-        $budgetTemplateController = new BudgetTemplateController();
+        $budgetTemplateController = new BudgetTemplateController($tableService);
         $budgetTemplateController->deleteOldTable($project);
         //$this->generateBasicBudgetValues($project);
         $this->budgetService->generateBasicBudgetValues($project);
@@ -1144,15 +1173,11 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function columnDelete(Column $column): void
+    public function columnDelete(Column $column, ColumnService $columnService): RedirectResponse
     {
-        $cells = ColumnCell::where('column_id', $column->id)->get();
+        $columnService->delete($column);
 
-        $column->cells()->delete();
-        foreach ($cells as $cell) {
-            $cell->comments()->delete();
-        }
-        $column->delete();
+        return Redirect::back();
     }
 
     public function updateMainPositionName(Request $request): void
@@ -1357,6 +1382,7 @@ class ProjectController extends Controller
             ->where('position', '>', $request->positionBefore)
             ->increment('position');
 
+        /** @var SubPositionRow $subPositionRow */
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
             'position' => $request->positionBefore + 1
@@ -1364,17 +1390,25 @@ class ProjectController extends Controller
 
         $firstThreeColumns = $columns->shift(3);
 
-        $subPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
-            'value' => '',
-            'linked_money_source_id' => null,
-            'verified_value' => ''
-        ]);
+        foreach ($firstThreeColumns as $firstThreeColumn) {
+            $subPositionRow->cells()->create([
+                'column_id' => $firstThreeColumn->id,
+                'sub_position_row_id' => $subPositionRow->id,
+                'value' => 0,
+                'linked_money_source_id' => null,
+                'verified_value' => ''
+            ]);
+        }
 
-        $subPositionRow->columns()->attach($columns->pluck('id'), [
-            'value' => 0,
-            'verified_value' => null,
-            'linked_money_source_id' => null,
-        ]);
+        foreach ($columns as $column) {
+            $subPositionRow->cells()->create([
+                'column_id' => $column->id,
+                'sub_position_row_id' => $subPositionRow->id,
+                'value' => 0,
+                'linked_money_source_id' => null,
+                'verified_value' => ''
+            ]);
+        }
     }
 
     public function dropSageData(Request $request, Sage100Service $sage100Service): void
@@ -1433,6 +1467,7 @@ class ProjectController extends Controller
 
     private function addSubPositionRowsWithColumns(SubPosition $subPosition, Collection $columns): void
     {
+        /** @var SubPositionRow $subPositionRow */
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
             'position' => 1,
@@ -1440,11 +1475,15 @@ class ProjectController extends Controller
 
         $firstThreeColumns = $columns->shift(3);
 
-        $subPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
-            'value' => '',
-            'linked_money_source_id' => null,
-            'verified_value' => ''
-        ]);
+        foreach ($firstThreeColumns as $firstThreeColumn) {
+            $subPositionRow->cells()->create([
+                'column_id' => $firstThreeColumn->id,
+                'sub_position_row_id' => $subPositionRow->id,
+                'value' => 0,
+                'linked_money_source_id' => null,
+                'verified_value' => ''
+            ]);
+        }
 
         $subPosition->subPositionSumDetails()->createMany(
             $columns->map(fn($column) => [
@@ -1452,18 +1491,22 @@ class ProjectController extends Controller
             ])->all()
         );
 
-        $subPositionRow->columns()->attach($columns->pluck('id'), [
-            'value' => 0,
-            'verified_value' => null,
-            'linked_money_source_id' => null,
-        ]);
+        foreach ($columns as $column) {
+            $subPositionRow->cells()->create([
+                'column_id' => $column->id,
+                'sub_position_row_id' => $subPositionRow->id,
+                'value' => 0,
+                'linked_money_source_id' => null,
+                'verified_value' => ''
+            ]);
+        }
     }
 
     public function updateCellCalculation(Request $request): RedirectResponse
     {
         if ($request->calculations) {
             foreach ($request->calculations as $calculation) {
-                $cellCalculation = CellCalculations::find($calculation['id']);
+                $cellCalculation = CellCalculation::find($calculation['id']);
                 $cellCalculation->update([
                     'name' => $calculation['name'] ?? '',
                     'value' => $calculation['value'] ?? 0,
@@ -1495,7 +1538,7 @@ class ProjectController extends Controller
 
         // update all positions of calculations where position is greater than $request->position and cell_id is
         // $cell->id and where not id is $newCalculation->id, increment position by 1 after new calculation
-        CellCalculations::query()
+        CellCalculation::query()
             ->where('cell_id', $cell->id)
             ->where('position', '>', $request->position)
             ->where('id', '!=', $newCalculation->id)
@@ -1958,8 +2001,10 @@ class ProjectController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function projectBudgetTab(Project $project): Response|ResponseFactory
-    {
+    public function projectBudgetTab(
+        Project $project,
+        SageAssignedDataCommentService $sageAssignedDataCommentService
+    ): Response|ResponseFactory {
         $project->load([
             'access_budget',
             'departments.users.departments',
@@ -2016,11 +2061,11 @@ class ProjectController extends Controller
 
         if (request('selectedSubPosition') && request('selectedColumn')) {
             $selectedSumDetail = Collection::make(
-                SubpositionSumDetail::with(['comments.user', 'sumMoneySource.moneySource'])
+                SubPositionSumDetail::with(['comments.user', 'sumMoneySource.moneySource'])
                     ->where('sub_position_id', request('selectedSubPosition'))
                     ->where('column_id', request('selectedColumn'))
                     ->first()
-            )->merge(['class' => SubpositionSumDetail::class]);
+            )->merge(['class' => SubPositionSumDetail::class]);
         }
 
         if (request('selectedMainPosition') && request('selectedColumn')) {
@@ -2047,9 +2092,11 @@ class ProjectController extends Controller
         $globalGroup = collect();
 
         if ($this->sageApiSettingsService->getFirst()?->enabled) {
-            $sageNotAssigned = SageNotAssignedData::where('project_id', $project->id)
-                ->orWhere('project_id', null)->get();
-
+            $sageNotAssigned = SageNotAssignedData::query()
+                ->where('project_id', $project->id)
+                ->orWhere('project_id', null)
+                ->orderBy('buchungsdatum', 'desc')
+                ->get();
 
             $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project): void {
                 if ($item->project_id === null) {
@@ -2059,10 +2106,6 @@ class ProjectController extends Controller
                 }
             });
         }
-
-
-        //dd($projectsGroup, $globalGroup);
-
 
         /** @var Collection $roomsWithAudience */
         $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
@@ -2088,13 +2131,23 @@ class ProjectController extends Controller
                         'mainPositions.subPositions.verified',
                         'mainPositions.subPositions.subPositionRows' => function ($query) {
                             return $query->orderBy('position');
-                        }, 'mainPositions.subPositions.subPositionRows.cells' => function ($query): void {
-                            $query->withCount('comments')
+                        },
+                        'mainPositions.subPositions.subPositionRows.cells' => function (HasMany $query): void {
+                            $query
+                                ->with([
+                                    'sageAssignedData',
+                                    'sageAssignedData.comments' => function (HasMany $hasMany): HasMany {
+                                        return $hasMany->orderBy('created_at', 'desc');
+                                    },
+                                    'sageAssignedData.comments.user'
+                                ])
+                                ->withCount('comments')
                                 ->withCount(['calculations' => function ($query) {
                                     // count if value is not 0
                                     return $query->where('value', '!=', 0);
                                 }]);
-                        }, 'mainPositions.subPositions.subPositionRows.cells.column'
+                        },
+                        'mainPositions.subPositions.subPositionRows.cells.column',
                     ])
                     ->first(),
                 'selectedCell' => $selectedCell?->load(['calculations' => function ($calculations): void {
@@ -2125,7 +2178,31 @@ class ProjectController extends Controller
                 'projectsGroup' => $projectsGroup,
                 'globalGroup' => $globalGroup
             ],
+            'recentlyCreatedSageAssignedDataComment' => $this->determineRecentlyCreatedSageAssignedDataComment(
+                $sageAssignedDataCommentService
+            )
         ]);
+    }
+
+    private function determineRecentlyCreatedSageAssignedDataComment(
+        SageAssignedDataCommentService $sageAssignedDataCommentService
+    ): SageAssignedDataComment|null {
+        //if there's a recently created comment for any SageAssignedData-Models retrieve corresponding model by id
+        //to display it right after the request finished without reopening the SageAssignedDataModal
+        $recentlyCreatedSageAssignedDataComment = null;
+
+        if ($recentlyCreatedSageAssignedDataCommentId = session('recentlyCreatedSageAssignedDataCommentId')) {
+            $recentlyCreatedSageAssignedDataComment = $sageAssignedDataCommentService->getById(
+                $recentlyCreatedSageAssignedDataCommentId
+            );
+        }
+
+        if ($recentlyCreatedSageAssignedDataComment instanceof SageAssignedDataComment) {
+            //load corresponding user for UserPopoverTooltip
+            $recentlyCreatedSageAssignedDataComment->load('user');
+        }
+
+        return $recentlyCreatedSageAssignedDataComment;
     }
 
     public function projectCommentTab(Project $project): Response|ResponseFactory
@@ -2808,46 +2885,38 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function deleteRow(SubPositionRow $row): void
-    {
-        $row->forceDelete();
+    public function deleteRow(
+        SubPositionRow $subPositionRow,
+        SubPositionRowService $subPositionRowService
+    ): RedirectResponse {
+        $subPositionRowService->delete($subPositionRow);
+
+        return Redirect::back();
     }
 
-    public function deleteTable(Table $table): void
+    public function deleteTable(Table $table, TableService $tableService): RedirectResponse
     {
-        $table->forceDelete();
+        $tableService->delete($table);
+
+        return Redirect::back();
     }
 
-    public function deleteMainPosition(MainPosition $mainPosition): void
-    {
-        $subPositions = $mainPosition->subPositions()->get();
-        foreach ($subPositions as $subPosition) {
-            $subRows = $subPosition->subPositionRows()->get();
+    public function deleteMainPosition(
+        MainPosition $mainPosition,
+        MainPositionService $mainPositionService
+    ): RedirectResponse {
+        $mainPositionService->delete($mainPosition);
 
-            foreach ($subRows as $subRow) {
-                $cells = $subRow->cells()->get();
-                foreach ($cells as $cell) {
-                    $cell->delete();
-                }
-                $subRow->delete();
-            }
-            $subPosition->delete();
-        }
-        $mainPosition->delete();
+        return Redirect::back();
     }
 
-    public function deleteSubPosition(SubPosition $subPosition): void
-    {
-        $subRows = $subPosition->subPositionRows()->get();
+    public function deleteSubPosition(
+        SubPosition $subPosition,
+        SubPositionService $subPositionService
+    ): RedirectResponse {
+        $subPositionService->delete($subPosition);
 
-        foreach ($subRows as $subRow) {
-            $cells = $subRow->cells()->get();
-            foreach ($cells as $cell) {
-                $cell->delete();
-            }
-            $subRow->delete();
-        }
-        $subPosition->delete();
+        return Redirect::back();
     }
 
     public function updateCommentedStatusOfRow(Request $request, SubPositionRow $row): RedirectResponse

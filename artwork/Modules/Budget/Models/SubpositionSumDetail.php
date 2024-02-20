@@ -2,10 +2,9 @@
 
 namespace Artwork\Modules\Budget\Models;
 
-use App\Models\SumMoneySource;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
@@ -13,15 +12,17 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property int $id
  * @property int $sub_position_id
  * @property int $column_id
+ * @property Collection<SumComment> $comments
+ * @property SumMoneySource|null $sumMoneySource
  * @property string $created_at
  * @property string $updated_at
  */
-class SubpositionSumDetail extends Model
+class SubPositionSumDetail extends Model
 {
     use HasFactory;
     use BelongsToSubPosition;
 
-    protected $guarded = [];
+    protected $table = 'subposition_sum_details';
 
     public function comments(): MorphMany
     {

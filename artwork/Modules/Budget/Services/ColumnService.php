@@ -3,7 +3,11 @@
 namespace Artwork\Modules\Budget\Services;
 
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\Column;
+use Artwork\Modules\Budget\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\MainPositionDetails;
+use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\ColumnRepository;
 
@@ -12,12 +16,21 @@ class ColumnService
 
     public function __construct(
         private readonly ColumnRepository $columnRepository,
-    )
-    {
+        private readonly ColumnCellService $columnCellService,
+        private readonly SubPositionSumDetailService $subPositionSumDetailService,
+        private readonly MainPositionDetailsService $mainPositionDetailsService,
+        private readonly BudgetSumDetailsService $budgetSumDetailsService
+    ) {
     }
 
-    public function createColumnInTable(Table $table, string $name, string $subName, string $type, int $linked_first_column = 0, int $linked_second_column = 0): Column|Model
-    {
+    public function createColumnInTable(
+        Table $table,
+        string $name,
+        string $subName,
+        string $type,
+        int|null $linked_first_column = null,
+        int|null $linked_second_column = null
+    ): Column|Model {
         $column = new Column();
         $column->table_id = $table->id;
         $column->name = $name;
@@ -28,7 +41,6 @@ class ColumnService
         return $this->columnRepository->save($column);
     }
 
-
     public function setColumnSubName(int $table_id): void
     {
         $table = Table::find($table_id);
@@ -37,8 +49,7 @@ class ColumnService
         $count = 1;
 
         foreach ($columns as $column) {
-            // Skip columns without subname
-            if ($column->subName === null || empty($column->subName)) {
+            if (empty($column->subName)) {
                 continue;
             }
             $column->update([
@@ -58,5 +69,26 @@ class ColumnService
         } else {
             return $letter;
         }
+    }
+
+    public function delete(Column $column): void
+    {
+        $column->subPositionSumDetails->each(function (SubPositionSumDetail $subPositionSumDetail): void {
+            $this->subPositionSumDetailService->delete($subPositionSumDetail);
+        });
+
+        $column->mainPositionSumDetails->each(function (MainPositionDetails $mainPositionDetails): void {
+            $this->mainPositionDetailsService->delete($mainPositionDetails);
+        });
+
+        $column->budgetSumDetails->each(function (BudgetSumDetails $budgetSumDetails): void {
+            $this->budgetSumDetailsService->delete($budgetSumDetails);
+        });
+
+        $column->cells->each(function (ColumnCell $columnCell): void {
+            $this->columnCellService->delete($columnCell);
+        });
+
+        $this->columnRepository->delete($column);
     }
 }

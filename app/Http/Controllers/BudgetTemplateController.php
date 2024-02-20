@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-
-use Artwork\Modules\Budget\Models\CellCalculations;
+use Artwork\Modules\Budget\Models\CellCalculation;
 use Artwork\Modules\Budget\Models\CellComment;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
@@ -12,19 +11,19 @@ use Artwork\Modules\Budget\Models\RowComment;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\Table;
+use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-use function Clue\StreamFilter\fun;
-
 class BudgetTemplateController extends Controller
 {
     protected ?array $columns = null;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly TableService $tableService
+    ) {
     }
 
     /**
@@ -83,8 +82,7 @@ class BudgetTemplateController extends Controller
 
     public function store(Table $table, Request $request): RedirectResponse
     {
-        $oldTable = $table;
-        $this->createTemplate($request->template_name, $oldTable);
+        $this->createTemplate($request->template_name, $table);
         return back()->with('success');
     }
 
@@ -96,6 +94,9 @@ class BudgetTemplateController extends Controller
             'project_id' => $projectId
         ]);
         $oldTable->columns->map(function (Column $column) use ($newTable): void {
+            if ($column->type === 'sage') {
+                return;
+            }
             $replicated_column = $column->replicate()->fill(['table_id' => $newTable->id]);
             $replicated_column->save();
             $this->columns[$column->id] = $replicated_column->id;
@@ -125,6 +126,9 @@ class BudgetTemplateController extends Controller
                         $replicated_subPositionRow->save();
                         $subPositionRow->cells->map(
                             function (ColumnCell $columnCell) use ($replicated_subPositionRow): void {
+                                if ($columnCell->column->type === 'sage') {
+                                    return;
+                                }
                                 $replicated_columnCell = $columnCell->replicate()->fill(
                                     ['sub_position_row_id' => $replicated_subPositionRow->id]
                                 );
@@ -141,7 +145,7 @@ class BudgetTemplateController extends Controller
                                     }
                                 );
                                 $columnCell->calculations->map(
-                                    function (CellCalculations $cellCalculations) use ($replicated_columnCell): void {
+                                    function (CellCalculation $cellCalculations) use ($replicated_columnCell): void {
                                         $replicated_cellCalculation = $cellCalculations->replicate()->fill(
                                             ['cell_id' => $replicated_columnCell->id]
                                         );
@@ -194,29 +198,9 @@ class BudgetTemplateController extends Controller
 
     public function deleteOldTable(Project $project): void
     {
+        /** @var Table $tableToDelete */
         $tableToDelete = $project->table()->first();
 
-        // delete old budget table
-        $tableToDelete->columns()->delete();
-        $mainPositions = $tableToDelete->mainPositions()->get();
-        foreach ($mainPositions as $mainPosition) {
-            $subPositions = $mainPosition->subPositions()->get();
-            foreach ($subPositions as $subPosition) {
-                $subPositionRows = $subPosition->subPositionRows()->get();
-                foreach ($subPositionRows as $subPositionRow) {
-                    $cells = $subPositionRow->cells()->get();
-                    foreach ($cells as $cell) {
-                        $cell->comments()->delete();
-                        $cell->calculations()->delete();
-                        $cell->delete();
-                    }
-                    $subPositionRow->comments()->delete();
-                    $subPositionRow->delete();
-                }
-                $subPosition->delete();
-            }
-            $mainPosition->delete();
-        }
-        $tableToDelete->delete();
+        $this->tableService->delete($tableToDelete);
     }
 }

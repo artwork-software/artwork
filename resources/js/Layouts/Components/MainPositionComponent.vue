@@ -134,7 +134,19 @@
         <table v-if="!mainPosition.closed" class="w-full ">
             <thead class="">
             <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @open-error-modal="openErrorModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="table.columns" :project="project" :table="table" :project-managers="projectManagers"></SubPositionComponent>
+                <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
+                                      @openVerifiedModal="openVerifiedModal"
+                                      @openCellDetailModal="openCellDetailModal"
+                                      @open-error-modal="openErrorModal"
+                                      @openDeleteModal="openDeleteModal"
+                                      @openSageAssignedDataModal="openSageAssignedDataModal"
+                                      :main-position="mainPosition"
+                                      :sub-position="subPosition"
+                                      :columns="table.columns"
+                                      :project="project"
+                                      :table="table"
+                                      :project-managers="projectManagers"
+                />
             </tr>
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-buttonBlue' : 'bg-primary'">
@@ -162,34 +174,36 @@
             </div>
 
         </table>
-
     </th>
+    <confirmation-component
+        v-if="showDeleteModal"
+        confirm="Löschen"
+        :titel="this.confirmationTitle"
+        :description="this.confirmationDescription"
+        @closed="afterConfirm"
+    />
+    <sage-assigned-data-modal v-if="this.showSageAssignedDataModal"
+                              :show="this.showSageAssignedDataModal"
+                              :cell="this.showSageAssignedDataModalCell"
+                              @close="this.closeSageAssignedDataModal"
+    />
 </template>
 
-<confirmation-component
-    v-if="showDeleteModal"
-    confirm="Löschen"
-    :titel="this.confirmationTitle"
-    :description="this.confirmationDescription"
-    @closed="afterConfirm"/>
-
 <script>
-
-
-
 import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import SubPositionComponent from "@/Layouts/Components/SubPositionComponent.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
+import SageAssignedDataModal from "@/Layouts/Components/SageAssignedDataModal.vue";
 
 export default {
     mixins: [Permissions],
     name: "MainPositionComponent",
     components: {
+        SageAssignedDataModal,
         SubPositionComponent,
         PlusCircleIcon,
         ChevronUpIcon,
@@ -209,26 +223,28 @@ export default {
     props: ['mainPosition','table','project', 'projectManagers','type'],
     emits:['openDeleteModal','openErrorModal'],
     data(){
-      return{
-          showMenu: null,
-          showDeleteModal: false,
-          confirmationTitle:'',
-          positionToDelete:'',
-          mainPositionToDelete: null,
-          showSuccessModal: false,
-          confirmationDescription: '',
-          successHeading: '',
-          successDescription: '',
-          showVerifiedModal: false,
-          positionDefault: {
+        return{
+            showMenu: null,
+            showDeleteModal: false,
+            confirmationTitle:'',
+            positionToDelete:'',
+            mainPositionToDelete: null,
+            showSuccessModal: false,
+            confirmationDescription: '',
+            successHeading: '',
+            successDescription: '',
+            showVerifiedModal: false,
+            showSageAssignedDataModal: false,
+            showSageAssignedDataModalCell: null,
+            positionDefault: {
               position: 0
-          },
-          verifiedTexts: {
+            },
+            verifiedTexts: {
               title: 'Verifizierung',
               positionTitle: '',
               description: 'Sind alle Zahlen richtig kalkuliert? Ist die Kalkulation plausibel? Lasse deine Hauptposition durch eine Nutzer*in verifizieren. '
-          },
-          submitVerifiedModalData: useForm({
+            },
+            submitVerifiedModalData: useForm({
               is_main: false,
               is_sub: false,
               id: null,
@@ -237,16 +253,15 @@ export default {
               project_title: this.project?.name,
               project_id: this.project?.id,
               table_id: this.table.id,
-          }),
-          colors: {
+            }),
+            colors: {
               whiteColumn: 'whiteColumn',
               greenColumn: 'greenColumn',
               yellowColumn: 'yellowColumn',
               redColumn: 'redColumn',
               lightGreenColumn: 'lightGreenColumn'
-          },
-
-      }
+            },
+        }
     },
     mounted() {
         // check if main Position in localStorage in "closedMainPositions"
@@ -431,6 +446,14 @@ export default {
             this.confirmationDescription = description
             this.$emit('openErrorModal', this.confirmationTitle, this.confirmationDescription)
         },
+        openSageAssignedDataModal(cell) {
+            this.showSageAssignedDataModalCell = cell;
+            this.showSageAssignedDataModal = true;
+        },
+        closeSageAssignedDataModal() {
+            this.showSageAssignedDataModal = false;
+            this.showSageAssignedDataModalCell = null;
+        }
     },
 
 }

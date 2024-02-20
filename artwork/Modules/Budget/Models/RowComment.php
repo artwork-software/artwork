@@ -2,10 +2,9 @@
 
 namespace Artwork\Modules\Budget\Models;
 
-use App\Models\User;
+use Artwork\Modules\User\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Artwork\Core\Database\Models\Model;
 
 /**
  * @property int $id
@@ -18,16 +17,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class RowComment extends Model
 {
     use HasFactory;
+    use BelongsToUser;
 
     protected $fillable = [
         'sub_position_row_id',
         'user_id',
         'description'
     ];
-
-    //@todo use belongstouser trait
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
 }

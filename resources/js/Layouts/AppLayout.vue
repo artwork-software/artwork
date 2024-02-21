@@ -257,41 +257,21 @@ export default {
                 {
                     has_permission: this.$can('change tool settings'),
                     name: 'Tool',
-                    href: route('tool.settings'),
-                    route: ['/tool/settings']
+                    href: route('tool.branding'),
+                    route: ['/tool/branding']
                 },
-                /*{
-                    has_permission: this.$can('usermanagement') || this.hasAdminRole(),
-                    name: 'Nutzer*innen',
-                    href: route('users'),
-                    route: ['/users']
-                },*/
                 {
                     has_permission: this.hasAdminRole(),
                     name: 'Schichteinstellungen',
                     href: route('shift.settings'),
                     route: ['/settings/shift']
                 },
-                /*{
-                    name: 'Teams',
-                    has_permission: this.$canAny(['teammanagement', 'update departments']) || this.hasAdminRole(),
-                    href: route('departments'),
-                    route: ['/departments']
-                },*/
                 {
                     name: 'Räume',
                     has_permission: this.$can('create, delete and update rooms') || this.hasAdminRole(),
                     href: route('areas.management'),
                     route: ['/areas']
                 },
-                /*
-                {
-                    name: 'Anfragen',
-                    has_permission: this.$can('read details room request') || this.hasAdminRole(),
-                    href: route('events.requests'),
-                    route: ['/events/requests']
-                },
-                */
                 {
                     name: 'Projekte',
                     has_permission: this.$can('change project settings') || this.hasAdminRole(),

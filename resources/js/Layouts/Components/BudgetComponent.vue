@@ -304,8 +304,9 @@
                 </thead>
             </table>
         </div>
+        <SageNotAssignedData v-if="!this.isBudgetTemplateManagement && $page.props.sageApiEnabled" :sage-not-assigned="sageNotAssigned" />
         <div class="w-full flex mb-6">
-            <div class="flex flex-wrap w-full bg-secondaryHover border border-2 border-gray-300">
+            <div class="flex flex-wrap w-full bg-secondaryHover border-2 border-gray-300">
                 <div class="w-full flex">
                     <div class="bg-secondaryHover ml-5 w-full" v-if="costsOpened">
                         <div :class="table.columns?.length > 5 ? 'mr-5' : 'w-[97%]'" class="flex justify-between my-10">
@@ -728,7 +729,6 @@
         :openTab="cellDetailOpenTab"
         @closed="closeCellDetailModal()"
     />
-
     <sum-detail-component
         :selectedSumDetail="selectedSumDetail"
         v-if="showSumDetailModal"
@@ -736,7 +736,6 @@
         :openTab="sumDetailOpenTab"
         @closed="showSumDetailModal = false"
     />
-
     <!-- Vorlage einlesen Modal-->
     <use-template-component
         v-if="showUseTemplateModal"
@@ -768,20 +767,19 @@
         confirm="Löschen"
         :titel="this.confirmationTitle"
         :description="this.confirmationDescription"
-        @closed="afterConfirm"/>
+        @closed="afterConfirm"
+    />
     <!-- Modal für Error-Info -->
     <error-component
         v-if="showErrorModal"
         confirm="Ok"
         :titel="this.errorTitle"
         :description="this.errorDescription"
-        @closed="afterErrorConfirm"/>
-
+        @closed="afterErrorConfirm"
+    />
 </template>
 
 <script>
-
-
 import {
     PencilAltIcon,
     PlusCircleIcon,
@@ -811,7 +809,7 @@ import {
 } from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
-import {useForm, usePage} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
 import MainPositionComponent from "@/Layouts/Components/MainPositionComponent.vue";
 import RowDetailComponent from "@/Layouts/Components/RowDetailComponent.vue";
@@ -823,11 +821,13 @@ import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue"
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SumDetailComponent from "@/Layouts/Components/SumDetailComponent.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import SageNotAssignedData from "@/Pages/Projects/Components/SageNotAssignedData.vue";
 
 export default {
     name: 'BudgetComponent',
     mixins: [Permissions],
     components: {
+        SageNotAssignedData,
         ZoomInIcon, ZoomOutIcon,
         SwitchGroup,
         SwitchLabel,
@@ -866,7 +866,6 @@ export default {
         ErrorComponent,
         DocumentReportIcon
     },
-
     data() {
         return {
             showSumDetailModal: false,
@@ -937,8 +936,22 @@ export default {
                 false
         }
     },
-
-    props: ['hideProjectHeader','selectedSumDetail','columnCalculatedNames','table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager', 'columns'],
+    props: [
+        'hideProjectHeader',
+        'selectedSumDetail',
+        'columnCalculatedNames',
+        'table',
+        'project',
+        'moneySources',
+        'selectedCell',
+        'selectedRow',
+        'templates',
+        'budgetAccess',
+        'projectManager',
+        'columns',
+        'isBudgetTemplateManagement',
+        'sageNotAssigned'
+    ],
     emits: ['changeProjectHeaderVisualisation'],
     computed: {
         tablesToShow: function () {
@@ -1162,7 +1175,7 @@ export default {
         },
         closeAddBudgetTemplateModal(bool) {
             this.showAddBudgetTemplateModal = false;
-            if(bool){
+            if (bool) {
                 this.successHeading = 'Vorlage gespeichert';
                 this.successDescription = 'Deine Vorlage wurde erfolgreich gespeichert.';
                 this.showSuccessModal = true;
@@ -1543,10 +1556,8 @@ export default {
     align-self: flex-start;
     position: -webkit-sticky;
     display: block;
-    top: 6rem;
+    top: 4rem;
     z-index: 21;
     background-color: #CECDD8;
 }
-
-
 </style>

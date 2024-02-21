@@ -71,7 +71,7 @@
                         <path id="Icon_metro-warning" data-name="Icon metro-warning" d="M8.571,3.015,13.6,13.037H3.542L8.571,3.015Zm0-1.087a.867.867,0,0,0-.713.523L2.735,12.66c-.392.7-.059,1.268.742,1.268H13.664c.8,0,1.134-.571.742-1.268h0L9.284,2.451A.867.867,0,0,0,8.571,1.928Zm.75,9.75a.75.75,0,1,1-.75-.75A.75.75,0,0,1,9.321,11.678Zm-.75-1.5a.75.75,0,0,1-.75-.75V7.178a.75.75,0,1,1,1.5,0v2.25A.75.75,0,0,1,8.571,10.178Z" transform="translate(-1.571 -0.928)" fill="#fcfcfb" stroke="#fcfcfb" stroke-width="0.2"/>
                     </svg>
 
-                    Konflikt mit deiner Schicht!
+                    {{ $t('Conflict with your shift!') }}
                 </div>
                 <div class="flex items-center">
                     <div>
@@ -96,7 +96,7 @@
         </div>
         <div class="my-2.5 text-sm">
             <p v-for="conflict in vacation.conflicts">
-                {{ conflict.user_name }} hat dich am {{ conflict.date_casted }} {{ conflict.start_time }} - {{ conflict.end_time }} eingeplant, entgegen deines ursprünglichen Eintrags.
+                {{ $t(':username has scheduled you on :date :start - :end, contrary to your original entry.', { username: conflict.user_name, date: conflict.date_casted, start: conflict.start_time, end: conflict.end_time }) }}
             </p>
         </div>
 

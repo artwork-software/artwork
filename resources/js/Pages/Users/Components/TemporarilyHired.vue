@@ -4,7 +4,7 @@
             <span aria-hidden="true" :class="[userEdit.temporary ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
         </Switch>
         <SwitchLabel as="span" class="ml-3 text-sm">
-            <span class="font-medium text-gray-900">Temporär angestellt</span>
+            <span class="font-medium text-gray-900">{{ $t('Temporarily employed')}}</span>
         </SwitchLabel>
     </SwitchGroup>
 
@@ -38,7 +38,7 @@
         </div>
     </div>
 
-    <AddButton :disabled="disabled" text="Speichern" class="!ml-0 mt-5" @click="updateTemporaryEmploy" />
+    <AddButton :disabled="disabled" :text="$t('Save')" class="!ml-0 mt-5" @click="updateTemporaryEmploy" />
 </template>
 <script>
 import {defineComponent} from 'vue'
@@ -81,7 +81,7 @@ export default defineComponent({
                 this.userEdit.employStart = null;
             }
             if(dayjs(this.userEdit.employStart) > dayjs(this.userEdit.employEnd)){
-                this.helpText = 'Startdatum darf nicht nach dem Enddatum liegen!'
+                this.helpText = this.$t('Start date must not be after the end date!')
                 return
             } else {
                 this.helpText = '';
@@ -98,7 +98,7 @@ export default defineComponent({
         checkChanges(){
             if(this.userEdit.temporary){
                 if(this.userEdit.employStart === null){
-                    this.employStartText = 'Bitte wähle ein Startdatum!'
+                    this.employStartText = this.$t('Please choose a start date!')
                     this.disabled = true
                 } else {
                     this.employStartText = ''
@@ -106,7 +106,7 @@ export default defineComponent({
                 }
 
                 if(this.userEdit.employEnd === null){
-                    this.employEndText = 'Bitte wähle ein Enddatum!'
+                    this.employEndText = this.$t('Please choose an end date!')
                     this.disabled = true
                 } else {
                     this.employEndText = ''

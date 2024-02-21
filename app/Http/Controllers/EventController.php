@@ -297,7 +297,7 @@ class EventController extends Controller
             )->with(['project', 'room'])->get();
 
         //get date for humans of today with weekday
-        $todayDate = Carbon::now()->locale('de')->isoFormat('dddd, DD.MM.YYYY');
+        $todayDate = Carbon::now()->locale(\session()->get('locale') ?? config('app.fallback_locale'))->isoFormat('dddd, DD.MM.YYYY');
 
         $notification = $user
             ->notifications()

@@ -41,13 +41,13 @@
                                 </div>
                                 <table class="w-full border-separate font-light">
                                     <tr class="text-gray-500 text-center">
-                                        <th class="p-3 font-light">Mo</th>
-                                        <th class="p-3 font-light">Di</th>
-                                        <th class="p-3 font-light">Mi</th>
-                                        <th class="p-3 font-light">Do</th>
-                                        <th class="p-3 font-light">Fr</th>
-                                        <th class="p-3 font-light">Sa</th>
-                                        <th class="p-3 font-light">So</th>
+                                        <th class="p-3 font-light">{{ $t('Mon') }}</th>
+                                        <th class="p-3 font-light">{{ $t('Tue') }}</th>
+                                        <th class="p-3 font-light">{{ $t('Wed') }}</th>
+                                        <th class="p-3 font-light">{{ $t('Thu') }}</th>
+                                        <th class="p-3 font-light">{{ $t('Fri') }}</th>
+                                        <th class="p-3 font-light">{{ $t('Sat') }}</th>
+                                        <th class="p-3 font-light">{{ $t('Sun') }}</th>
                                     </tr>
                                     <tr class="sDark grid-cols-7" v-for="(week, index) in vacationSelectCalendar" :key="index">
                                         <td class="col-span-1 " v-for="day in week" :key="day">
@@ -194,9 +194,9 @@
 
     <ConfirmDeleteModal
         v-if="showDeleteConfirmModal"
-        title="Serieneintrag löschen"
-        button="Einzeleintrag löschen"
-        description="Möchtest Du nur diesen Eintrag löschen oder die ganze Serie?"
+        :title="$t('Delete serial entry')"
+        :button="$t('Delete individual entry')"
+        :description="$t('Would you like to delete just this entry or the whole series?')"
         :is-series-delete="true"
         :is_budget="false"
         @closed="showDeleteConfirmModal = false"

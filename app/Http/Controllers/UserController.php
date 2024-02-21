@@ -157,7 +157,7 @@ class UserController extends Controller
             ->orderBy('date', 'ASC')->get();
 
         $createShowDate = [
-            $selectedPeriodDate->locale('de')->isoFormat('MMMM YYYY'),
+            $selectedPeriodDate->locale(\session()->get('locale') ?? config('app.fallback_locale'))->isoFormat('MMMM YYYY'),
             $selectedPeriodDate->copy()->startOfMonth()->toDate()
         ];
 
@@ -274,7 +274,7 @@ class UserController extends Controller
         }
 
         $dateToShow = [
-            $currentMonth->locale('de')->isoFormat('MMMM YYYY'),
+            $currentMonth->locale(\session()->get('locale') ?? config('app.fallback_locale'))->isoFormat('MMMM YYYY'),
             $currentMonth->copy()->startOfMonth()->toDate()
         ];
 

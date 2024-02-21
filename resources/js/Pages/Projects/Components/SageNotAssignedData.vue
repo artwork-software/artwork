@@ -19,6 +19,23 @@ export default {
                 <ChevronDownIcon v-else  class="h-6 w-6 text-primary my-auto" />
             </div>
             <div class="overflow-x-hidden overflow-y-scroll" :class="[sageNotAssigned.projectsGroup?.length > 0 ? 'h-28' : '']" v-if="sageNotAssigned.projectGroupOpened">
+                <div v-if="sageNotAssigned.projectsGroup?.length > 0" class="flex flex-row font-bold">
+                    <div class="w-28">
+                        KTO
+                    </div>
+                    <div class="w-28">
+                        KST
+                    </div>
+                    <div class="w-64 truncate">
+                        Buchungstext
+                    </div>
+                    <div class="w-52 text-right">
+                        Buchungsbetrag
+                    </div>
+                    <div class="w-40 text-right">
+                        Buchungsdatum
+                    </div>
+                </div>
                 <div v-if="sageNotAssigned.projectsGroup?.length > 0" v-for="(project, index) in sageNotAssigned.projectsGroup">
                     <SageDataDragElement :sageData="project" />
                 </div>
@@ -34,6 +51,23 @@ export default {
                 <ChevronDownIcon v-else  class="h-6 w-6 text-primary my-auto" />
             </div>
             <div class="overflow-x-hidden overflow-y-scroll" :class="[sageNotAssigned.globalGroup.length > 0 ? 'h-28' : '']" v-if="sageNotAssigned.globalGroupOpened">
+                <div v-if="sageNotAssigned.globalGroup?.length > 0" class="flex flex-row font-bold">
+                    <div class="w-28">
+                        KTO
+                    </div>
+                    <div class="w-28">
+                        KST
+                    </div>
+                    <div class="w-64 truncate">
+                        Buchungstext
+                    </div>
+                    <div class="w-52 text-right">
+                        Buchungsbetrag
+                    </div>
+                    <div class="w-40 text-right">
+                        Buchungsdatum
+                    </div>
+                </div>
                 <div v-if="sageNotAssigned.globalGroup?.length > 0" v-for="(global, index) in sageNotAssigned.globalGroup">
                     <SageDataDragElement :sageData="global" />
                 </div>

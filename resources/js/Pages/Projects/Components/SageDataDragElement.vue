@@ -7,9 +7,7 @@ export default {
             return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
         },
         onDragStart(event) {
-            //event.preventDefault();
             event.dataTransfer.setData('text/plain', JSON.stringify(this.sageData));
-            //console.log('drag start', this.sageData);
         }
     }
 }
@@ -18,20 +16,19 @@ export default {
 <template>
    <div class="flex items-center my-1.5 cursor-grab" draggable="true" @dragstart="onDragStart">
        <div class="w-28">
-           {{ sageData.kto }}
+           {{ sageData.sa_kto }}
        </div>
        <div class="w-28">
-           {{ sageData.kst }}
+           {{ sageData.kst_stelle }}
        </div>
        <div class="w-64 truncate">
-           {{ sageData.description }}
+           {{ sageData.buchungstext }}
        </div>
        <div class="w-52 text-right">
-           {{ currencyFormattedValue(sageData.amount) }}
+           {{ currencyFormattedValue(sageData.buchungsbetrag) }}
+       </div>
+       <div class="w-40 text-right">
+           {{ sageData.buchungsdatum }}
        </div>
    </div>
 </template>
-
-<style scoped>
-
-</style>

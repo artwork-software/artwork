@@ -9,6 +9,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
+/**
+ * @property int $project_id
+ * @property string $name
+ * @property bool $is_template
+ * @property \Illuminate\Database\Eloquent\Collection<Column> $columns
+ * @property \Illuminate\Database\Eloquent\Collection<MainPosition> $mainPositions
+ */
 class Table extends Model
 {
     use HasFactory;
@@ -33,16 +40,9 @@ class Table extends Model
         'earningSumDetails'
     ];
 
-    public function columns(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function columns(): HasMany
     {
         return $this->hasMany(Column::class, 'table_id', 'id');
-    }
-
-    public function scopeHasSageColumn(Builder $query): Builder
-    {
-        return $query->whereHas('columns', function ($query): void {
-            $query->where('name', 'sage');
-        });
     }
 
     public function mainPositions(): HasMany
@@ -152,5 +152,12 @@ class Table extends Model
             ->pluck('id');
 
         return $this->calculateCommentedSums($mainPositionIds);
+    }
+
+    public function scopeHasSageColumn(Builder $query): Builder
+    {
+        return $query->whereHas('columns', function ($query): void {
+            $query->where('name', 'sage');
+        });
     }
 }

@@ -8,13 +8,22 @@ use Illuminate\Http\Request;
 
 class PresetTimeLineController extends Controller
 {
-    public function store(ShiftPreset $shiftPreset): void
+    public function store(ShiftPreset $shiftPreset, Request $request): void
     {
-        $shiftPreset->timeline()->create();
+        $shiftPreset->timeline()->create(
+            $request->validate(
+                [
+                    'start' => 'required',
+                    'end' => 'required',
+                    'description' => 'nullable'
+                ]
+            )
+        );
     }
 
     public function update(Request $request): void
     {
+        //dd($request->timelines);
         foreach ($request->timelines as $timeline) {
             $findTimeLine = ShiftPresetTimeline::find($timeline['id']);
             $findTimeLine->update([

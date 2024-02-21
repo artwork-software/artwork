@@ -16,6 +16,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $position
  * @property string $name
  * @property string $is_verified
+ * @property Table $table
+ * @property Collection<SubPosition> $subPositions
+ * @property MainPositionVerified|null $verified
+ * @property Collection<MainPositionDetails> $mainPositionSumDetails
  * @property string $created_at
  * @property string $updated_at
  * @property bool $is_fixed
@@ -43,6 +47,16 @@ class MainPosition extends Model
     public function subPositions(): HasMany
     {
         return $this->hasMany(SubPosition::class);
+    }
+
+    public function verified(): HasOne
+    {
+        return $this->hasOne(MainPositionVerified::class);
+    }
+
+    public function mainPositionSumDetails(): HasMany
+    {
+        return $this->hasMany(MainPositionDetails::class);
     }
 
     public function getColumnSumsAttribute()
@@ -81,22 +95,11 @@ class MainPosition extends Model
         )->whereColumn('verified_value', '!=', 'value')->where('verified_value', '!=', '')->exists();
     }
 
-
-    public function verified(): HasOne
-    {
-        return $this->hasOne(MainPositionVerified::class);
-    }
-
     public function groupedSumDetails(): Collection
     {
         return $this->mainPositionSumDetails()
             ->withCount('comments', 'sumMoneySource')
             ->get()
             ->keyBy('column_id');
-    }
-
-    public function mainPositionSumDetails(): HasMany
-    {
-        return $this->hasMany(MainPositionDetails::class);
     }
 }

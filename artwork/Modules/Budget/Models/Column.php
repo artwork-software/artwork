@@ -4,11 +4,10 @@ namespace Artwork\Modules\Budget\Models;
 
 use App\Models\User;
 use Artwork\Core\Database\Models\Model;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
 
 /**
  * @property int $project_id
@@ -18,6 +17,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $type
  * @property int $linked_first_column
  * @property int $linked_second_column
+ * @property Collection<ColumnCell> $cells
+ * @property Collection<SubPositionSumDetail> $subPositionSumDetails
+ * @property Collection<MainPositionDetails> $mainPositionSumDetails
+ * @property Collection<BudgetSumDetails> $budgetSumDetails
+ * @property User|null $lockedBy
  * @property string $color
  * @property bool $is_locked
  */
@@ -47,20 +51,14 @@ class Column extends Model
         'lockedBy'
     ];
 
-    public function subPositionRows(): BelongsToMany
-    {
-        return $this->belongsToMany(SubPositionRow::class);
-    }
-
-
     public function cells(): HasMany
     {
-        return $this->hasMany(ColumnCell::class, 'column_id');
+        return $this->hasMany(ColumnCell::class, 'column_id', 'id');
     }
 
     public function subPositionSumDetails(): HasMany
     {
-        return $this->hasMany(SubpositionSumDetail::class);
+        return $this->hasMany(SubPositionSumDetail::class);
     }
 
     public function mainPositionSumDetails(): HasMany

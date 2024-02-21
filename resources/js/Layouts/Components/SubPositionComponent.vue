@@ -88,8 +88,9 @@
                                     </div>
                                     <img @click="handleCellClick(cell, 'calculation')" v-if="cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
                                     <img @click="handleCellClick(cell, 'moneysource')" v-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                                    <div :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : ''" @click="handleCellClick(cell)">
-                                    {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
+                                    <img @click="handleCellClick(cell, 'sageAssignedData')" v-if="cell.sage_assigned_data" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
+                                    <div :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : cell.column.type === 'sage' ? 'cursor-pointer' : ''" @click="handleCellClick(cell)">
+                                        {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
                                     </div>
                                 </div>
                             </div>
@@ -175,7 +176,6 @@
                         </transition>
                     </Menu>
                 </tr>
-                <!-- add drop element for sage data -->
                 <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id" :sub-position-id="subPosition.id"/>
                 <div @click="addRowToSubPosition(subPosition, row)" v-if="this.$can('edit budget templates') || !table.is_template" class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
                     <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
@@ -268,7 +268,8 @@ export default {
         'openVerifiedModal',
         'openErrorModal',
         'openCellDetailModal',
-        'openSubPositionSumDetailModal'
+        'openSubPositionSumDetailModal',
+        'openSageAssignedDataModal'
     ],
     data() {
         return {
@@ -521,14 +522,15 @@ export default {
 
         },
         async handleCellClick(cell, type = '') {
-
-            if(type === 'comment'){
+            if (type === 'comment') {
                 this.$emit('openCellDetailModal', cell, 'comment');
-            } else if(type === 'moneysource'){
+            } else if (type === 'moneysource') {
                 this.$emit('openCellDetailModal', cell, 'moneySource');
-            } else if(type === 'calculation'){
+            } else if (type === 'calculation') {
                 this.$emit('openCellDetailModal', cell, 'calculation');
-            } else if(cell.calculations_count > 0){
+            } else if (type === 'sageAssignedData' || cell.column.type === 'sage') {
+                this.$emit('openSageAssignedDataModal', cell);
+            } else if (cell.calculations_count > 0) {
                 this.$emit('openCellDetailModal', cell, 'calculation')
             } else {
                 cell.clicked = !cell.clicked

@@ -6,26 +6,22 @@ export default {
     props: ['row', 'tableId', 'subPositionId'],
     data(){
         return {
-            isDragOver: false, // Zustand, ob das Element gerade über das Drop-Ziel gezogen wird
+            isDragOver: false,
         }
     },
     methods: {
         onDragOver(event) {
             event.preventDefault();
-            this.isDragOver = true; // Aktualisiere den Zustand beim Drag-Over
+            this.isDragOver = true;
         },
         onDragLeave() {
-            this.isDragOver = false; // Setze den Zustand zurück, wenn das Element das Drop-Ziel verlässt
+            this.isDragOver = false;
         },
         onDrop(event) {
-            // Behandle das Drop-Ereignis
-            this.isDragOver = false; // Setze den Zustand zurück, nachdem das Element abgelegt wurde
-            // Füge hier deine Logik hinzu, um das abgelegte Element zu verarbeiten
+            this.isDragOver = false;
             event.preventDefault();
             const data = JSON.parse(event.dataTransfer.getData('text/plain'));
-            console.log('drop', data, this.row);
 
-            // Hier kannst du das abgelegte Element verarbeiten
             Inertia.post(this.route('project.budget.drop.sage'), {
                 table_id: this.tableId,
                 sub_position_id: this.subPositionId,
@@ -41,11 +37,5 @@ export default {
 </script>
 
 <template>
-    <!-- add class if drop has element -->
-    <div class="w-full h-1" @dragover="onDragOver" @drop="onDrop"  @dragleave.prevent="onDragLeave">
-    </div>
+    <div class="w-full h-1" @dragover="onDragOver" @drop="onDrop" @dragleave.prevent="onDragLeave"></div>
 </template>
-
-<style scoped>
-
-</style>

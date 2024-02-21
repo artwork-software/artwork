@@ -6,7 +6,7 @@ use App\Models\MoneySource;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPositionDetails;
-use Artwork\Modules\Budget\Models\SubpositionSumDetail;
+use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 
 class MoneySourceCalculationService
 {
@@ -73,7 +73,7 @@ class MoneySourceCalculationService
 
     private function calculateSubPositionSumDetailsLinkedSum(MoneySource $moneySource): int
     {
-        $subPositionSumDetails = SubpositionSumDetail::query()
+        $subPositionSumDetails = SubPositionSumDetail::query()
             ->with('subPosition.mainPosition.table.project', 'sumMoneySource')
             ->whereRelation('sumMoneySource', 'money_source_id', $moneySource->id)
             ->get();

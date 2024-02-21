@@ -2,11 +2,9 @@
 
 namespace Artwork\Modules\Budget\Models;
 
-use App\Models\User;
+use Artwork\Modules\User\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Artwork\Core\Database\Models\Model;
 
 /**
  * @property int $id
@@ -20,17 +18,12 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class SumComment extends Model
 {
     use HasFactory;
+    use BelongsToUser;
 
-    protected $guarded = [];
-
-    public function commentable(): MorphTo
-    {
-        return $this->morphTo();
-    }
-
-    //@todo belongs to user trait
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
+    protected $fillable = [
+        'commentable_type',
+        'commentable_id',
+        'comment',
+        'user_id'
+    ];
 }

@@ -12,7 +12,7 @@
                     <SvgCollection svgName="smallArrowRight" class="h-6 w-6 ml-2 mr-2"/>
                 </div>
                 <RefreshIcon :class="[
-                                !this.sageInterfaceIsConfigured() ?
+                                !this.sageInterfaceIsConfigured() || this.importProcessing ?
                                     'bg-gray-600 cursor-not-allowed' :
                                     'bg-buttonBlue cursor-pointer',
                                 'w-10 h-10 rounded-full text-white p-2'
@@ -138,7 +138,8 @@ export default defineComponent({
                 bookingDate: this.sageSettings ? this.sageSettings.bookingDate : null,
                 fetchTime: this.sageSettings ? this.sageSettings.fetchTime : null,
                 enabled: this.sageSettings ? this.sageSettings.enabled : false
-            })
+            }),
+            importProcessing: false
         }
     },
     methods: {
@@ -149,16 +150,20 @@ export default defineComponent({
                 typeof this.sageSettings?.password !== 'undefined';
         },
         initializeSageImport() {
-            if (!this.sageInterfaceIsConfigured()) {
+            if (!this.sageInterfaceIsConfigured() || this.importProcessing) {
                 return;
             }
 
+            this.importProcessing = true;
             this.$inertia.post(
                 route('tool.interfaces.sage.initialize'),
                 {},
                 {
                     preserveScroll: true,
-                    preserveState: false
+                    preserveState: false,
+                    onFinish() {
+                        this.importProcessing = false;
+                    }
                 }
             );
         },

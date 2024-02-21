@@ -338,6 +338,7 @@ class ContentSeeder extends Seeder
             'cost_center_id' => 1
         ]);
 
+        /** @var ProjectController $projectController */
         $projectController = app()->get(ProjectController::class);
         $projectController->generateBasicBudgetValues($project);
 

@@ -304,13 +304,7 @@
                 </thead>
             </table>
         </div>
-
-
-        <!-- Sage not assigned -->
-        <SageNotAssignedData v-if="$page.props.sageApiEnabled" :sage-not-assigned="sageNotAssigned" />
-
-
-
+        <SageNotAssignedData v-if="!this.isBudgetTemplateManagement && $page.props.sageApiEnabled" :sage-not-assigned="sageNotAssigned" />
         <div class="w-full flex mb-6">
             <div class="flex flex-wrap w-full bg-secondaryHover border-2 border-gray-300">
                 <div class="w-full flex">
@@ -735,7 +729,6 @@
         :openTab="cellDetailOpenTab"
         @closed="closeCellDetailModal()"
     />
-
     <sum-detail-component
         :selectedSumDetail="selectedSumDetail"
         v-if="showSumDetailModal"
@@ -743,7 +736,6 @@
         :openTab="sumDetailOpenTab"
         @closed="showSumDetailModal = false"
     />
-
     <!-- Vorlage einlesen Modal-->
     <use-template-component
         v-if="showUseTemplateModal"
@@ -775,20 +767,19 @@
         confirm="Löschen"
         :titel="this.confirmationTitle"
         :description="this.confirmationDescription"
-        @closed="afterConfirm"/>
+        @closed="afterConfirm"
+    />
     <!-- Modal für Error-Info -->
     <error-component
         v-if="showErrorModal"
         confirm="Ok"
         :titel="this.errorTitle"
         :description="this.errorDescription"
-        @closed="afterErrorConfirm"/>
-
+        @closed="afterErrorConfirm"
+    />
 </template>
 
 <script>
-
-
 import {
     PencilAltIcon,
     PlusCircleIcon,
@@ -818,7 +809,7 @@ import {
 } from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
-import {useForm, usePage} from "@inertiajs/inertia-vue3";
+import {useForm} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
 import MainPositionComponent from "@/Layouts/Components/MainPositionComponent.vue";
 import RowDetailComponent from "@/Layouts/Components/RowDetailComponent.vue";
@@ -875,7 +866,6 @@ export default {
         ErrorComponent,
         DocumentReportIcon
     },
-
     data() {
         return {
             showSumDetailModal: false,
@@ -946,8 +936,22 @@ export default {
                 false
         }
     },
-
-    props: ['hideProjectHeader','selectedSumDetail','columnCalculatedNames','table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager', 'columns', 'sageNotAssigned'],
+    props: [
+        'hideProjectHeader',
+        'selectedSumDetail',
+        'columnCalculatedNames',
+        'table',
+        'project',
+        'moneySources',
+        'selectedCell',
+        'selectedRow',
+        'templates',
+        'budgetAccess',
+        'projectManager',
+        'columns',
+        'isBudgetTemplateManagement',
+        'sageNotAssigned'
+    ],
     emits: ['changeProjectHeaderVisualisation'],
     computed: {
         tablesToShow: function () {
@@ -1033,7 +1037,6 @@ export default {
         },
     },
     methods: {
-
         updateColumnCommented(columnId, bool) {
             Inertia.patch(
                 route(
@@ -1172,7 +1175,7 @@ export default {
         },
         closeAddBudgetTemplateModal(bool) {
             this.showAddBudgetTemplateModal = false;
-            if(bool){
+            if (bool) {
                 this.successHeading = 'Vorlage gespeichert';
                 this.successDescription = 'Deine Vorlage wurde erfolgreich gespeichert.';
                 this.showSuccessModal = true;
@@ -1557,6 +1560,4 @@ export default {
     z-index: 21;
     background-color: #CECDD8;
 }
-
-
 </style>

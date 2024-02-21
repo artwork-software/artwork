@@ -36,10 +36,7 @@
                                         <SingleTimeLine :time="time" :index="index" :key="index"/>
                                     </div>
                                     <div class="w-full flex group">
-                                        <div
-                                            v-if="showAddTimeLineForm"
-                                            class="grid grid-cols-1 sm:grid-cols-2 w-full gap-2"
-                                        >
+                                        <div v-if="showAddTimeLineForm" class="grid grid-cols-1 sm:grid-cols-2 w-full gap-2">
                                             <div>
                                                 <input type="text"
                                                        onfocus="(this.type='time')"
@@ -61,16 +58,14 @@
                                                        @focusout="checkTime()"
                                                 />
                                             </div>
-                                            <span class="mt-2 text-red-500 text-xs" v-show="helpText.length > 0">{{
-                                                    helpText
-                                                }}</span>
+                                            <span class="mt-2 text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</span>
                                             <div class="mt-2 col-span-2">
                                                 <textarea
                                                     v-model="addTimeLineForm.description"
                                                     rows="4"
                                                     name="comment"
                                                     id="comment"
-                                                    class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                    class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
                                                 />
                                             </div>
                                         </div>
@@ -80,8 +75,7 @@
                                     </div>
                                     <div class="h-1">
                                         <div
-                                            class="mt-5 w-full h-1 border-b-2 border-dashed !flex items-center justify-center relative cursor-pointer hidden group-hover:block"
-                                            @click="showAddTimeLineForm = true">
+                                            class="mt-5 w-full h-1 border-b-2 border-dashed !flex items-center justify-center relative cursor-pointer group-hover:block" @click="showAddTimeLineForm = true">
                                             <div class="absolute flex items-center justify-center w-full ">
                                                 <PlusCircleIcon class="h-6 w-6"/>
                                             </div>

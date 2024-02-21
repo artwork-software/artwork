@@ -8,6 +8,8 @@ use App\Models\MoneySource;
 use App\Models\SeriesEvents;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
+use Artwork\Modules\Budget\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHeadline;
 use Artwork\Modules\Project\Models\ProjectStates;
@@ -767,44 +769,50 @@ class WalidRaadSeeder extends Seeder
             'column_id' => $lastThreeColumns->get(2)->id
         ]);
 
-        //$firstThreeColumns = $columns->shift(3);
+        /** @var SubPositionRow $row1 */
         $row1 = $costSubPosition->subPositionRows()->create([
             'commented' => false,
             'position' => $costSubPosition->subPositionRows()->max('position') + 1
         ]);
-
         // Zeile 1
-        $row1->columns()->attach($columns[0]->id, [
+        $row1->cells()->create([
+            'column_id' => $columns[0]->id,
+            'sub_position_row_id' => $row1->id,
             'value' => '3005',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
-
-        $row1->columns()->attach($columns[1]->id, [
+        $row1->cells()->create([
+            'column_id' => $columns[1]->id,
+            'sub_position_row_id' => $row1->id,
             'value' => '50800',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
-
-        $row1->columns()->attach($columns[2]->id, [
+        $row1->cells()->create([
+            'column_id' => $columns[2]->id,
+            'sub_position_row_id' => $row1->id,
             'value' => 'Operator Surtitles',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
-
-        $row1->columns()->attach($columns[3]->id, [
+        $row1->cells()->create([
+            'column_id' => $columns[3]->id,
+            'sub_position_row_id' => $row1->id,
             'value' => 950,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
-
-        $row1->columns()->attach($columns[4]->id, [
+        $row1->cells()->create([
+            'column_id' => $columns[4]->id,
+            'sub_position_row_id' => $row1->id,
             'value' => 950,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
-
-        $row1->columns()->attach($columns[5]->id, [
+        $row1->cells()->create([
+            'column_id' => $columns[5]->id,
+            'sub_position_row_id' => $row1->id,
             'value' => 950,
             'linked_money_source_id' => null,
             'verified_value' => ''
@@ -816,43 +824,50 @@ class WalidRaadSeeder extends Seeder
             'position' => $costSubPosition->subPositionRows()->max('position') + 1
         ]);
 
-        $row2->columns()->attach($columns[0]->id, [
+        $row2->cells()->create([
+            'column_id' => $columns[0]->id,
+            'sub_position_row_id' => $row2->id,
             'value' => '3005',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $row2->columns()->attach($columns[1]->id, [
+        $row2->cells()->create([
+            'column_id' => $columns[1]->id,
+            'sub_position_row_id' => $row2->id,
             'value' => '50800',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
-
-        $row2->columns()->attach($columns[2]->id, [
+        $row2->cells()->create([
+            'column_id' => $columns[2]->id,
+            'sub_position_row_id' => $row2->id,
             'value' => 'Performer',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
-
-        $row2->columns()->attach($columns[3]->id, [
+        $row2->cells()->create([
+            'column_id' => $columns[3]->id,
+            'sub_position_row_id' => $row2->id,
             'value' => 1000,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
-
-        $row2->columns()->attach($columns[4]->id, [
+        $row2->cells()->create([
+            'column_id' => $columns[4]->id,
+            'sub_position_row_id' => $row2->id,
             'value' => 1200,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
-
-        $row2->columns()->attach($columns[5]->id, [
+        $row2->cells()->create([
+            'column_id' => $columns[5]->id,
+            'sub_position_row_id' => $row2->id,
             'value' => 1100,
             'linked_money_source_id' => 1,
             'linked_type' => 'COST',
             'verified_value' => ''
         ]);
-
 
         // Zeile 3
         $row3 = $costSubPosition->subPositionRows()->create([
@@ -860,37 +875,49 @@ class WalidRaadSeeder extends Seeder
             'position' => $costSubPosition->subPositionRows()->max('position') + 1
         ]);
 
-        $row3->columns()->attach($columns[0]->id, [
+        $row3->cells()->create([
+            'column_id' => $columns[0]->id,
+            'sub_position_row_id' => $row3->id,
             'value' => '3005',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $row3->columns()->attach($columns[1]->id, [
+        $row3->cells()->create([
+            'column_id' => $columns[1]->id,
+            'sub_position_row_id' => $row3->id,
             'value' => '50800',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $row3->columns()->attach($columns[2]->id, [
+        $row3->cells()->create([
+            'column_id' => $columns[2]->id,
+            'sub_position_row_id' => $row3->id,
             'value' => 'Regie',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $row3->columns()->attach($columns[3]->id, [
+        $row3->cells()->create([
+            'column_id' => $columns[3]->id,
+            'sub_position_row_id' => $row3->id,
             'value' => 850,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $row3->columns()->attach($columns[4]->id, [
+        $row3->cells()->create([
+            'column_id' => $columns[4]->id,
+            'sub_position_row_id' => $row3->id,
             'value' => 800,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $row3->columns()->attach($columns[5]->id, [
+        $row3->cells()->create([
+            'column_id' => $columns[5]->id,
+            'sub_position_row_id' => $row3->id,
             'value' => 800,
             'linked_money_source_id' => null,
             'verified_value' => ''
@@ -902,37 +929,49 @@ class WalidRaadSeeder extends Seeder
             'position' => $costSubPosition->subPositionRows()->max('position') + 1
         ]);
 
-        $row4->columns()->attach($columns[0]->id, [
+        $row4->cells()->create([
+            'column_id' => $columns[0]->id,
+            'sub_position_row_id' => $row4->id,
             'value' => '3005',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $row4->columns()->attach($columns[1]->id, [
+        $row4->cells()->create([
+            'column_id' => $columns[1]->id,
+            'sub_position_row_id' => $row4->id,
             'value' => '50800',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $row4->columns()->attach($columns[2]->id, [
+        $row4->cells()->create([
+            'column_id' => $columns[2]->id,
+            'sub_position_row_id' => $row4->id,
             'value' => 'Künstler',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $row4->columns()->attach($columns[3]->id, [
+        $row4->cells()->create([
+            'column_id' => $columns[3]->id,
+            'sub_position_row_id' => $row4->id,
             'value' => 1200,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $row4->columns()->attach($columns[4]->id, [
+        $row4->cells()->create([
+            'column_id' => $columns[4]->id,
+            'sub_position_row_id' => $row4->id,
             'value' => 1200,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $row4->columns()->attach($columns[5]->id, [
+        $row4->cells()->create([
+            'column_id' => $columns[5]->id,
+            'sub_position_row_id' => $row4->id,
             'value' => 1200,
             'linked_money_source_id' => 2,
             'linked_type' => 'COST',
@@ -963,37 +1002,49 @@ class WalidRaadSeeder extends Seeder
             'position' => $costSubPosition->subPositionRows()->max('position') + 1
         ]);
 
-        $costSubPositionRow2->columns()->attach($columns[0]->id, [
+        $costSubPositionRow2->cells()->create([
+            'column_id' => $columns[0]->id,
+            'sub_position_row_id' => $costSubPositionRow2->id,
             'value' => '3060',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow2->columns()->attach($columns[1]->id, [
+        $costSubPositionRow2->cells()->create([
+            'column_id' => $columns[1]->id,
+            'sub_position_row_id' => $costSubPositionRow2->id,
             'value' => '20700',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow2->columns()->attach($columns[2]->id, [
+        $costSubPositionRow2->cells()->create([
+            'column_id' => $columns[2]->id,
+            'sub_position_row_id' => $costSubPositionRow2->id,
             'value' => 'Reisekosten',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow2->columns()->attach($columns[3]->id, [
+        $costSubPositionRow2->cells()->create([
+            'column_id' => $columns[3]->id,
+            'sub_position_row_id' => $costSubPositionRow2->id,
             'value' => 2482,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow2->columns()->attach($columns[4]->id, [
+        $costSubPositionRow2->cells()->create([
+            'column_id' => $columns[4]->id,
+            'sub_position_row_id' => $costSubPositionRow2->id,
             'value' => 2450,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow2->columns()->attach($columns[5]->id, [
+        $costSubPositionRow2->cells()->create([
+            'column_id' => $columns[5]->id,
+            'sub_position_row_id' => $costSubPositionRow2->id,
             'value' => 2450,
             'linked_money_source_id' => null,
             'verified_value' => ''
@@ -1021,37 +1072,49 @@ class WalidRaadSeeder extends Seeder
             'position' => $costSubPosition->subPositionRows()->max('position') + 1
         ]);
 
-        $costSubPositionRow3->columns()->attach($columns[0]->id, [
+        $costSubPositionRow3->cells()->create([
+            'column_id' => $columns[0]->id,
+            'sub_position_row_id' => $costSubPositionRow3->id,
             'value' => '3030',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow3->columns()->attach($columns[1]->id, [
+        $costSubPositionRow3->cells()->create([
+            'column_id' => $columns[1]->id,
+            'sub_position_row_id' => $costSubPositionRow3->id,
             'value' => '20500',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow3->columns()->attach($columns[2]->id, [
+        $costSubPositionRow3->cells()->create([
+            'column_id' => $columns[2]->id,
+            'sub_position_row_id' => $costSubPositionRow3->id,
             'value' => 'Transport Set',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow3->columns()->attach($columns[3]->id, [
+        $costSubPositionRow3->cells()->create([
+            'column_id' => $columns[3]->id,
+            'sub_position_row_id' => $costSubPositionRow3->id,
             'value' => 1500,
             'linked_money_source_id' => null,
             'verified_value' => '',
         ]);
 
-        $costSubPositionRow3->columns()->attach($columns[4]->id, [
+        $costSubPositionRow3->cells()->create([
+            'column_id' => $columns[4]->id,
+            'sub_position_row_id' => $costSubPositionRow3->id,
             'value' => 1500,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow3->columns()->attach($columns[5]->id, [
+        $costSubPositionRow3->cells()->create([
+            'column_id' => $columns[5]->id,
+            'sub_position_row_id' => $costSubPositionRow3->id,
             'value' => 1600,
             'linked_money_source_id' => 1,
             'linked_type' => 'COST',
@@ -1105,37 +1168,49 @@ class WalidRaadSeeder extends Seeder
             'position' => $costSubPosition->subPositionRows()->max('position') + 1
         ]);
 
-        $costSubPositionRow1Main2->columns()->attach($columns[0]->id, [
+        $costSubPositionRow1Main2->cells()->create([
+            'column_id' => $columns[0]->id,
+            'sub_position_row_id' => $costSubPositionRow1Main2->id,
             'value' => '4050',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow1Main2->columns()->attach($columns[1]->id, [
+        $costSubPositionRow1Main2->cells()->create([
+            'column_id' => $columns[1]->id,
+            'sub_position_row_id' => $costSubPositionRow1Main2->id,
             'value' => '10900',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow1Main2->columns()->attach($columns[2]->id, [
+        $costSubPositionRow1Main2->cells()->create([
+            'column_id' => $columns[2]->id,
+            'sub_position_row_id' => $costSubPositionRow1Main2->id,
             'value' => 'Mikrophon',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow1Main2->columns()->attach($columns[3]->id, [
+        $costSubPositionRow1Main2->cells()->create([
+            'column_id' => $columns[3]->id,
+            'sub_position_row_id' => $costSubPositionRow1Main2->id,
             'value' => 550,
             'linked_money_source_id' => null,
             'verified_value' => '',
         ]);
 
-        $costSubPositionRow1Main2->columns()->attach($columns[4]->id, [
+        $costSubPositionRow1Main2->cells()->create([
+            'column_id' => $columns[4]->id,
+            'sub_position_row_id' => $costSubPositionRow1Main2->id,
             'value' => 550,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow1Main2->columns()->attach($columns[5]->id, [
+        $costSubPositionRow1Main2->cells()->create([
+            'column_id' => $columns[5]->id,
+            'sub_position_row_id' => $costSubPositionRow1Main2->id,
             'value' => 43545,
             'linked_money_source_id' => null,
             'verified_value' => ''
@@ -1163,37 +1238,49 @@ class WalidRaadSeeder extends Seeder
             'position' => $costSubPosition->subPositionRows()->max('position') + 1
         ]);
 
-        $costSubPositionRow2Main2->columns()->attach($columns[0]->id, [
+        $costSubPositionRow2Main2->cells()->create([
+            'column_id' => $columns[0]->id,
+            'sub_position_row_id' => $costSubPositionRow2Main2->id,
             'value' => '4070',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow2Main2->columns()->attach($columns[1]->id, [
+        $costSubPositionRow2Main2->cells()->create([
+            'column_id' => $columns[1]->id,
+            'sub_position_row_id' => $costSubPositionRow2Main2->id,
             'value' => '15700',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow2Main2->columns()->attach($columns[2]->id, [
+        $costSubPositionRow2Main2->cells()->create([
+            'column_id' => $columns[2]->id,
+            'sub_position_row_id' => $costSubPositionRow2Main2->id,
             'value' => 'kauf projektoren',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow2Main2->columns()->attach($columns[3]->id, [
+        $costSubPositionRow2Main2->cells()->create([
+            'column_id' => $columns[3]->id,
+            'sub_position_row_id' => $costSubPositionRow2Main2->id,
             'value' => 2000,
             'linked_money_source_id' => null,
             'verified_value' => '',
         ]);
 
-        $costSubPositionRow2Main2->columns()->attach($columns[4]->id, [
+        $costSubPositionRow2Main2->cells()->create([
+            'column_id' => $columns[4]->id,
+            'sub_position_row_id' => $costSubPositionRow2Main2->id,
             'value' => 2200,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow2Main2->columns()->attach($columns[5]->id, [
+        $costSubPositionRow2Main2->cells()->create([
+            'column_id' => $columns[5]->id,
+            'sub_position_row_id' => $costSubPositionRow2Main2->id,
             'value' => 97987,
             'linked_money_source_id' => null,
             'verified_value' => 2200
@@ -1221,39 +1308,51 @@ class WalidRaadSeeder extends Seeder
             'position' => $costSubPosition->subPositionRows()->max('position') + 1
         ]);
 
-        $costSubPositionRow3Main2->columns()->attach($columns[0]->id, [
+        $costSubPositionRow3Main2->cells()->create([
+            'column_id' => $columns[0]->id,
+            'sub_position_row_id' => $costSubPositionRow3Main2->id,
             'value' => '4010',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow3Main2->columns()->attach($columns[1]->id, [
+        $costSubPositionRow3Main2->cells()->create([
+            'column_id' => $columns[1]->id,
+            'sub_position_row_id' => $costSubPositionRow3Main2->id,
             'value' => '10800',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow3Main2->columns()->attach($columns[2]->id, [
+        $costSubPositionRow3Main2->cells()->create([
+            'column_id' => $columns[2]->id,
+            'sub_position_row_id' => $costSubPositionRow3Main2->id,
             'value' => 'Lizenzen',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $costSubPositionRow3Main2->columns()->attach($columns[3]->id, [
+        $costSubPositionRow3Main2->cells()->create([
+            'column_id' => $columns[3]->id,
+            'sub_position_row_id' => $costSubPositionRow3Main2->id,
             'value' => 200,
             'linked_money_source_id' => null,
             'verified_value' => '',
             'commented' => true
         ]);
 
-        $costSubPositionRow3Main2->columns()->attach($columns[4]->id, [
+        $costSubPositionRow3Main2->cells()->create([
+            'column_id' => $columns[4]->id,
+            'sub_position_row_id' => $costSubPositionRow3Main2->id,
             'value' => 200,
             'linked_money_source_id' => null,
             'verified_value' => '',
             'commented' => true
         ]);
 
-        $costSubPositionRow3Main2->columns()->attach($columns[5]->id, [
+        $costSubPositionRow3Main2->cells()->create([
+            'column_id' => $columns[5]->id,
+            'sub_position_row_id' => $costSubPositionRow3Main2->id,
             'value' => 300,
             'linked_money_source_id' => null,
             'verified_value' => '',
@@ -1302,37 +1401,49 @@ class WalidRaadSeeder extends Seeder
             'position' => $earningSubPosition->subPositionRows()->max('position') + 1
         ]);
 
-        $earningSubPositionRow->columns()->attach($columns[0]->id, [
+        $earningSubPositionRow->cells()->create([
+            'column_id' => $columns[0]->id,
+            'sub_position_row_id' => $earningSubPositionRow->id,
             'value' => '8055',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $earningSubPositionRow->columns()->attach($columns[1]->id, [
+        $earningSubPositionRow->cells()->create([
+            'column_id' => $columns[1]->id,
+            'sub_position_row_id' => $earningSubPositionRow->id,
             'value' => '20800',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $earningSubPositionRow->columns()->attach($columns[2]->id, [
+        $earningSubPositionRow->cells()->create([
+            'column_id' => $columns[2]->id,
+            'sub_position_row_id' => $earningSubPositionRow->id,
             'value' => 'Fördermittel',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $earningSubPositionRow->columns()->attach($columns[3]->id, [
+        $earningSubPositionRow->cells()->create([
+            'column_id' => $columns[3]->id,
+            'sub_position_row_id' => $earningSubPositionRow->id,
             'value' => 5000,
             'linked_money_source_id' => null,
             'verified_value' => '',
         ]);
 
-        $earningSubPositionRow->columns()->attach($columns[4]->id, [
+        $earningSubPositionRow->cells()->create([
+            'column_id' => $columns[4]->id,
+            'sub_position_row_id' => $earningSubPositionRow->id,
             'value' => 5000,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $earningSubPositionRow->columns()->attach($columns[5]->id, [
+        $earningSubPositionRow->cells()->create([
+            'column_id' => $columns[5]->id,
+            'sub_position_row_id' => $earningSubPositionRow->id,
             'value' => 5000,
             'linked_money_source_id' => null,
             'verified_value' => ''
@@ -1361,37 +1472,49 @@ class WalidRaadSeeder extends Seeder
 
         ]);
 
-        $earningSubPositionRow2->columns()->attach($columns[0]->id, [
+        $earningSubPositionRow2->cells()->create([
+            'column_id' => $columns[0]->id,
+            'sub_position_row_id' => $earningSubPositionRow2->id,
             'value' => '8001',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $earningSubPositionRow2->columns()->attach($columns[1]->id, [
+        $earningSubPositionRow2->cells()->create([
+            'column_id' => $columns[1]->id,
+            'sub_position_row_id' => $earningSubPositionRow2->id,
             'value' => '20850',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $earningSubPositionRow2->columns()->attach($columns[2]->id, [
+        $earningSubPositionRow2->cells()->create([
+            'column_id' => $columns[2]->id,
+            'sub_position_row_id' => $earningSubPositionRow2->id,
             'value' => 'Eingaben',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $earningSubPositionRow2->columns()->attach($columns[3]->id, [
+        $earningSubPositionRow2->cells()->create([
+            'column_id' => $columns[3]->id,
+            'sub_position_row_id' => $earningSubPositionRow2->id,
             'value' => 5000,
             'linked_money_source_id' => null,
             'verified_value' => '',
         ]);
 
-        $earningSubPositionRow2->columns()->attach($columns[4]->id, [
+        $earningSubPositionRow2->cells()->create([
+            'column_id' => $columns[4]->id,
+            'sub_position_row_id' => $earningSubPositionRow2->id,
             'value' => 5000,
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
 
-        $earningSubPositionRow2->columns()->attach($columns[5]->id, [
+        $earningSubPositionRow2->cells()->create([
+            'column_id' => $columns[5]->id,
+            'sub_position_row_id' => $earningSubPositionRow2->id,
             'value' => 5000,
             'linked_money_source_id' => null,
             'verified_value' => ''

@@ -92,6 +92,6 @@ class SubEventsController extends Controller
 
     public function destroy(SubEvents $subEvents): void
     {
-        $subEvents->delete();
+        $subEvents->forceDelete();
     }
 }

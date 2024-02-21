@@ -35,7 +35,8 @@ class ServiceProviderShowResource extends JsonResource
             'assignableCrafts' => Craft::query()->get()->filter(
                 fn($craft) => !$this->assignedCrafts->pluck('id')->contains($craft->id)
             )->toArray(),
-            'shiftQualifications' => $this->shiftQualifications
+            'shiftQualifications' => $this->shiftQualifications,
+            'contacts' => $this->contacts,
         ];
     }
 }

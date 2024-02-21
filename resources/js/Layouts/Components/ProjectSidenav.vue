@@ -1,7 +1,7 @@
 <template>
     <div class="w-full mt-24">
         <div class="w-full flex items-center">
-            <div class="text-secondary text-md">Kostenträger: {{ costCenter?.name }}</div>
+            <div class="text-secondary text-md">Kostenträger: {{ project?.cost_center?.name }}</div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                            @click="openCopyrightModal"/>
             <ProjectCopyrightModal
@@ -10,15 +10,16 @@
                 :project="project"
                 :copyright="copyright"
                 :costCenter="costCenter"
+                :collecting-societies="collectingSocieties"
             />
         </div>
-        <div class="text-secondary text-md">Urheberrecht: {{ copyright?.own_copyright ? 'Ja' : 'Nein' }}</div>
-        <div class="text-secondary text-sm mt-2">
-            {{ copyright?.collecting_society.name }},
-            {{ copyright?.law_size === "small" ? 'kleines Recht' : 'großes Recht' }},
-            {{ copyright?.live_music ? 'mit Livemusik' : 'ohne Livemusik' }}
+        <div class="text-secondary text-md">Urheberrecht: {{ project.own_copyright ? 'Ja' : 'Nein' }}</div>
+        <div class="text-secondary text-sm mt-2" v-if="project.own_copyright">
+            {{ project?.collecting_society?.name }},
+            {{ project.law_size === "SMALL" ? 'kleines Recht' : 'großes Recht' }},
+            {{ project.live_music ? 'mit Livemusik' : 'ohne Livemusik' }}
         </div>
-        <div class="text-secondary text-sm">{{ costCenter?.description }}</div>
+        <div class="text-secondary text-sm"  v-if="project.own_copyright">{{ project.cost_center_description }}</div>
 
         <hr class="my-10 border-darkGray">
 
@@ -177,7 +178,6 @@ export default {
     },
     props: [
         'project',
-        'costCenter',
         'projectFiles',
         'contracts',
         'moneySources',
@@ -187,7 +187,7 @@ export default {
         'companyTypes',
         'currencies',
         'budgetAccess',
-        'copyright'
+        'collectingSocieties'
     ],
     /*props: {
         project: Object,

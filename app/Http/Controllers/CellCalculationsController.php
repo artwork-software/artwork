@@ -2,28 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\Budget\Models\CellCalculations;
-use Illuminate\Http\Request;
+use Artwork\Modules\Budget\Models\CellCalculation;
+use Artwork\Modules\Budget\Services\CellCalculationService;
+use Artwork\Modules\Budget\Services\ColumnCellService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Redirect;
 
 class CellCalculationsController extends Controller
 {
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \Artwork\Modules\Budget\Models\CellCalculations  $cellCalculations
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(CellCalculations $cellCalculation): \Illuminate\Http\RedirectResponse
+    public function __construct(
+        private readonly CellCalculationService $cellCalculationsService,
+        private readonly ColumnCellService $columnCellService
+    ) {
+    }
+
+    public function destroy(CellCalculation $cellCalculation): RedirectResponse
     {
-        $cellCalculation->delete();
+        $columnCell = $cellCalculation->cell;
 
-        // reset Positions on all other calculations in this cell
-        $cellCalculation->cell->calculations->each(function ($calculation, $index): void {
-            $calculation->update([
-                'position' => $index
-            ]);
-        });
+        $this->cellCalculationsService->delete($cellCalculation);
 
-        return back();
+        $this->columnCellService->resetCellCalculationsPosition($columnCell);
+
+        return Redirect::back();
     }
 }

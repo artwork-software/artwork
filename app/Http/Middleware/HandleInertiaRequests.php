@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
 use App\Models\GeneralSettings;
+use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,6 +51,7 @@ class HandleInertiaRequests extends Middleware
                     'error' => fn() => $request->session()->get('error')
                 ],
                 'selected_language' => Auth::guest() ? app()->getLocale() : Auth::user()->language,
+                'sageApiEnabled' => app(SageApiSettingsService::class)->getFirst()?->enabled ?? false
             ]
         );
     }

@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $id
  * @property string $name
  * @property string $description
- * @property int $project_id
  * @property string $created_at
  * @property string $updated_at
  * @property string $deleted_at
@@ -27,12 +26,6 @@ class CostCenter extends Model
 
     protected $fillable = [
       'name',
-      'description',
-      'project_id'
     ];
 
-    public function project(): BelongsTo
-    {
-        return $this->belongsTo(Project::class, 'project_id');
-    }
 }

@@ -4,8 +4,7 @@ namespace Artwork\Modules\Budget\Models;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -15,6 +14,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $position
  * @property int $main_position_id
  * @property string $is_verified
+ * @property MainPosition $mainPosition
+ * @property SubPositionVerified|null $verified
+ * @property Collection<SubPositionSumDetail> $subPositionSumDetails
+ * @property Collection<SubPositionRow> $subPositionRows
  * @property string $created_at
  * @property string $updated_at
  * @property bool $is_fixed
@@ -22,7 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class SubPosition extends Model
 {
     use HasFactory;
-use BelongsToMainPosition;
+    use BelongsToMainPosition;
 
     protected $fillable = [
         'main_position_id',
@@ -41,6 +44,16 @@ use BelongsToMainPosition;
     public function subPositionRows(): HasMany
     {
         return $this->hasMany(SubPositionRow::class);
+    }
+
+    public function verified(): HasOne
+    {
+        return $this->hasOne(SubPositionVerified::class);
+    }
+
+    public function subPositionSumDetails(): HasMany
+    {
+        return $this->hasMany(SubPositionSumDetail::class);
     }
 
     public function getColumnSumsAttribute(): \Illuminate\Support\Collection
@@ -70,21 +83,11 @@ use BelongsToMainPosition;
             ]);
     }
 
-    public function verified(): HasOne
-    {
-        return $this->hasOne(SubPositionVerified::class);
-    }
-
     public function groupedSumDetails(): Collection
     {
         return $this->subPositionSumDetails()
             ->withCount('comments', 'sumMoneySource')
             ->get()
             ->keyBy('column_id');
-    }
-
-    public function subPositionSumDetails(): HasMany
-    {
-        return $this->hasMany(SubpositionSumDetail::class);
     }
 }

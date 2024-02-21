@@ -4,9 +4,9 @@ namespace Artwork\Modules\Project\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Models\Category;
+use App\Models\CollectingSociety;
 use Artwork\Modules\Project\Models\Comment;
 use App\Models\Contract;
-use App\Models\Copyright;
 use App\Models\CostCenter;
 use App\Models\Event;
 use App\Models\EventType;
@@ -65,7 +65,6 @@ class Project extends Model
         'shift_description',
         'number_of_participants',
         'cost_center_id',
-        'copyright_id',
         'key_visual_path',
         'state',
         'num_of_guests',
@@ -75,13 +74,20 @@ class Project extends Model
         'registration_deadline',
         'closed_society',
         'budget_deadline',
-        'pinned_by_users'
+        'pinned_by_users',
+        'own_copyright',
+        'live_music',
+        'collecting_society_id',
+        'law_size',
+        'cost_center_description',
     ];
 
     protected $casts = [
         'registration_required' => 'boolean',
         'closed_society' => 'boolean',
         'pinned_by_users' => 'array',
+        'live_music' => 'boolean',
+        'own_copyright' => 'boolean',
     ];
 
     protected $with = ['shiftRelevantEventTypes', 'state'];
@@ -89,9 +95,14 @@ class Project extends Model
 
     //@todo: fix phpcs error - refactor function name to costCenter
     //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    public function cost_center(): HasOne
+    public function costCenter(): BelongsTo
     {
-        return $this->hasOne(CostCenter::class);
+        return $this->belongsTo(CostCenter::class, 'cost_center_id', 'id', 'cost_center');
+    }
+
+    public function collectingSociety(): BelongsTo
+    {
+        return $this->belongsTo(CollectingSociety::class, 'collecting_society_id', 'id', 'collecting_society');
     }
 
     public function shiftRelevantEventTypes(): BelongsToMany
@@ -104,11 +115,6 @@ class Project extends Model
     public function shift_contact(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_shift_contacts');
-    }
-
-    public function copyright(): HasOne
-    {
-        return $this->hasOne(Copyright::class);
     }
 
     public function users(): BelongsToMany

@@ -88,8 +88,9 @@
                                     </div>
                                     <img @click="handleCellClick(cell, 'calculation')" v-if="cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
                                     <img @click="handleCellClick(cell, 'moneysource')" v-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                                    <div :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : ''" @click="handleCellClick(cell)">
-                                    {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
+                                    <img @click="handleCellClick(cell, 'sageAssignedData')" v-if="cell.sage_assigned_data" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
+                                    <div :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : cell.column.type === 'sage' ? 'cursor-pointer' : ''" @click="handleCellClick(cell)">
+                                        {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
                                     </div>
                                 </div>
                             </div>
@@ -175,6 +176,7 @@
                         </transition>
                     </Menu>
                 </tr>
+                <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id" :sub-position-id="subPosition.id"/>
                 <div @click="addRowToSubPosition(subPosition, row)" v-if="this.$can('edit budget templates') || !table.is_template" class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
                     <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                         Zeile
@@ -182,12 +184,13 @@
                     </div>
                 </div>
             </div>
-            <div v-else @click="addRowToSubPosition(subPosition, row)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+            <div v-else @click="addRowToSubPosition(subPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                 <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                     Zeile
                     <PlusCircleIcon class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
                 </div>
             </div>
+            <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id" :sub-position-id="subPosition.id"/>
             <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
                 <td class="w-28"></td>
                 <td class="w-28"></td>
@@ -236,11 +239,13 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {nextTick} from "vue";
 import Permissions from "@/mixins/Permissions.vue";
+import SageDataDropElement from "@/Pages/Projects/Components/SageDataDropElement.vue";
 
 export default {
     mixins: [Permissions],
     name: "SubPositionComponent",
     components: {
+        SageDataDropElement,
         PlusCircleIcon,
         ChevronUpIcon,
         ChevronDownIcon,
@@ -263,7 +268,8 @@ export default {
         'openVerifiedModal',
         'openErrorModal',
         'openCellDetailModal',
-        'openSubPositionSumDetailModal'
+        'openSubPositionSumDetailModal',
+        'openSageAssignedDataModal'
     ],
     data() {
         return {
@@ -467,7 +473,7 @@ export default {
             this.showDeleteModal = true;
             this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.subPositionToDelete, 'sub')
         },
-        addRowToSubPosition(subPosition, row) {
+        addRowToSubPosition(subPosition, row = null) {
             this.$inertia.post(route('project.budget.sub-position-row.add'), {
                 table_id: this.table.id,
                 sub_position_id: subPosition.id,
@@ -516,14 +522,15 @@ export default {
 
         },
         async handleCellClick(cell, type = '') {
-
-            if(type === 'comment'){
+            if (type === 'comment') {
                 this.$emit('openCellDetailModal', cell, 'comment');
-            } else if(type === 'moneysource'){
+            } else if (type === 'moneysource') {
                 this.$emit('openCellDetailModal', cell, 'moneySource');
-            } else if(type === 'calculation'){
+            } else if (type === 'calculation') {
                 this.$emit('openCellDetailModal', cell, 'calculation');
-            } else if(cell.calculations_count > 0){
+            } else if (type === 'sageAssignedData' || cell.column.type === 'sage') {
+                this.$emit('openSageAssignedDataModal', cell);
+            } else if (cell.calculations_count > 0) {
                 this.$emit('openCellDetailModal', cell, 'calculation')
             } else {
                 cell.clicked = !cell.clicked

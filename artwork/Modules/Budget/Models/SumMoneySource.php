@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Budget\Models;
 
+use App\Models\MoneySource;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
  * @property int $id
@@ -20,12 +20,12 @@ class SumMoneySource extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
-
-    public function sourceable(): MorphTo
-    {
-        return $this->morphTo();
-    }
+    protected $fillable = [
+        'sourceable_type',
+        'sourceable_id',
+        'money_source_id',
+        'linked_type'
+    ];
 
     public function moneySource(): BelongsTo
     {

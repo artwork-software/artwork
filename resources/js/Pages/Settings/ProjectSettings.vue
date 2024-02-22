@@ -2,61 +2,61 @@
     <app-layout>
         <div class="max-w-screen-lg my-8 ml-14 mr-40">
             <div class="">
-                <h2 class="headline1 my-6">Projekteinstellungen</h2>
+                <h2 class="headline1 my-6">{{$t('Project Settings')}}</h2>
                 <div class="xsLight">
-                    Definiere globale Einstellungen für Projekte.
+                    {{$t('Define global settings for projects.')}}
                 </div>
             </div>
             <div class="flex flex-wrap pb-8">
 
                 <ProjectSettingsItem
-                    title="Genres"
-                    description="Lege Genres fest, denen Projekte später zugeordnet werden können."
-                    input-label="Genre eingeben"
+                    :title="$t('Genres')"
+                    :description="$t('Define genres that projects can be assigned to later.')"
+                    :input-label="$t('Enter Genre')"
                     :items="genres"
                     @add="addGenre"
                     @openDeleteModal="openDeleteGenreModal"
                 />
 
                 <ProjectSettingsItem
-                    title="Kategorien"
-                    description="Lege Kategorien fest, denen Projekte später zugeordnet werden können."
-                    input-label="Kategorie eingeben"
+                    :title="$t('Categories')"
+                    :description="$t('Define categories that projects can be assigned to later.')"
+                    :input-label="$t('Enter Category')"
                     :items="categories"
                     @add="addCategory"
                     @openDeleteModal="openDeleteCategoryModal"
                 />
 
                 <ProjectSettingsItem
-                    title="Bereiche"
-                    description="Lege Bereiche fest, denen Projekte später zugeordnet werden können."
-                    input-label="Bereich eingeben"
+                    :title="$t('Sectors')"
+                    :description="$t('Define sectors that projects can be assigned to later.')"
+                    :input-label="$t('Enter Sector')"
                     :items="sectors"
                     @add="addSector"
                     @openDeleteModal="openDeleteSectorModal"
                 />
 
                 <ProjectSettingState
-                    title="Projektstatus"
-                    description="Lege Projektstatus fest um zu kennzeichnen wie weit fortgeschritten ein Projekt ist. Die Nutzer*innen können anschließend ihre Notifications anhand der Status einstellen."
-                    input-label="Status eingeben"
+                    :title="$t('Project Status')"
+                    :description="$t('Define project statuses to indicate the progress of a project. Users can then adjust their notifications based on these statuses.')"
+                    :input-label="$t('Enter Status')"
                     :items="states"
                     @add="addState"
                     @openDeleteModal="openDeleteStateModal"
                 />
 
                 <ProjectSettingsItem
-                    title="Vertragsarten"
-                    description="Lege Vertragsarten fest, denen Vertragsdokumente später zugeordnet werden können."
-                    input-label="Vertragsart eingeben"
+                    :title="$t('Contract Types')"
+                    :description="$t('Define contract types that can be assigned to contracts later.')"
+                    :input-label="$t('Enter Contract Type')"
                     :items="contractTypes"
                     @add="addContractType"
                     @openDeleteModal="openDeleteContractTypeModal"
                 />
 
                 <ProjectSettingsItem
-                    title="Unternehmensformen"
-                    description="Lege Unternehmensformen fest, denen Vertragspartner später zugeordnet werden können."
+                    :title="$t('Company Types')"
+                    :description="$t('Define company types that can be assigned to companies later.')"
                     input-label="Unternehmensform eingeben"
                     :items="companyTypes"
                     @add="addCompanyType"
@@ -64,27 +64,27 @@
                 />
 
                 <ProjectSettingsItem
-                    title="Verwertungsgesellschaften"
-                    description="Lege Verwertungsgesellschaften fest, denen Verträge später zugeordnet werden können."
-                    input-label="Verwertungsgesellschaft eingeben"
+                    :title="$t('Collecting Societies')"
+                    :description="$t('Define collecting societies that can be assigned to projects later.')"
+                    :input-label="$t('Enter Collecting Society')"
                     :items="collectingSocieties"
                     @add="addCollectingSociety"
                     @openDeleteModal="openDeleteCollectingSocietyModal"
                 />
 
                 <ProjectSettingsItem
-                    title="Währungen"
-                    description="Lege Währungen fest, denen Verträge später zugeordnet werden können."
-                    input-label="Währung eingeben"
+                    :title="$t('Currencies')"
+                    :description="$t('Define currencies that can be assigned to contracts later.')"
+                    :input-label="$t('Enter Currency')"
                     :items="currencies"
                     @add="addCurrency"
                     @openDeleteModal="openDeleteCurrencyModal"
                 />
 
                 <ProjectSettingsItem
-                    title="Projektinformationen auf einen Blick"
-                    description="Lege fest welche Daten für ein Projekt erhoben werden sollten. Die Tabelle kann anschließend in jedem Projekt ausgefüllt werden."
-                    input-label="Überschrift eingeben"
+                    :title="$t('Project Headlines')"
+                    :description="$t('Define project headlines that can be assigned to projects later.')"
+                    :input-label="$t('Enter Project Headline')"
                     :items="project_headlines"
                     item-style="list"
                     @add="addProjectHeadline"
@@ -97,81 +97,81 @@
 
         <ProjectSettingsDeleteModal
             :show="deletingGenre"
-            title="Genre löschen"
-            :description="`Bist du sicher, dass du das Genre ${genreToDelete?.name} aus dem System löschen willst?`"
+            :title="$t('Delete Genre')"
+            :description="$t(`Are you sure you want to delete the genre {genre} from the system?`,{ genre: genreToDelete?.name})"
             @delete="deleteGenre"
             @closeModal="closeDeleteGenreModal"
         />
 
         <ProjectSettingsDeleteModal
             :show="deletingState"
-            title="Status löschen"
-            :description="`Bist du sicher, dass du den Status ${stateToDelete?.name} aus dem System löschen willst?`"
+            :title="$t('Delete Status')"
+            :description="$t('Are you sure you want to delete the status {status} from the system?',{ status: stateToDelete?.name})"
             @delete="deleteState"
             @closeModal="closeDeleteStateModal"
         />
 
         <ProjectSettingsDeleteModal
             :show="deletingCategory"
-            title="Kategorie löschen"
-            :description="`Bist du sicher, dass du die Kategorie ${categoryToDelete?.name} aus dem System löschen willst?`"
+            :title="$t('Delete Category')"
+            :description="$t('Are you sure you want to delete the category {category} from the system?',{ category: categoryToDelete?.name})"
             @delete="deleteCategory"
             @closeModal="closeDeleteCategoryModal"
         />
 
         <ProjectSettingsDeleteModal
             :show="deletingSector"
-            title="Bereich löschen"
-            :description="`Bist du sicher, dass du den Bereich ${sectorToDelete?.name} aus dem System löschen willst?`"
+            :title="$t('Delete Sector')"
+            :description="$t('Are you sure you want to delete the sector {sector} from the system?',{ sector: sectorToDelete?.name})"
             @delete="deleteSector"
             @closeModal="closeDeleteSectorModal"
         />
 
         <ProjectSettingsDeleteModal
             :show="deletingContractType"
-            title="Vertragsart löschen"
-            :description="`Bist du sicher, dass du die Vertragsart ${contractTypeToDelete?.name} aus dem System löschen willst?`"
+            :title="$t('Delete Contract Type')"
+            :description="$t('Are you sure you want to delete the contract type {contractType} from the system?',{ contractType: contractTypeToDelete?.name})"
             @delete="deleteContractType"
             @closeModal="closeDeleteContractTypeModal"
         />
 
         <ProjectSettingsDeleteModal
             :show="deletingCompanyType"
-            title="Unternehmensform löschen"
-            :description="`Bist du sicher, dass du die Unternehmensform ${companyTypeToDelete?.name} aus dem System löschen willst?`"
+            :title="$t('Delete Company Type')"
+            :description="$t('Are you sure you want to delete the company type {companyType} from the system?',{ companyType: companyTypeToDelete?.name})"
             @delete="deleteCompanyType"
             @closeModal="closeDeleteCompanyTypeModal"
         />
 
         <ProjectSettingsDeleteModal
             :show="deletingCollectingSociety"
-            title="Verwertungsgesellschaft löschen"
-            :description="`Bist du sicher, dass du die Verwertungsgesellschaft ${collectingSocietyToDelete?.name} aus dem System löschen willst?`"
+            :title="$t('Delete collecting society')"
+            :description="$t('Are you sure you want to delete the collecting society {collectingSociety} from the system?',{ collectingSociety: collectingSocietyToDelete?.name})"
             @delete="deleteCollectingSociety"
             @closeModal="closeDeleteCollectingSocietyModal"
         />
 
         <ProjectSettingsDeleteModal
             :show="deletingCurrency"
-            title="Währung löschen"
-            :description="`Bist du sicher, dass du die Währung ${currencyToDelete?.name} aus dem System löschen willst?`"
+            :title="$t('Delete Currency')"
+            :description="$t('Are you sure you want to delete the currency {currency} from the system?',{ currency: currencyToDelete?.name})"
             @delete="deleteCurrency"
             @closeModal="closeDeleteCurrencyModal"
         />
 
         <ProjectSettingsDeleteModal
             :show="deletingProjectHeadline"
-            title="Überschrift löschen"
-            :description="`Bist du sicher, dass du die Überschrift ${projectHeadlineToDelete?.name} aus dem System löschen willst?`"
+            :title="$t('Delete Project Headline')"
+            :description="$t('Are you sure you want to delete the project headline {headline} from the system?',{ headline: projectHeadlineToDelete?.name})"
             @delete="deleteProjectHeadline"
             @closeModal="closeDeleteProjectHeadlineModal"
         />
 
         <ProjectSettingsEditModal
             :show="editingProjectHeadline"
-            title="Überschrift bearbeiten"
+            :title="$t('Edit Project Headline')"
             :editedItem="projectHeadlineToEdit"
-            :description="`Ändere den Titel der ausgewählten Überschrift`"
+            :description="$t('Edit the selected project headline.')"
             @update="updateProjectHeadline"
             @closeModal="closeEditProjectHeadlineModal"
         />

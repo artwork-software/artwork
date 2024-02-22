@@ -167,7 +167,7 @@
             :confirm="$t('Close message')"
         />
         <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" />
-        <ConfirmDeleteModal :title="$t('Delete craft')" :description="$t('Are you sure you want to delete the selected trade?')" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
+        <ConfirmDeleteModal :title="$t('Delete craft')" :description="$t('Are you sure you want to delete the selected craft?')" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
     </AppLayout>
 </template>
 <script>

@@ -4,14 +4,13 @@
             <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Vertrags-Upload
+                    {{ $t('Contract upload')}}
                 </div>
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-secondary text-sm my-6">
-                    Lade Dokumente hoch, die ausschließlich das Budget betreffen. Diese können nur User mit
-                    entsprechender Berechtigung einsehen.
+                    {{ $t('Upload documents that relate exclusively to the budget. These can only be viewed by users with the appropriate authorization.') }}
                 </div>
                 <div>
                     <input
@@ -24,8 +23,8 @@
                     <div @click="selectNewFiles" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
                         border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher ziehen
-                            <br>oder ins Feld klicken
+                        <p class="text-buttonBlue font-bold text-center">
+                            {{ $t('Drag document here to upload or click in the field') }}
                         </p>
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
@@ -40,7 +39,7 @@
                 </div>
                 <div>
                     <div class="flex xsDark my-2 items-center" v-if="selectedProject">
-                    Aktuell zugeordnet zu:
+                    {{ $t('Currently assigned to:')}}
                     <a v-if="this.selectedProject?.id"
                        :href="route('projects.show.calendar', {project: selectedProject.id})"
                        class="ml-3 flex xsDark">
@@ -49,7 +48,7 @@
                     </div>
                     <div class="w-full" v-if="!this.projectId">
                         <input type="text"
-                               placeholder="In welchem Projekt speichern?*"
+                               :placeholder="$t('Save in which project?*')"
                                v-model="project_query"
                                class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         <div
@@ -67,7 +66,7 @@
                         <input type="text"
                                v-model="contractForm.contract_partner"
                                id="eventTitle"
-                               placeholder="Vertragspartner*"
+                               :placeholder="$t('Contract partner*')"
                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                     </div>
@@ -89,7 +88,7 @@
                             <ListboxButton v-else
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex flex-grow xsLight text-left subpixel-antialiased">
-                                    Rechtsform
+                                    {{ $t('Legal form')}}
                                 </div>
                                 <span
                                     class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -141,7 +140,7 @@
                             <ListboxButton v-else
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex flex-grow xsLight text-left subpixel-antialiased">
-                                    Vertragsart
+                                    {{ $t('Contract type')}}
                                 </div>
                                 <span
                                     class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -178,7 +177,7 @@
                     <div class="py-1 w-full flex">
                         <input type="number"
                                v-model="contractForm.amount"
-                               placeholder="Betrag* (Gage, Co-Produktionsbeitrag, etc.)"
+                               :placeholder="$t('Amount* (fee, co-production contribution, etc.)')"
                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         <Listbox as="div" class="flex h-12 w-24" v-model="selectedCurrency"
                                  id="eventType">
@@ -227,7 +226,7 @@
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <label for="hasGroup" :class="contractForm.ksk_liable ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
-                                KSK-pflichtig
+                                {{ $t('KSK-liable')}}
                             </label>
                         </div>
 
@@ -237,7 +236,7 @@
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <label for="hasGroup" :class="contractForm.resident_abroad ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
-                                Im Ausland ansässig
+                                {{ $t('Resident abroad')}}
                             </label>
                         </div>
                         <div class="ml-4" v-if="contractForm.resident_abroad">
@@ -247,7 +246,7 @@
                                 <label for="hasGroup"
                                        :class="contractForm.has_power_of_attorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
-                                    Vollmacht liegt vor
+                                    {{ $t('Power of attorney is available')}}
                                 </label>
                             </div>
                             <div class="flex items-center mb-2">
@@ -255,12 +254,12 @@
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <label for="hasGroup" :class="contractForm.is_freed ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
-                                    Im Heimatland befreit
+                                    {{ $t('Liberated at home')}}
                                 </label>
                             </div>
                         </div>
                     </div>
-                    <textarea placeholder="Kommentar / Notiz"
+                    <textarea :placeholder="$t('Comment / Note')"
                               id="description"
                               v-model="description"
                               rows="5"
@@ -270,7 +269,7 @@
                         <div class="relative w-full">
                             <div class="w-full">
                                 <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                       placeholder="Dokumentzugriff für"
+                                       :placeholder="$t('Document access for')"
                                        class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                             <transition leave-active-class="transition ease-in duration-100"
@@ -305,7 +304,7 @@
                                             {{ user.first_name }} {{ user.last_name }}
                                             </span>
                                             <button type="button" @click="deleteUserFromContractUserArray(index)">
-                                                <span class="sr-only">User aus Vertrag entfernen</span>
+                                                <span class="sr-only">{{ $t('Remove user from contract')}}</span>
                                                 <XIcon
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
@@ -319,7 +318,7 @@
                     <div class="px-12 w-full">
                         <div class="xxsDarkBold flex items-center cursor-pointer"
                              @click="showExtraSettings = !showExtraSettings">
-                            Weitere Angaben oder Aufgabe hinzufügen
+                            {{ $t('Add further details or task')}}
                             <ChevronUpIcon v-if="showExtraSettings"
                                            class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
                             <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
@@ -344,14 +343,14 @@
                                         @click="[creatingNewTask = !creatingNewTask]"
                                         class="flex py-3 px-8 items-center  border-2 mt-6 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
                                     <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
-                                    <p class="text-sm">{{ tasks.length === 0 ? 'Neue Aufgabe' : 'Weitere Aufgabe' }}</p>
+                                    <p class="text-sm">{{ tasks.length === 0 ? $t('New task') : $t('Further task') }}</p>
                                 </button>
 
                                 <button
                                     class="flex text-sm py-3 px-8 items-center border-2 mt-6 border-success bg-backgroundGray hover:bg-green-50 rounded-full shadow-sm text-success hover:shadow-blueButton focus:outline-none"
                                     v-if="creatingNewTask"
                                     @click="$refs.task_form.saveTask(); this.errorText === null ? creatingNewTask = false : null">
-                                    Aufgabe im Vertrag speichern
+                                    {{$t('Save task in contract')}}
                                 </button>
                             </div>
                         </div>
@@ -363,7 +362,7 @@
                         class="flex p-2 px-8 mt-1 items-center border border-transparent rounded-full shadow-sm  focus:outline-none"
                         :class="(file === null || contractForm.amount === '' || contractForm.contract_partner === '') || (!this.projectId && this.selectedProject === null)? 'bg-secondary text-white' : 'text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover'"
                         :disabled="file === null || contractForm.amount === '' || contractForm.contract_partner === '' || (!this.projectId && this.selectedProject === null)"
-                        @click="storeContract">Vertrag hochladen
+                        @click="storeContract">{{ $t('Upload contract')}}
                     </button>
                 </div>
             </div>
@@ -490,7 +489,7 @@ export default {
     },
     methods: {
         showError() {
-            this.errorText = 'Du musst die Aufgabe einer Person mit Dokumentenzugriff zuweisen'
+            this.errorText = this.$t('You must assign the task to a person with document access')
         },
         selectProject(project) {
             this.selectedProject = project;
@@ -527,11 +526,11 @@ export default {
             ]
             for (let file of files) {
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
-                    this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
+                    this.uploadDocumentFeedback = this.$t('Videos, .exe and .dmg files are not supported')
                 } else {
                     const fileSize = file.size;
                     if (fileSize > 2097152) {
-                        this.uploadDocumentFeedback = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
+                        this.uploadDocumentFeedback = this.$t('Files larger than 2MB cannot be uploaded.')
                     } else {
                         this.file = file
                     }

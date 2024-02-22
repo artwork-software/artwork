@@ -96,7 +96,7 @@
         </div>
         <div class="my-2.5 text-sm">
             <p v-for="conflict in vacation.conflicts">
-                {{ $t(':username has scheduled you on :date :start - :end, contrary to your original entry.', { username: conflict.user_name, date: conflict.date_casted, start: conflict.start_time, end: conflict.end_time }) }}
+                {{ $t('{username} has scheduled you on {date} {start} - {end}, contrary to your original entry.', { username: conflict.user_name, date: conflict.date_casted, start: conflict.start_time, end: conflict.end_time }) }}
             </p>
         </div>
 

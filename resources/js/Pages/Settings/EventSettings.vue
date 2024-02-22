@@ -2,24 +2,22 @@
     <app-layout>
         <div class="max-w-screen-lg ml-14 mr-40">
             <div class="">
-                <h2 class="headline1">Termineinstellungen</h2>
+                <h2 class="headline1">{{$t('Event Settings')}}</h2>
                 <div class="xsLight mt-2">
-                    Definiere globale Einstellungen für Termine.
+                    {{ $t('Set global event settings.')}}
                 </div>
             </div>
             <div class="mt-4 max-w-2xl">
                 <div class="flex">
-                    <h2 class="headline2 my-2">Termintypen</h2>
-                    <AddButton @click="openAddEventTypeModal" text="Neuer Termintyp" mode="page"/>
+                    <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
+                    <AddButton @click="openAddEventTypeModal" :text="$t('New Event Type')" mode="page"/>
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                        <span class="hind ml-1 my-auto">Erstelle neue Termintypen</span>
+                        <span class="hind ml-1 my-auto">{{$t('Create new Event Types')}}</span>
                     </div>
                 </div>
                 <div class="xsLight mt-2">
-                    Lege bis zu 10 Termintypen fest, denen Termine später zugeordnet werden können. Du kannst außerdem
-                    definieren ob sie Projekten zugeordnet werden müssen oder ob sie einen eigenen individuellen
-                    Terminnamen bekommen können.
+                    {{ $t('Define up to 10 event types that events can be assigned to later. You can also specify whether they need to be associated with projects or if they can have their own individual names.')}}
                 </div>
             </div>
             <ul role="list" class="mt-4 mb-20 w-full">
@@ -36,7 +34,7 @@
                             <div class="flex mt-2">
                                 <div class="xsLight mr-2">
                                     {{
-                                        eventType.project_mandatory ? "Projektzuordnung verpflichtend" : "Projektzuordnung optional"
+                                        eventType.project_mandatory ? $t('Project assignment mandatory') : $t('Project assignment optional')
                                     }}
                                 </div>
                                 <div class="xsLight">
@@ -44,7 +42,7 @@
                                 </div>
                                 <div class="xsLight ml-2">
                                     {{
-                                        eventType.individual_name ? "individueller Terminname verpflichtend" : "kein individueller Terminname verpflichtend"
+                                        eventType.individual_name ? $t('individual event name mandatory') : $t('individual event name optional')
                                     }}
                                 </div>
                             </div>
@@ -65,7 +63,7 @@
                                     </div>
                                     <div class="flex" v-if="index === 1">
                                         <span
-                                            class="hind ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite einen Termintypen</span>
+                                            class="hind ml-2 text-secondary tracking-tight text-lg">{{$t('Edit an event type')}}</span>
                                     </div>
                                 </div>
                             </div>
@@ -84,7 +82,7 @@
                                                 <PencilAltIcon
                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                     aria-hidden="true"/>
-                                                Termintyp bearbeiten
+                                                {{$t('Edit event type')}}
                                             </a>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
@@ -93,7 +91,7 @@
                                                 <TrashIcon
                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                     aria-hidden="true"/>
-                                                Termintyp entfernen
+                                                {{$t('Delete event type')}}
                                             </a>
                                         </MenuItem>
                                     </div>
@@ -111,20 +109,20 @@
                 <img src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="headline1 my-2">
-                        Neuer Termintyp
+                        {{$t('New event type')}}
                     </div>
                     <XIcon @click="closeAddEventTypeModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="xsLight">
-                        Du kannst bis zu 10 Termintypen festlegen.
+                        {{$t('You can create up to 10 different event types.')}}
                     </div>
                     <div class="mt-4">
                         <div class="flex">
                             <Menu as="div" class=" relative">
                                 <div>
                                     <MenuButton :class="[eventTypeForm.svg_name === '' ? 'border border-gray-400' : '']" class="items-center rounded-full focus:outline-none h-14 w-14">
-                                        <label v-if="eventTypeForm.svg_name === ''" class="text-gray-400 text-xs">Farbe*</label>
+                                        <label v-if="eventTypeForm.svg_name === ''" class="text-gray-400 text-xs">{{$t('Color*')}}</label>
                                         <ChevronDownIcon v-if="eventTypeForm.svg_name === ''"
                                                          class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"></ChevronDownIcon>
                                         <EventTypeIconCollection class="h-12 w-12" v-if="eventTypeForm.svg_name !== ''" :iconName=eventTypeForm.svg_name alt="TeamIcon" />
@@ -137,7 +135,7 @@
                                             leave-from-class="transform opacity-100 scale-100"
                                             leave-to-class="transform opacity-0 scale-95">
                                     <MenuItems
-                                        class="z-40 origin-top-right h-32 overflow-y-auto w-20 absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none overflow-y-auto">
+                                        class="z-40 origin-top-right h-32 overflow-y-auto w-20 absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                         <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
                                             <div>
                                                 <div class="" @click="eventTypeForm.svg_name = item.iconName"
@@ -155,12 +153,11 @@
                                        class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                        placeholder="placeholder"/>
                                 <label for="name"
-                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                                    des Termintyps*</label>
+                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{$t('Event type name*')}}</label>
                             </div>
                         </div>
                         <div class="mt-4">
-                            <input placeholder="Abkürzung des Eventtyps"
+                            <input :placeholder="$t('Abbreviation of the event type')"
                                    id="entry_fee"
                                    v-model="eventTypeForm.abbreviation"
                                    class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
@@ -171,14 +168,14 @@
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <p :class="[eventTypeForm.project_mandatory ? 'xsDark' : 'xsLight']"
-                                   class="ml-4 my-auto ">Projektzuordnung verpflichtend</p>
+                                   class="ml-4 my-auto ">{{$t('project assignment mandatory')}}</p>
                             </div>
                             <div class="flex items-center mt-4">
                                 <input v-model="eventTypeForm.individual_name"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <p :class="[eventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
-                                   class="ml-4 my-auto ">individueller Terminname verpflichtend</p>
+                                   class="ml-4 my-auto ">{{$t('individual event name mandatory')}}</p>
                             </div>
                         </div>
                         <div class="mt-2 w-full items-center text-center">
@@ -186,7 +183,7 @@
                                 :class="[this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                 class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
                                 @click="addEventType"
-                                :disabled="this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === ''" text="Termintyp anlegen" mode="modal" />
+                                :disabled="this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === ''" :text="$t('Create event type')" mode="modal" />
                         </div>
                     </div>
                 </div>
@@ -198,7 +195,7 @@
                 <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="headline1 my-2">
-                        Termintyp bearbeiten
+                        {{$t('Edit event type')}}
                     </div>
                     <XIcon @click="closeEditEventTypeModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
@@ -228,7 +225,7 @@
                                                      :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group relative flex  items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <EventTypeIconCollection :height="64" :width="64"
                                                                              :iconName="item.iconName"/>
-                                                </div>kjhb
+                                                </div>
                                             </div>
                                         </MenuItem>
                                     </MenuItems>
@@ -239,11 +236,11 @@
                                        class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                        placeholder="placeholder"/>
                                 <label for="editCategoryName"
-                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{$t('Name')}}</label>
                             </div>
                         </div>
                         <div class="mt-4">
-                            <input :placeholder="editEventTypeForm.abbreviation !== '' ? editEventTypeForm.abbreviation : 'Abkürzung des Eventtyps'"
+                            <input :placeholder="editEventTypeForm.abbreviation !== '' ? editEventTypeForm.abbreviation : $t('Abbreviation of the event type')"
                                    id="entry_fee"
                                    v-model="editEventTypeForm.abbreviation"
                                    class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
@@ -254,21 +251,21 @@
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <p :class="[editEventTypeForm.project_mandatory ? 'xsDark' : 'xsLight']"
-                                   class="ml-4 my-auto">Projektzuordnung verpflichtend</p>
+                                   class="ml-4 my-auto">{{$t('project assignment mandatory')}}</p>
                             </div>
                             <div class="flex items-center mt-4">
                                 <input v-model="editEventTypeForm.individual_name"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <p :class="[editEventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
-                                   class="ml-4 my-auto">individueller Terminname verpflichtend</p>
+                                   class="ml-4 my-auto">{{$t('individual event name mandatory')}}</p>
                             </div>
                         </div>
                         <div class="mt-8 w-full justify-center flex">
                             <AddButton
                                 class="inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
                                 @click="editEventType"
-                                :disabled="this.editEventTypeForm.name === '' || this.editEventTypeForm.svg_name === ''" text="Speichern" mode="modal" />
+                                :disabled="this.editEventTypeForm.name === '' || this.editEventTypeForm.svg_name === ''" :text="$t('Save')" mode="modal" />
                         </div>
                     </div>
                 </div>
@@ -279,24 +276,23 @@
             <template #content>
                 <div class="mx-4">
                     <div class="headline1 my-2">
-                        Termintyp löschen
+                        {{$t('Delete event type')}}
                     </div>
                     <XIcon @click="closeDeleteEventTypeModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="errorText">
-                        Bist du sicher, dass du den Termintyp {{ eventTypeToDelete.name }} löschen möchtest?
-                        Alle Termine, die diesem Typen zugeordnet sind, werden auf "undefiniert" gesetzt.
+                        {{$t('Are you sure you want to delete the event type {eventType} from the system? All events that are assigned to this type will be set to "undefined".', {eventType: eventTypeToDelete.name})}}
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-buttonBlue hover:bg-buttonHover focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="deleteEventType">
-                            Löschen
+                            {{$t('Delete')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteEventTypeModal"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{$t('No, actually not')}}</span>
                         </div>
                     </div>
                 </div>
@@ -306,19 +302,18 @@
             <template #content>
                 <div class="mx-4">
                     <div class="headline1">
-                        Termintyp löschen
+                        {{$t('Delete event type')}}
                     </div>
                     <XIcon @click="closeDeletingUndefined"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="errorText">
-                        Der Termintyp {{ eventTypeToDelete.name }} kann nicht gelöscht werden, da er der
-                        Standard-Termintyp ist.
+                        {{$t('The event type {eventType} cannot be deleted because it is the standard event type.', {eventType: eventTypeToDelete.name})}}
                     </div>
                     <div class="flex justify-between mt-6">
                         <div class="flex my-auto">
                             <span @click="closeDeletingUndefined"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Ok</span>
+                                  class="text-secondary subpixel-antialiased cursor-pointer">{{$t('Ok')}}</span>
                         </div>
                     </div>
                 </div>

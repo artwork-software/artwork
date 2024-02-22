@@ -357,6 +357,34 @@
     "Are you sure you want to delete the project headline {projectHeadline} from the system?": "Bist du sicher, dass du die Projektüberschrift {projectHeadline} aus dem System löschen willst?",
     "Edit Project Headline": "Projektüberschrift bearbeiten",
     "Edit the selected project headline.": "Bearbeite die ausgewählte Projektüberschrift.",
+    "Event Settings": "Termineinstellungen",
+    "Set global event settings.": "Lege globale Termineinstellungen fest.",
+    "Event Types" : "Termintypen",
+    "New Event Type" : "Neuer Termintyp",
+    "Create new Event Types": "Erstelle neue Termintypen",
+    "Define up to 10 event types that events can be assigned to later. You can also specify whether they need to be associated with projects or if they can have their own individual names.": "Lege bis zu 10 Termintypen fest, denen Termine später zugeordnet werden können. Du kannst außerdem definieren ob sie Projekten zugeordnet werden müssen oder ob sie einen eigenen individuellen Terminnamen bekommen können.",
+    "Project assignment mandatory": "Projektzuordnung verpflichtend",
+    "Project assignment optional": "Projektzuordnung optional",
+    "individual event name mandatory": "individueller Terminname verpflichtend",
+    "individual event name optional": "individueller Terminname optional",
+    "Edit an event type": "Bearbeite einen Termintypen",
+    "Edit event type": "Termintyp bearbeiten",
+    "Delete event type": "Termintyp löschen",
+    "New event type": "Neuer Termintyp",
+    "You can create up to 10 different event types." : "Du kannst bis zu 10 Termintypen festlegen.",
+    "Color*": "Farbe*",
+    "Event type name*": "Name des Termintyps*",
+    "Abbreviation of the event type": "Abkürzung des Termintyps",
+    "project assignment mandatory": "Projektzuordnung verpflichtend",
+    "Create event type": "Termintyp anlegen",
+    "name": "Name",
+    "Are you sure you want to delete the event type {eventType} from the system? All events that are assigned to this type will be set to undefined": "Bist du sicher, dass du den Termintyp {eventType} aus dem System löschen willst? Alle Termine, die diesem Typ zugeordnet sind, werden auf undefiniert gesetzt",
+    "No, actually not": "Nein, doch nicht",
+    "The event type {eventType} cannot be deleted because it is the standard event type.": "Der Termintyp {eventType} kann nicht gelöscht werden, da es sich um den Standard-Termintyp handelt.",
+    "Ok": "Ok"
+
+
+
 
 
 

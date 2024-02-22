@@ -52,7 +52,7 @@
                                 <DuplicateIcon
                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
-                                Bearbeiten
+                                {{ $t('Edit')}}
                             </a>
                         </MenuItem>
                         <MenuItem
@@ -62,7 +62,7 @@
                                 <TrashIcon
                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
-                                Löschen
+                                {{ $t('Delete') }}
                             </a>
                         </MenuItem>
                     </div>

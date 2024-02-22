@@ -131,62 +131,6 @@ class AppController extends Controller
         return $settings->setup_finished ? Redirect::route('login') : inertia('Auth/Register');
     }
 
-    /**
-     * @throws AuthorizationException
-     */
-    public function toolSettingsIndex(): Response
-    {
-        $this->authorize('view', GeneralSettings::class);
-
-        return Inertia::render('Settings/ToolSettings');
-    }
-
-    /**
-     * @throws AuthorizationException
-     */
-    public function updateToolImages(Request $request, GeneralSettings $settings): RedirectResponse
-    {
-        $this->authorize('updateToolImages', $settings);
-
-        $smallLogo = $request->file('smallLogo');
-        $bigLogo = $request->file('bigLogo');
-        $banner = $request->file('banner');
-
-        if ($smallLogo) {
-            $settings->small_logo_path = $smallLogo->storePublicly('logo', ['disk' => 'public']);
-        }
-
-        if ($bigLogo) {
-            $settings->big_logo_path = $bigLogo->storePublicly('logo', ['disk' => 'public']);
-        }
-
-        if ($banner) {
-            $settings->banner_path = $banner->storePublicly('banner', ['disk' => 'public']);
-        }
-
-        $settings->save();
-
-        return Redirect::back()->with('success', 'Fotos hinzugefügt');
-    }
-
-    /**
-     * @throws AuthorizationException
-     */
-    public function updateToolEmailSettings(Request $request, GeneralSettings $settings): RedirectResponse
-    {
-        $this->authorize('updateToolEmailSettings', $settings);
-
-        $settings->business_name = $request->get('businessName') ?? '';
-        $settings->impressum_link = $request->get('impressumLink') ?? '';
-        $settings->privacy_link = $request->get('privacyLink') ?? '';
-        $settings->email_footer = $request->get('emailFooter') ?? '';
-        $settings->business_email = $request->get('businessEmail') ?? '';
-
-        $settings->save();
-
-        return Redirect::back()->with('success', 'Email Einstellungen angepasst');
-    }
-
     public function createAdmin(
         UserCreateRequest $request,
         GeneralSettings $settings,

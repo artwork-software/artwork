@@ -13,10 +13,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $value
  * @property string $description
  * @property int $position
+ * @property ColumnCell|null $cell
  * @property string $created_at
  * @property string $updated_at
  */
-class CellCalculations extends Model
+class CellCalculation extends Model
 {
     use HasFactory;
 

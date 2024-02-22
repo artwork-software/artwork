@@ -16,8 +16,6 @@ use App\Http\Controllers\CompanyTypeController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\ContractTypeController;
-use App\Http\Controllers\CopyrightController;
-use App\Http\Controllers\CostCenterController;
 use App\Http\Controllers\CraftController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DepartmentController;
@@ -47,6 +45,7 @@ use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\RowCommentController;
+use App\Http\Controllers\SageAssignedDataCommentController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\ServiceProviderContactsController;
 use App\Http\Controllers\ServiceProviderController;
@@ -60,6 +59,9 @@ use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\SumDetailsController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTemplateController;
+use App\Http\Controllers\ToolSettingsBrandingController;
+use App\Http\Controllers\ToolSettingsCommunicationAndLegalController;
+use App\Http\Controllers\ToolSettingsInterfacesController;
 use App\Http\Controllers\UserCalendarFilterController;
 use App\Http\Controllers\UserCommentedBudgetItemsSettingController;
 use App\Http\Controllers\UserController;
@@ -99,9 +101,20 @@ Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('r
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {
-        Route::get('/settings', [AppController::class, 'toolSettingsIndex'])->name('tool.settings');
-        Route::put('/settings', [AppController::class, 'updateToolImages'])->name('tool.update');
-        Route::patch('/settings/email', [AppController::class, 'updateToolEmailSettings'])->name('tool.updateMail');
+        Route::get('/branding', [ToolSettingsBrandingController::class, 'index'])
+            ->name('tool.branding');
+        Route::put('/branding', [ToolSettingsBrandingController::class, 'update'])
+            ->name('tool.branding.update');
+        Route::get('/communication-and-legal', [ToolSettingsCommunicationAndLegalController::class, 'index'])
+            ->name('tool.communication-and-legal');
+        Route::patch('/communication-and-legal', [ToolSettingsCommunicationAndLegalController::class, 'update'])
+            ->name('tool.communication-and-legal.update');
+        Route::get('/interfaces', [ToolSettingsInterfacesController::class, 'index'])
+            ->name('tool.interfaces');
+        Route::post('/interfaces', [ToolSettingsInterfacesController::class, 'createOrUpdate'])
+            ->name('tool.interfaces.sage.update');
+        Route::post('/interfaces/sage/initialize', [ToolSettingsInterfacesController::class, 'initializeSage'])
+            ->name('tool.interfaces.sage.initialize');
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {
@@ -601,6 +614,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('project.budget.main-position.add');
             Route::post('/sub-position-row/add', [ProjectController::class, 'addSubPositionRow'])
                 ->name('project.budget.sub-position-row.add');
+
+            // drop sage data
+            Route::post('/drop/sage', [ProjectController::class, 'dropSageData'])
+                ->name('project.budget.drop.sage');
+
             Route::post('/cell/{columnCell}/comment/add', [CellCommentsController::class, 'store'])
                 ->name('project.budget.cell.comment.store');
             Route::post('/row/{row}/comment/add', [RowCommentController::class, 'store'])
@@ -673,7 +691,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('project.budget.column.update.commented');
 
             // DELETE
-            Route::delete('/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])
+            Route::delete('/sub-position-row/{subPositionRow}', [ProjectController::class, 'deleteRow'])
                 ->name('project.budget.sub-position-row.delete');
             Route::delete('/cell/comment/{cellComment}', [CellCommentsController::class, 'destroy'])
                 ->name('project.budget.cell.comment.delete');
@@ -689,6 +707,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('project.budget.sub-position.delete');
             Route::delete('/table/{table}', [ProjectController::class, 'deleteTable'])
                 ->name('project.budget.table.delete');
+
+            Route::resource('sageAssignedDataComments', SageAssignedDataCommentController::class)
+                ->only(['store', 'destroy']);
         });
     });
 
@@ -700,13 +721,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('templates.view.index')
         ->can('view budget templates');
 
-    //CopyRight
-    Route::post('/copyright', [CopyrightController::class, 'store'])->name('copyright.store');
-    Route::patch('/copyright/{copyright}', [CopyrightController::class, 'update'])->name('copyright.update');
 
-    //Cost Center
-    Route::post('/cost_center', [CostCenterController::class, 'store'])->name('costCenter.store');
-    Route::patch('/cost_center/{costCenter}', [CostCenterController::class, 'update'])->name('costCenter.update');
+    Route::post('/project/{project}/copyright/update', [ProjectController::class, 'updateCopyright'])
+        ->name('project.copyright.update');
 
     // ContractTypes
     Route::get('/contract_types', [ContractTypeController::class, 'index'])->name('contract_types.index');

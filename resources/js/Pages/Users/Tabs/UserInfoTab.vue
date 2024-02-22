@@ -18,7 +18,7 @@
                                        class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
                                        placeholder="placeholder"/>
                                 <label for="first_name"
-                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('First name') }}</label>
                             </div>
                         </div>
                         <div class="sm:col-span-3 flex items-end">
@@ -29,7 +29,7 @@
                                        placeholder="placeholder"/>
                                 <label for="last_name"
                                        class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
-                                               focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Nachname</label>
+                                               focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Last name')}}</label>
                             </div>
                         </div>
                     </div>
@@ -115,7 +115,7 @@
                 </div>
                 <div class="sm:col-span-6 mt-4 flex">
                     <span v-if="userForm.departments.length === 0"
-                          class="text-secondary subpixel-antialiased my-auto mr-4">In keinem Team</span>
+                          class="text-secondary subpixel-antialiased my-auto mr-4">{{ $t('Not in any team') }}</span>
                     <span v-else class="flex -mr-3"
                           v-for="(team,index) in userForm.departments">
                         <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white"
@@ -146,7 +146,7 @@
                                             <PencilAltIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Teamzugehörigkeit bearbeiten
+                                            {{ $t('Edit team membership')}}
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -155,7 +155,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Nutzer*in aus allen Teams entfernen
+                                            {{ $t('Remove user from all teams') }}
                                         </a>
                                     </MenuItem>
                                 </div>
@@ -169,12 +169,12 @@
             <div class="flex">
                 <AddButton @click="editUser"
                            class=" inline-flex items-center px-12 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                           text="Einstellungen ändern" mode="modal"/>
+                           :text="$t('Change settings')" mode="modal"/>
             </div>
         </div>
         <div class="">
             <div class="flex mt-6" v-if="this.hasAdminRole()">
-                <span @click="resetPassword()" class="xsLight cursor-pointer">Passwort zurücksetzen</span>
+                <span @click="resetPassword()" class="xsLight cursor-pointer">{{ $t('Reset Password')}}</span>
             </div>
             <div v-if="password_reset_status" class="mb-4 font-medium text-sm text-green-600">
                 {{ password_reset_status }}
@@ -186,18 +186,17 @@
             <img src="/Svgs/Overlays/illu_team_user.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="headline1 my-2">
-                    Teamzugehörigkeit
+                     {{$t('Team membership')}}
                 </div>
                 <XIcon @click="closeChangeTeamsModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
                 <div class="mt-4 xsLight">
-                    Gib' an in welchen Teams die/der Nutzer*in ist.<br/> Beachte: Sie/Er hat die Berechtigung alle
-                    den Teams zugeordneten <br/>Projekte einzusehen.
+                    {{ $t('Specify which teams the user is in. Note: He/she has authorization to view all projects assigned to the teams. Projects assigned to the teams.')}}
                 </div>
                 <div class="mt-8 mb-8">
                     <span v-if="departments.length === 0"
-                          class="xsLight flex mb-6 mt-8 my-auto">Bisher sind keine Teams im Tool angelegt.</span>
+                          class="xsLight flex mb-6 mt-8 my-auto">{{ $t('No teams have been created in the tool yet.')}}</span>
                     <div v-for="team in departments">
                         <span class=" flex items-center pr-4 py-2 text-md">
                             <input :key="team.name" type="checkbox" :value="team" :id="team.id"
@@ -225,14 +224,16 @@
         <template #content>
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary text-2xl my-2">
-                    Profilbild ändern
+                    {{ $t('Change profile picture')}}
                 </div>
-                <span class="text-secondary my-auto">Wähle hier dein Profilbild aus. Es sollte die Größe von 1024 KB nicht überschreiten. </span>
+                <span class="text-secondary my-auto">
+                    {{ $t('Select your profile picture here. It should not exceed the size of 1024 KB.')}}
+                </span>
                 <XIcon @click="closeChangePictureModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <!-- New Profile Photo Preview -->
-                <h2 class="" v-show="photoPreview">Vorschau neues Profilbild:</h2>
+                <h2 class="" v-show="photoPreview">{{ $t('Preview new profile picture:')}}</h2>
                 <div class="flex">
                     <div class="mt-1 flex items-center">
                         <div class="mt-2" v-show="photoPreview">
@@ -244,13 +245,13 @@
                     <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
                         <AddButton
                             class="my-auto px-3 py-3"
-                            text="Datei auswählen"
+                            :text="$t('Select file')"
                             mode="modal"
                             @click.prevent="selectNewPhoto"/>
                         <AddButton
                             class=" ml-3 my-auto px-3 py-3"
                             @click.prevent="deletePhoto"
-                            text="Aktuelles Profilbild löschen"
+                            :text="$t('Delete current profile picture')"
                             mode="modal"
                             v-if="this.user_to_edit.profile_photo_url" />
                     </div>
@@ -260,7 +261,7 @@
                 <div class="mt-6">
                     <AddButton
                         class="px-8 py-3"
-                        text="Neues Profilbild speichern"
+                        :text="$t('Save new profile picture')"
                         mode="modal"
                         @click="validateTypeAndChange" />
                 </div>
@@ -268,8 +269,8 @@
         </template>
     </jet-dialog-modal>
     <SuccessModal v-if="showSuccessModal"
-                  title="Nutzer*in erfolgreich bearbeitet"
-                  description="Die Änderungen wurden erfolgreich gespeichert."
+                  :title="$t('User successfully edited')"
+                  :description="$t('The changes have been saved successfully.')"
                   button="Ok"
                   @closed="closeSuccessModal"
     />

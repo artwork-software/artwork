@@ -26,12 +26,14 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
 use App\Models\UserShiftCalendarFilter;
+use App\Sage100\Sage100;
 use App\Support\Services\CollisionService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Carbon\Carbon;
@@ -65,7 +67,7 @@ class EventController extends Controller
     public function __construct(
         private readonly CollisionService $collisionService,
         private readonly NotificationService $notificationService,
-        private readonly BudgetService $budgetService
+        private readonly BudgetService $budgetService,
     ) {
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
@@ -93,10 +95,12 @@ class EventController extends Controller
             $eventsOfDay = collect();
 
             if ($this->userCalendarFilter->start_date === $this->userCalendarFilter->end_date) {
-                $eventsOfDay = Collection::make(CalendarEventResource::collection($calendarController->getEventsOfInterval(
-                    $this->userCalendarFilter->start_date,
-                    $this->userCalendarFilter->end_date
-                ))->resolve());
+
+                $eventsOfDay = Collection::make(CalendarEventResource::collection($calendarController
+                    ->getEventsOfInterval(
+                        $this->userCalendarFilter->start_date,
+                        $this->userCalendarFilter->end_date
+                    ))->resolve());
             }
 
             $events = new CalendarEventCollectionResourceModel(
@@ -297,7 +301,7 @@ class EventController extends Controller
             )->with(['project', 'room'])->get();
 
         //get date for humans of today with weekday
-        $todayDate = Carbon::now()->locale('de')->isoFormat('dddd, DD.MM.YYYY');
+        $todayDate = Carbon::now()->locale(\session()->get('locale') ?? config('app.fallback_locale'))->isoFormat('dddd, DD.MM.YYYY');
 
         $notification = $user
             ->notifications()

@@ -2,11 +2,12 @@
 
 namespace Artwork\Modules\Budget\Models;
 
+use Artwork\Core\Database\Models\Model;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * @property int $id
@@ -17,6 +18,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $linked_money_source_id
  * @property string $linked_type
  * @property string $verified_value
+ * @property Column $column
+ * @property Collection<CellComment> $comments
+ * @property Collection<CellCalculation> $calculations
+ * @property SageAssignedData|null $sageAssignedData
+ * @property SubPositionRow $subPositionRow
  * @property string $created_at
  * @property string $updated_at
  */
@@ -24,6 +30,8 @@ class ColumnCell extends Model
 {
     use HasFactory;
     use BelongsToColumn;
+
+    protected $table = 'column_sub_position_row';
 
     protected $fillable = [
         'column_id',
@@ -39,23 +47,32 @@ class ColumnCell extends Model
         'commented' => 'boolean'
     ];
 
-    protected $primaryKey = 'id';
-
-    protected $table = 'column_sub_position_row';
-
-    public function subPositionRows(): BelongsToMany
+    public function subPositionRow(): BelongsTo
     {
-        return $this->belongsToMany(SubPositionRow::class);
+        return $this->belongsTo(
+            SubPositionRow::class,
+            'sub_position_row_id',
+            'id',
+            'sub_position_rows'
+        );
     }
-
 
     public function comments(): HasMany
     {
-        return $this->hasMany(CellComment::class);
+        return $this->hasMany(CellComment::class, 'column_cell_id', 'id');
     }
 
     public function calculations(): HasMany
     {
-        return $this->hasMany(CellCalculations::class, 'cell_id');
+        return $this->hasMany(CellCalculation::class, 'cell_id', 'id');
+    }
+
+    public function sageAssignedData(): HasOne
+    {
+        return $this->hasOne(
+            SageAssignedData::class,
+            'column_cell_id',
+            'id'
+        );
     }
 }

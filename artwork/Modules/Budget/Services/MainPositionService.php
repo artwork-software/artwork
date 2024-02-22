@@ -5,6 +5,9 @@ namespace Artwork\Modules\Budget\Services;
 use App\Enums\BudgetTypesEnum;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\MainPositionDetails;
+use Artwork\Modules\Budget\Models\MainPositionVerified;
+use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Repositories\MainPositionRepository;
 
@@ -12,17 +15,40 @@ class MainPositionService
 {
     public function __construct(
         private readonly MainPositionRepository $mainPositionRepository,
-    )
-    {
+        private readonly SubPositionService $subPositionService,
+        private readonly MainPositionVerifiedService $mainPositionVerifiedService,
+        private readonly MainPositionDetailsService $mainPositionDetailsService
+    ) {
     }
 
-    public function createMainPosition(Table $table, BudgetTypesEnum $budgetTypesEnum, string $name, int $position): MainPosition|Model
-    {
+    public function createMainPosition(
+        Table $table,
+        BudgetTypesEnum $budgetTypesEnum,
+        string $name,
+        int $position
+    ): MainPosition|Model {
         $mainPosition = new MainPosition();
         $mainPosition->table_id = $table->id;
         $mainPosition->type = $budgetTypesEnum->value;
         $mainPosition->name = $name;
         $mainPosition->position = $position;
         return $this->mainPositionRepository->save($mainPosition);
+    }
+
+    public function delete(MainPosition $mainPosition): void
+    {
+        if (($mainPositionVerified = $mainPosition->verified) instanceof MainPositionVerified) {
+            $this->mainPositionVerifiedService->delete($mainPositionVerified);
+        }
+
+        $mainPosition->mainPositionSumDetails->each(function (MainPositionDetails $mainPositionDetails): void {
+            $this->mainPositionDetailsService->delete($mainPositionDetails);
+        });
+
+        $mainPosition->subPositions->each(function (SubPosition $subPosition): void {
+            $this->subPositionService->delete($subPosition);
+        });
+
+        $this->mainPositionRepository->delete($mainPosition);
     }
 }

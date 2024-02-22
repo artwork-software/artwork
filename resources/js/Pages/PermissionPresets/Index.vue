@@ -2,7 +2,7 @@
     <UserHeader>
         <div class="xl:max-w-screen-xl mt-12 flex flex-col">
             <div class="flex items-center">
-                <h2 class="headline1">Alle Rechte-Presets</h2>
+                <h2 class="headline1">{{ $t('All permission presets')}}</h2>
                 <div class="flex items-center">
                     <button @click="openPermissionPresetModal('create')"
                             type="button"
@@ -11,7 +11,7 @@
                     </button>
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                        <span class="hind ml-1 my-auto">Erstelle neue Rechte-Presets</span>
+                        <span class="hind ml-1 my-auto">{{ $t('Create new permission presets')}}</span>
                     </div>
                 </div>
             </div>
@@ -39,7 +39,7 @@
                                         <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
                                     </div>
                                     <div class="flex">
-                                        <span class="hind ml-1">Bearbeite ein Rechte-Preset</span>
+                                        <span class="hind ml-1">{{  $t('Edit a permission preset') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -65,7 +65,7 @@
                                             <PencilAltIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Rechte-Preset bearbeiten
+                                            {{ $t('Edit permission preset')}}
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -81,7 +81,7 @@
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
                                             <span>
-                                                Rechte-Preset löschen
+                                                {{$t('Delete permission preset')}}
                                             </span>
                                         </a>
                                     </MenuItem>
@@ -117,7 +117,7 @@
     />
     <error-component
         v-if="showPermissionPresetErrorModal"
-        titel="Es ist leider ein Fehler aufgetreten"
+        :titel="$t('Unfortunately an error has occurred')"
         :description="showPermissionPresetErrorModal"
         @closed="closePermissionPresetErrorModal"
     />
@@ -192,8 +192,7 @@ export default defineComponent({
         },
         openConfirmPermissionPresetDeleteModal(permissionPreset) {
             this.confirmDeletePermissionPresetIdToDelete = permissionPreset.id;
-            this.confirmDeletePermissionPresetModalDescription = 'Möchten Sie das Rechte-Preset "' +
-                permissionPreset.name + '" wirklich löschen? Dies kann nicht rückgängig gemacht werden.'
+            this.confirmDeletePermissionPresetModalDescription = this.$t('Do you really want to delete the {presetName} rights preset? This cannot be undone.', {presetName: permissionPreset.name})
             this.showConfirmDeletePermissionPresetModal = true;
         },
         closeConfirmPermissionPresetDeleteModal(bool) {

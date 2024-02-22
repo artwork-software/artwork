@@ -19,7 +19,7 @@ use Artwork\Modules\Budget\Models\MainPosition;
 use Artwork\Modules\Budget\Models\MainPositionDetails;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
-use Artwork\Modules\Budget\Models\SubpositionSumDetail;
+use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -195,7 +195,7 @@ class MoneySourceController extends Controller
             ->get()
             ->unique('sub_position_row_id');
 
-        $subPositionSumDetails = SubpositionSumDetail::with('subPosition.mainPosition.table.project', 'sumMoneySource')
+        $subPositionSumDetails = SubPositionSumDetail::with('subPosition.mainPosition.table.project', 'sumMoneySource')
             ->whereRelation('sumMoneySource', 'money_source_id', $moneySource->id)
             ->get();
 

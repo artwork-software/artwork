@@ -17,7 +17,7 @@
             <td>{{$row['premiere']}}</td>
             <td>{{$row['project_name']}}</td>
             <td>{{$row['artist_or_group']}}</td>
-            <td>{{$row['cost_center']}}</td>
+            <td>{{$row['costCenter']}}</td>
             <td>{{$row['project_state']}}</td>
             <td>{{$row['forecast_costs']}}</td>
             <td>{{$row['forecast_earnings']}}</td>

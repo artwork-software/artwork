@@ -16,8 +16,6 @@ return new class extends Migration
         Schema::create('cost_centers', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
-            $table->string('description')->nullable();
-            $table->foreignId('project_id');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -30,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cost_center');
+        Schema::dropIfExists('cost_centers');
     }
 };

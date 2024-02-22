@@ -5,6 +5,7 @@ namespace Artwork\Modules\Calendar\Services;
 use App\Models\Freelancer;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Session;
 
 class CalendarService
 {
@@ -121,7 +122,7 @@ class CalendarService
         }
 
         $dateToShow = [
-            $currentMonth->locale('de')->isoFormat('MMMM YYYY'),
+            $currentMonth->locale(\session()->get('locale') ?? config('app.fallback_locale'))->isoFormat('MMMM YYYY'),
             $currentMonth->copy()->startOfMonth()->toDate()
         ];
 

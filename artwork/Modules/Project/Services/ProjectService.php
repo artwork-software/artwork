@@ -38,6 +38,11 @@ class ProjectService
 
     }
 
+    public function getProjectsByCostCenter(string $costCenter): Collection
+    {
+        return $this->projectRepository->getProjectsByCostCenter($costCenter);
+    }
+
     public function pin(Project $project): bool
     {
         $user = Auth::user();

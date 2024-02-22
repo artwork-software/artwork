@@ -17,13 +17,13 @@
         <table class="w-full border-separate">
             <tr class="bg-backgroundGray sDark">
                 <th class="p-6"></th>
-                <th class="p-6">MO</th>
-                <th class="p-6">DI</th>
-                <th class="p-6">MI</th>
-                <th class="p-6">DO</th>
-                <th class="p-6">FR</th>
-                <th class="p-6">SA</th>
-                <th class="p-6">SO</th>
+                <th class="p-6">{{ $t('Mon') }}</th>
+                <th class="p-6">{{ $t('Tue') }}</th>
+                <th class="p-6">{{ $t('Wed') }}</th>
+                <th class="p-6">{{ $t('Thu') }}</th>
+                <th class="p-6">{{ $t('Fri') }}</th>
+                <th class="p-6">{{ $t('Sat') }}</th>
+                <th class="p-6">{{ $t('Sun') }}</th>
             </tr>
             <tr class="sDark grid-cols-8" v-for="week in calendarData" :key="week.weekNumber">
                 <td class="col-span-1">

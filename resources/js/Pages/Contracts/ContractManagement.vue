@@ -13,11 +13,11 @@
                                             <div class="inline-flex border-none justify-end w-full">
                                                 <button class="flex" @click="resetContractFilter">
                                                     <XIcon class="w-3 mr-1 mt-0.5"/>
-                                                    <label class="text-xs">Zurücksetzen</label>
+                                                    <label class="text-xs">{{ $t('Reset') }}</label>
                                                 </button>
                                             </div>
                                             <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
-                                                <BaseFilterDisclosure title="Zusatzkosten">
+                                                <BaseFilterDisclosure :title="$t('Additional costs')">
                                                     <div v-for="(filter, index) in filter.costsFilter">
                                                         <div class="relative flex items-center">
                                                             <div class="flex items-center">
@@ -32,7 +32,7 @@
                                                 </BaseFilterDisclosure>
 
                                                 <hr class="border-gray-500 rounded-full mt-2 mb-2">
-                                                <BaseFilterDisclosure title="Rechtsform">
+                                                <BaseFilterDisclosure :title="$t('Legal form')">
                                                     <div v-for="(filter, index) in filter.companyTypesFilter">
                                                         <div class="relative flex items-center">
                                                             <div class="flex items-center">
@@ -46,7 +46,7 @@
                                                 </BaseFilterDisclosure>
 
                                                 <hr class="border-gray-500 rounded-full mt-2 mb-2">
-                                                <BaseFilterDisclosure title="Vertragsart">
+                                                <BaseFilterDisclosure :title="$t('Contract type')">
                                                     <div v-for="(filter, index) in filter.contractTypesFilter">
                                                         <div class="relative flex items-center">
                                                             <div class="flex items-center">
@@ -63,7 +63,7 @@
                                         </BaseFilter>
                                     </div>
                                     <div>
-                                        <AddButton @click="openContractUploadModal" text="Neu" mode="page"/>
+                                        <AddButton @click="openContractUploadModal" :text="$t('New')" mode="page"/>
                                     </div>
 
                                 </div>
@@ -82,7 +82,7 @@
                                 </div>
 
                                 <div v-if="filteredContracts.length === 0" class="w-full text-secondary text-center">
-                                    <h2 class="text-secondary">Keine Verträge vorhanden</h2>
+                                    <h2 class="text-secondary">{{ $t('No contracts available')}}</h2>
                                 </div>
 
                                 <div v-for="contract in filteredContracts" class="mt-6 w-full">

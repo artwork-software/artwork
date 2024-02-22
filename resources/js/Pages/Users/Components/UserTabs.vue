@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import {defineComponent} from 'vue'
+import {defineComponent} from 'vue';
 import {Link} from "@inertiajs/inertia-vue3";
 import Permissions from "@/mixins/Permissions.vue";
 
@@ -29,7 +29,7 @@ export default defineComponent({
         return {
             tabs: [
                 {
-                    name: 'Nutzer*innen',
+                    name: this.$t('Users'),
                     href: route('users'),
                     current: route().current('users'),
                     hasPermission: true
@@ -41,7 +41,7 @@ export default defineComponent({
                     hasPermission: this.$can('teammanagement')
                 },
                 {
-                    name: 'Rechte-Presets',
+                    name: this.$t('Permission presets'),
                     href: route('permission-presets.index'),
                     current: route().current('permission-presets.index'),
                     hasPermission: this.hasAdminRole()

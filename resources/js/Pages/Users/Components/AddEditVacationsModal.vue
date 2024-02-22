@@ -11,9 +11,9 @@
                         <DialogPanel class="relative transform bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:p-6">
                             <DialogTitle class="relative flex justify-between items-center mb-7">
                                 <div class="text-primary text-base">
-                                    Verfügbarkeit & Abwesenheit
-                                    <span v-if="vacation.id"> bearbeiten</span>
-                                    <span v-else> eintragen</span>
+                                    {{ $t('Availability & absence')}}
+                                    <span v-if="vacation.id"> {{$t('edit')}}</span>
+                                    <span v-else> {{ $t('enter')}}</span>
                                 </div>
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
                                     <span class="sr-only">Close</span>
@@ -41,13 +41,13 @@
                                 </div>
                                 <table class="w-full border-separate font-light">
                                     <tr class="text-gray-500 text-center">
-                                        <th class="p-3 font-light">Mo</th>
-                                        <th class="p-3 font-light">Di</th>
-                                        <th class="p-3 font-light">Mi</th>
-                                        <th class="p-3 font-light">Do</th>
-                                        <th class="p-3 font-light">Fr</th>
-                                        <th class="p-3 font-light">Sa</th>
-                                        <th class="p-3 font-light">So</th>
+                                        <th class="p-3 font-light">{{ $t('Mon') }}</th>
+                                        <th class="p-3 font-light">{{ $t('Tue') }}</th>
+                                        <th class="p-3 font-light">{{ $t('Wed') }}</th>
+                                        <th class="p-3 font-light">{{ $t('Thu') }}</th>
+                                        <th class="p-3 font-light">{{ $t('Fri') }}</th>
+                                        <th class="p-3 font-light">{{ $t('Sat') }}</th>
+                                        <th class="p-3 font-light">{{ $t('Sun') }}</th>
                                     </tr>
                                     <tr class="sDark grid-cols-7" v-for="(week, index) in vacationSelectCalendar" :key="index">
                                         <td class="col-span-1 " v-for="day in week" :key="day">
@@ -85,7 +85,7 @@
                                                 <input id="full_day" v-model="vacation.full_day" :checked="vacation.full_day" aria-describedby="full_day-description" name="full_day" type="checkbox" class="h-5 w-5 border-green-300 text-green-600 focus:ring-0 ring-0" />
                                             </div>
                                             <div class="ml-3 text-sm leading-6">
-                                                <label for="full_day" class="font-medium text-gray-900">Ganztags</label>
+                                                <label for="full_day" class="font-medium text-gray-900">{{ $t('All day')}}</label>
                                             </div>
                                         </div>
                                     </div>
@@ -94,7 +94,7 @@
                                     <div class="mb-4" v-if="!vacation.full_day">
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <label for="start_time" class="block text-xs font-medium leading-6 text-gray-600">Startuhrzeit</label>
+                                                <label for="start_time" class="block text-xs font-medium leading-6 text-gray-600">{{ $t('Start time')}}</label>
                                                 <div class="mt-1">
                                                     <input type="time" v-model="vacation.start_time" name="start_time" id="start_time" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                                     <div v-show="helpText.start_time" class="mt-1 text-red-500 text-xs">
@@ -103,7 +103,7 @@
                                                 </div>
                                             </div>
                                             <div>
-                                                <label for="end_time" class="block text-xs font-medium leading-6 text-gray-600">Enduhrzeit</label>
+                                                <label for="end_time" class="block text-xs font-medium leading-6 text-gray-600">{{ $t('End time')}}</label>
                                                 <div class="mt-1">
                                                     <input type="time" v-model="vacation.end_time" name="end_time" id="end_time" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                                     <div v-show="helpText.end_time" class="mt-1 text-red-500 text-xs">
@@ -130,7 +130,7 @@
                                                         </g>
                                                     </svg>
 
-                                                    Wiederholungstermin
+                                                    {{ $t('Repeat date')}}
                                                 </label>
                                             </div>
                                         </div>
@@ -140,14 +140,14 @@
                                     <div class="mb-4" v-if="vacation.is_series">
                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <label for="email" class="block text-xs font-medium leading-6 text-gray-600">Wiederholung</label>
+                                                <label for="email" class="block text-xs font-medium leading-6 text-gray-600">{{  $t('Repetition') }}</label>
                                                 <select id="location" v-model="vacation.series_repeat" name="location" class="mt-1 block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :class="{'!bg-gray-200' : vacation?.id}" :disabled="vacation?.id">
-                                                    <option value="weekly" selected>Wöchentlich</option>
-                                                    <option value="daily">Täglich</option>
+                                                    <option value="weekly" selected>{{  $t('Weekly') }}</option>
+                                                    <option value="daily">{{ $t('Daily')}}</option>
                                                 </select>
                                             </div>
                                             <div>
-                                                <label for="email" class="block text-xs font-medium leading-6 text-gray-600">Endet</label>
+                                                <label for="email" class="block text-xs font-medium leading-6 text-gray-600">{{ $t('Ends')}}</label>
                                                 <div class="mt-1">
                                                     <input type="date" v-model="vacation.series_repeat_until" name="email" id="email" class="block w-full border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :disabled="vacation?.id" :class="{'!bg-gray-100' : vacation?.id}" />
                                                     <div v-show="helpText.series_repeat_until" class="mt-1 text-red-500 text-xs">
@@ -163,7 +163,7 @@
                                     <div>
                                         <div>
                                             <div class="mt-1">
-                                                <input type="text" v-model="vacation.comment" name="comment" id="comment" placeholder="Kommentar" maxlength="20" max="20" class="block w-full border-0 py-3.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                                <input type="text" v-model="vacation.comment" name="comment" id="comment" :placeholder="$t('Comment')" maxlength="20" max="20" class="block w-full border-0 py-3.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                                 <div v-show="helpText.comment" class="mt-1 text-red-500 text-xs">
                                                     {{ helpText.comment }}
                                                 </div>
@@ -175,13 +175,13 @@
                             </div>
                             <div class="flex items-center justify-between px-7 mt-5">
                                 <div>
-                                    <button class="text-[#3017AD] text-xs underline underline-offset-2" @click="saveOrUpdateVacation(true)">Speichern & weitere Einträge machen</button>
+                                    <button class="text-[#3017AD] text-xs underline underline-offset-2" @click="saveOrUpdateVacation(true)">{{ $t('Save & make further entries')}}</button>
                                 </div>
                                 <div >
-                                    <AddButton v-if="vacation.isDirty && !vacation.id" @click="saveOrUpdateVacation(false)" type="save" mode="modal" text="Speichern"/>
-                                    <AddButton v-if="vacation.isDirty && vacation.id" @click="saveOrUpdateVacation(false)" type="save" mode="modal" text="Bearbeiten"/>
-                                    <AddButton v-if="!vacation.isDirty && vacation.id" @click="checkVacationType" type="delete" mode="modal" text="Löschen"/>
-                                    <AddButton v-if="!vacation.isDirty && !vacation.id" @click="closeModal(true)" type="delete" mode="modal" text="Abbrechen"/>
+                                    <AddButton v-if="vacation.isDirty && !vacation.id" @click="saveOrUpdateVacation(false)" type="save" mode="modal" :text="$t('Save')"/>
+                                    <AddButton v-if="vacation.isDirty && vacation.id" @click="saveOrUpdateVacation(false)" type="save" mode="modal" :text="$t('Bearbeiten')"/>
+                                    <AddButton v-if="!vacation.isDirty && vacation.id" @click="checkVacationType" type="delete" mode="modal" :text="$t('Delete')"/>
+                                    <AddButton v-if="!vacation.isDirty && !vacation.id" @click="closeModal(true)" type="delete" mode="modal" :text="$t('Cancel')"/>
                                 </div>
                             </div>
 
@@ -194,9 +194,9 @@
 
     <ConfirmDeleteModal
         v-if="showDeleteConfirmModal"
-        title="Serieneintrag löschen"
-        button="Einzeleintrag löschen"
-        description="Möchtest Du nur diesen Eintrag löschen oder die ganze Serie?"
+        :title="$t('Delete serial entry')"
+        :button="$t('Delete individual entry')"
+        :description="$t('Would you like to delete just this entry or the whole series?')"
         :is-series-delete="true"
         :is_budget="false"
         @closed="showDeleteConfirmModal = false"
@@ -245,8 +245,8 @@ export default {
                 comment: '',
             },
             availableTypes: [
-                { id: 'available', title: 'Verfügbarkeit' },
-                { id: 'vacation', title: 'Abwesenheit' },
+                { id: 'available', title: this.$t('Availability') },
+                { id: 'vacation', title: this.$t('Absence') },
             ],
             showDeleteConfirmModal: false
         }
@@ -273,7 +273,7 @@ export default {
 
             // check if date is selected
             if(!this.vacation.date){
-                this.helpText.date = 'Bitte wähle ein Datum aus.'
+                this.helpText.date = this.$t('Please select a date.')
                 return;
             } else {
                 this.helpText.date = ''
@@ -281,7 +281,7 @@ export default {
 
             // check if type is selected
             if(!this.vacation.type){
-                this.helpText.type = 'Bitte wähle einen Typ aus.'
+                this.helpText.type = this.$t('Please select a type.')
                 return;
             } else {
                 this.helpText.type = ''
@@ -290,13 +290,13 @@ export default {
             // check if start time and end time is selected if not full day
             if(!this.vacation.full_day){
                 if(!this.vacation.start_time){
-                    this.helpText.start_time = 'Bitte wähle eine Startzeit aus.'
+                    this.helpText.start_time = this.$t('Please select a start time.')
                     return;
                 } else {
                     this.helpText.start_time = ''
                 }
                 if(!this.vacation.end_time){
-                    this.helpText.end_time = 'Bitte wähle eine Endzeit aus.'
+                    this.helpText.end_time = this.$t('Please select an end time.')
                     return;
                 } else {
                     this.helpText.end_time = ''
@@ -304,7 +304,7 @@ export default {
 
                 // check if start time is before end time
                 if(this.vacation.start_time > this.vacation.end_time){
-                    this.helpText.start_time = 'Die Startzeit muss vor der Endzeit liegen.'
+                    this.helpText.start_time = this.$t('The start time must be before the end time.')
                     return;
                 } else {
                     this.helpText.start_time = ''
@@ -312,7 +312,7 @@ export default {
 
                 // check if start time and end time is not the same
                 if(this.vacation.start_time === this.vacation.end_time){
-                    this.helpText.start_time = 'Die Startzeit und die Endzeit dürfen nicht gleich sein.'
+                    this.helpText.start_time = this.$t('The start time and the end time must not be the same.')
                     return;
                 } else {
                     this.helpText.start_time = ''
@@ -322,7 +322,7 @@ export default {
             // check if series repeat until is selected if is series
             if(this.vacation.is_series){
                 if(!this.vacation.series_repeat_until){
-                    this.helpText.series_repeat_until = 'Bitte wähle ein Enddatum aus.'
+                    this.helpText.series_repeat_until = this.$t('Please select an end date.')
                     return;
                 } else {
                     this.helpText.series_repeat_until = ''
@@ -332,7 +332,7 @@ export default {
             // check if comment is not longer than 20 characters
             if(this.vacation.comment){
                 if(this.vacation.comment.length > 20){
-                    this.helpText.comment = 'Der Kommentar darf nicht länger als 20 Zeichen sein.'
+                    this.helpText.comment = this.$t('The comment must not be longer than 20 characters.')
                     return;
                 } else {
                     this.helpText.comment = ''

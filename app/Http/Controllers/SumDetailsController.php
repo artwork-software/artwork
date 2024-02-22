@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\MoneySource;
-use App\Models\SumMoneySource;
 use App\Support\Services\MoneySourceThresholdReminderService;
+use Artwork\Modules\Budget\Models\SumMoneySource;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 

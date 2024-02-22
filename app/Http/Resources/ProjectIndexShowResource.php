@@ -44,7 +44,7 @@ class ProjectIndexShowResource extends JsonResource
             'delete_permission_users' => $this->delete_permission_users,
             'curr_user_is_related' => $this->users->contains(Auth::id()),
             'key_visual' => $this->key_visual_path,
-            'cost_center' => $this->cost_center,
+            'cost_center' => $this->costCenter,
             'moneySources' => $this->money_sources,
             'users' => UserResourceWithoutShifts::collection($this->users)->resolve(),
             'project_history' => $historyArray,

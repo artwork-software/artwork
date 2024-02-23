@@ -887,5 +887,22 @@
     "Name of the template*": "Name der Vorlage?*",
     "Rename table": "Tabelle umbenennen",
     "Choose a meaningful name for your template. This will make it easy for all users to find.": "Wähle einen aussagekräftigen Namen für deine Vorlage. So kann sie von allen Nutzer*innen einfach gefunden werden.",
-    "Save template": "Vorlage speichern"
+    "Save template": "Vorlage speichern",
+    "Search" : "Suche",
+    "Restore" : "Wiederherstellen",
+    "Delete permanently" : "Endgültig löschen",
+    "created on" : "angelegt am",
+    "Temporary rooms" : "Temporäre Räume",
+    "created on { created_at } by" : "angelegt am { created_at } von",
+    "assigned to" : "zugeordnet zu",
+    "Course of the project" : "Projektverlauf",
+    "Deleted user" : "gelöschte Nutzer:in",
+    "Project category - Genre" : "Projektkategorie - Genre",
+    "Project category - Category" : "Projektkategorie - Kategorie",
+    "Project category - Area" : "Projektkategorie - Bereich",
+    "Project category - Project status" : "Projektkategorie - Projektstatus",
+    "Project category - Contract type" : "Projektkategorie - Vertragsart",
+    "Project contracts - corporate form" : "Projektverträge - Unternehmensform",
+    "Project contracts - collecting society" : "Projektverträge - Verwertungsgesellschaft",
+    "Project contracts - Currency" : "Projektverträge - Währung"
 }

@@ -11,7 +11,7 @@
         <div v-else class="flex items-center w-64 mr-2">
             <div>
                 <input type="text"
-                       placeholder="Suche"
+                       :placeholder="$t('Search')"
                        v-model="searchText"
                        class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
             </div>
@@ -63,7 +63,7 @@
                                             <RefreshIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Wiederherstellen
+                                            {{  $t('Restore') }}
                                         </Link>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -75,7 +75,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Endgültig löschen
+                                            {{ $t('Delete permanently')}}
                                         </Link>
                                     </MenuItem>
                                 </div>
@@ -94,7 +94,7 @@
                                         {{ room.name }}
                                     </div>
                                     <div class="ml-6 flex items-center text-secondary text-sm my-auto">
-                                        angelegt am {{ room.created_at }} von
+                                        {{ $t('created on')}} {{ room.created_at }} von
                                         <img :src="room.created_by.profile_photo_url"
                                              :alt="room.created_by.first_name"
                                              class="rounded-full ml-2 h-6 w-6 object-cover cursor-pointer">
@@ -108,8 +108,7 @@
 
                 <h2 v-on:click="switchVisibility(area.id)"
                     class="text-sm mt-10 pb-2 flex font-bold text-primary cursor-pointer">
-                    Temporäre
-                    Räume
+                    {{ $t('Temporary rooms')}}
                     <ChevronUpIcon v-if="showTemporaryRooms.includes(area.id)"
                                    class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
                     <ChevronDownIcon v-else
@@ -128,7 +127,7 @@
 
                                     <div
                                         class="ml-6 flex items-center text-secondary text-sm my-auto">
-                                        angelegt am {{ room.created_at }} von
+                                        {{ $t('created on { created_at } by', { created_at: room.created_at })}}
                                         <img
                                             :src="room.created_by.profile_photo_url"
                                             :alt="room.created_by.first_name"

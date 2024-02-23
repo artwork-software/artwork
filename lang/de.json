@@ -548,6 +548,26 @@
     "Save task in contract": "Aufgabe im Vertrag speichern",
     "Upload contract": "Vertrag hochladen",
     "Videos, .exe and .dmg files are not supported": "Videos, .exe und .dmg Dateien werden nicht unterstützt",
-    "Files larger than 2MB cannot be uploaded.": "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
-
+    "Files larger than 2MB cannot be uploaded.": "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden.",
+    "Search" : "Suche",
+    "Restore" : "Wiederherstellen",
+    "Delete permanently" : "Endgültig löschen",
+    "created on" : "angelegt am",
+    "Temporary rooms" : "Temporäre Räume",
+    "created on { created_at } by" : "angelegt am { created_at } von",
+    "assigned to" : "zugeordnet zu",
+    "last modified" : "zuletzt geändert",
+    "View history" : "Verlauf ansehen",
+    "Course of the project" : "Projektverlauf",
+    "Here you can see what was changed by whom and when." : "Hier kannst du nachvollziehen, was von wem wann geändert wurde.",
+    "Deleted user" : "gelöschte Nutzer:in",
+    "Project" : "Projekt",
+    "Project category - Genre" : "Projektkategorie - Genre",
+    "Project category - Category" : "Projektkategorie - Kategorie",
+    "Project category - Area" : "Projektkategorie - Bereich",
+    "Project category - Project status" : "Projektkategorie - Projektstatus",
+    "Project category - Contract type" : "Projektkategorie - Vertragsart",
+    "Project contracts - corporate form" : "Projektverträge - Unternehmensform",
+    "Project contracts - collecting society" : "Projektverträge - Verwertungsgesellschaft",
+    "Project contracts - Currency" : "Projektverträge - Währung"
 }

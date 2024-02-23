@@ -11,7 +11,7 @@
             <div v-else class="flex items-center w-64 mr-2">
                 <div>
                     <input type="text"
-                           placeholder="Suche"
+                           :placeholder="$t('Search')"
                            v-model="searchText"
                            class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                 </div>
@@ -33,7 +33,7 @@
                             {{ event.name }}
                         </div>
                         <div v-if="event.project" class="mt-1.5 flex">
-                            zugeordnet zu:
+                            {{ $t('assigned to')}}:
                             <a v-if="event.project?.id"
                                :href="route('projects.show.calendar', {project: event.project.id})"
                                class="ml-3 text-md flex font-bold font-lexend text-primary">
@@ -79,7 +79,7 @@
                                             <RefreshIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Wiederherstellen
+                                            {{ $t('Restore') }}
                                         </Link>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -91,7 +91,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Endgültig löschen
+                                            {{ $t('Delete permanently')}}
                                         </Link>
                                     </MenuItem>
                                 </div>

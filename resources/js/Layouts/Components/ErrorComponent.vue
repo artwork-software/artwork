@@ -13,7 +13,7 @@
                     {{ description }}
                 </div>
                 <div class="flex justify-start mt-6">
-                    <AddButton class="px-20 py-4" @click="closeModal(true)" :text="confirm ?? 'Ja'" mode="modal"/>
+                    <AddButton class="px-20 py-4" @click="closeModal(true)" :text="confirm ?? $t('Yes')" mode="modal"/>
                 </div>
             </div>
         </template>
@@ -21,7 +21,6 @@
 </template>
 
 <script>
-
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
@@ -38,7 +37,12 @@ export default {
         AddButton,
         CheckIcon
     },
-    props: ['titel', 'description', 'confirm', 'cancel'],
+    props: [
+        'titel',
+        'description',
+        'confirm',
+        'cancel'
+    ],
     emits: ['closed'],
     methods: {
         closeModal(bool) {
@@ -47,5 +51,3 @@ export default {
     },
 }
 </script>
-
-<style scoped></style>

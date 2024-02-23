@@ -6,11 +6,10 @@
             <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
-                <!--   Heading   -->
                 <div>
                     <h1 class="my-1 flex">
                         <div class="flex-grow flex items-center headline1">
-                            Details
+                            {{ $t('Details') }}
                         </div>
                     </h1>
                     <div class="mb-4">
@@ -29,20 +28,21 @@
                     </div>
                     <!-- Commentary Tab -->
                     <div v-if="isCommentTab">
-
                         <textarea
-                             placeholder="Was gibt es zu diesem Posten zu beachten?"
+                             :placeholder="$t('What do I need to know about this item?')"
                              v-model="commentForm.comment" rows="4"
                              class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 inputMain pt-3 mb-8 placeholder-secondary  w-full"/>
                         <div>
-
                             <div class="my-6" v-for="comment in selectedSumDetail.comments"
                                  @mouseover="commentHovered = comment.id"
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
-                                        <NewUserToolTip :id="comment.id" :user="comment.user" :height="8"
-                                                        :width="8"></NewUserToolTip>
+                                        <NewUserToolTip :id="comment.id"
+                                                        :user="comment.user"
+                                                        :height="8"
+                                                        :width="8"
+                                        />
                                         <div class="ml-2 text-secondary"
                                              :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                             {{ formatDate(comment.created_at) }}
@@ -50,7 +50,7 @@
                                     </div>
                                     <button v-show="commentHovered === comment.id && comment.user_id === $page.props.user.id" type="button"
                                             @click="deleteCommentFromCell(comment)">
-                                        <span class="sr-only">Kommentar von Projekt entfernen</span>
+                                        <span class="sr-only">{{ $t('Remove comment from project') }}</span>
                                         <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
                                     </button>
                                 </div>
@@ -60,25 +60,26 @@
                             </div>
                         </div>
                         <div class="flex justify-center">
-                            <AddButton @click="addCommentToCell()" text="Speichern"
+                            <AddButton @click="addCommentToCell()" :text="$t('Save')"
                                        :disabled="commentForm.comment === null && commentForm.comment === ''"
                                        :class="commentForm.comment === null || commentForm.comment === '' ? 'bg-secondary hover:bg-secondary' : ''"
-                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
+                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"
+                            />
                         </div>
                     </div>
                     <!-- Link Tab -->
-
                     <div v-if="isLinkTab">
                         <h2 class="xsLight mb-2 mt-4">
-                            Behalte den Überblick über deine Finanzierungsquellen. Du kannst den Wert zur
-                            Quelle entweder addieren oder subtrahieren.
+                            {{ $t('Keep track of your funding sources. You can either add or subtract the value from the source.') }}
                         </h2>
 
                         <div class="flex items-center justify-start my-6">
                             <input v-model="isLinked" type="checkbox"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[isLinked ? 'xsDark' : 'xsLight']"
-                               class="ml-4 my-auto text-sm"> Mit Finanzierungsquelle verlinken</p>
+                               class="ml-4 my-auto text-sm">
+                                {{ $t('Link to funding source') }}
+                            </p>
                         </div>
 
                         <div v-if="isLinked" class="flex w-full">
@@ -106,7 +107,7 @@
                                             </ListboxOptions>
                                         </Listbox>
                                         <input id="userSearch" v-model="moneySource_query" type="text" autocomplete="off"
-                                               placeholder="Mit welcher Finanzierungsquelle willst du den Wert verlinken?"
+                                               :placeholder="$t('Which funding source do you want to link the value to?')"
                                                class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     </div>
                                     <transition leave-active-class="transition ease-in duration-100"
@@ -147,22 +148,21 @@
 
                         </div>
                         <div class="flex justify-center">
-                            <AddButton @click="updateMoneySourceLink()" :disabled="selectedMoneySource === null"
-                                       class="mt-8 py-5 px-24 flex" text="Speichern"
-                                       mode="modal"></AddButton>
+                            <AddButton :disabled="selectedMoneySource === null"
+                                       class="mt-8 py-5 px-24 flex"
+                                       :text="$t('Save')"
+                                       mode="modal"
+                                       @click="updateMoneySourceLink()"
+                            />
                         </div>
                     </div>
-
-
                 </div>
             </div>
         </template>
     </jet-dialog-modal>
-
 </template>
 
 <script>
-
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, RadioGroup, RadioGroupOption} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {CheckIcon, ChevronDownIcon, PlusCircleIcon, XIcon} from '@heroicons/vue/outline';
@@ -172,10 +172,6 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
-const linkTypes = [
-    {name: '+', type: 'EARNING'},
-    {name: '-', type: 'COST'}
-]
 export default {
     name: 'SumDetailComponent',
     mixins: [Permissions],
@@ -196,13 +192,29 @@ export default {
         PlusCircleIcon,
         XCircleIcon
     },
-
     data() {
         return {
             isLinked: this.selectedSumDetail.sum_money_source !== null,
-            linkedType: this.selectedSumDetail.sum_money_source?.linked_type === 'EARNING' ? linkTypes[0] : linkTypes[1],
+            linkedType: this.selectedSumDetail.sum_money_source?.linked_type === 'EARNING' ?
+                {
+                    name: '+',
+                    type: 'EARNING'
+                } :
+                {
+                    name: '-',
+                    type: 'COST'
+                },
             selectedMoneySource: this.selectedSumDetail.sum_money_source?.money_source ?? null,
-            linkTypes,
+            linkTypes: [
+                {
+                    name: '+',
+                    type: 'EARNING'
+                },
+                {
+                    name: '-',
+                    type: 'COST'
+                }
+            ],
             isCommentTab: this.openTab === 'comment',
             isLinkTab: this.openTab === 'moneySource',
             cellComment: null,

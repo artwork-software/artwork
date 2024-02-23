@@ -9,15 +9,14 @@
                 <div>
                     <h1 class="my-1 flex">
                         <div class="flex-grow headline1">
-                            Aus Projekt einlesen
+                            {{ $t('Read from project') }}
                         </div>
                     </h1>
                     <h2 class="xsLight mb-2 mt-8">
-                        Um deine Arbeit einfacher zu machen, nutze eine bestehende Kalkulation aus einem anderen
-                        Projekt.
+                        {{ $t('To make your work easier, use an existing calculation from another project.') }}
                     </h2>
                     <div v-if="selectedProject !== null" class="flex items-center my-3 xsDark">
-                        Aktuell gewählte Projekt-Vorlage: {{ this.selectedProject?.name }}
+                        {{ $t('Currently selected project template') }}: {{ this.selectedProject?.name }}
                         <div v-if="this.selectedProject" class="flex items-center my-auto">
                             <button type="button"
                                     @click="selectedProject = null">
@@ -27,7 +26,7 @@
                     </div>
                     <div class="flex items-center w-full mr-2">
                         <div class="w-full">
-                            <inputComponent v-model="this.project_query" placeholder="Aus welchem Projekt?*"/>
+                            <inputComponent v-model="this.project_query" :placeholder="$t('From which project?*')"/>
                             <div
                                 v-if="project_search_results.length > 0"
                                 class="bg-primary truncate sm:text-sm">
@@ -41,22 +40,20 @@
                         </div>
                     </div>
                     <div class="flex justify-center">
-                        <AddButton @click="useProjectBudgetAsTemplate()" :disabled="selectedProject === null"
+                        <AddButton @click="useProjectBudgetAsTemplate()"
+                                   :disabled="selectedProject === null"
                                    :class="selectedProject === null ? 'bg-secondary hover:bg-secondary cursor-pointer-none' : ''"
-                                   class="mt-8 py-3 flex" text="Kalkulation einlesen"
-                                   mode="modal"></AddButton>
+                                   class="mt-8 py-3 flex" :text="$t('Import calculation')"
+                                   mode="modal"
+                        />
                     </div>
                 </div>
             </div>
         </template>
     </jet-dialog-modal>
-
 </template>
 
 <script>
-
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
-
 
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
@@ -77,7 +74,6 @@ export default {
         InputComponent,
         XCircleIcon
     },
-
     data() {
         return {
             selectedProject: null,
@@ -85,12 +81,11 @@ export default {
             project_search_results: [],
         }
     },
-
-
-    props: ['projectId', 'templates'],
-
+    props: [
+        'projectId',
+        'templates'
+    ],
     emits: ['closed'],
-
     watch: {
         project_query: {
             handler() {
@@ -105,11 +100,7 @@ export default {
             deep: true
         },
     },
-
     methods: {
-        openModal() {
-        },
-
         closeModal(bool) {
             this.$emit('closed', bool);
         },
@@ -123,5 +114,3 @@ export default {
     },
 }
 </script>
-
-<style scoped></style>

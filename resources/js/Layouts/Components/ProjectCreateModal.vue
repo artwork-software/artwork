@@ -1,10 +1,10 @@
 <template>
-    <jet-dialog-modal :show="addingProject" @close="closeAddProjectModal">
+    <jet-dialog-modal :show="show" @close="this.$emit('closeCreateProjectModal')">
         <template #content>
             <img src="/Svgs/Overlays/illu_project_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                    Neues Projekt
+                    {{ $t('New project') }}
                 </div>
                 <div class="mb-4">
                     <div class="hidden sm:block">
@@ -28,7 +28,7 @@
                         <div class="mb-2">
                             <div class="relative flex w-full">
                                 <input id="projectName" v-model="createProjectForm.name" type="text"
-                                       placeholder="Projektname*"
+                                       :placeholder="$t('Project name*')"
                                        class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                         </div>
@@ -38,7 +38,7 @@
                                     <MenuButton
                                         class="h-12 border border-2 sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                     >
-                                        <span class="float-left xsLight">Eigenschaften wählen</span>
+                                        <span class="float-left xsLight">{{ $t('Select properties') }}</span>
                                         <ChevronDownIcon
                                             class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                             aria-hidden="true"
@@ -62,14 +62,15 @@
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
                                                     <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Kategorie</span>
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                                                        {{ $t('Category') }}
+                                                    </span>
                                                     <ChevronDownIcon
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
                                                     />
                                                 </DisclosureButton>
                                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
                                                     <div v-if="categories.length > 0"
                                                          v-for="category in categories"
                                                          :key="category.id"
@@ -84,8 +85,8 @@
                                                             {{ category.name }}
                                                         </p>
                                                     </div>
-                                                    <div v-else class="text-secondary">Noch keine Kategorien
-                                                        angelegt
+                                                    <div v-else class="text-secondary">
+                                                        {{ $t('No categories created yet') }}
                                                     </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
@@ -95,14 +96,15 @@
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
                                                     <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Genre</span>
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                                                        {{ $t('Genre') }}
+                                                    </span>
                                                     <ChevronDownIcon
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
                                                     />
                                                 </DisclosureButton>
                                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
                                                     <div v-if="genres.length > 0"
                                                          v-for="genre in genres"
                                                          :key="genre.id"
@@ -117,7 +119,8 @@
                                                             {{ genre.name }}
                                                         </p>
                                                     </div>
-                                                    <div v-else class="text-secondary">Noch keine Genres angelegt
+                                                    <div v-else class="text-secondary">
+                                                        {{ $t('No genres created yet') }}
                                                     </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
@@ -127,14 +130,15 @@
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
                                                     <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Bereich</span>
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">
+                                                        {{ $t('Area') }}
+                                                    </span>
                                                     <ChevronDownIcon
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
                                                     />
                                                 </DisclosureButton>
                                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
                                                     <div v-if="sectors.length > 0"
                                                          v-for="sector in sectors"
                                                          :key="sector.id"
@@ -149,7 +153,8 @@
                                                             {{ sector.name }}
                                                         </p>
                                                     </div>
-                                                    <div v-else class="text-secondary">Noch keine Bereiche angelegt
+                                                    <div v-else class="text-secondary">
+                                                        {{ $t('No areas created yet') }}
                                                     </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
@@ -177,7 +182,7 @@
                         </div>
                         <div class="mb-3">
                             <textarea
-                                placeholder="Kurzbeschreibung"
+                                :placeholder="$t('Short description')"
                                 v-model="createProjectForm.description" rows="4"
                                 class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
                         </div>
@@ -187,7 +192,7 @@
                             <label for="addToProjectGroup"
                                    :class="this.addToProjectGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
-                                Gehört zu Projektgruppe
+                                {{ $t('Belongs to project group') }}
                             </label>
                         </div>
                         <div v-if="this.addToProjectGroup" class="mb-2">
@@ -195,7 +200,7 @@
                                 <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
                                     <div class="flex-grow flex text-left xsDark">
                                         {{
-                                            this.createProjectForm.selectedGroup ? this.createProjectForm.selectedGroup.name : 'Projektgruppe suchen'
+                                            this.createProjectForm.selectedGroup ? this.createProjectForm.selectedGroup.name : $t('Search project group')
                                         }}
                                     </div>
                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
@@ -204,7 +209,7 @@
                                     <ListboxOption v-if="this.projectGroups.length === 0"
                                                    class="w-full text-secondary cursor-pointer p-2 flex justify-between"
                                                    :value="null">
-                                        Bisher ist keine Projektgruppe angelegt
+                                        {{ $t('No project group has been created yet') }}
                                     </ListboxOption>
                                     <ListboxOption v-for="projectGroup in this.projectGroups"
                                                    class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
@@ -221,7 +226,7 @@
                         </div>
                         <div class="mt-4">
                             <div class="xsLight">
-                                <span>Budget Stichtag</span>
+                                <span>{{ $t('Budget deadline') }}</span>
                             </div>
                             <div class="flex mt-1">
                                 <input v-model="this.createProjectForm.budgetDeadline"
@@ -236,7 +241,7 @@
                                 :class="[this.createProjectForm.name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                 class="mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
                                 @click="addProject"
-                                :disabled="this.createProjectForm.name === ''" text="Anlegen" mode="modal"/>
+                                :disabled="this.createProjectForm.name === ''" :text="$t('Create')" mode="modal"/>
                         </div>
                     </div>
                 </div>
@@ -246,7 +251,7 @@
                             <input type="text"
                                    v-model="createProjectForm.name"
                                    id="sourceName"
-                                   placeholder="Titel*"
+                                   :placeholder="$t('Title*')"
                                    class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <div class="mb-2">
@@ -256,7 +261,9 @@
                                         class="h-12 border border-2 sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                     >
                                             <span
-                                                class="float-left subpixel-antialiased xsLight">Eigenschaften wählen</span>
+                                                class="float-left subpixel-antialiased xsLight">
+                                                {{ $t('Select properties') }}
+                                            </span>
                                         <ChevronDownIcon
                                             class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                             aria-hidden="true"
@@ -280,14 +287,13 @@
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
                                                     <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Kategorie</span>
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Category') }}</span>
                                                     <ChevronDownIcon
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
                                                     />
                                                 </DisclosureButton>
                                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
                                                     <div v-if="categories.length > 0"
                                                          v-for="category in categories"
                                                          :key="category.id"
@@ -302,8 +308,8 @@
                                                             {{ category.name }}
                                                         </p>
                                                     </div>
-                                                    <div v-else class="text-secondary">Noch keine Kategorien
-                                                        angelegt
+                                                    <div v-else class="text-secondary">
+                                                        {{ $t('No categories created yet') }}
                                                     </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
@@ -313,14 +319,13 @@
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
                                                     <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Genre</span>
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Genre') }}</span>
                                                     <ChevronDownIcon
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
                                                     />
                                                 </DisclosureButton>
                                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
                                                     <div v-if="genres.length > 0"
                                                          v-for="genre in genres"
                                                          :key="genre.id"
@@ -335,25 +340,24 @@
                                                             {{ genre.name }}
                                                         </p>
                                                     </div>
-                                                    <div v-else class="text-secondary">Noch keine Genres angelegt
+                                                    <div v-else class="text-secondary">
+                                                        {{ $t('No genres created yet') }}
                                                     </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
-
                                             <hr class="border-gray-500 mt-2 mb-2">
                                             <Disclosure v-slot="{ open }">
                                                 <DisclosureButton
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
                                                     <span
-                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Bereich</span>
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Area') }}</span>
                                                     <ChevronDownIcon
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
                                                     />
                                                 </DisclosureButton>
                                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
                                                     <div v-if="sectors.length > 0"
                                                          v-for="sector in sectors"
                                                          :key="sector.id"
@@ -368,12 +372,12 @@
                                                             {{ sector.name }}
                                                         </p>
                                                     </div>
-                                                    <div v-else class="text-secondary">Noch keine Bereiche angelegt
+                                                    <div v-else class="text-secondary">
+                                                        {{ $t('No areas created yet') }}
                                                     </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
                                         </div>
-
                                     </MenuItems>
                                 </transition>
                             </Menu>
@@ -397,7 +401,7 @@
                         </div>
                         <div class="mb-2">
                             <textarea
-                                placeholder="Kurzbeschreibung"
+                                :placeholder="$t('Short description')"
                                 v-model="createProjectForm.description" rows="4"
                                 class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
                         </div>
@@ -406,7 +410,7 @@
                                 <div class="w-full">
                                     <input id="projectGroupQuery" v-model="projectGroupQuery" type="text"
                                            autocomplete="off"
-                                           placeholder="Welche Projekte gehören zu dieser Gruppe?"
+                                           :placeholder="$t('Which projects belong to this group?')"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                                 <transition leave-active-class="transition ease-in duration-100"
@@ -449,10 +453,9 @@
                         <div class="w-full items-center text-center">
                             <AddButton
                                 :class="[this.createProjectForm.name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                class="mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold
-                             text-xl shadow-sm text-secondaryHover"
+                                class="mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
                                 @click="addProject"
-                                :disabled="this.createProjectForm.name === ''" text="Anlegen" mode="modal"/>
+                                :disabled="this.createProjectForm.name === ''" :text="$t('Create')" mode="modal"/>
                         </div>
                     </div>
                 </div>
@@ -506,7 +509,13 @@ export default {
         Input
     },
     emits: ['closeCreateProjectModal'],
-    props: ['categories', 'genres', 'sectors', 'projectGroups'],
+    props: [
+        'show',
+        'categories',
+        'genres',
+        'sectors',
+        'projectGroups'
+    ],
     data() {
         return {
             isCreateProjectTab: true,
@@ -531,14 +540,20 @@ export default {
     computed: {
         tabs() {
             return [
-                {name: 'Projekt', current: this.isCreateProjectTab},
-                {name: 'Projektgruppe', current: this.isCreateProjectGroupTab},
+                {
+                    name: this.$t('Projects'),
+                    current: this.isCreateProjectTab
+                },
+                {
+                    name: this.$t('Project group'),
+                    current: this.isCreateProjectGroupTab
+                },
             ]
         },
     },
     methods: {
         changeTab(selectedTab) {
-            if (selectedTab.name === 'Projekt') {
+            if (selectedTab.name === this.$t('Project')) {
                 this.isCreateProjectTab = true;
                 this.isCreateProjectGroupTab = false;
                 this.createProjectForm.isGroup = false;

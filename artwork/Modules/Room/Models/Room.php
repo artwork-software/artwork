@@ -146,8 +146,9 @@ class Room extends Model
         );
     }
 
-    public function scopeWithAudience(Builder $query): Builder
+    public function scopeWithAudience(Builder $query, int $projectId): Builder
     {
-        return $query->whereRelation('events', 'audience', '=', true);
+        return $query->whereRelation('events', 'audience', '=', true)
+            ->whereRelation('events', 'project_id', '=', $projectId);
     }
 }

@@ -1,33 +1,34 @@
 <template>
     <div class="col-span-2 ml-14 pt-4 pr-14">
         <div class="flex w-full items-center mb-8">
-            <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
+            <h2 class="text-xl leading-6 font-bold font-lexend text-primary">
+                {{ $t('Checklists') }}
+            </h2>
             <div class="flex items-center"
                  v-if="$role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                <AddButton @click="openAddChecklistModal" text="Neue Checkliste" mode="page"/>
+                <AddButton @click="openAddChecklistModal" :text="$t('New checklist')" mode="page"/>
                 <div v-if="this.$page.props.show_hints" class="flex ml-2">
                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
-                    <span
-                        class="hind ml-1">Lege neue Checklisten an</span>
+                    <span class="hind ml-1">
+                        {{ $t('Create new checklists') }}
+                    </span>
                 </div>
             </div>
         </div>
         <div class="w-full">
             <span v-if="project.public_checklists.length === 0 && project.private_checklists.length === 0"
                   class="xsDark mb-4">
-                Noch keine Checklisten hinzugefügt. Erstelle Checklisten mit Aufgaben. Die Checklisten kannst du Teams zuordnen. Nutze Vorlagen und spare Zeit.
+                {{ $t('No checklists added yet. Create checklists with tasks. You can assign the checklists to teams. Use templates and save time.') }}
             </span>
             <div v-else>
                 <div class="flex w-full flex-wrap">
-                    <!-- Div einer Checkliste -->
                     <div v-for="checklist in project.public_checklists"
                          class="flex w-full bg-white my-2 inputMain">
                         <button class="bg-buttonBlue flex"
                                 @click="changeChecklistStatus(checklist)">
                             <ChevronUpIcon v-if="this.opened_checklists.includes(checklist.id)"
-                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                            <ChevronDownIcon v-else
-                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                                           class="h-6 w-6 text-white my-auto"/>
+                            <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"/>
                         </button>
                         <div :class="this.opened_checklists.includes(checklist.id) ? 'mt-4' : ''"
                              class="flex w-full ml-4 flex-wrap p-4">
@@ -39,10 +40,8 @@
                                     </span>
                                 </div>
                                 <div class="flex">
-                                    <!-- hier User ansicht -->
                                     <div class="mr-3 flex">
-                                        <div class="flex -mr-3"
-                                             v-for="(user, index) in checklist.users">
+                                        <div class="flex -mr-3" v-for="(user, index) in checklist.users">
                                             <img
                                                 class="h-10 w-10 mr-2 object-cover rounded-full border border-2 border-white"
                                                 :class="index !== 0 ? '-ml-2' : ''"
@@ -77,7 +76,7 @@
                                                             <PencilAltIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Nutzer*innen zuweisen
+                                                            {{ $t('Assign users') }}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }">
@@ -86,7 +85,7 @@
                                                             <PencilAltIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Bearbeiten
+                                                            {{ $t('Edit') }}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }"
@@ -96,7 +95,7 @@
                                                             <PencilAltIcon
                                                                 class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Alle Aufgaben als erledigt markieren
+                                                            {{ $t('Mark all tasks as completed') }}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }"
@@ -106,7 +105,7 @@
                                                             <PencilAltIcon
                                                                 class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Alle Aufgaben als unerledigt markieren
+                                                            {{ $t('Mark all tasks as unfinished') }}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem
@@ -116,7 +115,7 @@
                                                             <PencilAltIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Als Vorlage speichern
+                                                            {{ $t('Save as template') }}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }">
@@ -126,7 +125,7 @@
                                                             <DuplicateIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Duplizieren
+                                                            {{ $t('Duplicate') }}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }">
@@ -135,7 +134,7 @@
                                                             <TrashIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Löschen
+                                                            {{ $t('Delete') }}
                                                         </a>
                                                     </MenuItem>
                                                 </div>
@@ -150,12 +149,15 @@
                                      v-if="this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin')">
                                     <div>
                                         <AddButton @click="openAddTaskModal(checklist)"
-                                                   text="Neue Aufgabe" mode="page"/>
+                                                   :text="$t('New task')"
+                                                   mode="page"
+                                        />
                                     </div>
                                     <div v-if="this.$page.props.show_hints" class="flex">
                                         <SvgCollection svgName="arrowLeft" class="ml-2"/>
-                                        <span
-                                            class="hind text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
+                                        <span class="hind text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">
+                                            {{ $t('Create new tasks') }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -175,38 +177,42 @@
                                                 <div class="flex w-full items-center">
                                                     <div v-if="showMenu === element.id"
                                                          class="flex -mt-1 items-center">
-                                                        <DotsVerticalIcon
-                                                            class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
-                                                        <DotsVerticalIcon
-                                                            class="h-5 w-5 text-secondary"></DotsVerticalIcon>
+                                                        <DotsVerticalIcon class="h-5 w-5 -mr-3.5 text-secondary"/>
+                                                        <DotsVerticalIcon class="h-5 w-5 text-secondary"/>
                                                     </div>
-                                                    <div v-else class="h-5 w-5 flex">
-
-                                                    </div>
+                                                    <div v-else class="h-5 w-5 flex"></div>
                                                     <input @change="updateTaskStatus(element)"
                                                            v-model="element.done"
                                                            type="checkbox"
                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                     <p class="ml-4 my-auto text-lg font-black xsDark font-semibold"
                                                        :class="element.done ? 'text-secondary line-through' : 'text-primary'">
-                                                        {{ element.name }}</p>
+                                                        {{ element.name }}
+                                                    </p>
                                                     <span v-if="!element.done && element.deadline"
                                                           class="ml-2 my-auto text-sm subpixel-antialiased"
                                                           :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">
-                                                        bis {{ element.deadline }}
+                                                        {{ $t('until') }} {{ element.deadline }}
                                                     </span>
-
                                                     <span v-if="element.done && element.done_by_user"
                                                           class="ml-2 flex my-auto items-center text-sm text-secondary">
                                                         {{ element.done_at }}
                                                         <span class="ml-2">
-                                                            <UserPopoverTooltip :height="7" :width="7" v-if="element.done_by_user"
-                                                                            :user="element.done_by_user" :id="element.id"/>
+                                                            <UserPopoverTooltip v-if="element.done_by_user"
+                                                                                :height="7"
+                                                                                :width="7"
+                                                                                :user="element.done_by_user"
+                                                                                :id="element.id"
+                                                            />
                                                         </span>
                                                     </span>
                                                     <span class="mx-3 flex" v-else>
                                                         <span class="flex -mr-3" v-for="user in element.users">
-                                                            <UserPopoverTooltip :id="element.id + 'user' + user.id" :user="user" height="7" width="7"/>
+                                                            <UserPopoverTooltip :id="element.id + 'user' + user.id"
+                                                                                :user="user"
+                                                                                height="7"
+                                                                                width="7"
+                                                            />
                                                         </span>
                                                     </span>
                                                     <Menu
@@ -237,7 +243,7 @@
                                                                             <PencilAltIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
-                                                                            Bearbeiten
+                                                                            {{ $t('Edit') }}
                                                                         </a>
                                                                     </MenuItem>
                                                                     <MenuItem v-slot="{ active }">
@@ -246,7 +252,7 @@
                                                                             <TrashIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
-                                                                            Löschen
+                                                                            {{ $t('Delete') }}
                                                                         </a>
                                                                     </MenuItem>
                                                                 </div>
@@ -270,17 +276,19 @@
                         <button class="bg-buttonBlue flex"
                                 @click="changeChecklistStatus(checklist)">
                             <ChevronUpIcon v-if="this.opened_checklists.includes(checklist.id)"
-                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                            <ChevronDownIcon v-else
-                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                                           class="h-6 w-6 text-white my-auto"
+                            />
+                            <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"/>
                         </button>
                         <div class="flex w-full ml-4 flex-wrap p-4">
                             <div class="flex justify-between w-full">
                                 <div class="my-auto">
-                                        <span class="ml-6 text-xl leading-6 flex font-bold font-lexend text-primary">
-                                        {{ checklist.name }} <EyeIcon class="h-6 w-6 ml-3 text-primary"></EyeIcon> <p
-                                            class="text-primary text-sm my-auto ml-1">Privat</p>
-                                        </span>
+                                    <span class="ml-6 text-xl leading-6 flex font-bold font-lexend text-primary">
+                                    {{ checklist.name }} <EyeIcon class="h-6 w-6 ml-3 text-primary"></EyeIcon>
+                                        <p class="text-primary text-sm my-auto ml-1">
+                                            {{ $t('Private') }}
+                                        </p>
+                                    </span>
                                 </div>
                                 <div class="flex items-center">
                                     <img class="h-9 w-9 rounded-full object-cover mr-3"
@@ -292,7 +300,8 @@
                                                 class="flex bg-tagBg p-0.5 rounded-full">
                                                 <DotsVerticalIcon
                                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                                    aria-hidden="true"/>
+                                                    aria-hidden="true"
+                                                />
                                             </MenuButton>
                                         </div>
                                         <transition
@@ -311,7 +320,7 @@
                                                             <PencilAltIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Bearbeiten
+                                                            {{ $t('Edit') }}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }">
@@ -320,7 +329,7 @@
                                                             <PencilAltIcon
                                                                 class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Alle Aufgaben als erledigt markieren
+                                                            {{ $t('Mark all tasks as completed') }}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }">
@@ -329,7 +338,7 @@
                                                             <PencilAltIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Als Vorlage speichern
+                                                            {{ $t('Save as template') }}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }">
@@ -339,7 +348,7 @@
                                                             <DuplicateIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Duplizieren
+                                                            {{ $t('Duplicate') }}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }">
@@ -348,7 +357,7 @@
                                                             <TrashIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Löschen
+                                                            {{ $t('Delete') }}
                                                         </a>
                                                     </MenuItem>
                                                 </div>
@@ -360,13 +369,16 @@
                             <div class="flex w-full mt-6"
                                  v-if="this.opened_checklists.includes(checklist.id)">
                                 <div class="">
-                                    <AddButton @click="openAddTaskModal(checklist)" text="Neue Aufgabe"
+                                    <AddButton @click="openAddTaskModal(checklist)"
+                                               :text="$t('New task')"
                                                mode="page"/>
                                 </div>
                                 <div v-if="this.$page.props.show_hints" class="flex">
                                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                     <span
-                                        class="hind text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Aufgaben an</span>
+                                        class="hind text-secondary tracking-tight ml-1 tracking-tight text-xl">
+                                        {{ $t('Create new tasks') }}
+                                    </span>
                                 </div>
                             </div>
                             <div class="mt-6 mb-12"
@@ -386,33 +398,34 @@
                                                 <div class="flex w-full" :key="element.id">
                                                     <div v-if="showMenu === element.id"
                                                          class="flex -mt-1 items-center">
-                                                        <DotsVerticalIcon
-                                                            class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
-                                                        <DotsVerticalIcon
-                                                            class="h-5 w-5 text-secondary"></DotsVerticalIcon>
+                                                        <DotsVerticalIcon class="h-5 w-5 -mr-3.5 text-secondary"/>
+                                                        <DotsVerticalIcon class="h-5 w-5 text-secondary"/>
                                                     </div>
-                                                    <div v-else class="h-5 w-5 flex">
-
-                                                    </div>
+                                                    <div v-else class="h-5 w-5 flex"></div>
                                                     <input @change="updateTaskStatus(element)"
                                                            v-model="element.done"
                                                            type="checkbox"
-                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"
+                                                    />
                                                     <p class="ml-4 my-auto text-lg font-black text-sm xsDark"
                                                        :class="element.done ? 'text-secondary line-through' : 'text-primary'">
-                                                        {{ element.name }}</p>
+                                                        {{ element.name }}
+                                                    </p>
                                                     <span v-if="!element.done && element.deadline"
                                                           class="ml-2 my-auto text-sm subpixel-antialiased"
-                                                          :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
-                                                            element.deadline
-                                                        }}</span>
-
+                                                          :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">
+                                                        {{ $t('until') }} {{ element.deadline }}
+                                                    </span>
                                                     <span v-if="element.done && element.done_by_user"
                                                           class="ml-2 flex my-auto items-center text-sm text-secondary">
                                                         {{ element.done_at }}
                                                         <span class="ml-2">
-                                                            <UserPopoverTooltip :height="7" :width="7" v-if="element.done_by_user"
-                                                                            :user="element.done_by_user" :id="element.id"/>
+                                                            <UserPopoverTooltip v-if="element.done_by_user"
+                                                                                :height="7"
+                                                                                :width="7"
+                                                                                :user="element.done_by_user"
+                                                                                :id="element.id"
+                                                            />
                                                         </span>
                                                     </span>
                                                     <Menu as="div" class="my-auto relative ml-3 z-10"
@@ -436,14 +449,14 @@
                                                                 class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                 <div class="py-1">
                                                                     <MenuItem v-slot="{ active }">
-                                                                                <span
-                                                                                    @click="openEditTaskModal(element, true)"
-                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <PencilAltIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
-                                                                                    Bearbeiten
-                                                                                </span>
+                                                                        <span
+                                                                            @click="openEditTaskModal(element, true)"
+                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                            <PencilAltIcon
+                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                aria-hidden="true"/>
+                                                                            {{ $t('Edit') }}
+                                                                        </span>
                                                                     </MenuItem>
                                                                     <MenuItem v-slot="{ active }">
                                                                         <a @click="deleteTask(element)"
@@ -451,7 +464,7 @@
                                                                             <TrashIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
-                                                                            Löschen
+                                                                            {{ $t('Delete') }}
                                                                         </a>
                                                                     </MenuItem>
                                                                 </div>
@@ -464,7 +477,6 @@
                                                     {{ element.description }}
                                                 </div>
                                             </div>
-
                                         </div>
                                     </template>
                                 </draggable>
@@ -475,39 +487,39 @@
             </div>
         </div>
     </div>
-
-    <!-- Change Checklist Teams Modal -->
     <AddChecklistUserModal
         :checklistId="checklistToEdit?.id"
         :users="checklistToEdit?.users"
         :editingChecklistTeams="editingChecklistTeams"
         @closed="closeEditChecklistTeamsModal"
     />
-
-    <!-- Add Task Modal-->
     <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">
         <template #content>
             <img src="/Svgs/Overlays/illu_task_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="font-black font-lexend text-primary tracking-wide text-3xl my-2">
-                    Neue Aufgabe
+                    {{ $t('New task') }}
                 </div>
                 <XIcon @click="closeAddTaskModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-secondary tracking-tight leading-6 sub">
-                    Lege eine neue Aufgabe an. Du kannst sie zudem mit einer Deadline
-                    und einem Kommentar versehen.
+                    {{ $t('Create a new task. You can also add a deadline and a comment.') }}
                 </div>
                 <div class="mt-6">
                     <div class="flex">
                         <div class="mt-1 w-full mr-4">
-                            <input type="text" v-model="taskForm.name" placeholder="Aufgabe*"
-                                   class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                            <input type="text"
+                                   v-model="taskForm.name"
+                                   :placeholder="$t('Task') + '*'"
+                                   class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
+                            />
                         </div>
                     </div>
                     <div class="sm:w-1/2 my-2">
-                        <label for="deadlineDate" class="xxsLight">Zu erledigen bis?</label>
+                        <label for="deadlineDate" class="xxsLight">
+                            {{ $t('To be done until?') }}
+                        </label>
                         <div class="w-full flex">
                             <input v-model="taskForm.deadlineDate"
                                    id="deadlineDate"
@@ -516,16 +528,19 @@
                             <input v-model="taskForm.deadlineTime"
                                    id="deadlineTime"
                                    type="time"
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none"/>
                         </div>
-                        <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
                     </div>
                     <div class="mb-2 mr-4" v-if="!taskForm.private">
                         <div class="relative w-full">
                             <div class="w-full">
-                                <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                       placeholder="Wer ist zuständig für die Aufgabe?"
-                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                <input id="userSearch"
+                                       v-model="user_query"
+                                       type="text"
+                                       autocomplete="off"
+                                       :placeholder="$t('Who is responsible for the task?')"
+                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                />
                             </div>
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100"
@@ -549,67 +564,71 @@
                             </transition>
                         </div>
                         <div v-if="usersToAdd.length > 0" class="mt-2 mb-4 flex items-center">
-                                        <span v-for="(user,index) in usersToAdd"
-                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
-                                        <div class="flex items-center">
-                                            <img class="flex h-11 w-11 rounded-full object-cover"
-                                                 :src="user.profile_photo_url"
-                                                 alt=""/>
-                                            <span class="flex ml-4 sDark">
-                                            {{ user?.first_name }} {{ user?.last_name }}
-                                            </span>
-                                            <button type="button" @click="deleteUserFromTask(index)">
-                                                <span class="sr-only">User aus der Aufgabe entfernen</span>
-                                                <XIcon
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
-                                            </button>
-                                        </div>
-                                        </span>
+                            <span v-for="(user,index) in usersToAdd"
+                                  class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                <div class="flex items-center">
+                                    <img class="flex h-11 w-11 rounded-full object-cover"
+                                         :src="user.profile_photo_url"
+                                         alt=""/>
+                                    <span class="flex ml-4 sDark">
+                                    {{ user?.first_name }} {{ user?.last_name }}
+                                    </span>
+                                    <button type="button" @click="deleteUserFromTask(index)">
+                                        <span class="sr-only">{{ $t('Remove user from the task') }}</span>
+                                        <XIcon
+                                            class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                    </button>
+                                </div>
+                            </span>
                         </div>
                     </div>
                     <div class="mt-4 mr-4">
-                                            <textarea
-                                                placeholder="Kommentar"
-                                                v-model="taskForm.description" rows="3"
-                                                class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                        <textarea
+                            :placeholder="$t('Comment')"
+                            v-model="taskForm.description" rows="3"
+                            class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"
+                        />
                     </div>
-
                     <div class="w-full items-center text-center">
                         <AddButton
                             :class="[this.taskForm.name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border
-                            focus:outline-none border-transparent text-base font-bold text-lg tracking-wider shadow-sm
-                            text-secondaryHover"
+                            class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-lg tracking-wider shadow-sm text-secondaryHover"
                             @click="addTask"
-                            :disabled="this.taskForm.name === ''" text="Hinzufügen" mode="modal"/>
+                            :disabled="this.taskForm.name === ''"
+                            :text="$t('Add')"
+                            mode="modal"
+                        />
                     </div>
                 </div>
-
             </div>
-
         </template>
     </jet-dialog-modal>
-    <!-- Edit Task Modal-->
     <jet-dialog-modal :show="editingTask" @close="closeEditTaskModal">
         <template #content>
             <img src="/Svgs/Overlays/illu_task_edit.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                    Aufgabe bearbeiten
+                    {{ $t('Edit task') }}
                 </div>
                 <XIcon @click="closeEditTaskModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                       aria-hidden="true"/>
+                       aria-hidden="true"
+                />
                 <div class="mt-12">
                     <div class="mb-2">
                         <div class="relative flex w-full">
-                            <input id="edit_task_name" v-model="taskToEditForm.name" type="text"
-                                   class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                                   placeholder="Aufgabe"/>
+                            <input id="edit_task_name"
+                                   v-model="taskToEditForm.name"
+                                   type="text"
+                                   class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
+                                   :placeholder="$t('Task')"
+                            />
                         </div>
                     </div>
                     <div class="sm:w-1/2 my-2">
-                        <label for="deadlineDate" class="xxsLight">Zu erledigen bis?</label>
+                        <label for="deadlineDate" class="xxsLight">
+                            {{ $t('To be done until?') }}
+                        </label>
                         <div class="w-full flex">
                             <input v-model="taskToEditForm.deadlineDate"
                                    id="deadlineDate"
@@ -618,24 +637,22 @@
                             <input v-model="taskToEditForm.deadlineTime"
                                    id="deadlineTime"
                                    type="time"
-                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none"/>
                         </div>
-                        <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
                     </div>
                     <div class="mb-2" v-if="!taskToEditForm.private">
                         <div class="relative w-full">
                             <div class="w-full">
                                 <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                       placeholder="Wer ist zuständig für die Aufgabe?"
-                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                       :placeholder="$t('Who is responsible for the task?')"
+                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                />
                             </div>
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100"
                                         leave-to-class="opacity-0">
                                 <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                     class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
+                                     class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
                                     <div class="border-gray-200">
                                         <div v-for="(user, index) in user_search_results" :key="index"
                                              class="flex items-center cursor-pointer">
@@ -651,83 +668,78 @@
                             </transition>
                         </div>
                         <div v-if="usersToAdd.length > 0" class="mt-2 mb-4 flex items-center">
-                                        <span v-for="(user,index) in usersToAdd"
-                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
-                                        <div class="flex items-center">
-                                            <img class="flex h-11 w-11 rounded-full object-cover"
-                                                 :src="user.profile_photo_url"
-                                                 alt=""/>
-                                            <span class="flex ml-4 sDark">
-                                            {{ user?.first_name }} {{ user?.last_name }}
-                                            </span>
-                                            <button type="button" @click="deleteUserFromTask(index)">
-                                                <span class="sr-only">User aus der Aufgabe entfernen</span>
-                                                <XIcon
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
-                                            </button>
-                                        </div>
-                                        </span>
+                            <span v-for="(user,index) in usersToAdd"
+                                  class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                <div class="flex items-center">
+                                    <img class="flex h-11 w-11 rounded-full object-cover"
+                                         :src="user.profile_photo_url"
+                                         alt=""/>
+                                    <span class="flex ml-4 sDark">
+                                    {{ user?.first_name }} {{ user?.last_name }}
+                                    </span>
+                                    <button type="button" @click="deleteUserFromTask(index)">
+                                        <span class="sr-only">{{ $t('Remove user from the task') }}</span>
+                                        <XIcon class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                    </button>
+                                </div>
+                            </span>
                         </div>
                     </div>
                     <div class="mb-4">
-                                            <textarea
-                                                placeholder="Kommentar"
-                                                v-model="taskToEditForm.description" rows="3"
-                                                class="placeholder-secondary resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full font-semibold border "/>
+                        <textarea :placeholder="$t('Comment')"
+                                  v-model="taskToEditForm.description" rows="3"
+                                  class="placeholder-secondary resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full font-semibold border "/>
                     </div>
                     <div class="flex justify-center">
-                        <AddButton text="Speichern" @click="editTask"
-                                   :disabled="taskToEditForm.name === ''"></AddButton>
+                        <AddButton :text="$t('Save')"
+                                   @click="editTask"
+                                   :disabled="taskToEditForm.name === ''"
+                        />
                     </div>
                 </div>
-
             </div>
-
         </template>
     </jet-dialog-modal>
-    <!-- Delete Checklist Modal -->
     <jet-dialog-modal :show="deletingChecklist" @close="closeDeleteChecklistModal">
         <template #content>
             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                    Checkliste löschen
+                    {{ $t('Delete checklist') }}
                 </div>
                 <XIcon @click="closeDeleteChecklistModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-error subpixel-antialiased">
-                    Bist du sicher, dass du die Checkliste {{ checklistToDelete.name }} löschen willst?
+                    {{ $t('Are you sure you want to delete the checklist?', [checklistToDelete.name]) }}
                 </div>
                 <div class="flex justify-between mt-6">
                     <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-14 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="deleteChecklistFromProject()">
-                        Löschen
+                        {{ $t('Delete') }}
                     </button>
                     <div class="flex my-auto">
-                            <span @click="closeDeleteChecklistModal()"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                        <span @click="closeDeleteChecklistModal()" class="xsLight cursor-pointer">
+                            {{ $t('No, not really') }}
+                        </span>
                     </div>
                 </div>
             </div>
-
         </template>
-
     </jet-dialog-modal>
-    <!-- Checkliste Bearbeiten-->
     <jet-dialog-modal :show="editingChecklist" @close="closeEditChecklistModal">
         <template #content>
             <img src="/Svgs/Overlays/illu_checklist_edit.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
-                    Checkliste bearbeiten
+                    {{ $t('Edit checklist') }}
                 </div>
                 <XIcon @click="closeEditChecklistModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-secondary tracking-tight leading-6 sub">
-                    Bearbeite deine Checkliste
+                    {{ $t('Edit your checklist') }}
                 </div>
                 <div class="mt-4">
                     <div class="flex mt-8">
@@ -736,8 +748,9 @@
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                    placeholder="placeholder"/>
                             <label for="editChecklistName"
-                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                                der Checkliste</label>
+                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
+                                {{ $t('Name of the checklist') }}
+                            </label>
                         </div>
                     </div>
                     <div class="flex items-center my-6">
@@ -750,43 +763,41 @@
                                       :class="[editChecklistForm.private ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
                         </Switch>
                         <span class="ml-2 text-sm"
-                              :class="editChecklistForm.private ? 'text-primary' : 'text-secondary'">Privat</span>
+                              :class="editChecklistForm.private ? 'text-primary' : 'text-secondary'">
+                            {{ $t('Private') }}
+                        </span>
                         <div class="flex ml-2">
                             <ExclamationIcon class="my-auto h-5 w-5 text-error"></ExclamationIcon>
-                            <span
-                                class="text-error subpixel-antialiased text-sm my-auto ml-1">Dies ändert die Sichtbarkeit der Checkliste</span>
+                            <span class="text-error subpixel-antialiased text-sm my-auto ml-1">
+                                {{ $t('This changes the visibility of the checklist') }}
+                            </span>
                         </div>
                     </div>
-
                     <div class="w-full items-center text-center">
-
-                        <AddButton :class="[editChecklistForm.name.length === 0 ?
-                    'bg-secondary': 'focus:outline-none']"
-                                   class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="editChecklist" :disabled="editChecklistForm.name.length === 0"
-                                   text="Speichern" mode="modal"
+                        <AddButton :class="[editChecklistForm.name.length === 0 ? 'bg-secondary': 'focus:outline-none']"
+                                   class="mt-4 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold shadow-sm text-secondaryHover"
+                                   @click="editChecklist"
+                                   :disabled="editChecklistForm.name.length === 0"
+                                   :text="$t('Save')"
+                                   mode="modal"
                         />
                     </div>
                 </div>
             </div>
         </template>
-
     </jet-dialog-modal>
-    <!-- Checkliste Hinzufügen-->
     <jet-dialog-modal :show="addingChecklist" @close="closeAddChecklistModal">
         <template #content>
             <img src="/Svgs/Overlays/illu_checklist_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
-                    Neue Checkliste
+                    {{ $t('New checklist') }}
                 </div>
                 <XIcon @click="closeAddChecklistModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-secondary tracking-tight leading-6 sub">
-                    Lege eine neue Checkliste an. Um Zeit zu sparen kannst du eine Vorlage wählen und diese
-                    anschließend anpassen.
+                    {{ $t('Create a new checklist. To save time, you can choose a template and customize it customize it afterwards.') }}
                 </div>
                 <div class="flex my-6">
                     <Listbox class="sm:col-span-3" v-model="selectedTemplate">
@@ -797,15 +808,15 @@
                                             <span>{{ selectedTemplate.name }}</span>
                                         </span>
                                 <span v-if="selectedTemplate.name === ''"
-                                      class="block truncate">Keine Vorlage</span>
+                                      class="block truncate">{{ $t('No template') }}</span>
                                 <span
                                     class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                      <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
                                     </span>
                             </ListboxButton>
-
                             <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        leave-from-class="opacity-100"
+                                        leave-to-class="opacity-0">
                                 <ListboxOptions
                                     class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
@@ -813,15 +824,15 @@
                                                    :value="{name:'',id:null}"
                                                    v-slot="{ active, selected }">
                                         <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        Keine Vorlage
-                                                    </span>
-                                            <span
-                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
+                                            <span :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                {{ $t('No template') }}
+                                            </span>
+                                            <span :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                  <CheckIcon v-if="selected"
+                                                             class="h-5 w-5 flex text-success"
+                                                             aria-hidden="true"
+                                                  />
+                                            </span>
                                         </li>
                                     </ListboxOption>
                                     <ListboxOption as="template" class="max-h-8"
@@ -830,15 +841,16 @@
                                                    :value="template"
                                                    v-slot="{ active, selected }">
                                         <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        {{ template.name }}
-                                                    </span>
                                             <span
-                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
+                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                {{ template.name }}
+                                            </span>
+                                            <span :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                  <CheckIcon v-if="selected"
+                                                             class="h-5 w-5 flex text-success"
+                                                             aria-hidden="true"
+                                                  />
+                                            </span>
                                         </li>
                                     </ListboxOption>
                                 </ListboxOptions>
@@ -853,8 +865,9 @@
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                    placeholder="placeholder"/>
                             <label for="checklistName"
-                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                                der Checkliste*</label>
+                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
+                                {{ $t('Name of the checklist*') }}
+                            </label>
                         </div>
                     </div>
                     <div class="flex items-center my-6" v-if="selectedTemplate.name === ''">
@@ -867,27 +880,31 @@
                                       :class="[checklistForm.private ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
                         </Switch>
                         <span class="ml-2 text-sm"
-                              :class="checklistForm.private ? 'text-primary' : 'text-secondary'">Privat</span>
+                              :class="checklistForm.private ? 'text-primary' : 'text-secondary'">
+                            {{ $t('Private') }}
+                        </span>
                         <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="ml-2 mr-1 mt-1"/>
-                            <span
-                                class="hind text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Private Liste - nur du kannst sie sehen</span>
+                            <span class="hind text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">
+                                {{ $t('Private list - only you can see it') }}
+                            </span>
                         </div>
                     </div>
-
                     <div class="w-full items-center text-center">
-                        <AddButton :class="[checklistForm.name.length === 0 && !selectedTemplate.id ?
-                                       'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-4 items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
+                        <AddButton :class="[
+                                        checklistForm.name.length === 0 && !selectedTemplate.id ?
+                                            'bg-secondary':
+                                            'bg-buttonBlue hover:bg-buttonHover focus:outline-none'
+                                   ]"
+                                   class="mt-4 items-center px-20 py-3 border border-transparent text-base font-bold shadow-sm text-secondaryHover"
                                    @click="addChecklist"
                                    :disabled="checklistForm.name.length === 0 && !selectedTemplate.id"
-                                   text="Anlegen" mode="modal"/>
+                                   :text="$t('Create')"
+                                   mode="modal"/>
                     </div>
                 </div>
             </div>
         </template>
-
     </jet-dialog-modal>
 </template>
 
@@ -900,7 +917,9 @@ import Checkbox from "@/Jetstream/Checkbox.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {
-    Disclosure, DisclosureButton, DisclosurePanel,
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel,
     Listbox,
     ListboxButton,
     ListboxOption,
@@ -921,7 +940,8 @@ import {
 } from "@heroicons/vue/outline";
 import {
     CheckIcon,
-    ChevronDownIcon, ChevronRightIcon,
+    ChevronDownIcon,
+    ChevronRightIcon,
     ChevronUpIcon,
     DotsVerticalIcon,
     PlusSmIcon,
@@ -945,7 +965,12 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 export default {
     mixins: [Permissions],
     name: "ChecklistComponent",
-    props: ['project', 'opened_checklists', 'checklist_templates', 'projectManagerIds'],
+    props: [
+        'project',
+        'opened_checklists',
+        'checklist_templates',
+        'projectManagerIds'
+    ],
     components: {
         UserPopoverTooltip,
         NewUserToolTip,
@@ -1006,7 +1031,6 @@ export default {
     },
     data() {
         return {
-            error: [],
             allDoneTasks: [],
             checklist_assigned_users: [],
             selectedTemplate: {name: '', id: null},
@@ -1175,7 +1199,6 @@ export default {
             this.templateForm.checklist_id = checklist.id;
             this.templateForm.post(route('checklist_templates.store'));
         },
-
         getDateWithoutTime(inputDate) {
             const dateObject = new Date(inputDate);
             const year = dateObject.getFullYear();
@@ -1183,7 +1206,6 @@ export default {
             const day = dateObject.getDate();
             return `${year}-${month < 10 ? '0' : ''}${month}-${day < 10 ? '0' : ''}${day}`;
         },
-
         getTimeWithoutDate(inputDate) {
             const dateObject = new Date(inputDate);
             const hours = dateObject.getHours();
@@ -1214,7 +1236,6 @@ export default {
             this.taskToEditForm.users = [];
             this.user_query = '';
         },
-
         openAddTaskModal(checklist) {
             this.taskForm.checklist_id = checklist.id;
             this.taskForm.private = checklist.private;
@@ -1282,7 +1303,6 @@ export default {
             }));
             this.closeEditChecklistModal();
         },
-
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
             if (this.doneTaskForm.done === false) {
@@ -1317,7 +1337,6 @@ export default {
             this.checklistForm.assigned_user_ids = [];
         },
         addChecklist() {
-
             if (this.selectedTemplate.id !== null) {
                 this.checklistForm.template_id = this.selectedTemplate.id;
                 this.checklistForm.post(route('checklists.store'), {preserveState: true, preserveScroll: true});
@@ -1333,7 +1352,6 @@ export default {
 
         },
         changeChecklistStatus(checklist) {
-
             if (!this.opened_checklists.includes(checklist.id)) {
                 const openedChecklists = this.opened_checklists;
 
@@ -1354,7 +1372,6 @@ export default {
             }
         },
         updateTaskOrder(tasks) {
-
             tasks.map((task, index) => {
                 task.order = index + 1
             })
@@ -1365,7 +1382,6 @@ export default {
                 preserveState: true,
                 preserveScroll: true
             })
-
         },
     },
     watch: {
@@ -1384,7 +1400,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

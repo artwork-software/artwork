@@ -24,29 +24,57 @@
                             </div>
                             <div class="relative z-40">
                                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    Schichtvorlage einlesen
+                                    {{ $t('Import shift template') }}
                                 </div>
                                 <p class="xsLight subpixel-antialiased">
-                                    Möchtest du die Vorlage auf alle Termine dieses Typs in diesem Projekt anwenden?
+                                    {{ $t('Would you like to apply the template to all appointments of this type in this project?') }}
                                 </p>
                                 <div class="mt-10">
                                     <SwitchGroup as="div" class="flex items-center font-bold mb-3">
                                         <SwitchLabel as="span" class="mr-3 text-sm">
-                                            <span :class="presetForm.all === false ? 'font-bold text-gray-900' : 'font-normal text-gray-500'">Nur für diesen Termin</span>
+                                            <span :class="presetForm.all === false ?
+                                                    'font-bold text-gray-900' :
+                                                    'font-normal text-gray-500'"
+                                            >
+                                                {{ $t('Only for this date') }}
+                                            </span>
                                         </SwitchLabel>
-                                        <Switch v-model="presetForm.all" :class="[presetForm.all ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
-                                            <span aria-hidden="true" :class="[presetForm.all ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                                        <Switch v-model="presetForm.all"
+                                                :class="[
+                                                    presetForm.all ?
+                                                        'bg-indigo-600' :
+                                                        'bg-gray-200',
+                                                    'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'
+                                                ]"
+                                        >
+                                            <span aria-hidden="true"
+                                                  :class="[
+                                                      presetForm.all ?
+                                                          'translate-x-3' :
+                                                          'translate-x-0',
+                                                      'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out'
+                                                  ]"
+                                            />
                                         </Switch>
                                         <SwitchLabel as="span" class="ml-3 text-sm">
-                                            <span :class="presetForm.all === true ? 'font-bold text-gray-900' : 'font-normal text-gray-500'">Auf alle ({{ event_type.abbreviation }}) anwenden</span>
+                                            <span :class="presetForm.all === true ?
+                                                    'font-bold text-gray-900' :
+                                                    'font-normal text-gray-500'"
+                                            >
+                                                {{ $t('Apply to all ({0})', [event_type.abbreviation]) }}
+                                            </span>
                                         </SwitchLabel>
                                     </SwitchGroup>
                                     <div class="mb-2">
                                         <div class="relative w-full">
                                             <div class="w-full">
-                                                <input id="userSearch" v-model="template_query" type="text" autocomplete="off"
-                                                       placeholder="Welche Vorlage?*"
-                                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                                <input id="userSearch"
+                                                       v-model="template_query"
+                                                       type="text"
+                                                       autocomplete="off"
+                                                       :placeholder="$t('Which template?*')"
+                                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                />
                                             </div>
                                             <transition leave-active-class="transition ease-in duration-100"
                                                         leave-from-class="opacity-100"
@@ -75,7 +103,9 @@
                                                     {{ selectedTemplate?.name }}
                                                 </div>
                                                 <div>
-                                                    <XIcon class="h-5 w-5 cursor-pointer" @click="clearSelectedTemplate"/>
+                                                    <XIcon class="h-5 w-5 cursor-pointer"
+                                                           @click="clearSelectedTemplate"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
@@ -83,7 +113,7 @@
                                 </div>
                             </div>
                             <div class="flex justify-center">
-                                <AddButton mode="modal" text="Vorlage einlesen" @click="importTemplate"/>
+                                <AddButton mode="modal" :text="$t('Import template')" @click="importTemplate"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -96,8 +126,14 @@
 <script>
 import {defineComponent} from 'vue'
 import AddButton from "@/Layouts/Components/AddButton.vue";
-import {CheckIcon, XIcon} from "@heroicons/vue/solid";
-import {ChevronDownIcon, PlusCircleIcon} from "@heroicons/vue/outline";
+import {
+    CheckIcon,
+    XIcon
+} from "@heroicons/vue/solid";
+import {
+    ChevronDownIcon,
+    PlusCircleIcon
+} from "@heroicons/vue/outline";
 import SingleTimeLine from "@/Pages/Projects/Components/SingleTimeLine.vue";
 import Input from "@/Jetstream/Input.vue";
 import {
@@ -105,9 +141,14 @@ import {
     DialogPanel,
     DialogTitle,
     Listbox,
-    ListboxButton, ListboxOption, ListboxOptions,
+    ListboxButton,
+    ListboxOption,
+    ListboxOptions,
     TransitionChild,
-    TransitionRoot, Switch, SwitchGroup, SwitchLabel
+    TransitionRoot,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
@@ -115,7 +156,9 @@ import {useForm} from "@inertiajs/inertia-vue3";
 export default defineComponent({
     name: "ImportShiftTemplate",
     components: {
-        CheckIcon, ChevronDownIcon, EventTypeIconCollection,
+        CheckIcon,
+        ChevronDownIcon,
+        EventTypeIconCollection,
         SingleTimeLine,
         Input,
         AddButton,
@@ -123,15 +166,22 @@ export default defineComponent({
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel, PlusCircleIcon,
+        XIcon,
+        DialogPanel,
+        PlusCircleIcon,
         Listbox,
         ListboxButton,
         ListboxOption,
         ListboxOptions,
-        Switch, SwitchGroup, SwitchLabel
+        Switch,
+        SwitchGroup,
+        SwitchLabel
     },
     emits: ['closed'],
-    props: ['event_type', 'eventId'],
+    props: [
+        'event_type',
+        'eventId'
+    ],
     data() {
         return {
             open: true,
@@ -151,12 +201,15 @@ export default defineComponent({
             this.$emit('closed')
         },
         importTemplate(){
-            this.presetForm.post(route('shift.preset.import' , {event: this.eventId, shiftPreset: this.selectedTemplate.id}), {
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.closeModal()
+            this.presetForm.post(
+                route('shift.preset.import' , {event: this.eventId, shiftPreset: this.selectedTemplate.id}),
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        this.closeModal()
+                    }
                 }
-            })
+            )
         },
         addTemplate(template){
             this.presetForm.selectedTemplate = template.id;
@@ -186,6 +239,3 @@ export default defineComponent({
 
 })
 </script>
-<style scoped>
-
-</style>

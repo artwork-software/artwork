@@ -2,6 +2,7 @@
     <div class="mt-6  bg-lightBackgroundGray">
         <div class=" mt-6 max-w-screen-2xl bg-lightBackgroundGray">
             <div v-if="calendarType && calendarType === 'daily'">
+                Daily
                 <CalendarComponent
                     :selected-date="selectedDate"
                     :dateValue="dateValue"
@@ -15,11 +16,11 @@
                 />
             </div>
             <div v-else>
+                Individual {{ atAGlance }}
                 <IndividualCalendarAtGlanceComponent
-                    :dateValue="dateValue"
                     v-if="atAGlance"
+                    :dateValue="dateValue"
                     :project="project"
-                    @change-at-a-glance="changeAtAGlance"
                     :atAGlance="this.atAGlance"
                     :eventTypes=this.eventTypes
                     :rooms="rooms"
@@ -27,15 +28,15 @@
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :user_filters="user_filters"
+                    @change-at-a-glance="changeAtAGlance"
                 >
                 </IndividualCalendarAtGlanceComponent>
 
                 <IndividualCalendarComponent
+                    v-else
                     :events-without-room="eventsWithoutRoom"
                     :project="project"
                     :dateValue="dateValue"
-                    v-else
-                    @change-at-a-glance="changeAtAGlance"
                     :atAGlance="this.atAGlance"
                     :eventTypes=this.eventTypes
                     :calendarData="calendar"
@@ -44,6 +45,7 @@
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :user_filters="user_filters"
+                    @change-at-a-glance="changeAtAGlance"
                 />
             </div>
         </div>

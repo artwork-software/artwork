@@ -17,16 +17,16 @@
                             </div>
                             <div class="relative z-40">
                                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    Schicht einteilen
+                                    {{ $t('Organize shift') }}
                                 </div>
                                 <p class="xsLight subpixel-antialiased">
-                                    Lege fest wie lange deine Schicht dauert und wie viele Personen in deiner Schicht arbeiten sollen.
+                                    {{ $t('Determine how long your shift lasts and how many people should work in your shift.') }}
                                 </p>
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                                         <div>
                                             <input type="text" onfocus="(this.type='time')"
-                                                   placeholder="Schicht Start"
+                                                   :placeholder="$t('Shift start')"
                                                    v-model="shiftForm.start"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                                    required
@@ -36,7 +36,7 @@
                                         </div>
                                         <div>
                                             <input type="text" onfocus="(this.type='time')"
-                                                   placeholder="Schicht Ende"
+                                                   :placeholder="$t('Shift end')"
                                                    v-model="shiftForm.end"
                                                    maxlength="3"
                                                    required
@@ -47,7 +47,7 @@
                                         </div>
                                         <div>
                                             <input type="number"
-                                                   placeholder="Pausenlänge in Minuten*"
+                                                   :placeholder="$t('Length of break in minutes*')"
                                                    v-model="shiftForm.break_minutes"
                                                    @change="checkInfringement"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
@@ -59,7 +59,7 @@
                                             <Listbox as="div" v-model="selectedCraft">
                                                 <div class="relative">
                                                     <ListboxButton class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
-                                                        <span class="block truncate text-left pl-3">{{ selectedCraft?.name ?? 'Gewerk*'}} </span>
+                                                        <span class="block truncate text-left pl-3">{{ selectedCraft?.name ?? $t('Craft')}} </span>
                                                         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                                         </span>
@@ -69,7 +69,6 @@
                                                             <ListboxOption as="template" v-for="craft in selectableCrafts" :key="craft.id" :value="craft" v-slot="{ active, selected }">
                                                                 <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                                                     <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ craft.name }} ({{ craft.abbreviation }})</span>
-
                                                                     <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                                         <CheckIcon class="h-5 w-5" aria-hidden="true" />
                                                                     </span>
@@ -86,20 +85,26 @@
                                             <input v-if="this.canComputedShiftQualificationBeShown(computedShiftQualification)"
                                                    v-model="computedShiftQualification.value"
                                                    type="number"
-                                                   :placeholder="'Anzahl ' + computedShiftQualification.name"
+                                                   :placeholder="$t('Amount {0}', [computedShiftQualification.name])"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                             />
                                         </div>
                                         <span class="text-xs text-red-500" v-show="helpTexts.employeeText.length > 0">{{ helpTexts.employeeText }}</span>
                                         <span class="text-xs text-red-500" v-show="helpTexts.masterText.length > 0">{{ helpTexts.masterText }}</span>
                                         <div class="mt-2 col-span-2">
-                                            <textarea v-model="shiftForm.description" placeholder="Gibt es wichtige Informationen zu dieser Schicht?" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300" />
+                                            <textarea v-model="shiftForm.description"
+                                                      :placeholder="$t('Is there any important information about this shift?')"
+                                                      rows="4"
+                                                      name="comment"
+                                                      id="comment"
+                                                      class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
+                                            />
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex justify-between mt-5">
-                                <AddButton mode="modal" text="Speichern" @click="saveShift"/>
+                            <div class="flex justify-center mt-5">
+                                <AddButton mode="modal" :text="$t('Save')" @click="saveShift"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -116,14 +121,19 @@ import Permissions from "@/mixins/Permissions.vue";
 import {
     Dialog,
     DialogPanel,
-    DialogTitle, Listbox,
+    DialogTitle,
+    Listbox,
     ListboxButton,
-    ListboxOption, ListboxOptions,
+    ListboxOption,
+    ListboxOptions,
     TransitionChild,
     TransitionRoot
 } from "@headlessui/vue";
 import Input from "@/Jetstream/Input.vue";
-import {ChevronDownIcon, PlusCircleIcon} from "@heroicons/vue/outline";
+import {
+    ChevronDownIcon,
+    PlusCircleIcon
+} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
@@ -212,31 +222,15 @@ export default defineComponent({
                 let diffMinutes = (endHours - startHours) * 60 + (endMinutes - startMinutes);
 
                 if (diffMinutes > 600) { // 10 hours = 600 minutes
-                    this.helpTexts.time = 'Die Schicht ist über 10h lang!';
+                    this.helpTexts.time = this.$t('The shift is over 10 hours long!');
                 } else {
                     this.helpTexts.time = '';
                 }
                 if (diffMinutes > 360 && this.shiftForm.break_minutes < 30) { // 6 hours = 360 minutes
-                    this.helpTexts.breakText = 'Die Pause ist kürzer als das Arbeitsrecht vorschreibt!';
+                    this.helpTexts.breakText = this.$t('The break is shorter than required by law!');
                 }else{
                     this.helpTexts.breakText = '';
                 }
-            }
-        },
-        checkUserCount(){
-            if(this.shift?.user_count > 0){
-                this.helpTexts.employeeText = 'Es sind bereits Mitarbeiter*innen eingetragen. Die Anzahl kann nicht verändert werden. Bitte entferne erst alle Mitarbeiter*innen. Eingabe wurde zurückgesetzt!';
-                this.shiftForm.number_employees = this.shift.number_employees;
-            } else {
-                this.helpTexts.employeeText = '';
-            }
-        },
-        checkMasterCount(){
-            if(this.shift?.master_count > 0){
-                this.helpTexts.masterText = 'Es sind bereits Meister*innen eingetragen. Die Anzahl kann nicht verändert werden. Bitte entferne erst alle Meister*innen. Eingabe wurde zurückgesetzt!';
-                this.shiftForm.number_masters = this.shift.number_masters;
-            } else {
-                this.helpTexts.masterText = '';
             }
         },
         appendComputedShiftQualificationsToShiftForm() {
@@ -265,9 +259,9 @@ export default defineComponent({
                 (shiftsQualification) => shiftsQualification.shift_qualification_id === computedShiftQualification.id
             ) !== 'undefined'
         },
-        saveShift(){
-            if(this.event.is_series){
-                if(!this.buffer?.onlyThisDay){
+        saveShift() {
+            if (this.event.is_series) {
+                if (!this.buffer?.onlyThisDay) {
                     this.shiftForm.changeAll = true;
                     this.shiftForm.seriesId = this.event.series_id;
                     this.shiftForm.changes_start = this.buffer?.start;
@@ -277,50 +271,50 @@ export default defineComponent({
 
             this.shiftForm.craft_id = this.selectedCraft?.id;
 
-            if(this.shiftForm.start > this.shiftForm.start){
-                this.helpTexts.time = 'Die Schicht kann nicht vor dem Termin starten.';
+            if (this.shiftForm.start > this.shiftForm.start) {
+                this.helpTexts.time = this.$t('The shift cannot start before the deadline.');
                 return;
             } else {
                 this.helpTexts.time = '';
             }
 
-            if(this.event.end < this.shiftForm.end){
-                this.helpTexts.time = 'Die Schicht kann nicht nach dem Termin enden.';
+            if (this.event.end < this.shiftForm.end) {
+                this.helpTexts.time = this.$t('The shift cannot end after the deadline.');
                 return;
             } else {
                 this.helpTexts.time = '';
             }
 
-            if ( this.shiftForm.start === null ){
-                this.helpTexts.start = 'Bitte gib einen Startzeitpunkt an.';
+            if (this.shiftForm.start === null) {
+                this.helpTexts.start = this.$t('Please enter a start time.');
                 return;
             } else {
                 this.helpTexts.start = '';
             }
 
-            if ( this.shiftForm.end === null ){
-                this.helpTexts.end = 'Bitte gib einen Endzeitpunkt an.';
+            if (this.shiftForm.end === null) {
+                this.helpTexts.end = this.$t('Please enter an end date.');
                 return;
             } else {
                 this.helpTexts.end = '';
             }
 
-            if ( this.selectedCraft === null ){
-                this.helpTexts.craftText = 'Bitte wähle ein Gewerk aus.';
+            if (this.selectedCraft === null) {
+                this.helpTexts.craftText = this.$t('Please select a trade.');
                 return;
             } else {
                 this.helpTexts.craftText = '';
             }
 
-            if ( this.shiftForm.break_minutes === null ){
-                this.helpTexts.breakText = 'Bitte gib eine Pausenzeit an.';
+            if (this.shiftForm.break_minutes === null) {
+                this.helpTexts.breakText = this.$t('Please enter a break time.');
                 return;
             } else {
                 this.helpTexts.breakText = '';
             }
 
-            if(this.shiftForm.start >= this.shiftForm.end ){
-                this.helpTexts.time = 'Der Endzeitpunkt muss nach dem Startzeitpunkt liegen.';
+            if (this.shiftForm.start >= this.shiftForm.end) {
+                this.helpTexts.time = this.$t('The end time must be after the start time.');
                 return;
             } else {
                 this.helpTexts.time = '';
@@ -329,11 +323,11 @@ export default defineComponent({
             // set the craft id
             this.shiftForm.craft_id = this.selectedCraft.id;
 
-            if(this.shiftForm.number_employees === '' || this.shiftForm.number_employees === null){
+            if (this.shiftForm.number_employees === '' || this.shiftForm.number_employees === null) {
                 this.shiftForm.number_employees = 0;
             }
 
-            if(this.shiftForm.number_masters === '' || this.shiftForm.number_masters === null){
+            if (this.shiftForm.number_masters === '' || this.shiftForm.number_masters === null) {
                 this.shiftForm.number_masters = 0;
             }
 
@@ -344,18 +338,24 @@ export default defineComponent({
                 this.closeModal(true);
             };
 
-            if(this.shiftForm.id !== null && this.shiftForm.id !== undefined){
-                this.shiftForm.patch(route('event.shift.update', this.shift.id), {
-                    preserveScroll: true,   // preserve scroll position
-                    preserveState: true,    // preserve the state of the form
-                    onSuccess: onSuccess
-                });
+            if (this.shiftForm.id !== null && this.shiftForm.id !== undefined) {
+                this.shiftForm.patch(
+                    route('event.shift.update', this.shift.id),
+                    {
+                        preserveScroll: true,   // preserve scroll position
+                        preserveState: true,    // preserve the state of the form
+                        onSuccess: onSuccess
+                    }
+                );
             } else {
-                this.shiftForm.post(route('event.shift.store', this.event.id), {
-                    preserveScroll: true,   // preserve scroll position
-                    preserveState: true,    // preserve the state of the form
-                    onSuccess: onSuccess
-                });
+                this.shiftForm.post(
+                    route('event.shift.store', this.event.id),
+                    {
+                        preserveScroll: true,   // preserve scroll position
+                        preserveState: true,    // preserve the state of the form
+                        onSuccess: onSuccess
+                    }
+                );
             }
         }
     },

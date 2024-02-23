@@ -1696,7 +1696,7 @@ class ProjectController extends Controller
         }
 
         /** @var Collection $roomsWithAudience */
-        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+        $roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectInformation', [
             // needed for the ProjectShowHeaderComponent
@@ -1791,7 +1791,7 @@ class ProjectController extends Controller
         }
 
         /** @var Collection $roomsWithAudience */
-        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+        $roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectCalendar', [
             // needed for the ProjectShowHeaderComponent
@@ -1874,7 +1874,7 @@ class ProjectController extends Controller
         }
 
         /** @var Collection $roomsWithAudience */
-        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+        $roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectChecklists', [
             'project' => new ProjectChecklistResource($project),
@@ -2015,7 +2015,7 @@ class ProjectController extends Controller
         }
 
         /** @var Collection $roomsWithAudience */
-        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+        $roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectShifts', [
             'project' => new ProjectShiftResource($project),
@@ -2153,7 +2153,7 @@ class ProjectController extends Controller
         }
 
         /** @var Collection $roomsWithAudience */
-        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+        $roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectBudget', [
             'project' => new ProjectBudgetResource($project),
@@ -2278,7 +2278,7 @@ class ProjectController extends Controller
         }
 
         /** @var Collection $roomsWithAudience */
-        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+        $roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectComments', [
             'project' => new ProjectCommentResource($project),

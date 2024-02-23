@@ -61,7 +61,7 @@
                                 <div class="py-0.5" v-for="event in room[day.day].events.data">
                                     <SingleCalendarEvent
                                         class="relative"
-                                        :project="event.project"
+                                        :project="false"
                                         :multiEdit="multiEdit"
                                         :zoom-factor="zoomFactor"
                                         :width="zoomFactor * 204"

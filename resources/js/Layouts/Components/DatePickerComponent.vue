@@ -24,7 +24,7 @@
                                  v-model="dateValuePicker"/>
     </div>
     <div class="font-medium text-gray-900" v-else>
-        Projektzeitraum: {{new Date(dateValueArray[0]).format("DD.MM.YYYY")}} - {{new Date(dateValueArray[1]).format("DD.MM.YYYY")}}
+        {{$t('Project period')}}: {{new Date(dateValueArray[0]).format("DD.MM.YYYY")}} - {{new Date(dateValueArray[1]).format("DD.MM.YYYY")}}
     </div>
     <div v-if="hasError" class="text-error mt-1 mx-2">{{ errorMessage }}</div>
 </template>
@@ -42,15 +42,15 @@ import Permissions from "@/mixins/Permissions.vue";
 
 const datePickerOptions = ref({
     shortcuts: {
-        today: 'Heute',
-        yesterday: 'Gestern',
-        past: period => 'Letzte ' + period + ' Tage',
-        currentMonth: 'Aktueller Monat',
-        pastMonth: 'Letzter Monat'
+        today: this.$t('Today'),
+        yesterday: this.$t('Yesterday'),
+        past: period => this.$t('Last {0} days' , period),
+        currentMonth: this.$t('Current month'),
+        pastMonth: this.$t('Past month')
     },
     footer: {
-        apply: 'Anwenden',
-        cancel: 'Abbrechen'
+        apply: this.$t('Apply'),
+        cancel: this.$t('Cancel')
     }
 })
 const formatter = ref({
@@ -61,7 +61,7 @@ const formatter = ref({
 const customShortcuts = () => {
     return [
         {
-            label: 'Heute',
+            label: this.$t('Today'),
             atClick: () => {
                 const date = new Date();
                 return [
@@ -71,7 +71,7 @@ const customShortcuts = () => {
             }
         },
         {
-            label: 'Aktuelle Woche',
+            label: this.$t('Current week'),
             atClick: () => {
                 const today = new Date();
                 const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)));
@@ -81,7 +81,7 @@ const customShortcuts = () => {
             }
         },
         {
-            label: 'Aktueller Monat',
+            label: this.$t('Current month'),
             atClick: () => {
                 const today = new Date();
                 const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -91,7 +91,7 @@ const customShortcuts = () => {
             }
         },
         {
-            label: 'Aktuelles Jahr',
+            label: this.$t('Current year'),
             atClick: () => {
                 const today = new Date();
                 const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
@@ -101,7 +101,7 @@ const customShortcuts = () => {
             }
         },
         {
-            label: 'Nächste 30 Tage',
+            label: this.$t('Next 30 days'),
             atClick: () => {
                 const today = new Date();
                 const next30DaysStart = new Date(today.setDate(today.getDate() + 1));
@@ -111,7 +111,7 @@ const customShortcuts = () => {
             }
         },
         {
-            label: 'Nächste 90 Tage',
+            label: this.$t('Next 90 days'),
             atClick: () => {
                 const today = new Date();
                 const next90DaysStart = new Date(today.setDate(today.getDate() + 1));
@@ -155,7 +155,7 @@ export default {
             const endDate = new Date(this.dateValueArray[1]);
 
             if (endDate < startDate) {
-                this.errorMessage = 'Das Enddatum muss nach dem Startdatum liegen.';
+                this.errorMessage = this.$t('The end date must be after the start date.');
                 this.hasError = true;
             } else {
                 this.errorMessage = '';

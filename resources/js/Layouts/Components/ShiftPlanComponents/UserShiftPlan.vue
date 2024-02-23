@@ -24,7 +24,7 @@
                         </div>
                         <div v-if="day.in_vacation">
                             <div class="bg-shiftText text-sm p-1 flex items-center text-secondaryHover h-10">
-                                nicht verfügbar
+                                {{ $t('not available') }}
                             </div>
                         </div>
                         <div v-for="event in day.events" class="flex w-full">

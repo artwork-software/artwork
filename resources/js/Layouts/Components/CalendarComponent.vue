@@ -5,10 +5,7 @@
                  @click="openEventsWithoutRoomComponent()"
                  v-if="filteredEvents?.length > 0">
 
-                <ExclamationIcon class="h-6  mr-2"/>
-                {{
-                    filteredEvents?.length
-                }}{{ filteredEvents?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+                <ExclamationIcon class="h-6  mr-2"/>{{ filteredEvents?.length === 1 ? $t('{0} Event without room!', filteredEvents?.length) : $t('{0} Events without room!', filteredEvents?.length) }}
             </div>
         </div>
         <div class="bg-white">
@@ -61,13 +58,10 @@
                         <div :class="currentView === 'year' ? 'ml-24' : ''" class="mb-6">
                             {{ title }}
                         </div>
-                        <div class="hidden group-hover:block">
-                            djfdsjgl
-                        </div>
                     </template>
                     <template #today-button>
                         <div class="flex w-24 xsDark text-buttonBlue" v-if="currentView === 'year'">
-                            aktuelles Jahr
+                            {{ $t('Current year')}}
                         </div>
                     </template>
                     <template #weekday-heading="{ heading, view }">
@@ -142,7 +136,7 @@
                             </div>
                             <div class="eventTime mx-1" v-if="event.subEvents?.length > 0">
                                 <div>
-                                    Untertermine:
+                                    {{$t('Sub-events')}}:
                                 </div>
                                 <div v-for="subEvent in event.subEvents">
                                     {{ subEvent.event_type.abbreviation }}:
@@ -163,8 +157,8 @@
                                 <span class="flex w-full eventTime">
                         <span v-if="event.start.getDay() === event.end.getDay()"
                               class="items-center eventTime">
-                            <span v-if="event.allDay">
-                            ganztägig
+                            <span v-if="event.allDay" class="lowercase">
+                            {{ $t('Full day') }}
                             </span>
                             <span v-else>
                                 {{ event.start.formatTime("HH:mm") }} - {{
@@ -178,7 +172,7 @@
                         !
                         </span>
                             <span v-if="event.allDay">
-                             {{event.start.format("DD.MM.")}} - {{ event.end.format("DD.MM.")}} ganztägig
+                             {{event.start.format("DD.MM.")}} - {{ event.end.format("DD.MM.")}} <span class="lowercase">{{ $t('Full day') }}</span>
                             </span>
                             <span v-else class="items-center eventTime">
                                 {{ event.start.format("DD.MM. HH:mm") }} - {{
@@ -447,32 +441,32 @@ export default {
             },
             eventAttributes: {
                 isLoud: {
-                    name: 'laut',
+                    name: this.$t('loud'),
                     value: 'isLoud',
                     checked: false
                 },
                 isNotLoud: {
-                    name: 'nicht laut',
+                    name: this.$t('not loud'),
                     value: 'isNotLoud',
                     checked: false
                 },
                 adjoiningNotLoud: {
-                    name: 'ohne laute Nebenveranstaltung',
+                    name: this.$t('without a loud side event'),
                     value: 'adjoiningNotLoud',
                     checked: false
                 },
                 hasAudience: {
-                    name: 'Mit Publikum',
+                    name: this.$t('With audience'),
                     value: 'hasAudience',
                     checked: false
                 },
                 hasNoAudience: {
-                    name: 'ohne Publikum',
+                    name: this.$t('without audience'),
                     value: 'hasNoAudience',
                     checked: false
                 },
                 adjoiningNoAudience: {
-                    name: 'ohne Nebenveranstaltung mit Publikum',
+                    name: this.$t('without side event with audience'),
                     value: 'adjoiningNoAudience',
                     checked: false
                 },

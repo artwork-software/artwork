@@ -59,7 +59,7 @@
                                             <Listbox as="div" v-model="selectedCraft">
                                                 <div class="relative">
                                                     <ListboxButton class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
-                                                        <span class="block truncate text-left pl-3">{{ selectedCraft?.name ?? $t('Craft')}} </span>
+                                                        <span class="block truncate text-left pl-3">{{ selectedCraft?.name ?? $t('Craft') + '*'}} </span>
                                                         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                                         </span>

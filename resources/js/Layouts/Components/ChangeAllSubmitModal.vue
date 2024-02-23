@@ -18,15 +18,15 @@
                             </div>
                             <div class="relative z-40">
                                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    Auf alle anwenden
+                                    {{ $t('Apply to all')}}
                                 </div>
                                 <p class="xsLight">
-                                    Möchtest du die Änderungen auf alle Termine anwenden?
+                                    {{ $t('Would you like to apply the changes to all dates?')}}
                                 </p>
                             </div>
                             <div class="flex justify-center mt-5 gap-4">
-                                <button @click="allElement()" type="button" class=" hover:bg-indigo-600 py-2 px-8 rounded-full text-white" :class="clickedAll ? 'bg-success-500' : 'bg-buttonBlue'">Auf alle anwenden</button>
-                                <button @click="singleElement()" type="button" class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white">Nur auf diesen Termin anwenden</button>
+                                <button @click="allElement()" type="button" class=" hover:bg-indigo-600 py-2 px-8 rounded-full text-white" :class="clickedAll ? 'bg-success-500' : 'bg-buttonBlue'">{{ $t('Apply to all')}}</button>
+                                <button @click="singleElement()" type="button" class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white">{{ $t('Only apply to this event')}}</button>
                             </div>
                         </DialogPanel>
                     </TransitionChild>

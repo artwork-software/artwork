@@ -4,16 +4,16 @@
             <img alt="Neue Spalte" src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="headline1 my-2" v-if="!this.subEventToEdit">
-                    Neuer Untertermin
+                    {{$t('New sub-event')}}
                 </div>
                 <div class="headline1 my-2" v-else>
-                    Untertermin bearbeiten
+                    {{ $t('Edit sub-event')}}
                 </div>
                 <p class="mb-3 text-gray-400 text-sm">
-                    Gehört zu Blocker in {{ event.roomName }}
+                    {{ $t('Belongs to Blocker in {0}', {0: event.roomName}) }}
                 </p>
                 <p>
-                    Bitte beachte, dass der Termin innerhalb des Termingruppenzeitraums stattfinden muss.
+                    {{ $t('Please note that the appointment must take place within the appointment group period.')}}
                 </p>
 
                 <XIcon @click="closeModal"
@@ -91,7 +91,7 @@
                             <span class="float-left flex xsLight subpixel-antialiased"><img
                                 src="/Svgs/IconSvgs/icon_adjustments.svg"
                                 class="mr-2"
-                                alt="attributeIcon"/>Termineigenschaften wählen</span>
+                                alt="attributeIcon"/>{{ $t('Select appointment properties')}}</span>
                                 <ChevronDownIcon
                                     class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                     aria-hidden="true"
@@ -117,15 +117,15 @@
                                              alt="audienceIcon"/>
 
                                         <div :class="[subEvent.audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
-                                            Mit Publikum
+                                            {{ $t('With audience')}}
                                         </div>
                                     </div>
                                     <div class="flex w-full mb-2">
                                         <input v-model="subEvent.is_loud"
                                                type="checkbox"
                                                class="checkBoxOnDark"/>
-                                        <div :class="[subEvent.is_loud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">Es
-                                            wird laut
+                                        <div :class="[subEvent.is_loud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">
+                                            {{$t('It gets loud')}}
                                         </div>
                                     </div>
                                 </div>
@@ -136,10 +136,10 @@
                     <!--    Properties    -->
                     <div class="flex py-2">
                         <div v-if="subEvent.audience">
-                            <TagComponent icon="audience" displayed-text="Mit Publikum" hideX="true"/>
+                            <TagComponent icon="audience" :displayed-text="$t('With audience')" hideX="true"/>
                         </div>
                         <div v-if="subEvent.is_loud">
-                            <TagComponent displayed-text="es wird laut" hideX="true"/>
+                            <TagComponent :displayed-text="$t('It gets loud')" hideX="true"/>
                         </div>
                     </div>
                     <div class="w-full">
@@ -151,14 +151,16 @@
                             </Switch>
                             <SwitchLabel as="span" class="ml-3 text-sm">
                             <span :class="[this.allDayEvent ? 'xsDark' : 'xsLight', 'text-sm']">
-                                Ganztägig
+                                {{$t('Full day')}}
                             </span>
                             </SwitchLabel>
                         </SwitchGroup>
                     </div>
                     <div class="flex pb-1 flex-col sm:flex-row align-baseline gap-1">
                         <div class="sm:w-1/2">
-                            <label for="startDate" class="xxsLight">Start</label>
+                            <label for="startDate" class="xxsLight">
+                                {{ $t('Start*')}}
+                            </label>
                             <div class="w-full flex">
                                 <input v-model="startDate"
                                        id="startDate"
@@ -176,7 +178,7 @@
                             </div>
                         </div>
                         <div class="sm:w-1/2">
-                            <label for="endDate" class="xxsLight">Ende</label>
+                            <label for="endDate" class="xxsLight">{{ $t('End*')}}</label>
                             <div class="w-full flex">
                                 <input v-model="endDate"
                                        id="endDate"
@@ -212,11 +214,11 @@
 
 
                         <div class="py-2">
-                    <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
+                    <textarea :placeholder="$t('What do I need to bear in mind for the event?')"
                               id="description"
                               v-model="subEvent.description"
                               rows="4"
-                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
                         </div>
                     </div>
                 </div>
@@ -224,7 +226,7 @@
                     <button :disabled="!submit" :class="!submit ? 'bg-secondary hover:bg-secondary' : ''"
                             class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                             @click="updateOrCreateEvent()">
-                        Belegen
+                        {{ $t('Vouchers')}}
                     </button>
                 </div>
         </template>
@@ -327,7 +329,7 @@ export default {
             this.subEvent.start_time = dayjs(this.formatDate(this.startDate, this.startTime)).format('YYYY-MM-DD HH:mm');
             this.subEvent.end_time = dayjs(this.formatDate(this.endDate, this.endTime)).format('YYYY-MM-DD HH:mm');
             if (this.subEvent.start_time > this.subEvent.end_time && this.subEvent.end_time && this.subEvent.start_time) {
-                this.helpText = 'Endzeit kann nicht vor der Startzeit liegen!';
+                this.helpText = this.$t('The end time cannot be before the start time!');
                 this.submit = false;
             } else {
                 this.helpText = '';
@@ -340,7 +342,7 @@ export default {
             if (this.subEvent.start_time) {
                 const subEventStart = dayjs(this.subEvent.start_time);
                 if (start > subEventStart || end < subEventStart) {
-                    this.helpTextStart = 'Startzeit muss innerhalb Termingruppenzeitraum liegen';
+                    this.helpTextStart = this.$t('Start time must be within the event group period');
                     this.submit = false;
                 } else {
                     this.helpTextStart = '';
@@ -349,7 +351,7 @@ export default {
             if (this.subEvent.end_time) {
                 const subEventEnd = Date.parse(this.subEvent.end_time);
                 if (end < subEventEnd || start > subEventEnd) {
-                    this.helpTextEnd = 'Endzeit muss innerhalb Termingruppenzeitraum liegen';
+                    this.helpTextEnd = this.$t('End time must be within the event group period');
                     this.submit = false;
                 } else {
                     this.helpTextEnd = '';
@@ -363,7 +365,7 @@ export default {
                 if (minimumEnd <= new Date(this.subEvent.end_time)) {
                     this.helpTextLength = '';
                 } else {
-                    this.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
+                    this.helpTextLength = this.$t('The event must not be shorter than 30 minutes');
                     this.submit = false;
                 }
             }

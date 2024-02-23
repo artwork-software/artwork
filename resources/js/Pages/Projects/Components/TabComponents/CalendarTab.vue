@@ -16,7 +16,6 @@
                 />
             </div>
             <div v-else>
-                Individual {{ atAGlance }}
                 <IndividualCalendarAtGlanceComponent
                     v-if="atAGlance"
                     :dateValue="dateValue"

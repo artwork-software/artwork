@@ -691,7 +691,7 @@
     "Shift start": "Shift start",
     "Shift end": "Shift end",
     "Length of break in minutes*": "Length of break in minutes*",
-    "Craft": "Craft*",
+    "Craft": "Craft",
     "Amount {0}": "Amount {0}",
     "Is there any important information about this shift?": "Is there any important information about this shift?",
     "The shift is over 10 hours long!": "The shift is over 10 hours long!",
@@ -874,7 +874,9 @@
     "Contract partner*": "Contract partner*",
     "Amount* (fee, co-production contribution, etc.)": "Amount* (fee, co-production contribution, etc.)",
     "KSK-liable": "KSK-liable",
+    "not KSK-liable": "not KSK-liable",
     "Resident abroad": "Resident abroad",
+    "not resident abroad": "not resident abroad",
     "Power of attorney is available": "Power of attorney is available",
     "Liberated at home": "Liberated at home",
     "Document access for": "Document access for",
@@ -904,5 +906,8 @@
     "Project category - Contract type": "Project category - Contract type",
     "Project contracts - corporate form": "Project contracts - corporate form",
     "Project contracts - collecting society": "Project contracts - collecting society",
-    "Project contracts - Currency": "Project contracts - Currency"
+    "Project contracts - Currency": "Project contracts - Currency",
+    "No contract types created yet": "No contract types created yet",
+    "No legal forms created yet": "No legal forms created yet",
+    "No additional costs created yet": "No additional costs created yet"
 }

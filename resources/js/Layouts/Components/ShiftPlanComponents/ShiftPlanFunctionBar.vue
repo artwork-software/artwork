@@ -22,7 +22,7 @@
                     <ChevronRightIcon
                         class="-mr-0.5 h-4 w-4  group-hover:text-white"
                         aria-hidden="true"/>
-                    Verlauf ansehen
+                    {{ $t('View history')}}
                 </button>
             </div>
 
@@ -52,9 +52,9 @@
         v-if="showConfirmCommitModal"
         @closed="showConfirmCommitModal = false"
         @delete="commitAllShifts"
-        title="Dienstplan festschreiben"
-        description="Bist du sicher, dass du den Dienstplan festschreiben möchtest?"
-        button="Festschreiben"
+        :title="$t('Fixed Shiftplan')"
+        :description="$t('Are you sure you want to set the shift plan?')"
+        :button="$t('Fixing')"
     />
 </template>
 

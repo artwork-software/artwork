@@ -10,20 +10,20 @@
                             <div @click="openHistory" class="xxsLight cursor-pointer items-center flex text-buttonBlue">
                                 <ChevronRightIcon class="h-3 w-3"/>
                                 <span>
-                             Verlauf ansehen
+                                    {{ $t('View history')}}
                         </span>
                             </div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 xxsLight" v-if="notification.data?.description[0]">
                         {{ notification.data?.description[0].text }}
-                        von
+                        {{ $t('from')}}
                         <NewUserToolTip :id="notification.id" :user="notification.data?.description[0]?.created_by"
                                         height="5" width="5"/>
                     </div>
                     <div class="flex items-center gap-2 xxsLight" v-else-if="notification.data.created_by">
                         {{ notification.data.created_at }}
-                        von
+                        {{ $t('from')}}
                         <NewUserToolTip :id="notification.id" :user="notification.data?.created_by" height="5"
                                         width="5"/>
                     </div>
@@ -32,7 +32,7 @@
                     <div v-for="(description, index) in notification.data?.description" class="divide-x">
                         <p v-if="description.type !== 'comment'">
                             <span
-                                v-if="notification.data.type === 'NOTIFICATION_CONFLICT' && index === '1'">Betrifft: </span>
+                                v-if="notification.data.type === 'NOTIFICATION_CONFLICT' && index === '1'">{{ $t('Concerns')}}: </span>
                             <a :href="description.href" v-if="description.type === 'link'"
                                class="text-indigo-800">{{ description.title }}</a>
                             <span v-else>{{ description.title }}</span>
@@ -136,8 +136,8 @@
     <ConfirmDeleteModal
         @closed="showDeleteConfirmModal = false"
         @delete="deleteEvent"
-        title="Termin Löschen?"
-        description="Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht."
+        :title="$t('Delete event?')"
+        :description="$t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.')"
         v-if="showDeleteConfirmModal"
     />
 </template>

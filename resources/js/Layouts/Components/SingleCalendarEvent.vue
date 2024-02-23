@@ -6,7 +6,7 @@
              class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-indigo-500/50'">
             <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit">
-                <a v-if="event.project" type="button" :href="getEditHref(event.project)"
+                <a v-if="event.projectId" type="button" :href="getEditHref(event.projectId)"
                    class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <img src="/Svgs/IconSvgs/icon_connected.svg" class="h-4 w-4"/>
                 </a>
@@ -635,8 +635,8 @@ export default {
             this.subEventToEdit = subEvent;
             this.showAddSubEventModal = true;
         },
-        getEditHref(project) {
-            return route('projects.show.info', {project: project.id});
+        getEditHref(projectId) {
+            return route('projects.show.info', {project: projectId});
         },
     },
     watch: {

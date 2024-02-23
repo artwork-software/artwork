@@ -7,36 +7,36 @@
                        class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
                        aria-hidden="true"/>
                 <div class="mt-8 headline1">
-                    Buchungsdetails
+                    {{ $t('Booking details') }}
                 </div>
                 <div class="flex mt-4">
                     <div v-if="this.cell.sage_assigned_data === null">
-                        Bisher wurde noch keine Buchung verknüpft.
+                        {{ $t('No booking has been linked yet.') }}
                     </div>
                     <div v-else class="flex flex-col w-full">
                         <div class="grid grid-cols-2">
-                            <span class="xsLight">Kreditor</span>
+                            <span class="xsLight">{{ $t('Creditor') }}</span>
                             <span class="xsLight text-black">{{ this.cell.sage_assigned_data.kreditor }}</span>
-                            <span class="xsLight">Betrag</span>
+                            <span class="xsLight">{{ $t('Amount') }}</span>
                             <span class="xsLight text-black">{{ this.cell.sage_assigned_data.buchungsbetrag }} EUR</span>
-                            <span class="xsLight">Buchungstext</span>
+                            <span class="xsLight">{{ $t('Booking text') }}</span>
                             <span class="xsLight text-black">{{ this.cell.sage_assigned_data.buchungstext }}</span>
 
-                            <span class="xsLight mt-4">Belegnummer</span>
+                            <span class="xsLight mt-4">{{ $t('Document number') }}</span>
                             <span class="xsLight text-black mt-4">{{ this.cell.sage_assigned_data.belegnummer }}</span>
-                            <span class="xsLight">Belegdatum</span>
+                            <span class="xsLight">{{ $t('Document date') }}</span>
                             <span class="xsLight text-black">
                                 {{ this.formatBookingDataDate(this.cell.sage_assigned_data.belegdatum) }}
                             </span>
 
-                            <span class="xsLight mt-4">Sachkonto</span>
+                            <span class="xsLight mt-4">{{ $t('General ledger account') }}</span>
                             <span class="xsLight text-black mt-4">{{ this.cell.sage_assigned_data.sa_kto }}</span>
-                            <span class="xsLight">Kostenträger</span>
+                            <span class="xsLight">{{ $t('Cost bearer') }}</span>
                             <span class="xsLight text-black">{{ this.cell.sage_assigned_data.kst_traeger }}</span>
-                            <span class="xsLight">Kostenstelle</span>
+                            <span class="xsLight">{{ $t('Cost center') }}</span>
                             <span class="xsLight text-black">{{ this.cell.sage_assigned_data.kst_stelle }}</span>
 
-                            <span class="xsLight mt-4">Buchungsdatum</span>
+                            <span class="xsLight mt-4">{{ $t('Booking date') }}</span>
                             <span class="xsLight text-black mt-4">
                                 {{ this.formatBookingDataDate(this.cell.sage_assigned_data.buchungsdatum) }}
                             </span>
@@ -45,7 +45,7 @@
                         <div class="flex flex-col">
                             <textarea v-model="this.bookingDataCommentForm.comment"
                                       rows="5"
-                                      placeholder="Kommentar eingeben"
+                                      :placeholder="$t('Enter comment')"
                                       class="resize-none border-2 border-gray-300 text-md p-4"
                             />
                             <div class="flex justify-center mt-6">
@@ -54,7 +54,7 @@
                                                 this.bookingDataCommentForm.comment === ''
                                            "
                                            @click="this.saveComment()"
-                                           text="Speichern"
+                                           :text="$t('Save')"
                                            mode="modal"
                                 />
                             </div>

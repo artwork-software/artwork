@@ -25,10 +25,10 @@
                             </div>
                             <div class="relative z-40">
                                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    Neue Schichtvorlage
+                                    {{ $t('New shift template') }}
                                 </div>
                                 <p class="xsLight subpixel-antialiased">
-                                    Was für eine Schichtvorlage möchtest du anlegen?
+                                    {{ $t('What kind of shift template would you like to create?') }}
                                 </p>
                                 <div class="mt-10">
                                     <Listbox as="div" class="flex h-12" v-model="selectedEventType" id="eventType">
@@ -66,13 +66,16 @@
                                               id="changeEndTime"
                                               type="text"
                                               required
-                                              placeholder="Name der Vorlage*"
+                                              :placeholder="$t('Name of the template*')"
                                               class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none w-full h-12"/>
                                    </div>
                                 </div>
                             </div>
                             <div class="flex justify-center">
-                                <AddButton mode="modal" :text="preset ? 'Vorlage speichern' : 'Vorlage anlegen'" @click="savePreset"/>
+                                <AddButton mode="modal"
+                                           :text="preset ? $t('Save template') : $t('Create template')"
+                                           @click="savePreset"
+                                />
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -124,7 +127,9 @@ export default defineComponent({
         return {
             open: true,
             showAddTimeLine: false,
-            selectedEventType: this.preset ? this.event_types[this.preset.event_type_id - 1] : this.event_types.find(event_type => event_type.id === this.event_type_id),
+            selectedEventType: this.preset ?
+                this.event_types[this.preset.event_type_id - 1] :
+                this.event_types.find(event_type => event_type.id === this.event_type_id),
             presetForm: useForm({
                 name: this.preset ? this.preset.name : null,
                 event_type_id: null,
@@ -137,33 +142,38 @@ export default defineComponent({
         },
         savePreset(){
             this.presetForm.event_type_id = this.selectedEventType.id;
-            if(this.eventId !== null && this.eventId !== undefined) {
-                this.presetForm.post(route('shift-presets.store', { event: this.eventId }), {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.closeModal()
+            if (this.eventId !== null && this.eventId !== undefined) {
+                this.presetForm.post(
+                    route('shift-presets.store', { event: this.eventId }),
+                    {
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            this.closeModal()
+                        }
                     }
-                })
-            } else if(this.preset?.id !== null && this.preset?.id !== undefined){
-                this.presetForm.patch(route('update.shift.preset', { shiftPreset: this.preset.id }), {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.closeModal()
+                )
+            } else if (this.preset?.id !== null && this.preset?.id !== undefined) {
+                this.presetForm.patch(
+                    route('update.shift.preset', { shiftPreset: this.preset.id }),
+                    {
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            this.closeModal()
+                        }
                     }
-                })
-            }
-            else {
-                this.presetForm.post(route('empty.presets.store'), {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        this.closeModal()
+                )
+            } else {
+                this.presetForm.post(
+                    route('empty.presets.store'),
+                    {
+                        preserveScroll: true,
+                        onSuccess: () => {
+                            this.closeModal()
+                        }
                     }
-                })
+                )
             }
         },
     },
 })
 </script>
-<style scoped>
-
-</style>

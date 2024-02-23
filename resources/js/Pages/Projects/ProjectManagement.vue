@@ -4,7 +4,9 @@
             <div class="max-w-screen mb-40 flex flex-row ml-14 mr-14">
                 <div class="flex flex-1 flex-wrap">
                     <div>
-                        <p class="items-center flex mr-2 headline1 mb-11">Projekte</p>
+                        <p class="items-center flex mr-2 headline1 mb-11">
+                            {{ $t('Projects') }}
+                        </p>
                     </div>
                     <div class="w-full flex items-center justify-between">
                         <div class="w-full flex items-center">
@@ -12,7 +14,9 @@
                                 <BaseFilter :left="true">
                                     <div class="w-full">
                                         <div class="flex justify-end mb-3">
-                                            <span class="xxsLight cursor-pointer text-right w-full" @click="removeFilter">Zurücksetzen</span>
+                                            <span class="xxsLight cursor-pointer text-right w-full" @click="removeFilter">
+                                                {{ $t('Reset') }}
+                                            </span>
                                         </div>
                                         <SwitchGroup as="div" class="flex items-center">
                                             <Switch v-model="enabled"
@@ -22,27 +26,33 @@
                                                       :class="[enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                                             </Switch>
                                             <SwitchLabel as="span" class="ml-3 xxsLight">
-                                                Nur meine Projekte anzeigen
+                                                {{ $t('Show only my projects') }}
                                             </SwitchLabel>
                                         </SwitchGroup>
                                         <div class="flex max-h-8 mb-3 mt-3">
                                             <input v-model="showProjectGroups"
                                                    type="checkbox"
                                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                            <p class=" ml-4 my-auto text-sm text-secondary">Projektgruppen</p>
+                                            <p class=" ml-4 my-auto text-sm text-secondary">
+                                                {{ $t('Project groups') }}
+                                            </p>
                                         </div>
                                         <div class="flex max-h-8 mb-3 mt-3">
                                             <input v-model="showProjects"
                                                    type="checkbox"
                                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                            <p class=" ml-4 my-auto text-sm text-secondary">Projekte</p>
+                                            <p class=" ml-4 my-auto text-sm text-secondary">
+                                                {{ $t('Projects') }}
+                                            </p>
                                         </div>
                                         <div class="flex justify-between xsLight mb-3"
                                              @click="showProjectStateFilter = !showProjectStateFilter">
-                                            Projektstatus
-                                            <ChevronDownIcon class="h-5 w-5" v-if="!showProjectStateFilter"
+                                            {{ $t('Project status') }}
+                                            <ChevronDownIcon class="h-5 w-5"
+                                                             v-if="!showProjectStateFilter"
                                                              aria-hidden="true"/>
-                                            <ChevronUpIcon class="h-5 w-5" v-if="showProjectStateFilter"
+                                            <ChevronUpIcon class="h-5 w-5"
+                                                           v-if="showProjectStateFilter"
                                                            aria-hidden="true"/>
                                         </div>
                                         <div v-if="showProjectStateFilter">
@@ -66,7 +76,7 @@
                                 <div v-else class="flex items-center w-full w-64 mr-2">
                                     <div>
                                         <input type="text"
-                                               placeholder="Suche nach Projekten"
+                                               :placeholder="$t('Search for projects')"
                                                v-model="project_search"
                                                class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     </div>
@@ -77,52 +87,50 @@
                                     type="button"
                                     class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton focus:outline-none bg-buttonBlue hover:bg-buttonHover">
                                 <DocumentReportIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
-                                <p class="text-sm">Excel-Export</p>
+                                <p class="text-sm">{{ $t('Excel-Export') }}</p>
                             </button>
                         </div>
                         <div class="flex relative" v-if="$can('create and edit own project') || $role('artwork admin')">
                             <div v-if="this.$page.props.show_hints" class="flex mt-1 absolute w-40 right-32">
-                                <span class="hind ml-1 my-auto">Lege neue Projekte an</span>
+                                <span class="hind ml-1 my-auto">{{ $t('Create new projects') }}</span>
                                 <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
                             </div>
-                            <AddButton @click="openCreateProjectModal" text="Neu" mode="page"/>
+                            <AddButton @click="openCreateProjectModal" :text="$t('New')" mode="page"/>
                         </div>
                     </div>
                     <div id="selectedFilter" class="mt-3">
                         <span v-if="enabled"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                            Meine Projekte
+                            {{ $t('My projects') }}
                             <button type="button" @click="enabled = !enabled">
                                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
                         </span>
                         <span v-if="showProjectGroups"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                    Projektgruppen
+                                    {{ $t('Project groups') }}
                                     <button type="button" @click="showProjectGroups = !showProjectGroups">
                                         <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                                     </button>
                                 </span>
                         <span v-if="showProjects"
                               class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                    Projekte
+                                    {{ $t('Projects') }}
                                     <button type="button" @click="showProjects = !showProjects">
                                         <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                                     </button>
                                 </span>
                         <span v-for="state in states">
-                                    <span v-if="state.clicked"
-                                          class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                    {{ state.name }}
-                                    <button type="button"
-                                            @click="this.projectStateFilter.splice(this.projectStateFilter.indexOf(state),1); state.clicked = false">
-                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                    </button>
-                                </span>
-                                </span>
+                                <span v-if="state.clicked"
+                                      class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                {{ state.name }}
+                                <button type="button"
+                                        @click="this.projectStateFilter.splice(this.projectStateFilter.indexOf(state),1); state.clicked = false">
+                                    <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                </button>
+                            </span>
+                        </span>
                     </div>
-
-                    <!-- new table  -->
                     <div class="my-10 divide-y-2 divide-gray-200">
                         <div class="grid grid-cols-10 grid-rows-1 gap-4 w-full py-4" v-for="(project,index) in sortedProjects" :key="project.id">
                             <div class="flex items-start justify-center">
@@ -178,17 +186,16 @@
                                             <ChevronRightIcon
                                                 class="-mr-0.5 h-4 w-4 group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Verlauf ansehen
+                                            {{ $t('View history') }}
                                         </button>
                                     </div>
                                     <div v-else class="xxsLight">
-                                        Noch kein Verlauf verfügbar
+                                        {{ $t('No history available yet') }}
                                     </div>
                                 </div>
                                 <div class="xxsLight w-11/12">
                                     {{ truncate(project.description, 300, '...') }}
                                 </div>
-
                             </div>
                             <div class="col-start-8 flex items-center">
                                 <span
@@ -215,7 +222,9 @@
                                             <div v-if="this.$page.props.show_hints && index === 0"
                                                  class="absolute flex items-center w-40 right-1 -bottom-5">
                                                 <div class="flex">
-                                                    <span class="mr-2 hind mt-1">Bearbeite die Projekte</span>
+                                                    <span class="mr-2 hind mt-1">
+                                                        {{ $t('Edit the projects') }}
+                                                    </span>
                                                 </div>
                                                 <div>
                                                     <SvgCollection svgName="arrowUpRight" class="ml-2 rotate-45"/>
@@ -227,7 +236,6 @@
                                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                     aria-hidden="true"/>
                                             </MenuButton>
-
                                         </div>
                                         <transition enter-active-class="transition ease-out duration-100"
                                                     enter-from-class="transform opacity-0 scale-95"
@@ -245,7 +253,7 @@
                                                             <PencilAltIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Basisdaten bearbeiten
+                                                            {{ $t('Edit basic data') }}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem class="cursor-pointer" v-slot="{ active }">
@@ -254,7 +262,7 @@
                                                             <IconPin
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            {{project.pinned_by_users && project.pinned_by_users.includes($page.props.user.id) ? 'Anpinnung aufheben' : 'Anpinnen'}}
+                                                            {{project.pinned_by_users && project.pinned_by_users.includes($page.props.user.id) ? $t('Undo pinning') : $t('Pin')}}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }"
@@ -264,7 +272,7 @@
                                                             <DuplicateIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Duplizieren
+                                                            {{ $t('Duplicate') }}
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }"
@@ -274,7 +282,7 @@
                                                             <TrashIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            In den Papierkorb legen
+                                                            {{ $t('Put in the trash') }}
                                                         </a>
                                                     </MenuItem>
                                                 </div>
@@ -288,79 +296,75 @@
                 </div>
             </div>
         </div>
-        <!-- Projekt erstellen Modal-->
         <project-create-modal
             v-if="createProject"
             :show="createProject"
-            @close-create-project-modal="closeCreateProjectModal"
             :categories="categories"
             :genres="genres"
             :sectors="sectors"
             :project-groups="this.projectGroups"
+            @close-create-project-modal="closeCreateProjectModal"
         />
-        <!-- Delete Project Modal -->
-        <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
+        <jet-dialog-modal v-if="deletingProject" :show="deletingProject" @close="closeDeleteProjectModal">
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
-                        Projekt löschen
+                        {{ $t('Delete project') }}
                     </div>
                     <XIcon @click="closeDeleteProjectModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du das Projekt {{ projectToDelete.name }} löschen willst?
+                        {{ $t('Are you sure you want to delete the project?', [projectToDelete.name]) }}
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="deleteProject">
-                            Löschen
+                            {{ $t('Delete') }}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteProjectModal()"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">
+                                {{ $t('No, not really') }}
+                            </span>
                         </div>
                     </div>
                 </div>
-
             </template>
-
         </jet-dialog-modal>
         <!-- Success Modal - Delete project -->
         <SuccessModal
+            v-if="showSuccessModal"
             :show="showSuccessModal"
             @closed="closeSuccessModal"
-            title="Projekt gelöscht"
-            :description="'Das Projekt' +  nameOfDeletedProject + 'wurde gelöscht.'"
-            button="Schließen"
+            :title="$t('Project deleted')"
+            :description="$t('The project {0} has been deleted.', [projectToDelete.name])"
+            :button="$t('Close')"
             />
         <SuccessModal
             :show="showSuccessModal2"
             @closed="closeSuccessModal2"
-            title="Projekt erstellt"
-            description="Das Projekt wurde erfolgreich angelegt."
-            button="Schließen"
+            :title="$t('Project created')"
+            :description="$t('The project was successfully created.')"
+            :button="$t('Close')"
             />
         <project-data-edit-modal
             v-if="editingProject"
             :show="editingProject"
-            @closed="closeEditProjectModal"
             :project="this.projectToEdit"
             :group-projects="this.projectGroups"
             :current-group="this.groupPerProject[this.projectToEdit?.id]"
             :states="states"
+            @closed="closeEditProjectModal"
         />
-
-        <!-- Project History Modal -->
         <project-history-component
-            @closed="closeProjectHistoryModal"
             v-if="showProjectHistory"
             :project_history="projectHistoryToDisplay"
             :access_budget="projectBudgetAccess"
-        ></project-history-component>
-
+            @closed="closeProjectHistoryModal"
+        />
         <project-export-budgets-by-budget-deadline-modal
             v-if="showProjectExportBudgetsByBudgetDeadlineModal"
             :show="showProjectExportBudgetsByBudgetDeadlineModal"
@@ -383,10 +387,19 @@ import {
     DuplicateIcon,
     DocumentReportIcon
 } from '@heroicons/vue/outline'
-import {ChevronUpIcon, PlusSmIcon, CheckIcon, SelectorIcon, XCircleIcon, ChevronRightIcon} from '@heroicons/vue/solid'
+import {
+    ChevronUpIcon,
+    PlusSmIcon,
+    CheckIcon,
+    SelectorIcon,
+    XCircleIcon,
+    ChevronRightIcon
+} from '@heroicons/vue/solid'
 import {SearchIcon} from "@heroicons/vue/outline";
 import {
-    Disclosure, DisclosureButton, DisclosurePanel,
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel,
     Listbox,
     ListboxButton,
     ListboxLabel,
@@ -394,7 +407,11 @@ import {
     ListboxOptions,
     Menu,
     MenuButton,
-    MenuItem, MenuItems, Switch, SwitchGroup, SwitchLabel
+    MenuItem,
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from '@headlessui/vue'
 import Button from "@/Jetstream/Button";
 import JetButton from "@/Jetstream/Button";
@@ -488,17 +505,25 @@ export default defineComponent({
         SwitchLabel,
         SwitchGroup,
     },
-    props: ['projects', 'states', 'users', 'categories', 'genres', 'sectors', 'can', 'projectGroups'],
+    props: [
+        'projects',
+        'states',
+        'users',
+        'categories',
+        'genres',
+        'sectors',
+        'can',
+        'projectGroups'
+    ],
     mixins: [Permissions],
-
     data() {
         return {
             project_search: '',
             showProjectHistoryTab: true,
             showBudgetHistoryTab: false,
             projectBudgetAccess: {},
-            projectFilters: [{'name': 'Alle Projekte'}, {'name': 'Meine Projekte'}],
-            projectFilter: {'name': 'Alle Projekte'},
+            projectFilters: [{'name': this.$t('All projects')}, {'name': this.$t('My projects')}],
+            projectFilter: {'name': this.$t('All projects')},
             isSingleTab: true,
             isGroupTab: false,
             showSearchbar: false,
@@ -529,8 +554,16 @@ export default defineComponent({
     computed: {
         historyTabs() {
             return [
-                {name: 'Projekt', href: '#', current: this.showProjectHistoryTab},
-                {name: 'Budget', href: '#', current: this.showBudgetHistoryTab},
+                {
+                    name: this.$t('Project'),
+                    href: '#',
+                    current: this.showProjectHistoryTab
+                },
+                {
+                    name: this.$t('Budget'),
+                    href: '#',
+                    current: this.showBudgetHistoryTab
+                },
             ]
         },
         filteredProjects() {
@@ -602,7 +635,6 @@ export default defineComponent({
                 this.projectStateFilter.splice(this.projectStateFilter.indexOf(state), 1);
             } else {
                 this.projectStateFilter.push(state.id)
-
             }
         },
         removeFilter() {
@@ -617,7 +649,7 @@ export default defineComponent({
         changeHistoryTabs(selectedTab) {
             this.showProjectHistoryTab = false;
             this.showBudgetHistoryTab = false;
-            if (selectedTab.name === 'Projekt') {
+            if (selectedTab.name === this.$t('Project')) {
                 this.showProjectHistoryTab = true;
             } else {
                 this.showBudgetHistoryTab = true;

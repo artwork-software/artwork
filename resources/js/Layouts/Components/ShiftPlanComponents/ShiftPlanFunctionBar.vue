@@ -13,7 +13,7 @@
                 </div>
             </div>
             <div class="flex items-center" v-if="this.$can('can commit shifts') || this.hasAdminRole()">
-                <AddButton text="Alle Schichten festsetzen" type="secondary" @click="showConfirmCommitModal = true" />
+                <SecondaryButton text="Alle Schichten festsetzen" @click="showConfirmCommitModal = true" />
             </div>
 
             <div class="ml-5 flex items-center" >
@@ -73,12 +73,14 @@ import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {Inertia} from "@inertiajs/inertia";
+import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
 
 
 export default {
     name: "ShiftPlanFunctionBar",
     mixins: [Permissions],
     components: {
+        SecondaryButton,
         ConfirmDeleteModal,
         AddButton,
         BaseFilterTag,

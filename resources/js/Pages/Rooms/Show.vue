@@ -275,14 +275,11 @@
                             </div>
                         </div>
 
-                        <div class="flex justify-center">
-                            <AddButton @click="editRoom"
-                                       text="Speichern"
-                                       mode="modal"
-                                       :class="[editRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                       :disabled="editRoomForm.name.length === 0"
-                                       class="mt-8 px-24 py-3"/>
+                        <div class="flex justify-center pt-8">
+                            <SaveButton
+                                :disabled="editRoomForm.name.length === 0"
+                                @click="editRoom"
+                            />
                         </div>
 
                     </div>
@@ -574,6 +571,7 @@ import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import SaveButton from "@/Layouts/Components/General/Buttons/SaveButton.vue";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -610,6 +608,7 @@ export default {
         'user_filters'
     ],
     components: {
+        SaveButton,
         SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,

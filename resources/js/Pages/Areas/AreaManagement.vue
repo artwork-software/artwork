@@ -106,7 +106,7 @@
                                 <div class="flex w-full justify-between mt-6">
                                     <div class="flex">
                                         <div>
-                                            <AddButton @click="openAddAreaModal" text="Areal hinzufügen" mode="page"/>
+                                            <AddButtonBig @click="openAddAreaModal" text="Areal hinzufügen"/>
                                         </div>
                                         <div v-if="this.$page.props.show_hints" class="flex">
                                             <SvgCollection svgName="arrowLeft" class="ml-2 mt-4"/>
@@ -198,8 +198,7 @@
                                         </div>
                                         <div class="flex w-full mt-6" v-if="this.opened_areas.includes(area.id)">
                                             <div class="">
-                                                <AddButton @click="openAddRoomModal(area)" text="Raum hinzufügen"
-                                                           mode="page"/>
+                                                <AddButtonBig @click="openAddRoomModal(area)" text="Raum hinzufügen" />
                                             </div>
                                             <div v-if="this.$page.props.show_hints" class="flex">
                                                 <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -1019,10 +1018,12 @@ import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        AddButtonBig,
         SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,

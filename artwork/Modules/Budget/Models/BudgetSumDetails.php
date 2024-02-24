@@ -2,10 +2,9 @@
 
 namespace Artwork\Modules\Budget\Models;
 
-use App\Models\SumMoneySource;
-
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -14,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
  * @property int $id
  * @property string $type
  * @property int $column_id
+ * @property Collection<SumComment> $comments
+ * @property SumMoneySource|null $sumMoneySource
  * @property string $created_at
  * @property string $updated_at
  */

@@ -33,7 +33,7 @@ class NotificationProjectResource extends JsonResource
             'register_by' => $this->register_by,
             'registration_deadline' => $this->registration_deadline,
             'closed_society' => $this->closed_society,
-            'cost_center' => $this->cost_center,
+            'cost_center' => $this->costCenter,
         ];
     }
 }

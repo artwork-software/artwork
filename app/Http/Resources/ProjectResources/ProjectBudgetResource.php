@@ -45,8 +45,7 @@ class ProjectBudgetResource extends JsonResource
             'isMemberOfADepartment' => $this->departments
                 ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'key_visual_path' => $this->key_visual_path,
-            'cost_center' => $this->cost_center,
-            'copyright' => new CopyrightResource($this->copyright),
+            'cost_center' => $this->costCenter,
             'moneySources' => $this->moneySources,
             'project_files' => ProjectFileResource::collection($this->project_files),
             'contracts' => ContractResource::collection($this->contracts),
@@ -59,6 +58,11 @@ class ProjectBudgetResource extends JsonResource
             'delete_permission_users' => $this->delete_permission_users,
             'project_managers' => $this->managerUsers,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
+            'own_copyright' => $this->own_copyright,
+            'live_music' => $this->live_music,
+            'collecting_society' => $this->collectingSociety,
+            'law_size' => $this->law_size,
+            'cost_center_description' => $this->cost_center_description,
         ];
     }
 }

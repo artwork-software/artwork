@@ -14,12 +14,12 @@ class GeneralSettingsPolicy
         return $user->can('change tool settings');
     }
 
-    public function updateToolImages(User $user): bool
+    public function updateImages(User $user): bool
     {
         return $user->can('change tool settings');
     }
 
-    public function updateToolEmailSettings(User $user): bool
+    public function updateEmailSettings(User $user): bool
     {
         return $user->can('change tool settings');
     }

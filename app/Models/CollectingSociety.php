@@ -25,9 +25,4 @@ class CollectingSociety extends Model
     protected $fillable = [
         'name'
     ];
-
-    public function copyrights(): BelongsToMany
-    {
-        return $this->belongsToMany(Copyright::class);
-    }
 }

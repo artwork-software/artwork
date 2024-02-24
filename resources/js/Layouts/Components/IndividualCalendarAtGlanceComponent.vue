@@ -25,7 +25,7 @@
                     <SingleCalendarEvent
                         :atAGlance="true"
                         :multiEdit="multiEdit"
-                        :project="event.project"
+                        :project="false"
                         :zoom-factor="1"
                         :width="204"
                         :event="event"

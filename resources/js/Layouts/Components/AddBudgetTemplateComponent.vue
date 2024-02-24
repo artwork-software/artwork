@@ -33,14 +33,9 @@
             </div>
         </template>
     </jet-dialog-modal>
-
 </template>
 
 <script>
-
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
-
-
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton.vue";
@@ -62,33 +57,28 @@ export default {
         InputComponent,
         XCircleIcon
     },
-
     data() {
         return {
             templateName: '',
         }
     },
-
-
     props: ['tableId'],
-
     emits: ['closed'],
-
     methods: {
-        openModal() {
-        },
-
         closeModal(bool) {
             this.$emit('closed', bool);
         },
         createBudgetTemplate() {
-            this.$inertia.post(route('project.budget.template.create', this.tableId), {
-                template_name: this.templateName
-            });
-            this.closeModal(true);
+            this.$inertia.post(
+                route('project.budget.template.create', this.tableId),
+                {
+                    template_name: this.templateName,
+                },
+                {
+                    onFinish: this.$emit('closed', true)
+                }
+            );
         }
     },
 }
 </script>
-
-<style scoped></style>

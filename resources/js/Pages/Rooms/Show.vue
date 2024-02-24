@@ -290,30 +290,12 @@
             </template>
         </jet-dialog-modal>
         <!-- Success Modal -->
-        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="headline1 my-2">
-                        {{ successHeading }}
-                    </div>
-                    <XIcon @click="closeSuccessModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="successText">
-                        {{ successDescription }}
-                    </div>
-                    <div class="mt-6">
-                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="closeSuccessModal">
-                            <CheckIcon class="h-6 w-6 text-secondaryHover"/>
-                        </button>
-                    </div>
-                </div>
-
-            </template>
-        </jet-dialog-modal>
+        <SuccessModal
+            :title="successHeading"
+            :description="successDescription"
+            :show="showSuccessModal"
+            @closed="closeSuccessModal"
+        />
         <!-- Approve Request Modal -->
         <jet-dialog-modal :show="showApproveRequestModal" @close="closeApproveRequestModal">
             <template #content>
@@ -591,6 +573,7 @@ import SingleRoomCalendarComponent from "@/Layouts/Components/SingleRoomCalendar
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -627,6 +610,7 @@ export default {
         'user_filters'
     ],
     components: {
+        SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,
         IndividualCalendarComponent,

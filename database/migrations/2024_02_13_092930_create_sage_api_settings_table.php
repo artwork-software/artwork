@@ -13,13 +13,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('copyrights', function (Blueprint $table): void {
+        Schema::create('sage_api_settings', function (Blueprint $table): void {
             $table->id();
-            $table->boolean('own_copyright');
-            $table->boolean('live_music');
-            $table->string('collecting_society_id');
-            $table->enum('law_size', ['small', 'big']);
-            $table->foreignId('project_id');
+            $table->longText('host');
+            $table->longText('endpoint');
+            $table->longText('user');
+            $table->longText('password');
+            $table->date('bookingDate')->nullable();
+            $table->string('fetchTime')->nullable();
+            $table->boolean('enabled');
             $table->timestamps();
         });
     }
@@ -31,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('copyright');
+        Schema::dropIfExists('sage_api_settings');
     }
 };

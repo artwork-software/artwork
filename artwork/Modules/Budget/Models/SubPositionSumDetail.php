@@ -22,7 +22,7 @@ class SubPositionSumDetail extends Model
     use HasFactory;
     use BelongsToSubPosition;
 
-    protected  $fillable = [
+    protected $fillable = [
         'column_id'
     ];
 

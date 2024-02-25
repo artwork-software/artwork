@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Event as EventFacade;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Inertia\Testing\AssertableInertia;
 
-use function Pest\Faker\faker;
+use function Pest\Faker\fake;
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertDatabaseMissing;
 use function Pest\Laravel\assertSoftDeleted;
@@ -177,7 +177,7 @@ test('event requests', function (\Illuminate\Database\Eloquent\Collection|\Illum
 test('Store event', function () {
 
     EventFacade::fake();
-    $title = faker()->company();
+    $title = fake()->company();
 
     $data = getEventData();
     $data['title'] = $title;
@@ -189,7 +189,7 @@ test('Store event', function () {
 
 test('Store event series', function (int $frequency) {
     EventFacade::fake();
-    $title = faker()->company();
+    $title = fake()->company();
 
     $data = getEventData();
     $data['title'] = $title;
@@ -553,10 +553,10 @@ function getEventData(): array
         'end' => now()->addYear()->format('Y-m-d'),
         'roomId' => Room::factory()->create()->id,
         'eventName' => null,
-        'description' => faker()->text(),
-        'title' => faker()->company(),
-        'audience' => faker()->boolean(),
-        'isLoud' => faker()->boolean(),
+        'description' => fake()->text(),
+        'title' => fake()->company(),
+        'audience' => fake()->boolean(),
+        'isLoud' => fake()->boolean(),
         'projectId' => Project::factory()->create()->id,
         'eventTypeId' => 1,
         'projectIdMandatory' => false,

@@ -240,7 +240,7 @@ export default{
                 "image/gif"
             ]
 
-            if (allowedTypes.includes(file.type)) {
+            if (allowedTypes.includes(file?.type)) {
                 this.keyVisualForm.keyVisual = file
                 this.keyVisualForm.post(route('projects_key_visual.update', {project: this.project.id}), {
                         onError: error => {

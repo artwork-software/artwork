@@ -160,7 +160,7 @@ export default defineComponent({
               "image/gif"
             ]
 
-            if (allowedTypes.includes(file.type)) {
+            if (allowedTypes.includes(file?.type)) {
                 const reader = new FileReader();
 
                 reader.onload = (e) => {

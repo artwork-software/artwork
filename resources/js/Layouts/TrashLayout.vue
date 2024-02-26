@@ -3,8 +3,10 @@
         <div class="flex-wrap max-w-5xl">
             <div class="flex flex-wrap mx-10 ml-14">
                 <h2 class="font-black text-primary font-lexend text-3xl w-full">Papierkorb</h2>
-                <p class="text-secondary tracking-tight leading-6 subpixel-antialiased mt-5">Du kannst Objekte aus deinem Papierkorb wieder herstellen oder endgültig
-                    löschen. Nach 30 Tagen werden Objekte automatisch endgültig gelöscht.</p>
+                <p class="text-secondary tracking-tight leading-6 subpixel-antialiased mt-5">
+                    Du kannst Objekte aus deinem Papierkorb wieder herstellen oder endgültig löschen. Nach 30 Tagen
+                    werden Objekte automatisch endgültig gelöscht.
+                </p>
                 <div class="flex flex-wrap w-full">
 
                     <div class="w-full mt-5 flex my-auto justify-between">
@@ -29,6 +31,7 @@
                                         ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="page in trashSites"
+                                                       v-show="page.available"
                                                        :key="page.name"
                                                        :value="page"
                                                        v-slot="{ active, selected }">
@@ -92,23 +95,33 @@ export default {
             return {
                 'Trash/Projects': {
                     name: 'Projekte',
-                    href: route('projects.trashed')
+                    href: route('projects.trashed'),
+                    available: true
                 },
                 'Trash/Areas': {
                     name: 'Areale',
-                    href: route('areas.trashed')
+                    href: route('areas.trashed'),
+                    available: true
                 },
                 'Trash/Rooms': {
                     name: 'Räume',
-                    href: route('rooms.trashed')
+                    href: route('rooms.trashed'),
+                    available: true
                 },
                 'Trash/Events': {
                     name: 'Termine',
-                    href: route('events.trashed')
+                    href: route('events.trashed'),
+                    available: true
                 },
                 'Trash/ProjectSettings': {
                     name: 'Projekteinstellungen',
-                    href: route('projects.settings.trashed')
+                    href: route('projects.settings.trashed'),
+                    available: true
+                },
+                'Trash/SageNotAssignedData': {
+                    name: 'Sage-API Datensätze',
+                    href: route('sageNotAssignedData.trashed'),
+                    available: this.$can('can view and delete sage100-api-data')
                 }
             }
         }

@@ -13,7 +13,6 @@ use Artwork\Modules\Budget\Repositories\ColumnRepository;
 
 class ColumnService
 {
-
     public function __construct(
         private readonly ColumnRepository $columnRepository,
         private readonly ColumnCellService $columnCellService,

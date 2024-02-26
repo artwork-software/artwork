@@ -50,6 +50,7 @@ use Laravel\Scout\Searchable;
  * @property int $is_group
  * @property int $state
  * @property string $budget_deadline
+ * @property Table|null $table
  */
 class Project extends Model
 {

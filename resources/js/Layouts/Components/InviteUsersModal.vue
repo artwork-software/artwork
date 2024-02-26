@@ -130,10 +130,14 @@
                         </div>
                         <div v-if="showUserPermissions && this.form.role !== 'admin'"
                              class="flex flex-col">
-                            <div v-for="(permissions, group) in all_permissions">
-                                <h3 class="headline6Light mb-2 mt-6">{{ group }}</h3>
+                            <div v-for="(group, groupName) in this.computedGroupedPermissions"
+                                 v-show="group.shown"
+                            >
+                                <h3 class="headline6Light mb-2 mt-6">{{ groupName }}</h3>
                                 <div class="relative w-full flex items-center"
-                                     v-for="(permission, index) in permissions" :key=index>
+                                     v-for="(permission, index) in group.permissions"
+                                     :key=index
+                                >
                                     <Checkbox @change="changePermission(permission)"
                                               class="w-full h-auto"
                                               :item="permission"
@@ -227,6 +231,35 @@ export default {
     computed: {
         errors() {
             return this.$page.props.errors;
+        },
+        computedGroupedPermissions() {
+            let groupedPermissions = {};
+
+            for (const [group, permissions] of Object.entries(this.all_permissions)) {
+                groupedPermissions[group] = {
+                    shown: true,
+                    permissions: []
+                };
+
+                permissions.forEach((permission) => {
+                    //permissions depending on specific logic to be displayed
+                    if (permission.name === 'can view and delete sage100-api-data') {
+                        //this permission is only added when sage api is enabled
+                        if (this.$page.props.sageApiEnabled) {
+                            groupedPermissions[group].permissions.push(permission);
+                        }
+                        return;
+                    }
+
+                    //other permissions are pushed anytime
+                    groupedPermissions[group].permissions.push(permission);
+                });
+
+                //groups are only shown when there are permissions to display
+                groupedPermissions[group].shown = groupedPermissions[group].permissions.length > 0;
+            }
+
+            return groupedPermissions;
         }
     },
     updated() {

@@ -11,4 +11,9 @@ class SageAssignedDataRepository extends BaseRepository
     {
         return SageAssignedData::byColumnCellId($columnSubPositionRowId)->first();
     }
+
+    public function findBySageId(int $sageId): SageAssignedData|null
+    {
+        return SageAssignedData::bySageId($sageId)->first();
+    }
 }

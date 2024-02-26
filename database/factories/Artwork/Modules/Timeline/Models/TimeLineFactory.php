@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Timeline\Models;
 
 use App\Models\Event;
 use Artwork\Modules\Timeline\Models\Timeline;

@@ -22,23 +22,17 @@ jobs:
       - name: Install PHP and Composer
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: '8.2'
           extensions: gd
-
 
       - name: Install Dependencies
         run: composer install --no-progress --no-suggest --no-interaction
-
-      - name: Install PHP_CodeSniffer
-        run: |
-          curl -OL https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar
-          php phpcs.phar --version
 
       - name: Sniff
         uses: tinovyatkin/action-php-codesniffer@v1
         with:
           files: "**.php" # you may customize glob as needed
-          phpcs_path: php phpcs.phar
+          phpcs_path: php vendor/bin/phpcs
           standard: phpcs.xml
 
 #      - name: Create Merge Request

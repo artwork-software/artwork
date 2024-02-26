@@ -285,6 +285,9 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionNameEnum::TEAM_UPDATE->value)) {
+            abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
+        }
         $user->update(
             $request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email')
         );

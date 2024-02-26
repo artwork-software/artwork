@@ -22,6 +22,10 @@ class SubPositionSumDetail extends Model
     use HasFactory;
     use BelongsToSubPosition;
 
+    protected $fillable = [
+        'column_id'
+    ];
+
     protected $table = 'subposition_sum_details';
 
     public function comments(): MorphMany

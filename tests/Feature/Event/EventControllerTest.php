@@ -31,31 +31,31 @@ beforeEach(function () {
     $this->auth_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
     $this->actingAs($this->auth_user);
     setupCalendar($this->auth_user);
-
 });
 
 test('views events', function () {
     $today = today();
-    $tomorrow = today()->addDay();
 
-    setupCalendar($this->auth_user);
+    $calendarFilter = $this->auth_user->calendar_filter()->first();
+    $calendarFilter->end_date = $today;
+    $calendarFilter->save();
 
     $response = $this->get(route('events'));
 
     $response->assertInertia(fn(AssertableInertia $page) => $page
         ->component('Events/EventManagement')
-        ->has('events.events', 17));
+        ->has('events.events', 0));
 
     Event::factory()->create([
-        'start_time' => $today,
-        'end_time' => $tomorrow,
+        'start_time' => now(),
+        'end_time' => $today->endOfDay(),
     ]);
 
     $response = $this->get(route('events'));
 
     $response->assertInertia(fn(AssertableInertia $page) => $page
         ->component('Events/EventManagement')
-        ->has('events.events', 18));
+        ->has('events.events', 1));
 });
 
 test('view shiftplan', function () {
@@ -304,36 +304,6 @@ test('answer on event for admins', function () {
     NotificationFacade::assertNothingSentTo($event->room->user);
 });
 
-//test('accept event without managers', function () {
-//
-//    EventFacade::fake();
-//    NotificationFacade::fake();
-//
-//    $event = Event::factory()->create();
-//
-//    $this->put(route('events.accept', $event->id), []);
-//
-//    NotificationFacade::assertSentTo($event->creator, RoomRequestNotification::class);
-//});
-//
-//test('accept event with managers', function () {
-//    EventFacade::fake();
-//    NotificationFacade::fake();
-//
-//    $project = Project::factory()->create();
-//    $managers = User::factory(4)->create();
-//    $project->managerUsers()->sync($managers);
-//    $event = Event::factory()->create([
-//        'project_id' => $project->id,
-//    ]);
-//
-//    $this->put(route('events.accept', $event->id), []);
-//
-//    foreach ($managers as $manager) {
-//        NotificationFacade::assertSentTo($manager, RoomRequestNotification::class);
-//    }
-//});
-
 test('decline event without managers', function () {
 
     EventFacade::fake();
@@ -437,12 +407,12 @@ test('destroy shifts', function () {
     $timeline = Timeline::factory()->create(['event_id' => $event->id]);
 
     assertDatabaseHas('shifts', ['id' => $shift->id, 'event_id' => $event->id]);
-    assertDatabaseHas('time_lines', ['id' => $timeline->id, 'event_id' => $event->id]);
+    assertDatabaseHas('timelines', ['id' => $timeline->id, 'event_id' => $event->id]);
 
     $this->delete(route('events.shifts.delete', $event->id));
 
     assertDatabaseMissing('shifts', ['id' => $shift->id, 'event_id' => $event->id]);
-    assertDatabaseMissing('time_lines', ['id' => $timeline->id, 'event_id' => $event->id]);
+    assertDatabaseMissing('timelines', ['id' => $timeline->id, 'event_id' => $event->id]);
 });
 
 test('delete event', function () {

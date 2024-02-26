@@ -82,4 +82,9 @@ class SageAssignedDataService
     {
         $this->sageAssignedDataRepository->delete($sageAssignedData);
     }
+
+    public function findBySageId(int $sageId): SageAssignedData|null
+    {
+        return $this->sageAssignedDataRepository->findBySageId($sageId);
+    }
 }

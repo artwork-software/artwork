@@ -5,6 +5,7 @@ namespace Artwork\Modules\Budget\Services;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Repositories\SageNotAssignedDataRepository;
+use Illuminate\Database\Eloquent\Collection;
 
 class SageNotAssignedDataService
 {
@@ -63,5 +64,20 @@ class SageNotAssignedDataService
     public function delete(SageNotAssignedData $sageNotAssignedData): void
     {
         $this->sageNotAssignedDataRepository->delete($sageNotAssignedData);
+    }
+
+    public function forceDelete(SageNotAssignedData $sageNotAssignedData): void
+    {
+        $this->sageNotAssignedDataRepository->forceDelete($sageNotAssignedData);
+    }
+
+    public function getTrashed(): Collection
+    {
+        return $this->sageNotAssignedDataRepository->getTrashed();
+    }
+
+    public function restore(SageNotAssignedData $sageNotAssignedData): bool
+    {
+        return $this->sageNotAssignedDataRepository->restore($sageNotAssignedData);
     }
 }

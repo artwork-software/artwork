@@ -56,21 +56,26 @@
         </div>
         <div>
             <div v-if="showUserPermissions" class="flex flex-col w-full ">
-                <div class="w-full mb-3" v-for="(permissions, group) in all_permissions">
+                <div class="w-full mb-3"
+                     v-for="(group, groupName) in this.computedGroupedPermissions"
+                     v-show="group.shown"
+                >
                     <div
                         class="uppercase my-3 text-xs columnSubName flex items-center cursor-pointer"
-                        @click="permissions.show = !permissions.show">
-                        {{ group }}
+                        @click="group.show = typeof group.show === 'undefined' ? false : !group.show">
+                        {{ groupName }}
                         <div class="flex items-center ml-2">
                             <SvgCollection svg-name="arrowUp"
-                                           v-if="!permissions.show"></SvgCollection>
+                                           v-if="typeof group.show === 'undefined' ? true : group.show"
+                            />
                             <SvgCollection svg-name="arrowDown"
-                                           v-if="permissions.show"></SvgCollection>
+                                           v-else
+                            />
                         </div>
                     </div>
-                    <div v-if="!permissions.show"
+                    <div v-if="typeof group.show === 'undefined' || group.show"
                          class="relative justify-between flex items-center w-full"
-                         v-for="(permission, index) in permissions"
+                         v-for="(permission, index) in group.permissions"
                          :key=index>
                         <div class="flex items-center h-7">
                             <input
@@ -174,6 +179,7 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {Inertia} from "@inertiajs/inertia";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import {reactive} from "vue";
 
 export default {
     components: {
@@ -211,6 +217,37 @@ export default {
             }),
         }
     },
+    computed: {
+        computedGroupedPermissions() {
+            let groupedPermissions = {};
+
+            for (const [group, permissions] of Object.entries(this.all_permissions)) {
+                groupedPermissions[group] = {
+                    shown: true,
+                    permissions: []
+                };
+
+                permissions.forEach((permission) => {
+                    //permissions depending on specific logic to be displayed
+                    if (permission.name === 'can view and delete sage100-api-data') {
+                        //this permission is only added when sage api is enabled
+                        if (this.$page.props.sageApiEnabled) {
+                            groupedPermissions[group].permissions.push(permission);
+                        }
+                        return;
+                    }
+
+                    //other permissions are pushed anytime
+                    groupedPermissions[group].permissions.push(permission);
+                });
+
+                //groups are only shown when there are permissions to display
+                groupedPermissions[group].shown = groupedPermissions[group].permissions.length > 0;
+            }
+
+            return reactive(groupedPermissions);
+        }
+    },
     methods: {
         editUser() {
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
@@ -233,8 +270,3 @@ export default {
     }
 }
 </script>
-
-
-<style scoped>
-
-</style>

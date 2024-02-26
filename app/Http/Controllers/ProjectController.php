@@ -1231,6 +1231,7 @@ class ProjectController extends Controller
     {
         $table = Table::find($request->table_id);
         if ($request->column_type === 'empty') {
+            /** @var Column $column */
             $column = $table->columns()->create([
                 'name' => 'empty',
                 'subName' => '-',
@@ -1245,15 +1246,19 @@ class ProjectController extends Controller
                 function (Builder $query) use ($request): void {
                     $query->where('table_id', $request->table_id);
                 }
-            )->pluck('id');
+            )->get();
 
             foreach ($subPositionRows as $subPositionRow) {
-                $column->subPositionRows()->attach($subPositionRow, [
-                    'value' => 0,
-                    'verified_value' => null,
-                    'linked_money_source_id' => null,
-                    'commented' => SubPositionRow::find($subPositionRow)->commented
-                ]);
+                $column->cells()->create(
+                    [
+                        'column_id' => $column->id,
+                        'sub_position_row_id' => $subPositionRow->id,
+                        'value' => 0,
+                        'verified_value' => null,
+                        'linked_money_source_id' => null,
+                        'commented' => $subPositionRow->commented
+                    ]
+                );
             }
 
             $subPositions = SubPosition::whereHas('mainPosition', function (Builder $query) use ($request): void {
@@ -1297,7 +1302,7 @@ class ProjectController extends Controller
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
                     ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
                     ->first();
-                $sum = (int)$firstColumn->value + (int)$secondColumn->value;
+                $sum = $firstColumn->value + $secondColumn->value;
                 ColumnCell::create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
@@ -1323,7 +1328,7 @@ class ProjectController extends Controller
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
                     ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
                     ->first();
-                $sum = (int)$firstColumn->value - (int)$secondColumn->value;
+                $sum = $firstColumn->value - $secondColumn->value;
                 ColumnCell::create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,

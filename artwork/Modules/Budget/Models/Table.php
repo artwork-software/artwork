@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
 /**
+ * @property int $id
  * @property int $project_id
  * @property string $name
  * @property bool $is_template

@@ -23,6 +23,7 @@ class SubPositionSumDetail extends Model
     use BelongsToSubPosition;
 
     protected $fillable = [
+        'sub_position_id',
         'column_id'
     ];
 

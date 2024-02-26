@@ -1,12 +1,12 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Timeline\Models;
 
 use App\Models\Event;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class TimeLineFactory extends Factory
+class TimelineFactory extends Factory
 {
     protected $model = Timeline::class;
 

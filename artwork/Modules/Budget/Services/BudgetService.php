@@ -81,14 +81,14 @@ class BudgetService
                 'position' => $earningMainPosition->subPositions()->max('position') + 1
             ]);
 
-            $costSubPositionRow = $costSubPosition->subPositionRow()->create([
+            $costSubPositionRow = $costSubPosition->subPositionRows()->create([
                 'commented' => false,
-                'position' => $costSubPosition->subPositionRow()->max('position') + 1
+                'position' => $costSubPosition->subPositionRows()->max('position') + 1
             ]);
 
-            $earningSubPositionRow = $earningSubPosition->subPositionRow()->create([
+            $earningSubPositionRow = $earningSubPosition->subPositionRows()->create([
                 'commented' => false,
-                'position' => $earningSubPosition->subPositionRow()->max('position') + 1
+                'position' => $earningSubPosition->subPositionRows()->max('position') + 1
 
             ]);
 

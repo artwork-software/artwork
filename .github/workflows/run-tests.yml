@@ -23,8 +23,8 @@ jobs:
 
     strategy:
       matrix:
-        php: [ 8.2, 8.1]
-        laravel: [ ^10, ^9 ]
+        php: [ 8.2]
+        laravel: [ ^10 ]
         dependency-version: [ prefer-stable ]
         exclude:
           - laravel: ^10
@@ -70,7 +70,8 @@ jobs:
         run: |
           php artisan key:generate --env=testing
           php artisan optimize --env=testing
-          php artisan migrate:fresh --seed --env=testing
+          php artisan migrate:fresh --env=testing
+          php artisan db:seed --class=ProductionDatabaseSeeder --env=testing
 
       - name: Running Test
         run: vendor/bin/pest --colors=always

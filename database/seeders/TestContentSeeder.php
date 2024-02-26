@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Project\Models\Comment;
 use App\Models\Event;
@@ -12,13 +13,11 @@ use App\Models\Sector;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
-use Area;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Room\Models\RoomAttribute;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Auth;
-use Room;
-use RoomAttribute;
 
 class TestContentSeeder extends Seeder
 {

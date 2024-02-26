@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
+use App\Models\Task;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\Event;
 use App\Models\Scheduling;
-
 use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Notification\Models\GlobalNotification;

@@ -123,6 +123,22 @@ enum NotificationConstEnum: string
 
             self::NOTIFICATION_PROJECT => ProjectNotification::class,
             self::NOTIFICATION_TEAM => TeamNotification::class,
+            //TODO: Implement the rest of the cases
+            /*
+            self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED => throw new \Exception('To be implemented'),
+            self::NOTIFICATION_BUDGET_STATE_CHANGED => throw new \Exception('To be implemented'),
+            self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED => throw new \Exception('To be implemented'),
+            self::NOTIFICATION_MONEY_SOURCE_EXPIRATION => throw new \Exception('To be implemented'),
+            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED => throw new \Exception('To be implemented'),
+            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => throw new \Exception('To be implemented'),
+            self::NOTIFICATION_PUBLIC_RELEVANT => throw new \Exception('To be implemented'),
+            self::NOTIFICATION_SHIFT_CHANGED => throw new \Exception('To be implemented'),
+            self::NOTIFICATION_SHIFT_OWN_INFRINGEMENT => throw new \Exception('To be implemented'),
+            self::NOTIFICATION_SHIFT_INFRINGEMENT => throw new \Exception('To be implemented'),
+            self::NOTIFICATION_SHIFT_LOCKED => throw new \Exception('To be implemented'),
+            self::NOTIFICATION_SHIFT_AVAILABLE => throw new \Exception('To be implemented'),
+            self::NOTIFICATION_SHIFT_CONFLICT => throw new \Exception('To be implemented'),
+            */
         };
     }
 

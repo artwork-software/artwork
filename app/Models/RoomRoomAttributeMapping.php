@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Models\RoomAttribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;

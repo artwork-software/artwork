@@ -75,7 +75,7 @@ class ProjectPolicy
             }
         }
 
-        return $user->can(PermissionNameEnum::PROJECT_UPDATE->value) || $isCreator;
+        return $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value) || $isCreator;
     }
 
     public function delete(User $user, Project $project): bool

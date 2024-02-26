@@ -4,6 +4,8 @@ namespace Artwork\Modules\Room\Models;
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 
 use App\Models\Event;
+use App\Models\RoomRoomAttributeMapping;
+use App\Models\RoomRoomCategoryMapping;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Models\BelongsToArea;

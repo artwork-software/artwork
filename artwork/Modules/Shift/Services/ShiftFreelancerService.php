@@ -214,7 +214,7 @@ class ShiftFreelancerService
         );
     }
 
-    public function removeFromShiftByUserIdAndShiftId(int $freelancerId, int $shiftId): ShiftFreelancer
+    public function removeFromShiftByUserIdAndShiftId(int $freelancerId, int $shiftId): void
     {
         $this->removeFromShift(
             $this->shiftFreelancerRepository->findByUserIdAndShiftId(

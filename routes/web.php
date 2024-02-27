@@ -46,6 +46,7 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\RowCommentController;
 use App\Http\Controllers\SageAssignedDataCommentController;
+use App\Http\Controllers\SageNotAssignedDataController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\ServiceProviderContactsController;
 use App\Http\Controllers\ServiceProviderController;
@@ -709,6 +710,33 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('project.budget.sub-position.delete');
             Route::delete('/table/{table}', [ProjectController::class, 'deleteTable'])
                 ->name('project.budget.table.delete');
+
+            Route::get('/sageNotAssignedData/trashed', [SageNotAssignedDataController::class, 'getTrashed'])
+                ->name('sageNotAssignedData.trashed');
+
+            Route::delete(
+                '/sageNotAssignedData/{sageNotAssignedData}',
+                [
+                    SageNotAssignedDataController::class, 'destroy'
+                ]
+            )
+                ->name('sageNotAssignedData.destroy');
+            Route::delete(
+                '/sageNotAssignedData/{sageNotAssignedData}/forceDelete',
+                [
+                    SageNotAssignedDataController::class, 'forceDelete'
+                ]
+            )
+                ->name('sageNotAssignedData.forceDelete')
+                ->withTrashed();
+            Route::patch(
+                '/sageNotAssignedData/{sageNotAssignedData}/restore',
+                [
+                    SageNotAssignedDataController::class, 'restore'
+                ]
+            )
+                ->name('sageNotAssignedData.restore')
+                ->withTrashed();
 
             Route::resource('sageAssignedDataComments', SageAssignedDataCommentController::class)
                 ->only(['store', 'destroy']);

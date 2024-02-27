@@ -29,6 +29,11 @@ abstract class BaseRepository
         return $model->delete();
     }
 
+    public function forceDelete(Model|Pivot $model): bool
+    {
+        return $model->forceDelete();
+    }
+
     /**
      * @throws Throwable
      */

@@ -30,8 +30,7 @@ class ColumnCellService
         });
 
         if (!$columnCell->subPositionRow->subPosition->mainPosition->table->is_template) {
-            $sageAssignedData = $columnCell->sageAssignedData;
-            if ($sageAssignedData instanceof SageAssignedData) {
+            if (($sageAssignedData = $columnCell->sageAssignedData) instanceof SageAssignedData) {
                 $this->sageNotAssignedDataService->createFromSageAssignedData(
                     $sageAssignedData,
                     $columnCell->subPositionRow->subPosition->mainPosition->table->project_id

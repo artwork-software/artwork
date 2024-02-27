@@ -4,8 +4,8 @@ namespace App\Http\Resources;
 
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Models\Filter;
+use Artwork\Modules\Room\Models\Room;
 use Illuminate\Http\Resources\Json\ResourceCollection;
-use Room;
 
 class CalendarEventCollectionResource extends ResourceCollection
 {

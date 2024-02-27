@@ -171,13 +171,6 @@
             </div>
         </table>
     </th>
-    <confirmation-component
-        v-if="showDeleteModal"
-        :confirm="$t('Delete')"
-        :titel="this.confirmationTitle"
-        :description="this.confirmationDescription"
-        @closed="afterConfirm"
-    />
     <sage-assigned-data-modal v-if="this.showSageAssignedDataModal"
                               :show="this.showSageAssignedDataModal"
                               :cell="this.showSageAssignedDataModalCell"
@@ -327,18 +320,14 @@ export default {
                 preserveState: true
             })
         },
-        afterConfirm(bool) {
-            if (!bool) return this.showDeleteModal = false;
-
-            this.deletePosition();
-
-        },
         openDeleteModal(title, description, position, type) {
-            this.confirmationTitle = title;
-            this.confirmationDescription = description
-            this.positionToDelete = position;
-            this.showDeleteModal = true;
-            this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.positionToDelete, type)
+            this.$emit(
+                'openDeleteModal',
+                title,
+                description,
+                position,
+                type
+            );
         },
         updateMainPositionName(mainPosition) {
             this.$inertia.patch(route('project.budget.main-position.update-name'), {

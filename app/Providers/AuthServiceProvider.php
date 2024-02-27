@@ -12,7 +12,9 @@ use App\Policies\SageApiSettingsPolicy;
 use App\Policies\ServiceProviderPolicy;
 use App\Policies\GeneralSettingsPolicy;
 use Artwork\Modules\Budget\Models\SageAssignedDataComment;
+use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Policies\SageAssignedDataCommentPolicy;
+use Artwork\Modules\Budget\Policies\SageNotAssignedDataPolicy;
 use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use Artwork\Modules\Project\Models\Comment;
@@ -65,7 +67,8 @@ class AuthServiceProvider extends ServiceProvider
         GeneralSettings::class => GeneralSettingsPolicy::class,
         ShiftQualification::class => ShiftQualificationPolicy::class,
         SageApiSettings::class => SageApiSettingsPolicy::class,
-        SageAssignedDataComment::class => SageAssignedDataCommentPolicy::class
+        SageAssignedDataComment::class => SageAssignedDataCommentPolicy::class,
+        SageNotAssignedData::class => SageNotAssignedDataPolicy::class
     ];
 
     public function boot(): void

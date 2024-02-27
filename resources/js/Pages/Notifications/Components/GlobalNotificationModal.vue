@@ -169,7 +169,7 @@ export default {
                 "image/gif"
             ]
 
-            if (allowedTypes.includes(file.type)) {
+            if (allowedTypes.includes(file?.type)) {
 
                 const reader = new FileReader();
 

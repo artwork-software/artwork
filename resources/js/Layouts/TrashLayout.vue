@@ -30,6 +30,7 @@
                                         ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="page in trashSites"
+                                                       v-show="page.available"
                                                        :key="page.name"
                                                        :value="page"
                                                        v-slot="{ active, selected }">
@@ -93,23 +94,33 @@ export default {
             return {
                 'Trash/Projects': {
                     name: this.$t('Projects'),
-                    href: route('projects.trashed')
+                    href: route('projects.trashed'),
+                    available: true
                 },
                 'Trash/Areas': {
                     name: this.$t('Areas'),
-                    href: route('areas.trashed')
+                    href: route('areas.trashed'),
+                    available: true
                 },
                 'Trash/Rooms': {
                     name: this.$t('Rooms'),
-                    href: route('rooms.trashed')
+                    href: route('rooms.trashed'),
+                    available: true
                 },
                 'Trash/Events': {
                     name: this.$t('Events'),
-                    href: route('events.trashed')
+                    href: route('events.trashed'),
+                    available: true
                 },
                 'Trash/ProjectSettings': {
                     name: this.$t('Project Settings'),
-                    href: route('projects.settings.trashed')
+                    href: route('projects.settings.trashed'),
+                    available: true
+                },
+                'Trash/SageNotAssignedData': {
+                    name: 'Sage-API Datensätze',
+                    href: route('sageNotAssignedData.trashed'),
+                    available: this.$can('can view and delete sage100-api-data')
                 }
             }
         }

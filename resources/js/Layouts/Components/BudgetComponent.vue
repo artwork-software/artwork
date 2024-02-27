@@ -260,7 +260,10 @@
                 </thead>
             </table>
         </div>
-        <SageNotAssignedData v-if="!this.isBudgetTemplateManagement && $page.props.sageApiEnabled" :sage-not-assigned="sageNotAssigned" />
+        <SageNotAssignedData v-if="!this.isBudgetTemplateManagement && this.$page.props.sageApiEnabled && this.$can('can view and delete sage100-api-data')"
+                             :sage-not-assigned="sageNotAssigned"
+                             @remove-sage-not-assigned-data="this.showRemoveSageNotAssignedDataConfirmationModal"
+        />
         <div class="w-full flex mb-6">
             <div class="flex flex-wrap w-full bg-secondaryHover border-2 border-gray-300">
                 <div class="w-full flex">
@@ -695,6 +698,12 @@
         :description="this.errorDescription"
         @closed="afterErrorConfirm"
     />
+    <confirmation-component v-if="this.showDeleteSageNotAssignedDataConfirmationModal"
+                            @closed="this.showSageNotAssignedDataConfirmationModalHandler"
+                            :description='"Willst du den Datensatz: \"" + this.sageNotAssignedDataToDelete.buchungstext
+                                + "\" wirklich in den Papierkorb legen?"'
+                            titel="In den Papierkorb verschieben"
+    />
 </template>
 
 <script>
@@ -851,7 +860,9 @@ export default {
             sumDetailOpenTab: 'comment',
             userExcludeCommentedBudgetItems: this.$page.props.user.commented_budget_items_setting ?
                 this.$page.props.user.commented_budget_items_setting.exclude === 1 :
-                false
+                false,
+            showDeleteSageNotAssignedDataConfirmationModal: false,
+            sageNotAssignedDataToDelete: null
         }
     },
     props: [
@@ -1419,6 +1430,28 @@ export default {
                     project: projectId
                 }
             ));
+        },
+        showRemoveSageNotAssignedDataConfirmationModal(sageNotAssignedData) {
+            this.sageNotAssignedDataToDelete = sageNotAssignedData;
+            this.showDeleteSageNotAssignedDataConfirmationModal = true;
+        },
+        showSageNotAssignedDataConfirmationModalHandler(closedToDelete) {
+            if (closedToDelete) {
+                Inertia.delete(
+                    route('sageNotAssignedData.destroy',
+                        {
+                            sageNotAssignedData: this.sageNotAssignedDataToDelete.id
+                        },
+                        {
+                            preserveState: true,
+                            preserveScroll: true
+                        }
+                    )
+                )
+            }
+
+            this.showDeleteSageNotAssignedDataConfirmationModal = false;
+            this.sageNotAssignedDataToDelete = null;
         }
     },
 }

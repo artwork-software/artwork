@@ -53,6 +53,6 @@ class SageNotAssignedData extends Model
 
     public function prunable(): Builder
     {
-        return static::where('deleted_at', '<=', now()->subDays(30))->withTrashed();
+        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
     }
 }

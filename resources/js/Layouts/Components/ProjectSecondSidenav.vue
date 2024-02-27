@@ -97,6 +97,7 @@
             </div>
         </div>
     </div>
+
     <ProjectEditTeamModal :show="showTeamModal"
                           :assigned-users="this.project.users"
                           :userIsProjectManager="userIsProjectManager"
@@ -104,6 +105,9 @@
                           :project-id="project.id"
                           @closed="showTeamModal = false"
     />
+
+    <ProjectEntranceModal :show="show" :close-modal="closeEntranceModal" :project="project"/>
+
     <ProjectAttributeEditModal :show="showAttributeEditModal"
                                :project="project"
                                :projectCategoryIdArray="projectCategoryIds"
@@ -114,9 +118,6 @@
                                :genres="genres"
                                @closed="closeProjectAttributeEditModal"
     />
-    <ProjectEntranceModal :show="show"
-                          :close-modal="closeEntranceModal"
-                          :project="project"/>
 </template>
 
 <script>
@@ -133,7 +134,19 @@ import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     mixins: [Permissions],
-    props: ['project', 'projectMembers', 'projectCategories', 'projectGenres', 'projectSectors', 'categories', 'sectors', 'genres', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds'],
+    props: [
+        'project',
+        'projectMembers',
+        'projectCategories',
+        'projectGenres',
+        'projectSectors',
+        'categories',
+        'sectors',
+        'genres',
+        'projectCategoryIds',
+        'projectGenreIds',
+        'projectSectorIds'
+    ],
     components: {
         ProjectEditTeamModal,
         TeamTooltip,

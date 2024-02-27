@@ -183,6 +183,10 @@ export default {
         'assignedUsers',
         'userIsProjectManager',
         'departments',
+        'show',
+        'assignedUsers',
+        'assignedDepartments',
+        'userIsProjectManager',
         'projectId'
     ],
     data(){
@@ -194,17 +198,29 @@ export default {
                 assigned_user_ids: {},
                 assigned_departments: [],
             }),
-            users: this.assignedUsers,
-            assignedDepartments: this.departments ? this.departments : [],
-            show: this.editingTeam ? this.editingTeam : false
+            //remove reference to original object by destructuring to new array
+            users: [...this.assignedUsers],
+            //remove reference to original object by destructuring to new array
+            departments: [...this.assignedDepartments]
         }
     },
     methods: {
         closeModal(bool) {
             this.$emit('closed', bool);
         },
+        addDepartmentToProjectTeamArray(departmentToAdd) {
+            for (let assignedDepartment of this.departments) {
+                if (departmentToAdd.id === assignedDepartment.id) {
+                    this.department_and_user_query = ""
+                    return;
+                }
+            }
+
+            this.department_and_user_query = ""
+            this.departments.push(departmentToAdd);
+        },
         deleteDepartmentFromProjectTeam(department) {
-            this.assignedDepartments.splice(this.assignedDepartments.indexOf(department), 1);
+            this.departments.splice(this.departments.indexOf(department), 1);
         },
         addUserToProjectTeamArray(userToAdd) {
             for (let assignedUser of this.users) {
@@ -216,21 +232,6 @@ export default {
 
             this.users.push(userToAdd);
             this.department_and_user_query = ""
-        },
-        addDepartmentToProjectTeamArray(departmentToAdd) {
-            if (this.assignedDepartments !== []) {
-                for (let assignedDepartment of this.assignedDepartments) {
-                    if (departmentToAdd.id === assignedDepartment.id) {
-                        this.department_and_user_query = ""
-                        return;
-                    }
-                }
-            } else {
-                this.assignedDepartments = [departmentToAdd];
-            }
-            this.department_and_user_query = ""
-            this.assignedDepartments.push(departmentToAdd);
-
         },
         deleteUserFromProjectTeam(user) {
             if (this.users.includes(user)) {
@@ -248,7 +249,7 @@ export default {
                 };
             })
             this.form.assigned_departments = [];
-            this.assignedDepartments.forEach(department => {
+            this.departments.forEach(department => {
                 this.form.assigned_departments.push(department);
             })
             this.form.patch(route('projects.update_team', {project: this.projectId}));

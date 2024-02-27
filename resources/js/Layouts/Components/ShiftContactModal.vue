@@ -13,7 +13,7 @@
                 {{ $t('Define contact persons for this shift planning') }}
             </div>
             <div class="w-full grid grid-cols-2">
-                <div class="flex flex-wrap mt-4 mr-4 col-span-1" v-for="user in this.project.project_managers">
+                <div class="flex flex-wrap mt-4 mr-4 col-span-1" v-for="user in this.projectManagers">
                     <div class="flex">
                         <div class="mr-4">
                             <img :data-tooltip-target="user?.id"
@@ -100,10 +100,12 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 export default {
     mixins: [Permissions],
     name: "ShiftContactModal",
-    props: {
-        show: Boolean,
-        project: Object
-    },
+    props: [
+        'show',
+        'assignedShiftContacts',
+        'projectId',
+        'projectManagers'
+    ],
     components: {
         XCircleIcon,
         UserTooltip,
@@ -118,6 +120,8 @@ export default {
         return {
             user_search_results: [],
             user_query: '',
+            //remove reference to original object by destructuring to new array
+            shift_contacts: [...this.assignedShiftContacts]
         }
     },
     watch: {
@@ -137,27 +141,27 @@ export default {
     methods: {
         changeShiftContacts() {
             let contactIds = [];
-            this.project.shift_contacts.forEach((contact) => {
+            this.shift_contacts.forEach((contact) => {
                 contactIds.push(contact.id);
             })
-            this.$inertia.patch(route('projects.update.shift_contacts', {project: this.project.id}), {
+            this.$inertia.patch(route('projects.update.shift_contacts', {project: this.projectId}), {
                 contactIds: contactIds,
             });
             this.$emit('closeModal')
         },
         addUserToContactArray(user) {
             let contactIds = [];
-            this.project.shift_contacts.forEach((contact) => {
+            this.shift_contacts.forEach((contact) => {
                 contactIds.push(contact.id)
             })
             if (!contactIds.includes(user.id)) {
-                this.project.shift_contacts.push(user);
+                this.shift_contacts.push(user);
             }
             this.user_query = '';
         },
         deleteUserFromContactArray(user) {
-            if (this.project.shift_contacts.includes(user)) {
-                this.project.shift_contacts.splice(this.project.shift_contacts.indexOf(user), 1);
+            if (this.shift_contacts.includes(user)) {
+                this.shift_contacts.splice(this.shift_contacts.indexOf(user), 1);
             }
         },
     }

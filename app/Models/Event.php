@@ -14,6 +14,7 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -52,6 +53,7 @@ class Event extends Model
     use HasChangesHistory;
     use HasFactory;
     use SoftDeletes;
+    use Prunable;
 
     protected $with = ['series', 'event_type', 'subEvents'];
 
@@ -244,7 +246,10 @@ class Event extends Model
             $this->end_time->isBetween($event->start_time, $event->end_time);
     }
 
-    // scopes
+    public function prunable(): Builder
+    {
+        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
+    }
 
     public function scopeHasNoRoom(Builder $builder): Builder
     {

@@ -91,14 +91,24 @@
         </div>
     </div>
     <ProjectEntranceModal :show="show" :close-modal="closeEntranceModal" :project="project"/>
-    <ProjectAttributeEditModal :show="showAttributeEditModal" @closed="closeProjectAttributeEditModal"
-                               :project="project" :projectCategoryIdArray="projectCategoryIds"
-                               :projectSectorIdArray="projectSectorIds" :projectGenreIdArray="projectGenreIds"
-                               :categories="categories" :sectors="sectors" :genres="genres"/>
+    <ProjectAttributeEditModal :show="showAttributeEditModal"
+                               :project="project"
+                               :projectCategoryIdArray="projectCategoryIds"
+                               :projectSectorIdArray="projectSectorIds"
+                               :projectGenreIdArray="projectGenreIds"
+                               :categories="categories"
+                               :sectors="sectors"
+                               :genres="genres"
+                               @closed="closeProjectAttributeEditModal"
+    />
     <!-- Change Project Team Modal -->
-    <ProjectEditTeamModal :show="showTeamModal" @closed="showTeamModal = false" :assigned-users="this.project.users"
-                          :userIsProjectManager="userIsProjectManager" :departments="project.departments"
-                          :project-id="project.id"/>
+    <ProjectEditTeamModal :show="this.showTeamModal"
+                          :assigned-users="this.project.users"
+                          :assigned-departments="this.project.departments"
+                          :project-id="this.project.id"
+                          :userIsProjectManager="this.userIsProjectManager"
+                          @closed="this.showTeamModal = false"
+    />
 </template>
 
 <script>
@@ -115,7 +125,19 @@ import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     mixins: [Permissions],
-    props: ['project', 'projectMembers', 'projectCategories', 'projectGenres', 'projectSectors', 'categories', 'sectors', 'genres', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds'],
+    props: [
+        'project',
+        'projectMembers',
+        'projectCategories',
+        'projectGenres',
+        'projectSectors',
+        'categories',
+        'sectors',
+        'genres',
+        'projectCategoryIds',
+        'projectGenreIds',
+        'projectSectorIds'
+    ],
     components: {
         ProjectEditTeamModal,
         TeamTooltip,

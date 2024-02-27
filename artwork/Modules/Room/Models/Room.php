@@ -128,7 +128,7 @@ class Room extends Model
 
     public function prunable(): Builder
     {
-        return static::where('deleted_at', '<=', now()->subMonth())
+        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed()
             ->orWhere('temporary', true)
             ->where('end_date', '<=', now());
     }

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
@@ -29,5 +29,10 @@ class Currency extends Model
     public function contracts(): BelongsToMany
     {
         return $this->belongsToMany(Contract::class);
+    }
+
+    public function prunable(): Builder
+    {
+        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
     }
 }

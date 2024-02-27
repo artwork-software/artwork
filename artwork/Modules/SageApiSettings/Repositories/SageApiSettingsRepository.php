@@ -9,6 +9,9 @@ class SageApiSettingsRepository extends BaseRepository
 {
     public function getFirst(): SageApiSettings|null
     {
-        return SageApiSettings::query()->get()->first();
+        /** @var SageApiSettings|null $sageApiSettings */
+        $sageApiSettings = SageApiSettings::query()->first();
+
+        return $sageApiSettings;
     }
 }

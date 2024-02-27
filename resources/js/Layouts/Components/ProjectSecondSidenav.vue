@@ -98,14 +98,13 @@
         </div>
     </div>
 
-    <ProjectEditTeamModal :show="showTeamModal"
+    <ProjectEditTeamModal :show="this.showTeamModal"
                           :assigned-users="this.project.users"
-                          :userIsProjectManager="userIsProjectManager"
-                          :departments="project.departments"
-                          :project-id="project.id"
-                          @closed="showTeamModal = false"
+                          :assigned-departments="this.project.departments"
+                          :project-id="this.project.id"
+                          :userIsProjectManager="this.userIsProjectManager"
+                          @closed="this.showTeamModal = false"
     />
-
     <ProjectEntranceModal :show="show" :close-modal="closeEntranceModal" :project="project"/>
 
     <ProjectAttributeEditModal :show="showAttributeEditModal"
@@ -118,6 +117,7 @@
                                :genres="genres"
                                @closed="closeProjectAttributeEditModal"
     />
+
 </template>
 
 <script>

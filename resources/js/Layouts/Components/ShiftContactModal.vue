@@ -65,7 +65,7 @@
                 </transition>
             </div>
             <div class="mt-4 w-full">
-                <span v-for="(user,index) in project.shift_contacts"
+                <span v-for="(user,index) in this.shift_contacts"
                       class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                     <div class="flex items-center">
                         <img class="flex h-11 w-11 rounded-full object-cover"

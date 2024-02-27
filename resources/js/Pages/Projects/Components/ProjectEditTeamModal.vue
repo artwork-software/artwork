@@ -65,7 +65,7 @@
                     </transition>
                 </div>
                 <div class="mt-4">
-                    <span v-for="user in users"
+                    <span v-for="user in this.users"
                           class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
                         <div class="flex items-center w-64">
                             <div class="flex items-center">
@@ -131,7 +131,7 @@
                             </div>
                         </div>
                     </span>
-                    <span v-for="department in assignedDepartments"
+                    <span v-for="department in this.departments"
                           class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                         <div class="flex items-center">
                             <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
@@ -179,10 +179,6 @@ export default {
         XIcon
     },
     props: [
-        'editingTeam',
-        'assignedUsers',
-        'userIsProjectManager',
-        'departments',
         'show',
         'assignedUsers',
         'assignedDepartments',

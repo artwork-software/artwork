@@ -17,7 +17,7 @@
                      class="flex cursor-pointer items-center justify-end linkText mr-8">
                     <img src="/Svgs/IconSvgs/icon_archive_blue.svg"
                          class="h-4 w-4 mr-2"
-                         aria-hidden="true"/>alle archivieren
+                         aria-hidden="true"/>{{$t('Archive all')}}
                 </div>
             </div>
             <div v-if="showSection" @mouseover="notification.hovered = true" @mouseleave="notification.hovered = false"
@@ -38,17 +38,17 @@
             </div>
             <div @click="showReadSection = true" v-if="showSection && !showReadSection"
                  class="ml-12 my-6 linkText cursor-pointer">
-                alte Benachrichtigungen ansehen
+                {{ $t('View old notifications')}}
             </div>
             <div class="flex justify-between items-center w-full ml-12 mt-8 xsDark" v-if="showReadSection">
                 <div :class="!readNotifications ? 'mb-12' : ''" class="flex items-center">
                     <img src="/Svgs/IconSvgs/icon_archive_black.svg"
                          class="h-4 w-4 mr-2"
                          aria-hidden="true"/>
-                    Archiv
+                    {{$t('Archive')}}
                 </div>
                 <div @click="showReadSection = false" v-if="showReadSection" class="mr-12 linkText cursor-pointer">
-                    Archiv schließen
+                    {{$t('Close archive')}}
                 </div>
             </div>
             <div v-if="showReadSection" @mouseover="notification.hovered = true"
@@ -82,9 +82,9 @@
     <!-- Event löschen Modal -->
     <confirmation-component
         v-if="deleteComponentVisible"
-        confirm="Löschen"
-        titel="Termin löschen"
-        :description="'Bist du sicher, dass du den Termin ' + this.eventToDelete.eventName + ' in den Papierkorb legen möchtest? Du kannst ihn innerhalb von 30 Tagen wiederherstellen.'"
+        :confirm="$t('Delete')"
+        :titel="$t('Delete event')"
+        :description="$t('Are you sure you want to put the event {0} in the trash? You can restore it within 30 days.', [this.eventToDelete.eventName])"
         @closed="afterConfirm"/>
     <!-- Raumbelegungsanfrage beantworten Modal -->
     <AnswerEventRequestComponent

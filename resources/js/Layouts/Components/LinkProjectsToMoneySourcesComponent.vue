@@ -9,12 +9,12 @@
                 <div>
                     <h1 class="my-1 flex">
                         <div class="flex-grow flex items-center headline1">
-                            Projekte verlinken
+                            {{$t('Link projects')}}
                         </div>
                     </h1>
                     <div>
                         <h2 class="xsLight mb-2 mt-4">
-                            Weise Projekte zu dieser Finanzierungsquelle zu. Es können später nur diese Projekte mit dieser Finanzierungsquelle verlinkt werden.
+                            {{ $t('Assign projects to this funding source. Only these projects can later be linked to this source of funding.')}}
                         </h2>
                         <div class="flex w-full mt-6">
                             <div class="flex w-full">
@@ -46,7 +46,7 @@
                             </div>
                         </div>
                         <div class="sDark mt-4" v-if="this.linkedProjectsArray.length > 0">
-                            Verlinkte Projekte:
+                            {{$t('Linked projects')}}:
                         </div>
                         <span v-for="project in linkedProjectsArray"
                               class="flex justify-between mt-4 mr-1 items-center xsDark border-1 border-b pb-3">
@@ -57,14 +57,14 @@
                                     </span>
                                 </div>
                                 <button type="button" @click="deleteProjectFromArray(project)">
-                                    <span class="sr-only">User aus Team entfernen</span>
+                                    <span class="sr-only">{{$t('Remove user from team')}}</span>
                                     <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
                                 </button>
                             </div>
                             </span>
                         <div class="flex justify-center">
                             <AddButton @click="updateLinkedProjects()"
-                                       class="mt-8 py-5 px-24 flex" text="Speichern"
+                                       class="mt-8 py-5 px-24 flex" :text="$t('Save')"
                                        mode="modal"></AddButton>
                         </div>
                     </div>

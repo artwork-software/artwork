@@ -4,7 +4,7 @@
             <img src="/Svgs/Overlays/illu_money_source_create.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Quellenkategorien verwalten
+                    {{ $t('Manage source categories')}}
                 </div>
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
@@ -16,7 +16,7 @@
                         <MenuButton class="w-full">
                             <div class="border-2 border-gray-300 w-full cursor-pointer truncate flex p-4 mt-4">
                                 <div class="flex-grow xsLight text-left subpixel-antialiased">
-                                    Quellenkategorien wählen
+                                    {{ $t('Select source categories')}}
                                 </div>
                                 <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </div>
@@ -46,7 +46,7 @@
                                     </div>
                                 </div>
                                 <div v-else class="text-sm text-gray-300">
-                                  Es wurden noch keine Quellenkategorien angelegt
+                                    {{ $t('No source categories have been created yet')}}
                                 </div>
                             </MenuItems>
                         </transition>
@@ -61,7 +61,7 @@
                               hide-x="true"/>
             </div>
             <div class="justify-center flex w-full my-6">
-                <AddButton :disabled="moneySourceCategories.length === 0" text="Speichern" mode="modal" class="px-6 py-3" @click="attachCategories"/>
+                <AddButton :disabled="moneySourceCategories.length === 0" :text="$t('Save')" mode="modal" class="px-6 py-3" @click="attachCategories"/>
             </div>
         </template>
     </jet-dialog-modal>

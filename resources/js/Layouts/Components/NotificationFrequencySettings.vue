@@ -2,10 +2,9 @@
     <div class="max-w-4xl">
 
         <div class="my-10">
-            <h2 class="headline2 my-2">Benachrichtigung per E-Mail</h2>
+            <h2 class="headline2 my-2">{{$t('Notification by e-mail')}}</h2>
             <div class="xsLight">
-                Lass dich per E-Mail benachrichtigen und bleibe auf dem neusten Stand – auch wenn du gerade nicht im artwork
-                online bist.
+                {{$t('Get notified by e-mail and stay up to date - even if you are not currently online in artwork.')}}
             </div>
         </div>
 

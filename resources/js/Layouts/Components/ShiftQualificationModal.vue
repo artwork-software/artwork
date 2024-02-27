@@ -7,13 +7,12 @@
                        class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
                        aria-hidden="true"/>
                 <div class="mt-8 headline1">
-                    {{this.mode === 'create' ? 'Qualifikation erstellen' : 'Qualifikation bearbeiten'}}
+                    {{this.mode === 'create' ? $t('Create qualification') : $t('Edit qualification')}}
                 </div>
                 <div class="xsLight my-6">
                     {{
                         this.mode === 'create' ?
-                            'Hier kannst du eine Qualifikation erstellen.' :
-                            'Hier kannst du die Qualifikation "' + this.shiftQualification.name + '" bearbeiten.'
+                            $t('You can create a qualification here.') : $t('Here you can edit the qualification "{0}".', [this.shiftQualification.name])
                     }}
                 </div>
                 <div class="flex">
@@ -23,7 +22,7 @@
                                         class="items-center rounded-full focus:outline-none h-12 w-12">
                                 <label v-if="this.shiftQualificationForm.icon === null"
                                        class="cursor-pointer text-gray-400 text-xs">
-                                    Icon*
+                                    {{$t('Icon')}}*
                                 </label>
                                 <ChevronDownIcon v-if="this.shiftQualificationForm.icon === null"
                                                  class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"/>
@@ -71,7 +70,7 @@
                         />
                         <label for="name"
                                class="text-secondary absolute left-0 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-base peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm">
-                            Name der Qualifikation
+                            {{$t('Name of the qualification')}}
                         </label>
                     </div>
                 </div>
@@ -82,7 +81,7 @@
                     />
                     <p :class="[this.shiftQualificationForm.available ? 'xsDark' : 'xsLight']"
                        class="ml-3 my-auto text-sm">
-                        Wird bei neuen Schichten berücksichtigt
+                        {{ $t('Is taken into account for new shifts')}}
                     </p>
                 </div>
                 <div class="w-full text-center mb-6">
@@ -94,7 +93,7 @@
                         ]"
                                @click="save"
                                :disabled="this.shiftQualificationForm.icon === null || this.shiftQualificationForm.name === null"
-                               :text="this.mode === 'create' ? 'Erstellen' : 'Speichern'"
+                               :text="this.mode === 'create' ? $t('Create') : $t('Save')"
                                mode="modal"
                     />
                 </div>

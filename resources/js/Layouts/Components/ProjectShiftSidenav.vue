@@ -39,7 +39,7 @@
                             <div class="xsLight">
                                 {{ projectManager.first_name }} {{ projectManager.last_name }}
                                 <span class="xxsLight">
-                                    , Projektleitung
+                                    , {{ $t('Project management')}}
                                 </span>
                             </div>
                             <div>

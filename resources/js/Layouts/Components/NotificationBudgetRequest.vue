@@ -7,10 +7,10 @@
         <AddButton
             @click="redirectToBudget"
             class="flex"
-            text="Kalkulation prüfen" mode="modal"/>
+            :text="$t('Check calculation')" mode="modal"/>
         <AddButton
             type="secondary"
-            text="Anfrage löschen"></AddButton>
+            :text="$t('Delete request')"></AddButton>
     </div>
 </template>
 

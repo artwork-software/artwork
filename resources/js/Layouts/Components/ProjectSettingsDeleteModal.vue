@@ -13,10 +13,10 @@
                     {{ description }}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <AddButton class="px-20 py-4" @click="$emit('delete')" text="Löschen" mode="modal"/>
+                    <AddButton class="px-20 py-4" @click="$emit('delete')" :text="$t('Delete')" mode="modal"/>
                     <div class="flex my-auto">
                             <span @click="$emit('closeModal')"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
                     </div>
                 </div>
             </div>

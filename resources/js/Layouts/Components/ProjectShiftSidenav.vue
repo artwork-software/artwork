@@ -61,7 +61,7 @@
             <div class="my-2" v-for="contact in this.project.shift_contacts">
                 <div class="flex w-full">
                     <div class="mr-4">
-                        <img :data-tooltip-target="contact?.id" :src="user?.profile_photo_url" :alt="contact?.name"
+                        <img :src="contact.profile_photo_url" :alt="contact.name"
                              class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
                     </div>
                     <div>
@@ -112,8 +112,10 @@
     />
     <ShiftContactModal
         :show="showContactModal"
+        :assigned-shift-contacts="this.project.shift_contacts"
+        :project-id="this.project.id"
+        :project-managers="this.project.project_managers"
         @close-modal="closeContactModal"
-        :project="project"
     />
     <ShiftInformationModal
         :show="showShiftInformationModal"

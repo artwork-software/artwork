@@ -163,7 +163,6 @@ class Sage100Service
                             $sageColumnCell = $sageColumn->cells()
                                 ->where('column_id', $sageColumn->id)
                                 ->where('sub_position_row_id', $singleKTO->sub_position_row_id)
-                                ->get()
                                 ->first();
                             $sageColumnCell->update(['value' => $item['Buchungsbetrag']]);
 

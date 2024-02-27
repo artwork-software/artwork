@@ -13,7 +13,6 @@ class ShiftsQualificationsRepository extends BaseRepository
     ): ShiftsQualifications|null {
         return ShiftsQualifications::query()
             ->byShiftIdAndShiftQualificationId($shiftId, $shiftQualificationId)
-            ->get()
             ->first();
     }
 }

@@ -13,7 +13,6 @@ class PresetShiftsShiftsQualificationsRepository extends BaseRepository
     ): PresetShiftShiftsQualifications|null {
         return PresetShiftShiftsQualifications::query()
             ->byShiftIdAndShiftQualificationId($presetShiftId, $shiftQualificationId)
-            ->get()
             ->first();
     }
 }

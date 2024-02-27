@@ -700,9 +700,8 @@
     />
     <confirmation-component v-if="this.showDeleteSageNotAssignedDataConfirmationModal"
                             @closed="this.showSageNotAssignedDataConfirmationModalHandler"
-                            :description='"Willst du den Datensatz: \"" + this.sageNotAssignedDataToDelete.buchungstext
-                                + "\" wirklich in den Papierkorb legen?"'
-                            titel="In den Papierkorb verschieben"
+                            :description="$t('Do you really want to put the data set in the trash?', [this.sageNotAssignedDataToDelete.buchungstext])"
+                            :titel="$t('Move to the trash')"
     />
 </template>
 

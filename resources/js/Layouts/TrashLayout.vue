@@ -75,19 +75,18 @@ export default {
     data() {
         return {
             selectedTrash: null,
-
         }
     },
     watch: {
-      selectedTrash: {
+        selectedTrash: {
           handler() {
               Inertia.get(this.selectedTrash.href)
           },
           deep: true
-      }
+        }
     },
     created() {
-      this.selectedTrash = this.trashSites[this.$page.component]
+        this.selectedTrash = this.trashSites[this.$page.component]
     },
     computed: {
         trashSites() {
@@ -118,7 +117,7 @@ export default {
                     available: true
                 },
                 'Trash/SageNotAssignedData': {
-                    name: 'Sage-API Datensätze',
+                    name: this.$t('Sage API data sets'),
                     href: route('sageNotAssignedData.trashed'),
                     available: this.$can('can view and delete sage100-api-data')
                 }

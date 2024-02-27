@@ -219,7 +219,7 @@ class Project extends Model
 
     public function prunable(): Builder
     {
-        return static::where('deleted_at', '<=', now()->subMonth());
+        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
     }
 
     public function groups(): BelongsToMany

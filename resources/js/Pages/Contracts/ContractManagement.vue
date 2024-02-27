@@ -7,7 +7,7 @@
                         <div class="flex flex-wrap w-full">
                             <div class="flex flex-wrap w-full">
                                 <div class="flex justify-between w-full mb-6">
-                                    <h2 class="headline1">Verträge</h2>
+                                    <h2 class="headline1">{{$t('Contracts')}}</h2>
                                     <div class="flex">
                                         <BaseFilter>
                                             <div class="inline-flex border-none justify-end w-full">
@@ -208,12 +208,12 @@ export default {
             // filter by costs
             this.filter.costsFilter.forEach((cost) => {
                 if(cost.checked) {
-                    if(cost.name === 'KSK-pflichtig') {
+                    if(cost.name === this.$t('KSK-liable')) {
                         filteredContracts = filteredContracts.filter((contract) => {
                             return contract.ksk_liable
                         })
                     }
-                    if(cost.name === 'Im Ausland ansässig') {
+                    if(cost.name === this.$t('Resident abroad')) {
                         filteredContracts = filteredContracts.filter((contract) => {
                             return contract.resident_abroad
                         })

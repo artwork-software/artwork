@@ -35,11 +35,11 @@
                             <div class="py-1">
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="showEditShiftModal = true"
-                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                         <DuplicateIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
-                                        Bearbeiten
+                                        {{  $t('edit') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
@@ -48,7 +48,7 @@
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
-                                        Löschen
+                                        {{ $t('Delete') }}
                                     </a>
                                 </MenuItem>
                             </div>
@@ -68,7 +68,7 @@
             <div v-for="(count) in shiftsQualification.value">
                 <div class="flex items-center gap-2 p-1 hover:bg-gray-50/40 rounded cursor-pointer">
                     <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
-                    <span class="text-xs">Unbesetzt</span>
+                    <span class="text-xs">{{ $t('Unoccupied')}}</span>
                     <ShiftQualificationIconCollection
                         class="w-5 h-5"
                         :icon-name="this.getShiftQualificationById(shiftsQualification.shift_qualification_id).icon"/>

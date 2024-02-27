@@ -3,7 +3,7 @@
         <div class="ml-14">
             <div class="flex justify-between">
             <div class="headline1">
-                Budgetvorlagen
+                {{$t('Budget templates')}}
             </div>
             <div class="flex items-center">
                 <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
@@ -11,7 +11,7 @@
                     <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                 </div>
                 <div v-else class="flex items-center w-full w-64 mr-2">
-                    <inputComponent v-model="template_search" placeholder="Suche nach Vorlagen"/>
+                    <inputComponent v-model="template_search" :placeholder="$t('Search for templates')"/>
                     <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                 </div>
             </div>

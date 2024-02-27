@@ -11,7 +11,7 @@
                         <img src="/Svgs/Logos/artwork_logo_big.svg"/>
                     </div>
                     <div class="flex items-center mb-12">
-                        <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">Passwort zurücksetzen</h2>
+                        <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">{{ $t('Reset Password')}}</h2>
                         <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
                     </div>
                 </div>
@@ -31,7 +31,7 @@
                             </div>
                             <div class="flex items-center justify-end mt-4">
                                 <jet-button class="bg-buttonBlue hover:bg-buttonHover" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                                    Passwort zurücksetzen
+                                    {{ $t('Reset Password')}}
                                 </jet-button>
                             </div>
                         </form>
@@ -40,24 +40,24 @@
                 </div>
                 <div class=" absolute bottom-0 mb-20 text-secondary subpixel-antialiased text-sm tracking-wide">
                     <a v-if="this.$page.props.impressumLink !== ''" target="_blank" :href="this.$page.props.impressumLink">
-                        Impressum
+                        {{$t('Imprint')}}
                     </a>
                     <!-- TODO: Wohin bei Default ? -->
                     <a target="_blank" v-else :href="this.$page.props.impressumLink">
-                        Impressum
+                        {{$t('Imprint')}}
                     </a>
                     |
                     <a target="_blank" v-if="this.$page.props.privacyLink !== ''" :href="this.$page.props.privacyLink">
-                        Datenschutz
+                        {{$t('Privacy Policy')}}
                     </a>
                     <!-- TODO: Wohin bei Default ? -->
                     <a target="_blank" v-else :href="this.$page.props.privacyLink">
-                        Datenschutz
+                        {{$t('Privacy Policy')}}
                     </a>
                     |
                     <!-- TODO: Hier noch Link zu Über uns Page -->
                     <a href="">
-                        Über das Tool
+                        {{$t('About the tool')}}
                     </a>
                 </div>
             </div>

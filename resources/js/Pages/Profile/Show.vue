@@ -6,7 +6,7 @@
                     <form @submit.prevent="updateProfileInformation">
                         <div>
                             <div>
-                                <h2 class="headline1 my-2">Mein Konto</h2>
+                                <h2 class="headline1 my-2">{{ $t('My account') }}</h2>
                                 <div class="col-span-6 sm:col-span-4">
                                     <!-- Profile Photo File Input -->
                                     <input type="file" class="hidden"
@@ -25,7 +25,7 @@
                                                     class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
                                                     placeholder="placeholder"/>
                                                 <label for="first_name"
-                                                    class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                                    class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{$t('First name')}}</label>
                                             </div>
                                         </div>
 
@@ -37,7 +37,7 @@
                                                     placeholder="placeholder"/>
                                                 <label for="last_name"
                                                     class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
-                                                   focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Nachname</label>
+                                                   focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Last name')}}</label>
                                             </div>
                                         </div>
 
@@ -59,14 +59,14 @@
 
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
-                                            <input type="text" v-model="userForm.position" placeholder="Position"
+                                            <input type="text" v-model="userForm.position" :placeholder="$t('Position')"
                                                 class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border-gray-300"/>
                                         </div>
                                     </div>
 
                                     <div class="sm:col-span-3">
                                         <div class="mt-1 relative">
-                                            <input type="email" v-model="userForm.email" placeholder="E-Mail-Adresse"
+                                            <input type="email" v-model="userForm.email" :placeholder="$t('E-mail address')"
                                                 :class="[email_validation_classes,'text-primary border-2 w-full font-semibold focus:outline-none focus:ring-0 focus:border-secondary focus:border-1']"/>
 
                                             <div v-if="!email_validation.email"
@@ -84,7 +84,7 @@
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.phone_number"
-                                                placeholder="Telefonnummer"
+                                                :placeholder="$t('Phone number')"
                                                 class="text-primary border-2 w-full focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 font-semibold border-gray-300 "/>
                                         </div>
                                     </div>
@@ -93,7 +93,7 @@
                                     <div class="sm:col-span-6">
                                         <div class="mt-1">
                                             <textarea
-                                                placeholder="Was sollten die anderen artwork-User über dich wissen?"
+                                                :placeholder="$t('What should the other artwork users know about you?')"
                                                 v-model="userForm.description" rows="3"
                                                 class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border border-gray-300 "/>
                                         </div>
@@ -101,7 +101,7 @@
                                     <div class="sm:col-span-6">
                                         <div class="sm:col-span-6 ml-3 flex inline-flex">
                                             <span v-if="userForm.departments.length === 0"
-                                                class="text-secondary my-auto -ml-3">In keinem Team </span>
+                                                class="text-secondary my-auto -ml-3">{{ $t('Not in any team')}}</span>
                                             <span v-else class="flex mt-3 -ml-4"
                                                 v-for="(team,index) in userForm.departments">
                                             <TeamIconCollection :data-tooltip-target="team.name" class="h-14 w-14 rounded-full ring-2 ring-white"
@@ -118,7 +118,7 @@
                             <div class="mt-2 items-center">
                                 <AddButton v-if="!showSuccess" @click="updateProfileInformation()"
                                     class="mt-8 px-10 py-3"
-                                    text="Profiländerungen speichern" mode="modal"
+                                    :text="$t('Save profile changes')" mode="modal"
                                 />
                                 <button v-else type="submit"
                                     class="items-center py-1 mt-5 rounded-full px-28 border bg-success"
@@ -130,7 +130,7 @@
                     </form>
                 </div>
                 <div v-if="$page.props.jetstream.canUpdatePassword">
-                    <h2 class="font-bold font-lexend text-xl my-2 mt-12">Dein Passwort</h2>
+                    <h2 class="font-bold font-lexend text-xl my-2 mt-12">{{ $t('Your password')}}</h2>
 
                     <div class="mt-4 flex flex-col md:flex-row">
                         <div class="w-full md:w-1/2">
@@ -140,7 +140,7 @@
                                     ref="current_password"
                                     id="password" name="password" type="password" autocomplete="new-password"
                                     required
-                                    placeholder="Aktuelles Passwort"
+                                    :placeholder="$t('Current password')"
                                     :class="[passwordForm.hasErrors && passwordForm.errors.current_password
                                             ? 'border-error'
                                             : passwordForm.current_password.length > 0 && passwordForm.hasErrors
@@ -169,7 +169,7 @@
                                     v-model="passwordForm.password"
                                     ref="password"
                                     id="password" name="password" type="password"
-                                    autocomplete="new-password" required placeholder="Neues Passwort"
+                                    autocomplete="new-password" required :placeholder="$t('New Password')"
                                     :class="[passwordForm.hasErrors ? 'border-error' : 'border-gray-200',
                                     'placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full']"/>
                                 <div v-if="passwordForm.hasErrors"
@@ -180,7 +180,7 @@
                             <jet-input-error :message="passwordForm.errors.password" class="mt-2"/>
                         </div>
                         <div class="w-full md:w-1/2 flex items-center p-3">
-                            <span class="text-xs text-secondary">Schwach</span>
+                            <span class="text-xs text-secondary">{{$t('Weak')}}</span>
 
                             <div class="mx-6 mt-1 w-full bg-gray-200 h-1 dark:bg-gray-700">
                                 <div :class="[pw_feedback < 1
@@ -191,7 +191,7 @@
                                 'h-1']" :style="{width: `${(pw_feedback + 1) / 5 * 100}%`}"></div>
                             </div>
 
-                            <span class="text-xs">Stark</span>
+                            <span class="text-xs">{{$t('Strong')}}</span>
                         </div>
                     </div>
 
@@ -200,25 +200,23 @@
                             <SvgCollection svgName="arrowTopLeft"/>
 
                             <div class="hind w-full ml-3">
-                                Das Passwort muss mind. 10 Zeichen lang sein, mind. 1 Ziffer, Groß- und Kleinbuchstaben
-                                und
-                                Sonderzeichen beinhalten.
+                                {{ $t('The password must be at least 10 characters long, contain at least 1 digit, upper and lower case letters and special characters.')}}
                             </div>
                         </div>
 
                         <jet-action-message :on="passwordForm.recentlySuccessful" class="mr-3">
-                            Saved.
+                            {{ $t('Saved.')}}
                         </jet-action-message>
                     </div>
                     <AddButton @click="updatePassword"
                         class="px-10 py-3 mt-4"
-                        text="Passwort ändern"
+                        :text="$t('Change password')"
                         mode="modal"
                     />
                 </div>
             </div>
             <div class="flex ml-20 mt-12">
-                <span v-if="$role('artwork admin')" @click="openDeleteUserModal()" class="xsLight cursor-pointer">Konto endgültig löschen</span>
+                <span v-if="$role('artwork admin')" @click="openDeleteUserModal()" class="xsLight cursor-pointer">{{$t('Delete account permanently')}}</span>
             </div>
         </div>
         <!-- Change Profile Picture Modal -->
@@ -227,14 +225,14 @@
             <template #content>
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
-                        Profilbild ändern
+                        {{ $t('Change profile picture') }}
                     </div>
-                    <span class="text-secondary my-auto">Wähle hier dein Profilbild aus. Es sollte die Größe von 1024 KB nicht überschreiten. </span>
+                    <span class="text-secondary my-auto">{{ $t('Select your profile picture here. It should not exceed the size of 1024 KB.')}} </span>
                     <XIcon @click="closeChangePictureModal"
                         class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                         aria-hidden="true"/>
                     <!-- New Profile Photo Preview -->
-                    <h2 class="" v-show="photoPreview">Vorschau neues Profilbild:</h2>
+                    <h2 class="" v-show="photoPreview">{{$t('Preview new profile picture:')}}</h2>
                     <div class="flex">
                         <div class="mt-1 flex items-center">
                             <div class="mt-2" v-show="photoPreview">
@@ -246,13 +244,13 @@
                         <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
                             <AddButton
                                 class="my-auto px-3 py-3"
-                                text="Datei auswählen"
+                                :text="$t('Select file')"
                                 mode="modal"
                                 @click.prevent="selectNewPhoto"/>
                             <AddButton
                                 class=" ml-3 my-auto px-3 py-3"
                                 @click.prevent="deletePhoto"
-                                text="Aktuelles Profilbild löschen"
+                                :text="$t('Delete current profile picture')"
                                 mode="modal"
                                 v-if="user.profile_photo_path" />
                         </div>
@@ -264,7 +262,7 @@
                     <div class="mt-6">
                         <AddButton
                             class="px-8 py-3"
-                            text="Neues Profilbild speichern"
+                            :text="$t('Save new profile picture')"
                             mode="modal"
                             @click="validateTypeAndChange" />
                     </div>
@@ -279,24 +277,23 @@
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
-                        Konto endgültig löschen
+                        {{ $t('Delete account permanently')}}
                     </div>
                     <XIcon @click="closeDeleteUserModal"
                         class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                         aria-hidden="true"/>
                     <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du dein artwork-Konto endgültig löschen möchtest? Sämtliche Einstellungen
-                        gehen verloren.
+                        {{ $t('Are you sure you want to permanently delete your artwork account? All settings will be lost.')}}
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="deleteUser">
-                            Konto Löschen
+                            {{$t('Delete account')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteUserModal()"
-                                class="text-secondary xsLight cursor-pointer">Nein, doch nicht</span>
+                                class="text-secondary xsLight cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -435,7 +432,7 @@ export default defineComponent({
         },
         updateProfileInformation() {
             if (!this.userForm.first_name || !this.userForm.last_name) {
-                this.nameError = 'Vorname und Nachname sind notwendig';
+                this.nameError = this.$t('First name and surname are required');
                 this.hasNameError = true;
                 return; // Exit the function without making the API call
             }
@@ -474,7 +471,7 @@ export default defineComponent({
             if (forbiddenTypes.includes(this.$refs.photo.files[0].type)
                 || this.$refs.photo.files[0].type.match('video.*')
                 || this.$refs.photo.files[0].type === "") {
-                this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+                this.updateProfilePictureFeedback = this.$t('Only .png and .jpeg files are supported')
             } else {
                 this.changeProfilePicture()
             }
@@ -502,7 +499,7 @@ export default defineComponent({
                 if (e.target.result.includes("data:image/png") || e.target.result.includes("data:image/jpeg")) {
                     this.photoPreview = e.target.result;
                 } else {
-                    this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+                    this.updateProfilePictureFeedback = this.$t('Only .png and .jpeg files are supported')
                 }
             };
 

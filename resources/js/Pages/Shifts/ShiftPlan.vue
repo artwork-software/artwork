@@ -83,7 +83,7 @@
                         </div>
                         <div v-if="showUserOverview" @mousedown="startResize" :class="showUserOverview ? '' : 'fixed bottom-0 '"
                              class="flex h-5 w-8 justify-center items-center cursor-ns-resize bg-primary"
-                            title="Halte und Ziehen um die Größe zu verändern">
+                            :title="$t('Hold and drag to change the size')">
                             <div :class="showUserOverview ? 'rotate-180' : 'fixed bottom-2'">
                                 <SelectorIcon class="h-3 w-6 text-gray-400" />
                             </div>
@@ -108,7 +108,7 @@
                                           :class="[highlightMode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
                                     </Switch>
                                     <div :class="[highlightMode ? 'xsLight text-secondaryHover' : 'xsLight','ml-1']">
-                                        Schichten hervorheben
+                                        {{ $t('Highlight layers')}}
                                     </div>
                                 </th>
                                 <th class="flex items-center pl-2 py-1">
@@ -121,7 +121,7 @@
                                           :class="[multiEditMode ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
                                     </Switch>
                                     <div :class="[multiEditMode ? 'xsLight text-secondaryHover' : 'xsLight','ml-1']">
-                                        Multi-Edit
+                                        {{$t('Multi-Edit')}}
                                     </div>
                                 </th>
                             </tr>
@@ -168,7 +168,7 @@
                                                 {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                             </span>
                                             <span v-else class="h-full flex justify-center items-center">
-                                                nicht verfügbar
+                                                {{ $t('not available')}}
                                             </span>
                                         </div>
                                     </td>
@@ -176,7 +176,7 @@
                             </tbody>
                             <tbody>
                                 <tr class="stickyYAxisNoMarginLeft cursor-pointer w-48 xsLight flex justify-between pb-1" @click="changeCraftVisibility('noCraft')">
-                                    Ohne Gewerkszuordnung
+                                    {{ $t('Without craft assignment')}}
                                     <ChevronDownIcon
                                         :class="closedCrafts.includes('noCraft') ? '' : 'rotate-180 transform'"
                                         class="h-4 w-4 mt-0.5"
@@ -214,7 +214,7 @@
                                                 {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
                                             </span>
                                             <span v-else class="h-full flex justify-center items-center">
-                                                nicht verfügbar
+                                                {{ $t('not available')}}
                                             </span>
                                         </div>
                                     </td>
@@ -244,7 +244,7 @@
                     <button type="button"
                             @click="multiEditMode = false"
                             class="rounded-full bg-gray-100 px-14 py-3 text-sm font-semibold text-gray-500 shadow-sm hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                        Abbrechen
+                        {{ $t('Cancel')}}
                     </button>
                 </div>
                 <div>
@@ -257,7 +257,7 @@
                                 'cursor-pointer bg-buttonBlue hover:bg-buttonHover',
                                 'rounded-full px-14 py-3 text-sm font-semibold text-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
                             ]">
-                        Speichern
+                        {{ $t('Save') }}
                     </button>
                 </div>
             </div>

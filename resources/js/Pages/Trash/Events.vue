@@ -25,7 +25,7 @@
             <div class="flex justify-between w-full">
                 <div class="my-auto">
                     <p class="headline2" v-if="!event.name">
-                        {{ event.project?.name || "Termin ohne Name" }}
+                        {{ event.project?.name || this.$t('Event without name') }}
                     </p>
 
                     <div v-else class="flex w-full items-center justify-between">

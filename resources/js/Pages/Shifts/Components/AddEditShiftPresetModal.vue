@@ -17,16 +17,16 @@
                             </div>
                             <div class="relative z-40">
                                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    Schicht einteilen
+                                    {{ $t('Organize shift')}}
                                 </div>
                                 <p class="xsLight subpixel-antialiased">
-                                    Lege fest wie lange deine Schicht dauert und wie viele Personen in deiner Schicht arbeiten sollen.
+                                    {{ $t('Determine how long your shift lasts and how many people should work in your shift.')}}
                                 </p>
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                                         <div>
                                             <input type="time"
-                                                   placeholder="Schicht Start"
+                                                   :placeholder="$t('Shift start')"
                                                    v-model="shiftForm.start"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                                    required
@@ -35,7 +35,7 @@
                                         </div>
                                         <div>
                                             <input type="time"
-                                                   placeholder="Schicht Ende"
+                                                   :placeholder="$t('Shift end')"
                                                    v-model="shiftForm.end"
                                                    maxlength="3"
                                                    required
@@ -45,7 +45,7 @@
                                         </div>
                                         <div>
                                             <input type="number"
-                                                   placeholder="Pausenlänge in Minuten*"
+                                                   :placeholder="$t('Length of break in minutes*')"
                                                    v-model="shiftForm.break_minutes"
                                                    minlength="0"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
@@ -57,7 +57,7 @@
                                             <Listbox as="div" v-model="selectedCraft">
                                                 <div class="relative">
                                                     <ListboxButton class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
-                                                        <span class="block truncate text-left pl-3">{{ selectedCraft?.name ?? 'Gewerk*'}} </span>
+                                                        <span class="block truncate text-left pl-3">{{ selectedCraft?.name ?? $t('Craft') + '*'}} </span>
                                                         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                                         </span>
@@ -83,18 +83,18 @@
                                             <input v-if="this.canComputedShiftQualificationBeShown(computedShiftQualification)"
                                                    v-model="computedShiftQualification.value"
                                                    type="number"
-                                                   :placeholder="'Anzahl ' + computedShiftQualification.name"
+                                                   :placeholder="$t('Amount {0}', [computedShiftQualification.name])"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                             />
                                         </div>
                                         <div class="mt-2 col-span-2">
-                                            <textarea v-model="shiftForm.description" placeholder="Gibt es wichtige Informationen zu dieser Schicht?" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300" />
+                                            <textarea v-model="shiftForm.description" :placeholder="$t('Is there any important information about this shift?')" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300" />
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="flex justify-between mt-5">
-                                <AddButton mode="modal" text="Speichern" @click="saveShift"/>
+                                <AddButton mode="modal" :text="$t('Save')" @click="saveShift"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -227,56 +227,56 @@ export default defineComponent({
             this.shiftForm.craft_id = this.selectedCraft?.id;
 
             if (this.shiftForm.start > this.shiftForm.start) {
-                this.helpTexts.time = 'Die Schicht kann nicht vor dem Termin starten.';
+                this.helpTexts.time = this.$t('The shift cannot start before the deadline.');
                 return;
             } else {
                 this.helpTexts.time = '';
             }
 
             if (this.shiftForm.start === null){
-                this.helpTexts.start = 'Bitte gib einen Startzeitpunkt an.';
+                this.helpTexts.start = this.$t('Please enter a start time.');
                 return;
             } else {
                 this.helpTexts.start = '';
             }
 
             if (this.shiftForm.end === null){
-                this.helpTexts.end = 'Bitte gib einen Endzeitpunkt an.';
+                this.helpTexts.end = this.$t('Please enter an end date.');
                 return;
             } else {
                 this.helpTexts.end = '';
             }
 
             if (this.selectedCraft === null){
-                this.helpTexts.craftText = 'Bitte wähle ein Gewerk aus.';
+                this.helpTexts.craftText = this.$t('Please select a trade.');
                 return;
             } else {
                 this.helpTexts.craftText = '';
             }
 
             if (this.shiftForm.break_minutes === null){
-                this.helpTexts.breakText = 'Bitte gib eine Pausenzeit an.';
+                this.helpTexts.breakText = this.$t('Please enter a break time.');
                 return;
             } else {
                 this.helpTexts.breakText = '';
             }
 
             if (this.shiftForm.break_minutes < 0) {
-                this.helpTexts.breakText = 'Die Pausenzeit kann nicht negativ sein.';
+                this.helpTexts.breakText = this.$t('The pause time cannot be negative.');
                 return;
             } else {
                 this.helpTexts.breakText = '';
             }
 
             if (this.shiftForm.break_minutes >= (this.shiftForm.end - this.shiftForm.start)) {
-                this.helpTexts.breakText = 'Die Pausenzeit kann nicht länger als die Schicht sein.';
+                this.helpTexts.breakText = this.$t('The break time cannot be longer than the shift.');
                 return;
             } else {
                 this.helpTexts.breakText = '';
             }
 
             if (this.shiftForm.start >= this.shiftForm.end) {
-                this.helpTexts.time = 'Der Endzeitpunkt muss nach dem Startzeitpunkt liegen.';
+                this.helpTexts.time = this.$t('The end time must be after the start time.');
                 return;
             } else {
                 this.helpTexts.time = '';

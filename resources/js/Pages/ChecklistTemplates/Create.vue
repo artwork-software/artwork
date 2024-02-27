@@ -3,11 +3,10 @@
         <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
                 <div class="flex">
-                    <h2 class="mb-4 headline1">Checklistenvorlage</h2>
+                    <h2 class="mb-4 headline1">{{$t('Checklist template')}}</h2>
                 </div>
                 <div class="xsLight max-w-screen-sm">
-                    Hier kannst du deine Checklistenvorlage anlegen und bearbeiten - sie kann anschließend in jedem
-                    Projekt genutzt werden.
+                    {{$t('You can create and edit your checklist template here - it can then be used in any project.')}}
                 </div>
                 <div class="flex mt-8">
                     <div class="relative w-full max-w-2xl">
@@ -15,15 +14,15 @@
                                class="peer pl-0 h-12 w-full text-xl font-bold focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="teamName"
-                               class="absolute left-0 -top-7 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                            der Checklistenvorlage*</label>
-                        <span v-if="showEmptyTaskNameError" class="errorText">Sie müssen einen Namen eingeben.</span>
+                               class="absolute left-0 -top-7 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
+                            {{ $t('Name of the checklist template')}}*</label>
+                        <span v-if="showEmptyTaskNameError" class="errorText">{{ $t('You must enter a name.')}}</span>
                     </div>
                 </div>
                 <div class="flex items-center mt-6 mr-8">
                     <div v-if="templateForm.users.length === 0">
                         <span
-                            class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Nutzer*innen hinzugefügt</span>
+                            class="text-secondary subpixel-antialiased cursor-pointer">{{ $t('No users added yet')}}</span>
                     </div>
                     <div v-else class="-mr-3 my-auto" v-for="(user, index) in templateForm.users">
                         <img class="h-10 w-10 mr-2 object-cover rounded-full border-2 border-white"
@@ -49,7 +48,7 @@
                         <div v-if="this.$page.props.show_hints" class="flex">
                             <SvgCollection svgName="arrowLeft" class="ml-2"/>
                             <span
-                                class="ml-1 my-auto hind">Lege neue Aufgaben an</span>
+                                class="ml-1 my-auto hind">{{$t('Create new tasks')}}</span>
                         </div>
                     </div>
                 </div>
@@ -67,7 +66,9 @@
                                        :class="element.done ? 'text-secondary' : 'sDark'">
                                         {{ element.name }}</p>
                                     <button type="button" @click="deleteTaskFromTemplate(element)">
-                                        <span class="sr-only">Task aus Checklistenvorlage entfernen</span>
+                                        <span class="sr-only">
+                                            {{$t('Remove task from checklist template')}}
+                                        </span>
                                         <XCircleIcon class="ml-4 h-5 w-5 hover:text-error group-hover:block hidden "/>
                                     </button>
                                 </div>
@@ -100,7 +101,7 @@
             <template #content>
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        Neue Aufgabe
+                        {{ $t('New task')}}
                     </div>
                     <XIcon @click="closeAddTaskModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
@@ -112,12 +113,12 @@
                                        class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
                                        placeholder="placeholder"/>
                                 <label for="task_name"
-                                       class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Aufgabe</label>
+                                       class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{  $t('Task') }}</label>
                             </div>
                         </div>
                         <div class="mt-8 mr-4">
                                             <textarea
-                                                placeholder="Kommentar"
+                                                :placeholder="$t('Comment')"
                                                 v-model="newTaskDescription" rows="3"
                                                 class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full font-semibold border "/>
                         </div>
@@ -126,7 +127,7 @@
                             text-base font-bold shadow-sm text-secondaryHover"
                                    @click="addTaskToTemplate"
                                    :disabled="this.newTaskName === ''"
-                                   text="Hinzufügen" mode="modal"/>
+                                   :text="$t('Add')" mode="modal"/>
                     </div>
 
                 </div>
@@ -139,13 +140,13 @@
                 <img src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
-                        Checklistenvorlage zuweisen
+                        {{ $t('Assign checklist template')}}
                     </div>
                     <XIcon @click="closeChangeUsersModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
                     <div class="text-secondary tracking-tight leading-6 sub">
-                        Tippe den Namen des Nutzer*innen dem du die Checklistenvorlage zuweisen möchtest.
+                        {{ $t('Type the name of the user to whom you want to assign the checklist template.')}}
                     </div>
                     <div class="mt-6 relative">
                         <div class="my-auto w-full">
@@ -153,7 +154,7 @@
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                    placeholder="placeholder"/>
                             <label for="userSearch"
-                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Name') }}</label>
                         </div>
 
                         <transition leave-active-class="transition ease-in duration-100"
@@ -192,7 +193,7 @@
                                 {{ user.first_name }} {{ user.last_name }}
                             </div>
                             <button type="button" @click="deleteUser(user)">
-                                <span class="sr-only">Benutzer aus Checklistenvorlage entfernen</span>
+                                <span class="sr-only">{{ $t('Remove user from checklist template')}}</span>
                                 <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
                             </button>
                         </span>
@@ -200,7 +201,7 @@
                     <AddButton
                         class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                         @click="closeChangeUsersModal"
-                        text="Zuweisen" mode="modal" />
+                        :text="$t('Assign')" mode="modal" />
                 </div>
             </template>
         </jet-dialog-modal>

@@ -53,7 +53,7 @@
                                :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
                                type="text"
                                v-model="userForm.position"
-                               placeholder="Position"
+                               :placeholder="this.$t('Position')"
                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                     </div>
                 </div>
@@ -72,7 +72,7 @@
                                :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
                                type="text"
                                v-model="userForm.phone_number"
-                               placeholder="Telefonnummer"
+                               :placeholder="$t('Phone number')"
                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                     </div>
                 </div>
@@ -107,7 +107,7 @@
                     <div class="mt-1">
                         <textarea :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
                                   :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
-                                  placeholder="Was sollten die anderen artwork-User wissen?"
+                                  :placeholder="$t('What should other artwork users know?')"
                                   v-model="userForm.description"
                                   rows="5"
                                   class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
@@ -271,7 +271,7 @@
     <SuccessModal v-if="showSuccessModal"
                   :title="$t('User successfully edited')"
                   :description="$t('The changes have been saved successfully.')"
-                  button="Ok"
+                  :button="$t('Ok')"
                   @closed="closeSuccessModal"
     />
 </template>
@@ -349,7 +349,7 @@ export default {
             statusbar: {
                 show: true,
                 status: "success",
-                text: "Nutzer wurde erfolgreich bearbeitet"
+                text: this.$t('User has been successfully edited')
             },
             languages: [
                 { id: 'de', name: 'Deutsch' },
@@ -390,7 +390,7 @@ export default {
                 this.userForm.email = this.user_to_edit.email;
             }
             if (!this.userForm.first_name || !this.userForm.last_name) {
-                this.nameError = 'Vorname und Nachname sind notwendig';
+                this.nameError = this.$t('First name and surname are required');
                 this.hasNameError = true;
                 return; // Exit the function without making the API call
             }
@@ -455,7 +455,7 @@ export default {
                 if (e.target.result.includes("data:image/png") || e.target.result.includes("data:image/jpeg")) {
                     this.photoPreview = e.target.result;
                 } else {
-                    this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+                    this.updateProfilePictureFeedback = this.$t('Only .png and .jpeg files are supported')
                 }
             };
 
@@ -475,7 +475,7 @@ export default {
                 if (forbiddenTypes.includes(this.$refs.photo.files[0]?.type)
                     || this.$refs.photo.files[0].type.match('video.*')
                     || this.$refs.photo.files[0].type === "") {
-                    this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+                    this.updateProfilePictureFeedback = this.$t('Only .png and .jpeg files are supported')
                 } else {
                     this.changeProfilePicture()
                 }

@@ -4,13 +4,13 @@
             <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                    Verfügbarkeitsverlauf
+                    {{ $t('Availability history')}}
                 </div>
                 <XIcon @click="closeModal()"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-secondary subpixel-antialiased">
-                    Hier kannst du nachvollziehen, was von wem wann geändert wurde.
+                    {{  $t('Here you can see what was changed by whom and when.') }}
                 </div>
 
 
@@ -25,7 +25,7 @@
                                 <NewUserToolTip :height="7" :width="7" v-if="historyItem.changes[0].changed_by"
                                                 :user="historyItem.changes[0].changed_by" :id="index"/>
                                 <div v-else class="xsLight ml-3">
-                                    gelöschte Nutzer:in
+                                    {{ $t('deleted User')}}
                                 </div>
                                 <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
                                     {{ historyItem.changes[0].message }}

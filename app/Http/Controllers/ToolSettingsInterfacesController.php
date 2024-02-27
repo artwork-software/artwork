@@ -49,28 +49,26 @@ class ToolSettingsInterfacesController extends Controller
 
             return Redirect::back()->with(
                 'error',
-                'Sage-Schnittstelleneinstellungen konnten nicht aktualisiert werden, bitte erneut versuchen.'
+                __('interfaces.failed_to_save')
             );
         }
 
         if (!$sageApiSettingsService->testConnection()) {
             return Redirect::back()->with(
                 'error',
-                'Sage-Schnittstelleneinstellungen wurden erfolgreich aktualisiert, aber der Verbindungstest ist ' .
-                    'fehlgeschlagen, Bitte überprüfe die Schnittstelleneinstellungen und stelle sicher, dass die ' .
-                    'Schnittstelle erreichbar ist.'
+                __('interfaces.connection_test_failed')
             );
         }
 
-        return Redirect::back()->with('success', 'Sage-Schnittstelleneinstellungen erfolgreich aktualisiert.');
+        return Redirect::back()->with('success', __('interfaces.saved_successfully'));
     }
 
     public function initializeSage(): RedirectResponse
     {
         if (Artisan::call(GetSage100Data::class) === 0) {
-            return Redirect::back()->with('success', 'Sage-Import wurde erfolgreich ausgeführt');
+            return Redirect::back()->with('success', __('interfaces.import_executed_successfully'));
         }
 
-        return Redirect::back()->with('error', 'Sage-Import konnte nicht ausgeführt werden, bitte erneut versuchen');
+        return Redirect::back()->with('error', __('interfaces.import_executed_unsuccessfully'));
     }
 }

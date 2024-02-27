@@ -1036,5 +1036,8 @@
     "Current week" : "Aktuelle Woche",
     "Next 30 days" : "Nächste 30 Tage",
     "Next 90 days" : "Nächste 90 Tage",
-    "The end date must be after the start date." : "Das Enddatum muss nach dem Startdatum liegen."
+    "The end date must be after the start date." : "Das Enddatum muss nach dem Startdatum liegen.",
+    "Sage API data sets": "Sage-API Datensätze",
+    "Move to the trash": "In den Papierkorb verschieben",
+    "Do you really want to put the data set in the trash?": "Willst du den Datensatz: \"{0}\" wirklich in den Papierkorb legen?"
 }

@@ -20,7 +20,7 @@
                                     {{ $t('Shift repetition') }}
                                 </div>
                                 <p class="xsLight">
-                                    {{ $t('You have assigned a shift to a repeat date. Specify the period in which the shift is to be repeated.') }}
+                                    {{ $t('You have assigned a shift to a repeat event. Specify the period in which the shift is to be repeated.') }}
                                 </p>
                                 <SwitchGroup as="div" class="flex items-center mt-4">
                                     <SwitchLabel as="span" class="mr-3 text-sm" :class="bufferForReturn.onlyThisDay ? 'text-gray-400' : 'font-bold'">

@@ -130,7 +130,7 @@
                                                         </g>
                                                     </svg>
 
-                                                    {{ $t('Repeat date')}}
+                                                    {{ $t('Repeat event')}}
                                                 </label>
                                             </div>
                                         </div>

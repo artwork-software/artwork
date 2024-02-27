@@ -6,9 +6,7 @@
                      @click="openEventsWithoutRoomComponent()"
                      v-if="filteredEvents?.length > 0">
                     <ExclamationIcon class="h-6  mr-2"/>
-                    {{
-                        filteredEvents?.length
-                    }}{{ filteredEvents?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+                    {{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
                 </div>
             </div>
             <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal"

@@ -36,7 +36,7 @@
             </div>
             <div v-else>
                 <div class="pl-6 pb-12 mt-10 xsDark">
-                    Keine Termine für dieses Projekt
+                    {{$t('No events for this project')}}
                 </div>
             </div>
 
@@ -68,11 +68,11 @@
 
     <div v-show="multiEdit"
          class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
-        <AddButton mode="modal" class="bg-buttonBlue hover:bg-buttonHover text-white resize-none" text="Termine verschieben"
+        <AddButton mode="modal" class="bg-buttonBlue hover:bg-buttonHover text-white resize-none" :text="$t('Move events')"
                    @click="openMultiEditModal"/>
         <AddButton mode="modal" @click="openDeleteSelectedEventsModal = true"
                    class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none"
-                   text="Termine löschen"/>
+                   :text="$t('Delete events')"/>
     </div>
 
     <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms"
@@ -82,8 +82,8 @@
         v-if="openDeleteSelectedEventsModal"
         @closed="openDeleteSelectedEventsModal = false"
         @delete="deleteSelectedEvents"
-        title="Belegungen löschen"
-        description="Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht."/>
+        :title="$t('Delete assignments')"
+        :description="$t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.')"/>
 </template>
 
 <script>

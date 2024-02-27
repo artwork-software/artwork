@@ -124,7 +124,7 @@
                                            type="checkbox"
                                            class="checkBoxOnDark"/>
                                     <p :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">{{ $t('Repeat date')}}</p>
+                                       class=" ml-4 my-auto text-secondary">{{ $t('Repeat event')}}</p>
                                 </div>
                                 <div class="flex py-1" v-if="this.$canAny(['can manage workers', 'can plan shifts'])">
                                     <input v-model="userCalendarSettings.work_shifts"

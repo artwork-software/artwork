@@ -5,7 +5,7 @@
                  @click="openEventsWithoutRoomComponent()"
                  v-if="filteredEvents?.length > 0">
 
-                <ExclamationIcon class="h-6  mr-2"/>{{ filteredEvents?.length === 1 ? $t('{0} Event without room!', filteredEvents?.length) : $t('{0} Events without room!', filteredEvents?.length) }}
+                <ExclamationIcon class="h-6  mr-2"/>{{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
             </div>
         </div>
         <div class="bg-white">

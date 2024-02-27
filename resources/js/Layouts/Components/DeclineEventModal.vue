@@ -4,7 +4,7 @@
             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Belegung absagen
+                    {{ $t('Cancel booking')}}
                 </div>
                 <XIcon @click="closeDeclineRequestModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
@@ -33,7 +33,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-start text-xs">
-                                    Erstellt von:
+                                    {{ $t('Created by')}}
                                     <UserPopoverTooltip class="ml-2" :user="requestToDecline.created_by" :id="requestToDecline.created_by.id" height="4" width="4"/>
                                 </div>
                             </div>
@@ -41,7 +41,7 @@
                         <div class="mb-3">
                             <div v-if="requestToDecline.project">
                                 <div class="xxsLight flex items-center">
-                                    Zugeordnet zu
+                                    {{ $t('assigned to')}}
                                     <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                         {{ requestToDecline.project?.name }}
                                     </div>
@@ -57,22 +57,22 @@
                                 -->
                             </div>
                             <div class="xxsLight" v-else>
-                                Keine Projektzuordnung
+                                {{ $t('No project assignment')}}
                             </div>
                         </div>
                         <div class="mb-3 xsDark">
                             {{ requestToDecline.roomName }} - {{ dayjs(requestToDecline.start).format('DD.MM.YYYY HH:mm') }} - {{ dayjs(requestToDecline.end).format('DD.MM.YYYY HH:mm') }}
                         </div>
                         <div class="mb-3 xsDark">
-                            Termininfo {{ requestToDecline.description }}
+                            {{ $t('Event info')}} {{ requestToDecline.description }}
                         </div>
 
                         <div>
-                            <textarea placeholder="Möchtest du eine Begründung eingeben?"
+                            <textarea :placeholder="$t('Would you like to enter a reason?')"
                                       id="adminComment"
                                       v-model="declineEvent.comment"
                                       rows="4"
-                                      class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                      class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
                         </div>
                     </div>
                 </div>
@@ -80,11 +80,11 @@
                     <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="declineRequest">
-                        Absagen
+                        {{ $t('Cancellations')}}
                     </button>
                     <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
                     </div>
                 </div>
             </div>

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9ad74789cb9c0021685a316a43d3529b",
+    "content-hash": "c32cc6cf37c4e5f8d6dff09d0cb58ae2",
     "packages": [
         {
             "name": "antonrom00/laravel-model-changes-history",
@@ -3037,33 +3037,33 @@
         },
         {
             "name": "laravel-lang/native-country-names",
-            "version": "1.0.0",
+            "version": "1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Laravel-Lang/native-country-names.git",
-                "reference": "07d07cbd4553c5edbb43c22ad8c222428f15917c"
+                "reference": "cea0d0fbb8aeb9c8b426c05796034295c3d1cabb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Laravel-Lang/native-country-names/zipball/07d07cbd4553c5edbb43c22ad8c222428f15917c",
-                "reference": "07d07cbd4553c5edbb43c22ad8c222428f15917c",
+                "url": "https://api.github.com/repos/Laravel-Lang/native-country-names/zipball/cea0d0fbb8aeb9c8b426c05796034295c3d1cabb",
+                "reference": "cea0d0fbb8aeb9c8b426c05796034295c3d1cabb",
                 "shasum": ""
             },
             "require": {
                 "dragon-code/support": "^6.11",
                 "ext-json": "*",
+                "illuminate/collections": "^10.0",
                 "php": "^8.1"
             },
             "require-dev": {
-                "guzzlehttp/guzzle": "^7.8",
-                "illuminate/support": "^10.31",
-                "laravel-lang/locale-list": "^1.0",
-                "laravel-lang/status-generator": "^2.3.1",
+                "illuminate/support": "^10.0",
+                "laravel-lang/locale-list": "^1.2",
                 "pestphp/pest": "^2.24.3",
                 "punic/punic": "^3.8",
-                "symfony/console": "^6.3",
-                "symfony/process": "^6.3",
-                "symfony/var-dumper": "^6.3"
+                "symfony/console": "^6.3 || ^7.0",
+                "symfony/process": "^6.3 || ^7.0",
+                "symfony/var-dumper": "^6.3 || ^7.0",
+                "vlucas/phpdotenv": "^5.6"
             },
             "type": "library",
             "autoload": {
@@ -3105,37 +3105,37 @@
                 "issues": "https://github.com/Laravel-Lang/native-country-names/issues",
                 "source": "https://github.com/Laravel-Lang/native-country-names"
             },
-            "time": "2023-11-19T17:07:07+00:00"
+            "time": "2023-12-29T23:38:20+00:00"
         },
         {
             "name": "laravel-lang/native-currency-names",
-            "version": "1.1.0",
+            "version": "1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Laravel-Lang/native-currency-names.git",
-                "reference": "932dccfb33df43a8686f57bee128a9281a53b31d"
+                "reference": "21662cd9f31edf1817439344d5c4519b627679b5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Laravel-Lang/native-currency-names/zipball/932dccfb33df43a8686f57bee128a9281a53b31d",
-                "reference": "932dccfb33df43a8686f57bee128a9281a53b31d",
+                "url": "https://api.github.com/repos/Laravel-Lang/native-currency-names/zipball/21662cd9f31edf1817439344d5c4519b627679b5",
+                "reference": "21662cd9f31edf1817439344d5c4519b627679b5",
                 "shasum": ""
             },
             "require": {
                 "dragon-code/support": "^6.11",
                 "ext-json": "*",
+                "illuminate/collections": "^10.0",
                 "php": "^8.1"
             },
             "require-dev": {
-                "guzzlehttp/guzzle": "^7.8",
-                "illuminate/support": "^10.31",
-                "laravel-lang/locale-list": "^1.1",
-                "laravel-lang/status-generator": "^2.3.1",
+                "illuminate/support": "^10.0",
+                "laravel-lang/locale-list": "^1.2",
                 "pestphp/pest": "^2.24.3",
                 "punic/punic": "^3.8",
-                "symfony/console": "^6.3",
-                "symfony/process": "^6.3",
-                "symfony/var-dumper": "^6.3"
+                "symfony/console": "^6.3 || ^7.0",
+                "symfony/process": "^6.3 || ^7.0",
+                "symfony/var-dumper": "^6.3 || ^7.0",
+                "vlucas/phpdotenv": "^5.6"
             },
             "type": "library",
             "autoload": {
@@ -3174,7 +3174,7 @@
                 "issues": "https://github.com/Laravel-Lang/native-currency-names/issues",
                 "source": "https://github.com/Laravel-Lang/native-currency-names"
             },
-            "time": "2023-11-19T21:19:14+00:00"
+            "time": "2023-12-29T23:30:58+00:00"
         },
         {
             "name": "laravel-lang/native-locale-names",
@@ -14501,16 +14501,16 @@
         },
         {
             "name": "laravel-lang/actions",
-            "version": "1.5.1",
+            "version": "1.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Laravel-Lang/actions.git",
-                "reference": "3b71749230a5bcbb0b7d1466ec5c75c5af5f1ea1"
+                "reference": "7f41ee016c21feaefc90b7e7513976c66177bbce"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Laravel-Lang/actions/zipball/3b71749230a5bcbb0b7d1466ec5c75c5af5f1ea1",
-                "reference": "3b71749230a5bcbb0b7d1466ec5c75c5af5f1ea1",
+                "url": "https://api.github.com/repos/Laravel-Lang/actions/zipball/7f41ee016c21feaefc90b7e7513976c66177bbce",
+                "reference": "7f41ee016c21feaefc90b7e7513976c66177bbce",
                 "shasum": ""
             },
             "require": {
@@ -14562,9 +14562,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Laravel-Lang/actions/issues",
-                "source": "https://github.com/Laravel-Lang/actions/tree/1.5.1"
+                "source": "https://github.com/Laravel-Lang/actions/tree/1.5.2"
             },
-            "time": "2024-02-15T22:44:13+00:00"
+            "time": "2024-02-26T07:17:43+00:00"
         },
         {
             "name": "laravel-lang/attributes",
@@ -14637,29 +14637,30 @@
         },
         {
             "name": "laravel-lang/common",
-            "version": "v4.0.0",
+            "version": "4.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Laravel-Lang/common.git",
-                "reference": "31744c7f64610990a77c7705e590e04c1fca372d"
+                "reference": "0da7d05913b66a7f9edd712016d737059c74ae00"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Laravel-Lang/common/zipball/31744c7f64610990a77c7705e590e04c1fca372d",
-                "reference": "31744c7f64610990a77c7705e590e04c1fca372d",
+                "url": "https://api.github.com/repos/Laravel-Lang/common/zipball/0da7d05913b66a7f9edd712016d737059c74ae00",
+                "reference": "0da7d05913b66a7f9edd712016d737059c74ae00",
                 "shasum": ""
             },
             "require": {
-                "laravel-lang/attributes": "^2.3.3",
-                "laravel-lang/http-statuses": "^3.3.1",
-                "laravel-lang/lang": "^13.0",
-                "laravel-lang/publisher": "^14.6.4",
+                "laravel-lang/attributes": "^2.4.1",
+                "laravel-lang/http-statuses": "^3.4.5",
+                "laravel-lang/lang": "^13.2.8",
+                "laravel-lang/locales": "^1.4",
+                "laravel-lang/publisher": "^14.7.1",
                 "php": "^8.1"
             },
             "require-dev": {
-                "orchestra/testbench": "^8.5 || ^9.0",
-                "phpunit/phpunit": "^10.0",
-                "symfony/var-dumper": "^6.3"
+                "orchestra/testbench": "^8.14",
+                "phpunit/phpunit": "^10.4.2",
+                "symfony/var-dumper": "^6.3.6"
             },
             "type": "library",
             "notification-url": "https://packagist.org/downloads/",
@@ -14697,6 +14698,8 @@
                 "laravel",
                 "locale",
                 "locales",
+                "localization",
+                "localizations",
                 "nova",
                 "publisher",
                 "spark",
@@ -14714,7 +14717,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2023-08-09T09:24:50+00:00"
+            "time": "2023-10-30T08:56:35+00:00"
         },
         {
             "name": "laravel-lang/http-statuses",
@@ -14842,6 +14845,74 @@
                 "source": "https://github.com/Laravel-Lang/lang"
             },
             "time": "2023-12-16T17:26:12+00:00"
+        },
+        {
+            "name": "laravel-lang/locales",
+            "version": "1.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Laravel-Lang/locales.git",
+                "reference": "e7f68118f130c6d7f2f49e35a233075826972559"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Laravel-Lang/locales/zipball/e7f68118f130c6d7f2f49e35a233075826972559",
+                "reference": "e7f68118f130c6d7f2f49e35a233075826972559",
+                "shasum": ""
+            },
+            "require": {
+                "archtechx/enums": "^0.3.2",
+                "dragon-code/support": "^6.11.3",
+                "ext-json": "*",
+                "illuminate/collections": "^10.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0",
+                "pestphp/pest": "^2.24.1",
+                "symfony/var-dumper": "^6.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "LaravelLang\\Locales\\ServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "LaravelLang\\Locales\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Andrey Helldar",
+                    "email": "helldar@dragon-code.pro"
+                },
+                {
+                    "name": "Laravel-Lang Team",
+                    "homepage": "https://laravel-lang.com"
+                }
+            ],
+            "description": "Basic functionality for working with localizations",
+            "keywords": [
+                "laravel",
+                "locale",
+                "locales",
+                "localization",
+                "translation",
+                "translations"
+            ],
+            "support": {
+                "issues": "https://github.com/Laravel-Lang/locales/issues",
+                "source": "https://github.com/Laravel-Lang/locales"
+            },
+            "time": "2023-11-03T09:47:59+00:00"
         },
         {
             "name": "laravel-lang/publisher",

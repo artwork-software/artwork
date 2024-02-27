@@ -58,7 +58,7 @@ export default {
                 shortcuts: {
                     today: this.$t('Today'),
                     yesterday: this.$t('Yesterday'),
-                    past: period => this.$t('Last {0} days' , period),
+                    past: period => this.$t('Last {0} days' , [period]),
                     currentMonth: this.$t('Current month'),
                     pastMonth: this.$t('Past month')
                 },

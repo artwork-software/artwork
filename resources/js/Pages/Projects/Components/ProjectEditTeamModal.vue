@@ -68,7 +68,7 @@
                     </transition>
                 </div>
                 <div class="mt-4">
-                        <span v-for="user in users"
+                        <span v-for="user in this.users"
                               class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
                             <div class="flex items-center w-64">
                                 <div class="flex items-center">
@@ -132,7 +132,7 @@
                                 </div>
                             </div>
                         </span>
-                    <span v-for="department in assignedDepartments"
+                    <span v-for="department in this.departments"
                           class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
                                 <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
@@ -178,7 +178,13 @@ export default {
         XCircleIcon,
         XIcon
     },
-    props: ['editingTeam', 'assignedUsers', 'userIsProjectManager', 'departments', 'projectId'],
+    props: [
+        'show',
+        'assignedUsers',
+        'assignedDepartments',
+        'userIsProjectManager',
+        'projectId'
+    ],
     data(){
         return {
             department_and_user_query: "",
@@ -188,20 +194,29 @@ export default {
                 assigned_user_ids: {},
                 assigned_departments: [],
             }),
-            users: this.assignedUsers,
-            assignedDepartments: this.departments ? this.departments : [],
-            show: this.editingTeam ? this.editingTeam : false
+            //remove reference to original object by destructuring to new array
+            users: [...this.assignedUsers],
+            //remove reference to original object by destructuring to new array
+            departments: [...this.assignedDepartments]
         }
     },
     methods: {
         closeModal(bool) {
             this.$emit('closed', bool);
         },
-        closeEditProjectTeamModal(){
-            this.editingTeam = false;
+        addDepartmentToProjectTeamArray(departmentToAdd) {
+            for (let assignedDepartment of this.departments) {
+                if (departmentToAdd.id === assignedDepartment.id) {
+                    this.department_and_user_query = ""
+                    return;
+                }
+            }
+
+            this.department_and_user_query = ""
+            this.departments.push(departmentToAdd);
         },
         deleteDepartmentFromProjectTeam(department) {
-            this.assignedDepartments.splice(this.assignedDepartments.indexOf(department), 1);
+            this.departments.splice(this.departments.indexOf(department), 1);
         },
         addUserToProjectTeamArray(userToAdd) {
             for (let assignedUser of this.users) {
@@ -213,21 +228,6 @@ export default {
 
             this.users.push(userToAdd);
             this.department_and_user_query = ""
-        },
-        addDepartmentToProjectTeamArray(departmentToAdd) {
-            if (this.assignedDepartments !== []) {
-                for (let assignedDepartment of this.assignedDepartments) {
-                    if (departmentToAdd.id === assignedDepartment.id) {
-                        this.department_and_user_query = ""
-                        return;
-                    }
-                }
-            } else {
-                this.assignedDepartments = [departmentToAdd];
-            }
-            this.department_and_user_query = ""
-            this.assignedDepartments.push(departmentToAdd);
-
         },
         deleteUserFromProjectTeam(user) {
             if (this.users.includes(user)) {
@@ -245,7 +245,7 @@ export default {
                 };
             })
             this.form.assigned_departments = [];
-            this.assignedDepartments.forEach(department => {
+            this.departments.forEach(department => {
                 this.form.assigned_departments.push(department);
             })
             this.form.patch(route('projects.update_team', {project: this.projectId}));

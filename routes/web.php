@@ -263,7 +263,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/projects/{project}/checklist', [ProjectController::class, 'projectChecklistTab'])
         ->name('projects.show.checklist')->middleware(CanViewProject::class);
     ;
-    Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])->name('projects.show.shift')->can('can plan shifts');
+    Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])
+        ->name('projects.show.shift')->can('can plan shifts');
     Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
         ->name('projects.export.budget');
     Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])
@@ -432,7 +433,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Event Api
     Route::get('/events', [EventController::class, 'eventIndex'])->name('events.index');
-    Route::get('/events/collision', [EventController::class, 'getCollisionCount'])->name('events.collisions');
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
@@ -470,7 +470,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/collision/room', [RoomController::class, 'collisionsCount'])->name('collisions.room');
     Route::patch('/notifications', [NotificationController::class, 'setOnRead'])->name('notifications.setReadAt');
-    Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])->name('notifications.setReadAtAll');
+    Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])
+        ->name('notifications.setReadAtAll');
     Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
     Route::patch('/user/settings/{setting}', [NotificationController::class, 'updateSetting'])
         ->name('notifications.settings');

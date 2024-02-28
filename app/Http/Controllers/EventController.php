@@ -26,14 +26,12 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
 use App\Models\UserShiftCalendarFilter;
-use App\Sage100\Sage100;
 use App\Support\Services\CollisionService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
-use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Carbon\Carbon;
@@ -48,7 +46,6 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Response;
 use Inertia\ResponseFactory;
-use const _PHPStan_11268e5ee\__;
 
 class EventController extends Controller
 {
@@ -1667,7 +1664,7 @@ class EventController extends Controller
         $end = Carbon::parse($request->query('end'))->setTimezone(config('app.timezone'));
 
         return Event::query()
-            ->whereOccursBetween($start, $end, true)
+            ->startAndEndTimeOverlap($start, $end)
             ->where('room_id', $request->query('roomId'))
             ->where('id', '!=', $request->query('eventId'))
             ->count();

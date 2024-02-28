@@ -98,8 +98,6 @@ use stdClass;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-use const _PHPStan_11268e5ee\__;
-
 class ProjectController extends Controller
 {
     // init empty notification controller

@@ -7,7 +7,6 @@
                     <h2 class="headline1 flex mb-4">{{$t('Notifications')}}</h2>
                 </div>
             </div>
-
         </div>
         <div class="ml-12 mt-8">
             <div class="mb-4 border-gray-200 dark:border-gray-700">
@@ -109,7 +108,6 @@
                                 </div>
                             </div>
                         </div>
-
                        <div class="mt-4" v-if="hasAdminRole() || $canAny(['change system notification'])">
                            <AddButton :text="$t('Change notification to all')" mode="modal" type="secondary" class="col-span-12 !ml-0" @click="showGlobalNotificationModal = true"/>
                        </div>
@@ -130,23 +128,11 @@
                 </div>
             </div>
         </div>
-        <event-without-room-new-request-component
-            v-if="showEventWithoutRoomComponent"
-            @closed="onEventWithoutRoomComponentClose()"
-            :showHints="$page.props?.can?.show_hints"
-            :eventTypes="eventTypes"
-            :rooms="rooms"
-            :event="this.eventToEdit"
-            :projects="this.projects"
-            :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
-        />
-
         <GlobalNotificationModal v-if="showGlobalNotificationModal" @closed="showGlobalNotificationModal = false" :global-notification="globalNotification"/>
     </app-layout>
 </template>
 
 <script>
-
 import {defineComponent} from 'vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -159,7 +145,13 @@ import {
     TrashIcon,
     XIcon
 } from '@heroicons/vue/outline'
-import {CheckIcon, ChevronRightIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
+import {
+    CheckIcon,
+    ChevronRightIcon,
+    ChevronUpIcon,
+    PlusSmIcon,
+    XCircleIcon
+} from '@heroicons/vue/solid'
 
 import {
     Listbox,
@@ -179,7 +171,10 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import Checkbox from "@/Layouts/Components/Checkbox";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
+import {
+    Link,
+    useForm
+} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
@@ -187,14 +182,12 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
-import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent";
 import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings";
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent";
 import NotificationPushSettings from "@/Layouts/Components/NotificationPushSettings";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent";
 import Permissions from "@/mixins/Permissions.vue";
 import GlobalNotificationModal from "@/Pages/Notifications/Components/GlobalNotificationModal.vue";
-
 
 export default defineComponent({
     mixins: [Permissions],
@@ -241,44 +234,29 @@ export default defineComponent({
         ChevronRightIcon,
         NotificationEventInfoRow,
         NotificationUserIcon,
-        EventWithoutRoomNewRequestComponent,
         AnswerEventRequestComponent,
-
     },
-    props: ['historyObjects','notifications', 'rooms', 'eventTypes', 'projects', 'readNotifications', 'notificationSettings', 'notificationFrequencies', 'groupTypes', 'event', 'project', 'wantedSplit', 'roomCollisions', 'globalNotification'],
-    created() {
-
-    },
-    methods: {
-        formatDate(isoDate) {
-            if(isoDate?.split('T').length > 1){
-                return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
-            }else if(isoDate?.split(' ').length > 1){
-                return isoDate.split(' ')[0].substring(8, 10) + '.' + isoDate.split(' ')[0].substring(5, 7) + '.' + isoDate.split(' ')[0].substring(0, 4) + ', ' + isoDate.split(' ')[1].substring(0, 5)
-            }
-        },
-        isErrorType(type, notification) {
-            if (type.indexOf('RoomRequestNotification') !== -1 && notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1 || notification.data.title === 'Termin abgesagt') {
-                return true;
-            }
-            return false;
-        },
-        openEventWithoutRoomComponent(event) {
-            this.eventToEdit = event;
-            this.showEventWithoutRoomComponent = true;
-        },
-        onEventWithoutRoomComponentClose() {
-            this.showEventWithoutRoomComponent = false;
-        },
-    },
-    watch: {},
+    props: [
+        'historyObjects',
+        'notifications',
+        'rooms',
+        'eventTypes',
+        'projects',
+        'readNotifications',
+        'notificationSettings',
+        'notificationFrequencies',
+        'groupTypes',
+        'event',
+        'project',
+        'wantedSplit',
+        'roomCollisions',
+        'globalNotification'
+    ],
     data() {
         return {
             openTab: 'notifications',
             showRoomsAndEvents: true,
             showRoomsAndRoomRequests: true,
-            eventToEdit: null,
-            showEventWithoutRoomComponent: false,
             deleteComponentVisible: false,
             answerRequestModalVisible: false,
             requestToAnswer: null,
@@ -289,8 +267,25 @@ export default defineComponent({
             showGlobalNotificationModal: false
         }
     },
-    setup() {
-        return {}
+    methods: {
+        formatDate(isoDate) {
+            if (isoDate?.split('T').length > 1) {
+                return isoDate.split('T')[0].substring(8, 10) + '.' +
+                    isoDate.split('T')[0].substring(5, 7) + '.' +
+                    isoDate.split('T')[0].substring(0, 4) + ', ' +
+                    isoDate.split('T')[1].substring(0, 5)
+            } else if(isoDate?.split(' ').length > 1) {
+                return isoDate.split(' ')[0].substring(8, 10) + '.' +
+                    isoDate.split(' ')[0].substring(5, 7) + '.' +
+                    isoDate.split(' ')[0].substring(0, 4) + ', ' +
+                    isoDate.split(' ')[1].substring(0, 5)
+            }
+        },
+        isErrorType(type, notification) {
+            return type.indexOf('RoomRequestNotification') !== -1 && notification.data.accepted === false ||
+                type.indexOf('ConflictNotification') !== -1 ||
+                notification.data.title === 'Termin abgesagt';
+        }
     }
 })
 </script>

@@ -336,9 +336,12 @@
                                            :value="room"
                                            v-slot="{ active, selected }">
                                 <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                    {{ room.name }} <img v-if="this.roomCollisions ? this.roomCollisions[room.id] > 0 : false"
-                                                         src="/Svgs/IconSvgs/icon_warning_white.svg"
-                                                         class="h-4 w-4 mx-2" alt="conflictIcon"/>
+                                    {{ room.name }}
+                                    <img
+                                        v-if="this.roomCollisionArray[room.id] > 0"
+                                        src="/Svgs/IconSvgs/icon_warning_white.svg"
+                                        class="h-4 w-4 mx-2" alt="conflictIcon"
+                                    />
                                 </div>
                                 <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                             </ListboxOption>
@@ -357,8 +360,13 @@
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
-                                <div :class="[selected ? 'text-white' : '']">
+                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
                                     {{ room.name }}
+                                    <img
+                                        v-if="this.roomCollisionArray[room.id] > 0"
+                                        src="/Svgs/IconSvgs/icon_warning_white.svg"
+                                        class="h-4 w-4 mx-2" alt="conflictIcon"
+                                    />
                                 </div>
                                 <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                             </ListboxOption>
@@ -523,7 +531,6 @@ export default {
             error: null,
             creatingProject: false,
             projectSearchResults: [],
-            collisionCount: 0,
             description: null,
             canEdit: null,
             declinedRoomId: null,
@@ -543,13 +550,22 @@ export default {
                 roomId: null
             }),
             newComment: '',
+            roomCollisionArray: []
         }
     },
 
-    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event', 'project', 'wantedRoomId', 'roomCollisions','showComments'],
-
+    props: [
+        'showHints',
+        'eventTypes',
+        'rooms',
+        'isAdmin',
+        'event',
+        'project',
+        'wantedRoomId',
+        'roomCollisions',
+        'showComments'
+    ],
     emits: ['closed'],
-
     watch: {
         projectName: {
             deep: true,
@@ -577,15 +593,12 @@ export default {
                 adminIds.push(admin.id);
             })
             return adminIds;
-
-
         },
     },
-
     methods: {
         checkButtonDisabled(){
-            if(this.series){
-                if(this.seriesEndDate){
+            if (this.series) {
+                if (this.seriesEndDate) {
                     const eventEndDate = new Date(this.endFull);
                     const endDateSeries = new Date(this.seriesEndDate);
                     return endDateSeries < eventEndDate;
@@ -622,7 +635,7 @@ export default {
                 }
             }
             this.series = this.event.is_series
-            if(this.series){
+            if (this.series) {
                 this.seriesEndDate = this.event.series.end_date;
             }
             this.frequencies.forEach((frequency) => {
@@ -637,12 +650,10 @@ export default {
                 this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId)
             }
 
-
             this.description = this.event.description
 
             this.checkCollisions();
         },
-
         closeModal(bool) {
             this.startDate = null;
             this.startTime = null;
@@ -657,60 +668,26 @@ export default {
             }
             this.$emit('closed', bool);
         },
-
-        /**
-         * Format date and time to ISO 8601 with timezone UTC
-         *
-         * @param date
-         * @param time
-         * @returns {string|null}
-         */
         formatDate(date, time) {
             if (date === null || time === null) return null;
             return (new Date(date + ' ' + time)).toISOString()
         },
-
         checkChanges() {
-            this.updateTimes(this.event);
-
-            if (this.event?.start && this.event?.end) {
-
-                axios.post('/collision/room', {
-                    params: {
-                        start: this.event?.start,
-                        end: this.event?.end,
-                    }
-                })
-                    .then(response => this.roomCollisions = response.data);
-            }
-
-
+            this.updateTimes();
+            this.checkCollisions();
         },
-        checkTypeChange() {
-
-        },
-
-        /**
-         * If the user selects a start, end, and room
-         * call the server to get information if there are any collision
-         *
-         * @returns {Promise<void>}
-         */
         async checkCollisions() {
-            if (!(this.startTime && this.startDate && this.endTime && this.endDate && this.selectedRoom)) {
-                this.collisionCount = 0
-                return;
-            }
-
-            await axios
-                .get('/events/collision', {
+            if (this.startTime && this.startDate && this.endTime && this.endDate) {
+                let startFull = this.formatDate(this.startDate, this.startTime);
+                let endFull = this.formatDate(this.endDate, this.endTime);
+                await axios.post('/collision/room', {
                     params: {
-                        start: this.formatDate(this.startDate, this.startTime),
-                        end: this.formatDate(this.endDate, this.endTime),
-                        roomId: this.selectedRoom?.id,
+                        start: startFull,
+                        end: endFull,
+                        currentEventId: this.event.id
                     }
-                })
-                .then(response => this.collisionCount = response.data);
+                }).then(response => this.roomCollisionArray = response.data);
+            }
         },
         updateTimes() {
             if (this.startDate) {
@@ -726,7 +703,9 @@ export default {
                             if (startHours === '23') {
                                 this.endTime = '00:' + this.startTime.slice(3, 5);
                                 let date = new Date();
-                                this.endDate = new Date(date.setDate(new Date(this.endDate).getDate() + 1)).toISOString().slice(0, 10);
+                                this.endDate = new Date(
+                                    date.setDate(new Date(this.endDate).getDate() + 1)
+                                ).toISOString().slice(0, 10);
                             } else {
                                 this.endTime = this.getNextHourString(this.startTime)
                             }
@@ -734,16 +713,11 @@ export default {
                     }
                 }
             }
-
-
             this.validateStartBeforeEndTime();
-
             this.checkCollisions();
             this.checkEventTimeLength()
-
         },
         async validateStartBeforeEndTime() {
-
             this.error = null;
             if (this.startDate && this.endDate && this.startTime && this.endTime) {
                 this.setCombinedTimeString(this.startDate, this.startTime, 'start');
@@ -752,7 +726,6 @@ export default {
                     .post('/events', {start: this.startFull, end: this.endFull}, {headers: {'X-Dry-Run': true}})
                     .catch(error => this.error = error.response.data.errors);
             }
-
         },
         checkEventTimeLength() {
             // check if event min 30min
@@ -776,15 +749,23 @@ export default {
 
             if (target === 'start') {
                 if (offset === -60) {
-                    this.startFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                    this.startFull = new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
+                    ).toISOString().slice(0, 16);
                 } else {
-                    this.startFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                    this.startFull = new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
+                    ).toISOString().slice(0, 16);
                 }
             } else if (target === 'end') {
                 if (offset === -60) {
-                    this.endFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                    this.endFull = new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
+                    ).toISOString().slice(0, 16);
                 } else {
-                    this.endFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                    this.endFull = new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
+                    ).toISOString().slice(0, 16);
                 }
             }
         },
@@ -796,18 +777,12 @@ export default {
             } else {
                 return (Number(hours) + 1) + ':' + minutes;
             }
-
         },
-        /**
-         * Creates an event and reloads all events
-         *
-         * @returns {Promise<*>}
-         */
         async updateAndAnswerEvent() {
             return await axios
-                        .put('/events/' + this.event?.id, this.eventData())
-                        .then(() => { this.closeModal(true);})
-                        .catch(error => this.error = error.response.data.errors);
+                .put('/events/' + this.event?.id, this.eventData())
+                .then(() => { this.closeModal(true);})
+                .catch(error => this.error = error.response.data.errors);
         },
         async singleSaveEvent(){
             return await axios
@@ -825,7 +800,6 @@ export default {
         closeSeriesEditModal(){
             this.showSeriesEdit = false;
         },
-
         async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;
 
@@ -860,7 +834,6 @@ export default {
                 }
             }
         },
-
         eventData() {
             return {
                 title: this.title,
@@ -893,5 +866,3 @@ export default {
     },
 }
 </script>
-
-<style scoped></style>

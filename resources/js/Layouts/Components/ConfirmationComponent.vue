@@ -13,10 +13,10 @@
                     {{ description }}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <AddButton class="px-20 py-4" @click="closeModal(true)" :text="confirm ?? 'Ja'" mode="modal"/>
+                    <AddButton class="px-20 py-4" @click="closeModal(true)" :text="confirm ?? $t('Yes')" mode="modal"/>
                     <div class="my-auto xsLight cursor-pointer"
                         @click="closeModal(false)">
-                        {{ cancel ?? 'Nein, doch nicht' }}
+                        {{ cancel ?? $t('No, not really') }}
                     </div>
                 </div>
             </div>

@@ -5,9 +5,9 @@
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap">
-                            <h2 class="headline1 flex w-full">Belegungsanfragen</h2>
+                            <h2 class="headline1 flex w-full">{{ $t('Occupancy requests')}}</h2>
                             <div class="text-secondary subpixel-antialiased flex mt-2">
-                                Hier siehst du alle Raumbelegungsanfragen auf einen Blick und kannst sie verwalten.
+                                {{ $t('Here you can see all room occupancy requests at a glance and manage them.')}}
                             </div>
                         </div>
                     </div>
@@ -59,7 +59,7 @@
                                 <div class="flex items-center w-full ml-44 justify-between">
                                     <div v-if="eventRequest.project" class="w-80">
                                         <div class="ml-16 xsLight flex items-center">
-                                            Zugeordnet zu
+                                            {{ $t('assigned to')}}
                                             <Link
                                                 :href="route('projects.show.calendar',{project: eventRequest.project.id})"
                                                 class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
@@ -73,10 +73,10 @@
 
                                     </div>
                                     <div class="xsLight w-64 ml-16" v-else>
-                                        Keinem Projekt zugeordnet
+                                        {{$t('Not assigned to a project')}}
                                     </div>
                                     <div class="flex xsLight items-center">
-                                        angefragt:
+                                        {{ $t('requested')}}:
                                         <UserPopoverTooltip :user="eventRequest.created_by" :id="eventRequest.created_by.id" height="7" width="7" class="ml-2"/>
                                         <span class="ml-2 xsLight"> {{ eventRequest.created_at }}</span>
                                     </div>
@@ -104,13 +104,13 @@
                 <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="headline1 my-2">
-                        Raumbelegung bestätigen
+                        {{ $t('Confirm room occupancy')}}
                     </div>
                     <XIcon @click="closeApproveRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="successText">
-                        Bist du sicher, dass du die Raumbelegung zusagen möchtest?
+                        {{ $t('Are you sure you want to accept the room allocation?')}}
                     </div>
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
@@ -148,7 +148,7 @@
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToApprove.project" class="w-80">
                                     <div class="ml-16 xsLight flex items-center">
-                                        Zugeordnet zu
+                                        {{$t('assigned to')}}
                                         <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                             {{ requestToApprove.project.name }}
                                         </div>
@@ -164,10 +164,10 @@
                                     -->
                                 </div>
                                 <div class="xsLight ml-10" v-else>
-                                    Keinem Projekt zugeordnet
+                                    {{ $t('Not assigned to a project')}}
                                 </div>
                                 <div class="flex xsLight items-center">
-                                    angefragt:
+                                    {{ $t('requested')}}:
                                     <UserPopoverTooltip :user="requestToApprove.created_by" :id="requestToApprove.created_by.id" height="7" width="7" class="ml-2"/>
                                     <span class="ml-2 xsLight"> {{ requestToApprove.created_at }}</span>
                                 </div>
@@ -185,11 +185,11 @@
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="approveRequest">
-                            Zusagen
+                            {{$t('Commitments')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeApproveRequestModal"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -201,13 +201,13 @@
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="headline1 my-2">
-                        Raumbelegung absagen
+                        {{$t('Cancel room reservation')}}
                     </div>
                     <XIcon @click="closeDeclineRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="errorText">
-                        Bist du sicher, dass du die Raumbelegung absagen möchtest?
+                        {{$t('Are you sure you want to cancel the room reservation?')}}
                     </div>
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
@@ -245,7 +245,7 @@
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToDecline.project" class="w-80">
                                     <div class="ml-16 xsLight flex items-center">
-                                        Zugeordnet zu
+                                        {{$t('assigned to')}}
                                         <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                             {{ requestToDecline.project?.name }}
                                         </div>
@@ -261,10 +261,10 @@
                                     -->
                                 </div>
                                 <div class="xsLight ml-10" v-else>
-                                    Keinem Projekt zugeordnet
+                                    {{ $t('Not assigned to a project')}}
                                 </div>
                                 <div class="flex xsLight items-center">
-                                    angefragt:
+                                    {{$t('requested')}}:
                                     <UserPopoverTooltip :user="requestToDecline.created_by" :id="requestToDecline.created_by.id" height="7" width="7" class="ml-2"/>
                                     <span class="ml-2"> {{ requestToDecline.created_at }}</span>
                                 </div>
@@ -282,11 +282,11 @@
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="declineRequest">
-                            Absagen
+                            {{ $t('Cancellations')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>

@@ -18,7 +18,7 @@
                                        class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
                                        placeholder="placeholder"/>
                                 <label for="first_name"
-                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('First name') }}</label>
                             </div>
                         </div>
                         <div class="sm:col-span-3 flex items-end">
@@ -29,7 +29,7 @@
                                        placeholder="placeholder"/>
                                 <label for="last_name"
                                        class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
-                                               focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Nachname</label>
+                                               focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Last name')}}</label>
                             </div>
                         </div>
                     </div>
@@ -53,7 +53,7 @@
                                :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
                                type="text"
                                v-model="userForm.position"
-                               placeholder="Position"
+                               :placeholder="this.$t('Position')"
                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                     </div>
                 </div>
@@ -72,15 +72,42 @@
                                :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
                                type="text"
                                v-model="userForm.phone_number"
-                               placeholder="Telefonnummer"
+                               :placeholder="$t('Phone number')"
                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                     </div>
+                </div>
+                <div class="col-span-full">
+                    <Listbox as="div" class="w-44" v-model="selectedLanguage">
+                        <ListboxLabel class="block text-sm font-bold leading-6 text-gray-900">{{ $t('Application language')}}</ListboxLabel>
+                        <div class="relative mt-2">
+                            <ListboxButton class="relative w-full cursor-default shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block border-gray-300 text-start py-2 px-3">
+                                <span class="block truncate">{{ selectedLanguage?.name }}</span>
+                                <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                                  <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+                                </span>
+                            </ListboxButton>
+
+                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" v-for="language in languages" :key="language.id" :value="language" v-slot="{ active, selected }">
+                                        <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                            <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ language.name }}</span>
+
+                                            <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                                            </span>
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
+                        </div>
+                    </Listbox>
                 </div>
                 <div class="sm:col-span-6">
                     <div class="mt-1">
                         <textarea :disabled="!this.isSignedInUser() && !this.$can('can manage workers')"
                                   :class="this.isSignedInUser() || this.$can('can manage workers') ? '' : 'bg-gray-100'"
-                                  placeholder="Was sollten die anderen artwork-User wissen?"
+                                  :placeholder="$t('What should other artwork users know?')"
                                   v-model="userForm.description"
                                   rows="5"
                                   class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
@@ -88,7 +115,7 @@
                 </div>
                 <div class="sm:col-span-6 mt-4 flex">
                     <span v-if="userForm.departments.length === 0"
-                          class="text-secondary subpixel-antialiased my-auto mr-4">In keinem Team</span>
+                          class="text-secondary subpixel-antialiased my-auto mr-4">{{ $t('Not in any team') }}</span>
                     <span v-else class="flex -mr-3"
                           v-for="(team,index) in userForm.departments">
                         <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white"
@@ -119,7 +146,7 @@
                                             <PencilAltIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Teamzugehörigkeit bearbeiten
+                                            {{ $t('Edit team membership')}}
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -128,7 +155,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Nutzer*in aus allen Teams entfernen
+                                            {{ $t('Remove user from all teams') }}
                                         </a>
                                     </MenuItem>
                                 </div>
@@ -142,12 +169,12 @@
             <div class="flex">
                 <AddButton @click="editUser"
                            class=" inline-flex items-center px-12 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                           text="Einstellungen ändern" mode="modal"/>
+                           :text="$t('Change settings')" mode="modal"/>
             </div>
         </div>
         <div class="">
             <div class="flex mt-6" v-if="this.hasAdminRole()">
-                <span @click="resetPassword()" class="xsLight cursor-pointer">Passwort zurücksetzen</span>
+                <span @click="resetPassword()" class="xsLight cursor-pointer">{{ $t('Reset Password')}}</span>
             </div>
             <div v-if="password_reset_status" class="mb-4 font-medium text-sm text-green-600">
                 {{ password_reset_status }}
@@ -159,18 +186,17 @@
             <img src="/Svgs/Overlays/illu_team_user.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="headline1 my-2">
-                    Teamzugehörigkeit
+                     {{$t('Team membership')}}
                 </div>
                 <XIcon @click="closeChangeTeamsModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
                 <div class="mt-4 xsLight">
-                    Gib' an in welchen Teams die/der Nutzer*in ist.<br/> Beachte: Sie/Er hat die Berechtigung alle
-                    den Teams zugeordneten <br/>Projekte einzusehen.
+                    {{ $t('Specify which teams the user is in. Note: He/she has authorization to view all projects assigned to the teams. Projects assigned to the teams.')}}
                 </div>
                 <div class="mt-8 mb-8">
                     <span v-if="departments.length === 0"
-                          class="xsLight flex mb-6 mt-8 my-auto">Bisher sind keine Teams im Tool angelegt.</span>
+                          class="xsLight flex mb-6 mt-8 my-auto">{{ $t('No teams have been created in the tool yet.')}}</span>
                     <div v-for="team in departments">
                         <span class=" flex items-center pr-4 py-2 text-md">
                             <input :key="team.name" type="checkbox" :value="team" :id="team.id"
@@ -198,14 +224,16 @@
         <template #content>
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary text-2xl my-2">
-                    Profilbild ändern
+                    {{ $t('Change profile picture')}}
                 </div>
-                <span class="text-secondary my-auto">Wähle hier dein Profilbild aus. Es sollte die Größe von 1024 KB nicht überschreiten. </span>
+                <span class="text-secondary my-auto">
+                    {{ $t('Select your profile picture here. It should not exceed the size of 1024 KB.')}}
+                </span>
                 <XIcon @click="closeChangePictureModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <!-- New Profile Photo Preview -->
-                <h2 class="" v-show="photoPreview">Vorschau neues Profilbild:</h2>
+                <h2 class="" v-show="photoPreview">{{ $t('Preview new profile picture:')}}</h2>
                 <div class="flex">
                     <div class="mt-1 flex items-center">
                         <div class="mt-2" v-show="photoPreview">
@@ -217,13 +245,13 @@
                     <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
                         <AddButton
                             class="my-auto px-3 py-3"
-                            text="Datei auswählen"
+                            :text="$t('Select file')"
                             mode="modal"
                             @click.prevent="selectNewPhoto"/>
                         <AddButton
                             class=" ml-3 my-auto px-3 py-3"
                             @click.prevent="deletePhoto"
-                            text="Aktuelles Profilbild löschen"
+                            :text="$t('Delete current profile picture')"
                             mode="modal"
                             v-if="this.user_to_edit.profile_photo_url" />
                     </div>
@@ -233,7 +261,7 @@
                 <div class="mt-6">
                     <AddButton
                         class="px-8 py-3"
-                        text="Neues Profilbild speichern"
+                        :text="$t('Save new profile picture')"
                         mode="modal"
                         @click="validateTypeAndChange" />
                 </div>
@@ -241,16 +269,16 @@
         </template>
     </jet-dialog-modal>
     <SuccessModal v-if="showSuccessModal"
-                  title="Nutzer*in erfolgreich bearbeitet"
-                  description="Die Änderungen wurden erfolgreich gespeichert."
-                  button="Ok"
+                  :title="$t('User successfully edited')"
+                  :description="$t('The changes have been saved successfully.')"
+                  :button="$t('Ok')"
                   @closed="closeSuccessModal"
     />
 </template>
 
 <script>
 
-import {CheckIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
+import {CheckIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon, ChevronDownIcon } from "@heroicons/vue/outline";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
@@ -259,6 +287,9 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue';
+
+
 
 export default {
     components: {
@@ -275,6 +306,7 @@ export default {
         MenuButton,
         MenuItem,
         MenuItems,
+        Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions,ChevronDownIcon
     },
     mixins: [Permissions],
     props: [
@@ -282,6 +314,14 @@ export default {
         'password_reset_status',
         'departments'
     ],
+    watch: {
+        selectedLanguage: {
+            handler() {
+                document.documentElement.lang = this.selectedLanguage.id;
+            },
+            deep: true
+        }
+    },
     data() {
         return {
             showChangeTeamsModal: false,
@@ -301,6 +341,7 @@ export default {
                 departments: this.user_to_edit.departments,
                 phone_number: this.user_to_edit.phone_number,
                 description: this.user_to_edit.description,
+                language: this.user_to_edit.language
             }),
             resetPasswordForm: this.$inertia.form({
                 email: this.user_to_edit.email
@@ -308,9 +349,18 @@ export default {
             statusbar: {
                 show: true,
                 status: "success",
-                text: "Nutzer wurde erfolgreich bearbeitet"
-            }
+                text: this.$t('User has been successfully edited')
+            },
+            languages: [
+                { id: 'de', name: 'Deutsch' },
+                { id: 'en', name: 'Englisch' },
+            ],
+            // set the default selected language to the user's language
+            selectedLanguage: null
         }
+    },
+    mounted() {
+        this.selectedLanguage = this.languages.find(language => language.id === this.user_to_edit.language);
     },
     methods: {
         isSignedInUser() {
@@ -335,11 +385,12 @@ export default {
             this.openSuccessModal();
         },
         editUser() {
+            this.userForm.language = this.selectedLanguage.id;
             if (this.hasAdminRole()) {
                 this.userForm.email = this.user_to_edit.email;
             }
             if (!this.userForm.first_name || !this.userForm.last_name) {
-                this.nameError = 'Vorname und Nachname sind notwendig';
+                this.nameError = this.$t('First name and surname are required');
                 this.hasNameError = true;
                 return; // Exit the function without making the API call
             }
@@ -404,7 +455,7 @@ export default {
                 if (e.target.result.includes("data:image/png") || e.target.result.includes("data:image/jpeg")) {
                     this.photoPreview = e.target.result;
                 } else {
-                    this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+                    this.updateProfilePictureFeedback = this.$t('Only .png and .jpeg files are supported')
                 }
             };
 
@@ -424,7 +475,7 @@ export default {
                 if (forbiddenTypes.includes(this.$refs.photo.files[0]?.type)
                     || this.$refs.photo.files[0].type.match('video.*')
                     || this.$refs.photo.files[0].type === "") {
-                    this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+                    this.updateProfilePictureFeedback = this.$t('Only .png and .jpeg files are supported')
                 } else {
                     this.changeProfilePicture()
                 }

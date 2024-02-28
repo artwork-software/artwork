@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class TaskShowResource extends JsonResource
@@ -20,11 +21,11 @@ class TaskShowResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'done' => (bool) $this->done_at,
-            'humanDeadline' => $this->deadline
+            'humanDeadline' => Carbon::parse($this->deadline)
                 ?->setTimezone($request->get('timezone', config('calendar.default_timezone')))
                 ->format('d.m.Y'),
-            'deadline' => $this->deadline?->timestamp,
-            'isDeadlineInFuture' => $this->deadline?->isFuture(),
+            'deadline' => $this->deadline,
+            'isDeadlineInFuture' => Carbon::parse($this->deadline)?->isFuture(),
             'isPrivate' => (bool) $this->checklist?->user_id,
             'projectId' => $this->checklist?->project->id,
             'projectName' => $this->checklist?->project->name,

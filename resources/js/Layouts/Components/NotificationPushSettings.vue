@@ -2,9 +2,9 @@
     <div class="max-w-4xl">
 
         <div class="my-10">
-            <h2 class="headline2 my-2">Benachrichtigung per Push-Nachricht</h2>
+            <h2 class="headline2 my-2">{{$t('Notification by push message')}}</h2>
             <div class="xsLight">
-                Lass’ dich per E-Mail benachrichtigen und bleibe auf dem neusten Stand – auch wenn du gerade nicht im artwork online bist.
+                {{$t('Get notified via push notifications and stay up to date.')}}
             </div>
         </div>
 

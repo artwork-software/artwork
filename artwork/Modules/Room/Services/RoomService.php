@@ -346,8 +346,13 @@ class RoomService
             $roomAdminIdsAfter[] = $roomAdminAfter->id;
             // if added a new room admin, send notification to this user
             if (!in_array($roomAdminAfter->id, $roomAdminIdsBefore)) {
-                $notificationTitle = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
+                //$notificationTitle = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
                 $user = User::find($roomAdminAfter->id);
+                $notificationTitle = __(
+                    'notifications.room.leader.add',
+                    ['room' => $room->name],
+                    $user->language
+                );
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -368,7 +373,12 @@ class RoomService
         foreach ($roomAdminIdsBefore as $roomAdminBefore) {
             if (!in_array($roomAdminBefore, $roomAdminIdsAfter)) {
                 $user = User::find($roomAdminBefore);
-                $notificationTitle = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
+                //$notificationTitle = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
+                $notificationTitle = __(
+                    'notifications.room.leader.remove',
+                    ['room' => $room->name],
+                    $user->language
+                );
                 $broadcastMessage = [
                     'id' => random_int(1, 1000000),
                     'type' => 'error',

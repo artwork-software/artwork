@@ -4,20 +4,19 @@
             <img alt="Freigabe" src="/Svgs/Overlays/illu_money_source_create.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="font-black font-lexend text-primary text-3xl my-6">
-                    Freigabe verwalten
+                    {{ $t('Manage release')}}
                 </div>
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
                 <div class="xsLight">
-                    Tippe den Namen der Nutzer*innen, denen du Zugriff zur Quelle erteilen möchtest. Du kannst nur Nutzer*innen auswählen, welche die Berechtigung haben, eine Finanzierungsquelle bearbeiten zu können.
-                    Zuständige Nutzer*innen haben automatisch Zugriff auf die Quelle.
+                    {{ $t('Type the name of the users you want to give access to the source. You can only select users who are authorized to edit a funding source. Authorized users automatically have access to the source.')}}
                 </div>
                 <div class="mb-2 mt-6">
                     <div class="relative w-full">
                         <div class="w-full">
                             <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   placeholder="Suche nach Nutzer*innen"
+                                   :placeholder="$t('Search for users')"
                                    class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <transition leave-active-class="transition ease-in duration-100"
@@ -54,7 +53,7 @@
                                     </span>
                             </div>
                             <button type="button" @click="deleteUserFromMoneySourceUserArray(user)">
-                                <span class="sr-only">User aus Team entfernen</span>
+                                <span class="sr-only">{{ $t('Remove user from team')}}</span>
                                 <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
                             </button>
                         </div>
@@ -65,14 +64,14 @@
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                     <p :class="[user.pivot.competent ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">Zuständig</p>
+                                       class="ml-4 my-auto text-sm">{{ $t('Responsible')}}</p>
                                 </div>
                                 <div class="flex ml-8">
                                     <input v-model="user.pivot.write_access"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                     <p :class="[user.pivot.write_access ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">Schreib- und Löschrecht</p>
+                                       class="ml-4 my-auto text-sm">{{ $t('Write and delete permission')}}</p>
                                 </div>
                             </div>
                             <div class="flex items-center justify-between" v-else>
@@ -81,22 +80,22 @@
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                     <p :class="[user.competent ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">Zuständig</p>
+                                       class="ml-4 my-auto text-sm">{{ $t('Responsible')}}</p>
                                 </div>
                                 <div class="flex ml-8">
                                     <input v-model="user.write_access"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                     <p :class="[user.write_access ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">Schreib- und Löschrecht</p>
+                                       class="ml-4 my-auto text-sm">{{ $t('Write and delete permission')}}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="w-full items-center text-center">
-                    <AddButton @click="editMoneySourceUsers" text="Speichern" mode="modal"
-                               class=" inline-flex mt-8 items-center px-12 py-3 border bg-buttonBlue hover:bg-buttonHover focus:outline-none border-transparent text-base font-bold tracking-wider text-lg shadow-sm text-secondaryHover"
+                    <AddButton @click="editMoneySourceUsers" :text="$t('Save')" mode="modal"
+                               class=" inline-flex mt-8 items-center px-12 py-3 border bg-buttonBlue hover:bg-buttonHover focus:outline-none border-transparent  font-bold tracking-wider text-lg shadow-sm text-secondaryHover"
                     />
                 </div>
             </div>

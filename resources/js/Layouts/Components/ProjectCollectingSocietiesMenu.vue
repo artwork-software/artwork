@@ -6,7 +6,7 @@
                 {{selectedCollectingSociety}}
             </div>
             <div v-else class="flex-grow xsLight text-left subpixel-antialiased">
-                Verwertungsgesellschaft wählen*
+                {{$t('Choose a collecting society')}}*
             </div>
             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
         </ListboxButton>

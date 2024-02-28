@@ -14,7 +14,7 @@
                     {{ description }}
                 </div>
 
-                <input placeholder="Neue Bezeichnung der Überschrift eingeben"
+                <input :placeholder="$t('Enter a new name for the heading')"
                        id="title"
                        v-model="newName"
                        class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased
@@ -22,10 +22,10 @@
                 />
 
                 <div class="flex justify-between mt-6">
-                    <AddButton class="px-20 py-4" @click="emit('update', newName)" text="Speichern" mode="modal"/>
+                    <AddButton class="px-20 py-4" @click="emit('update', newName)" :text="$t('Save')" mode="modal"/>
                     <div class="flex my-auto">
                             <span @click="emit('closeModal')"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
                     </div>
                 </div>
             </div>

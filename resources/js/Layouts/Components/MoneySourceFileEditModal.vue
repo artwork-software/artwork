@@ -4,7 +4,7 @@
             <img src="/Svgs/Overlays/illu_money_source_create.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Dokument bearbeiten
+                    {{$t('Edit document')}}
                 </div>
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
@@ -14,7 +14,7 @@
                     <div class="text-buttonBlue text-sm my-6">{{ file.name }}</div>
                 </div>
                 <div class="text-secondary text-sm my-2">
-                    Dokument ersetzen
+                    {{ $t('Replace document')}}
                 </div>
                 <div>
                     <input
@@ -27,24 +27,23 @@
                     <div @click="selectNewFile" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
                         border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher ziehen
-                            <br>oder ins Feld klicken
+                        <p class="text-buttonBlue font-bold text-center">{{ $t('Drag document here to upload or click in the field')}}
                         </p>
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
                 <div>
-                <textarea placeholder="Kommentar / Notiz"
+                <textarea :placeholder="$t('Comment / Note')"
                           id="description"
                           v-model="comment"
                           rows="4"
                           class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                 </div>
                 <div class="mb-6">
-                    <div v-for="file in files">Neues Dokument: {{ file?.name }}</div>
+                    <div v-for="file in files">{{ $t('New document')}}: {{ file?.name }}</div>
                 </div>
                 <div class="justify-center flex w-full my-6">
-                    <AddButton text="Speichern" mode="modal" class="px-6 py-3"
+                    <AddButton :text="$t('Save')" mode="modal" class="px-6 py-3"
                                @click="updateFile"/>
                 </div>
                 <div class="w-full my-4">
@@ -130,11 +129,11 @@ export default {
             ]
             for (let file of files) {
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
-                    this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
+                    this.uploadDocumentFeedback = this.$t('Videos, .exe and .dmg files are not supported')
                 } else {
                     const fileSize = file.size;
                     if (fileSize > 2097152) {
-                        this.uploadDocumentFeedback = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
+                        this.uploadDocumentFeedback = this.$t('Files larger than 2MB cannot be uploaded.')
                     } else {
                         this.files.push(file)
                     }

@@ -1,30 +1,30 @@
 <template>
     <app-layout>
-    <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds"
-                                :projectWriteIds="projectWriteIds"
-                                :projectManagerIds="projectManagerIds"
-                                :project="project"
-                                :eventTypes="eventTypes"
-                                :currentGroup="currentGroup"
-                                :states="states"
-                                :project-groups="projectGroups"
-                                :first-event-in-project="firstEventInProject"
-                                :last-event-in-project="lastEventInProject"
-                                :rooms-with-audience="roomsWithAudience"
-                                :group-projects="groupProjects"
-                                :access_budget="access_budget"
-                                open-tab="shift">
-        <ShiftTab :projectWriteIds="projectWriteIds"
-                  :projectManagerIds="projectManagerIds"
-                  :eventsWithRelevant="eventsWithRelevant"
-                  :crafts="crafts"
-                  :currentUserCrafts="currentUserCrafts"
-                  :drop-users="dropUsers"
-                  :users="project.users"
-                  :event-types="eventTypes"
-                  :shift-qualifications="shiftQualifications"
-        />
-    </ProjectShowHeaderComponent>
+        <ProjectShowHeaderComponent :project-delete-ids="projectDeleteIds"
+                                    :projectWriteIds="projectWriteIds"
+                                    :projectManagerIds="projectManagerIds"
+                                    :project="project"
+                                    :eventTypes="eventTypes"
+                                    :currentGroup="currentGroup"
+                                    :states="states"
+                                    :project-groups="projectGroups"
+                                    :first-event-in-project="firstEventInProject"
+                                    :last-event-in-project="lastEventInProject"
+                                    :rooms-with-audience="roomsWithAudience"
+                                    :group-projects="groupProjects"
+                                    :access_budget="access_budget"
+                                    open-tab="shift">
+            <ShiftTab :projectWriteIds="projectWriteIds"
+                      :projectManagerIds="projectManagerIds"
+                      :eventsWithRelevant="eventsWithRelevant"
+                      :crafts="crafts"
+                      :currentUserCrafts="currentUserCrafts"
+                      :drop-users="dropUsers"
+                      :users="project.users"
+                      :event-types="eventTypes"
+                      :shift-qualifications="shiftQualifications"
+            />
+        </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectShiftSidenav
                 :project="project"

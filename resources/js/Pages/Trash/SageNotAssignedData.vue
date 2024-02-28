@@ -7,7 +7,7 @@
         <div v-else class="flex items-center w-64 mr-2">
             <div>
                 <input type="text"
-                       placeholder="Suche"
+                       :placeholder="$t('Search')"
                        v-model="this.searchText"
                        class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
             </div>
@@ -65,7 +65,7 @@
                                             <RefreshIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Wiederherstellen
+                                            {{ $t('Restore') }}
                                         </Link>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -82,7 +82,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Endgültig löschen
+                                            {{ $t('Delete permanently') }}
                                         </Link>
                                     </MenuItem>
                                 </div>
@@ -93,28 +93,28 @@
             </div>
             <div class="w-full mt-6 mb-12" v-if="sageNotAssignedData.hidden">
                 <div class="grid grid-cols-2">
-                    <span class="xsLight">Kreditor</span>
+                    <span class="xsLight">{{ $t('Creditor') }}</span>
                     <span class="xsLight text-black">{{ sageNotAssignedData.kreditor }}</span>
-                    <span class="xsLight">Betrag</span>
+                    <span class="xsLight">{{ $t('Betrag') }}</span>
                     <span class="xsLight text-black">{{ sageNotAssignedData.buchungsbetrag }} EUR</span>
-                    <span class="xsLight">Buchungstext</span>
+                    <span class="xsLight">{{ $t('Booking text') }}</span>
                     <span class="xsLight text-black">{{ sageNotAssignedData.buchungstext }}</span>
 
-                    <span class="xsLight mt-4">Belegnummer</span>
+                    <span class="xsLight mt-4">{{ $t('Document number') }}</span>
                     <span class="xsLight text-black mt-4">{{ sageNotAssignedData.belegnummer }}</span>
-                    <span class="xsLight">Belegdatum</span>
+                    <span class="xsLight">{{ $t('Document date') }}</span>
                     <span class="xsLight text-black">
                         {{ this.formatBookingDataDate(sageNotAssignedData.belegdatum) }}
                     </span>
 
-                    <span class="xsLight mt-4">Sachkonto</span>
+                    <span class="xsLight mt-4">{{ $t('General ledger account') }}</span>
                     <span class="xsLight text-black mt-4">{{ sageNotAssignedData.sa_kto }}</span>
-                    <span class="xsLight">Kostenträger</span>
+                    <span class="xsLight">{{ $t('Cost bearer') }}</span>
                     <span class="xsLight text-black">{{ sageNotAssignedData.kst_traeger }}</span>
-                    <span class="xsLight">Kostenstelle</span>
+                    <span class="xsLight">{{ $t('Cost center') }}</span>
                     <span class="xsLight text-black">{{ sageNotAssignedData.kst_stelle }}</span>
 
-                    <span class="xsLight mt-4">Buchungsdatum</span>
+                    <span class="xsLight mt-4">{{ $t('Booking date') }}</span>
                     <span class="xsLight text-black mt-4">
                         {{ this.formatBookingDataDate(sageNotAssignedData.buchungsdatum) }}
                     </span>

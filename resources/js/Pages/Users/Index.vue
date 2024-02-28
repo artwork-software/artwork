@@ -45,7 +45,7 @@
                                     <div  class="mt-1 ml-2">
                                         <SvgCollection svgName="arrowLeft"/>
                                     </div>
-                                    <span class="hind ml-1 my-auto">Lade neue Nutzer*innen ein</span>
+                                    <span class="hind ml-1 my-auto">{{ $t('Invite new users')}}</span>
                                 </div>
                             </div>
                         </div>
@@ -142,7 +142,7 @@
                                                 </div>
                                                 <div class="flex">
                                                     <span
-                                                        class="hind ml-1">Bearbeite einen Nutzer</span>
+                                                        class="hind ml-1">{{ $t('Edit a user')}}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -162,7 +162,7 @@
                                                         <PencilAltIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        Profil bearbeiten
+                                                        {{ $t('Edit Profile')}}
                                                     </a>
                                                 </MenuItem>
                                                 <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
@@ -172,13 +172,13 @@
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
                                                         <span v-if="user.type === 'user'">
-                                                            Nutzer*in löschen
+                                                            {{ $t('Delete user')}}
                                                         </span>
                                                         <span v-else-if="user.type === 'freelancer'">
-                                                            Freelancer*in löschen
+                                                            {{ $t('Delete freelancer')}}
                                                         </span>
                                                         <span v-else-if="user.type === 'service_provider'">
-                                                            Dienstleister*in löschen
+                                                            {{ $t('Delete service provider')}}
                                                         </span>
                                                     </a>
                                                 </MenuItem>
@@ -265,7 +265,7 @@
                                                 </div>
                                                 <div class="flex">
                                                     <span
-                                                        class="hind ml-2 text-secondary tracking-tight text-lg">Bearbeite einen Nutzer</span>
+                                                        class="hind ml-2 text-secondary tracking-tight text-lg">{{ $t('Edit a user')}}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -285,7 +285,7 @@
                                                         <PencilAltIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        Profil bearbeiten
+                                                        {{ $t('Edit Profile')}}
                                                     </a>
                                                 </MenuItem>
                                                 <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
@@ -294,7 +294,7 @@
                                                         <TrashIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        Nutzer*in löschen
+                                                        {{ $t('Delete user')}}
                                                     </a>
                                                 </MenuItem>
                                             </div>
@@ -314,13 +314,13 @@
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         <span v-if="userToDelete.type === 'user'">
-                            Nutzer*in löschen
+                            {{ $t('Delete user')}}
                         </span>
                         <span v-else-if="userToDelete.type === 'freelancer'">
-                            Freelancer*in löschen
+                            {{ $t('Delete freelancer')}}
                         </span>
                         <span v-else-if="userToDelete.type === 'service_provider'">
-                            Dienstleister*in löschen
+                            {{ $t('Delete service provider')}}
                         </span>
                     </div>
                     <XIcon @click="closeDeleteUserModal"
@@ -328,19 +328,18 @@
                            aria-hidden="true"/>
                     <div class="errorText">
                         <span v-if="userToDelete.type === 'user' || userToDelete.type === 'freelancer'">
-                            Bist du sicher, dass du "{{ userToDelete.last_name }}, {{ userToDelete.first_name }}"
-                            aus dem System löschen möchtest?
+                            {{ $t('Are you sure you want to delete {last_name}, {first_name} from the system?', { last_name: userToDelete.last_name, first_name: userToDelete.first_name}) }}
                         </span>
                         <span v-else-if="userToDelete.type === 'service_provider'">
-                            Bist du sicher, dass du "{{ userToDelete.provider_name }}" aus dem System löschen möchtest?
+                            {{ $t('Are you sure you want to delete { serviceProvider } from the system?', { serviceProvider: userToDelete.provider_name }) }}
                         </span>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <AddButton text="Löschen" mode="modal" class="px-20 py-3"
+                        <AddButton :text="$t('Delete')" mode="modal" class="px-20 py-3"
                                    @click="deleteUser"/>
                         <div class="flex my-auto">
                             <span @click="closeDeleteUserModal()"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -352,8 +351,8 @@
         <SuccessModal
             :open="showSuccessModal"
             @closed="closeSuccessModal"
-            title="Nutzer*innen eingeladen"
-            description="Die Nutzer*innen haben eine Einladungs-E-Mail erhalten."
+            :title="$t('Users invited')"
+            :description="$t('The users have received an invitation email.')"
             button="Okay"
             />
     </UserHeader>
@@ -377,16 +376,6 @@
 
 import {Inertia} from "@inertiajs/inertia";
 
-const roleCheckboxes = [
-    {name: 'Standarduser', roleName: "user", tooltipText: "Hier fehlt noch info text", showIcon: true, checked: false},
-    {
-        name: 'Adminrechte',
-        roleName: "admin",
-        tooltipText: "Administratoren haben im gesamten System Lese- und Schreibrechte - weitere Einstellungen entfallen",
-        showIcon: true,
-        checked: false
-    },
-]
 
 import {defineComponent} from 'vue'
 import AddButton from "@/Layouts/Components/AddButton";
@@ -494,23 +483,23 @@ export default defineComponent({
             user_search_results: [],
             displayFilters: [
                 {
-                    'name': 'Alle Nutzer*innen',
+                    'name': this.$t('All users'),
                     'type': 'users'
                 },
                 {
-                    'name': 'Alle Freelancer*innen',
+                    'name': this.$t('All freelancers'),
                     'type': 'freelancer'
                 },
                 {
-                    'name': 'Alle Dienstleister*innen',
+                    'name': this.$t('All service providers'),
                     'type': 'service_provider'
                 },
                 {
-                    'name': 'Alle verfügbaren Nutzer*innen',
+                    'name': this.$t('All available users'),
                     'type': 'all'
                 }
             ],
-            selectedFilter: {'name': 'Alle Nutzer*innen', 'type': 'users'},
+            selectedFilter: {'name': this.$t('All users'), 'type': 'users'},
             openSelectAddUsersModal: false
         }
     },
@@ -613,11 +602,5 @@ export default defineComponent({
             deep: true
         }
     },
-    setup() {
-
-        return {
-            roleCheckboxes
-        }
-    }
 })
 </script>

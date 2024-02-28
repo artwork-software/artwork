@@ -11,7 +11,7 @@
                     <div class="flex w-full justify-between">
                         <h1 class="my-1 flex">
                             <div class="flex-grow headline1">
-                                Termin ohne Raum
+                                {{ $t('Event without room') }}
                             </div>
                         </h1>
                         <div class="flex justify-end">
@@ -27,8 +27,7 @@
                         {{ this.rooms.find(room => room.id === event.declined_room_id)?.name }}
                     </div>
                     <h2 class="xsLight">
-                        Diese Raumbelegungsanfrage wurde vom Raumadmin abgelehnt. Sage den Termin ab oder verschiebe
-                        ihn in einen anderen Raum.
+                        {{ $t('This room booking request has been rejected by the room admin. Cancel the appointment or move it to another room.')}}
                     </h2>
                 </div>
                 <div v-if="event.creator" class="flex items-center mb-1 my-4">
@@ -104,12 +103,12 @@
                                 type="text"
                                 v-model="event.eventName"
                                 id="eventTitle"
-                                placeholder="Terminname*"
+                                :placeholder="$t('Event name')+'*'"
                                 class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             <input v-else type="text"
                                    v-model="event.eventName"
                                    id="eventTitle"
-                                   placeholder="Terminname"
+                                   :placeholder="$t('Event name')"
                                    class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                             <p class="text-xs text-red-800">{{ event.error?.eventName?.join('. ') }}</p>
@@ -125,7 +124,7 @@
                                         <span class="float-left flex xsLight subpixel-antialiased"><img
                                             src="/Svgs/IconSvgs/icon_adjustments.svg"
                                             class="mr-2"
-                                            alt="attributeIcon"/>Termineigenschaften wählen</span>
+                                            alt="attributeIcon"/>{{$t('Select appointment properties')}}</span>
                                 <ChevronDownIcon
                                     class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                     aria-hidden="true"
@@ -151,7 +150,7 @@
 
                                         <div
                                             :class="[event.audience ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">
-                                            Mit Publikum
+                                            {{$t('With audience')}}
                                         </div>
                                     </div>
                                     <div class="flex w-full mb-2">
@@ -160,8 +159,7 @@
                                                class="checkBoxOnDark"/>
                                         <div
                                             :class="[event.is_loud ? 'text-white' : 'text-secondary', 'subpixel-antialiased mx-2']">
-                                            Es
-                                            wird laut
+                                            {{$t('It gets loud')}}
                                         </div>
                                     </div>
                                 </div>
@@ -171,16 +169,16 @@
                     <!--    Properties    -->
                     <div class="flex py-2">
                         <div v-if="event.audience">
-                            <TagComponent icon="audience" displayed-text="Mit Publikum" hideX="true"></TagComponent>
+                            <TagComponent icon="audience" :displayed-text="$t('With audience')" hideX="true"></TagComponent>
                         </div>
                         <div v-if="event.is_loud">
-                            <TagComponent displayed-text="es wird laut" hideX="true"></TagComponent>
+                            <TagComponent :displayed-text="$t('It gets loud')" hideX="true"></TagComponent>
                         </div>
                     </div>
                     <!--    Project    -->
                     <div>
                         <div class="xsLight flex" v-if="!this.creatingProject">
-                            Aktuell zugeordnet zu:
+                            {{ $t('Currently assigned to:')}}
                             <a v-if="this.selectedProject?.id"
                                :href="route('projects.show.calendar', {project: selectedProject.id})"
                                class="ml-3 flex xsDark">
@@ -197,14 +195,14 @@
                             </div>
                         </div>
                         <div class="xsLight" v-if="this.creatingProject">
-                            Das Projekt wird beim Abspeichern erstellt.
+                            {{ $t('The project is created when it is saved.')}}
                         </div>
 
                         <div class="my-2">
                             <div class="flex pb-2">
                             <span class="mr-4 "
                                   :class="[!creatingProject ? 'xsDark' : 'xsLight',]">
-                                Bestehendes Projekt
+                                {{$t('Existing project')}}
                             </span>
                                 <div class="flex">
                                     <label for="project-toggle" class="inline-flex relative items-center cursor-pointer">
@@ -220,23 +218,23 @@
                                     </label>
                                     <span class="ml-4 text-sm"
                                           :class="[creatingProject ? 'xsDark' : 'xsLight']">
-                                Neues Projekt
+                                {{$t('New project')}}
                             </span>
                                     <div v-if="showHints" class="ml-3 flex">
                                         <SvgCollection svgName="arrowLeft" class="mt-1"/>
                                         <div class=" ml-1 my-auto hind">
-                                            Lege gleichzeitig ein neues Projekt an
+                                            {{$t('Create a new project at the same time')}}
                                         </div>
                                     </div>
                                 </div>
 
                             </div>
                             <input v-if="creatingProject" type="text"
-                                   :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
+                                   :placeholder="creatingProject ? $t('New project name') : $t('Search project')"
                                    v-model="event.projectName"
                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             <input v-else
-                                   :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
+                                   :placeholder="creatingProject ? $t('New project name') : $t('Search project')"
                                    v-model="this.projectName"
                                    class="h-10 pl-3 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
@@ -259,7 +257,7 @@
                     <!--    Time    -->
                     <div class="flex py-1 flex-col sm:flex-row align-baseline">
                         <div class="sm:w-1/2">
-                            <label for="startDate" class="xsLight">Start</label>
+                            <label for="startDate" class="xsLight">{{$t('Start*')}}</label>
                             <div class="w-full flex">
                                 <input v-model="event.startDate"
                                        id="startDate"
@@ -277,7 +275,7 @@
                             <p class="text-xs text-red-800">{{ event.error?.start?.join('. ') }}</p>
                         </div>
                         <div class="sm:w-1/2">
-                            <label for="endDate" class="xsLight">Ende</label>
+                            <label for="endDate" class="xsLight">{{$t('End*')}}</label>
                             <div class="w-full flex">
                                 <input v-model="event.endDate"
                                        id="endDate"
@@ -306,7 +304,7 @@
                                     {{ this.rooms.find(room => room.id === event.room_id)?.name }}
                                 </div>
                                 <div v-else class="flex-grow xsLight text-left subpixel-antialiased">
-                                    Raum wählen*
+                                    {{$t('Select room')}}*
                                 </div>
                                 <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </ListboxButton>
@@ -327,11 +325,11 @@
                     </div>
                     <!--    Description    -->
                     <div class="py-1">
-                            <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
+                            <textarea :placeholder="$t('What do I need to bear in mind for the event?')"
                                       id="description"
                                       v-model="event.description"
                                       rows="4"
-                                      class="border-gray-300 border-2 resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                      class="border-gray-300 border-2 resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1"/>
                     </div>
                     <div class="my-6" v-for="comment in this.event.comments">
                         <div class="flex justify-between">
@@ -351,7 +349,7 @@
                         <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                                 @click="updateOrCreateEvent(event)">
                             {{
-                                (selectedRoom?.everyone_can_book || this.isAdmin) ? 'Speichern' : 'Belegung anfragen'
+                                (selectedRoom?.everyone_can_book || this.isAdmin) ? $t('Save') : $t('Request occupancy')
                             }}
                         </button>
                     </div>
@@ -363,9 +361,9 @@
     <!-- Event löschen Modal -->
     <confirmation-component
         v-if="deleteComponentVisible"
-        confirm="Löschen"
-        titel="Termin löschen"
-        :description="'Bist du sicher, dass du den Termin ' + this.eventToDelete.title + ' in den Papierkorb legen möchtest? Du kannst ihn innerhalb von 30 Tagen wiederherstellen.'"
+        :confirm="$t('Delete')"
+        :titel="$t('Delete event')"
+        :description="$t('Are you sure you want to put the event {0} in the trash? You can restore it within 30 days.', [this.eventToDelete.title ?? ''])"
         @closed="afterConfirm"/>
 
 </template>

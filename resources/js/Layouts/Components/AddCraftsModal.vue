@@ -18,20 +18,20 @@
                             </div>
                             <div class="relative z-40">
                                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    Gewerk
+                                    {{ $t('Craft')}}
                                 </div>
-                                <p class="subpixel-antialiased">Definiere die Spezifikationen deines Gewerks.</p>
+                                <p class="subpixel-antialiased">{{ $t('Define the specifications of your trade.')}}</p>
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-5">
 
                                     <input type="text"
-                                           placeholder="Name des Gewerks*"
+                                           :placeholder="$t('Name of the craft') + '*'"
                                            v-model="craft.name"
                                            class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                            required
                                     />
                                     <input type="text"
-                                           placeholder="Abkürzung*"
+                                           :placeholder="$t('Abbreviation') + '*'"
                                            v-model="craft.abbreviation"
                                            maxlength="3"
                                            required
@@ -41,13 +41,13 @@
                                 <div class="mt-3">
                                     <SwitchGroup as="div" class="flex items-center gap-2">
                                         <SwitchLabel as="span" class="mr-3 text-sm">
-                                            <span class="font-medium text-gray-900" :class="enabled ? '!text-gray-400' : ''">Eingeschränkt zuteilbar</span>
+                                            <span class="font-medium text-gray-900" :class="enabled ? '!text-gray-400' : ''">{{ $t('Allocable to a limited extent')}}</span>
                                         </SwitchLabel>
                                         <Switch v-model="enabled" :class="[enabled ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
                                             <span aria-hidden="true" :class="[enabled ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                         </Switch>
                                         <SwitchLabel as="span" class="ml-3 text-sm">
-                                            <span class="font-medium text-gray-900" :class="!enabled ? '!text-gray-400' : ''">Von allen Schichtplanern einteilbar</span>
+                                            <span class="font-medium text-gray-900" :class="!enabled ? '!text-gray-400' : ''">{{ $t('Can be scheduled by all shift planners')}}</span>
                                         </SwitchLabel>
                                     </SwitchGroup>
                                 </div>
@@ -56,7 +56,7 @@
                                         <div class="relative mt-2">
                                             <ListboxButton class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
                                                 <span class="block truncate text-left pl-3">
-                                                    Wähle Nutzer*innen aus
+                                                    {{ $t('Select users')}}
                                                 </span>
                                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
@@ -86,7 +86,7 @@
                                                     </span>
                                                 </div>
                                                 <button type="button" @click="addOrRemoveFormUserList(user)">
-                                                    <span class="sr-only">User aus Team entfernen</span>
+                                                    <span class="sr-only">{{ $t('Remove user from team')}}</span>
                                                     <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
                                                 </button>
                                             </div>

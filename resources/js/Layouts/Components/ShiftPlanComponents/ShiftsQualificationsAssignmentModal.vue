@@ -8,23 +8,23 @@
                        aria-hidden="true"/>
                 <div class="mt-8 flex flex-col">
                     <span class="xsLight">
-                        Schicht {{ this.getCurrentShiftCount() }}/{{ this.getMaxShiftCount() }}
+                        {{ $t('Shift')}} {{ this.getCurrentShiftCount() }}/{{ this.getMaxShiftCount() }}
                     </span>
                     <span class="headline1 -mt-2">
-                        Qualifikationszuweisung
+                        {{ $t('Qualification assignment')}}
                     </span>
                 </div>
                 <div class="mt-3 xsLight">
-                    In welcher Qualifikation soll
+                    {{ $t('In which qualification should')}}
                     <img class="inline h-5 w-5 object-cover rounded-full"
                          :src="this.user.profile_photo_url"
                          :alt="'Profilfoto ' + this.user.display_name"
                     />
-                    {{ this.user.display_name }} in folgender Schicht eingesetzt werden?
+                    {{ $t('{0} be used in the following layer?', this.user.display_name)}}
                 </div>
                 <div class="xsLight my-3 flex flex-col">
                     <span>
-                        Schicht:
+                        {{ $t('Shift')}}:
                         {{ this.currentShiftToAssign.shift.craft.name }}
                         ({{ this.currentShiftToAssign.shift.craft.abbreviation }})
                         &vert;
@@ -37,14 +37,14 @@
                     <div class="grid grid-cols-2 w-full gap-4">
                         <input v-for="availableShiftQualificationSlot in this.currentShiftToAssign.availableSlots"
                                type="button"
-                               :value="'Als ' + availableShiftQualificationSlot.name + ' einsetzen'"
+                               :value="$t('Insert as {0}', availableShiftQualificationSlot.name)"
                                class="cursor-pointer bg-buttonBlue text-sm flex py-2 px-12 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none hover:bg-buttonHover"
                                @click="this.handleShift(this.currentShiftToAssign.shift.id, availableShiftQualificationSlot.id)"
                         />
                     </div>
                     <div class="w-full mt-4">
                         <input type="button"
-                               value="Zuweisung überspringen"
+                               :value="$t('Skip assignment')"
                                class="w-full cursor-pointer bg-gray-600 text-sm flex py-2 px-12 items-center border border-transparent rounded-full shadow-sm text-white focus:outline-none hover:bg-gray-500"
                                @click="this.skipShift"
                         />

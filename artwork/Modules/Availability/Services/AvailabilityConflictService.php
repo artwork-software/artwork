@@ -51,33 +51,45 @@ class AvailabilityConflictService
 
         foreach ($shifts as $shift) {
             $shiftCommittedBy = $shift->committedBy()->first();
-            $notificationTitle = 'Konflikt mit deiner Schicht';
-            $broadcastMessage = [
-                'id' => rand(1, 1000000),
-                'type' => 'success',
-                'message' => $notificationTitle
-            ];
-            $notificationDescription = [
-                1 => [
-                    'type' => 'string',
-                    'title' => $shift->committedBy->full_name . ' hat dich am ' .
-                        Carbon::parse($shift->event_start_day)->format('d.m.Y') . ' ' .
-                        $shift->start . ' - ' . $shift->end
-                        . ' eingeplant, entgegen deines ursprünglichen Eintrags.',
-                    'href' => null
-                ],
-            ];
+            //$notificationTitle = 'Konflikt mit deiner Schicht';
+            if (!$user) {
+                $notificationTitle = __(
+                    'notification.shift.conflict',
+                    [],
+                    $user->language
+                );
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $notificationTitle
+                ];
+                $notificationDescription = [
+                    1 => [
+                        'type' => 'string',
+                        'title' => __(
+                            'notification.shift.conflict_text',
+                            [
+                                'username' => $shiftCommittedBy->full_name,
+                                'date' => Carbon::parse($shift->event_start_day)->format('d.m.Y'),
+                                'from' => $shift->start,
+                                'to' => $shift->end
+                            ],
+                            $user->language
+                        ),
+                        'href' => null
+                    ],
+                ];
 
-            $this->notificationService->setTitle($notificationTitle);
-            $this->notificationService->setIcon('red');
-            $this->notificationService->setPriority(2);
-            $this->notificationService
-                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
-            $this->notificationService->setBroadcastMessage($broadcastMessage);
-            $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setButtons(['see_shift']);
-            $this->notificationService->setShiftId($shift->id);
-
+                $this->notificationService->setTitle($notificationTitle);
+                $this->notificationService->setIcon('red');
+                $this->notificationService->setPriority(2);
+                $this->notificationService
+                    ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
+                $this->notificationService->setBroadcastMessage($broadcastMessage);
+                $this->notificationService->setDescription($notificationDescription);
+                $this->notificationService->setButtons(['see_shift']);
+                $this->notificationService->setShiftId($shift->id);
+            }
             if ($availabilities->count() > 0) {
                 foreach ($availabilities as $availability) {
                     $availability->conflicts()->each(function ($conflict): void {
@@ -102,8 +114,10 @@ class AvailabilityConflictService
                                 'start_time' => $shift->start,
                                 'end_time' => $shift->end,
                             ]);
-                            $this->notificationService->setNotificationTo($user);
-                            $this->notificationService->createNotification();
+                            if (!$user) {
+                                $this->notificationService->setNotificationTo($user);
+                                $this->notificationService->createNotification();
+                            }
                         }
                     }
                 }
@@ -131,33 +145,45 @@ class AvailabilityConflictService
         }
 
         $shiftCommittedBy = $shift->committedBy()->first();
-        $notificationTitle = 'Konflikt mit deiner Schicht';
-        $broadcastMessage = [
-            'id' => rand(1, 1000000),
-            'type' => 'success',
-            'message' => $notificationTitle
-        ];
-        $notificationDescription = [
-            1 => [
-                'type' => 'string',
-                'title' => $shiftCommittedBy->full_name . ' hat dich am ' .
-                    Carbon::parse($shift->event_start_day)->format('d.m.Y') . ' ' .
-                    $shift->start . ' - ' . $shift->end
-                    . ' eingeplant, entgegen deines ursprünglichen Eintrags.',
-                'href' => null
-            ],
-        ];
+        if (!$user) {
+            $notificationTitle = __(
+                'notification.shift.conflict',
+                [],
+                $user->language
+            );
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => __(
+                        'notification.shift.conflict_text',
+                        [
+                            'username' => $shiftCommittedBy->full_name,
+                            'date' => Carbon::parse($shift->event_start_day)->format('d.m.Y'),
+                            'from' => $shift->start,
+                            'to' => $shift->end
+                        ],
+                        $user->language
+                    ),
+                    'href' => null
+                ],
+            ];
 
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('red');
-        $this->notificationService->setPriority(2);
-        $this->notificationService
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
+            $this->notificationService
             ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CONFLICT);
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->setButtons(['see_shift']);
-        $this->notificationService->setShiftId($shift->id);
-
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
+            $this->notificationService->setButtons(['see_shift']);
+            $this->notificationService->setShiftId($shift->id);
+        }
         if ($availabilities->count() > 0) {
             foreach ($availabilities as $availability) {
                 $availability->conflicts()->each(function ($conflict): void {
@@ -180,8 +206,10 @@ class AvailabilityConflictService
                             'start_time' => $shift->start,
                             'end_time' => $shift->end,
                         ]);
-                        $this->notificationService->setNotificationTo($user);
-                        $this->notificationService->createNotification();
+                        if (!$user) {
+                            $this->notificationService->setNotificationTo($user);
+                            $this->notificationService->createNotification();
+                        }
                     }
                 }
             }

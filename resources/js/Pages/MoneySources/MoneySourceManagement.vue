@@ -4,7 +4,7 @@
             <div class="max-w-screen-xl mb-40 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div>
-                        <p class="items-center flex mr-2 headline1 mb-11">Finanzierungsquellen</p>
+                        <p class="items-center flex mr-2 headline1 mb-11">{{ $t('Sources of financing')}}</p>
                     </div>
                     <div class="w-full flex my-auto">
                         <div class="flex justify-between w-full">
@@ -48,7 +48,7 @@
                                 </div>
                                 <div v-else class="flex items-center w-full mr-2">
                                     <input type="text"
-                                           placeholder="Suche nach Quellen"
+                                           :placeholder="$t('Search for sources')"
                                            v-model="moneySource_query"
                                            class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
@@ -64,7 +64,7 @@
                                             <DisclosureButton
                                                 class="flex w-full py-2 px-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500">
                                                 <span
-                                                    :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Alle Kategorien</span>
+                                                    :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('All categories')}}</span>
                                                 <ChevronDownIcon :class="open ? 'rotate-180 transform' : ''"
                                                                  class="h-4 w-4 mt-0.5 text-white"/>
                                             </DisclosureButton>
@@ -92,7 +92,7 @@
                                                     </div>
                                                 </div>
                                                 <div v-else class="xxsLight px-2">
-                                                    Bisher wurden keine Kategorien für Finanzierungsquellen angelegt.
+                                                    {{ $t('No categories for financing sources have been created yet.')}}
                                                 </div>
                                             </DisclosurePanel>
                                         </Disclosure>
@@ -111,7 +111,7 @@
                                                         'cursor-pointer text-xs subpixel-antialiased ml-1.5'
                                                    ]"
                                                    for="openTasksFilter">
-                                                Quellen mit offenen Aufgaben
+                                                {{$t('Sources with open tasks')}}
                                             </label>
                                         </div>
                                         <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
@@ -122,7 +122,7 @@
                                                             'text-secondary',
                                                         'cursor-pointer text-xs subpixel-antialiased ml-1.5'
                                                    ]">
-                                            Zeitraum
+                                            {{ $t('Period')}}
                                         </div>
                                     </div>
                                 </div>
@@ -132,7 +132,7 @@
                                             class="flex">
                                             <img src="/Svgs/IconSvgs/icon_sort.svg"
                                                  class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                                 aria-hidden="true" alt="Sortieren"/>
+                                                 aria-hidden="true" :alt="$t('Sort')"/>
                                         </MenuButton>
                                     </div>
                                     <transition enter-active-class="transition ease-out duration-100"
@@ -147,7 +147,7 @@
                                                 <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                     <div @click="changeSortAlgorithm('name')"
                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        Alphabetisch
+                                                        {{$t('Alphabetical')}}
                                                         <ArrowNarrowDownIcon
                                                             v-if="sortType === 'name' && sortOrder === 'descending'"
                                                             class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
@@ -160,7 +160,7 @@
                                                 <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                     <div @click="changeSortAlgorithm('funding_start_date')"
                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        Startdatum
+                                                        {{$t('Start date')}}
                                                         <ArrowNarrowDownIcon
                                                             v-if="sortType === 'funding_start_date' && sortOrder === 'descending'"
                                                             class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
@@ -173,7 +173,7 @@
                                                 <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                     <div @click="changeSortAlgorithm('funding_end_date')"
                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        Enddatum
+                                                        {{$t('End date')}}
                                                         <ArrowNarrowDownIcon
                                                             v-if="sortType === 'funding_end_date' && sortOrder === 'descending'"
                                                             class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
@@ -186,7 +186,7 @@
                                                 <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                     <div @click="changeSortAlgorithm('created_at')"
                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        Erstellt am
+                                                        {{ $t('Created on')}}
                                                         <ArrowNarrowDownIcon
                                                             v-if="sortType === 'created_at' && sortOrder === 'descending'"
                                                             class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
@@ -202,7 +202,7 @@
                                 </Menu>
                                 <div class="flex"
                                      v-if="$can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                    <AddButton @click="openAddMoneySourceModal" text="Neu" mode="page"/>
+                                    <AddButton @click="openAddMoneySourceModal" :text="$t('New')" mode="page"/>
                                 </div>
                             </div>
                         </div>
@@ -216,7 +216,7 @@
                                       :displayed-text="this.moneySourceCategories.find((value) => value.id === categoryFilter).name"
                                       :method="() => deactivateCategoryFilter(categoryFilter)"/>
                         <TagComponent v-if="openTasksFilter"
-                                      displayed-text="Quellen mit offenen Aufgaben"
+                                      :displayed-text="$t('Sources with open tasks')"
                                       :method="deactivateOpenTasksFilter"/>
                     </div>
                     <ul role="list" class="mt-5 w-full">
@@ -237,7 +237,7 @@
                                         </div>
                                         <div v-if="moneySource.group_id !== null"
                                              class="w-full flex items-center xxsLight subpixel-antialiased ml-14 mt-1">
-                                            Gehört zu:
+                                            {{ $t('Belongs to')}}:
                                             {{
                                                 this.moneySourceGroups.find(sourceGroup => sourceGroup.id === moneySource.group_id).name
                                             }}
@@ -269,11 +269,11 @@
                                                     <div class="py-1">
                                                         <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                             <a :href="getEditHref(moneySource)"
-                                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                                                 <PencilAltIcon
                                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                     aria-hidden="true"/>
-                                                                Bearbeiten
+                                                                {{ $t('edit')}}
                                                             </a>
                                                         </MenuItem>
                                                         <MenuItem class="cursor-pointer" v-slot="{ active }"
@@ -283,7 +283,7 @@
                                                                 <DuplicateIcon
                                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                     aria-hidden="true"/>
-                                                                Duplizieren
+                                                                {{ $t('Duplicate')}}
                                                             </a>
                                                         </MenuItem>
                                                         <MenuItem class="cursor-pointer" v-slot="{ active }"
@@ -293,7 +293,7 @@
                                                                 <IconPin
                                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                     aria-hidden="true"/>
-                                                                {{moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.user.id) ? 'Anpinnung aufheben' : 'Anpinnen'}}
+                                                                {{moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.user.id) ? $t('Undo pinning') : $t('Pin')}}
                                                             </a>
                                                         </MenuItem>
                                                         <MenuItem class="cursor-pointer" v-slot="{ active }"
@@ -303,7 +303,7 @@
                                                                 <TrashIcon
                                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                     aria-hidden="true"/>
-                                                                Löschen
+                                                                {{ $t('Delete')}}
                                                             </a>
                                                         </MenuItem>
                                                     </div>
@@ -354,8 +354,8 @@
     />
     <confirm-delete-modal
         v-if="showDeleteSourceModal"
-        title="Finanzierungsquelle/gruppe löschen"
-        :description="'Bist du sicher, dass du die Finanzierungsquelle/Gruppe ' + this.sourceToDelete.name + ' löschen möchtest?'"
+        :title="$t('Delete funding source/group')"
+        :description="$t('Are you sure you want to delete the funding source/group {0}?', [sourceToDelete.name])"
         @closed="afterConfirm(false)"
         @delete="afterConfirm(true)"/>
 
@@ -369,11 +369,11 @@
             <div class="mx-4">
                 <h1 class="my-1 flex">
                     <div class="flex-grow headline1">
-                        Zeitraum wählen
+                        {{$t('Select period')}}
                     </div>
                 </h1>
                 <h2 class="xsLight mb-2 mt-8">
-                    Bitte wähle die Zeitspanne in der die Finanzquellen angezeigt werden sollen.
+                    {{$t('Please select the time period in which the financial sources should be displayed.')}}
                 </h2>
                 <div class="flex flex-row justify-between">
                     <input class="w-1/2" type="date" v-model="timeSpanFilterStart"/>
@@ -381,7 +381,7 @@
                 </div>
                 <div class="w-full flex justify-center my-3">
                     <AddButton :disabled="timeSpanFilterStart === null || timeSpanFilterEnd === null"
-                               text="Filtern"
+                               :text="$t('Filtering')"
                                mode="modal"
                                @click="activateTimeSpanFilter"/>
                 </div>
@@ -696,13 +696,13 @@ export default defineComponent({
     data() {
         return {
             moneySourceFilters: [{
-                'name': 'Alle Finanzierungsquellen & -gruppen',
+                'name': this.$t('All funding sources & groups'),
                 'type': 'all'
-            }, {'name': 'Alle Finanzierungsquellen', 'type': 'single'}, {
-                'name': 'Alle Finanzierungsgruppen',
+            }, {'name': this.$t('All sources of funding'), 'type': 'single'}, {
+                'name': this.$t('All financing groups'),
                 'type': 'group'
             }],
-            moneySourceFilter: {'name': 'Alle Finanzierungsquellen & -gruppen', 'type': 'all'},
+            moneySourceFilter: {'name': this.$t('All funding sources & groups'), 'type': 'all'},
             showSearchbar: false,
             moneySource_query: '',
             showMoneySourceModal: false,

@@ -3,11 +3,11 @@
         <div class="inline-flex border-none justify-end w-full">
             <button class="flex" @click="resetCalendarFilter">
                 <XIcon class="w-3 mr-1 mt-0.5"/>
-                <label class="text-xs cursor-pointer">Zurücksetzen</label>
+                <label class="text-xs cursor-pointer">{{ $t('Reset') }}</label>
             </button>
             <button class="flex ml-4" @click="saving = !saving">
                 <DocumentTextIcon class="w-3 mr-1 mt-0.5"/>
-                <label class="text-xs cursor-pointer">Speichern</label>
+                <label class="text-xs cursor-pointer">{{ $t('Save')}}</label>
             </button>
         </div>
         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
@@ -18,7 +18,7 @@
                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                 >
                     <span
-                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Gespeicherte Filter</span>
+                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{$t('Saved filters')}}</span>
                     <ChevronDownIcon
                         :class="open ? 'rotate-180 transform' : ''"
                         class="h-4 w-4 mt-0.5 text-white"
@@ -33,7 +33,7 @@
                             <button
                                 class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
                                 <label @click="saveFilter"
-                                       class="cursor-pointer text-white text-xs">Speichern</label>
+                                       class="cursor-pointer text-white text-xs">{{$t('Save')}}</label>
                             </button>
                             <!-- <AddButton text="Speichern" class="text-sm ml-0"
                                        @click="saveFilter"></AddButton> -->
@@ -47,8 +47,9 @@
                                class="cursor-pointer text-white">{{ filter.name }}</label>
                         <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
                     </button>
-                    <p v-if="localPersonalFilters.length === 0" class="text-secondary py-1">Noch keine Filter
-                        gespeichert</p>
+                    <p v-if="localPersonalFilters.length === 0" class="text-secondary py-1">{{
+                            $t('No filters saved yet')
+                        }}</p>
                 </DisclosurePanel>
             </Disclosure>
 
@@ -59,7 +60,7 @@
                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                 >
                                     <span
-                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Räume</span>
+                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Rooms')}}</span>
                     <ChevronDownIcon
                         :class="open ? 'rotate-180 transform' : ''"
                         class="h-4 w-4 mt-0.5 text-white"
@@ -105,16 +106,14 @@
                                        @change="reloadFilterBackend"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[filterArray.eventAttributes.adjoiningNotLoud.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">Ohne laute
-                                    Nebenveranstaltung</p>
+                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">{{$t('without a loud side event')}}</p>
                             </div>
                             <div class="flex w-full mb-2">
                                 <input type="checkbox" v-model="filterArray.eventAttributes.adjoiningNoAudience.checked"
                                        @change="reloadFilterBackend"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[filterArray.eventAttributes.adjoiningNoAudience.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">Ohne Nebenveranstaltung
-                                    mit Publikum</p>
+                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">{{$t('without side event with audience')}}</p>
                             </div>
                             <!-- temporarily not included
 
@@ -157,7 +156,7 @@
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                         >
                             <span
-                                :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
+                                :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Room categories')}}</span>
                             <ChevronDownIcon
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
@@ -174,7 +173,7 @@
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ category.name }}</p>
                             </div>
-                            <div v-else class="text-secondary">Noch keine Kategorien angelegt</div>
+                            <div v-else class="text-secondary">{{$t('No categories created yet')}}</div>
                         </DisclosurePanel>
                     </Disclosure>
                     <hr class="border-gray-500 mt-2 mb-2">
@@ -183,7 +182,7 @@
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                         >
                                     <span
-                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Areale</span>
+                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Areas ') }}</span>
                             <ChevronDownIcon
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
@@ -199,7 +198,7 @@
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ area.label || area.name }}</p>
                             </div>
-                            <div v-else class="text-secondary">Keine Areale angelegt</div>
+                            <div v-else class="text-secondary">{{  $t('No areas created') }}</div>
                         </DisclosurePanel>
                     </Disclosure>
                     <hr class="border-gray-500 mt-2 mb-2">
@@ -207,7 +206,7 @@
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                         >
-                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumeigenschaften</span>
+                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Room properties')}}</span>
                             <ChevronDownIcon
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
@@ -224,7 +223,7 @@
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ attribute.name }}</p>
                             </div>
-                            <div v-else class="text-secondary">Noch keine Raumeigenschaften angelegt
+                            <div v-else class="text-secondary">{{$t('No room properties created yet')}}
                             </div>
                         </DisclosurePanel>
                     </Disclosure>
@@ -234,7 +233,7 @@
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                         >
                                     <span
-                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Räume</span>
+                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{$t('Rooms')}}</span>
                             <ChevronDownIcon
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
@@ -250,7 +249,7 @@
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ room.label }}</p>
                             </div>
-                            <div v-else class="text-secondary">Noch keine Räume angelegt</div>
+                            <div v-else class="text-secondary">{{$t('No rooms created yet')}}</div>
                         </DisclosurePanel>
                     </Disclosure>
                 </DisclosurePanel>
@@ -264,7 +263,7 @@
                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
                 >
                                 <span
-                                    :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termine</span>
+                                    :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{$t('Events')}}</span>
                     <ChevronDownIcon
                         :class="open ? 'rotate-180 transform' : ''"
                         class="h-4 w-4 mt-0.5 text-white"
@@ -276,7 +275,7 @@
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                         >
-                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termintyp</span>
+                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Event type')}}</span>
                             <ChevronDownIcon
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
@@ -298,7 +297,7 @@
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
                         >
-                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termineigenschaften</span>
+                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Event properties')}}</span>
                             <ChevronDownIcon
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
@@ -616,32 +615,32 @@ export default {
                 isLoud: {
                     checked: this.user_filters.is_loud,
                     value: 'is_loud',
-                    name: 'Laut'
+                    name: this.$t('loud')
                 },
                 isNotLoud: {
                     checked: this.user_filters.is_not_loud,
                     value: 'is_not_loud',
-                    name: 'nicht laut',
+                    name: this.$t('not loud'),
                 },
                 adjoiningNoAudience: {
                     checked: this.user_filters.adjoining_no_audience,
                     value: 'adjoining_no_audience',
-                    name: 'ohne Nebenveranstaltung mit Publikum',
+                    name: this.$t('without side event with audience'),
                 },
                 adjoiningNotLoud: {
                     checked: this.user_filters.adjoining_not_loud,
                     value: 'adjoining_not_loud',
-                    name: 'ohne laute Nebenveranstaltung',
+                    name: this.$t('without a loud side event'),
                 },
                 hasAudience: {
                     checked: this.user_filters.has_audience,
                     value: 'has_audience',
-                    name: 'Mit Publikum',
+                    name: this.$t('With audience'),
                 },
                 hasNoAudience: {
                     checked: this.user_filters.has_no_audience,
                     value: 'has_no_audience',
-                    name: 'ohne Publikum',
+                    name: this.$t('without audience'),
                 },
             }
         },

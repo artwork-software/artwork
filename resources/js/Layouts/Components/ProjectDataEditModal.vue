@@ -4,7 +4,7 @@
             <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Basisdaten bearbeiten
+                    {{ $t('Edit basic data') }}
                 </div>
                 <XIcon @click="closeModal(false)"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
@@ -18,18 +18,18 @@
                         <ListboxButton class="w-full text-left">
                             <button class="w-full h-12 flex justify-between xsDark items-center text-left border border-2 border-gray-300 bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                     @click="openColor = !openColor">
-                                        <span class="w-full" v-if="!selectedState">
-                                            Wähle Projekt Status
-                                        </span>
+                                <span class="w-full" v-if="!selectedState">
+                                    {{ $t('Select project status') }}
+                                </span>
                                 <span v-else>
-                                            {{ this.states.find(state => state.id === selectedState)?.name}}
-                                        </span>
+                                    {{ this.states.find(state => state.id === selectedState)?.name}}
+                                </span>
                                 <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </button>
                         </ListboxButton>
-
                         <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                    leave-from-class="opacity-100"
+                                    leave-to-class="opacity-0">
                             <ListboxOptions
                                 class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" class=""
@@ -39,16 +39,16 @@
                                     <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-1 text-sm subpixel-antialiased']"
                                         @click="updateProjectState(state)">
                                         <div class="flex">
-                                                    <span class="rounded-full items-center font-medium px-2 mt-2 text-sm ml-2 mr-1 mb-1 inline-flex">
-                                                        {{ state.name }}
-                                                    </span>
+                                            <span class="rounded-full items-center font-medium px-2 mt-2 text-sm ml-2 mr-1 mb-1 inline-flex">
+                                                {{ state.name }}
+                                            </span>
                                         </div>
                                         <span
                                             :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                                    <CheckIcon v-if="selected"
-                                                                               class="h-5 w-5 flex text-success"
-                                                                               aria-hidden="true"/>
-                                                                </span>
+                                            <CheckIcon v-if="selected"
+                                                       class="h-5 w-5 flex text-success"
+                                                       aria-hidden="true"/>
+                                        </span>
                                     </li>
                                 </ListboxOption>
                             </ListboxOptions>
@@ -62,7 +62,7 @@
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                         <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                class="ml-2">
-                            Gehört zu Projektgruppe
+                            {{ $t('Belongs to project group') }}
                         </label>
                     </div>
                     <div v-if="this.hasGroup" class="mb-2">
@@ -70,7 +70,7 @@
                             <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
                                 <div class="flex-grow flex text-left xsDark">
                                     {{
-                                        this.selectedGroup?.name ? this.selectedGroup.name : 'Projektgruppe suchen'
+                                        this.selectedGroup?.name ? this.selectedGroup.name : $t('Search project group')
                                     }}
                                 </div>
                                 <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
@@ -79,7 +79,7 @@
                                 <ListboxOption v-if="this.groupProjects.length === 0"
                                                class="w-full text-secondary cursor-pointer p-2 flex justify-between"
                                                :value="null">
-                                  Bisher ist keine Projektgruppe angelegt
+                                    {{ $t('No project group has been created yet') }}
                                 </ListboxOption>
                                 <ListboxOption v-for="projectGroup in groupProjects"
                                                class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
@@ -97,7 +97,7 @@
                 </div>
                 <div class="mt-4">
                     <div>
-                        <span>Budget Stichtag:</span>
+                        <span>{{ $t('Budget deadline') }}</span>
                     </div>
                     <div class="flex mt-1">
                         <input v-model="this.budgetDeadline"
@@ -109,7 +109,10 @@
                 </div>
             </div>
             <div class="justify-center flex w-full my-6">
-                <AddButton text="Speichern" mode="modal" class="px-6 py-3" :disabled="name.length < 1"
+                <AddButton :text="$t('Save')"
+                           mode="modal"
+                           class="px-6 py-3"
+                           :disabled="name.length < 1"
                            @click="updateProjectData"/>
             </div>
         </template>
@@ -120,9 +123,18 @@
 import JetDialogModal from "@/Jetstream/DialogModal";
 import JetInputError from '@/Jetstream/InputError.vue'
 import AddButton from "@/Layouts/Components/AddButton";
-import {DownloadIcon, XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
+import {
+    DownloadIcon,
+    XIcon,
+    ChevronDownIcon
+} from "@heroicons/vue/outline";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
+import {
+    Listbox,
+    ListboxButton,
+    ListboxOption,
+    ListboxOptions
+} from "@headlessui/vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
@@ -207,7 +219,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

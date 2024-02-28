@@ -4,7 +4,7 @@
             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Belegung absagen
+                    {{ $t('Cancel booking')}}
                 </div>
                 <XIcon @click="closeDeclineRequestModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
@@ -20,11 +20,11 @@
                     <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="declineRequest">
-                        Absagen
+                        {{ $t('Cancellations')}}
                     </button>
                     <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
                     </div>
                 </div>
             </div>

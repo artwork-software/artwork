@@ -3,7 +3,7 @@
         <input type="text"
                v-model="this.newTaskName"
                id="newTaskName"
-               placeholder="Aufgabe"
+               :placeholder="$t('Task')"
                class="w-full h-12 sDark inputMain bg-transparent placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
 
         <div class="sm:w-full mt-4" id="deadline">
@@ -11,7 +11,7 @@
                 <input v-model="deadlineDate"
                        id="startDate"
                        type="text"
-                       placeholder="Zu erledigen bis?"
+                       :placeholder="$t('To be completed by?')"
                        required
                        onfocus="(this.type='date')"
                        class="border-gray-300 h-12 inputMain bg-transparent xsDark placeholder-secondary disabled:border-none flex-grow"/>
@@ -24,7 +24,7 @@
         </div>
         <div class="relative w-full">
             <input id="taskUserSearch" v-model="task_user_query" type="text" autocomplete="off"
-                   placeholder="Wer ist zuständig für diese Aufgabe?*"
+                   :placeholder="$t('Who is responsible for this task?')"
                    class="h-12 mt-4 w-full bg-transparent sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
             <transition leave-active-class="transition ease-in duration-100"
                         leave-from-class="opacity-100"
@@ -61,7 +61,7 @@
                                             {{ user.first_name }} {{ user.last_name }}
                                             </span>
                                             <button type="button" @click="deleteUserFromTaskUserArray(index)">
-                                                <span class="sr-only">User von Aufgabe entfernen</span>
+                                                <span class="sr-only">{{ $t('Remove user from task')}}</span>
                                                 <XIcon
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
@@ -70,7 +70,7 @@
                                         </span>
         </div>
 
-        <textarea placeholder="Kommentar / Notiz"
+        <textarea :placeholder="$t('Comment / Note')"
                   id="description"
                   v-model="taskDescription"
                   rows="5"
@@ -150,7 +150,7 @@ export default {
                 this.$emit('addTask', task)
                 this.clearForm();
             }else{
-                this.errorText = 'Du musst die Aufgabe einer Person mit Dokumentenzugriff zuweisen'
+                this.errorText = this.$t('You must assign the task to a person with document access')
                 this.$emit('showError');
             }
         },

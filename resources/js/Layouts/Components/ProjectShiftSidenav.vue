@@ -2,7 +2,7 @@
     <div class="w-full mt-24">
         <div class="flex justify-between">
             <div class="sLight">
-                Für Schichtplanung relevante Termine
+                {{ $t('Relevant dates for shift planning') }}
             </div>
             <div>
                 <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
@@ -19,7 +19,7 @@
         <hr class="my-10 border-darkGray">
         <div class="flex justify-between">
             <div class="sLight">
-                Ansprechpartner*innen
+                {{ $t('Contact persons') }}
             </div>
             <div>
                 <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
@@ -30,7 +30,6 @@
             <div class="my-2" v-for="projectManager in this.project.project_managers">
                 <div class="flex w-full">
                     <div class="mr-4">
-
                         <img :data-tooltip-target="projectManager?.id" :src="user?.profile_photo_url"
                              :alt="projectManager?.name"
                              class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
@@ -40,7 +39,7 @@
                             <div class="xsLight">
                                 {{ projectManager.first_name }} {{ projectManager.last_name }}
                                 <span class="xxsLight">
-                                    , Projektleitung
+                                    , {{ $t('Project management')}}
                                 </span>
                             </div>
                             <div>
@@ -88,7 +87,7 @@
         <hr class="my-10 border-darkGray">
         <div class="flex justify-between">
             <div class="sLight">
-                Generelle Schichtinformationen
+                {{ $t('General shift information') }}
             </div>
             <div>
                 <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
@@ -100,7 +99,7 @@
                 {{ project.shiftDescription }}
             </div>
             <div v-else>
-                Bisher sind noch keine Schichtinformationen eingetragen
+                {{ $t('No shift information has been entered yet') }}
             </div>
         </div>
     </div>
@@ -122,13 +121,10 @@
         @close-modal="closeShiftInformationModal"
         :project="project"
     />
-
 </template>
 
 <script>
-import {
-    PencilAltIcon,
-} from '@heroicons/vue/outline';
+import {PencilAltIcon} from '@heroicons/vue/outline';
 import Permissions from "@/mixins/Permissions.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import ShiftInformationModal from "@/Layouts/Components/ShiftInformationModal.vue";
@@ -181,7 +177,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

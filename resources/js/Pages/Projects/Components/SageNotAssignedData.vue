@@ -3,7 +3,7 @@
         <div>
             <div class="flex items-center gap-x-1 cursor-pointer"
                  @click="this.projectGroupOpened = !this.projectGroupOpened">
-                <h4 class="font-bold">Projektbezogene Sage-Daten</h4>
+                <h4 class="font-bold">{{ $t('Project-related Sage data') }}</h4>
                 <ChevronUpIcon v-if="this.projectGroupOpened" class="h-6 w-6 text-primary my-auto" />
                 <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto" />
             </div>
@@ -11,19 +11,19 @@
                 <div v-show="sageNotAssigned.projectsGroup.length > 0">
                     <div class="flex flex-row font-bold">
                         <div class="w-28">
-                            KTO
+                            {{ $t('KTO') }}
                         </div>
                         <div class="w-28">
-                            KST
+                            {{ $t('KST') }}
                         </div>
                         <div class="w-64 truncate">
-                            Buchungstext
+                            {{ $t('Booking text') }}
                         </div>
                         <div class="w-52 text-right">
-                            Buchungsbetrag
+                            {{ $t('Booking amount') }}
                         </div>
                         <div class="w-40 text-right">
-                            Buchungsdatum
+                            {{ $t('Booking date') }}
                         </div>
                     </div>
                     <div v-for="(project) in sageNotAssigned.projectsGroup">
@@ -40,7 +40,7 @@
         <div>
             <div class="flex items-center gap-x-1 cursor-pointer"
                  @click="this.globalGroupOpened = !this.globalGroupOpened">
-                <h4 class="font-bold">Globale Sage-Daten</h4>
+                <h4 class="font-bold">{{ $t('Global Sage data') }}</h4>
                 <ChevronUpIcon v-if="this.globalGroupOpened" class="h-6 w-6 text-primary my-auto" />
                 <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto" />
             </div>
@@ -48,19 +48,19 @@
                 <div v-show="sageNotAssigned.globalGroup.length > 0">
                     <div class="flex flex-row font-bold">
                         <div class="w-28">
-                            KTO
+                            {{ $t('KTO') }}
                         </div>
                         <div class="w-28">
-                            KST
+                            {{ $t('KST') }}
                         </div>
                         <div class="w-64 truncate">
-                            Buchungstext
+                            {{ $t('Booking text') }}
                         </div>
                         <div class="w-52 text-right">
-                            Buchungsbetrag
+                            {{ $t('Booking amount') }}
                         </div>
                         <div class="w-40 text-right">
-                            Buchungsdatum
+                            {{ $t('Booking date') }}
                         </div>
                     </div>
                     <div v-for="(global) in sageNotAssigned.globalGroup">
@@ -70,7 +70,7 @@
                     </div>
                 </div>
                 <div v-if="!sageNotAssigned.globalGroup.length" class="italic font-light text-sm mb-3">
-                    <p>Keine Daten vorhanden</p>
+                    <p>{{ $t('No data available') }}</p>
                 </div>
             </div>
         </div>

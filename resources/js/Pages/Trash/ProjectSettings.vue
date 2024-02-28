@@ -1,12 +1,12 @@
 <template>
-    <TrashItems :items="props.trashed_genres" type="Projektkategorie - Genre" model="genres" />
-    <TrashItems :items="props.trashed_categories" type="Projektkategorie - Kategorie" model="categories" />
-    <TrashItems :items="props.trashed_sectors" type="Projektkategorie - Bereich" model="sectors" />
-    <TrashItems :items="props.trashed_project_states" type="Projektkategorie - Projektstatus" model="state" />
-    <TrashItems :items="props.trashed_contract_types" type="Projektkategorie - Vertragsart" model="contract_types" />
-    <TrashItems :items="props.trashed_company_types" type="Projektverträge - Unternehmensform" model="company_types" />
-    <TrashItems :items="props.trashed_collecting_societies" type="Projektverträge - Verwertungsgesellschaft" model="collecting_societies" />
-    <TrashItems :items="props.trashed_currencies" type="Projektverträge - Währung" model="currencies" />
+    <TrashItems :items="props.trashed_genres" :type="$t('Project category - Genre')" model="genres" />
+    <TrashItems :items="props.trashed_categories" :type="$t('Project category - Category')" model="categories" />
+    <TrashItems :items="props.trashed_sectors" :type="$t('Project category - Area')" model="sectors" />
+    <TrashItems :items="props.trashed_project_states" :type="$t('Project category - Project status')" model="state" />
+    <TrashItems :items="props.trashed_contract_types" :type="$t('Project category - Contract type')" model="contract_types" />
+    <TrashItems :items="props.trashed_company_types" :type="$t('Project contracts - corporate form')" model="company_types" />
+    <TrashItems :items="props.trashed_collecting_societies" :type="$t('Project contracts - collecting society')" model="collecting_societies" />
+    <TrashItems :items="props.trashed_currencies" :type="$t('Project contracts - Currency')" model="currencies" />
 </template>
 
 <script>

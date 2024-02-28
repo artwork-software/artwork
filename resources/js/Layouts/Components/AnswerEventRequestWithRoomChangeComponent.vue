@@ -4,7 +4,7 @@
             <img src="/Svgs/Overlays/illu_appointment.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="headline1 mt-2 mb-8">
-                    Termin
+                    {{ $t('Event')}}
                 </div>
                 <!-- Type -->
                 <div class=" w-full flex truncate">
@@ -19,7 +19,7 @@
                     <!-- Project and Creator -->
                     <div class="my-2 flex w-full">
                         <div class="w-1/2 flex items-center my-auto" v-if="this.project?.id">
-                            Zugeordnet zu: <a
+                            {{ $t('assigned to')}}: <a
                             :href="route('projects.show.calendar', {project: this.project.id, openTab: 'calendar'})"
                             class="ml-3 mt-1 items-center flex linkText">
                             {{ this.project?.name }}
@@ -33,7 +33,7 @@
                                  :alt="this.creator.last_name"
                                  class="ml-2 my-auto ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                             <div class="xsLight ml-3" v-else>
-                                gelöschte Nutzer:in
+                                {{ $t('Deleted user')}}
                             </div>
                         </div>
                     </div>
@@ -52,10 +52,10 @@
                     <!--    Properties    -->
                     <div class="flex py-2 w-full">
                         <div v-if="request.audience">
-                            <TagComponent icon="audience" displayed-text="Mit Publikum" hideX="true"></TagComponent>
+                            <TagComponent icon="audience" :displayed-text="$t('With audience')" hideX="true"></TagComponent>
                         </div>
                         <div v-if="request.is_loud">
-                            <TagComponent displayed-text="es wird laut" hideX="true"></TagComponent>
+                            <TagComponent :displayed-text="$t('It gets loud')" hideX="true"></TagComponent>
                         </div>
                     </div>
                     <!-- Description -->
@@ -89,7 +89,7 @@
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="flex justify-center mt-6">
-                    <AddButton class="px-20 py-4" @click="closeModal(true)" text="Belegung mit Raumänderung bestätigen"
+                    <AddButton class="px-20 py-4" @click="closeModal(true)" :text="$t('Confirm occupancy with room change')"
                                mode="modal"/>
                 </div>
             </div>

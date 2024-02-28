@@ -2,7 +2,7 @@
     <div class="w-full mt-24">
         <div class="w-full pb-10 mb-5 border-b-2 border-gray-700">
             <div class="flex items-center justify-between">
-                <h2 class="mb-3 xWhiteBold">Projektteam</h2>
+                <h2 class="mb-3 xWhiteBold">{{ $t('Project team') }}</h2>
                 <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                                @click="showTeamModal = true"
                                v-if="projectMembersWriteAccess()"
@@ -10,7 +10,9 @@
             </div>
             <div class="flex w-full mt-2 flex-wrap">
                 <span
-                    class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
+                    class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
+                    {{ $t('Project management') }}
+                </span>
                 <div class="flex flex-wrap mt-2 -mr-3" v-for="user in this.project.project_managers">
                     <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
                          class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
@@ -18,7 +20,9 @@
                 </div>
             </div>
             <div class="flex w-full mt-2 flex-wrap">
-                <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">Projektteam</span>
+                <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">
+                    {{ $t('Project team') }}
+                </span>
                 <div class="flex w-full">
                     <div class="flex" v-if="this.project.departments !== []">
                         <div class="flex mt-2 -mr-3" v-for="department in this.project.departments">
@@ -39,7 +43,7 @@
         </div>
         <div class="w-full pb-10 mb-5 border-b-2 border-gray-700">
             <div class="flex items-center justify-between">
-                <h2 class="mb-3 xWhiteBold">Projekteigenschaften</h2>
+                <h2 class="mb-3 xWhiteBold">{{ $t('Project properties') }}</h2>
                 <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                                @click="openProjectAttributeEditModal"
                                v-if="projectMembersWriteAccess()"
@@ -49,48 +53,60 @@
                 <div>
                     <SidebarTagComponent v-for="category in projectCategories"
                                          :displayed-text="category.name" :property="category"
-                                         :hide-x="true"></SidebarTagComponent>
+                                         :hide-x="true"
+                    />
                     <SidebarTagComponent v-for="genre in projectGenres"
                                          :displayed-text="genre.name" :property="genre"
-                                         :hide-x="true"></SidebarTagComponent>
+                                         :hide-x="true"
+                    />
                     <SidebarTagComponent v-for="sector in projectSectors"
                                          :displayed-text="sector.name" :property="sector"
-                                         :hide-x="true"></SidebarTagComponent>
+                                         :hide-x="true"
+                    />
                 </div>
             </div>
         </div>
         <div class="w-full flex items-center mb-4">
-            <div class="xWhiteBold">Eintritt & Anmeldung</div>
+            <div class="xWhiteBold">{{ $t('Entry & registration') }}</div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                            @click="openEntranceModal"
                            v-if="projectMembersWriteAccess()"
             />
         </div>
         <div>
-            <div class="text-secondary text-sm mb-1">Gäste:
-                {{ project.num_of_guests ? project.num_of_guests : 'Nicht definiert' }}
+            <div class="text-secondary text-sm mb-1">
+                {{ $t('Guests') }}: {{ project.num_of_guests ? project.num_of_guests : $t('Not defined') }}
             </div>
-            <div class="text-secondary text-sm mb-1">Eintritt:
-                {{ project.entry_fee ? project.entry_fee : 'Nicht definiert' }}
+            <div class="text-secondary text-sm mb-1">
+                {{ $t('Entrance') }}: {{ project.entry_fee ? project.entry_fee : $t('Not defined') }}
             </div>
-            <div class="text-secondary text-sm mb-1">Anmeldung erforderlich:
-                {{ project.registration_required ? 'Ja' : 'Nein' }}
+            <div class="text-secondary text-sm mb-1">
+                {{ $t('Registration required') }}: {{ project.registration_required ? $t('Yes') : $t('No') }}
             </div>
             <div v-if="project.registration_required">
-                <div class="text-secondary text-sm mb-1">Anmeldung über:
-                    {{ project.register_by ? project.register_by : 'Nicht definiert' }}
+                <div class="text-secondary text-sm mb-1">
+                    {{ $t('Registration via') }}: {{ project.register_by ? project.register_by : $t('Not defined') }}
                 </div>
-                <div class="text-secondary text-sm mb-1">Anmeldefrist:
-                    {{ project.registration_deadline ? project.registration_deadline : 'Keine Frist' }}
+                <div class="text-secondary text-sm mb-1">
+                    {{ $t('Registration deadline') }}:
+                    {{ project.registration_deadline ? project.registration_deadline : $t('No deadline') }}
                 </div>
             </div>
-            <div class="text-secondary text-sm">Geschlossene Gesellschaft: {{
-                    project.closed_society ? 'Ja' : 'Nein'
-                }}
+            <div class="text-secondary text-sm">
+                {{ $t('Closed society') }}: {{ project.closed_society ? $t('Yes') : $t('No') }}
             </div>
         </div>
     </div>
+
+    <ProjectEditTeamModal :show="this.showTeamModal"
+                          :assigned-users="this.project.users"
+                          :assigned-departments="this.project.departments"
+                          :project-id="this.project.id"
+                          :userIsProjectManager="this.userIsProjectManager"
+                          @closed="this.showTeamModal = false"
+    />
     <ProjectEntranceModal :show="show" :close-modal="closeEntranceModal" :project="project"/>
+
     <ProjectAttributeEditModal :show="showAttributeEditModal"
                                :project="project"
                                :projectCategoryIdArray="projectCategoryIds"
@@ -101,14 +117,7 @@
                                :genres="genres"
                                @closed="closeProjectAttributeEditModal"
     />
-    <!-- Change Project Team Modal -->
-    <ProjectEditTeamModal :show="this.showTeamModal"
-                          :assigned-users="this.project.users"
-                          :assigned-departments="this.project.departments"
-                          :project-id="this.project.id"
-                          :userIsProjectManager="this.userIsProjectManager"
-                          @closed="this.showTeamModal = false"
-    />
+
 </template>
 
 <script>
@@ -197,21 +206,7 @@ export default {
                 }
             )
             return managerIdArray.includes(this.$page.props.user.id);
-        },
-        userIsProjectMember: function () {
-            let projectMemberArray = [];
-            this.project.users.forEach(member => {
-                    projectMemberArray.push(member.id)
-                }
-            )
-            return projectMemberArray.includes(this.$page.props.user.id);
-        },
+        }
     }
 }
-
-
 </script>
-
-<style scoped>
-
-</style>

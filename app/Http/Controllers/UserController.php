@@ -31,6 +31,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
@@ -156,7 +157,7 @@ class UserController extends Controller
             ->orderBy('date', 'ASC')->get();
 
         $createShowDate = [
-            $selectedPeriodDate->locale('de')->isoFormat('MMMM YYYY'),
+            $selectedPeriodDate->locale(\session()->get('locale') ?? config('app.fallback_locale'))->isoFormat('MMMM YYYY'),
             $selectedPeriodDate->copy()->startOfMonth()->toDate()
         ];
 
@@ -273,7 +274,7 @@ class UserController extends Controller
         }
 
         $dateToShow = [
-            $currentMonth->locale('de')->isoFormat('MMMM YYYY'),
+            $currentMonth->locale(\session()->get('locale') ?? config('app.fallback_locale'))->isoFormat('MMMM YYYY'),
             $currentMonth->copy()->startOfMonth()->toDate()
         ];
 
@@ -289,7 +290,7 @@ class UserController extends Controller
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
         }
         $user->update(
-            $request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email')
+            $request->only('first_name', 'last_name', 'phone_number', 'position', 'description', 'email', 'language')
         );
 
         if (Auth::user()->can(PermissionNameEnum::TEAM_UPDATE->value)) {
@@ -300,9 +301,14 @@ class UserController extends Controller
                     })
             );
         }
+        if ($request->permissions) {
+            $user->syncPermissions($request->permissions);
+        }
+        if ($request->roles) {
+            $user->syncRoles($request->roles);
+        }
 
-        $user->syncPermissions($request->permissions);
-        $user->syncRoles($request->roles);
+        Session::put('locale', $user->language);
 
         return Redirect::back()->with('success', 'Benutzer aktualisiert');
     }

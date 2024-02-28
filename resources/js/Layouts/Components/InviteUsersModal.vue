@@ -7,11 +7,10 @@
                        class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
                        aria-hidden="true"/>
                 <div class="mt-8 headline1">
-                    Nutzer*innen einladen
+                    {{ $t('Invite users')}}
                 </div>
                 <div class="xsLight my-3">
-                    Du kannst mehrere Nutzer*innen mit den gleichen Nutzerrechten und Teamzugehörigkeiten auf einmal
-                    einladen.
+                    {{ $t('You can invite several users with the same user permissions and team memberships at once.')}}
                 </div>
                 <div class="mt-6">
                     <div class="flex mt-8">
@@ -33,13 +32,13 @@
                         </div>
                     </div>
                     <ul v-if="showInvalidEmailErrorText" class="mt-4">
-                        <li class="errorText">Dies ist keine gültige E-Mail Adresse.</li>
+                        <li class="errorText">{{ $t('This is not a valid e-mail address.')}}</li>
                     </ul>
                     <span v-for="(email,index) in form.user_emails"
                           class="flex mt-4 mr-1 rounded-full items-center sDark">
                             {{ email }}
                     <button type="button" @click="deleteEmailFromInvitationArray(index)">
-                    <span class="sr-only">Email aus Einladung entfernen</span>
+                    <span class="sr-only">{{ $t('Remove email from invitation')}}</span>
                         <XCircleIcon
                             class="ml-1 mt-1 h-5 w-5 hover:text-error "/>
                     </button>
@@ -58,11 +57,11 @@
                     <Disclosure as="div">
                         <div class="flex mt-4 mb-10">
                             <DisclosureButton>
-                                <AddButton text="Zu Teams zuweisen" mode="page"/>
+                                <AddButton :text="$t('Assign to teams')" mode="page"/>
                             </DisclosureButton>
                             <div v-if="this.$page.props.show_hints && form.departments.length === 0" class="flex mt-2">
                                 <SvgCollection svgName="arrowLeft" class="mt-2 ml-2"/>
-                                <span class="hind ml-1 my-auto">Teile die Nutzer*innen direkt deinen Teams zu</span>
+                                <span class="hind ml-1 my-auto">{{ $t('Assign users directly to your teams')}}</span>
                             </div>
                         </div>
                         <transition enter-active-class="transition ease-out duration-100"
@@ -74,7 +73,7 @@
                             <DisclosurePanel
                                 class="origin-top-right absolute overflow-y-auto max-h-48 w-72 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                 <div v-if="departments.length === 0">
-                                    <span class="text-secondary p-1 ml-4 flex flex-nowrap">Keine Teams zum Zuweisen vorhanden</span>
+                                    <span class="text-secondary p-1 ml-4 flex flex-nowrap">{{$t('No teams available for assignment')}}</span>
                                 </div>
                                 <div v-for="team in departments">
                                         <span class="flex "
@@ -92,7 +91,7 @@
                         </transition>
                     </Disclosure>
                     <div class="pb-5 my-2 border-gray-200 sm:pb-0">
-                        <h3 class="mt-6 mb-8 headline2">Nutzerrechte definieren</h3>
+                        <h3 class="mt-6 mb-8 headline2">{{ $t('Define user permissions')}}</h3>
                         <div class="mb-8">
                             <div v-for="role in roles">
                                 <Checkbox @click="changeRole(role)" :item="role"></Checkbox>
@@ -102,7 +101,7 @@
                     <div v-if="!this.form.roles.includes('artwork admin')" class="pb-5 my-2 border-gray-200 sm:pb-0">
                         <div v-on:click="showPresets = !showPresets">
                             <h2 class="flex headline6Light cursor-pointer mb-2">
-                                Rechte-Presets
+                                {{$t('Permission presets')}}
                                 <ChevronUpIcon v-if="showPresets"
                                                class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
                                 <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
@@ -115,7 +114,7 @@
                             </div>
                             <div v-else
                                  class="xsLight">
-                                Es wurden noch keine Rechte-Presets angelegt.
+                                {{ $t('No permission presets have been created yet.')}}
                             </div>
                         </div>
                     </div>
@@ -156,7 +155,7 @@
                         ]"
                         @click="addUser"
                         :disabled="form.processing || (form.user_emails.length === 0)"
-                        text="Einladen"
+                        :text="$t('Invite')"
                         mode="modal"
                     />
                 </div>

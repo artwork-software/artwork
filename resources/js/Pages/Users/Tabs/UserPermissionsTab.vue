@@ -1,7 +1,7 @@
 <template>
     <div>
         <div>
-            <h2 class="mb-8 headline2">Nutzerrechte</h2>
+            <h2 class="mb-8 headline2">{{ $t('User rights')}}</h2>
         </div>
 
         <div class="bg-userBg py-10">
@@ -9,7 +9,7 @@
                 <div
                     class="uppercase mb-3 text-xs columnSubName flex items-center cursor-pointer"
                     @click="showGlobalRoles = !showGlobalRoles">
-                    globale Rollen
+                    {{ $t('Global roles')}}
                     <div class="flex items-center ml-2">
                         <SvgCollection svg-name="arrowUp"
                                        v-if="showGlobalRoles"></SvgCollection>
@@ -41,8 +41,7 @@
                         <div :id="role.name" role="tooltip"
                              v-if="role.name_de === 'Adminrechte'"
                              class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
-                            Administratoren haben im gesamten System Lese- und Schreibrechte -
-                            weitere Einstellungen entfallen
+                            {{ $t('Administrators have read and write access to the entire system No further settings are required')}}
                             <div class="tooltip-arrow" data-popper-arrow></div>
                         </div>
                         <div :id="role.name" role="tooltip" v-else
@@ -87,9 +86,7 @@
 
                             <div class="ml-3 text-sm">
                                 <label for="permissions"
-                                       :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'xsDark' : 'xsLight']">{{
-                                        permission.name_de
-                                    }}</label>
+                                       :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'xsDark' : 'xsLight']">{{ permission.name_de }}</label>
                             </div>
                         </div>
                         <div class="justify-end">
@@ -114,7 +111,7 @@
                 </div>
             </div>
             <div class="flex mt-12">
-                <span @click="openDeleteUserModal()" class="xsLight cursor-pointer">Nutzer*in endgültig löschen</span>
+                <span @click="openDeleteUserModal()" class="xsLight cursor-pointer">{{ $t('Permanently delete user')}}</span>
             </div>
         </div>
     </div>
@@ -123,9 +120,9 @@
     <SuccessModal
         :show="showSuccessModal"
         @closed="closeSuccessModal"
-        title="Nutzer*in erfolgreich bearbeitet"
-        description="Die Änderungen wurden erfolgreich gespeichert."
-        button="Schließen"
+        :title="$t('User successfully edited')"
+        :description="$t('The changes have been saved successfully.')"
+        :button="$t('Close')"
     />
     <!-- Nutzer*in löschen Modal -->
     <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
@@ -133,24 +130,23 @@
             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Nutzer*in löschen
+                    {{ $t('Delete user')}}
                 </div>
                 <XIcon @click="closeDeleteUserModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="errorText">
-                    Bist du sicher, dass du {{ user_to_edit.last_name + "," }} {{ user_to_edit.first_name }} aus dem
-                    System löschen möchtest?
+                    {{ $t('re you sure you want to delete {last_name}, {first_name} from the system?', {last_name: user_to_edit.last_name, first_name: user_to_edit.first_name})}}
                 </div>
                 <div class="flex justify-between mt-6">
                     <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="deleteUser">
-                        Löschen
+                        {{ $t('Delete') }}
                     </button>
                     <div class="flex my-auto">
                             <span @click="closeDeleteUserModal()"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
                     </div>
                 </div>
             </div>

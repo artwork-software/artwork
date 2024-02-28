@@ -18,29 +18,25 @@
                             </div>
                             <div class="relative z-40">
                                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    Schichtbesetzung löschen
+                                    {{ $t('Delete shift staffing') }}
                                 </div>
                                 <p class="xsLight">
-                                    Du möchtest die Besetzung einer Wiederholungsschicht löschen. Lege fest ob das nur für den einen oder für alle weiteren Schichten gilt.
+                                    {{ $t('You want to delete the occupation of a repeat shift. Specify whether this only applies to one or all further shifts.') }}
                                 </p>
-
                                 <SwitchGroup as="div" class="flex items-center mt-4">
                                     <SwitchLabel as="span" class="mr-3 text-sm" :class="this.removeFromSingleShift ? 'text-gray-400' : 'font-bold'">
-                                        Für diese und alle nachfolgenden Schichten
+                                        {{ $t('For this and all subsequent shifts') }}
                                     </SwitchLabel>
                                     <Switch v-model="this.removeFromSingleShift" :class="[this.removeFromSingleShift ? 'bg-indigo-600' : 'bg-indigo-600', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none']">
                                         <span aria-hidden="true" :class="[this.removeFromSingleShift  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
                                     </Switch>
                                     <SwitchLabel as="span" class="ml-3 text-sm" :class="this.removeFromSingleShift ? 'font-bold' : 'text-gray-400'">
-                                        Nur für diese Schicht
+                                        {{ $t('Only for this shift') }}
                                     </SwitchLabel>
-
                                 </SwitchGroup>
-
                                 <div class="flex items-center justify-center">
-                                    <AddButton type="modal" text="Speichern" @click="returnBuffer" class="mt-4"/>
+                                    <AddButton type="modal" :text="$t('Save')" @click="returnBuffer" class="mt-4"/>
                                 </div>
-
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -51,10 +47,20 @@
 </template>
 
 <script>
-import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot, Switch, SwitchGroup, SwitchLabel} from '@headlessui/vue'
+import {
+    Dialog,
+    DialogPanel,
+    DialogTitle,
+    TransitionChild,
+    TransitionRoot,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
+} from '@headlessui/vue'
 import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
+
 export default {
     name: "ChooseDeleteUserShiftModal",
     mixins: [Permissions],
@@ -65,7 +71,10 @@ export default {
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, Switch, SwitchGroup, SwitchLabel
+        XIcon,
+        Switch,
+        SwitchGroup,
+        SwitchLabel
     },
     data(){
         return {
@@ -75,7 +84,10 @@ export default {
             removeFromSingleShift: false,
         }
     },
-    emits: ['close-modal', 'returnBuffer'],
+    emits: [
+        'close-modal',
+        'returnBuffer'
+    ],
     methods: {
         closed(){
             this.$emit('close-modal')
@@ -86,7 +98,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

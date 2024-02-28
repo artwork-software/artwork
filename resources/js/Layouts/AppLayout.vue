@@ -113,7 +113,7 @@
                         </Switch>
                         <span v-if="$page.props.show_hints" class="ml-2 flex w-40">
                                     <SvgCollection svgName="arrowLeft" class="mr-1"/>
-                                    <span class="hind">Hilfe einblenden</span>
+                                    <span class="hind">{{ $t('Show help')}}</span>
                                 </span>
                     </div>
                     <div class="flex justify-end w-full">
@@ -160,12 +160,12 @@
                                         <MenuItem v-slot="{ active }">
                                             <Link :href="route('user.edit.info', {user: this.$page.props.user.id})"
                                                   :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                Dein Konto
+                                                {{ $t('Your account')}}
                                             </Link>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <a @click="logout"
-                                               :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor cursor-pointer']">Ausloggen</a>
+                                               :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor cursor-pointer']">{{ $t('Log out')}}</a>
                                         </MenuItem>
                                     </MenuItems>
                                 </transition>
@@ -262,42 +262,42 @@ export default {
                 },
                 {
                     has_permission: this.hasAdminRole(),
-                    name: 'Schichteinstellungen',
+                    name: this.$t('Shift settings'),
                     href: route('shift.settings'),
                     route: ['/settings/shift']
                 },
                 {
-                    name: 'Räume',
+                    name: this.$t('Rooms'),
                     has_permission: this.$can('create, delete and update rooms') || this.hasAdminRole(),
                     href: route('areas.management'),
                     route: ['/areas']
                 },
                 {
-                    name: 'Projekte',
+                    name: this.$t('Projects'),
                     has_permission: this.$can('change project settings') || this.hasAdminRole(),
                     href: route('project.settings'),
                     route: ['/settings/projects']
                 },
                 {
-                    name: 'Termine',
+                    name: this.$t('Events'),
                     has_permission: this.$can('change event settings') || this.hasAdminRole(),
                     href: route('event_types.management'),
                     route: ['/event_types']
                 },
                 {
-                    name: 'Checklisten',
+                    name: this.$t('Checklists'),
                     has_permission: this.$can('admin checklistTemplates') || this.hasAdminRole(),
                     href: route('checklist_templates.management'),
                     route: ['/checklist_templates']
                 },
                 {
-                    name: 'Finanzierungsquellen',
+                    name: this.$t('Sources of financing'),
                     has_permission: this.hasAdminRole(),
                     href: route('money_sources.settings'),
                     route: ['/money_sources/settings']
                 },
                 {
-                    name: 'Budgetvorlagen',
+                    name: this.$t('Budget templates'),
                     has_permission: this.hasAdminRole() || this.$can('view budget templates'),
                     href: route('templates.view.index'),
                     route: ['/templates/index']
@@ -315,7 +315,7 @@ export default {
                     has_permission: true
                 },
                 {
-                    name: 'Projekte',
+                    name: this.$t('Projects'),
                     href: route('projects'),
                     route: ['/projects'],
                     svgSrc: '/Svgs/Sidebar/icon_projects.svg',
@@ -323,7 +323,7 @@ export default {
                     has_permission: true
                 },
                 {
-                    name: 'Raumbelegung',
+                    name: this.$t('Room assignment'),
                     href: route('events'),
                     route: ['/calendar/view'],
                     svgSrc: '/Svgs/Sidebar/icon_calendar.svg',
@@ -331,7 +331,7 @@ export default {
                     has_permission: true
                 },
                 {
-                    name: 'Dienstplan',
+                    name: this.$t('Shift plan'),
                     href: route('shifts.plan'),
                     route: ['/shifts/view'],
                     svgSrc: '/Svgs/Sidebar/icon_shift_plan.svg',
@@ -339,7 +339,7 @@ export default {
                     has_permission: this.$can('can view shift plan') || this.hasAdminRole()
                 },
                 {
-                    name: 'Aufgaben',
+                    name: this.$t('Tasks'),
                     href: route('tasks.own'),
                     route: ['/tasks/own'],
                     svgSrc: '/Svgs/Sidebar/icon_tasks.svg',
@@ -348,7 +348,7 @@ export default {
                 },
 
                 {
-                    name: 'Finanzierungsquellen',
+                    name: this.$t('Sources of financing'),
                     href: route('money_sources.index'),
                     route: ['/money_sources'],
                     svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',
@@ -356,7 +356,7 @@ export default {
                     has_permission: this.$canAny(['view edit add money_sources', 'can edit and delete money sources']) || this.hasAdminRole()
                 },
                 {
-                    name: 'Nutzer*innen',
+                    name: this.$t('Users'),
                     href: route('users'),
                     route: ['/users'],
                     svgSrc: '/Svgs/Sidebar/icon_users_teams.svg',
@@ -365,7 +365,7 @@ export default {
                 },
 
                 {
-                    name: 'Verträge',
+                    name: this.$t('Contracts'),
                     href: route('contracts.view.index'),
                     route: ['/contracts/view'],
                     svgSrc: '/Svgs/Sidebar/icon_contract.svg',

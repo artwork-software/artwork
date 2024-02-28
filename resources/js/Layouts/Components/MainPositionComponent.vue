@@ -21,11 +21,11 @@
                 <div class="text-white items-center" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && mainPosition.verified?.requested !== this.$page.props.user.id">
                     <div class="xsWhiteBold flex w-44">
                         <img alt="Gesperrt" src="/Svgs/IconSvgs/icon_verify.svg" class="-ml-20"/>
-                        <p class="ml-2">wird verifiziert</p>
+                        <p class="ml-2">{{ $t('is verified') }}</p>
                     </div>
                 </div>
                 <div v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" class="text-white w-44 flex items-center text-center cursor-pointer" @click="verifiedMainPosition(mainPosition.verified?.main_position_id)" v-if="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED'">
-                    <p class="xxsLight">Als verifiziert markieren</p>
+                    <p class="xxsLight">{{ $t('Mark as verified') }}</p>
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" class="ml-1" height="20" viewBox="0 0 20 20">
                         <g id="check_btn" transform="translate(-1234 -671.05)">
                             <g id="Pfad_1370" data-name="Pfad 1370" transform="translate(1234 671.05)" fill="none">
@@ -37,7 +37,7 @@
                     </svg>
                 </div>
                 <div class="text-white w-44 flex items-center text-center justify-end mr-2" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && !mainPosition.columnVerifiedChanges">
-                    <p class="xsWhiteBold mr-1">verifiziert</p>
+                    <p class="xsWhiteBold mr-1">{{ $t('verified') }}</p>
                     <svg xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686" class="ml-1" viewBox="0 0 11.975 13.686">
                         <path id="Icon_awesome-lock" data-name="Icon awesome-lock" d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z" fill="#fcfcfb"/>
                     </svg>
@@ -53,7 +53,6 @@
                 <div class="flex flex-wrap w-8">
                     <div class="flex w-full">
                         <Menu as="div" class="my-auto relative" v-if="this.$can('edit budget templates') || !table.is_template">
-                              <!-- v-show="showMenu === 'MainPosition' + mainPosition.id" -->
                             <div class="flex">
                                 <MenuButton class="flex bg-tagBg p-0.5 rounded-full">
                                     <DotsVerticalIcon class=" flex-shrink-0 h-6 w-6 text-secondaryHover my-auto" aria-hidden="true"/>
@@ -67,7 +66,7 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                                 </svg>
-                                                Von User verifizieren lassen
+                                                {{ $t('Get verified by user') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && (mainPosition.verified?.requested === this.$page.props.user.id || projectManagers.includes(this.$page.props.user.id))">
@@ -75,7 +74,7 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                                 </svg>
-                                                Verifizierung aufheben
+                                                {{ $t('Cancel verification') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && (mainPosition.verified?.requested_by === this.$page.props.user.id || projectManagers.includes(this.$page.props.user.id))">
@@ -83,7 +82,7 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                                 </svg>
-                                                Verifizierungsanfrage zurücknehmen
+                                                {{ $t('Withdraw verification request') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !mainPosition.is_fixed">
@@ -91,7 +90,7 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                                 </svg>
-                                                Festschreiben
+                                                {{ $t('Commitment') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && mainPosition.is_fixed">
@@ -99,22 +98,21 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                                 </svg>
-                                                Festschreibung aufheben
+                                                {{ $t('Canceling a fixed term') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <span @click="openDeleteMainPositionModal(mainPosition)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <TrashIcon class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
-                                                Löschen
+                                                {{ $t('Delete') }}
                                             </span>
                                         </MenuItem>
-
                                         <MenuItem v-slot="{ active }">
                                             <a @click="duplicateMainPosition(mainPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
                                                 </svg>
-                                                Duplizieren
+                                                {{ $t('Duplicate') }}
                                             </a>
                                         </MenuItem>
                                     </div>
@@ -127,13 +125,13 @@
         </div>
         <div @click="addSubPosition(mainPosition.id)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
             <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
-                Unterposition
+                {{ $t('Sub position') }}
                 <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full" />
             </div>
         </div>
-        <table v-if="!mainPosition.closed" class="w-full ">
+        <table v-if="!mainPosition.closed" class="w-full">
             <thead class="">
-            <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
+            <tr class="" v-for="(subPosition) in mainPosition.sub_positions">
                 <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
                                       @openVerifiedModal="openVerifiedModal"
                                       @openCellDetailModal="openCellDetailModal"
@@ -148,7 +146,6 @@
                                       :project-managers="projectManagers"
                 />
             </tr>
-
             <tr class=" xsWhiteBold flex h-10 w-full text-right text-lg items-center" :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-buttonBlue' : 'bg-primary'">
                 <td class="w-28"></td>
                 <td class="w-28"></td>
@@ -168,11 +165,10 @@
             </thead>
             <div @click="addMainPosition(mainPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                 <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
-                    Hauptposition
+                    {{ $t('Main position') }}
                     <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full" />
                 </div>
             </div>
-
         </table>
     </th>
     <sage-assigned-data-modal v-if="this.showSageAssignedDataModal"
@@ -213,8 +209,20 @@ export default {
         MenuButton,
         ConfirmationComponent
     },
-    props: ['mainPosition','table','project', 'projectManagers','type'],
-    emits:['openDeleteModal','openErrorModal'],
+    props: [
+        'mainPosition',
+        'table',
+        'project',
+        'projectManagers',
+        'type'
+    ],
+    emits:[
+        'openDeleteModal',
+        'openErrorModal',
+        'openSubPositionSumDetailModal',
+        'openMainPositionSumDetailModal',
+        'openCellDetailModal'
+    ],
     data(){
         return{
             showMenu: null,
@@ -233,9 +241,9 @@ export default {
               position: 0
             },
             verifiedTexts: {
-              title: 'Verifizierung',
-              positionTitle: '',
-              description: 'Sind alle Zahlen richtig kalkuliert? Ist die Kalkulation plausibel? Lasse deine Hauptposition durch eine Nutzer*in verifizieren. '
+                title: this.$t('Verification'),
+                positionTitle: '',
+                description: this.$t('Have all figures been calculated correctly? Is the calculation plausible? Have your main item verified by a user.')
             },
             submitVerifiedModalData: useForm({
               is_main: false,
@@ -276,7 +284,7 @@ export default {
                     closedMainPositions = []
                 }
                 let index = closedMainPositions.findIndex((mainPosition) => mainPosition.id === this.mainPosition.id)
-                if(index !== -1){
+                if (index !== -1) {
                     this.mainPosition.closed = closedMainPositions[index].closed
                 }
             }
@@ -341,13 +349,19 @@ export default {
             })
         },
         openVerifiedModal(is_main,is_sub,id,position) {
-            this.verifiedTexts.positionTitle = position.name
-            this.submitVerifiedModalData.is_main = is_main
-            this.submitVerifiedModalData.is_sub = is_sub
-            this.submitVerifiedModalData.id = id
-            this.submitVerifiedModalData.position = position
-            this.showVerifiedModal = true
-            this.$emit('openVerifiedModal',this.submitVerifiedModalData.is_main, this.submitVerifiedModalData.is_sub,this.submitVerifiedModalData.id,this.submitVerifiedModalData.position)
+            this.verifiedTexts.positionTitle = position.name;
+            this.submitVerifiedModalData.is_main = is_main;
+            this.submitVerifiedModalData.is_sub = is_sub;
+            this.submitVerifiedModalData.id = id;
+            this.submitVerifiedModalData.position = position;
+            this.showVerifiedModal = true;
+            this.$emit(
+                'openVerifiedModal',
+                this.submitVerifiedModalData.is_main,
+                this.submitVerifiedModalData.is_sub,
+                this.submitVerifiedModalData.id,
+                this.submitVerifiedModalData.position
+            );
         },
         removeVerification(position, type){
             this.$inertia.post(this.route('project.budget.remove.verification'), {
@@ -368,14 +382,16 @@ export default {
             })
         },
         openDeleteMainPositionModal(mainPosition) {
-            this.confirmationTitle = 'Hauptposition löschen';
-            this.confirmationDescription = 'Bist du sicher, dass du die Hauptposition ' + mainPosition.name + ' löschen möchtest?'
+            this.confirmationTitle = this.$t('Delete main position');
+            this.confirmationDescription = this.$t(
+                'Are you sure you want to delete the main position?',
+                [mainPosition.name]
+            );
             this.mainPositionToDelete = mainPosition;
             this.showDeleteModal = true;
             this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.mainPositionToDelete, 'main')
         },
         addSubPosition(mainPositionId, subPosition = null) {
-
             let subPositionBefore = subPosition
 
             if (!subPositionBefore) {
@@ -404,13 +420,13 @@ export default {
             });
         },
         openSubPositionSumDetailModal(subPosition, column, type) {
-            this.$emit('openSubPositionSumDetailModal', subPosition, column, type)
+            this.$emit('openSubPositionSumDetailModal', subPosition, column, type);
         },
         openMainPositionSumDetailModal(mainPosition, column, type='comment') {
-            this.$emit('openMainPositionSumDetailModal', mainPosition, column, type)
+            this.$emit('openMainPositionSumDetailModal', mainPosition, column, type);
         },
         openCellDetailModal(column, type) {
-            this.$emit('openCellDetailModal',column, type)
+            this.$emit('openCellDetailModal', column, type);
         },
         fixMainPosition(mainPositionId){
             this.$inertia.patch(this.route('project.budget.fix.main-position'), {
@@ -447,7 +463,3 @@ export default {
 
 }
 </script>
-
-<style scoped>
-
-</style>

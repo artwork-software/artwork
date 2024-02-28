@@ -31,21 +31,21 @@
                                     <a href="#" @click="showEditShiftModal = true"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
-                                        Vorlage umdefinieren
+                                        {{ $t('Redefine template')}}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="duplicatePreset"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
-                                        Vorlage duplizieren
+                                        {{ $t('Duplicate template') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="showConfirmDeleteModal = true"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
-                                        Vorlage löschen
+                                        {{ $t('Delete template')}}
                                     </a>
                                 </MenuItem>
                             </div>
@@ -77,8 +77,8 @@
                          @closed="showEditShiftModal = false"
     />
     <ConfirmDeleteModal v-if="showConfirmDeleteModal"
-                        title="Schichtvorlage löschen"
-                        description="Möchten sie die Schichtvorlage löschen?"
+                        :title="$t('Delete shift template')"
+                        :description="$t('Would you like to delete the shift template?')"
                         @closed="showConfirmDeleteModal = false"
                         @delete="deletePreset"
     />

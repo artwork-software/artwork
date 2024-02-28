@@ -2,7 +2,7 @@
     <div class="w-full mt-36" v-if="$canAny(['view edit upload contracts','can see and download contract modules']) || hasAdminRole()">
         <div class="w-full flex items-center mb-4">
             <div class="text-secondary text-md font-semibold">
-                Vertragsbausteine
+                {{ $t('Contract modules')}}
             </div>
             <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="openUploadModal" v-if="$can('view edit upload contracts') || hasAdminRole()"/>
         </div>
@@ -27,7 +27,7 @@
         />
     </div>
     <div v-else class="xsLight">
-        Du hast nicht die nötige Berechtigung um hochgeladene Vertragsbausteine einsehen zu können.
+        {{ $t('You do not have the necessary authorization to view uploaded contract modules.')}}
     </div>
 </template>
 

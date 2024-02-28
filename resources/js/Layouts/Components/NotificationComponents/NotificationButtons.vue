@@ -81,18 +81,23 @@ import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 
 export default {
     name: "NotificationButtons",
-    methods: {
-
-    },
     props: ['buttons'],
-    emits: ['openDeclineModal', 'openEventEditAccept', 'deleteEvent', 'openProjectCalculation', 'deleteVerificationRequest','openEventWithoutRoomModal','openDialogModal', 'deleteNotification', 'openProject', 'showInTask'],
+    emits: [
+        'openDeclineModal',
+        'openEventEditAccept',
+        'deleteEvent',
+        'openProjectCalculation',
+        'deleteVerificationRequest',
+        'openEventWithoutRoomModal',
+        'openDialogModal',
+        'deleteNotification',
+        'openProject',
+        'showInTask'
+    ],
     components: {
         DeclineEventModal,
-        PencilAltIcon, XIcon
+        PencilAltIcon,
+        XIcon
     }
 }
 </script>
-
-<style scoped>
-
-</style>

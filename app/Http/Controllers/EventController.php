@@ -1363,7 +1363,7 @@ class EventController extends Controller
         $end = Carbon::parse($request->query('end'))->setTimezone(config('app.timezone'));
 
         return Event::query()
-            ->whereOccursBetween($start, $end, true)
+            ->startAndEndTimeOverlap($start, $end)
             ->where('room_id', $request->query('roomId'))
             ->where('id', '!=', $request->query('eventId'))
             ->count();

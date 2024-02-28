@@ -33,8 +33,7 @@ class RoomController extends Controller
     public function __construct(
         protected readonly RoomService $roomService,
         protected readonly CollisionService $collisionService
-    )
-    {
+    ) {
     }
 
     /**
@@ -301,10 +300,18 @@ class RoomController extends Controller
     {
         $startDate = Carbon::parse($request['params']['start'])->setTimezone(config('app.timezone'));
         $endDate = Carbon::parse($request['params']['end'])->setTimezone(config('app.timezone'));
+        $currentEventId = $request['params']['currentEventId'];
         $collisions = [];
-        $this->roomService->getAllWithoutTrashed()->each(function(Room $room) use (&$collisions, $startDate, $endDate){
-            $collisions[$room->id] = $this->collisionService->findCollisionCountForRoom($room, $startDate, $endDate);
-        });
+        $this->roomService->getAllWithoutTrashed()->each(
+            function (Room $room) use (&$collisions, $startDate, $endDate, $currentEventId): void {
+                $collisions[$room->id] = $this->collisionService->findCollisionCountForRoom(
+                    $room,
+                    $startDate,
+                    $endDate,
+                    $currentEventId
+                );
+            }
+        );
         return $collisions;
     }
 }

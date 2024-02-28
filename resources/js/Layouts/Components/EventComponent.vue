@@ -153,6 +153,7 @@
                 <div v-if="canEdit" class="w-full">
                     <SwitchGroup as="div" class="flex items-center">
                         <Switch v-model="this.allDayEvent"
+                                @update:modelValue="checkChanges"
                                 :class="[this.allDayEvent ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
                             <span aria-hidden="true"
                                   :class="[this.allDayEvent ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
@@ -298,16 +299,18 @@
                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
                         <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
-                            <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                            <ListboxOption v-for="room in this.rooms"
+                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
                                 <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                    {{ room.name }} <img
-                                    v-if="this.roomCollisionArray ? this.roomCollisionArray[room.id] > 0 : false"
-                                    src="/Svgs/IconSvgs/icon_warning_white.svg"
-                                    class="h-4 w-4 mx-2" alt="conflictIcon"/>
+                                    {{ room.name }}
+                                    <img
+                                        v-if="this.roomCollisionArray[room.id] > 0"
+                                        src="/Svgs/IconSvgs/icon_warning_white.svg"
+                                        class="h-4 w-4 mx-2" alt="conflictIcon"
+                                    />
                                 </div>
                                 <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                             </ListboxOption>
@@ -320,14 +323,19 @@
                             </div>
                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
-                        <ListboxOptions class="w-[88%] bg-primary max-h-32 overflow-y-auto text-sm absolute z-50">
+                        <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
-                                <div :class="[selected ? 'text-white' : '']">
+                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
                                     {{ room.name }}
+                                    <img
+                                        v-if="this.roomCollisionArray[room.id] > 0"
+                                        src="/Svgs/IconSvgs/icon_warning_white.svg"
+                                        class="h-4 w-4 mx-2" alt="conflictIcon"
+                                    />
                                 </div>
                                 <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                             </ListboxOption>
@@ -634,9 +642,6 @@
 
 
 <script>
-
-import {ref} from "vue";
-
 const options = [
     {
         name: 'Option 1',
@@ -653,19 +658,33 @@ const options = [
 ];
 
 import JetDialogModal from "@/Jetstream/DialogModal";
-import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
+import {
+    ChevronDownIcon,
+    DotsVerticalIcon,
+    PencilAltIcon,
+    XCircleIcon,
+    XIcon
+} from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
     Listbox,
-    ListboxButton, ListboxLabel,
+    ListboxButton,
+    ListboxLabel,
     ListboxOption,
     ListboxOptions,
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems, Switch, SwitchGroup, SwitchLabel
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
-import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
+import {
+    CheckIcon,
+    ChevronUpIcon,
+    TrashIcon
+} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
@@ -680,7 +699,9 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: 'EventComponent',
-    mixins: [Permissions],
+    mixins: [
+        Permissions
+    ],
     components: {
         UserPopoverTooltip,
         NewUserToolTip,
@@ -718,7 +739,6 @@ export default {
             options,
         }
     },
-
     data() {
         return {
             submit: true,
@@ -768,7 +788,6 @@ export default {
             error: null,
             creatingProject: false,
             projectSearchResults: [],
-            collisionCount: 0,
             description: null,
             canEdit: null,
             declinedRoomId: null,
@@ -792,11 +811,18 @@ export default {
             helpTextLengthRoom: ''
         }
     },
-
-    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event', 'project', 'wantedRoomId', 'roomCollisions', 'showComments'],
-
+    props: [
+        'showHints',
+        'eventTypes',
+        'rooms',
+        'isAdmin',
+        'event',
+        'project',
+        'wantedRoomId',
+        'roomCollisions',
+        'showComments'
+    ],
     emits: ['closed'],
-
     watch: {
         selectedRoom: {
             deep: true,
@@ -832,7 +858,9 @@ export default {
             return adminIds;
         },
         isRoomAdmin() {
-            return this.rooms.find(room => room.id === this.event?.roomId)?.admins.some(admin => admin.id === this.$page.props.user.id) || false;
+            return this.rooms.find(room => room.id === this.event?.roomId)?.admins.some(
+                admin => admin.id === this.$page.props.user.id
+            ) || false;
         },
         isCreator() {
             return this.event ? this.event.created_by?.id === this.$page.props.user.id : false
@@ -902,12 +930,10 @@ export default {
                 this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId)
             }
 
-
             this.description = this.event.description
 
             this.checkCollisions();
         },
-
         closeModal(bool) {
             this.startDate = null;
             this.startTime = null;
@@ -917,7 +943,6 @@ export default {
             this.selectedProject = null;
             this.$emit('closed', bool);
         },
-
         /**
          * Format date and time to ISO 8601 with timezone UTC
          *
@@ -929,7 +954,6 @@ export default {
             if (date === null || time === null) return null;
             return (new Date(date + ' ' + time)).toISOString()
         },
-
         checkChanges() {
             if (this.selectedRoom) {
                 if (this.selectedRoom.temporary) {
@@ -953,26 +977,8 @@ export default {
                 }
             }
 
-
             this.updateTimes(this.event);
-
-            if (this.event?.start && this.event?.end) {
-
-                axios.post('/collision/room', {
-                    params: {
-                        start: this.event?.start,
-                        end: this.event?.end,
-                    }
-                })
-                    .then(response => this.roomCollisionArray = response.data);
-            }
-
-
         },
-        checkTypeChange() {
-
-        },
-
         /**
          * If the user selects a start, end, and room
          * call the server to get information if there are any collision
@@ -980,31 +986,19 @@ export default {
          * @returns {Promise<void>}
          */
         async checkCollisions() {
-            if (this.startTime && this.startDate && this.endTime && this.endDate) {
-                let startFull = this.formatDate(this.startDate, this.startTime);
-                let endFull = this.formatDate(this.endDate, this.endTime);
-                if (this.selectedRoom) {
-                    await axios
-                        .get('/events/collision', {
-                            params: {
-                                start: startFull,
-                                end: endFull,
-                                roomId: this.selectedRoom?.id,
-                            }
-                        })
-                        .then(response => this.collisionCount = response.data);
-                }
+            if (
+                this.startTime && this.startDate && this.endTime && this.endDate ||
+                this.allDayEvent && this.startDate && this.endDate
+            ) {
+                let startFull = this.formatDate(this.startDate, this.startTime ?? '00:00');
+                let endFull = this.formatDate(this.endDate, this.endTime ?? '23:59');
                 await axios.post('/collision/room', {
                     params: {
                         start: startFull,
-                        end: endFull,
+                        end: endFull
                     }
                 }).then(response => this.roomCollisionArray = response.data);
-            } else {
-                this.collisionCount = 0
             }
-
-
         },
         checkYear(date) {
             return (parseInt(date.split('-')[0]) > 1900);
@@ -1023,7 +1017,9 @@ export default {
                             if (startHours === '23') {
                                 this.endTime = '00:' + this.startTime.slice(3, 5);
                                 let date = new Date();
-                                this.endDate = new Date(date.setDate(new Date(this.endDate).getDate() + 1)).toISOString().slice(0, 10);
+                                this.endDate = new Date(
+                                    date.setDate(new Date(this.endDate).getDate() + 1)
+                                ).toISOString().slice(0, 10);
                             } else {
                                 this.endTime = this.getNextHourString(this.startTime)
                             }
@@ -1032,15 +1028,11 @@ export default {
                 }
             }
 
-
             this.validateStartBeforeEndTime();
-
             this.checkCollisions();
             this.checkEventTimeLength()
-
         },
         async validateStartBeforeEndTime() {
-
             this.error = null;
             if (this.startDate && this.endDate && this.startTime && this.endTime) {
                 this.setCombinedTimeString(this.startDate, this.startTime, 'start');
@@ -1049,7 +1041,6 @@ export default {
                     .post('/events', {start: this.startFull, end: this.endFull}, {headers: {'X-Dry-Run': true}})
                     .catch(error => this.error = error.response.data.errors);
             }
-
         },
         checkEventTimeLength() {
             // check if event min 30min
@@ -1073,15 +1064,23 @@ export default {
 
             if (target === 'start') {
                 if (offset === -60) {
-                    this.startFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                    this.startFull = new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
+                    ).toISOString().slice(0, 16);
                 } else {
-                    this.startFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                    this.startFull = new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
+                    ).toISOString().slice(0, 16);
                 }
             } else if (target === 'end') {
                 if (offset === -60) {
-                    this.endFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                    this.endFull = new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
+                    ).toISOString().slice(0, 16);
                 } else {
-                    this.endFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                    this.endFull = new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
+                    ).toISOString().slice(0, 16);
                 }
             }
         },
@@ -1102,7 +1101,12 @@ export default {
          */
         async updateOrCreateEvent(isOption = false) {
             this.isOption = isOption;
-            this.handleAllDayEventChange();
+
+            if (this.allDayEvent) {
+                // Set startTime to "00:00" and endTime to "23:59" for all-day event
+                this.startTime = "00:00";
+                this.endTime = "23:59";
+            }
 
             if (this.accept === false && this.optionAccept === false) {
                 this.isOption = true;
@@ -1133,12 +1137,7 @@ export default {
                         })
                         .catch(error => this.error = error.response.data.errors);
                 }
-
-
             }
-
-
-            /**/
         },
         async singleSaveEvent() {
             return await axios
@@ -1162,7 +1161,6 @@ export default {
         closeSeriesEditModal() {
             this.showSeriesEdit = false;
         },
-
         async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;
 
@@ -1197,16 +1195,6 @@ export default {
                 }
             }
         },
-        handleAllDayEventChange() {
-            if (this.allDayEvent) {
-                // Set startTime to "00:00" and endTime to "23:59" for all-day event
-                this.startTime = "00:00";
-                this.endTime = "23:59";
-            } else {
-                // Handle other logic if needed when allDayEvent is false
-            }
-        },
-
         eventData() {
             return {
                 title: this.title,
@@ -1239,5 +1227,3 @@ export default {
     },
 }
 </script>
-
-<style scoped></style>

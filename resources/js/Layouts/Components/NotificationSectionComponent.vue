@@ -69,16 +69,6 @@
             </div>
         </div>
     </div>
-    <event-without-room-new-request-component
-        v-if="showEventWithoutRoomComponent"
-        @closed="onEventWithoutRoomComponentClose()"
-        :showHints="this.$page.props.show_hints"
-        :eventTypes="eventTypes"
-        :rooms="rooms"
-        :event="this.eventToEdit"
-        :projects="this.projects"
-        :isAdmin="this.hasAdminRole"
-    />
     <!-- Event löschen Modal -->
     <confirmation-component
         v-if="deleteComponentVisible"
@@ -123,12 +113,11 @@
 
 import {ChevronDownIcon} from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
-import {CheckIcon, ChevronRightIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
+import {ChevronRightIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import AddButton from "@/Layouts/Components/AddButton";
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
-import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent";
@@ -139,7 +128,6 @@ import NotificationBudgetRequest from "@/Layouts/Components/NotificationBudgetRe
 import NotificationPublicChangesInfo from "@/Layouts/Components/NotificationPublicChangesInfo.vue";
 import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 import Permissions from "@/mixins/Permissions.vue";
-
 
 export default  {
     name: 'NotificationSectionComponent',
@@ -157,20 +145,16 @@ export default  {
         NotificationEventInfoRow,
         ChevronRightIcon,
         NotificationUserIcon,
-        EventWithoutRoomNewRequestComponent,
         Link,
         AnswerEventRequestComponent,
         AnswerEventRequestWithRoomChangeComponent,
         RoomHistoryComponent,
         EventHistoryComponent
     },
-
     data() {
         return {
             showSection: true,
             showReadSection: false,
-            eventToEdit: null,
-            showEventWithoutRoomComponent: false,
             deleteComponentVisible: false,
             eventToDelete: null,
             answerRequestModalVisible: false,
@@ -226,10 +210,6 @@ export default  {
             this.wantedHistory = history;
             this.showRoomHistory = true;
         },
-        openEventHistoryModal(history){
-          this.wantedHistory = history;
-          this.showEventHistory = true;
-        },
         closeEventHistoryModal(){
             this.showEventHistory = false;
             this.wantedHistory = null
@@ -237,16 +217,6 @@ export default  {
         closeRoomHistoryModal(){
             this.showRoomHistory = false;
             this.wantedRoom = null;
-        },
-        openEventWithoutRoomComponent(event,notification) {
-            this.eventToEdit = event;
-            this.notificationToDelete = notification;
-            this.showEventWithoutRoomComponent = true;
-        },
-        onEventWithoutRoomComponentClose() {
-            this.showEventWithoutRoomComponent = false;
-            this.deleteNotification();
-
         },
         openDeleteEventModal(event, notification) {
             this.eventToDelete = event;
@@ -268,35 +238,9 @@ export default  {
                 this.setOnReadAll.notificationIds.push(notification.id);
             });
 
-            // patch set on read all form
-            console.log(this.setOnReadAll.notificationIds);
-
             this.setOnReadAll.patch(route('notifications.setReadAtAll'), {
                 preserveScroll: true,
             });
-
-            /*console.log(notifications);
-            //return;
-            if(!notifications){
-                return;
-            }
-            notifications.forEach((notification) => {
-                if (notification.data.icon !== 'blue') {
-                    this.setOnRead(notification.id);
-                }
-            })*/
-        },
-        openAnswerEventRequestModal(notification, event, type) {
-            this.requestToAnswer = event;
-            this.answerRequestType = type;
-            this.answerRequestModalVisible = true;
-            this.notificationToDelete = notification;
-        },
-        openAnswerRequestWithRoomChangeModal(notification, event, creator) {
-            this.creatorOfRequest = creator;
-            this.requestToAnswerWithRoomChange = event;
-            this.answerRequestWithRoomChangeVisible = true;
-            this.notificationToDelete = notification
         },
         async afterRequestAnswer(bool) {
             if (!bool) {

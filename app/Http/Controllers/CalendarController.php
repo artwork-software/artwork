@@ -135,8 +135,7 @@ class CalendarController extends Controller
         ?Room $room = null,
         $startDate = null,
         $endDate = null
-    ): array
-    {
+    ): array {
         $calendarType = 'individual';
         $selectedDate = null;
         if (!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
@@ -574,9 +573,7 @@ class CalendarController extends Controller
         ?Room $room,
         ?Project $project,
         $shiftPlan = false
-    ): mixed
-    {
-
+    ): mixed {
         $user = Auth::user();
         if (!$shiftPlan) {
             $calendarFilter = $user->calendar_filter()->first();
@@ -622,27 +619,7 @@ class CalendarController extends Controller
             ->unless(!$hasNoAudience, fn(EventBuilder $builder) => $builder->where('audience', false))
             ->unless(!$isLoud, fn(EventBuilder $builder) => $builder->where('is_loud', true))
             ->unless(!$isNotLoud, fn(EventBuilder $builder) => $builder->where('is_loud', false))
-            ->when($startDate, fn(EventBuilder $builder) => $builder
-                ->where(function ($query) use ($startDate, $endDate): void {
-                    // Events, die innerhalb des gegebenen Zeitraums starten und enden
-                    $query->whereBetween('start_time', [$startDate, $endDate])
-                        ->whereBetween('end_time', [$startDate, $endDate]);
-                })
-                ->orWhere(function ($query) use ($startDate, $endDate): void {
-                    // Events, die vor dem gegebenen Startdatum beginnen und nach dem gegebenen Enddatum enden
-                    $query->where('start_time', '<', $startDate)
-                        ->where('end_time', '>', $endDate);
-                })
-                ->orWhere(function ($query) use ($startDate, $endDate): void {
-                    // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
-                    $query->where('start_time', '<', $startDate)
-                        ->whereBetween('end_time', [$startDate, $endDate]);
-                })
-                ->orWhere(function ($query) use ($startDate, $endDate): void {
-                    // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden
-                    $query->whereBetween('start_time', [$startDate, $endDate])
-                        ->where('end_time', '>', $endDate);
-                }));
+            ->when($startDate, fn(EventBuilder $builder) => $builder->startAndEndTimeOverlap($startDate, $endDate));
     }
 
     public function filterRooms($startDate, $endDate, $shiftPlan = false): Builder

@@ -152,6 +152,7 @@
                             <!--    Time    -->
                             <SwitchGroup as="div" class="flex items-center">
                                 <Switch v-model="event.allDay"
+                                        @update:modelValue="checkChanges(event)"
                                         :class="[event.allDay ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
                                     <span aria-hidden="true"
                                           :class="[event.allDay ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
@@ -206,6 +207,7 @@
                                     <p class="text-xs text-red-800">{{ event.error?.end?.join('. ') }}</p>
                                 </div>
                             </div>
+                            <div class="text-xs text-red-800" v-if="event.helpTextLength">{{ event.helpTextLength }}</div>
                             <!-- Serien Termin -->
                             <div v-if="event?.is_series" class="xsLight mt-2">Termin ist Teil eines Wiederholungstermines</div>
                             <div v-if="event?.is_series" class="xsLight mb-2">Turnus: {{ event.selectedFrequencyName }} bis zum {{ convertDateFormat(event.series.end_date) }}</div>
@@ -232,8 +234,13 @@
                                                        :key="room.name"
                                                        :value="room.id"
                                                        v-slot="{ active, selected }">
-                                            <div :class="[selected ? 'text-white' : '']">
+                                            <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
                                                 {{ room.name }}
+                                                <img
+                                                    v-if="event.roomCollisionArray[room.id] > 0"
+                                                    src="/Svgs/IconSvgs/icon_warning_white.svg"
+                                                    class="h-4 w-4 mx-2" alt="conflictIcon"
+                                                />
                                             </div>
                                             <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                         </ListboxOption>
@@ -484,7 +491,13 @@
 <script>
 
 import JetDialogModal from "@/Jetstream/DialogModal";
-import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
+import {
+    ChevronDownIcon,
+    DotsVerticalIcon,
+    PencilAltIcon,
+    XCircleIcon,
+    XIcon
+} from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
     Listbox,
@@ -496,7 +509,11 @@ import {
     MenuItem,
     MenuItems, Switch, SwitchGroup, SwitchLabel
 } from "@headlessui/vue";
-import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
+import {
+    CheckIcon,
+    ChevronUpIcon,
+    TrashIcon
+} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
@@ -534,7 +551,6 @@ export default {
         ConfirmationComponent,
         TagComponent
     },
-
     data() {
         return {
             startDate: null,
@@ -553,7 +569,6 @@ export default {
             error: null,
             creatingProject: false,
             projectSearchResults: [],
-            collisionCount: 0,
             description: null,
             canEdit: false,
             deleteComponentVisible: false,
@@ -582,11 +597,15 @@ export default {
             ]
         }
     },
-
-    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'eventsWithoutRoom', 'removeNotificationOnAction'],
-
+    props: [
+        'showHints',
+        'eventTypes',
+        'rooms',
+        'isAdmin',
+        'eventsWithoutRoom',
+        'removeNotificationOnAction'
+    ],
     emits: ['closed'],
-
     watch: {
         projectName: {
             deep: true,
@@ -598,14 +617,7 @@ export default {
                 axios.get('/projects/search', {params: {query: this.projectName}})
                     .then(response => this.projectSearchResults = response.data)
             },
-        },
-        event: {
-            immediate: true,
-            deep: true,
-            handler: function () {
-                this.openModal()
-            },
-        },
+        }
     },
     computed: {
         computedEventsWithoutRoom: function () {
@@ -628,9 +640,7 @@ export default {
             this.firstCall = false;
             return this.eventsWithoutRoom;
         },
-
     },
-
     methods: {
         getTimeOfDate(date) {
             //returns hours and minutes in format HH:mm, if necessary with leading zeros, from given date object
@@ -642,7 +652,6 @@ export default {
             return date.getFullYear() + "-" +
                 (date.getMonth() + 1).toString().padStart(2, '0') + '-' +
                 date.getDate().toString().padStart(2, '0');
-
         },
         convertDateFormat(dateString) {
             const parts = dateString.split('-');
@@ -665,13 +674,9 @@ export default {
             event.showProjectSearchResults = false;
             this.projectSearchResults = [];
         },
-        openModal() {
-        },
-
         closeModal(bool) {
             this.$emit('closed', bool);
         },
-
         /**
          * Format date and time to ISO 8601 with timezone UTC
          *
@@ -683,15 +688,9 @@ export default {
             if (date === null || time === null) return null;
             return (new Date(date + ' ' + time)).toISOString()
         },
-
         checkChanges(event) {
             this.updateTimes(event);
-            this.checkCollisions(event)
         },
-        checkTypeChange(event) {
-            this.checkCollisions(event);
-        },
-
         /**
          * If the user selects a start, end, and room
          * call the server to get information if there are any collision
@@ -699,28 +698,51 @@ export default {
          * @returns {Promise<void>}
          */
         async checkCollisions(event) {
-            if (!(event.startTime && event.startDate && event.endTime && event.endDate && event.roomId)) {
-                event.collisionCount = 0
-                return;
-            }
+            if (
+                event.startTime && event.startDate && event.endTime && event.endDate ||
+                event.allDay && event.startDate && event.endDate
+            ) {
+                let startFull = this.formatDate(event.startDate, !event.allDay ? event.startTime : '00:00');
+                let endFull = this.formatDate(event.endDate, !event.allDay ? event.endTime : '23:59');
 
-            await axios
-                .get('/events/collision', {
+                await axios.post('/collision/room', {
                     params: {
-                        start: this.formatDate(event.startDate, event.startTime),
-                        end: this.formatDate(event.endDate, event.endTime),
-                        roomId: event.roomId,
+                        start: startFull,
+                        end: endFull
                     }
-                })
-                .then(response => event.collisionCount = response.data);
+                }).then(response => event.roomCollisionArray = response.data);
+            }
         },
         updateTimes(event) {
-            this.validateStartBeforeEndTime(event);
+            if (event.startDate) {
+                if (!event.endDate && this.checkYear(event.startDate)) {
+                  event.endDate = event.startDate;
+                }
+                if (event.startTime) {
+                    if (!event.endTime) {
+                          if (event.startTime === '23:00') {
+                            event.endTime = '23:59';
+                          } else {
+                              let startHours = event.startTime.slice(0, 2);
+                              if (startHours === '23') {
+                                  event.endTime = '00:' + event.startTime.slice(3, 5);
+                                  let date = new Date();
+                                  event.endDate = new Date(
+                                      date.setDate(new Date(event.endDate).getDate() + 1)
+                                  ).toISOString().slice(0, 10);
+                              } else {
+                                  event.endTime = this.getNextHourString(event.startTime)
+                              }
+                        }
+                    }
+                }
+            }
 
+            this.validateStartBeforeEndTime(event);
             this.checkCollisions(event);
+            this.checkEventTimeLength(event);
         },
         async validateStartBeforeEndTime(event) {
-
             event.error = null;
             if (event.startDate && event.endDate && event.startTime && event.endTime) {
                 let startFull = this.setCombinedTimeString(event.startDate, event.startTime, 'start');
@@ -731,21 +753,49 @@ export default {
             }
 
         },
+        checkEventTimeLength(event) {
+            if (event.allDay) {
+                event.helpTextLength = '';
+                return;
+            }
+            // check if event min 30min
+            let startFull = new Date(event.startDate + ' ' + event.startTime);
+            let endFull = new Date(event.endDate + ' ' + event.endTime);
+
+            const minimumEnd = this.addMinutes(startFull, 30);
+            if (minimumEnd <= endFull) {
+                event.helpTextLength = '';
+            } else {
+                event.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
+            }
+        },
+        addMinutes(date, minutes) {
+            date.setMinutes(date.getMinutes() + minutes);
+            return date;
+        },
         setCombinedTimeString(date, time, target) {
             let combinedDateString = (date.toString() + ' ' + time);
             const offset = new Date(combinedDateString).getTimezoneOffset()
 
             if (target === 'start') {
                 if (offset === -60) {
-                    return new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                    return new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
+                    ).toISOString().slice(0, 16);
                 } else {
-                    return new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                    return new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
+                    ).toISOString().slice(0, 16);
                 }
             } else if (target === 'end') {
                 if (offset === -60) {
-                    return new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                    return new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
+                    ).toISOString().slice(0, 16);
                 } else {
-                    return new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                    return new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
+                    ).toISOString().slice(0, 16);
                 }
             }
         },
@@ -764,7 +814,6 @@ export default {
             event.projectId = null;
             event.projectName = '';
         },
-
         /**
          * Creates an event and reloads all events
          *
@@ -772,7 +821,7 @@ export default {
          */
         async updateOrCreateEvent(event) {
             if (this.removeNotificationOnAction && (this.selectedRoom?.everyone_can_book || this.isAdmin)) {
-              this.isOption = true;
+                this.isOption = true;
             }
             return await axios
                 .put('/events/' + event?.id, this.eventData(event))
@@ -816,5 +865,3 @@ export default {
     },
 }
 </script>
-
-<style scoped></style>

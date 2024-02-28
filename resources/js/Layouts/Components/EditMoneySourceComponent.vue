@@ -9,7 +9,7 @@
                 <!--   Heading   -->
                 <div class="my-1">
                     <div class="flex-grow headline1 mb-6">
-                        {{ moneySource.is_group ? $t('Financing source group') : $t('Source of financing') }}
+                        {{ moneySource.is_group ? $t('Funding source group') : $t('Source of funding') }}
                     </div>
                     <div class="flex items-center w-full mt-4">
                         <div class="mt-2 xsDark text-xs flex items-center"
@@ -142,7 +142,7 @@
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
-                                    {{ $t('Belongs to Financing Sources Group')}}
+                                    {{ $t('Belongs to funding Sources Group')}}
                                 </label>
                             </div>
                             <div v-if="this.hasGroup" class="mb-2">
@@ -150,7 +150,7 @@
                                     <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
                                         <div class="flex-grow flex text-left xsDark">
                                             {{
-                                                this.selectedMoneySourceGroup ? this.selectedMoneySourceGroup.name : $t('Search for a financing group')
+                                                this.selectedMoneySourceGroup ? this.selectedMoneySourceGroup.name : $t('Search for a funding group')
                                             }}
                                         </div>
                                         <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>

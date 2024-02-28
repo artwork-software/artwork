@@ -9,7 +9,7 @@
                 <!--   Heading   -->
                 <div class="my-1">
                     <div class="flex-grow headline1 mb-6">
-                        {{ $t('New source of financing')}}
+                        {{ $t('New source of funding')}}
                     </div>
                     <div class="xsLight">
                         {{ $t('Create a funding source and link projects and items to get an overview of your budget.')}}
@@ -138,7 +138,7 @@
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
-                                    {{ $t('Belongs to Financing Sources Group')}}
+                                    {{ $t('Belongs to funding Sources Group')}}
                                 </label>
                             </div>
                             <div v-if="this.hasGroup" class="mb-2">
@@ -146,7 +146,7 @@
                                     <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
                                         <div class="flex-grow flex text-left xsDark">
                                             {{
-                                                this.selectedMoneySourceGroup ? this.selectedMoneySourceGroup.name : $t('Search for a financing group')
+                                                this.selectedMoneySourceGroup ? this.selectedMoneySourceGroup.name : $t('Search for a funding group')
                                             }}
                                         </div>
                                         <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
@@ -186,7 +186,7 @@
                                                     'xsLight',
                                                'ml-2 subpixel-antialiased'
                                            ]">
-                                        {{ $t('Remind me when this spring runs out')}}
+                                        {{ $t('Remind me when this source runs out')}}
                                     </label>
                                 </div>
                                 <div v-if="remindOnExpiration" class="flex flex-col columns-1 mt-2">
@@ -293,7 +293,7 @@
                                            mode="modal"
                                            class="text-white resize-none"
                                            @click="createSingleSource()"
-                                           :text="$t('Creating a source of financing')"
+                                           :text="$t('Creating a source of funding')"
                                 />
                             </div>
                         </div>
@@ -409,7 +409,7 @@
                         </div>
                         <div class="flex justify-center mt-2">
                             <AddButton :disabled="!isGroupFormComplete()" mode="modal" class="text-white resize-none"
-                                       @click="createMoneySourceGroup()" :text="$t('Create financing source group')"/>
+                                       @click="createMoneySourceGroup()" :text="$t('Create funding source group')"/>
                         </div>
                     </div>
                 </div>

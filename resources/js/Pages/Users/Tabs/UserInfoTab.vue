@@ -352,8 +352,9 @@ export default {
                 text: this.$t('User has been successfully edited')
             },
             languages: [
-                { id: 'de', name: 'Deutsch' },
-                { id: 'en', name: 'Englisch' },
+                { id: 'en', name: 'English' },
+                { id: 'de', name: 'German' },
+
             ],
             // set the default selected language to the user's language
             selectedLanguage: null

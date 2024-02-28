@@ -172,7 +172,7 @@
                                 <div v-if="$role('artwork admin') || $can('write projects') || checkPermission(project, 'edit') || $can('view projects')" class="text-secondary flex flex-nowrap items-center ">
                                     <div v-if="project.project_history.length" class="flex items-center">
                                         <span class=" xxsLight">
-                                              zuletzt geändert:
+                                              {{ $t('Last change:') }}
                                         </span>
                                         <UserPopoverTooltip v-if="project.project_history[0].changes[0].changed_by"
                                                             :user="project.project_history[0].changes[0].changed_by"

@@ -553,7 +553,7 @@ export default {
     },
     methods: {
         changeTab(selectedTab) {
-            if (selectedTab.name === this.$t('Project')) {
+            if (selectedTab.name === this.$t('Projects')) {
                 this.isCreateProjectTab = true;
                 this.isCreateProjectGroupTab = false;
                 this.createProjectForm.isGroup = false;

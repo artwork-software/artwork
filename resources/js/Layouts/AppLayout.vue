@@ -291,7 +291,7 @@ export default {
                     route: ['/checklist_templates']
                 },
                 {
-                    name: this.$t('Sources of financing'),
+                    name: this.$t('Sources of funding'),
                     has_permission: this.hasAdminRole(),
                     href: route('money_sources.settings'),
                     route: ['/money_sources/settings']
@@ -348,7 +348,7 @@ export default {
                 },
 
                 {
-                    name: this.$t('Sources of financing'),
+                    name: this.$t('Sources of funding'),
                     href: route('money_sources.index'),
                     route: ['/money_sources'],
                     svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',

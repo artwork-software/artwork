@@ -4,7 +4,7 @@
             <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                    {{ $t('Course of financing sources')}}
+                    {{ $t('Course of funding sources')}}
                 </div>
                 <XIcon @click="closeModal()"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"

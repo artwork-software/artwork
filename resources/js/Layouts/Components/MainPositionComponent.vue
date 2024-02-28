@@ -21,7 +21,7 @@
                 <div class="text-white items-center" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && mainPosition.verified?.requested !== this.$page.props.user.id">
                     <div class="xsWhiteBold flex w-44">
                         <img alt="Gesperrt" src="/Svgs/IconSvgs/icon_verify.svg" class="-ml-20"/>
-                        <p class="ml-2">{{ $t('is verified') }}</p>
+                        <p class="ml-2">{{ $t('requested to be verified') }}</p>
                     </div>
                 </div>
                 <div v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" class="text-white w-44 flex items-center text-center cursor-pointer" @click="verifiedMainPosition(mainPosition.verified?.main_position_id)" v-if="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED'">

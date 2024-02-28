@@ -82,10 +82,7 @@
                 <div class="pt-8">
                     <div class="mt-2 items-center">
                         <AddButton v-if="!showSuccess" @click="createChecklistTemplate"
-                                   class="py-3 px-5 border bg-primary hover:bg-primaryHover
-                                 focus:outline-none border-transparent text-base font-bold text-xl uppercase
-                                  shadow-sm text-secondaryHover"
-                                   text="Vorlage anlegen" mode="modal"/>
+                                   :text="$t('Create template')" mode="modal"/>
                         <button v-else type="submit"
                                 class="items-center rounded-full px-16 py-1 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                         >

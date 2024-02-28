@@ -97,13 +97,13 @@
                         leave-to-class="transform scale-95 opacity-0"
                     >
                         <MenuItems class="w-80 absolute right-0 top-12 origin-top-right rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                            <div class="w-44 p-6">
+                            <div class="w-76 p-6">
                                 <div class="flex py-1" v-if="!project">
                                     <input v-model="userCalendarSettings.project_status"
                                            type="checkbox"
                                            class="checkBoxOnDark"/>
-                                    <p :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">{{ $t('Project Status')}}</p>
+                                    <div :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                       class=" ml-4 my-auto text-secondary">{{ $t('Project Status')}}</div>
                                 </div>
                                 <div class="flex py-1">
                                     <input v-model="userCalendarSettings.options"

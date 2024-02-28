@@ -6,7 +6,7 @@
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap w-full">
                             <div class="flex flex-wrap w-full">
-                                <h2 class="headline1 flex w-full">{{  $t('Sources of financing') }}</h2>
+                                <h2 class="headline1 flex w-full">{{  $t('Sources of funding') }}</h2>
                                 <h2 class="mt-10 headline2 w-full">{{$t('Source categories')}}</h2>
                                 <div class="xsLight flex mt-4 w-full">
                                     {{$t('Define categories. These can then be filtered in the overview.')}}
@@ -62,7 +62,7 @@
         <ConfirmationComponent v-if="categoryDeleteModalVisible"
                                :confirm="$t('Delete source category')"
                                :titel="$t('Delete source category')"
-                               :description="$t('Are you sure you want to delete the source category? This irrevocably deletes all assignments of financing sources to this category.')"
+                               :description="$t('Are you sure you want to delete the source category? This irrevocably deletes all assignments of funding sources to this category.')"
                                @closed="afterDeleteCategoryConfirm"/>
     </app-layout>
 </template>

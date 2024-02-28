@@ -96,7 +96,7 @@
                     </div>
                 </div>
                 <div class="mt-4">
-                    <div>
+                    <div class="xsDark">
                         <span>{{ $t('Budget deadline') }}</span>
                     </div>
                     <div class="flex mt-1">

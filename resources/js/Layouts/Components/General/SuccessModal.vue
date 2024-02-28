@@ -24,7 +24,7 @@
                             <div class="flex justify-between mt-5 items-center pr-4">
                                 <AddButton mode="modal" @click="closeModal(true)"
                                            class="!border-2 !border-buttonBlue text-white bg-buttonBlue hover:bg-buttonHover !hover:border-transparent resize-none"
-                                           :text="buttonText"/>
+                                           :text="$t(buttonText)"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -54,7 +54,7 @@ export default {
     data(){
         return {
             open: true,
-            buttonText: this.button ? this.button : $t('Delete')
+            buttonText: this.button ? this.button : 'Delete'
         }
     },
     props: ['title', 'description', 'button', 'is_budget'],

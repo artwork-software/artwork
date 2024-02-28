@@ -4,7 +4,7 @@
             <div class="max-w-screen-xl mb-40 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div>
-                        <p class="items-center flex mr-2 headline1 mb-11">{{ $t('Sources of financing')}}</p>
+                        <p class="items-center flex mr-2 headline1 mb-11">{{ $t('Sources of funding')}}</p>
                     </div>
                     <div class="w-full flex my-auto">
                         <div class="flex justify-between w-full">
@@ -92,7 +92,7 @@
                                                     </div>
                                                 </div>
                                                 <div v-else class="xxsLight px-2">
-                                                    {{ $t('No categories for financing sources have been created yet.')}}
+                                                    {{ $t('No categories for funding sources have been created yet.')}}
                                                 </div>
                                             </DisclosurePanel>
                                         </Disclosure>
@@ -699,7 +699,7 @@ export default defineComponent({
                 'name': this.$t('All funding sources & groups'),
                 'type': 'all'
             }, {'name': this.$t('All sources of funding'), 'type': 'single'}, {
-                'name': this.$t('All financing groups'),
+                'name': this.$t('All funding groups'),
                 'type': 'group'
             }],
             moneySourceFilter: {'name': this.$t('All funding sources & groups'), 'type': 'all'},

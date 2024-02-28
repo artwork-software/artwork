@@ -1,7 +1,7 @@
 <template>
     <div class="w-full mt-24">
         <div class="w-full flex items-center">
-            <div class="text-secondary text-md">Kostenträger: {{ project?.cost_center?.name }}</div>
+            <div class="text-secondary text-md">{{$t('Cost unit:')}} {{ project?.cost_center?.name }}</div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                            @click="openCopyrightModal"/>
             <ProjectCopyrightModal
@@ -110,7 +110,7 @@
                 <hr class="my-10 border-darkGray">
 
                 <div class="w-full flex items-center mb-4">
-                    <div class="text-secondary text-md">{{$t('Linked sources of financing')}}</div>
+                    <div class="text-secondary text-md">{{$t('Linked sources of funding')}}</div>
                     <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySources ? 'rotate-180' : '']"
                                      @click="showMoneySources = !showMoneySources"/>
                 </div>

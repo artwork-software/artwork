@@ -12,6 +12,7 @@ class Notification
     public string $title;
 
     public array|null $description = [];
+
     public ?NotificationConstEnum $notificationConstEnum = null;
 
     public string $icon = 'green';
@@ -60,6 +61,9 @@ class Notification
         $this->title = $title;
     }
 
+    /**
+     * @return array<mixed, mixed>|null
+     */
     public function getDescription(): ?array
     {
         return $this->description;
@@ -90,6 +94,9 @@ class Notification
         $this->icon = $icon;
     }
 
+    /**
+     * @return array<mixed, mixed>
+     */
     public function getButtons(): array
     {
         return $this->buttons;
@@ -130,6 +137,9 @@ class Notification
         $this->modelId = $modelId;
     }
 
+    /**
+     * @return array<mixed, mixed>|null
+     */
     public function getBroadcastMessage(): ?array
     {
         return $this->broadcastMessage;
@@ -209,6 +219,4 @@ class Notification
     {
         $this->priority = $priority;
     }
-
-
 }

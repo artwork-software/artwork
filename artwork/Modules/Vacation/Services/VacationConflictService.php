@@ -20,7 +20,6 @@ class VacationConflictService
     ) {
     }
 
-
     public function create(array $data): \Artwork\Core\Database\Models\Model
     {
         $conflict = new VacationConflict();
@@ -28,7 +27,8 @@ class VacationConflictService
         return $this->vacationConflictRepository->save($conflict);
     }
 
-
+    //@todo: fix phpcs error - fix complexity and nesting level
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function checkVacationConflictsOnDay(
         string $day,
         ?User $user = null,

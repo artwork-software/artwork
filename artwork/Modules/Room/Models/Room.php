@@ -1,8 +1,8 @@
 <?php
+
 namespace Artwork\Modules\Room\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
-
 use App\Models\Event;
 use App\Models\RoomRoomAttributeMapping;
 use App\Models\RoomRoomCategoryMapping;

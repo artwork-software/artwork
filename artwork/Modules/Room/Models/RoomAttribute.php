@@ -1,4 +1,5 @@
 <?php
+
 namespace Artwork\Modules\Room\Models;
 
 use App\Models\RoomRoomAttributeMapping;

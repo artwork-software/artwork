@@ -10,12 +10,9 @@ use Artwork\Modules\Department\Services\DepartmentService;
 use Artwork\Modules\User\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
-use stdClass;
 
 class DepartmentController extends Controller
 {
@@ -25,9 +22,8 @@ class DepartmentController extends Controller
      */
     public function __construct(
         private readonly DepartmentService $departmentService,
-        private readonly UserService       $userService,
-    )
-    {
+        private readonly UserService $userService,
+    ) {
         $this->authorizeResource(Department::class);
     }
 
@@ -75,7 +71,6 @@ class DepartmentController extends Controller
         );
     }
 
-
     /**
      * Show the form for editing the specified resource.
      *
@@ -106,7 +101,8 @@ class DepartmentController extends Controller
         return Redirect::route('departments', $department->id)->with('success', 'Department updated');
     }
 
-    public function removeAllMembers(Department $department){
+    public function removeAllMembers(Department $department)
+    {
         $this->departmentService->removeAllMembers($department);
         return Redirect::route('departments', $department->id)->with('success', 'Department updated');
     }

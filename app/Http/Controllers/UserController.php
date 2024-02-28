@@ -47,7 +47,6 @@ class UserController extends Controller
         $this->authorizeResource(User::class, 'user');
     }
 
-
     /**
      * @return array<string, mixed>
      * @throws AuthorizationException
@@ -157,7 +156,10 @@ class UserController extends Controller
             ->orderBy('date', 'ASC')->get();
 
         $createShowDate = [
-            $selectedPeriodDate->locale(\session()->get('locale') ?? config('app.fallback_locale'))->isoFormat('MMMM YYYY'),
+            $selectedPeriodDate->locale(
+                \session()->get('locale') ??
+                    config('app.fallback_locale')
+            )->isoFormat('MMMM YYYY'),
             $selectedPeriodDate->copy()->startOfMonth()->toDate()
         ];
 

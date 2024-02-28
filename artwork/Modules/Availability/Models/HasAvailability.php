@@ -11,10 +11,4 @@ trait HasAvailability
     {
         return $this->morphMany(Availability::class, 'available');
     }
-
-    public function hasavailabilityDays(): array
-    {
-        $availabilities = $this->availabilities;
-        return $availabilities->map(fn(Availability $availability) => $availability->date)->toArray();
-    }
 }

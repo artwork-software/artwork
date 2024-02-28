@@ -2,12 +2,9 @@
 
 namespace App\Models;
 
-use Artwork\Modules\Project\Models\Project;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -27,5 +24,4 @@ class CostCenter extends Model
     protected $fillable = [
       'name',
     ];
-
 }

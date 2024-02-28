@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Enums\PermissionNameEnum;
-
 use App\Models\User;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Auth\Access\HandlesAuthorization;

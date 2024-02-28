@@ -4,13 +4,13 @@ namespace App\Http\Resources\ProjectResources;
 
 use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\UserResourceWithoutShifts;
-
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * @mixin \Artwork\Modules\Project\Models\Project
+ * @mixin Project
  */
 class ProjectCommentResource extends JsonResource
 {

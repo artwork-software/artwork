@@ -10,6 +10,9 @@ class UserCalendarSettingsFactory extends Factory
 {
     protected $model = UserCalendarSettings::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
         return [

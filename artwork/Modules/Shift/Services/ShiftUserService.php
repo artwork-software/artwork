@@ -137,7 +137,8 @@ class ShiftUserService
         $this->notificationService->setDescription([
             1 => [
                 'type' => 'string',
-                'title' => __('notification.keyWords.your_shift') . Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
+                'title' => __('notification.keyWords.your_shift') .
+                    Carbon::parse($shift->start)->format('d.m.Y H:i') . ' - ' .
                     Carbon::parse($shift->end)->format('d.m.Y H:i'),
                 'href' => null
             ],

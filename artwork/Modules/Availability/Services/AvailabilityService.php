@@ -29,6 +29,8 @@ class AvailabilityService
         $this->historyService->setModel(Availability::class);
     }
 
+    //@todo: fix phpcs error - fix complexity
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function create(Available $available, $data): Available|Model
     {
         $firstAvailable = $available->availabilities()->create([

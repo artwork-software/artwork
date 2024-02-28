@@ -128,7 +128,13 @@ class MoneySourceController extends Controller
             $user = User::find($requestUser['user_id']);
             // create user Notification
             //$notificationTitle = 'Du hast Zugriff auf "' . $request->name . '" erhalten';
-            $notificationTitle = __('notification.moneySource.add_permission', ['moneySourceName' => $request->name], $user->language);
+            $notificationTitle = __(
+                'notification.moneySource.add_permission',
+                [
+                    'moneySourceName' => $request->name
+                ],
+                $user->language
+            );
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',

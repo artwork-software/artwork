@@ -19,6 +19,8 @@ class HandleInertiaRequests extends Middleware
     /**
      * @return array<string, mixed>
      */
+    //@todo: fix phpcs error - complexity too high
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function share(Request $request): array
     {
         $generalSettings = app(GeneralSettings::class);

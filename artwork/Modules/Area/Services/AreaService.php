@@ -14,9 +14,7 @@ class AreaService
     public function __construct(
         private readonly AreaRepository $areaRepository,
         private readonly RoomService $roomService
-    )
-    {
-
+    ) {
     }
 
     public function updateByRequest(Area $area, Request $request): Area|Model

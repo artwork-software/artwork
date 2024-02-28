@@ -3,39 +3,21 @@
 namespace Artwork\Modules\Project\Services;
 
 use App\Models\User;
-use Artwork\Modules\Project\Http\Requests\ProjectStoreRequest;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Repositories\ProjectFileRepository;
-use Artwork\Modules\Project\Repositories\ProjectHeadlineRepository;
 use Artwork\Modules\Project\Repositories\ProjectRepository;
-use Artwork\Modules\Project\Repositories\ProjectStateRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class ProjectService
 {
     public function __construct(
-        private readonly ProjectFileRepository     $projectFileRepository,
-        private readonly ProjectHeadlineRepository $projectHeadlineRepository,
-        private readonly ProjectStateRepository    $projectStateRepository,
-        private readonly ProjectRepository         $projectRepository,
-    )
-    {
+        private readonly ProjectRepository $projectRepository,
+    ) {
     }
 
     public function isManagerForProject(User $user, Project $project): bool
     {
         return $this->projectRepository->findManagers($project)->contains($user);
-    }
-
-    public function findManagersForProject(Project $project): \Illuminate\Database\Eloquent\Collection
-    {
-        return $this->projectRepository->findManagers($project);
-    }
-
-    public function storeByRequest(ProjectStoreRequest $projectStoreRequest): void
-    {
-
     }
 
     public function getProjectsByCostCenter(string $costCenter): Collection

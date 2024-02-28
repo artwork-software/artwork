@@ -7,6 +7,9 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class EventIndexRequest extends FormRequest
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

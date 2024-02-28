@@ -12,6 +12,7 @@ class RemoveExpiredInvitations extends Command
      *
      * @var string
      */
+    //phpcs:ignore SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
     protected $signature = 'app:remove-expired-invitations';
 
     /**
@@ -19,6 +20,7 @@ class RemoveExpiredInvitations extends Command
      *
      * @var string
      */
+    //phpcs:ignore SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
     protected $description = 'Remove expired invitations from the database.';
 
     /**

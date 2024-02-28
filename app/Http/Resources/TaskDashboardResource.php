@@ -12,7 +12,7 @@ class TaskDashboardResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass, Generic.Metrics.CyclomaticComplexity.TooHigh
     public function toArray($request): array
     {
         $deadline = $this->deadline ? Carbon::parse($this->deadline) : null;

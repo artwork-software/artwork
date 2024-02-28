@@ -10,6 +10,9 @@ class FreelancerVacationFactory extends Factory
 {
     protected $model = FreelancerVacation::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
         return [

@@ -19,7 +19,6 @@ class AvailabilityConflictService
     ) {
     }
 
-
     public function create(array $data): void
     {
         $conflict = new AvailabilitiesConflict();
@@ -27,6 +26,8 @@ class AvailabilityConflictService
         $this->availabilityConflictRepository->save($conflict);
     }
 
+    //@todo: fix phpcs error - fix nesting level
+    //phpcs:ignore Generic.Metrics.NestingLevel.TooHigh
     public function checkAvailabilityConflictsOnDay(
         string $day,
         ?User $user = null,

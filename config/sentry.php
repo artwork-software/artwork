@@ -5,6 +5,7 @@
  *
  * @see https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/
  */
+
 return [
 
     // @see https://docs.sentry.io/product/sentry-basics/dsn-explainer/
@@ -24,7 +25,9 @@ return [
     'traces_sample_rate' => env('SENTRY_TRACES_SAMPLE_RATE') === null ? null : (float)env('SENTRY_TRACES_SAMPLE_RATE'),
 
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#profiles-sample-rate
-    'profiles_sample_rate' => env('SENTRY_PROFILES_SAMPLE_RATE') === null ? null : (float)env('SENTRY_PROFILES_SAMPLE_RATE'),
+    'profiles_sample_rate' => env('SENTRY_PROFILES_SAMPLE_RATE') === null ?
+        null :
+        (float)env('SENTRY_PROFILES_SAMPLE_RATE'),
 
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#send-default-pii
     'send_default_pii' => env('SENTRY_SEND_DEFAULT_PII', false),
@@ -97,12 +100,12 @@ return [
         // Enable tracing for requests without a matching route (404's)
         'missing_routes' => env('SENTRY_TRACE_MISSING_ROUTES_ENABLED', false),
 
-        // Configures if the performance trace should continue after the response has been sent to the user until the application terminates
-        // This is required to capture any spans that are created after the response has been sent like queue jobs dispatched using `dispatch(...)->afterResponse()` for example
+        // Configures if the performance trace should continue after the response has been sent to the user until the
+        //application terminates. This is required to capture any spans that are created after the response has been
+        //sent like queue jobs dispatched using `dispatch(...)->afterResponse()` for example
         'continue_after_response' => env('SENTRY_TRACE_CONTINUE_AFTER_RESPONSE', true),
 
         // Enable the tracing integrations supplied by Sentry (recommended)
         'default_integrations' => env('SENTRY_TRACE_DEFAULT_INTEGRATIONS_ENABLED', true),
     ],
-
 ];

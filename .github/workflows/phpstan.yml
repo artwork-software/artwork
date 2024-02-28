@@ -24,11 +24,11 @@ jobs:
         uses: php-actions/composer@v6
         with:
           php_version: 8.2
-          php_extensions: gd zip
+          php_extensions: gd zip bcmath
 
       - name: PHPStan Static Analysis
         uses: php-actions/phpstan@v3
         with:
           path: app/ artwork/
           php_version: 8.2
-          php_extensions: gd zip
+          php_extensions: gd zip bcmath

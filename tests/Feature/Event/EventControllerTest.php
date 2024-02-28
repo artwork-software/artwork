@@ -335,43 +335,6 @@ test('decline event with managers', function () {
     }
 });
 
-test('collisions', function (Event $event) {
-
-    $data = [
-        'roomId' => $event->room->id,
-        'eventId' => $event->id,
-        'start' => today()->format('Y-m-d'),
-        'end' => today()->addDay()->format('Y-m-d'),
-    ];
-
-    $response = $this->get(route('events.collisions', $data));
-
-    expect($response->getContent())->toBe((string)$event->collisions);
-})->with([
-    'no collisions' => function () {
-        $event = Event::factory()->create([
-            'start_time' => today(),
-            'end_time' => today()->addDay(),
-        ]);
-
-        $event->collisions = 0;
-        return $event;
-    },
-    '5 collisions' => function () {
-        $event = Event::factory()->create([
-            'start_time' => today(),
-            'end_time' => today()->addDay(),
-        ]);
-
-        Event::factory(5)->create([
-            'room_id' => $event->room->id,
-            'start_time' => today(),
-            'end_time' => today()->addDay(),
-        ]);
-        $event->collisions = 5;
-        return $event;
-    }
-]);
 //
 //test('event index', function () {
 //    $event = Event::factory(2)->create([

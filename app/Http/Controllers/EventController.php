@@ -92,7 +92,6 @@ class EventController extends Controller
             $eventsOfDay = collect();
 
             if ($this->userCalendarFilter->start_date === $this->userCalendarFilter->end_date) {
-
                 $eventsOfDay = Collection::make(CalendarEventResource::collection($calendarController
                     ->getEventsOfInterval(
                         $this->userCalendarFilter->start_date,
@@ -259,6 +258,8 @@ class EventController extends Controller
         ]);
     }
 
+    //@todo: fix phpcs error - fix complexity too high
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function showDashboardPage(): Response
     {
         $event = null;
@@ -298,7 +299,10 @@ class EventController extends Controller
             )->with(['project', 'room'])->get();
 
         //get date for humans of today with weekday
-        $todayDate = Carbon::now()->locale(\session()->get('locale') ?? config('app.fallback_locale'))->isoFormat('dddd, DD.MM.YYYY');
+        $todayDate = Carbon::now()->locale(
+            \session()->get('locale') ??
+                config('app.fallback_locale')
+        )->isoFormat('dddd, DD.MM.YYYY');
 
         $notification = $user
             ->notifications()
@@ -859,9 +863,12 @@ class EventController extends Controller
      * @throws AuthorizationException
      */
     //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function updateEvent(EventUpdateRequest $request, Event $event, ProjectController $projectController): CalendarEventResource
-    {
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    public function updateEvent(
+        EventUpdateRequest $request,
+        Event $event,
+        ProjectController $projectController
+    ): CalendarEventResource {
         $this->authorize('update', $event);
 
         if (!$request->noNotifications) {
@@ -1040,7 +1047,11 @@ class EventController extends Controller
                 $this->notificationService->setNotificationTo($projectManager);
                 $this->notificationService->createNotification();
             }
-            $notificationTitle = __('notification.event.room_change_confirmed', [], $event->creator()->first()->language);
+            $notificationTitle = __(
+                'notification.event.room_change_confirmed',
+                [],
+                $event->creator()->first()->language
+            );
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -1701,6 +1712,8 @@ class EventController extends Controller
     /**
      * @throws AuthorizationException
      */
+    //@todo: fix phpcs error - complexity too high
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function destroy(Event $event): RedirectResponse
     {
         $this->authorize('delete', $event);
@@ -1812,6 +1825,8 @@ class EventController extends Controller
     /**
      * @throws AuthorizationException
      */
+    //@todo: fix phpcs error - complexity too high
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function destroyByNotification(Event $event, Request $request): void
     {
         $this->authorize('delete', $event);

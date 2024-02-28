@@ -26,15 +26,21 @@ use Illuminate\Support\Facades\Auth;
 class CalendarController extends Controller
 {
     protected ?Carbon $startDate = null;
+
     protected ?Carbon $endDate = null;
+
     private ?Authenticatable $user;
+
     private ?UserCalendarFilter $userCalendarFilter;
+
     private ?UserShiftCalendarFilter $userShiftCalendarFilter;
+
     private ?UserCalendarSettings $calendarSettings;
 
-
-    public function __construct(private readonly FilterProvider $filterProvider, private readonly RoomService $roomService)
-    {
+    public function __construct(
+        private readonly FilterProvider $filterProvider,
+        private readonly RoomService $roomService
+    ) {
         //@todo This will break if no user present
         $this->user = Auth::user();
         $this->userCalendarFilter = $this->user?->calendar_filter;
@@ -262,6 +268,8 @@ class CalendarController extends Controller
     /**
      * @return array<string, mixed>
      */
+    //@todo: fix phpcs error - complexity too high
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createCalendarDataForUserShiftPlan(?User $user = null): array
     {
         $currentDate = Carbon::now();
@@ -341,6 +349,8 @@ class CalendarController extends Controller
     /**
      * @return array<string, mixed>
      */
+    //@todo: fix phpcs error - complexity too high
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function createCalendarDataForFreelancerShiftPlan(?Freelancer $freelancer = null): array
     {
         $currentDate = Carbon::now();

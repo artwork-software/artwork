@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-
 use Artwork\Modules\Craft\Models\Craft;
 use Illuminate\Database\Seeder;
 

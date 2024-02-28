@@ -45,6 +45,7 @@ class Freelancer extends Model implements Vacationer, Available
     /**
      * @var string[]
      */
+    //phpcs:ignore SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
     protected $fillable = [
         'position',
         'profile_image',

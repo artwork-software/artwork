@@ -70,7 +70,7 @@ class RoomService
         return Room::query()
             ->unless(
                 is_null($roomIds),
-                fn(\Illuminate\Database\Eloquent\Builder $builder) => $builder->whereIn('id', $roomIds)
+                fn(Builder $builder) => $builder->whereIn('id', $roomIds)
             )
             ->unless(
                 is_null($roomAttributeIds),
@@ -234,7 +234,10 @@ class RoomService
 
         foreach ($oldCategoryIds as $oldCategoryId) {
             if (!in_array($oldCategoryId, $newCategoryIds)) {
-                $this->history->createHistory($roomId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' wurde entfernt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' wurde entfernt'
+                );
             }
         }
     }
@@ -265,7 +268,10 @@ class RoomService
 
         foreach ($oldAttributeIds as $oldAttributeId) {
             if (!in_array($oldAttributeId, $newAttributeIds)) {
-                $this->history->createHistory($roomId, 'Attribut ' . $oldAttributeNames[$oldAttributeId] . ' wurde entfernt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Attribut ' . $oldAttributeNames[$oldAttributeId] . ' wurde entfernt'
+                );
             }
         }
     }
@@ -323,7 +329,10 @@ class RoomService
 
         foreach ($oldAdjoiningRoomIds as $oldAdjoiningRoomId) {
             if (!in_array($oldAdjoiningRoomId, $newAdjoiningRoomIds)) {
-                $this->history->createHistory($roomId, 'Nebenraum ' . $oldAdjoiningRoomName[$oldAdjoiningRoomId] . ' wurde entfernt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Nebenraum ' . $oldAdjoiningRoomName[$oldAdjoiningRoomId] . ' wurde entfernt'
+                );
             }
         }
     }
@@ -425,7 +434,9 @@ class RoomService
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
             ->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
                 // Erstelle einen Zeitraum für das Event, der innerhalb der gewünschten Periode liegt
-                $eventStart = $event->start_time->isBefore($calendarPeriod->start) ? $calendarPeriod->start : $event->start_time;
+                $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
+                    $calendarPeriod->start :
+                    $event->start_time;
                 $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
                 $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
 
@@ -435,13 +446,19 @@ class RoomService
                 }
             });
         foreach ($actualEvents as $key => $value) {
-            $eventsForRoom[$key] = ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection($value)];
+            $eventsForRoom[$key] = [
+                'roomName' => $room->name,
+                'events' => CalendarShowEventResource::collection($value)
+            ];
         }
         return collect($eventsForRoom);
     }
 
-    public function collectEventsForRooms(array|Collection $roomsWithEvents, CarbonPeriod $calendarPeriod, ?Project $project = null): Collection
-    {
+    public function collectEventsForRooms(
+        array|Collection $roomsWithEvents,
+        CarbonPeriod $calendarPeriod,
+        ?Project $project = null
+    ): Collection {
         $roomEvents = collect();
 
         foreach ($roomsWithEvents as $room) {
@@ -450,12 +467,20 @@ class RoomService
         return $roomEvents;
     }
 
-    private function fillPeriodWithEmptyEventData(Room $room, CarbonPeriod $calendarPeriod): array
-    {
+    /**
+     * @return array<string, mixed>
+     */
+    private function fillPeriodWithEmptyEventData(
+        Room $room,
+        CarbonPeriod $calendarPeriod
+    ): array {
         $eventsForRoom = [];
         /** @var Collection $eventsForRoom */
         foreach ($calendarPeriod as $date) {
-            $eventsForRoom[$date->format('d.m.')] = ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection([])];
+            $eventsForRoom[$date->format('d.m.')] = [
+                'roomName' => $room->name,
+                'events' => CalendarShowEventResource::collection([])
+            ];
         }
         return $eventsForRoom;
     }

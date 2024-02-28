@@ -14,10 +14,11 @@ trait GoesOnVacation
         return $this->morphMany(Vacation::class, 'vacationer');
     }
 
+    /**
+     * @return array<int, Carbon>
+     */
     public function hasVacationDays(): array
     {
-        $vacations = $this->vacations;
-        return $vacations->map(fn(Vacation $vacation) => $vacation->date)->toArray();
+        return $this->vacations->map(fn(Vacation $vacation) => $vacation->date)->toArray();
     }
-
 }

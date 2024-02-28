@@ -23,5 +23,4 @@ class ProjectHistory extends Model
     protected $guarded = [
         'id'
     ];
-
 }

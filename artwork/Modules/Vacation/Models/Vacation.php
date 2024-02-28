@@ -3,11 +3,11 @@
 namespace Artwork\Modules\Vacation\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
-use App\Models\Freelancer;
-use App\Models\User;
 use Artwork\Core\Database\Models\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
@@ -63,12 +63,12 @@ class Vacation extends Model
         return $this->morphTo();
     }
 
-    public function series(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function series(): HasOne
     {
         return $this->hasOne(VacationSeries::class, 'id', 'series_id');
     }
 
-    public function conflicts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function conflicts(): HasMany
     {
         return $this->hasMany(VacationConflict::class, 'vacation_id', 'id');
     }
@@ -83,5 +83,4 @@ class Vacation extends Model
     {
         return $this->conflicts()->exists();
     }
-
 }

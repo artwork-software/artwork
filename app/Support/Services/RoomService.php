@@ -8,7 +8,6 @@ use Artwork\Modules\Room\Models\Room;
 
 class RoomService
 {
-
     protected ?\stdClass $notificationData = null;
 
     protected NewHistoryService $history;

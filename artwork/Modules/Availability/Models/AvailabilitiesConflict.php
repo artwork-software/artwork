@@ -51,5 +51,4 @@ class AvailabilitiesConflict extends Model
         Carbon::setLocale('de');
         return Carbon::parse($this->date)->translatedFormat('d.m.Y');
     }
-
 }

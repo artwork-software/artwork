@@ -1005,7 +1005,8 @@ class ProjectController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setBudgetData($budgetData);
             $this->notificationService->setDescription($notificationDescription);
@@ -1061,7 +1062,8 @@ class ProjectController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setBudgetData($budgetData);
             $this->notificationService->setDescription($notificationDescription);
@@ -2048,7 +2050,7 @@ class ProjectController extends Controller
     }
 
     //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function projectBudgetTab(
         Project $project,
         SageAssignedDataCommentService $sageAssignedDataCommentService

@@ -7,11 +7,13 @@ use Artwork\Modules\Room\Models\RoomFile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
-
 class RoomFileFactory extends Factory
 {
     protected $model = RoomFile::class;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
         return [

@@ -37,7 +37,7 @@ class DepartmentRepository extends BaseRepository
     /**
      * @param Department $department
      * @param array $userIds
-     * @return array
+     * @return array<int, int>
      */
     public function syncUsers(Department $department, array $userIds): array
     {

@@ -10,7 +10,7 @@ use Artwork\Modules\Availability\Models\AvailabilitySeries;
 use Artwork\Modules\Availability\Services\AvailabilitySeriesService;
 use Artwork\Modules\Availability\Services\AvailabilityService;
 use Artwork\Modules\Vacation\Services\VacationService;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 
 class AvailabilityController extends Controller
 {
@@ -21,33 +21,10 @@ class AvailabilityController extends Controller
     ) {
     }
 
-    public function index():void
-    {
-        //
-    }
-
-    public function create(): void
-    {
-        //
-    }
-
-    public function store(Request $request): void
-    {
-        //
-    }
-
-    public function show(Availability $availability): void
-    {
-        //
-    }
-
-    public function edit(Availability $availability): void
-    {
-        //
-    }
-
-    public function update(UpdateAvailabilityRequest $updateAvailabilityRequest, Availability $availability): \Illuminate\Http\RedirectResponse
-    {
+    public function update(
+        UpdateAvailabilityRequest $updateAvailabilityRequest,
+        Availability $availability
+    ): RedirectResponse {
         if ($updateAvailabilityRequest->validated()) {
             if ($updateAvailabilityRequest->type_before_update !== $updateAvailabilityRequest->type) {
                 if ($updateAvailabilityRequest->type === 'vacation') {
@@ -75,13 +52,13 @@ class AvailabilityController extends Controller
         return redirect()->back();
     }
 
-    public function destroy(Availability $availability): \Illuminate\Http\RedirectResponse
+    public function destroy(Availability $availability): RedirectResponse
     {
         $this->availabilityService->delete($availability);
         return redirect()->back();
     }
 
-    public function destroySeries(AvailabilitySeries $availabilitySeries): \Illuminate\Http\RedirectResponse
+    public function destroySeries(AvailabilitySeries $availabilitySeries): RedirectResponse
     {
         $this->availabilitySeriesService->deleteSeries($availabilitySeries);
         return redirect()->back();

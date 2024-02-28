@@ -5,12 +5,10 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\FileUpload;
 use Artwork\Modules\Project\Models\Comment;
-
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

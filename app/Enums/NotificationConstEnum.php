@@ -104,7 +104,7 @@ enum NotificationConstEnum: string
         };
     }
 
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function notificationClass(): string
     {
         return match ($this) {

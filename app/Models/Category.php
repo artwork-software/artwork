@@ -11,10 +11,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * @property int	$id
- * @property string	$name
- * @property \Carbon\Carbon	$created_at
- * @property \Carbon\Carbon	$updated_at
+ * @property int $id
+ * @property string $name
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
  * @property \Illuminate\Support\Collection<\Artwork\Modules\Project\Models\Project> $projects
  * @property string $deleted_at
  */
@@ -38,5 +38,3 @@ class Category extends Model
         return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
     }
 }
-
-

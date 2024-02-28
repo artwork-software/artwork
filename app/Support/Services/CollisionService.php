@@ -3,7 +3,6 @@
 namespace App\Support\Services;
 
 use App\Models\Event;
-
 use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;

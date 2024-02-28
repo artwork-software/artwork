@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Enums\RoleNameEnum;
 use App\Models\Event;
-use App\Models\Freelancer;
-use App\Models\ServiceProvider;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
@@ -39,14 +37,6 @@ class ShiftController extends Controller
     ) {
         $this->history = new NewHistoryService('Artwork\Modules\Shift\Models\Shift');
         $this->notificationService = new NotificationService();
-    }
-
-    public function index(): void
-    {
-    }
-
-    public function create(): void
-    {
     }
 
     public function store(
@@ -329,10 +319,8 @@ class ShiftController extends Controller
         $this->notificationService->clearNotificationData();
     }
 
-    private function setConflictNotificationHeaderAndData(Shift $shift, $shiftCommittedBy): void
+    private function setConflictNotificationHeaderAndData(Shift $shift): void
     {
-
-
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(2);
         $this->notificationService
@@ -341,6 +329,8 @@ class ShiftController extends Controller
         $this->notificationService->setShiftId($shift->id);
     }
 
+    //@todo: fix phpcs error - complexity too high, nesting too high
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function updateCommitments(Request $request): RedirectResponse
     {
         $projectId = $request->input('project_id');
@@ -376,7 +366,7 @@ class ShiftController extends Controller
                         ->availabilities()
                         ->get();
 
-                    $this->setConflictNotificationHeaderAndData($shift, $shiftCommittedBy);
+                    $this->setConflictNotificationHeaderAndData($shift);
 
                     if ($vacations->count() > 0) {
                         foreach ($vacations as $vacation) {
@@ -572,8 +562,6 @@ class ShiftController extends Controller
 
             foreach ($shift->users()->get() as $user) {
                 if (Auth::id() !== $user->id) {
-                    /*$notificationTitle = 'Schicht gelöscht trotz Festschreibung ' .
-                        $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;*/
                     $notificationTitle = __(
                         'notification.shift.deleted_where_locked',
                         [
@@ -609,8 +597,6 @@ class ShiftController extends Controller
 
             foreach ($craft->users()->get() as $craftUser) {
                 if (Auth::id() !== $craftUser->id) {
-                    /*$notificationTitle = 'Schicht gelöscht trotz Festschreibung ' .
-                        $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;*/
                     $notificationTitle = __(
                         'notification.shift.deleted_where_locked',
                         [

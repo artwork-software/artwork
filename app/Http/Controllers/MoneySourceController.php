@@ -31,8 +31,6 @@ use Inertia\Response;
 use Inertia\ResponseFactory;
 use stdClass;
 
-use const _PHPStan_11268e5ee\__;
-
 class MoneySourceController extends Controller
 {
     protected ?NotificationService $notificationService = null;

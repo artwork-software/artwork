@@ -255,7 +255,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //ProjectTabs
     Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])
-        ->name('projects.show.info')->middleware(CanViewProject::class);
+        ->name('projects.show.info')
+        ->middleware(CanViewProject::class);
     Route::get('/projects/{project}/calendar', [ProjectController::class, 'projectCalendarTab'])
         ->name('projects.show.calendar')->middleware(CanViewProject::class);
     ;

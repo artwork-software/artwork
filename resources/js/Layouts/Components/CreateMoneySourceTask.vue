@@ -9,17 +9,17 @@
                 <!--   Heading   -->
                 <div class="my-1">
                     <div class="flex-grow headline1 mb-6">
-                        Neue Aufgabe
+                        {{ $t('New task')}}
                     </div>
                     <p class="xsLight">
-                        Lege eine neue Aufgabe an. Du kannst sie zudem mit einer Deadline und einem Kommentar versehen.
+                        {{ $t('Create a new task. You can also add a deadline and a comment.')}}
                     </p>
                     <div class="pb-2 pt-2">
                         <div class="mb-2">
                             <input type="text"
                                    v-model="this.task.name"
                                    id="sourceName"
-                                   placeholder="Titel*"
+                                   :placeholder="$t('Title*')"
                                    class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <div class="flex mb-2 space-x-2">
@@ -27,7 +27,7 @@
                                 <input type="text" onfocus="(this.type='date')"
                                        v-model="this.task.end_date"
                                        id="sourceStartDate"
-                                       placeholder="Zu erledigen bis?*"
+                                       :placeholder="$t('To be completed by?*')"
                                        class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                             <div class="w-1/2">
@@ -39,14 +39,14 @@
                             </div>
                         </div>
                         <div class="flex">
-                                    <textarea placeholder="Kommentar"
+                                    <textarea :placeholder="$t('Comment')"
                                               id="description"
                                               v-model="this.task.description"
                                               rows="4"
-                                              class="border-2 placeholder:xsLight placeholder:subpixel-antialiased focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                              class="border-2 placeholder:xsLight placeholder:subpixel-antialiased focus:xsDark resize-none text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <div class="flex justify-center mt-2">
-                            <AddButton mode="modal" class="bg-buttonBlue hover:bg-buttonHover text-white resize-none" @click="createTask()" text="Speichern"/>
+                            <AddButton mode="modal" class="bg-buttonBlue hover:bg-buttonHover text-white resize-none" @click="createTask()" :text="$t('Save')"/>
                         </div>
                     </div>
                 </div>

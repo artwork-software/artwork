@@ -5,28 +5,34 @@
             <div class="mx-4">
                 <div>
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        Projekt-Budgets exportieren
+                        {{ $t('Export project budgets') }}
                     </div>
                     <XIcon @click="this.close()"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
                 </div>
                 <div class="mt-4">
-                    <span class="text-sm xsLight">Alle Projekt-Budgets, deren Budget-Stichtag sich zwischen den folgenden Datumsangaben befindet, werden exportiert.</span>
+                    <span class="text-sm xsLight">
+                        {{ $t('All project budgets whose budget key date is between the following dates are exported.') }}
+                    </span>
                 </div>
                 <div class="mt-4 w-full flex flex-row">
                     <div class="w-1/2">
-                        <label for="startDate" class="xxsLight">Startdatum</label>
+                        <label for="startDate" class="xxsLight">
+                            {{ $t('Start date') }}
+                        </label>
                         <input v-model="startBudgetDeadline" type="date" class="w-full"/>
                     </div>
                     <div class="w-1/2">
-                        <label for="endDate" class="xxsLight">Enddatum</label>
+                        <label for="endDate" class="xxsLight">
+                            {{ $t('End date') }}
+                        </label>
                         <input v-model="endBudgetDeadline" type="date" class="w-full"/>
                     </div>
                 </div>
                 <div v-if="showMandatoryFieldsErrorText" class="w-full text-center mt-3">
                     <span class="text-red-600 text-xs">
-                        Sie müssen sowohl Start- als auch Enddatum angeben. Starten Sie den Export dann erneut.
+                        {{ $t('You must specify both the start and end date. Then start the export again.') }}
                     </span>
                 </div>
                 <div class="mt-5 mb-3 w-full grid justify-items-center">
@@ -34,7 +40,7 @@
                             type="button"
                             class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton focus:outline-none bg-buttonBlue hover:bg-buttonHover">
                         <DocumentReportIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
-                        <p class="text-sm">Exportieren</p>
+                        <p class="text-sm">{{ $t('Export') }}</p>
                     </button>
                 </div>
             </div>

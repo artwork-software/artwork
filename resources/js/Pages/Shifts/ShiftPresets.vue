@@ -17,7 +17,7 @@
                             <ListboxOption as="template" class="max-h-8" key="0" :value="{name: 'Alle Vorlagen', id: 0}" v-slot="{ active, selected }">
                                 <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
                                 <span :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
-                                    Alle Schichtvorlagen
+                                    {{$t('All shift templates')}}
                                 </span>
                                 </li>
                             </ListboxOption>
@@ -36,7 +36,7 @@
                 </button>
                 <div v-if="this.$page.props.show_hints" class="flex mt-1">
                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                    <span class="hind ml-1 my-auto">Erstelle eine neue Schichtvorlage</span>
+                    <span class="hind ml-1 my-auto">{{$t('Create a new shift template')}}</span>
                 </div>
             </div>
             <div>
@@ -49,7 +49,7 @@
                            id="changeEndTime"
                            type="text"
                            required
-                           placeholder="Name der Vorlage*"
+                           :placeholder="$t('Name of the template*')"
                            class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none w-full h-12"/>
 
                     <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar"/>
@@ -69,7 +69,7 @@
             <div v-else>
                 <div class="rounded-md bg-red-50 p-4 ml-5">
                     <div class="flex text-sm text-red-700">
-                        Keine Schichtvorlagen vorhanden.
+                        {{$t('No shift templates available.')}}
                     </div>
                 </div>
             </div>
@@ -117,7 +117,7 @@ export default defineComponent({
     data(){
         return {
             selectedFilter: {
-                name: 'Alle Vorlagen',
+                name: this.$t('All templates'),
                 id: 0
             },
             showAddShiftPresetModal: false,

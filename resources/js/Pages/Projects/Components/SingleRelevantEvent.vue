@@ -1,12 +1,10 @@
 <template>
-
     <div class="mb-3">
         <!-- Event Header -->
         <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm"
              :class="event.event_type.svg_name">
             <div class="flex items-center">
                 {{ event.event?.start_time }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
-
                 <span v-if="event.event.is_series" class="ml-3">
                     <SvgCollection svg-name="iconRepeat"/>
                 </span>
@@ -24,7 +22,6 @@
                                 class=" flex-shrink-0 h-4 w-4 my-auto"
                                 aria-hidden="true"/>
                         </MenuButton>
-
                     </div>
                     <transition enter-active-class="transition ease-out duration-100"
                                 enter-from-class="transform opacity-0 scale-95"
@@ -36,24 +33,24 @@
                             class="origin-top-right z-100 absolute right-0 mr-4 mt-2 w-80 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                             <div class="py-1">
                                 <MenuItem v-slot="{ active }">
-                                    <a href="#" @click="openDeletConfirmModal"
+                                    <a href="#" @click="openDeleteConfirmModal"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
-                                        Schichtplanung löschen
+                                        {{ $t('Delete shift planning') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="saveShiftAsPreset"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
-                                        Schichtplanung als Vorlage speichern
+                                        {{ $t('Save shift planning as a template') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="showImportShiftTemplateModal = true"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
-                                        Schichtplanung aus Vorlage einlesen
+                                        {{ $t('Import shift planning from template') }}
                                     </a>
                                 </MenuItem>
                             </div>
@@ -62,15 +59,13 @@
                 </Menu>
             </div>
         </div>
-
         <ConfirmDeleteModal
             v-if="showConfirmDeleteModal"
-            title="Schichtplanung löschen"
-            description="Möchten sie die Schichtplanung löschen?"
+            :title="$t('Delete shift planning')"
+            :description="$t('Would you like to delete the shift planning?')"
             @closed="closeConfirmDeleteModal"
             @delete="deleteShift"
         />
-
         <AddShiftPresetModal
             v-if="showAddShiftPresetModal"
             @closed="showAddShiftPresetModal = false"
@@ -78,14 +73,12 @@
             :event_type_id="event.event_type.id"
             :event-id="event.event.id"
         />
-
         <ImportShiftTemplate
             v-if="showImportShiftTemplateModal"
             @closed="showImportShiftTemplateModal = false"
             :event_type="event.event_type"
             :eventId="event.event.id"
         />
-
         <div class="flex justify-start mt-3 overflow-x-scroll gap-3 h-full" v-if="showShift">
             <TimeLineShiftsComponent :time-line="event.timeline"
                                      :shifts="event.shifts"
@@ -96,9 +89,6 @@
                                      @dropFeedback="dropFeedback"/>
         </div>
     </div>
-
-
-
 </template>
 
 <script>
@@ -113,7 +103,6 @@ import AddShiftPresetModal from "@/Pages/Projects/Components/AddShiftPresetModal
 import {ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/outline";
 import ImportShiftTemplate from "@/Pages/Projects/Components/ImportShiftTemplate.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-
 
 export default defineComponent({
     name: "SingleRelevantEvent",
@@ -147,7 +136,7 @@ export default defineComponent({
         return {
             showConfirmDeleteModal: false,
             showAddShiftPresetModal: false,
-            showShift: parseInt(this.$page.props?.urlParameters?.eventId) === parseInt(this.event.event.id) ? true : false,
+            showShift: parseInt(this.$page.props.urlParameters?.eventId) === parseInt(this.event.event.id),
             showImportShiftTemplateModal: false,
         }
     },
@@ -155,7 +144,7 @@ export default defineComponent({
         dropFeedback(event) {
             this.$emit('dropFeedback', event)
         },
-        openDeletConfirmModal() {
+        openDeleteConfirmModal() {
             this.showConfirmDeleteModal = true
         },
         closeConfirmDeleteModal() {
@@ -165,13 +154,12 @@ export default defineComponent({
             this.$inertia.delete(`/events/${this.event.event.id}/shifts`)
             this.showConfirmDeleteModal = false
         },
-        saveShiftAsPreset(){
+        saveShiftAsPreset() {
             this.showAddShiftPresetModal = true
         }
     }
 })
 </script>
-
 
 <style scoped>
 .eventType0 {

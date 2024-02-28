@@ -4,14 +4,13 @@
             <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Vertrag bearbeiten
+                    {{ $t('Edit contract')}}
                 </div>
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-secondary text-sm my-6">
-                    Lade Dokumente hoch, die ausschließlich das Budget betreffen. Diese können nur User mit
-                    entsprechender Berechtigung einsehen.
+                    {{ $t('Upload documents that relate exclusively to the budget. These can only be viewed by users with the appropriate authorization.')}}
                 </div>
                 <div>
                     <input
@@ -44,7 +43,7 @@
                         <input type="text"
                                v-model="this.contractPartner"
                                id="eventTitle"
-                               placeholder="Vertragspartner*"
+                               :placeholder="$t('Contract partner*')"
                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                     </div>
@@ -54,7 +53,7 @@
                             <ListboxButton v-if="selectedLegalForm !== null"
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
-                                <span class="block truncate items-center flex">
+                                <span class="truncate items-center flex">
                                             <span>{{ selectedLegalForm.name }}</span>
                                 </span>
                                     <span
@@ -66,7 +65,7 @@
                             <ListboxButton v-else
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex flex-grow xsLight text-left subpixel-antialiased">
-                                    Rechtsform
+                                    {{$t('Legal form')}}
                                 </div>
                                 <span
                                     class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -118,7 +117,7 @@
                             <ListboxButton v-else
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex flex-grow xsLight text-left subpixel-antialiased">
-                                    Vertragsart
+                                    {{ $t('Contract type')}}
                                 </div>
                                 <span
                                     class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -155,7 +154,7 @@
                     <div class="py-1 w-full flex">
                         <input type="number"
                                v-model="this.contractAmount"
-                               placeholder="Betrag* (Gage, Co-Produktionsbeitrag, etc.)"
+                               :placeholder="$t('Amount* (fee, co-production contribution, etc.)')"
                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         <Listbox as="div" class="flex h-12 w-24" v-model="selectedCurrency"
                                  id="eventType">
@@ -204,7 +203,7 @@
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <label for="hasGroup" :class="this.kskLiable ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
-                                KSK-pflichtig
+                                {{ $t('KSK-liable')}}
                             </label>
                         </div>
 
@@ -214,7 +213,7 @@
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <label for="hasGroup" :class="this.isAbroad ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
-                                Im Ausland ansässig
+                                {{ $t('Resident abroad')}}
                             </label>
                         </div>
                         <div class="ml-4" v-if="this.isAbroad">
@@ -224,7 +223,7 @@
                                 <label for="hasGroup"
                                        :class="this.hasPowerOfAttorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
-                                    Vollmacht liegt vor
+                                    {{$t('Power of attorney is available')}}
                                 </label>
                             </div>
                             <div class="flex items-center mb-2">
@@ -232,22 +231,22 @@
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <label for="hasGroup" :class="this.isFreed ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
-                                    Im Heimatland befreit
+                                    {{ $t('Liberated at home')}}
                                 </label>
                             </div>
                         </div>
                     </div>
-                    <textarea placeholder="Kommentar / Notiz"
+                    <textarea :placeholder="$t('Comment / Note')"
                               id="comment"
                               v-model="comment"
                               rows="5"
-                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                              class="inputMain resize-none xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                     <div class="my-1">
                         <div class="relative w-full">
                             <div class="w-full">
                                 <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                       placeholder="Dokumentzugriff für*"
+                                       :placeholder="$t('Document access for') + '*'"
                                        class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                             <transition leave-active-class="transition ease-in duration-100"
@@ -282,7 +281,7 @@
                                             {{ user.first_name }} {{ user.last_name }}
                                             </span>
                                             <button type="button" @click="deleteUserFromContractUserArray(index)">
-                                                <span class="sr-only">User aus Vertrag entfernen</span>
+                                                <span class="sr-only">{{$t('Remove user from contract')}}</span>
                                                 <XIcon
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
@@ -296,7 +295,7 @@
                     <div class="px-12 w-full">
                         <div class="xxsDarkBold flex items-center cursor-pointer"
                              @click="showExtraSettings = !showExtraSettings">
-                            Weitere Angaben oder Aufgabe hinzufügen
+                            {{ $t('Add further details or task')}}
                             <ChevronUpIcon v-if="showExtraSettings"
                                            class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
                             <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
@@ -325,7 +324,7 @@
                                 </button>
 
                                 <button class="flex text-sm py-3 px-8 mt-1 items-center border border-2 mt-6 border-success bg-backgroundGray hover:bg-green-50 rounded-full shadow-sm text-success hover:shadow-blueButton focus:outline-none" v-if="creatingNewTask" @click="$refs.task_form.saveTask(); this.errorText === null ? creatingNewTask = false : null">
-                                    Aufgabe im Vertrag speichern
+                                    {{ $t('Save task in contract')}}
                                 </button>
                             </div>
                         </div>
@@ -347,7 +346,7 @@
 
                 <div class="justify-center flex w-full my-6">
                     <button class="flex p-2 px-8 mt-1 items-center border border-transparent rounded-full shadow-sm  focus:outline-none" :class="(this.file === null || this.contractAmount === '' || this.contractPartner === '')? 'bg-secondary text-white' : 'text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover'" :disabled="this.file === null || this.contractAmount === '' || this.contractPartner === ''"
-                            @click="updateContract">Speichern</button>
+                            @click="updateContract">{{ $t('Save') }}</button>
                 </div>
             </div>
 

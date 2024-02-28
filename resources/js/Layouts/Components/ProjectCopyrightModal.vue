@@ -4,15 +4,15 @@
             <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Kostenträger & Urheberrecht
+                    {{$t('Cost units & copyright')}}
                 </div>
                 <XIcon @click="$emit('closeModal')"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="text-secondary w-full mt-2">Lege einen Kostenträger und Urheberregelungen für dein Projekt
-                    fest.
+                <div class="text-secondary w-full mt-2">
+                    {{$t('Define a cost unit and copyright regulations for your project.')}}
                 </div>
-                <input :placeholder="[projectRightForm.cost_center_name ? projectRightForm.cost_center_name : 'Name des Kostenträgers']"
+                <input :placeholder="[projectRightForm.cost_center_name ? projectRightForm.cost_center_name : $t('Name of the cost unit')]"
                        id="title"
                        v-model="projectRightForm.cost_center_name"
                        class="mt-4 p-4 inputMain resize-none xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
@@ -20,7 +20,7 @@
                     <input type="checkbox" v-model="projectRightForm.own_copyright"
                            class="cursor-pointer h-4 w-4 text-success border-2 border-gray-300 bg-darkGrayBg focus:ring-0"/>
                     <div class="text-md ml-2" :class="[projectRightForm.own_copyright ? 'text-primary' : 'text-secondary']">
-                        Urheberrecht
+                        {{ $t('Copyright')}}
                     </div>
                 </div>
 
@@ -30,7 +30,7 @@
                         <input type="checkbox" v-model="projectRightForm.live_music"
                                class="cursor-pointer h-4 w-4 text-success border-2 border-gray-300 bg-darkGrayBg focus:ring-0"/>
                         <div class="text-md ml-2" :class="[projectRightForm.live_music ? 'text-primary' : 'text-secondary']">
-                            Livemusik
+                            {{ $t('Live music')}}
                         </div>
                     </div>
                     <Listbox as="div" v-model="collectingSociety" id="collecting_society">
@@ -40,7 +40,7 @@
                                 {{collectingSociety?.name}}
                             </div>
                             <div v-else class="flex-grow xsLight text-left subpixel-antialiased">
-                                Verwertungsgesellschaft wählen*
+                                {{ $t('Choose a collecting society')}}*
                             </div>
                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
@@ -69,7 +69,7 @@
                         </fieldset>
                     </div>
 
-                    <textarea placeholder="Kommentar / Notiz"
+                    <textarea :placeholder="$t('Comment / Note')"
                               id="description"
                               v-model="projectRightForm.description"
                               rows="4"
@@ -79,7 +79,7 @@
                 </div>
                 <div class="w-full flex justify-center my-6">
                     <AddButton
-                        text="Speichern"
+                        :text="$t('Save')"
                         mode="modal"
                         class="px-6 py-3"
                         @click="updateData"
@@ -135,8 +135,8 @@ export default {
                 law_size: this.project ? this.project?.law_size : 'SMALL',
             }),
             lawSizes: [
-                {id: 'BIG', name: 'Großes Recht'},
-                {id: 'SMALL', name: 'Kleines Recht'}
+                {id: 'BIG', name: this.$t('Big law')},
+                {id: 'SMALL', name: this.$t('Small law')}
             ],
         }
     },

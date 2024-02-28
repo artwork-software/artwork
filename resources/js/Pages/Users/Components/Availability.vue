@@ -1,11 +1,11 @@
 <template>
     <div class="grid grid-cols-12 w-full">
         <div class="col-span-7">
-            <h3 class="headline2 mb-6">Verfügbarkeit</h3>
+            <h3 class="headline2 mb-6">{{ $t('Availability')}}</h3>
             <div class="mb-10" v-if="type !== 'freelancer'">
                 <TemporarilyHired :user="user" v-if="$can('can manage workers') || hasAdminRole()" />
                 <div v-if="user.temporary && user.employStart && user.employEnd">
-                    Temporär angestellt: {{ dayjs(user.employStart).format('DD.MM.YYYY') }} - {{ dayjs(user.employEnd).format('DD.MM.YYYY') }}
+                    {{ $t('Temporarily employed') }}: {{ dayjs(user.employStart).format('DD.MM.YYYY') }} - {{ dayjs(user.employEnd).format('DD.MM.YYYY') }}
                 </div>
             </div>
         </div>

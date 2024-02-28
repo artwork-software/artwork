@@ -18,7 +18,7 @@
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 </div>
                                 <div class="flex">
-                                    <span class="ml-2 hind mt-1">Bearbeite den Raum</span>
+                                    <span class="ml-2 hind mt-1">{{$t('Edit the room')}}</span>
                                 </div>
                             </div>
                         </div>
@@ -33,11 +33,11 @@
                                 <div class="py-1">
                                     <MenuItem v-slot="{ active }">
                                         <a @click="openEditRoomModal(room)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                             <PencilAltIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Bearbeiten
+                                            {{$t('edit')}}
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -46,7 +46,7 @@
                                             <DuplicateIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Duplizieren
+                                            {{ $t('Duplicate')}}
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -55,7 +55,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            In den Papierkorb
+                                            {{$t('In the wastebasket')}}
                                         </a>
                                     </MenuItem>
                                 </div>
@@ -66,7 +66,7 @@
                 <div v-if="room.room_history[0]"
                      class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
                     <div>
-                        zuletzt geändert:
+                        {{$t('last modified')}}:
                     </div>
                     <UserPopoverTooltip :user="room.room_history[0].changes[0].changed_by"
                                         :id="room.room_history[0].changes[0].changed_by?.id"
@@ -79,7 +79,7 @@
                         <ChevronRightIcon
                             class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
                             aria-hidden="true"/>
-                        Verlauf ansehen
+                        {{$t('View history')}}
                     </button>
                 </div>
                 <div v-if="room.temporary === true" class="font-lexend my-4 font-semibold">
@@ -91,8 +91,8 @@
                             {{ room.area.name }}
                         </span>
                         <p class="xsLight mt-4">
-                            Kann von jedem gebucht werden: <label v-if="room.everyone_can_book">Ja</label>
-                            <label v-else>Nein</label>
+                            {{$t('Can be booked by anyone ')}}: <label v-if="room.everyone_can_book">{{$t('Yes')}}</label>
+                            <label v-else>{{ $t('No') }}</label>
                         </p>
                         <span class="flex mt-6 xsLight subpixel-antialiased">
                             {{ room.description }}
@@ -196,7 +196,7 @@
 
         <div class="my-12 ml-14" v-if="$role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin">
             <div class="flex mt-6 items-center mb-2 ml-14">
-                <h3 class="headline2"> Raumbelegung </h3>
+                <h3 class="headline2"> {{$t('Room assignment')}} </h3>
             </div>
             <div>
                 <div v-if="calendarType && calendarType === 'daily'">
@@ -218,7 +218,7 @@
                 <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
                     <div class="headline1 my-2">
-                        Raum bearbeiten
+                        {{$t('Edit room')}}
                     </div>
                     <XIcon @click="closeEditRoomModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
@@ -229,13 +229,14 @@
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                    placeholder="placeholder"/>
                             <label for="roomNameEdit"
-                                   class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Raumname
+                                   class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
+                                {{$t('Room name')}}
                             </label>
                             <jet-input-error :message="editRoomForm.error" class="mt-2"/>
                         </div>
                         <div class="mt-8 mr-4">
                                             <textarea
-                                                placeholder="Kurzbeschreibung"
+                                                :placeholder="$t('Short description')"
                                                 v-model="editRoomForm.description" rows="4"
                                                 class="shadow-sm placeholder-secondary resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
                         </div>
@@ -244,21 +245,21 @@
                                    type="checkbox"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[editRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
-                               class="ml-4 my-auto text-sm">Temporärer Raum</p>
+                               class="ml-4 my-auto text-sm">{{$t('Temporary room')}}</p>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                                 <span
-                                    class="ml-1 my-auto hind">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
+                                    class="ml-1 my-auto hind">{{$t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')}}</span>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-x-3" v-if="editRoomForm.temporary">
                             <input
                                 v-model="editRoomForm.start_date_dt_local" id="startDateEdit"
-                                placeholder="Zu erledigen bis?" type="date"
+                                :placeholder="$t('To be completed by?')" type="date"
                                 class="border-gray-300 col-span-1 placeholder-secondary mr-2 w-full"/>
                             <input
                                 v-model="editRoomForm.end_date_dt_local" id="endDateEdit"
-                                placeholder="Zu erledigen bis?" type="date"
+                                :placeholder="$t('To be completed by?')" type="date"
                                 class="border-gray-300 col-span-1 placeholder-secondary w-full"/>
                         </div>
 
@@ -267,17 +268,17 @@
                                    type="checkbox"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[editRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
-                               class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
+                               class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone')}}</p>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                                 <span
-                                    class="ml-1 my-auto hind">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>
+                                    class="ml-1 my-auto hind">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
                             </div>
                         </div>
 
                         <div class="flex justify-center">
                             <AddButton @click="editRoom"
-                                       text="Speichern"
+                                       :text="$t(Save)"
                                        mode="modal"
                                        :class="[editRoomForm.name.length === 0 ?
                     'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
@@ -302,13 +303,13 @@
                 <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="headline1 my-2">
-                        Raumbelegung zusagen
+                        {{ $t('Confirm room occupancy')}}
                     </div>
                     <XIcon @click="closeApproveRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="successText">
-                        Bist du sicher, dass du die Raumbelegung zusagen möchtest?
+                        {{$t('Bist du sicher, dass du die Raumbelegung zusagen möchtest?')}}
                     </div>
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
@@ -346,7 +347,7 @@
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToApprove.project" class="w-80">
                                     <div class="ml-16  xsLight flex items-center">
-                                        Zugeordnet zu
+                                        {{$t('assigned to')}}
                                         <div class="xsDark ml-2">
                                             {{ requestToApprove.project.name }}
                                         </div>
@@ -362,10 +363,10 @@
                                     -->
                                 </div>
                                 <div class="xsLight ml-10" v-else>
-                                    Keinem Projekt zugeordnet
+                                    {{$t('Not assigned to a project')}}
                                 </div>
                                 <div class="flex xsLight items-center">
-                                    angefragt:
+                                    {{$t('requested')}}:
                                     <UserPopoverTooltip :height="7" :width="7" v-if="requestToApprove.created_by"
                                                     :user="requestToApprove.created_by" :id="1"/>
                                     <span class="ml-2 xsLight"> {{ requestToApprove.created_at }}</span>
@@ -384,11 +385,11 @@
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="approveRequest">
-                            Zusagen
+                            {{$t('Commitments')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeApproveRequestModal"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -400,13 +401,13 @@
                 <img src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="headline1 my-2">
-                        Raumbelegung absagen
+                        {{ $t('Cancel room reservation')}}
                     </div>
                     <XIcon @click="closeDeclineRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="errorText">
-                        Bist du sicher, dass du die Raumbelegung absagen möchtest?
+                        {{$t('Are you sure you want to cancel the room reservation?')}}
                     </div>
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
@@ -444,7 +445,7 @@
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToDecline.project" class="w-80">
                                     <div class="ml-16 xsLight flex items-center">
-                                        Zugeordnet zu
+                                        {{$t('assigned to')}}
                                         <div class="xsDark ml-2">
                                             {{ requestToDecline.project.name }}
                                         </div>
@@ -460,10 +461,10 @@
                                     -->
                                 </div>
                                 <div class="xsLight ml-10" v-else>
-                                    Keinem Projekt zugeordnet
+                                    {{$t('Not assigned to a project')}}
                                 </div>
                                 <div class="flex xsLight items-center">
-                                    angefragt:
+                                    {{$t('requested')}}:
                                     <UserPopoverTooltip :height="7" :width="7" v-if="requestToDecline.created_by"
                                                     :user="requestToDecline.created_by" :id="1"/>
                                     <span class="ml-2 xsLight"> {{ requestToDecline.created_at }}</span>
@@ -482,11 +483,11 @@
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="declineRequest">
-                            Absagen
+                            {{$t('Cancellations')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -514,8 +515,8 @@
     />
     <!-- Delete Room Modal -->
     <ConfirmationComponent v-if="showSoftDeleteRoomModal"
-                           confirm="Raum löschen"
-                           titel="Raum in den Papierkorb"
+                           :confirm="$t('Delete room')"
+                           :titel="$t('Room in the wastebasket')"
                            :description="roomDeleteDescriptionText"
                            @closed="afterSoftDeleteRoomConfirm"/>
 </template>
@@ -575,11 +576,6 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 
-const attributeFilters = [
-    {name: 'Nur Anfragen', id: 1},
-    {name: 'Nur laute Termine', id: 2},
-    {name: 'Nur Termine mit Publikum', id: 3}
-]
 
 export default {
     mixins: [Permissions],
@@ -672,7 +668,7 @@ export default {
             return requestsToShow
         },
         roomDeleteDescriptionText() {
-            return `Bist du sicher, dass du den Raum ${this.roomToSoftDelete.name} in den Papierkorb legen möchtest?`;
+            return this.$t('Are you sure you want to put the room {0} in the trash?', [this.roomToSoftDelete.name]);
         },
     },
     mounted() {
@@ -854,11 +850,11 @@ export default {
             for (let file of files) {
 
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
-                    this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
+                    this.uploadDocumentFeedback = this.$t('Videos, .exe and .dmg files are not supported')
                 } else {
                     const fileSize = file.size;
                     if (fileSize > 2097152) {
-                        this.uploadDocumentFeedback = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
+                        this.uploadDocumentFeedback = this.$t('Files larger than 2MB cannot be uploaded.')
                     } else {
                         this.uploadDocumentToRoom(file)
                     }
@@ -959,8 +955,8 @@ export default {
         softDeleteRoom() {
             this.$inertia.delete(`/rooms/${this.roomToSoftDelete.id}`);
             this.closeSoftDeleteRoomModal();
-            this.successHeading = "Raum im Papierkorb"
-            this.successDescription = "Der Raum wurde erfolgreich in den Papierkorb gelegt."
+            this.successHeading = this.$t('Room in the wastebasket')
+            this.successDescription = this.$t('The room has been successfully moved to the trash.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000);
         },
@@ -989,11 +985,6 @@ export default {
                 }
             },
             deep: true
-        }
-    },
-    setup() {
-        return {
-            attributeFilters,
         }
     },
 }

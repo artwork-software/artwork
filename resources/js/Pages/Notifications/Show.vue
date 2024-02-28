@@ -4,7 +4,7 @@
             <!-- Greetings Div -->
             <div class="mr-2 w-4/6">
                 <div class="ml-12 mt-10">
-                    <h2 class="headline1 flex mb-4">Benachrichtigungen</h2>
+                    <h2 class="headline1 flex mb-4">{{$t('Notifications')}}</h2>
                 </div>
             </div>
         </div>
@@ -13,20 +13,20 @@
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
                     <li class="mr-2" role="presentation">
                         <button
-                            :class="[openTab === 'notifications' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']"
-                            @click="openTab = 'notifications'">BENACHRICHTIGUNGEN
+                            :class="[openTab === 'notifications' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                            @click="openTab = 'notifications'">{{$t('Notifications')}}
                         </button>
                     </li>
                     <li class="mr-2" role="presentation">
                         <button
-                            :class="[openTab === 'mailSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']"
-                            @click="openTab = 'mailSettings'">E-MAIL-EINSTELLUNGEN
+                            :class="[openTab === 'mailSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                            @click="openTab = 'mailSettings'">{{$t('E-mail settings')}}
                         </button>
                     </li>
                     <li class="mr-2" role="presentation">
                         <button
-                            :class="[openTab === 'pushSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']"
-                            @click="openTab = 'pushSettings'">PUSH-EINSTELLUNGEN
+                            :class="[openTab === 'pushSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                            @click="openTab = 'pushSettings'">{{ $t('Push settings')}}
                         </button>
                     </li>
                 </ul>
@@ -36,7 +36,7 @@
                     <div class="col-span-8">
                         <!-- Raumbelegungen und Termine Notifications -->
                         <NotificationSectionComponent :readNotifications="readNotifications['EVENTS']"
-                                                      name="Raumbelegungen & Termine" :rooms="rooms"
+                                                      :name="$t('Room bookings & events')" :rooms="rooms"
                                                       :projects="projects"
                                                       :event-types="eventTypes"
                                                       :notifications="notifications['EVENTS']"
@@ -47,7 +47,7 @@
                                                       :room-collisions="roomCollisions"/>
                         <!-- Räume und Raumbelegungsanfragen -->
                         <NotificationSectionComponent :readNotifications="readNotifications['ROOMS']"
-                                                      name="Räume & Raumbelegungsanfragen" :rooms="rooms"
+                                                      :name="$t('Rooms & room booking requests')" :rooms="rooms"
                                                       :projects="projects" :event-types="eventTypes"
                                                       :notifications="notifications['ROOMS']"
                                                       :history-objects="historyObjects"
@@ -56,7 +56,7 @@
                                                       :project="project"
                                                       :room-collisions="roomCollisions"/>
                         <!-- Aufgaben -->
-                        <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" name="Aufgaben"
+                        <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" :name="$t('Tasks')"
                                                       :rooms="rooms" :projects="projects" :event-types="eventTypes"
                                                       :notifications="notifications['TASKS']"
                                                       :history-objects="historyObjects"
@@ -66,7 +66,7 @@
                                                       :room-collisions="roomCollisions"/>
                         <!-- Projekte & Teams -->
                         <NotificationSectionComponent :readNotifications="readNotifications['PROJECTS']"
-                                                      name="Projekte & Teams" :rooms="rooms" :projects="projects"
+                                                      :name="$t('Projects & Teams')" :rooms="rooms" :projects="projects"
                                                       :event-types="eventTypes"
                                                       :notifications="notifications['PROJECTS']"
                                                       :history-objects="historyObjects"
@@ -75,7 +75,7 @@
                                                       :project="project"
                                                       :room-collisions="roomCollisions"/>
                         <NotificationSectionComponent :readNotifications="readNotifications['BUDGET']"
-                                                      name="Projektbudgets & Finanzierungsquellen" :rooms="rooms" :projects="projects"
+                                                      :name="$t('Project budgets & sources of funding')" :rooms="rooms" :projects="projects"
                                                       :event-types="eventTypes"
                                                       :notifications="notifications['BUDGET']"
                                                       :history-objects="historyObjects"
@@ -84,7 +84,7 @@
                                                       :project="project"
                                                       :room-collisions="roomCollisions"/>
                         <NotificationSectionComponent :readNotifications="readNotifications['SHIFTS']"
-                                                      name="Schichtplanung" :rooms="rooms" :projects="projects"
+                                                      :name="$t('Shift planning')" :rooms="rooms" :projects="projects"
                                                       :event-types="eventTypes"
                                                       :notifications="notifications['SHIFTS']"
                                                       :history-objects="historyObjects"
@@ -109,7 +109,7 @@
                             </div>
                         </div>
                        <div class="mt-4" v-if="hasAdminRole() || $canAny(['change system notification'])">
-                           <AddButton text="Benachrichtigung an alle ändern" mode="modal" type="secondary" class="col-span-12 !ml-0" @click="showGlobalNotificationModal = true"/>
+                           <AddButton :text="$t('Change notification to all')" mode="modal" type="secondary" class="col-span-12 !ml-0" @click="showGlobalNotificationModal = true"/>
                        </div>
                     </div>
                 </div>

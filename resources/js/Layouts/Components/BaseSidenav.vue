@@ -8,7 +8,7 @@
                      :class="show ? 'fixed bg-primary pr-1 pb-1' : 'rotate-180 bg-primary absolute'"
                      />
                 <div v-show="!show" class="xsLight ml-5">
-                    Details
+                    {{$t('Details')}}
                 </div>
 
             </div>

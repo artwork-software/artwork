@@ -7,13 +7,13 @@
                        class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
                        aria-hidden="true"/>
                 <div class="mt-8 headline1">
-                    {{this.mode === 'create' ? 'Rechte-Preset erstellen' : 'Rechte-Preset bearbeiten'}}
+                    {{this.mode === 'create' ? $t('Create permission preset') : $t('Edit permission preset')}}
                 </div>
                 <div class="xsLight my-6">
                     {{
                         this.mode === 'create' ?
-                            'Hier kannst du ein Rechte-Preset erstellen. Dieses kann bei der Nutzererstellung verwendet werden.' :
-                            'Hier kannst du das Rechte-Preset "' + this.permission_preset.name + '" bearbeiten.'
+                            $t('You can create a permission preset here. This can be used when creating users.') :
+                            $t('Here you can edit the permission preset {presetName}.', {presetName: this.permission_preset.name})
                     }}
                 </div>
                 <div class="flex items-center">
@@ -37,7 +37,7 @@
                                    'absolute left-0 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none peer-placeholder-shown:text-base peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm'
                                ]"
                         >
-                            Rechte-Preset Name
+                            {{ $t('Permission preset name') }}
                         </label>
                         <span v-if="$page.props.errors.name" class="errorText">
                             {{$page.props.errors.name.charAt(0).toUpperCase() + $page.props.errors.name.slice(1)}}
@@ -75,7 +75,7 @@
                         ]"
                                @click="save"
                                :disabled="this.permissionPresetForm.permissions.length === 0 || this.permissionPresetForm.name === ''"
-                               :text="this.mode === 'create' ? 'Erstellen' : 'Speichern'"
+                               :text="this.mode === 'create' ? $t('Create') : $t('Save')"
                                mode="modal"
                     />
                 </div>

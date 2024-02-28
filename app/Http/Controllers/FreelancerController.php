@@ -68,7 +68,8 @@ class FreelancerController extends Controller
             'vacationSelectCalendar' => $this->calendarService
                 ->createVacationAndAvailabilityPeriodCalendar(request('vacationMonth')),
             'createShowDate' => [
-                $selectedPeriodDate->locale('de')->isoFormat('MMMM YYYY'),
+                $selectedPeriodDate->locale(\session()->get('locale') ?? config('app.fallback_locale'))
+                    ->isoFormat('MMMM YYYY'),
                 $selectedPeriodDate->copy()->startOfMonth()->toDate()
             ],
             'showVacationsAndAvailabilitiesDate' => $selectedDate->format('Y-m-d'),

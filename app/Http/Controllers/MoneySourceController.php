@@ -31,6 +31,8 @@ use Inertia\Response;
 use Inertia\ResponseFactory;
 use stdClass;
 
+use const _PHPStan_11268e5ee\__;
+
 class MoneySourceController extends Controller
 {
     protected ?NotificationService $notificationService = null;
@@ -125,9 +127,10 @@ class MoneySourceController extends Controller
     public function store(Request $request): RedirectResponse
     {
         foreach ($request->users as $requestUser) {
-            $notificationTitle = 'Du hast Zugriff auf "' . $request->name . '" erhalten';
             $user = User::find($requestUser['user_id']);
             // create user Notification
+            //$notificationTitle = 'Du hast Zugriff auf "' . $request->name . '" erhalten';
+            $notificationTitle = __('notification.moneySource.add_permission', ['moneySourceName' => $request->name], $user->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -559,7 +562,12 @@ class MoneySourceController extends Controller
         $users = $moneySource->users()->get();
         if ($users) {
             foreach ($users as $user) {
-                $notificationTitle = 'Finanzierungsquelle/gruppe ' . $moneySource->name . ' wurde gelöscht';
+                //$notificationTitle = 'Finanzierungsquelle/gruppe ' . $moneySource->name . ' wurde gelöscht';
+                $notificationTitle = __(
+                    'notification.moneySource.deleted',
+                    ['moneySource' => $moneySource->name],
+                    $user->language
+                );
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -634,7 +642,13 @@ class MoneySourceController extends Controller
         foreach ($newUsers as $newUser) {
             $newUserIds[] = $newUser->id;
             if (!in_array($newUser->id, $oldUserIds)) {
-                $notificationTitle = 'Du hast Zugriff auf ' . $moneySource->name . ' erhalten';
+                $user = User::find($newUser->id);
+                //$notificationTitle = 'Du hast Zugriff auf ' . $moneySource->name . ' erhalten';
+                $notificationTitle = __(
+                    'notification.moneySource.add_permission',
+                    ['moneySource' => $moneySource->name],
+                    $user->language
+                );
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -647,7 +661,7 @@ class MoneySourceController extends Controller
                     NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
                 );
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setNotificationTo(User::find($newUser->id));
+                $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
                 $this->history->createHistory($moneySource->id, 'Nutzerzugriff zu Finanzierungsquelle hinzugefügt');
             }
@@ -655,7 +669,13 @@ class MoneySourceController extends Controller
 
         foreach ($oldUserIds as $oldUserId) {
             if (!in_array($oldUserId, $newUserIds)) {
-                $notificationTitle = 'Dein Zugriff auf ' . $moneySource->name . ' wurde gelöscht';
+                $user = User::find($newUser->id);
+                //$notificationTitle = 'Dein Zugriff auf ' . $moneySource->name . ' wurde gelöscht';
+                $notificationTitle = __(
+                    'notification.moneySource.remove_permission',
+                    ['moneySource' => $moneySource->name],
+                    $user->language
+                );
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'error',
@@ -668,7 +688,7 @@ class MoneySourceController extends Controller
                     NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED
                 );
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
-                $this->notificationService->setNotificationTo(User::find($newUser->id));
+                $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
                 $this->history->createHistory($moneySource->id, 'Nutzerzugriff zu Finanzierungsquelle entfernt');
             }

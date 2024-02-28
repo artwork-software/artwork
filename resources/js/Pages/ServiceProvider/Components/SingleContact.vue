@@ -3,16 +3,16 @@
         <div class="col-span-8">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="col-span-1">
-                    <input type="text" v-model="contactData.first_name" name="first_name" id="first_name" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" placeholder="Vorname" />
+                    <input type="text" v-model="contactData.first_name" name="first_name" id="first_name" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :placeholder="$t('First name')" />
                 </div>
                 <div class="col-span-1">
-                    <input type="text" v-model="contactData.last_name" name="last_name" id="last_name" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" placeholder="Nachname" />
+                    <input type="text" v-model="contactData.last_name" name="last_name" id="last_name" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :placeholder="$t('Last name')" />
                 </div>
                 <div class="col-span-1">
-                    <input type="email" v-model="contactData.email" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" placeholder="Email" />
+                    <input type="email" v-model="contactData.email" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :placeholder="$t('Email')" />
                 </div>
                 <div class="col-span-1">
-                    <input type="text" v-model="contactData.phone_number" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" placeholder="Telefonnummer" />
+                    <input type="text" v-model="contactData.phone_number" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :placeholder="$t('Phone number')" />
                 </div>
             </div>
         </div>
@@ -29,7 +29,7 @@
         </div>
     </div>
 
-    <SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" title="Dienstleister Kontakt erfolgreich gespeichert" description="Die Änderungen wurden erfolgreich gespeichert." button="Ok" />
+    <SuccessModal v-if="showSuccessModal" @close-modal="showSuccessModal = false" :title="$t('Service provider contact successfully saved')" :description="$t('The changes have been saved successfully.')" :button="$t('Ok')" />
 </template>
 
 <script>

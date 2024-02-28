@@ -4,14 +4,13 @@
             <img src="/Svgs/Overlays/illu_new_contract_module.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Vertragsbaustein hochladen
+                    {{ $t('Upload contract module')}}
                 </div>
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-secondary text-sm my-6">
-                    Lade Vertragsbausteine hoch. Jeder User mit der Berechtigung Verträge einzusehen, kann diese
-                    anschließend für die Vertragsgestaltung herunterladen und nutzen.
+                    {{ $t('Upload contract modules. Any user with authorization to view contracts can then download and use them for contract design.')}}
                 </div>
                 <div>
                     <input
@@ -25,14 +24,14 @@
                     <div @click="selectNewFiles" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
                         border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher ziehen
-                            <br>oder ins Feld klicken
+                        <p class="text-buttonBlue font-bold text-center">
+                           {{ $t('Drag document here to upload or click in the field') }}
                         </p>
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
                 <div>
-                <textarea placeholder="Kommentar / Notiz"
+                <textarea :placeholder="$t('Comment / Note')"
                           id="description"
                           v-model="description"
                           rows="4"
@@ -42,7 +41,7 @@
                     <div v-for="file of files">{{ file.name }}</div>
                 </div>
                 <div class="justify-center flex w-full my-6">
-                    <AddButton text="Dokument hochladen" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
+                    <AddButton :text="$t('Upload document')" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
                                @click="storeFiles"/>
                 </div>
             </div>

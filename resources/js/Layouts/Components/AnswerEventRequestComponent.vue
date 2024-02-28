@@ -5,21 +5,21 @@
             <img v-else-if="type === 'decline'" src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Raumanfrage {{ type === 'accept' ? 'bestätigen' : 'ablehnen'}}
+                    {{ $t('Room request')}} {{ type === 'accept' ? $t('Confirm') : $t('Reject')}}
                 </div>
                 <XIcon @click="closeModal(false)"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="w-10/12" :class="type === 'accept' ? 'successText' : 'errorText'">
-                    Möchtest du die Raumanfrage für {{ this.rooms.find(room => room.id === request.room_id).name}} | {{this.eventTypes.find(eventType => eventType.id === request.event_type_id).name}},
+                    {{ $t('Would you like to submit a room request for')}} {{ this.rooms.find(room => room.id === request.room_id).name}} | {{this.eventTypes.find(eventType => eventType.id === request.event_type_id).name}},
                     {{request.eventName}}  {{ request.project_id ? '|' : ''}} {{this.projects.find(project => project.id === request.project_id)?.name}} | {{formatDate(request.start_time)}} - {{ formatDate(request.end_time)}}
-                    {{ type === 'accept' ? 'bestätigen' : 'ablehnen'}}?
+                    {{ type === 'accept' ? $t('Confirm') : $t('Reject')}}?
                 </div>
                 <div class="flex justify-between mt-6">
-                    <AddButton class="px-20 py-4" @click="closeModal(true)" text="Bestätigen" mode="modal"/>
+                    <AddButton class="px-20 py-4" @click="closeModal(true)" :text="$t('Confirm')" mode="modal"/>
                     <div class="flex my-auto">
                             <span @click="closeModal(false)"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
                     </div>
                 </div>
             </div>

@@ -4,7 +4,7 @@
             <div>
                 <div class="max-w-screen-lg pl-14 pr-4">
                     <div class="headline1 mb-5" v-if="user_to_edit.id === $page.props.user.id">
-                        Mein Konto
+                        {{ $t('My account')}}
                     </div>
                     <div class="flex">
                         <img class=" h-16 w-16 rounded-full flex justify-start object-cover"
@@ -76,11 +76,11 @@ export default {
         return {
             show: false,
             tabs: [
-                {id: 1, name: 'Einsatzplan', href: '#', current: this.currentTab === 'shiftplan', has_permission: this.$can('can plan shifts') || this.hasAdminRole()},
-                {id: 2, name: 'Konditionen', href: '#', current: this.currentTab === 'terms', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
-                {id: 3, name: 'Persönliche Daten', href: '#', current: this.currentTab === 'info', has_permission: true},
-                {id: 4, name: 'Nutzerrechte', href: '#', current: this.currentTab === 'permissions', has_permission: this.hasAdminRole()},
-                {id: 5, name: 'Arbeitsprofil', href: '#', current: this.currentTab === 'workProfile', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
+                {id: 1, name: this.$t('Operational plan'), href: '#', current: this.currentTab === 'shiftplan', has_permission: this.$can('can plan shifts') || this.hasAdminRole()},
+                {id: 2, name: this.$t('Conditions'), href: '#', current: this.currentTab === 'terms', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
+                {id: 3, name: this.$t('Personal data'), href: '#', current: this.currentTab === 'info', has_permission: true},
+                {id: 4, name: this.$t('User permissions'), href: '#', current: this.currentTab === 'permissions', has_permission: this.hasAdminRole()},
+                {id: 5, name: this.$t('Work profile'), href: '#', current: this.currentTab === 'workProfile', has_permission: this.$can('can manage workers') || this.hasAdminRole()},
             ],
         }
     },

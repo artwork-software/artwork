@@ -4,21 +4,20 @@
             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Dokument löschen
+                    {{ $t('Delete document')}}
                 </div>
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="errorText">
-                    Bist du sicher, dass du dieses Dokument aus dem
-                    System löschen möchtest?
+                    {{ $t('Are you sure you want to delete this document from the system?')}}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <AddButton text="Löschen" mode="modal" class="px-20 py-3"
+                    <AddButton :text="$t('Delete')" mode="modal" class="px-20 py-3"
                                @click="destroy" />
                     <div class="flex my-auto">
                             <span @click="closeModal"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
                     </div>
                 </div>
             </div>

@@ -28,7 +28,7 @@
                                         <RefreshIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
-                                        Wiederherstellen
+                                        {{ $t('Restore')}}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }" class="z-10">
@@ -37,7 +37,7 @@
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
-                                        Endgültig löschen
+                                        {{ $t('Delete permanently')}}
                                     </a>
                                 </MenuItem>
                             </div>

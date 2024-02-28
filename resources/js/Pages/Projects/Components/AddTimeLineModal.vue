@@ -5,7 +5,6 @@
                              leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"/>
             </TransitionChild>
-
             <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <TransitionChild as="template" enter="ease-out duration-300"
@@ -25,11 +24,10 @@
                             </div>
                             <div class="relative z-40">
                                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    Timeline erstellen
+                                    {{ $t('Create timeline') }}
                                 </div>
                                 <p class="xsLight subpixel-antialiased">
-                                    Lege die Schichtrelevanten Zeiten fest. Du kannst Schichten jeweils entlang dieser
-                                    Timeline erstellen.
+                                    {{ $t('Define the shift-relevant times. You can create shifts along this timeline.') }}
                                 </p>
                                 <div class="mt-10">
                                     <div class="my-4" v-for="(time, index) in timeLine">
@@ -40,7 +38,7 @@
                                             <div>
                                                 <input type="text"
                                                        onfocus="(this.type='time')"
-                                                       placeholder="Start*"
+                                                       :placeholder="$t('Start*')"
                                                        v-model="addTimeLineForm.start"
                                                        class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                                        required
@@ -50,7 +48,7 @@
                                             <div>
                                                 <input type="text"
                                                        onfocus="(this.type='time')"
-                                                       placeholder="Ende*"
+                                                       :placeholder="$t('End*')"
                                                        v-model="addTimeLineForm.end"
                                                        maxlength="3"
                                                        required
@@ -63,6 +61,7 @@
                                                 <textarea
                                                     v-model="addTimeLineForm.description"
                                                     rows="4"
+                                                    :placeholder="$t('Comment')"
                                                     name="comment"
                                                     id="comment"
                                                     class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
@@ -84,7 +83,7 @@
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
-                                <AddButton mode="modal" text="Speichern" @click="saveTimeLines"/>
+                                <AddButton mode="modal" :text="$t('Save')" @click="saveTimeLines"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -95,10 +94,19 @@
 </template>
 <script>
 import {defineComponent} from 'vue'
-import {XCircleIcon, XIcon} from "@heroicons/vue/solid";
+import {
+    XCircleIcon,
+    XIcon
+} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
-import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
+import {
+    Dialog,
+    DialogPanel,
+    DialogTitle,
+    TransitionChild,
+    TransitionRoot
+} from "@headlessui/vue";
 import Input from "@/Jetstream/Input.vue";
 import {PlusCircleIcon} from "@heroicons/vue/outline";
 import SingleTimeLine from "@/Pages/Projects/Components/SingleTimeLine.vue";
@@ -116,9 +124,14 @@ export default defineComponent({
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel, PlusCircleIcon
+        XIcon,
+        DialogPanel,
+        PlusCircleIcon
     },
-    props: ['event', 'timeLine'],
+    props: [
+        'event',
+        'timeLine'
+    ],
     data() {
         return {
             open: true,
@@ -165,22 +178,25 @@ export default defineComponent({
             }
         },
         updateTimes() {
-            this.$inertia.patch(route('update.timelines'), {
-                timelines: this.timeLine
-            }, {
-                preserveState: true,
-                preserveScroll: true,
-                onFinish: () => {
-                    this.closeModal(true);
+            this.$inertia.patch(
+                route('update.timelines'),
+                {
+                    timelines: this.timeLine
+                }, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onFinish: () => {
+                        this.closeModal(true);
+                    }
                 }
-            })
+            )
         },
         checkTime() {
             if (this.addTimeLineForm.start === null || this.addTimeLineForm.end === null) {
-                this.helpText = 'Bitte fülle beide Felder aus.';
+                this.helpText = this.$t('Please fill in both fields.');
                 return false;
             } else if (this.addTimeLineForm.start >= this.addTimeLineForm.end) {
-                this.helpText = 'Die Startzeit muss vor der Endzeit liegen.';
+                this.helpText = this.$t('The start time must be before the end time.');
                 return false;
             } else {
                 this.helpText = '';
@@ -190,6 +206,3 @@ export default defineComponent({
     }
 })
 </script>
-<style scoped>
-
-</style>

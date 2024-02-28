@@ -18,20 +18,20 @@
                             </div>
                             <div class="relative z-40 pl-4">
                                 <div class="mb-4">
-                                    <label for="title" class="block text-sm font-medium leading-6 text-gray-900">Überschrift</label>
+                                    <label for="title" class="block text-sm font-medium leading-6 text-gray-900">{{ $t('Heading')}}</label>
                                     <div class="mt-2">
                                         <input v-model="pdf.title" type="text" :placeholder="pdf.title" name="title" id="title" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                                     <div>
-                                        <label for="start" class="block text-sm font-medium leading-6 text-gray-900">Startzeit</label>
+                                        <label for="start" class="block text-sm font-medium leading-6 text-gray-900">{{ $t('Start-Time')}}</label>
                                         <div class="mt-2">
                                             <input v-model="pdf.start" type="date" name="start" id="start" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                         </div>
                                     </div>
                                     <div>
-                                        <label for="end" class="block text-sm font-medium leading-6 text-gray-900">Endzeit</label>
+                                        <label for="end" class="block text-sm font-medium leading-6 text-gray-900">{{ $t('End-Time')}}</label>
                                         <div class="mt-2">
                                             <input v-model="pdf.end" type="date" name="end" id="end" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                         </div>
@@ -40,7 +40,7 @@
                                 <!-- defaultPaperSize -->
                                 <div>
                                     <Listbox as="div" v-model="selectedPaperSize">
-                                        <ListboxLabel class="block text-sm font-medium leading-6 text-gray-900">Papiergröße</ListboxLabel>
+                                        <ListboxLabel class="block text-sm font-medium leading-6 text-gray-900">{{$t('Paper size')}}</ListboxLabel>
                                         <div class="relative mt-2">
                                             <ListboxButton class="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
                                                 <span class="block truncate">{{ selectedPaperSize.name }}</span>
@@ -71,7 +71,7 @@
                                 </div>
                                 <!-- defaultPaperOrientation -->
                                 <div class="mt-4 mb-4">
-                                    <label class="block text-sm font-medium leading-6 text-gray-900">Papierorientierung</label>
+                                    <label class="block text-sm font-medium leading-6 text-gray-900">{{$t('Paper orientation')}}</label>
                                     <fieldset class="">
                                         <legend class="sr-only">Notification method</legend>
                                         <div class="space-y-4 sm:flex sm:items-center sm:space-x-10 sm:space-y-0">
@@ -81,19 +81,19 @@
                                             </div>
 
                                         </div>
-                                        <span class="text-red-500 text-xs" v-if="orientationDisabled"> Das Format A6 ist nur im Querformat möglich.  </span>
+                                        <span class="text-red-500 text-xs" v-if="orientationDisabled"> {{$t('The A6 format is only possible in landscape format.')}}  </span>
                                     </fieldset>
                                 </div>
 
                                 <div class="mb-4">
-                                    <label for="dpi" class="block text-sm font-medium leading-6 text-gray-900">Auflösung (DPI) (Standard: 72) (Maximal: 300)</label>
+                                    <label for="dpi" class="block text-sm font-medium leading-6 text-gray-900">{{$t('Resolution (DPI) (Standard: 72) (Maximum: 300)')}}</label>
                                     <div class="mt-2">
                                         <input v-model="pdf.dpi" type="number" :placeholder="pdf.dpi" name="dpi" id="dpi" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                     </div>
                                 </div>
 
                               <div class="flex justify-center">
-                                  <AddButton mode="modal" @click="createPdf()" class="!border-2 !border-buttonBlue text-white bg-buttonBlue hover:bg-buttonHover !hover:border-transparent resize-none" text="PDF Exportieren"/>
+                                  <AddButton mode="modal" @click="createPdf()" class="!border-2 !border-buttonBlue text-white bg-buttonBlue hover:bg-buttonHover !hover:border-transparent resize-none" :text="$t('Export PDF')"/>
                               </div>
                             </div>
                         </DialogPanel>
@@ -132,8 +132,8 @@ export default {
                 { id: 'a6', name: 'A6' },
             ],
             paperOrientations: [
-                    { id: 'portrait', title: 'Hochformat' },
-                    { id: 'landscape', title: 'Querformat' },
+                    { id: 'portrait', title: this.$t('Portrait format') },
+                    { id: 'landscape', title: this.$t('Landscape format') },
             ],
             pdf: useForm({
                 title: this.pdfTitle ? this.pdfTitle : null,
@@ -145,7 +145,7 @@ export default {
                 dpi: 72,
             }),
             selectedPaperSize: { id: 'a4', name: 'A4 (Standard)' },
-            selectedPaperOrientation: { id: 'portrait', title: 'Hochformat' },
+            selectedPaperOrientation: { id: 'portrait', title: this.$t('Portrait format') },
             checkedOrientation: 'portrait',
             orientationDisabled: false,
         }

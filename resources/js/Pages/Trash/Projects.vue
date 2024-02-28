@@ -11,7 +11,7 @@
             <div v-else class="flex items-center w-64 mr-2">
                 <div>
                     <input type="text"
-                           placeholder="Suche"
+                           :placeholder="$t('Search')"
                            v-model="searchText"
                            class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                 </div>
@@ -135,7 +135,7 @@
                                         <RefreshIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
-                                        Wiederherstellen
+                                        {{  $t('Restore') }}
                                     </Link>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
@@ -147,7 +147,7 @@
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
-                                        Endgültig löschen
+                                        {{ $t('Delete permanently')}}
                                     </Link>
                                 </MenuItem>
                             </div>
@@ -161,7 +161,7 @@
         <div class="mb-4 subpixel-antialiased text-secondary text-xs flex items-center"
              v-if="project.project_history.length">
             <div>
-                zuletzt geändert:
+                {{ $t('last modified') }}:
             </div>
             <UserPopoverTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
                                 :user="project.project_history[0].changes[0].changed_by"
@@ -176,7 +176,7 @@
                 <ChevronRightIcon
                     class="-mr-0.5 h-4 w-4  group-hover:text-white"
                     aria-hidden="true"/>
-                Verlauf ansehen
+                {{ $t('View history') }}
             </button>
         </div>
 

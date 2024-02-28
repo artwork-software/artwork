@@ -1,7 +1,7 @@
 <template>
     <app-layout>
         <div class=" ml-14 mr-10">
-            <h2 class="headline1">Nutzer*innen & Teams</h2>
+            <h2 class="headline1">{{ $t('Users & teams')}}</h2>
 
             <UserTabs />
 

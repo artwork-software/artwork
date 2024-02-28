@@ -1,14 +1,13 @@
 <template>
     <ToolSettingsHeader>
-        <h2 class="headline2">Schnittstelle Sage</h2>
+        <h2 class="headline2">{{ $t('Sage interface') }}</h2>
         <div class="grid grid-cols-12">
             <div class="xsLight mt-4 col-span-9">
-                Du möchtest die Buchungen aus Sage automatisch in die jeweiligen Projektbudgets einlesen lass? Dann gib'
-                hier einfach deinen API-Key ein und sage wann die tägliche API-Abfrage erfolgen soll.
+                {{ $t('Would you like to have the bookings from Sage automatically imported into the respective project budgets? Then simply enter your API key here and say when the daily API query should take place.') }}
             </div>
             <div class="flex items-center justify-end col-span-3">
                 <div class="flex items-center mr-2">
-                    <span class="ml-1 my-auto hind">Datenabruf aus Sage erneut ausführen&nbsp;</span>
+                    <span class="ml-1 my-auto hind">{{ $t('Execute data retrieval from Sage again') }}&nbsp;</span>
                     <SvgCollection svgName="smallArrowRight" class="h-6 w-6 ml-2 mr-2"/>
                 </div>
                 <RefreshIcon :class="[
@@ -22,34 +21,34 @@
             </div>
         </div>
         <div class="w-1/2 mt-4 grid grid-cols-1 gap-3">
-            <input-component v-model="this.sageForm.host" placeholder="Host"/>
-            <div class="errorText" v-if="showHostErrorText">Der Host muss angegeben werden.</div>
-            <input-component v-model="this.sageForm.endpoint" placeholder="Endpunkt"/>
-            <div class="errorText" v-if="showEndpointErrorText">Der Endpunkt muss angegeben werden.</div>
-            <input-component v-model="this.sageForm.user" placeholder="Benutzer"/>
-            <div class="errorText" v-if="showUserErrorText">Der Benutzer muss angegeben werden.</div>
+            <input-component v-model="this.sageForm.host" :placeholder="$t('Host')"/>
+            <div class="errorText" v-if="showHostErrorText">{{ $t('The host must be specified.') }}</div>
+            <input-component v-model="this.sageForm.endpoint" :placeholder="$t('Endpoint')"/>
+            <div class="errorText" v-if="showEndpointErrorText">{{ $t('The end point must be specified.') }}</div>
+            <input-component v-model="this.sageForm.user" :placeholder="$t('User')"/>
+            <div class="errorText" v-if="showUserErrorText">{{ $t('The user must be specified.') }}</div>
             <input type="password"
                    v-model="this.sageForm.password"
-                   placeholder="Passwort"
+                   :placeholder="$t('Password')"
                    class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
             />
-            <div class="errorText" v-if="showPasswordErrorText">Das Passwort muss angegeben werden.</div>
+            <div class="errorText" v-if="showPasswordErrorText">{{ $t('The password must be entered.') }}</div>
             <div class="flex flex-col xsLight gap-3">
                 <div class="flex items-center justify-end w-full">
                     <div class="group relative">
                         <InformationCircleIcon class="w-5 h-5 mr-1"/>
                         <div class="hidden group-hover:flex absolute z-10 top-5 left-5 w-96 h-auto bg-gray-600 text-white p-2">
-                            Wird nach dem Import der Daten automatisch auf das letzte Buchungsdatum der bereits importierten Daten angepasst.
+                            {{ $t('Is automatically adjusted to the last posting date of the data already imported after the data has been imported.') }}
                         </div>
                     </div>
-                    <span>Daten ab diesem Buchungsdatum abfragen&nbsp;</span>
+                    <span>{{ $t('Query data from this booking date') }}&nbsp;</span>
                     <input v-model="this.sageForm.bookingDate"
                            type="date"
                            class="text-center border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none"
                     />
                 </div>
                 <div class="flex items-center justify-end">
-                    <span>Abfrage täglich um&nbsp;</span>
+                    <span>{{ $t('Query daily at') }}&nbsp;</span>
                     <input v-model="this.sageForm.fetchTime"
                            type="time"
                            style="width:82px;"
@@ -57,7 +56,7 @@
                     />
                 </div>
                 <div class="flex items-center justify-end">
-                    <label for="sageEnabled">Schnittstelle aktiv&nbsp;</label>
+                    <label for="sageEnabled">{{ $t('Interface enabled') }}&nbsp;</label>
                     <input type="checkbox"
                            id="sageEnabled"
                            class="checkBoxOnDark"
@@ -67,27 +66,27 @@
             </div>
             <input class="p-4 cursor-pointer text-sm text-white rounded-full bg-buttonBlue hover:bg-buttonHover"
                    type="button"
-                   value="Schnittstelleneinstellungen speichern"
+                   :value="$t('Save interface settings')"
                    @click="this.showConfirmationComponent = true;"
             />
         </div>
     </ToolSettingsHeader>
     <confirmation-component v-if="this.showConfirmationComponent"
-                            titel="Schnittstellenänderungen"
-                            confirm="Änderungen anwenden"
-                            description="Bist du sicher, dass du die Schnittstelleneinstellungen ändern möchtest"
+                            :titel="$t('Interface changes')"
+                            :confirm="$t('Apply changes')"
+                            :description="$t('Are you sure you want to change the interface settings')"
                             @closed="this.saveSageInterface"
     />
     <success-modal v-if="this.$page.props.flash.success"
-                   title="Schnittstelle Sage"
+                   :title="$t('Sage interface')"
                    :description="this.$page.props.flash.success"
-                   button="Meldung schließen"
+                   :button="$t('Close message')"
                    @closed="this.$page.props.flash.success = null;"
     />
     <error-component v-if="this.$page.props.flash.error"
-                     title="Es ist ein Fehler aufgetreten"
+                     :title="$t('An error has occurred')"
                      :description="this.$page.props.flash.error"
-                     confirm="Meldung schließen"
+                     :confirm="$t('Close message')"
                      @closed="this.$page.props.flash.error = null;"
     />
 </template>

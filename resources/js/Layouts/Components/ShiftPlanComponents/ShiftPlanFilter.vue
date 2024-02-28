@@ -3,11 +3,11 @@
         <div class="inline-flex border-none justify-end w-full">
             <button class="flex" @click="resetCalendarFilter">
                 <XIcon class="w-3 mr-1 mt-0.5"/>
-                <label class="text-xs cursor-pointer">Zurücksetzen</label>
+                <label class="text-xs cursor-pointer">{{ $t('Reset')}}</label>
             </button>
             <button class="flex ml-4" @click="saving = !saving">
                 <DocumentTextIcon class="w-3 mr-1 mt-0.5"/>
-                <label class="text-xs cursor-pointer">Speichern</label>
+                <label class="text-xs cursor-pointer">{{ $t('Save')}}</label>
             </button>
         </div>
 
@@ -19,7 +19,7 @@
                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                 >
                     <span
-                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Gespeicherte Filter</span>
+                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Saved filters')}}</span>
                     <ChevronDownIcon
                         :class="open ? 'rotate-180 transform' : ''"
                         class="h-4 w-4 mt-0.5 text-white"
@@ -30,11 +30,11 @@
                         <div class="flex">
                             <input id="saveFilter" autocomplete="off" v-model="filterName" type="text"
                                    class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
-                                   placeholder="Name des Filters"/>
+                                   :placeholder="$t('Name of the filter')"/>
                             <button
                                 class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
                                 <label @click="saveFilter"
-                                       class="cursor-pointer text-white text-xs">Speichern</label>
+                                       class="cursor-pointer text-white text-xs">{{ $t('Save')}}</label>
                             </button>
                             <!-- <AddButton text="Speichern" class="text-sm ml-0"
                                        @click="saveFilter"></AddButton> -->
@@ -48,8 +48,7 @@
                                class="cursor-pointer text-white">{{ filter.name }}</label>
                         <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
                     </button>
-                    <p v-if="localPersonalFilters.length === 0" class="text-secondary py-1">Noch keine Filter
-                        gespeichert</p>
+                    <p v-if="localPersonalFilters.length === 0" class="text-secondary py-1">{{ $t('No filters saved yet')}}</p>
                 </DisclosurePanel>
             </Disclosure>
 
@@ -60,7 +59,7 @@
                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                 >
                                     <span
-                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Räume</span>
+                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Rooms')}}</span>
                     <ChevronDownIcon
                         :class="open ? 'rotate-180 transform' : ''"
                         class="h-4 w-4 mt-0.5 text-white"
@@ -75,7 +74,7 @@
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                     {{ room.label }}</p>
                             </div>
-                            <div v-else class="text-secondary">Noch keine Räume angelegt</div>
+                            <div v-else class="text-secondary">{{ $t('No rooms created yet')}}</div>
                         </DisclosurePanel>
                     </Disclosure>
 
@@ -87,7 +86,7 @@
                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
                 >
                                 <span
-                                    :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termine</span>
+                                    :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Events')}}</span>
                     <ChevronDownIcon
                         :class="open ? 'rotate-180 transform' : ''"
                         class="h-4 w-4 mt-0.5 text-white"
@@ -99,7 +98,7 @@
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                         >
-                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termintyp</span>
+                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{$t('Event type')}}</span>
                             <ChevronDownIcon
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"

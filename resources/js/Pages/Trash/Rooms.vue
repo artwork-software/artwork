@@ -11,7 +11,7 @@
             <div v-else class="flex items-center w-64 mr-2">
                 <div>
                     <input type="text"
-                           placeholder="Suche"
+                           :placeholder="$t('Search')"
                            v-model="searchText"
                            class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                 </div>
@@ -82,7 +82,7 @@
                                                             <RefreshIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Wiederherstellen
+                                                            {{ $t('Restore')}}
                                                         </Link>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }">
@@ -94,7 +94,7 @@
                                                             <TrashIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Endgültig löschen
+                                                            {{ $t('Delete permanently')}}
                                                         </Link>
                                                     </MenuItem>
                                                 </div>
@@ -110,8 +110,7 @@
 
                     <h2 v-on:click="switchVisibility(area.id)"
                         class="text-sm mt-10 pb-2 flex font-bold text-primary cursor-pointer">
-                        Temporäre
-                        Räume
+                        {{ $t('Temporary rooms')}}
                         <ChevronUpIcon v-if="showTemporaryRooms.includes(area.id)"
                                        class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
                         <ChevronDownIcon v-else
@@ -168,7 +167,7 @@
                                                             <RefreshIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Wiederherstellen
+                                                            {{$t('Restore')}}
                                                         </Link>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }">
@@ -180,7 +179,7 @@
                                                             <TrashIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Endgültig löschen
+                                                            {{ $t('Delete permanently')}}
                                                         </Link>
                                                     </MenuItem>
                                                 </div>

@@ -1,22 +1,22 @@
 <template>
     <jet-dialog-modal :show="true" @close="closeModal()">
-
         <template #content>
             <img alt="Details" src="/Svgs/Overlays/illu_budget_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                   aria-hidden="true"/>
+            <XIcon class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+                   aria-hidden="true"
+                   @click="closeModal()"
+            />
             <div class="mx-4">
-                <!--   Heading   -->
                 <div>
                     <h1 class="my-1 flex">
                         <div class="flex-grow flex items-center headline1">
                             Details
                             <svg v-if="cell.column.is_locked" xmlns="http://www.w3.org/2000/svg" width="16"
                                          height="20" class="mr-2 ml-4 flex items-center mt-0.5" viewBox="0 0 11.975 13.686">
-                            <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
-                                  d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
-                                  fill="#27233C"/>
-                        </svg>
+                                <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
+                                      d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
+                                      fill="#27233C"/>
+                            </svg>
                         </div>
                     </h1>
                     <div class="mb-4">
@@ -44,7 +44,7 @@
                                     <div class="w-1/2">
                                         <input type="text"
                                                v-model="calculation.name"
-                                               placeholder="Name"
+                                               :placeholder="$t('Name')"
                                                :disabled="cell.column.is_locked"
                                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     </div>
@@ -52,11 +52,11 @@
                                         <input type="number" @focusout="this.refreshSumKey++"
                                                v-model="calculation.value"
                                                :disabled="cell.column.is_locked"
-                                               placeholder="Wert"
+                                               :placeholder="$t('Value')"
                                                class="h-12 sDark text-right inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     </div>
                                 </div>
-                                <textarea placeholder="Kommentar"
+                                <textarea :placeholder="$t('Comment')"
                                           v-model="calculation.description"
                                           :disabled="cell.column.is_locked"
                                           rows="4"
@@ -68,7 +68,7 @@
                                     <div class="w-full relative">
                                         <div @click="addCalculation(cell.id, calculation.position)" v-if="!cell.column.is_locked" class="cursor-pointer h-1 border-dashed border-t-2 border-indigo-500">
                                             <div class="flex flex-col justify-center absolute -top-7 left-1/2">
-                                                <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">Unterhalb hinzufügen</div>
+                                                <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">{{ $t('Add below') }}</div>
                                                 <div class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 object-cover">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -82,7 +82,7 @@
                                     <div class="w-full relative">
                                         <div @click="deleteCalculationFromCell(calculation)" v-if="!cell.column.is_locked" class="cursor-pointer h-1 border-dashed border-t-2 border-red-500">
                                             <div class="flex flex-col justify-center absolute -top-7 left-1/2">
-                                                <div class="uppercase text-red-500 text-xs font-semibold -ml-12">Oberhalb Löschen</div>
+                                                <div class="uppercase text-red-500 text-xs font-semibold -ml-12">{{ $t('Delete above') }}</div>
                                                 <div class="shadow-[0px_0px_5px_0px_#f56565] rounded-full text-white bg-red-300 w-fit ">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 object-cover">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -94,14 +94,13 @@
                                 </div>
                             </div>
                         </div>
-
                         <!-- if no calculations are present -->
                         <div class="group h-2" v-show="this.cell.calculations?.length < 0">
                             <div class="hidden group-hover:block col-span-1">
                                 <div class="w-full relative">
                                     <div @click="addCalculation(cell.id)" v-if="!cell.column.is_locked" class="cursor-pointer h-1 border-dashed border-t-2 border-indigo-500">
                                         <div class="flex flex-col justify-center absolute -top-7 left-1/2">
-                                            <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">Unterhalb hinzufügen</div>
+                                            <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">{{ $t('Add below') }}</div>
                                             <div class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 object-cover">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -112,7 +111,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="py-2 bg-silverGray flex justify-between mt-2">
                             <div class="ml-2 sDark">
                                 SUM
@@ -122,33 +120,41 @@
                             </div>
                         </div>
                         <div class="flex justify-center mt-6">
-                            <AddButton @click="saveCalculation()" text="Speichern" :disabled="cell.column.is_locked"
-                                       class="text-sm ml-0 py-5 xsWhiteBold"></AddButton>
+                            <AddButton @click="saveCalculation()"
+                                       :text="$t('Save')"
+                                       :disabled="cell.column.is_locked"
+                                       class="text-sm ml-0 py-5 xsWhiteBold"
+                            />
                         </div>
                     </div>
                     <!-- Commentary Tab -->
                     <div v-if="isCommentTab">
                          <textarea
-                             placeholder="Was gibt es zu diesem Posten zu beachten?"
-                             v-model="commentForm.description" rows="4"
-                             class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 inputMain pt-3 mb-8 placeholder-secondary  w-full"/>
+                             :placeholder="$t('What do I need to know about this item?')"
+                             v-model="commentForm.description"
+                             rows="4"
+                             class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 inputMain pt-3 mb-8 placeholder-secondary w-full"
+                         />
                         <div>
-
                             <div class="my-6" v-for="comment in this.cell.comments"
                                  @mouseover="commentHovered = comment.id"
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
-                                        <NewUserToolTip :id="comment.id" :user="comment.user" :height="8"
-                                                        :width="8"></NewUserToolTip>
+                                        <NewUserToolTip :id="comment.id"
+                                                        :user="comment.user"
+                                                        :height="8"
+                                                        :width="8"
+                                        />
                                         <div class="ml-2 text-secondary"
                                              :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                             {{ formatDate(comment.created_at) }}
                                         </div>
                                     </div>
-                                    <button v-show="commentHovered === comment.id && comment.user_id === $page.props.user.id" type="button"
+                                    <button v-show="commentHovered === comment.id && comment.user_id === $page.props.user.id"
+                                            type="button"
                                             @click="deleteCommentFromCell(comment)">
-                                        <span class="sr-only">Kommentar von Projekt entfernen</span>
+                                        <span class="sr-only">{{ $t('Remove comment from project') }}</span>
                                         <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
                                     </button>
                                 </div>
@@ -158,29 +164,29 @@
                             </div>
                         </div>
                         <div class="flex justify-center">
-                            <AddButton @click="addCommentToCell()" text="Speichern"
+                            <AddButton @click="addCommentToCell()" :text="$t('Save')"
                                        :disabled="this.commentForm.description === null && this.commentForm.description === ''"
                                        :class="this.commentForm.description === null || this.commentForm.description === '' ? 'bg-secondary hover:bg-secondary' : ''"
-                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
+                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"
+                            />
                         </div>
                     </div>
                     <!-- Link Tab -->
                     <div v-if="isLinkTab">
                         <h2 class="xsLight mb-2 mt-4">
-                            Behalte den Überblick über deine Finanzierungsquellen. Du kannst den Wert zur
-                            Quelle addieren.
+                            {{ $t('Keep track of your funding sources. You can add the value to the source.') }}
                         </h2>
                         <div class="flex items-center justify-start my-6">
                             <input v-model="isLinked" type="checkbox" :disabled="cell.column.is_locked"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[isLinked ? 'xsDark' : 'xsLight']"
-                               class="ml-4 my-auto text-sm"> Mit Finanzierungsquelle verlinken</p>
+                               class="ml-4 my-auto text-sm">{{ $t('Link to funding source') }}</p>
                         </div>
                         <div v-if="isLinked" class="flex w-full">
                             <div class="flex w-full" v-if="!cell.column.is_locked">
                                 <div class="relative w-full">
                                     <div class="w-full flex">
-                                    <Listbox as="div" v-model="linkedType" id="linked_type" >
+                                    <Listbox as="div" v-model="linkedType" id="linked_type">
                                         <ListboxButton  class="inputMain w-12 h-10 cursor-pointer truncate flex p-2">
                                             <div class="flex-grow xsLight text-left subpixel-antialiased">
                                                 {{ linkedType.name }}
@@ -188,7 +194,7 @@
                                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                         </ListboxButton>
                                         <ListboxOptions class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                            <ListboxOption v-for="type in linkTypes"
+                                            <ListboxOption v-for="type in this.linkTypes"
                                                            class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
                                                            :key="type.name"
                                                            :value="type"
@@ -201,8 +207,9 @@
                                         </ListboxOptions>
                                     </Listbox>
                                         <input id="userSearch" v-model="moneySource_query" type="text" autocomplete="off"
-                                               placeholder="Mit welcher Finanzierungsquelle willst du den Wert verlinken?"
-                                               class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                               :placeholder="$t('Which funding source do you want to link the value to?')"
+                                               class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                        />
                                     </div>
                                     <transition leave-active-class="transition ease-in duration-100"
                                                 leave-from-class="opacity-100"
@@ -225,79 +232,65 @@
                                         </div>
                                     </transition>
                                     <div class="flex xsDark mt-2">
-                                        Verlinkt mit:
+                                        {{ $t('Linked with') }}:
                                         <div class="xsDark mx-2">
                                             {{selectedMoneySource?.name}}
                                         </div>
-                                        als
+                                        {{ $t('as') }}
                                         <div v-if="linkedType.type === 'EARNING'" class="xsDark mx-2">
-                                            Einnahme
+                                            {{ $t('Revenue') }}
                                         </div>
                                         <div v-else class="xsDark mx-2">
-                                            Ausgabe
+                                            {{ $t('Expenses') }}
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="flex xsDark" v-else>
-                                Verlinkt mit:
+                                {{ $t('Linked with') }}:
                                 <div class="xsDark mx-2">
                                     {{selectedMoneySource.name}}
                                 </div>
-                                als
+                                {{ $t('as') }}
                                 <div v-if="linkedType.type === 'EARNING'" class="xsDark mx-2">
-                                    Einnahme
+                                    {{ $t('Revenue') }}
                                 </div>
                                 <div v-else class="xsDark mx-2">
-                                    Ausgabe
+                                    {{ $t('Expenses') }}
                                 </div>
                             </div>
-
                         </div>
                         <div class="flex justify-center">
-                            <AddButton @click="updateMoneySourceLink()" :disabled="cell.column.is_locked || selectedMoneySource === null"
-                                       class="mt-8 py-5 px-24" text="Speichern"
-                            ></AddButton>
+                            <AddButton :disabled="cell.column.is_locked || selectedMoneySource === null"
+                                       class="mt-8 py-5 px-24" :text="$t('Save')"
+                                       @click="updateMoneySourceLink()"
+                           />
                         </div>
                     </div>
-                    <!--<div v-if="isExcludeTab">
-                        <h2 class="xsLight mb-2 mt-4">
-                            Ausgeklammerte Posten werden nicht in das Projektbudget gerechnet. So kannst du zB. internes
-                            Personal, virtuelle Kosten wie Eigenleistungen oä. aufführen, ohne dass diese Einfluss auf
-                            das Projektbudget haben.
-                        </h2>
-                        <div class="flex items-center justify-start my-6">
-                            <input v-model="isExcluded" type="checkbox" :disabled="cell.column.is_locked"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <p :class="[isExcluded ? 'xsDark' : 'xsLight']"
-                               class="ml-4 my-auto text-sm"> Ausklammern</p>
-                        </div>
-                        <div class="flex justify-center">
-                            <AddButton @click="updateCommentedStatus()" :disabled="cell.column.is_locked"  text="Speichern"
-                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
-                        </div>
-                    </div>-->
                 </div>
             </div>
         </template>
     </jet-dialog-modal>
-
-
     <ConfirmDeleteModal
         v-if="showConfirmCalculationModal"
-        title="Kalkulation speichern"
-        description="Möchtest Du deine Kalkulation speichern? Die bisherige Zahl in der Budget-Tabelle wird dadurch mit der neuen Zahl unwiederufbar überschrieben."
-        button="Speichern"
-        @closed="closeConfirmCalculationModal()"
+        :title="$t('Save calculation')"
+        :description="$t('Would you like to save your calculation? The previous figure in the budget table will be overwritten with the new figure irrevocably.')"
+        :button="$t('Save')"
         :is_budget="true"
+        @closed="closeConfirmCalculationModal()"
         @delete="saveAllCalculations()"
     />
 </template>
 
 <script>
-
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions, RadioGroup, RadioGroupOption} from "@headlessui/vue";
-
+import {
+    Listbox,
+    ListboxButton,
+    ListboxOption,
+    ListboxOptions,
+    RadioGroup,
+    RadioGroupOption
+} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {CheckIcon, ChevronDownIcon, PlusCircleIcon, XIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton.vue";
@@ -309,11 +302,6 @@ import Permissions from "@/mixins/Permissions.vue";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-
-const linkTypes = [
-    {name: '+', type: 'EARNING'},
-    {name: '-', type: 'COST'}
-]
 
 export default {
     name: 'CellDetailComponent',
@@ -338,13 +326,28 @@ export default {
         PlusCircleIcon,
         XCircleIcon
     },
-
     data() {
         return {
             isLinked: this.cell.linked_money_source_id !== null,
-            linkedType: this.cell.linked_type === 'EARNING' ? linkTypes[0] : linkTypes[1],
+            linkedType: this.cell.linked_type === 'EARNING' ?
+                {
+                    name: '+',
+                    type: 'EARNING'
+                } : {
+                    name: '-',
+                    type: 'COST'
+                },
+            linkTypes: [
+                {
+                    name: '+',
+                    type: 'EARNING'
+                },
+                {
+                    name: '-',
+                    type: 'COST'
+                }
+            ],
             selectedMoneySource: this.cell.linked_money_source_id !== null ? this.moneySources.find(moneySource => moneySource.id === this.cell.linked_money_source_id) : null,
-            linkTypes,
             isCalculateTab: this.openTab === 'calculation' || (this.cell.column.type === 'empty' && this.openTab !== 'comment' && this.openTab !== 'moneySource'),
             isCommentTab: this.openTab === 'comment' || this.cell.column.type !== 'empty' && this.openTab !== 'moneySource' && this.openTab !== 'calculation',
             isExcludeTab: false,
@@ -364,27 +367,36 @@ export default {
             showConfirmCalculationModal: false
         }
     },
-
-    props: ['cell', 'moneySources', 'projectId','openTab'],
-
+    props: [
+        'cell',
+        'moneySources',
+        'projectId',
+        'openTab'
+    ],
     emits: ['closed'],
-
     mounted() {
-        if(this.cell.calculations.length === 0){
-            this.$inertia.post(route('project.budget.cell-calculation.add', this.cell.id), {}, {
-                preserveScroll: true
-            })
+        if (this.cell.calculations.length === 0) {
+            this.$inertia.post(
+                route('project.budget.cell-calculation.add', this.cell.id),
+                {},
+                {
+                    preserveScroll: true
+                }
+            )
         }
     },
-
     watch: {
         moneySource_query: {
             handler() {
                 if (this.moneySource_query.length > 0) {
                     axios.get('/money_sources/search/money_source', {
-                        params: {query: this.moneySource_query, projectId: this.projectId}
+                        params: {
+                            query: this.moneySource_query,
+                            projectId: this.projectId
+                        }
                     }).then(response => {
-                        this.moneySource_search_results = response.data.filter((moneySource) => moneySource.is_group === 0 || moneySource.is_group === false)
+                        this.moneySource_search_results = response.data.filter((moneySource) =>
+                            moneySource.is_group === 0 || moneySource.is_group === false)
                     })
                 }
             },
@@ -394,20 +406,17 @@ export default {
     computed: {
         tabs() {
             if (this.cell.column.type === 'empty') {
-                    return [
-                        {name: 'Kalkulation', href: '#', current: this.isCalculateTab},
-                        {name: 'Kommentar', href: '#', current: this.isCommentTab},
-                        //is commented out for now, maybe this functionality is used in future again, maybe its removed
-                        //{name: 'Ausklammern', href: '#', current: this.isExcludeTab},
-                        {name: 'Verlinkung', href: '#', current: this.isLinkTab},
-                    ]
+                return [
+                    {name: this.$t('Calculation'), href: '#', current: this.isCalculateTab},
+                    {name: this.$t('Comment'), href: '#', current: this.isCommentTab},
+                    {name: this.$t('Linking'), href: '#', current: this.isLinkTab},
+                ]
             } else {
                 return [
-                    {name: 'Kommentar', href: '#', current: this.isCommentTab},
-                    {name: 'Verlinkung', href: '#', current: this.isLinkTab},
+                    {name: this.$t('Comment'), href: '#', current: this.isCommentTab},
+                    {name: this.$t('Linking'), href: '#', current: this.isLinkTab},
                 ]
             }
-
         },
         calculationValues() {
             let calculations = this.cell.calculations;
@@ -428,7 +437,6 @@ export default {
             return sum;
         },
     },
-
     methods: {
         formatDate(date) {
             const dateFormate = new Date(date);
@@ -446,9 +454,13 @@ export default {
         },
         openModal() {
             if(this.cell.calculations.length === 0){
-                this.$inertia.post(route('project.budget.cell-calculation.add', this.cell.id), {}, {
-                    preserveScroll: true
-                })
+                this.$inertia.post(
+                    route('project.budget.cell-calculation.add', this.cell.id),
+                    {},
+                    {
+                        preserveScroll: true
+                    }
+                )
             }
         },
         selectMoneySource(moneySource){
@@ -460,13 +472,10 @@ export default {
             this.isCommentTab = false;
             this.isExcludeTab = false;
             this.isLinkTab = false;
-            if (selectedTab.name === 'Kalkulation') {
+            if (selectedTab.name === this.$t('Calculation')) {
                 this.isCalculateTab = true;
-            } else if (selectedTab.name === 'Kommentar') {
+            } else if (selectedTab.name === this.$t('Comment')) {
                 this.isCommentTab = true;
-            //is commented out for now, maybe this functionality is used in future again, maybe its removed
-            // } else if (selectedTab.name === 'Ausklammern') {
-            //     this.isExcludeTab = true;
             } else {
                 this.isLinkTab = true;
             }
@@ -475,21 +484,32 @@ export default {
             this.$emit('closed', bool);
         },
         updateMoneySourceLink() {
-            this.$inertia.patch(route('project.budget.cell-source.update'), {
-                cell_id: this.cell.id,
-                linked_type: this.isLinked ? this.linkedType.type : null,
-                money_source_id: this.isLinked ? this.selectedMoneySource.id : null
-            }, {
-                preserveScroll: true
-            });
+            this.$inertia.patch(
+                route('project.budget.cell-source.update'),
+                {
+                    cell_id: this.cell.id,
+                    linked_type: this.isLinked ? this.linkedType.type : null,
+                    money_source_id: this.isLinked ? this.selectedMoneySource.id : null
+                },
+                {
+                    preserveScroll: true
+                }
+            );
 
             this.closeModal(true);
         },
         addCalculation(cellId, position) {
-            if(this.cell.calculations?.length > 0){
-                this.$inertia.patch(route('project.budget.cell-calculation.update'), {
-                    calculations: this.cell.calculations,
-                }, {preserveState: true, preserveScroll: true});
+            if (this.cell.calculations?.length > 0) {
+                this.$inertia.patch(
+                    route('project.budget.cell-calculation.update'),
+                    {
+                        calculations: this.cell.calculations,
+                    },
+                    {
+                        preserveState: true,
+                        preserveScroll: true
+                    }
+                );
             }
             this.$inertia.post(route('project.budget.cell-calculation.add', cellId), {
                 position: position
@@ -500,56 +520,68 @@ export default {
         saveCalculation() {
             let canClosed = false;
             this.cell.calculations.forEach((calculation) => {
-                if(!canClosed){
-                    if(Number(calculation.value) !== 0){
+                if (!canClosed) {
+                    if (Number(calculation.value) !== 0) {
                         this.showConfirmCalculationModal = true;
                         canClosed = true;
                     }
                 }
             })
-            if(!canClosed){
+            if (!canClosed) {
                 this.saveAllCalculations()
             }
         },
         saveAllCalculations(){
-            this.$inertia.patch(route('project.budget.cell-calculation.update'), {
-                calculations: this.cell.calculations,
-            }, {preserveState: true, preserveScroll: true});
+            this.$inertia.patch(
+                route('project.budget.cell-calculation.update'),
+                {
+                    calculations: this.cell.calculations,
+                },
+                {
+                    preserveState: true, preserveScroll: true
+                }
+            );
             this.closeModal(true);
         },
         deleteCommentFromCell(comment) {
-            this.$inertia.delete(route('project.budget.cell.comment.delete', {cellComment: comment.id}), {
-                preserveState: true,
-                preserveScroll: true
-            });
+            this.$inertia.delete(
+                route('project.budget.cell.comment.delete', {cellComment: comment.id}),
+                {
+                    preserveScroll: true
+                }
+            );
         },
         deleteCalculationFromCell(calculation) {
-            this.$inertia.delete(route('project.budget.cell.calculation.delete', {cellCalculation: calculation.id}), {
-                preserveState: true,
-                preserveScroll: true
-            });
+            this.$inertia.delete(
+                route('project.budget.cell.calculation.delete', {cellCalculation: calculation.id}),
+                {
+                    preserveScroll: true
+                }
+            );
         },
         addCommentToCell() {
             if(!this.commentForm.description){
                 return;
             }
-            this.commentForm.post(route('project.budget.cell.comment.store', { columnCell: this.cell.id }), {
-                preserveState: true,
-                preserveScroll: true
-            });
+            this.commentForm.post(
+                route('project.budget.cell.comment.store', { columnCell: this.cell.id }),
+                {
+                    preserveScroll: true
+                }
+            );
             this.commentForm.reset('description');
         },
         updateCommentedStatus() {
-            this.$inertia.patch(route('project.budget.cell.commented', {columnCell: this.cell.id}), {
-                commented: this.isExcluded
-            }, {
-                preserveState: true,
-                preserveScroll: true
-            });
+            this.$inertia.patch(
+                route('project.budget.cell.commented', {columnCell: this.cell.id}),
+                {
+                    commented: this.isExcluded
+                }, {
+                    preserveScroll: true
+                }
+            );
             this.closeModal(true);
         }
     },
 }
 </script>
-
-<style scoped></style>

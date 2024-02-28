@@ -4,7 +4,7 @@
             <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Raumeigenschaften
+                    {{$t('Room properties')}}
                 </div>
                 <XIcon @click="emit('close')"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
@@ -14,7 +14,7 @@
                         <MenuButton @click="attributesOpened = true" class="w-full">
                             <div class="border-2 border-gray-300 w-full cursor-pointer truncate flex p-4 mt-4">
                                 <div class="flex-grow xsLight text-left subpixel-antialiased">
-                                    Raumeigenschaften wählen
+                                    {{$t('Select room properties')}}
                                 </div>
                                 <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </div>
@@ -33,7 +33,7 @@
                                 <div class="rounded-2xl max-h-56 overflow-y-auto bg-primary border-none mt-2">
 
                                     <!-- Room Categories Section -->
-                                    <BaseFilterDisclosure title="Raumkategorien">
+                                    <BaseFilterDisclosure :title="$t('Room categories')">
 
                                         <div v-if="availableCategories?.length > 0"
                                              v-for="category in availableCategories"
@@ -49,13 +49,13 @@
                                                 {{ category.name }}
                                             </p>
                                         </div>
-                                        <div v-else class="text-secondary">Noch keine Raumkategorien angelegt</div>
+                                        <div v-else class="text-secondary">{{ $t('No room categories created yet')}}</div>
                                     </BaseFilterDisclosure>
 
                                     <hr class="border-gray-500 rounded-full mt-2 mb-2">
 
                                     <!-- Adjoining rooms Section -->
-                                    <BaseFilterDisclosure title="Nebenräume">
+                                    <BaseFilterDisclosure :title="$t('Adjoining rooms')">
 
                                         <div v-if="availableAdjoiningRooms?.length > 0"
                                              v-for="room in availableAdjoiningRooms"
@@ -71,13 +71,13 @@
                                                 {{ room.name }}
                                             </p>
                                         </div>
-                                        <div v-else class="text-secondary">Noch keine Nebenräume angelegt</div>
+                                        <div v-else class="text-secondary">{{$t('No adjoining rooms created yet')}}</div>
                                     </BaseFilterDisclosure>
 
                                     <hr class="border-gray-500 rounded-full mt-2 mb-2">
 
                                     <!-- Room attributes Section -->
-                                    <BaseFilterDisclosure title="Raumeigenschaften">
+                                    <BaseFilterDisclosure :title="$t('Room properties')">
 
                                         <div v-if="availableAttributes?.length > 0"
                                              v-for="attribute in availableAttributes"
@@ -93,7 +93,7 @@
                                                 {{ attribute.name }}
                                             </p>
                                         </div>
-                                        <div v-else class="text-secondary">Noch keine Raumeigenschaften angelegt</div>
+                                        <div v-else class="text-secondary">{{$t('No room properties created yet')}}</div>
                                     </BaseFilterDisclosure>
                                 </div>
                             </MenuItems>
@@ -113,7 +113,7 @@
                 </div>
             </div>
             <div class="justify-center flex w-full my-6 mt-44">
-                <AddButton text="Speichern" mode="modal" class="px-6 py-3"
+                <AddButton :text="$t('Save')" mode="modal" class="px-6 py-3"
                            @click="saveRoomData"/>
             </div>
         </template>

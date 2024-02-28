@@ -61,6 +61,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon $updated_at
  * @property boolean $project_management
  * @property boolean $can_work_shifts
+ * @property string $language
  *
  * @property Collection<\Artwork\Modules\Department\Models\Department> departments
  * @property Collection<\Artwork\Modules\Project\Models\Project> projects
@@ -108,6 +109,7 @@ class User extends Authenticatable implements Vacationer, Available
         'weekly_working_hours',
         'salary_per_hour',
         'salary_description',
+        'language',
     ];
 
     protected $casts = [

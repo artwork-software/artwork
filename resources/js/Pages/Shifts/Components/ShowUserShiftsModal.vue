@@ -28,14 +28,14 @@
                                         <span v-if="user.element.resource !== 'ServiceProviderShiftResource'">
                                             {{ user.element.first_name }} {{ user.element.last_name }}
                                             <span v-if="user.resource === 'FreelancerShiftResource'">
-                                            (extern)
+                                            ({{ $t('external')}})
                                             </span>
                                             <span v-else>
-                                                (intern)
+                                                ({{ $t('internal') }})
                                             </span>
                                         </span>
                                         <span v-else>
-                                            {{ user.element.provider_name }} (Dienstleister)
+                                            {{ user.element.provider_name }} ({{$t('Service provider')}})
                                         </span>
 
                                     </div>
@@ -58,7 +58,7 @@
 
 
                                 <div class="mt-5 text-sm" v-if="user.availabilities">
-                                    <h3 class="font-bold mb-3">Eingetragene Verfügbarkeiten</h3>
+                                    <h3 class="font-bold mb-3">{{ $t('Registered availabilities')}}</h3>
 
                                     <div class="my-2" v-for="availability in user.availabilities[day.full_day]">
                                         <div>
@@ -81,13 +81,13 @@
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                     <p :class="[checked ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">Verfügbar</p>
+                                       class="ml-4 my-auto text-sm">{{ $t('Available')}}</p>
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
                                 <AddButton mode="modal" @click="checkVacation"
                                            class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none"
-                                           text="Speichern"/>
+                                           :text="$t('Save')"/>
                             </div>
 
                         </DialogPanel>

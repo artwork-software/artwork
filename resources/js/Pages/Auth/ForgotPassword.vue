@@ -6,10 +6,10 @@
             <img src="/Svgs/Logos/artwork_logo_big.svg"/>
         </div>
         <h2 class="my-6 text-2xl text-center font-bold text-gray-900">
-        Passwort vergessen
+            {{  $t('Forgot your password?') }}
         </h2>
         <div class="mb-4 text-md font-semibold text-gray-600">
-            Passwort vergessen? Kein Problem, gib einfach deine E-Mail-Adresse ein und wir senden dir einen Passwort Reset-Link um ein neues festzulegen.
+            {{$t('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.')}}
         </div>
 
         <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
@@ -25,7 +25,7 @@
             </div>
             <div class="flex items-center justify-end mt-4">
                 <jet-button class="bg-buttonBlue hover:bg-buttonHover" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                    Reset-Link versenden
+                    {{ $t('Send reset link')}}
                 </jet-button>
             </div>
         </form>

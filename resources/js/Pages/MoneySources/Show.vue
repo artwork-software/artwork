@@ -19,7 +19,7 @@
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 </div>
                                 <div class="flex">
-                                    <span class="hind ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite die Basisdaten</span>
+                                    <span class="hind ml-2 text-secondary tracking-tight text-lg">{{$t('Edit the basic data')}}</span>
                                 </div>
                             </div>
                         </div>
@@ -40,7 +40,7 @@
                                             <PencilAltIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Basisdaten bearbeiten
+                                            {{$t('Edit basic data')}}
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -49,7 +49,7 @@
                                             <DuplicateIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Duplizieren
+                                            {{ $t('Duplicate')}}
                                         </a>
                                     </MenuItem>
                                     <MenuItem
@@ -60,7 +60,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Löschen
+                                            {{ $t('Delete')}}
                                         </a>
                                     </MenuItem>
                                 </div>
@@ -70,7 +70,7 @@
                 </div>
                 <div class="flex items-center w-full justify-between mt-4">
                     <div class="flex mt-2 xsDark items-center">
-                        erstellt von
+                        {{ $t('Created by')}}
                         <UserPopoverTooltip v-if="moneySource.creator" :user="moneySource.creator" :id="moneySource.creator?.id"
                                             :height="7" :width="7" class="ml-2"/>
                     </div>
@@ -79,14 +79,14 @@
                         <ChevronRightIcon
                             class="-mr-0.5 h-4 w-4  group-hover:text-white"
                             aria-hidden="true"/>
-                        Verlauf ansehen
+                        {{ $t('View history')}}
                     </button>
                 </div>
                 <div class="xsDark mt-4 flex items-center" v-if="moneySource.group_id">
                     <img src="/Svgs/IconSvgs/icon_group_red.svg"
                          class=" h-4 w-4" alt="groupIcon"/>
                     <div class="ml-2">
-                        Gehört zu
+                        {{$t('Belongs to')}}
                     </div>
                     <Link v-if="moneySource.group_id" :href="getEditHref(moneySource.group_id)"
                           class="linkText ml-1 mt-0.5">
@@ -94,7 +94,7 @@
                     </Link>
                 </div>
                 <div class="mt-3 xsDark" v-if="moneySource.start_date && moneySource.end_date">
-                    Laufzeit: {{ formatDate(moneySource.start_date) }} - {{ formatDate(moneySource.end_date) }}
+                    {{$t('Runtime')}}: {{ formatDate(moneySource.start_date) }} - {{ formatDate(moneySource.end_date) }}
                 </div>
                 <div :class="[
                         moneySource.hasSentExpirationReminderNotification ?
@@ -102,23 +102,23 @@
                             '',
                         'mt-3 xsDark'
                      ]" v-if="moneySource.funding_start_date && moneySource.funding_end_date">
-                    Förderzeitraum: {{ formatDate(moneySource.funding_start_date) }} - {{ formatDate(moneySource.funding_end_date) }}
+                    {{$t('Funding period')}}: {{ formatDate(moneySource.funding_start_date) }} - {{ formatDate(moneySource.funding_end_date) }}
                 </div>
                 <div class="mt-2 xsDark" v-if="moneySource.source_name">
-                    Quelle: {{ moneySource.source_name }}
+                    {{ $t('Source')}}: {{ moneySource.source_name }}
                 </div>
                 <div class="mr-14 my-3 subpixel-antialiased text-secondary">
                     {{ moneySource.description }}
                 </div>
                 <div class="mt-12 flex">
                     <div class="w-1/2 xsLight uppercase border-r-2">
-                        Ursprungsvolumen
+                        {{ $t('Original volume')}}
                         <div class="bigNumber my-4">
                             {{ currencyFormat(moneySource.amount) }}
                         </div>
                     </div>
                     <div class="w-1/2 xsLight uppercase ml-6">
-                        Noch Verfügbar
+                        {{$t('Still available')}}
                         <div :class="[
                                  moneySource.amount_available <= 0 || moneySource.hasSentThresholdReminderNotification ?
                                     'text-red-500' :
@@ -138,7 +138,7 @@
             <div class="max-w-screen-2xl bg-lightBackgroundGray">
                 <div class="flex pt-12 justify-between items-center">
                     <div class="headline4  ml-14">
-                        Verlinkte Positionen
+                        {{ $t('Linked positions')}}
                     </div>
                     <div>
                         <Listbox as="div" class="flex h-12 mr-4 w-64" v-model="wantedProject"
@@ -146,11 +146,11 @@
                             <ListboxButton
                                 class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                 <div class="flex items-center my-auto">
-                                        <span class="block truncate items-center ml-3 flex" v-if="wantedProject">
+                                        <span class="truncate items-center ml-3 flex" v-if="wantedProject">
                                             <span class="truncate mr-6">{{ wantedProject?.name }}</span>
                                         </span>
-                                    <span class="block truncate items-center ml-3 flex" v-else>
-                                            <span> Alle Projekte</span>
+                                    <span class="truncate items-center ml-3 flex" v-else>
+                                            <span>{{$t('All projects')}}</span>
                                         </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -170,7 +170,7 @@
                                             <div class="flex">
                                                     <span
                                                         :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        Alle Projekte
+                                                        {{$t('All projects')}}
                                                     </span>
                                             </div>
                                             <span
@@ -253,8 +253,8 @@
     </app-layout>
     <confirm-delete-modal
         v-if="showDeleteSourceModal"
-        title="Finanzierungsquelle/gruppe löschen"
-        :description="'Bist du sicher, dass du die Finanzierungsquelle/Gruppe ' + this.sourceToDelete.name + ' löschen möchtest?'"
+        :title="$t('Delete funding source/group')"
+        :description="$t('Are you sure you want to delete the funding source/group {0}?', [sourceToDelete.name])"
         @closed="afterConfirm(false)"
     @delete="afterConfirm(true)"/>
 

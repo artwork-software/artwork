@@ -3,34 +3,34 @@
         <div class="inline-flex border-none justify-end w-full">
             <button class="flex" @click="resetContractFilter">
                 <XIcon class="w-3 mr-1 mt-0.5"/>
-                <label class="text-xs">Zurücksetzen</label>
+                <label class="text-xs">{{$t('Reset')}}</label>
             </button>
         </div>
         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
-            <BaseFilterDisclosure title="Zusatzkosten">
+            <BaseFilterDisclosure :title="$t('Additional costs')">
                 <BaseFilterCheckboxList
                     :list="additionalCosts"
                     filterName="costsFilter"
-                    text-if-empty="Noch keine Zusatzkosten angelegt"
+                    :text-if-empty="$t('No additional costs created yet')"
                     @changeFilterItems="updateFilter"
                 />
             </BaseFilterDisclosure>
 
             <hr class="border-gray-500 rounded-full mt-2 mb-2">
-            <BaseFilterDisclosure title="Rechtsform">
+            <BaseFilterDisclosure :title="$t('Legal form')">
                 <BaseFilterCheckboxList
                     :list="companyTypes"
                     filterName="companyTypesFilter"
-                    text-if-empty="Noch keine Rechtsformen angelegt"
+                    :text-if-empty="$t('No legal forms created yet')"
                     @changeFilterItems="updateFilter" />
             </BaseFilterDisclosure>
 
             <hr class="border-gray-500 rounded-full mt-2 mb-2">
-            <BaseFilterDisclosure title="Vertragsart">
+            <BaseFilterDisclosure :title="$t('Contract type')">
                 <BaseFilterCheckboxList
                     :list="contractTypes"
                     filterName="contractTypesFilter"
-                    text-if-empty="Noch keine Vertragsarten angelegt"
+                    :text-if-empty="$t('No contract types created yet')"
                     @changeFilterItems="updateFilter" />
             </BaseFilterDisclosure>
         </div>
@@ -97,11 +97,11 @@ export default {
             additionalCosts: [
                 {
                     "checked": false,
-                    "name": "KSK-pflichtig",
+                    "name": this.$t('KSK-liable'),
                 },
                 {
                     "checked": false,
-                    "name": "Im Ausland ansässig"
+                    "name": this.$t('Resident abroad')
                 }
             ],
         }

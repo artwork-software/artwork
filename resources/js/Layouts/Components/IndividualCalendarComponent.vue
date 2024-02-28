@@ -6,9 +6,7 @@
                      @click="openEventsWithoutRoomComponent()"
                      v-if="filteredEvents?.length > 0">
                     <ExclamationIcon class="h-6  mr-2"/>
-                    {{
-                        filteredEvents?.length
-                    }}{{ filteredEvents?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+                    {{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
                 </div>
             </div>
             <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal"
@@ -107,11 +105,11 @@
 
         <div v-show="multiEdit"
              class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
-            <AddButton mode="modal" class="bg-primary text-white resize-none" text="Termine verschieben"
+            <AddButton mode="modal" class="bg-primary text-white resize-none" :text="$t('Move events')"
                        @click="openMultiEditModal"/>
             <AddButton mode="modal" @click="openDeleteSelectedEventsModal = true"
                        class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none"
-                       text="Termine löschen"/>
+                       :text="$t('Delete events')"/>
         </div>
 
         <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms"
@@ -121,8 +119,8 @@
             v-if="openDeleteSelectedEventsModal"
             @closed="openDeleteSelectedEventsModal = false"
             @delete="deleteSelectedEvents"
-            title="Belegungen löschen"
-            description="Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht."/>
+            :title="$t('Delete assignments')"
+            :description="$t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.')"/>
 
     </div>
 </template>

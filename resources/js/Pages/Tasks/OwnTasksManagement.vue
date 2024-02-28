@@ -3,7 +3,7 @@
         <div class="max-w-screen-xl ml-14 mr-10">
             <div class="flex-wrap">
                 <div class="flex flex-wrap">
-                    <h2 class="headline1 w-full">Meine Aufgaben</h2>
+                    <h2 class="headline1 w-full">{{$t('My tasks')}}</h2>
                     <Listbox as="div" class="sm:col-span-3 mb-8" @click="changeTasksToDisplay" v-model="selectedFilter">
                         <div class="relative">
                             <ListboxButton class="w-56 flex justify-between sDark py-2">
@@ -51,11 +51,6 @@
 
 import Permissions from "@/mixins/Permissions.vue";
 
-const filters = [
-    {name: 'Nach Checklisten'},
-    {name: 'Nach Deadline'},
-    {name: 'Erledigte Aufgaben'}
-]
 
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {CheckIcon, ChevronDownIcon, ChevronRightIcon} from "@heroicons/vue/solid";
@@ -92,13 +87,13 @@ export default {
     methods: {
         changeTasksToDisplay() {
             switch (this.selectedFilter.name) {
-                case 'Nach Deadline':
+                case this.$t('By deadline'):
                     this.tasksToDisplay = this.tasks.data.filter(task => !task.done);
                     this.tasksToDisplay = this.tasksToDisplay.sort(function (a, b) {
                         return a.deadline > b.deadline
                     });
                     break;
-                case 'Erledigte Aufgaben':
+                case this.$t('Completed tasks'):
                     this.tasksToDisplay = this.tasks.data.filter(task => task.done);
                     break;
                 default:
@@ -118,19 +113,19 @@ export default {
     },
     data() {
         return {
-            selectedFilter: filters[0],
+            selectedFilter: {name: this.$t('According to checklists')},
             tasksToDisplay: this.tasks.data.filter(task => !task.done),
             doneTaskForm: useForm({
                 done: false
             }),
-            highlight: null
+            highlight: null,
+            filters : [
+                {name: this.$t('According to checklists')},
+                {name: this.$t('By deadline')},
+                {name: this.$t('Completed tasks')}
+            ]
         }
     },
-    setup() {
-        return {
-            filters
-        }
-    }
 }
 </script>
 

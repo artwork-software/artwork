@@ -132,7 +132,7 @@
                         v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
                         class="items-center">
                         <div v-if="event.allDay">
-                            ganztägig
+                            {{$t('Full day')}}
                         </div>
                         <div v-else>
                             {{
@@ -143,10 +143,10 @@
                     <div class="flex w-full" v-else>
                         <div v-if="event.allDay">
                             <div v-if="atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()">
-                                ganztägig, {{ new Date(event.start).format("DD.MM.") }}
+                                {{ $t('Full day')}}, {{ new Date(event.start).format("DD.MM.") }}
                             </div>
                             <div v-else>
-                                ganztägig, {{ new Date(event.start).format("DD.MM.") }} - {{
+                                {{ $t('Full day')}}, {{ new Date(event.start).format("DD.MM.") }} - {{
                                     new Date(event.end).format("DD.MM.")
                                 }}
                             </div>
@@ -203,7 +203,7 @@
                               d="M11.864,19.5v.914a1.741,1.741,0,0,1-1.636,1.829H4.5" transform="translate(0 -13.307)"/>
                     </g>
                 </svg>
-                Wiederholungstermin
+                {{$t('Repeat event')}}
             </div>
             <!-- User-Icons -->
             <div class="-ml-3 mb-0.5 w-full" v-if="$page.props.user.calendar_settings.project_management">
@@ -348,7 +348,7 @@
                             v-if="new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString() && !project && !atAGlance"
                             class="items-center">
                             <div v-if="subEvent.allDay">
-                                ganztägig
+                                {{$t('Full day')}}
                             </div>
                             <div v-else>
                                 {{
@@ -359,13 +359,13 @@
                         <div class="flex w-full" v-else>
                             <div v-if="subEvent.allDay">
                                 <div v-if="atAGlance && new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString()">
-                                    ganztägig, {{ new Date(subEvent.start).format("DD.MM.") }}
+                                    {{$t('Full day')}}, {{ new Date(subEvent.start).format("DD.MM.") }}
                                 </div>
                                 <div v-else>
                                     <span class="text-error">
                         {{ new Date(subEvent.start).toDateString() !== new Date(subEvent.end).toDateString() ? '!' : '' }}
                             </span>
-                                    ganztägig, {{ new Date(subEvent.start).format("DD.MM.") }} - {{
+                                    {{$t('Full day')}}, {{ new Date(subEvent.start).format("DD.MM.") }} - {{
                                         new Date(subEvent.end).format("DD.MM.")
                                     }}
                                 </div>
@@ -606,12 +606,12 @@ export default {
         openConfirmModal(eventId, type) {
             if (type === 'main') {
                 this.type = type;
-                this.deleteTitle = 'Termin Löschen?';
-                this.deleteDescription = 'Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht.';
+                this.deleteTitle = this.$t('Delete event?');
+                this.deleteDescription = this.$t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.');
             } else {
                 this.type = type;
-                this.deleteTitle = 'Untertermin Löschen?';
-                this.deleteDescription = 'Bist du sicher, dass du die ausgewählten Belegungen löschen möchtest?';
+                this.deleteTitle = this.$t('Delete sub-event?');
+                this.deleteDescription = this.$t('Are you sure you want to delete the selected assignments?');
             }
             this.eventToDelete = eventId
             this.deleteComponentVisible = true;
@@ -649,7 +649,6 @@ export default {
         },
         checkedEvents: {
             handler() {
-                console.log("checked events changed")
                 if (this.checkedEvents.includes(this.event.id)) {
                     this.event.clicked = true;
                 }

@@ -5,9 +5,11 @@ namespace App\Enums;
 use App\Notifications\ConflictNotification;
 use App\Notifications\DeadlineNotification;
 use App\Notifications\EventNotification;
+use App\Notifications\MoneySourceNotification;
 use App\Notifications\ProjectNotification;
 use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
+use App\Notifications\ShiftNotification;
 use App\Notifications\TaskNotification;
 use App\Notifications\TeamNotification;
 
@@ -106,39 +108,31 @@ enum NotificationConstEnum: string
     {
         return match ($this) {
             self::NOTIFICATION_EVENT_CHANGED => EventNotification::class,
-
             self::NOTIFICATION_UPSERT_ROOM_REQUEST,
             self::NOTIFICATION_ROOM_REQUEST => RoomRequestNotification::class,
-
             self::NOTIFICATION_CONFLICT,
             self::NOTIFICATION_LOUD_ADJOINING_EVENT => ConflictNotification::class,
-
             self::NOTIFICATION_REMINDER_ROOM_REQUEST,
             self::NOTIFICATION_ROOM_ANSWER,
             self::NOTIFICATION_ROOM_CHANGED => RoomNotification::class,
-
             self::NOTIFICATION_TASK_REMINDER => DeadlineNotification::class,
             self::NOTIFICATION_NEW_TASK,
             self::NOTIFICATION_TASK_CHANGED => TaskNotification::class,
-
+            self::NOTIFICATION_PUBLIC_RELEVANT,
             self::NOTIFICATION_PROJECT => ProjectNotification::class,
             self::NOTIFICATION_TEAM => TeamNotification::class,
-            //TODO: Implement the rest of the cases
-            /*
-            self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED => throw new \Exception('To be implemented'),
-            self::NOTIFICATION_BUDGET_STATE_CHANGED => throw new \Exception('To be implemented'),
-            self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED => throw new \Exception('To be implemented'),
-            self::NOTIFICATION_MONEY_SOURCE_EXPIRATION => throw new \Exception('To be implemented'),
-            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED => throw new \Exception('To be implemented'),
-            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => throw new \Exception('To be implemented'),
-            self::NOTIFICATION_PUBLIC_RELEVANT => throw new \Exception('To be implemented'),
-            self::NOTIFICATION_SHIFT_CHANGED => throw new \Exception('To be implemented'),
-            self::NOTIFICATION_SHIFT_OWN_INFRINGEMENT => throw new \Exception('To be implemented'),
-            self::NOTIFICATION_SHIFT_INFRINGEMENT => throw new \Exception('To be implemented'),
-            self::NOTIFICATION_SHIFT_LOCKED => throw new \Exception('To be implemented'),
-            self::NOTIFICATION_SHIFT_AVAILABLE => throw new \Exception('To be implemented'),
-            self::NOTIFICATION_SHIFT_CONFLICT => throw new \Exception('To be implemented'),
-            */
+            self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED,
+            self::NOTIFICATION_BUDGET_STATE_CHANGED,
+            self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED,
+            self::NOTIFICATION_MONEY_SOURCE_EXPIRATION,
+            self::NOTIFICATION_MONEY_SOURCE_BUDGET_THRESHOLD_REACHED,
+            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => MoneySourceNotification::class,
+            self::NOTIFICATION_SHIFT_CHANGED,
+            self::NOTIFICATION_SHIFT_OWN_INFRINGEMENT,
+            self::NOTIFICATION_SHIFT_INFRINGEMENT,
+            self::NOTIFICATION_SHIFT_LOCKED,
+            self::NOTIFICATION_SHIFT_AVAILABLE,
+            self::NOTIFICATION_SHIFT_CONFLICT => ShiftNotification::class,
         };
     }
 

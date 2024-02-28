@@ -298,9 +298,11 @@ class RoomController extends Controller
      */
     public function collisionsCount(Request $request): array
     {
-        $startDate = Carbon::parse($request['params']['start'])->setTimezone(config('app.timezone'));
-        $endDate = Carbon::parse($request['params']['end'])->setTimezone(config('app.timezone'));
-        $currentEventId = $request['params']['currentEventId'];
+        $params = $request->get('params');
+        $startDate = Carbon::parse($params['start'])->setTimezone(config('app.timezone'));
+        $endDate = Carbon::parse($params['end'])->setTimezone(config('app.timezone'));
+        $currentEventId = $params['currentEventId'] ?? null;
+
         $collisions = [];
         $this->roomService->getAllWithoutTrashed()->each(
             function (Room $room) use (&$collisions, $startDate, $endDate, $currentEventId): void {

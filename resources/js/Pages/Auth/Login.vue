@@ -97,7 +97,6 @@ import JetInputError from "@/Jetstream/InputError.vue";
 import Permissions from "@/mixins/Permissions.vue";
 
 
-const rememberCheckbox = {name: 'Angemeldet bleiben', checked: false, showIcon: false}
 
 export default defineComponent({
     mixins: [Permissions],
@@ -132,7 +131,8 @@ export default defineComponent({
                 password: '',
                 remember: false,
                 error:'',
-            })
+            }),
+            rememberCheckbox: {name: this.$t('Remember me'), checked: false, showIcon: false}
         }
     },
 
@@ -148,10 +148,5 @@ export default defineComponent({
                 })
         }
     },
-    setup() {
-        return {
-            rememberCheckbox
-        }
-    }
 })
 </script>

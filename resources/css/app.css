@@ -275,6 +275,160 @@
         border-color: #d2d6dc;
     }
 
+    /* Anpassungen für Mobilgeräte */
+    @media (max-width: 639px) {
+        .headline1 {
+            font: normal normal 900 24px/34px Lexend;
+        }
+        .headline2 {
+            font: normal normal 600 18px/25px Lexend;
+        }
+        .headline3 {
+            font: normal normal 600 16px/21px Lexend;
+        }
+        .headline3Light {
+            font: normal normal 16px/21px Inter;
+        }
+        .headline4 {
+            font: normal normal 600 18px/25px Lexend;
+        }
+        .xxsLight{
+            font: normal normal 10px/18px Inter;
+        }
+        .xxsDark{
+            font: normal normal 10px/15px Inter;
+        }
+        .xxsDarkBold{
+            font: normal normal 600 10px/15px Inter;
+        }
+        .sLight{
+            font: normal normal 14px/19px Inter;
+        }
+        .xsLighter{
+            font: normal normal 12px/20px Inter;
+        }
+        .xsWhiteBold{
+            font: normal normal bold 12px/20px Inter;
+        }
+        .xWhiteBold{
+            font: normal normal bold 16px/20px Inter;
+        }
+        .xsLight{
+            font: normal normal bold 12px/20px Inter;
+        }
+        .xsDark{
+            font: normal normal 600 12px/20px Inter;
+        }
+        .sDark{
+            font: normal normal 600 14px/20px Inter;
+        }
+        .mDark{
+            font: normal normal 600 16px/21px Inter;
+        }
+        .hind{
+            font: normal normal normal 16px/18px "artwork Pen";
+        }
+        .errorText{
+            font: normal normal 12px/20px Inter;
+        }
+        .successText{
+            font: normal normal 12px/20px Inter;
+        }
+        .eventTime{
+            font: normal normal 10px/18px Inter;
+        }
+        .eventHeader{
+            font: normal normal bold 10px/20px Inter;
+        }
+        .calendarRoomHeader{
+            font: normal normal 10px/18px Inter;
+        }
+        .bigNumber{
+            font: normal normal 30px/48px Lexend;
+        }
+        .linkText{
+            font: normal normal 10px/18px Inter;
+        }
+        /* Skalierung für weitere Klassen... */
+    }
+
+    /* Anpassungen für Tablets */
+    @media (min-width: 640px) and (max-width: 767px) {
+        .headline1 {
+            font: normal normal 900 28px/34px Lexend;
+        }
+        .headline2 {
+            font: normal normal 600 20px/25px Lexend;
+        }
+        .headline3 {
+            font: normal normal 600 18px/21px Lexend;
+        }
+        .headline3Light {
+            font: normal normal 18px/21px Inter;
+        }
+        .headline4 {
+            font: normal normal 600 20px/25px Lexend;
+        }
+        .xxsLight{
+            font: normal normal 12px/18px Inter;
+        }
+        .xxsDark{
+            font: normal normal 12px/15px Inter;
+        }
+        .xxsDarkBold{
+            font: normal normal 600 12px/15px Inter;
+        }
+        .sLight{
+            font: normal normal 16px/19px Inter;
+        }
+        .xsLighter{
+            font: normal normal 14px/20px Inter;
+        }
+        .xsWhiteBold{
+            font: normal normal bold 14px/20px Inter;
+        }
+        .xWhiteBold{
+            font: normal normal bold 18px/20px Inter;
+        }
+        .xsLight{
+            font: normal normal bold 14px/20px Inter;
+        }
+        .xsDark{
+            font: normal normal 600 14px/20px Inter;
+        }
+        .sDark{
+            font: normal normal 600 16px/20px Inter;
+        }
+        .mDark{
+            font: normal normal 600 18px/21px Inter;
+        }
+        .hind{
+            font: normal normal normal 18px/18px "artwork Pen";
+        }
+        .errorText{
+            font: normal normal 14px/20px Inter;
+        }
+        .successText{
+            font: normal normal 14px/20px Inter;
+        }
+        .eventTime{
+            font: normal normal 12px/18px Inter;
+        }
+        .eventHeader{
+            font: normal normal bold 12px/20px Inter;
+        }
+        .calendarRoomHeader{
+            font: normal normal 13px/18px Inter;
+        }
+        .bigNumber{
+            font: normal normal 40px/48px Lexend;
+        }
+        .linkText{
+            font: normal normal 12px/18px Inter;
+        }
+        /* Skalierung für weitere Klassen... */
+    }
+
 
 
 }

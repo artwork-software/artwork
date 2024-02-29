@@ -86,7 +86,8 @@ class UserController extends Controller
         );
 
         return $status == Password::RESET_LINK_SENT
-            ? Redirect::back()->with('status', __('passwords.sent_to_user', ['email' => $request->email]))
+            ? Redirect::back()
+                ->with('status', __('passwords.sentToUser', [], Auth::user()->language))
             : app(FailedPasswordResetLinkRequestResponse::class, ['status' => $status]);
     }
 
@@ -121,7 +122,7 @@ class UserController extends Controller
             'user_to_edit' => new UserShowResource($user),
             'currentTab' => 'info',
             "departments" => Department::all(),
-            "password_reset_status" => session('status'),
+            "password_reset_status" => session('status')
         ]);
     }
 

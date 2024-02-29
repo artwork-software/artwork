@@ -20,7 +20,7 @@ class SectorController extends Controller
             'name' => $request->name,
         ]);
 
-        return Redirect::back()->with('success', 'Sector created');
+        return Redirect::back();
     }
 
     public function update(Request $request, Sector $sector): void
@@ -32,7 +32,7 @@ class SectorController extends Controller
     {
         $sector->delete();
 
-        return Redirect::back()->with('success', 'Sector deleted');
+        return Redirect::back();
     }
 
     public function forceDelete(int $id): RedirectResponse
@@ -40,7 +40,7 @@ class SectorController extends Controller
         $sector = Sector::onlyTrashed()->findOrFail($id);
         $sector->forceDelete();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'Sector deleted');
+        return Redirect::route('projects.settings.trashed');
     }
 
     public function restore(int $id): RedirectResponse
@@ -48,6 +48,6 @@ class SectorController extends Controller
         $sector = Sector::onlyTrashed()->findOrFail($id);
         $sector->restore();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'Sector restored');
+        return Redirect::route('projects.settings.trashed');
     }
 }

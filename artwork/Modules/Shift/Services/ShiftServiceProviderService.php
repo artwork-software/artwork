@@ -77,9 +77,13 @@ class ShiftServiceProviderService
     ): void {
         $this->getNewHistoryService(Shift::class)->createHistory(
             $shift->id,
-            'Dienstleister ' . $serviceProvider->getNameAttribute() . ' wurde zur Schicht (' .
-                $shift->craft->abbreviation . ' - ' . $shift->event->eventName . ') als "' .
-                $shiftQualification->name . '" hinzugefügt',
+            'Service provider was added to the shift as',
+            [
+                $serviceProvider->getNameAttribute(),
+                $shift->craft->abbreviation,
+                $shift->event->eventName,
+                $shiftQualification->name
+            ],
             'shift'
         );
     }
@@ -176,8 +180,12 @@ class ShiftServiceProviderService
         if ($shift->is_committed) {
             $this->getNewHistoryService(Shift::class)->createHistory(
                 $shift->id,
-                'Freelancer ' . $serviceProvider->getNameAttribute() . ' wurde von Schicht (' .
-                $shift->craft->abbreviation . ' - ' . $shift->event->eventName . ') entfernt',
+                'Service provider was removed from shift',
+                [
+                    $serviceProvider->getNameAttribute(),
+                    $shift->craft->abbreviation,
+                    $shift->event->eventName
+                ],
                 'shift'
             );
         }

@@ -47,6 +47,6 @@ class ToolSettingsBrandingController extends Controller
 
         $generalSettings->save();
 
-        return Redirect::back()->with('success', 'Branding erfolgreich aktualisiert.');
+        return Redirect::back()->with('success', __('flash-messages.branding.update'));
     }
 }

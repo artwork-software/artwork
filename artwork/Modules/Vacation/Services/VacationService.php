@@ -27,6 +27,7 @@ class VacationService
 
     public function create(Vacationer $vacationer, $data): Vacation|Model
     {
+        /** @var Vacation $firstVacation */
         $firstVacation = $vacationer->vacations()->create([
             'start_time' => $data->start_time,
             'end_time' => $data->end_time,
@@ -62,10 +63,7 @@ class VacationService
             );
         }
 
-
-
-
-        $this->createHistory($firstVacation, 'Verfügbarkeit hinzugefügt');
+        $this->createHistory($firstVacation, 'Availability added');
         $this->announceChanges($firstVacation);
 
         return $firstVacation;
@@ -170,9 +168,9 @@ class VacationService
         $this->vacationRepository->delete($vacation);
     }
 
-    protected function createHistory(Vacation $vacation, string $text): void
+    protected function createHistory(Vacation $vacation, string $translationKey): void
     {
-        $this->historyService->setHistoryText($text);
+        $this->historyService->setTranslationKey($translationKey);
         $this->historyService->setModelId($vacation->id);
         $this->historyService->setType('vacation');
         $this->historyService->create();

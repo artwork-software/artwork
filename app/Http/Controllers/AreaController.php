@@ -8,6 +8,7 @@ use App\Models\User;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Services\AreaService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -47,12 +48,12 @@ class AreaController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $this->areaService->createByRequest($request);
-        return Redirect::route('areas.management')->with('success', 'Area created.');
+        return Redirect::route('areas.management');
     }
 
     /**
@@ -60,12 +61,12 @@ class AreaController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Area  $area
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function update(Request $request, Area $area): \Illuminate\Http\RedirectResponse
+    public function update(Request $request, Area $area): RedirectResponse
     {
         $this->areaService->updateByRequest($area, $request);
-        return Redirect::route('areas.management')->with('success', 'Area updated');
+        return Redirect::route('areas.management');
     }
 
     /**
@@ -74,26 +75,26 @@ class AreaController extends Controller
     public function duplicate(Area $area)
     {
         $this->areaService->duplicateByAreaModel($area);
-        return Redirect::route('areas.management')->with('success', 'Area created.');
+        return Redirect::route('areas.management');
     }
 
     /**
      * Remove the specified resource from storage.
      *
      * @param  \Area  $area
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function destroy(Area $area): \Illuminate\Http\RedirectResponse
+    public function destroy(Area $area): RedirectResponse
     {
         $this->areaService->delete($area);
-        return Redirect::route('areas.management')->with('success', 'Area moved to trash');
+        return Redirect::route('areas.management');
     }
 
     public function forceDelete(int $id)
     {
         $area = Area::onlyTrashed()->findOrFail($id);
         $area->forceDelete();
-        return Redirect::route('areas.trashed')->with('success', 'Room restored');
+        return Redirect::route('areas.trashed');
     }
 
     public function restore(int $id)
@@ -103,7 +104,7 @@ class AreaController extends Controller
         foreach ($area->rooms() as $room) {
             $room->restore();
         }
-        return Redirect::route('areas.trashed')->with('success', 'Room restored');
+        return Redirect::route('areas.trashed');
     }
 
     public function getTrashed()

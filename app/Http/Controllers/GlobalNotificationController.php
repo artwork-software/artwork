@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Notification\Models\GlobalNotification;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -14,9 +15,9 @@ class GlobalNotificationController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $oldGlobalNotifications = GlobalNotification::all();
         foreach ($oldGlobalNotifications as $globalNotification) {
@@ -42,7 +43,7 @@ class GlobalNotificationController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \Artwork\Modules\Notification\Models\GlobalNotification  $globalNotification
+     * @param GlobalNotification $globalNotification
      * @return \Illuminate\Http\JsonResponse
      */
     public function show(GlobalNotification $globalNotification): \Illuminate\Http\JsonResponse
@@ -55,12 +56,12 @@ class GlobalNotificationController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \Artwork\Modules\Notification\Models\GlobalNotification  $globalNotification
-     * @return \Illuminate\Http\RedirectResponse
+     * @param GlobalNotification $globalNotification
+     * @return RedirectResponse
      */
-    public function destroy(GlobalNotification $globalNotification): \Illuminate\Http\RedirectResponse
+    public function destroy(GlobalNotification $globalNotification): RedirectResponse
     {
         $globalNotification->delete();
-        return Redirect::back()->with('success', 'Notification deleted');
+        return Redirect::back();
     }
 }

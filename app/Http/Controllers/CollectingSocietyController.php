@@ -25,7 +25,7 @@ class CollectingSocietyController extends Controller
     public function destroy(CollectingSociety $collectingSociety): RedirectResponse
     {
         $collectingSociety->delete();
-        return Redirect::back()->with('success', 'CollectingSociety deleted');
+        return Redirect::back();
     }
 
     public function forceDelete(int $id): RedirectResponse
@@ -34,7 +34,7 @@ class CollectingSocietyController extends Controller
 
         $collectingSociety->forceDelete();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'CollectingSociety deleted');
+        return Redirect::route('projects.settings.trashed');
     }
 
     public function restore(int $id): RedirectResponse
@@ -43,6 +43,6 @@ class CollectingSocietyController extends Controller
 
         $collectingSociety->restore();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'CollectingSociety restored');
+        return Redirect::route('projects.settings.trashed');
     }
 }

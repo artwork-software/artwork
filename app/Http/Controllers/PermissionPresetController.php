@@ -39,11 +39,11 @@ class PermissionPresetController extends Controller
             return Redirect::back()
                 ->with(
                     'error',
-                    'Rechte-Preset konnte nicht gespeichert werden. Bitte versuche es erneut.'
+                    __('flash-messages.permission-preset.error.created')
                 );
         }
 
-        return Redirect::back()->with('success', 'Rechte-Preset erfolgreich erstellt.');
+        return Redirect::back()->with('success', __('flash-messages.permission-preset.success.created'));
     }
 
     public function update(UpdatePermissionPresetRequest $request, PermissionPreset $permissionPreset): RedirectResponse
@@ -54,11 +54,11 @@ class PermissionPresetController extends Controller
             Log::error($t->getMessage());
             return Redirect::back()->with(
                 'error',
-                'Rechte-Preset konnte nicht aktualisiert werden. Bitte versuche es erneut.'
+                __('flash-messages.permission-preset.error.updated')
             );
         }
 
-        return Redirect::back()->with('success', 'Rechte-Preset erfolgreich aktualisiert.');
+        return Redirect::back()->with('success', __('flash-messages.permission-preset.success.updated'));
     }
 
     public function destroy(PermissionPreset $permissionPreset): RedirectResponse
@@ -69,10 +69,10 @@ class PermissionPresetController extends Controller
             Log::error($t->getMessage());
             return Redirect::back()->with(
                 'error',
-                'Rechte-Preset konnte nicht gelöscht werden. Bitte versuche es erneut.'
+                __('flash-messages.permission-preset.error.deleted')
             );
         }
 
-        return Redirect::back()->with('success', 'Rechte-Preset erfolgreich gelöscht.');
+        return Redirect::back()->with('success', __('flash-messages.permission-preset.success.deleted'));
     }
 }

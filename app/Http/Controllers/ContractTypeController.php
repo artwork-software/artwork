@@ -41,7 +41,7 @@ class ContractTypeController extends Controller
     public function destroy(ContractType $contractType): \Illuminate\Http\RedirectResponse
     {
         $contractType->delete();
-        return Redirect::back()->with('success', 'ContractType deleted');
+        return Redirect::back();
     }
 
     public function forceDelete(int $id)
@@ -50,7 +50,7 @@ class ContractTypeController extends Controller
 
         $contractType->forceDelete();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'ContractType deleted');
+        return Redirect::route('projects.settings.trashed');
     }
 
     public function restore(int $id)
@@ -59,6 +59,6 @@ class ContractTypeController extends Controller
 
         $contractType->restore();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'ContractType restored');
+        return Redirect::route('projects.settings.trashed');
     }
 }

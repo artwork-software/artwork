@@ -52,7 +52,7 @@ class DepartmentController extends Controller
     public function store(StoreDepartmentRequest $storeDepartmentRequest): RedirectResponse
     {
         $this->departmentService->createByRequest($storeDepartmentRequest);
-        return Redirect::route('departments')->with('success', 'Department created.');
+        return Redirect::route('departments');
     }
 
     /**
@@ -98,13 +98,13 @@ class DepartmentController extends Controller
     public function update(UpdateDepartmentRequest $updateDepartmentRequest, Department $department): RedirectResponse
     {
         $this->departmentService->updateByRequest($updateDepartmentRequest, $department);
-        return Redirect::route('departments', $department->id)->with('success', 'Department updated');
+        return Redirect::route('departments', $department->id);
     }
 
     public function removeAllMembers(Department $department)
     {
         $this->departmentService->removeAllMembers($department);
-        return Redirect::route('departments', $department->id)->with('success', 'Department updated');
+        return Redirect::route('departments', $department->id);
     }
 
     /**
@@ -116,7 +116,7 @@ class DepartmentController extends Controller
     public function destroy(Department $department): RedirectResponse
     {
         $this->departmentService->deleteDepartment($department);
-        return Redirect::route('departments')->with('success', 'Department deleted');
+        return Redirect::route('departments');
     }
 
     /**

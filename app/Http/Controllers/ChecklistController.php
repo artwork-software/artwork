@@ -49,7 +49,11 @@ class ChecklistController extends Controller
         }
 
         $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-        $this->history->createHistory($request->project_id, 'Checkliste ' . $request->name . ' hinzugefügt');
+        $this->history->createHistory(
+            $request->project_id,
+            'Checklist added',
+            [$request->name]
+        );
 
         ProjectHistory::create([
             "user_id" => Auth::id(),
@@ -57,7 +61,7 @@ class ChecklistController extends Controller
             "description" => "Checkliste $request->name angelegt"
         ]);
 
-        return Redirect::back()->with('success', 'Checklist created.');
+        return Redirect::back();
     }
 
     protected function createFromTemplate(Request $request): void
@@ -127,24 +131,32 @@ class ChecklistController extends Controller
         $this->checklistService->updateByRequest($checklist, $request);
 
         if ($request->missing('assigned_user_ids')) {
-            return Redirect::back()->with('success', 'Checklist updated');
+            return Redirect::back();
         }
 
         $this->checklistService->assignUsersById($checklist, $request->assigned_user_ids);
 
         $this->history = new NewHistoryService(Project::class);
-        $this->history->createHistory($checklist->project_id, 'Checkliste ' . $checklist->name . ' geändert');
+        $this->history->createHistory(
+            $checklist->project_id,
+            'Checklist modified',
+            [$checklist->name]
+        );
 
-        return Redirect::back()->with('success', 'Checklist updated');
+        return Redirect::back();
     }
 
     public function destroy(Checklist $checklist, HistoryService $historyService): RedirectResponse
     {
         $this->history = new NewHistoryService(Project::class);
-        $this->history->createHistory($checklist->project_id, 'Checkliste ' . $checklist->name . ' gelöscht');
+        $this->history->createHistory(
+            $checklist->project_id,
+            'Checklist removed',
+            [$checklist->name]
+        );
         $checklist->delete();
         $historyService->checklistUpdated($checklist);
 
-        return Redirect::back()->with('success', 'Checklist deleted');
+        return Redirect::back();
     }
 }

@@ -458,7 +458,7 @@ class EventController extends Controller
 
             if ($eventProject) {
                 $projectHistory = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-                $projectHistory->createHistory($eventProject->id, 'Ablaufplan hinzugefügt');
+                $projectHistory->createHistory($eventProject->id, 'Schedule added');
             }
         }
 
@@ -1116,7 +1116,7 @@ class EventController extends Controller
         if (!empty($event->project_id)) {
             $eventProject = $event->project()->first();
             $projectHistory = new NewHistoryService(Project::class);
-            $projectHistory->createHistory($eventProject->id, 'Ablaufplan geändert');
+            $projectHistory->createHistory($eventProject->id, 'Schedule modified');
         }
 
         $newEventDescription = $event->description;
@@ -1345,7 +1345,7 @@ class EventController extends Controller
 
         $event->occupancy_option = false;
 
-        $this->history->createHistory($event->id, 'Raum bestätigt');
+        $this->history->createHistory($event->id, 'Room confirmed');
 
         $event->save();
         $room = Room::find($event->room_id);
@@ -1570,7 +1570,7 @@ class EventController extends Controller
         }
 
         $this->notificationKey = Str::random(15);
-        $this->history->createHistory($event->id, 'Raum abgelehnt');
+        $this->history->createHistory($event->id, 'Room declined');
         $room = Room::find($roomId);
         $project = Project::find($event->project_id);
 
@@ -1721,7 +1721,7 @@ class EventController extends Controller
         if (!empty($event->project_id)) {
             $eventProject = $event->project()->first();
             $projectHistory = new NewHistoryService(Project::class);
-            $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
+            $projectHistory->createHistory($eventProject->id, 'Schedule deleted');
         }
 
         $room = $event->room()->first();
@@ -1834,7 +1834,7 @@ class EventController extends Controller
         if (!empty($event->project_id)) {
             $eventProject = $event->project()->first();
             $projectHistory = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-            $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
+            $projectHistory->createHistory($eventProject->id, 'Schedule deleted');
         }
 
         $room = Room::find($event->declined_room_id);
@@ -1954,7 +1954,7 @@ class EventController extends Controller
 
         broadcast(new OccupancyUpdated())->toOthers();
 
-        return Redirect::route('events.trashed')->with('success', 'Event deleted');
+        return Redirect::route('events.trashed');
     }
 
     public function restore(int $id): RedirectResponse
@@ -1964,7 +1964,7 @@ class EventController extends Controller
         $event->restore();
         broadcast(new OccupancyUpdated())->toOthers();
 
-        return Redirect::route('events.trashed')->with('success', 'Event restored');
+        return Redirect::route('events.trashed');
     }
 
     private function checkDateChanges(
@@ -1978,51 +1978,51 @@ class EventController extends Controller
             strtotime($oldEventStartDate) !== strtotime($newEventStartDate) ||
             strtotime($oldEventEndDate) !== strtotime($newEventEndDate)
         ) {
-            $this->history->createHistory($eventId, 'Datum/Uhrzeit geändert');
+            $this->history->createHistory($eventId, 'Date/time changed');
         }
     }
 
     private function checkEventTypeChanges($eventId, $oldType, $newType): void
     {
         if ($oldType !== $newType) {
-            $this->history->createHistory($eventId, 'Termintyp geändert');
+            $this->history->createHistory($eventId, 'Appointment type changed');
         }
     }
 
     private function checkEventNameChanges($eventId, $oldName, $newName): void
     {
         if ($oldName === null && $newName !== null) {
-            $this->history->createHistory($eventId, 'Terminname hinzugefügt');
+            $this->history->createHistory($eventId, 'Appointment name added');
         }
 
         if ($oldName !== $newName && $newName !== null && $oldName !== null) {
-            $this->history->createHistory($eventId, 'Terminname geändert');
+            $this->history->createHistory($eventId, 'Appointment name changed');
         }
 
         if ($oldName !== null && $newName === null) {
-            $this->history->createHistory($eventId, 'Terminname gelöscht');
+            $this->history->createHistory($eventId, 'Appointment name deleted');
         }
     }
 
     private function checkProjectChanges($eventId, $oldProject, $newProject): void
     {
         if ($newProject !== null && $oldProject === null) {
-            $this->history->createHistory($eventId, 'Projektzuordnung hinzugefügt');
+            $this->history->createHistory($eventId, 'Added project assignment');
         }
 
         if ($oldProject !== null && $newProject === null) {
-            $this->history->createHistory($eventId, 'Projektzuordnung gelöscht');
+            $this->history->createHistory($eventId, 'Deleted project assignment');
         }
 
         if ($newProject !== null && $oldProject !== null && $newProject !== $oldProject) {
-            $this->history->createHistory($eventId, 'Projektzuordnung geändert');
+            $this->history->createHistory($eventId, 'Changed project assignment');
         }
     }
 
     private function checkRoomChanges($eventId, $oldRoom, $newRoom): void
     {
         if ($oldRoom !== $newRoom) {
-            $this->history->createHistory($eventId, 'Raum geändert');
+            $this->history->createHistory($eventId, 'Room changed');
 
             $this->notificationService->deleteUpsertRoomRequestNotificationByEventId($eventId);
         }
@@ -2031,20 +2031,20 @@ class EventController extends Controller
     private function checkShortDescriptionChanges(int $eventId, $oldDescription, $newDescription): void
     {
         if ($newDescription === null && $oldDescription !== null) {
-            $this->history->createHistory($eventId, 'Terminnotiz gelöscht');
+            $this->history->createHistory($eventId, 'Appointment notice deleted');
         }
         if ($oldDescription === null && $newDescription !== null) {
-            $this->history->createHistory($eventId, 'Terminnotiz hinzugefügt');
+            $this->history->createHistory($eventId, 'Appointment notice added');
         }
         if ($oldDescription !== $newDescription && $oldDescription !== null && $newDescription !== null) {
-            $this->history->createHistory($eventId, 'Terminnotiz geändert');
+            $this->history->createHistory($eventId, 'Appointment notice changed');
         }
     }
 
     private function checkEventOptionChanges(int $eventId, $isLoudOld, $isLoudNew, $audienceOld, $audienceNew): void
     {
         if ($isLoudOld !== $isLoudNew || $audienceOld !== $audienceNew) {
-            $this->history->createHistory($eventId, 'Termineigenschaft geändert');
+            $this->history->createHistory($eventId, 'Changed appointment property');
         }
     }
 

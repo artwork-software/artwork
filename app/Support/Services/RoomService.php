@@ -27,14 +27,14 @@ class RoomService
         $newEndDate
     ): void {
         if ($oldTemporary && !$newTemporary) {
-            $this->history->createHistory($roomId, 'Temporärer Zeitraum gelöscht');
+            $this->history->createHistory($roomId, 'Temporary period deleted');
         }
         if ($newTemporary && !$oldTemporary) {
-            $this->history->createHistory($roomId, 'Temporärer Zeitraum hinzugefügt');
+            $this->history->createHistory($roomId, 'Temporary period added');
         }
 
         if ($oldStartDate !== $newStartDate || $oldEndDate !== $newEndDate) {
-            $this->history->createHistory($roomId, 'Temporärer Zeitraum geändert');
+            $this->history->createHistory($roomId, 'Temporary period changed');
         }
     }
 
@@ -52,14 +52,21 @@ class RoomService
         foreach ($newCategories as $newCategory) {
             $newCategoryIds[] = $newCategory->id;
             if (!in_array($newCategory->id, $oldCategoryIds)) {
-                $this->history->createHistory($roomId, 'Kategorie ' . $newCategory->name . ' wurde hinzugefügt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Added category',
+                    [$newCategory->name]
+                );
             }
         }
 
         foreach ($oldCategoryIds as $oldCategoryId) {
             if (!in_array($oldCategoryId, $newCategoryIds)) {
-                $this->history
-                    ->createHistory($roomId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' wurde entfernt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Deleted category',
+                    [$oldCategoryNames[$oldCategoryId]]
+                );
             }
         }
     }
@@ -78,14 +85,22 @@ class RoomService
         foreach ($newAttributes as $newAttribute) {
             $newAttributeIds[] = $newAttribute->id;
             if (!in_array($newAttribute->id, $oldAttributeIds)) {
-                $this->history->createHistory($roomId, 'Attribut ' . $newAttribute->name . ' wurde hinzugefügt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Added attribute',
+                    [$newAttribute->name]
+                );
             }
         }
 
         foreach ($oldAttributeIds as $oldAttributeId) {
             if (!in_array($oldAttributeId, $newAttributeIds)) {
                 $this->history
-                    ->createHistory($roomId, 'Attribut ' . $oldAttributeNames[$oldAttributeId] . ' wurde entfernt');
+                    ->createHistory(
+                        $roomId,
+                        'Deleted attribute',
+                        [$oldAttributeNames[$oldAttributeId]]
+                    );
             }
         }
     }
@@ -93,15 +108,14 @@ class RoomService
     public function checkTitleChanges($roomId, $oldTitle, $newTitle): void
     {
         if ($oldTitle !== $newTitle) {
-            $this->history->createHistory($roomId, 'Raumname wurde geändert');
+            $this->history->createHistory($roomId, 'Room name has been changed');
         }
     }
 
     public function checkDescriptionChanges($roomId, $oldDescription, $newDescription): void
     {
-        // check changes in room description
         if ($oldDescription !== $newDescription) {
-            $this->history->createHistory($roomId, 'Beschreibung wurde geändert');
+            $this->history->createHistory($roomId, 'Description has been changed');
         }
     }
 
@@ -119,7 +133,11 @@ class RoomService
         foreach ($newAdjoiningRooms as $newAdjoiningRoom) {
             $newAdjoiningRoomIds[] = $newAdjoiningRoom->id;
             if (!in_array($newAdjoiningRoom->id, $oldAdjoiningRoomIds)) {
-                $this->history->createHistory($roomId, 'Nebenraum ' . $newAdjoiningRoom->name . ' wurde hinzugefügt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Adjoining room was added',
+                    [$newAdjoiningRoom->name]
+                );
             }
         }
 
@@ -127,7 +145,8 @@ class RoomService
             if (!in_array($oldAdjoiningRoomId, $newAdjoiningRoomIds)) {
                 $this->history->createHistory(
                     $roomId,
-                    'Nebenraum ' . $oldAdjoiningRoomName[$oldAdjoiningRoomId] . ' wurde entfernt'
+                    'Adjoining room has been removed',
+                    [$oldAdjoiningRoomName[$oldAdjoiningRoomId]]
                 );
             }
         }
@@ -159,7 +178,11 @@ class RoomService
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
-                $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin hinzugefügt');
+                $this->history->createHistory(
+                    $room->id,
+                    'Added as room admin',
+                    [$user->first_name]
+                );
             }
         }
 
@@ -180,7 +203,11 @@ class RoomService
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
-                $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin entfernt');
+                $this->history->createHistory(
+                    $room->id,
+                    'Removed as room admin',
+                    [$user->first_name]
+                );
             }
         }
     }

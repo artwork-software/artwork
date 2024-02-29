@@ -44,11 +44,8 @@ class Task extends Model
 
     protected $casts = [
         'done' => 'boolean',
-    ];
-
-    protected $dates = [
-        'done_at',
-        'deadline',
+        'done_at' => 'datetime',
+        'deadline' => 'datetime'
     ];
 
     public function contract(): BelongsTo

@@ -49,26 +49,26 @@ class ToolSettingsInterfacesController extends Controller
 
             return Redirect::back()->with(
                 'error',
-                __('interfaces.failed_to_save')
+                __('flash-messages.interfaces.failed_to_save')
             );
         }
 
         if (!$sageApiSettingsService->testConnection()) {
             return Redirect::back()->with(
                 'error',
-                __('interfaces.connection_test_failed')
+                __('flash-messages.interfaces.connection_test_failed')
             );
         }
 
-        return Redirect::back()->with('success', __('interfaces.saved_successfully'));
+        return Redirect::back()->with('success', __('flash-messages.interfaces.saved_successfully'));
     }
 
     public function initializeSage(): RedirectResponse
     {
         if (Artisan::call(GetSage100Data::class) === 0) {
-            return Redirect::back()->with('success', __('interfaces.import_executed_successfully'));
+            return Redirect::back()->with('success', __('flash-messages.interfaces.import_executed_successfully'));
         }
 
-        return Redirect::back()->with('error', __('interfaces.import_executed_unsuccessfully'));
+        return Redirect::back()->with('error', __('flash-messages.interfaces.import_executed_unsuccessfully'));
     }
 }

@@ -52,7 +52,7 @@ class ShiftFilterController extends Controller
             }
         }
 
-        return Redirect::back()->with('success', 'Shift Filter created.');
+        return Redirect::back();
     }
 
     public function destroy(ShiftFilter $filter): void

@@ -53,19 +53,19 @@ class CommentController extends Controller
             return response()->json(['error' => 'Not authorized to create comments in this project.'], 403);
         }
 
-        return Redirect::back()->with('success', 'Comment created');
+        return Redirect::back();
     }
 
     public function update(Request $request, Comment $comment): RedirectResponse
     {
         $comment->text = $request->input('text');
         $this->commentService->save($comment);
-        return Redirect::back()->with('success', 'Comment updated');
+        return Redirect::back();
     }
 
     public function destroy(Comment $comment): RedirectResponse
     {
         $this->commentService->delete($comment);
-        return Redirect::back()->with('success', 'Comment deleted');
+        return Redirect::back();
     }
 }

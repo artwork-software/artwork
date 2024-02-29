@@ -107,9 +107,13 @@ class ShiftUserService
     ): void {
         $this->getNewHistoryService(Shift::class)->createHistory(
             $shift->id,
-            'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde zur Schicht (' .
-                $shift->craft->abbreviation . ' - ' . $shift->event->eventName . ') als "' .
-                $shiftQualification->name . '" hinzugefügt',
+            'Employee was added to the shift as',
+            [
+                $user->getFullNameAttribute(),
+                $shift->craft->abbreviation,
+                $shift->event->eventName,
+                $shiftQualification->name
+            ],
             'shift'
         );
     }
@@ -119,8 +123,6 @@ class ShiftUserService
         $this->notificationService->setProjectId($shift->event->project->id);
         $this->notificationService->setEventId($shift->event->id);
         $this->notificationService->setShiftId($shift->id);
-        /*$notificationTitle = 'Neue Schichtbesetzung ' .
-            $shift->event->project->name . ' ' . $shift->craft->abbreviation;*/
         $notificationTitle = __('notification.shift.new_shift_add', [
             'projectName' => $shift->event->project->name,
             'craftAbbreviation' => $shift->craft->abbreviation
@@ -150,9 +152,6 @@ class ShiftUserService
 
     private function createVacationConflictNotification(Shift $shift, User $user): void
     {
-        /*$notificationTitle = 'Schichtkonflikt ' . Carbon::parse($shift->event_start_day)->format('d.m.Y') .
-            ' ' . $shift->event->project->name . ' ' . $shift->craft->abbreviation;*/
-
         $this->notificationService->setIcon('blue');
         $this->notificationService->setPriority(1);
         $this->notificationService
@@ -199,7 +198,6 @@ class ShiftUserService
         $shiftBreakCheck = $this->notificationService->checkIfShortBreakBetweenTwoShifts($user, $shift);
 
         if ($shiftBreakCheck->shortBreak) {
-            //$notificationTitle = 'Du wurdest mit zu kurzer Ruhepause geplant';
             $notificationTitle = __('notification.shift.your_short_break', [], $user->language);
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setIcon('blue');
@@ -248,7 +246,6 @@ class ShiftUserService
             $this->notificationService->setButtons(['see_shift', 'delete_shift_notification']);
 
             foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $adminUser) {
-                //$notificationTitle = 'Mitarbeiter*in mit zu kurzer Ruhepause geplant';
                 $notificationTitle = __('notification.shift.worker_short_break', [], $adminUser->language);
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setDescription([
@@ -289,7 +286,6 @@ class ShiftUserService
                     if (in_array($craftUser->id, $usersWhichGotNotification)) {
                         continue;
                     }
-                    //$notificationTitle = 'Mitarbeiter*in mit zu kurzer Ruhepause geplant';
                     $notificationTitle = __('notification.shift.worker_short_break', [], $craftUser->language);
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setDescription([
@@ -614,8 +610,12 @@ class ShiftUserService
     {
         $this->getNewHistoryService(Shift::class)->createHistory(
             $shift->id,
-            'Mitarbeiter ' . $user->getFullNameAttribute() . ' wurde von Schicht (' .
-            $shift->craft->abbreviation . ' - ' . $shift->event->eventName . ') entfernt',
+            'Employee was removed from shift',
+            [
+                $user->getFullNameAttribute(),
+                $shift->craft->abbreviation,
+                $shift->event->eventName
+            ],
             'shift'
         );
     }
@@ -625,8 +625,6 @@ class ShiftUserService
         $this->notificationService->setProjectId($shift->event->project->id);
         $this->notificationService->setEventId($shift->event->id);
         $this->notificationService->setShiftId($shift->id);
-        /*$notificationTitle = 'Schichtbesetzung gelöscht  ' .
-            $shift->event->project->name . ' ' . $shift->craft->abbreviation;*/
         $notificationTitle = __(
             'notification.shift.shift_staffing_deleted',
             [

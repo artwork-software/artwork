@@ -27,7 +27,7 @@ class ProjectStatesController extends Controller
         $projectStates = ProjectStates::onlyTrashed()->findOrFail($id);
         $projectStates->forceDelete();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'ProjectStates deleted');
+        return Redirect::route('projects.settings.trashed');
     }
 
     public function restore(int $id): RedirectResponse
@@ -35,6 +35,6 @@ class ProjectStatesController extends Controller
         $projectStates = ProjectStates::onlyTrashed()->findOrFail($id);
         $projectStates->restore();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'ProjectStates restored');
+        return Redirect::route('projects.settings.trashed');
     }
 }

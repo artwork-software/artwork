@@ -67,7 +67,12 @@ class ProjectFileController extends Controller
             $projectFile->comments()->save($comment);
         }
 
-        $this->history->createHistory($project->id, 'Datei ' . $original_name . ' hinzugefügt', 'public_changes');
+        $this->history->createHistory(
+            $project->id,
+            'Added file',
+            [$original_name],
+            'public_changes'
+        );
         $projectController->setPublicChangesNotification($project->id);
 
         $projectFileUsers =  $projectFile->accessingUsers()->get();
@@ -81,7 +86,6 @@ class ProjectFileController extends Controller
         $this->notificationService->setProjectId($project->id);
 
         foreach ($projectFileUsers as $projectFileUser) {
-            //$notificationTitle = 'Ein Dokument wurde für dich freigegeben';
             $notificationTitle = __('notifications.project.file.permission_add', [], $projectFileUser->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
@@ -191,7 +195,12 @@ class ProjectFileController extends Controller
     {
         $this->authorize('view', $projectFile->project);
         $project = $projectFile->project()->first();
-        $this->history->createHistory($project->id, 'Datei ' . $projectFile->name . ' gelöscht', 'public_changes');
+        $this->history->createHistory(
+            $project->id,
+            'Deleted file',
+            [$projectFile->name],
+            'public_changes'
+        );
         $projectController->setPublicChangesNotification($project->id);
 
         $projectFileUsers =  $projectFile->accessingUsers()->get();
@@ -204,7 +213,6 @@ class ProjectFileController extends Controller
         $this->notificationService->setProjectId($project->id);
 
         foreach ($projectFileUsers as $projectFileUser) {
-            //$notificationTitle = 'Ein Dokument wurde gelöscht';
             $notificationTitle = __('notifications.project.file.deleted', [], $projectFileUser->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),

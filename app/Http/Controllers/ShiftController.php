@@ -119,7 +119,6 @@ class ShiftController extends Controller
             $this->notificationService->setEventId($shift->event()->first()->id);
             $this->notificationService->setShiftId($shift->id);
             foreach (User::role(RoleNameEnum::ARTWORK_ADMIN->value)->get() as $authUser) {
-                //$notificationTitle = 'Schicht mit zu kurzer Pausenzeit angelegt ';
                 $notificationTitle = __('notification.shift.short_break', [], $authUser->language);
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
@@ -146,8 +145,12 @@ class ShiftController extends Controller
             }
         }
 
-        $this->history
-            ->createHistory($shift->id, 'Schicht von Event ' . $event->eventName . ' wurde erstellt', 'shift');
+        $this->history->createHistory(
+            $shift->id,
+            'Shift of event was created',
+            [$event->eventName],
+            'shift'
+        );
     }
 
     public function show(): void
@@ -162,8 +165,12 @@ class ShiftController extends Controller
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history
-                ->createHistory($shift->id, 'Schicht von Event ' . $event->eventName . ' wurde bearbeitet', 'shift');
+            $this->history->createHistory(
+                $shift->id,
+                'Shift of event has been edited',
+                [$event->eventName],
+                'shift'
+            );
         }
         $shift->update($request->only([
             'start',
@@ -175,7 +182,7 @@ class ShiftController extends Controller
             'description',
         ]));
 
-        return Redirect::route('shifts.plan')->with('success', 'Shift updated');
+        return Redirect::route('shifts.plan');
     }
 
     public function updateShift(
@@ -186,16 +193,18 @@ class ShiftController extends Controller
         $projectId =  $shift->event()->first()->project()->first()->id;
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history
-                ->createHistory($shift->id, 'Schicht von Event ' . $event->eventName . ' wurde bearbeitet', 'shift');
+            $this->history->createHistory(
+                $shift->id,
+                'Shift of event has been edited',
+                [$event->eventName],
+                'shift'
+            );
 
             $this->notificationService->setIcon('red');
             $this->notificationService->setPriority(2);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
 
             foreach ($shift->users()->get() as $user) {
-                //$notificationTitle = 'Schichtänderung trotz Festschreibung ' .
-                //    $shift->event()->first()->project()->first()->name . ' ' . $shift->craft()->first()->abbreviation;
                 $notificationTitle = __(
                     'notification.shift.locked_changes',
                     [
@@ -276,13 +285,11 @@ class ShiftController extends Controller
             $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);
         }
 
-        return Redirect::route('projects.show.shift', $projectId)->with('success', 'Shift updated');
+        return Redirect::route('projects.show.shift', $projectId);
     }
 
     private function sendShiftAddedNotificationToUser(Shift $shift, User $user): void
     {
-        /*$notificationTitle = 'Neue Schichtbesetzung ' . $shift->event()->first()->project()
-                ->first()->name . ' ' . $shift->craft()->first()->abbreviation;*/
         $notificationTitle = __(
             'notification.shift.shift_staffing',
             [
@@ -544,21 +551,23 @@ class ShiftController extends Controller
             }
         }
 
-        return Redirect::route('projects.show.shift', $projectId)->with('success', 'Shift updated');
+        return Redirect::route('projects.show.shift', $projectId);
     }
 
     public function destroy(Shift $shift): void
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history
-                ->createHistory($shift->id, 'Schicht von Event ' . $event->eventName . ' wurde gelöscht', 'shift');
-
+            $this->history->createHistory(
+                $shift->id,
+                'Shift of event was deleted',
+                [$event->eventName],
+                'shift'
+            );
 
             $this->notificationService->setIcon('green');
             $this->notificationService->setPriority(3);
             $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_CHANGED);
-
 
             foreach ($shift->users()->get() as $user) {
                 if (Auth::id() !== $user->id) {

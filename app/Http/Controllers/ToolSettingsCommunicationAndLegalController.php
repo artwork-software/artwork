@@ -37,6 +37,6 @@ class ToolSettingsCommunicationAndLegalController extends Controller
 
         $generalSettings->save();
 
-        return Redirect::back()->with('success', 'Kommunikation & Rechtliches erfolgreich aktualisiert.');
+        return Redirect::back()->with('success', __('flash-messages.communication_and_legal'));
     }
 }

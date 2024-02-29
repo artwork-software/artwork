@@ -91,7 +91,7 @@ class InvitationController extends Controller
             Mail::to($email)->send(new InvitationCreated($invitation, $admin_user, $token['plain']));
         }
 
-        return Redirect::route('users')->with('success', 'Invitation created.');
+        return Redirect::route('users');
     }
 
     public function edit(Invitation $invitation): Response|ResponseFactory
@@ -117,14 +117,14 @@ class InvitationController extends Controller
             $invitation->update(['token' => $token['hash']]);
         }
 
-        return Redirect::route('user.invitations')->with('success', 'Invitation updated.');
+        return Redirect::route('user.invitations');
     }
 
     public function destroy(Invitation $invitation): RedirectResponse
     {
         $invitation->delete();
 
-        return Redirect::back()->with('success', 'Invitation deleted');
+        return Redirect::back();
     }
 
     public function accept(Request $request): Response|ResponseFactory
@@ -168,6 +168,6 @@ class InvitationController extends Controller
 
         broadcast(new UserUpdated())->toOthers();
 
-        return Redirect::route('dashboard')->with('success', 'Herzlich Willkommen.');
+        return Redirect::route('dashboard');
     }
 }

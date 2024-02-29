@@ -25,7 +25,7 @@ class TaskTemplateController extends Controller
             'checklist_template_id' => $request->checklist_template_id
         ]);
 
-        return Redirect::back()->with('success', 'TaskTemplate created.');
+        return Redirect::back();
     }
 
     public function edit(TaskTemplate $taskTemplate): Response|ResponseFactory
@@ -43,13 +43,13 @@ class TaskTemplateController extends Controller
     {
         $taskTemplate->update($request->only('name', 'description', 'done', 'checklist_template_id'));
 
-        return Redirect::back()->with('success', 'TaskTemplate updated');
+        return Redirect::back();
     }
 
     public function destroy(TaskTemplate $taskTemplate): RedirectResponse
     {
         $taskTemplate->delete();
 
-        return Redirect::back()->with('success', 'TaskTemplate deleted');
+        return Redirect::back();
     }
 }

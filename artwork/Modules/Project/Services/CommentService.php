@@ -33,7 +33,7 @@ class CommentService
         $comment->user()->associate($user);
         if ($project) {
             $comment->project()->associate($project);
-            $this->historyService->createHistory($project->id, 'Kommentar hinzugefügt');
+            $this->historyService->createHistory($project->id, 'Comment added');
         }
         if ($projectFile) {
             $comment->project_file()->associate($projectFile);
@@ -56,7 +56,7 @@ class CommentService
 
     public function delete(Comment $comment): void
     {
-        $this->historyService->createHistory($comment->project->id, 'Kommentar gelöscht');
+        $this->historyService->createHistory($comment->project->id, 'Comment deleted');
         $comment->delete();
     }
 }

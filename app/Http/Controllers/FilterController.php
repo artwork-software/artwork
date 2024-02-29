@@ -94,7 +94,7 @@ class FilterController extends Controller
             }
         }
 
-        return Redirect::back()->with('success', 'Filter created.');
+        return Redirect::back();
     }
 
     /**
@@ -106,6 +106,6 @@ class FilterController extends Controller
     public function destroy(Filter $filter): RedirectResponse
     {
         $filter->delete();
-        return Redirect::back()->with('success', 'Filter deleted');
+        return Redirect::back();
     }
 }

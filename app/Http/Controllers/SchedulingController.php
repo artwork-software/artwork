@@ -90,7 +90,6 @@ class SchedulingController extends Controller
                             ['checklist' => $privateChecklistTask->name],
                             $user->language
                         );
-                        //$notificationTitle = 'Deadline von ' . $privateChecklistTask->name . ' ist morgen erreicht';
                         $broadcastMessage = [
                             'id' => rand(1, 1000000),
                             'type' => 'error',
@@ -195,7 +194,6 @@ class SchedulingController extends Controller
                         ['checklist' => $task->name],
                         $user->language
                     );
-                    //$notificationTitle = 'Deadline von ' . $task->name . ' ist morgen erreicht';
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'error',
@@ -255,7 +253,6 @@ class SchedulingController extends Controller
                         ['project' => $project->name],
                         $user->language
                     );
-                    //$notificationTitle = 'Es gab Änderungen an ' . $project->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -280,7 +277,6 @@ class SchedulingController extends Controller
                         ['task' => $task?->name],
                         $user->language
                     );
-                    //$notificationTitle = 'Änderungen an ' . $task?->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -304,7 +300,6 @@ class SchedulingController extends Controller
                         ['room' => $room?->name],
                         $user->language
                     );
-                    //$notificationTitle = 'Änderungen an ' . $room?->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -327,7 +322,6 @@ class SchedulingController extends Controller
                         [],
                         $user->language
                     );
-                    //$notificationTitle = 'Termin geändert';
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -379,7 +373,6 @@ class SchedulingController extends Controller
                         ['project' => $project->name],
                         $user->language
                     );
-                    //$notificationTitle = 'Es gab öffentlichkeitsarbeitsrelevante Änderungen an ' . $project->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
@@ -406,7 +399,6 @@ class SchedulingController extends Controller
                         [],
                         $user->language
                     );
-                    //$notificationTitle = 'Verfügbarkeit geändert';
                     $broadcastMessage = [
                         'id' => random_int(1, 1000000),
                         'type' => 'success',

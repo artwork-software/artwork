@@ -151,7 +151,7 @@ export default defineComponent({
             shiftQualificationForm: useForm({
                 icon: this.mode === 'edit' ? this.shiftQualification.icon : null,
                 name: this.mode === 'edit' ? this.shiftQualification.name : null,
-                available: this.mode === 'edit' ? this.shiftQualification.available : null
+                available: this.mode === 'edit' ? this.shiftQualification.available : false
             })
         }
     },

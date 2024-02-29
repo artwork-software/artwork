@@ -313,7 +313,7 @@ class UserController extends Controller
 
         Session::put('locale', $user->language);
 
-        return Redirect::back()->with('success', 'Benutzer aktualisiert');
+        return Redirect::back();
     }
 
     public function updateChecklistStatus(Request $request): RedirectResponse
@@ -322,7 +322,7 @@ class UserController extends Controller
             'opened_checklists' => $request->opened_checklists
         ]);
 
-        return Redirect::back()->with('success', 'Checklist status updated');
+        return Redirect::back();
     }
 
     public function updateAreaStatus(Request $request): RedirectResponse
@@ -331,7 +331,7 @@ class UserController extends Controller
             'opened_areas' => $request->opened_areas
         ]);
 
-        return Redirect::back()->with('success', 'Area status updated');
+        return Redirect::back();
     }
 
     /**
@@ -346,7 +346,7 @@ class UserController extends Controller
             'work_description' => $request->get('workDescription')
         ]);
 
-        return Redirect::back()->with('success', ['workProfile' => 'Arbeitsprofil erfolgreich aktualisiert']);
+        return Redirect::back()->with('success', ['workProfile' => __('flash-messages.workProfile.changed')]);
     }
 
     /**
@@ -401,7 +401,7 @@ class UserController extends Controller
             $user->assignedCrafts()->attach(Craft::find($request->get('craftId')));
         }
 
-        return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
+        return Redirect::back()->with('success', ['craft' => __('flash-messages.craft.assigned')]);
     }
 
     /**
@@ -413,7 +413,7 @@ class UserController extends Controller
 
         $user->assignedCrafts()->detach($craft);
 
-        return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
+        return Redirect::back()->with('success', ['craft' => __('flash-messages.craft.removed')]);
     }
 
     public function destroy(User $user): RedirectResponse
@@ -423,7 +423,7 @@ class UserController extends Controller
 
         broadcast(new UserUpdated())->toOthers();
 
-        return Redirect::route('users')->with('success', 'Benutzer gelöscht');
+        return Redirect::route('users');
     }
 
 

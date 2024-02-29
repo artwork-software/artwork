@@ -29,13 +29,13 @@ class ShiftQualificationController extends Controller
 
             return Redirect::back()->with(
                 'error',
-                ['shift_qualification' => 'Qualifikation konnte nicht gespeichert werden, bitte versuche es erneut.']
+                ['shift_qualification' => __('flash-messages.shift-qualification.error.create')]
             );
         }
 
         return Redirect::back()->with(
             'success',
-            ['shift_qualification' => 'Qualifikation erfolgreich gespeichert.']
+            ['shift_qualification' => __('flash-messages.shift-qualification.success.create')]
         );
     }
 
@@ -51,13 +51,13 @@ class ShiftQualificationController extends Controller
 
             return Redirect::back()->with(
                 'error',
-                ['shift_qualification' => 'Qualifikation konnte nicht aktualisiert werden, bitte versuche es erneut.']
+                ['shift_qualification' => __('flash-messages.shift-qualification.error.update')]
             );
         }
 
         return Redirect::back()->with(
             'success',
-            ['shift_qualification' => 'Qualifikation erfolgreich aktualisiert.']
+            ['shift_qualification' => __('flash-messages.shift-qualification.success.update')]
         );
     }
 }

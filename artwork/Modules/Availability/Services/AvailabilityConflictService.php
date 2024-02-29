@@ -52,7 +52,6 @@ class AvailabilityConflictService
 
         foreach ($shifts as $shift) {
             $shiftCommittedBy = $shift->committedBy()->first();
-            //$notificationTitle = 'Konflikt mit deiner Schicht';
             if (!$user) {
                 $notificationTitle = __(
                     'notification.shift.conflict',

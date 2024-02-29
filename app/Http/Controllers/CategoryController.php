@@ -75,20 +75,20 @@ class CategoryController extends Controller
         Category::create([
             'name' => $request->name,
         ]);
-        return Redirect::back()->with('success', 'Category created');
+        return Redirect::back();
     }
 
     public function update(Request $request, Category $category): RedirectResponse
     {
         $category->update($request->only('name'));
 
-        return Redirect::back()->with('success', 'Category edited');
+        return Redirect::back();
     }
 
     public function destroy(Category $category): RedirectResponse
     {
         $category->delete();
-        return Redirect::back()->with('success', 'Category deleted');
+        return Redirect::back();
     }
 
     public function forceDelete(int $id): RedirectResponse
@@ -97,7 +97,7 @@ class CategoryController extends Controller
 
         $category->forceDelete();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'Category deleted');
+        return Redirect::route('projects.settings.trashed');
     }
 
     public function restore(int $id): RedirectResponse
@@ -106,6 +106,6 @@ class CategoryController extends Controller
 
         $category->restore();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'Category restored');
+        return Redirect::route('projects.settings.trashed');
     }
 }

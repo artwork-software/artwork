@@ -151,7 +151,6 @@ class ContractController extends Controller
                 [],
                 $contractUser->language
             );
-            //$notificationTitle = 'Ein Vertrag wurde für dich freigegeben';
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'error',
@@ -179,7 +178,7 @@ class ContractController extends Controller
 
         $contract->save();
 
-        return Redirect::route('contracts.view.index')->with('success', 'Project created.');
+        return Redirect::route('contracts.view.index');
     }
 
     public function download(Contract $contract): StreamedResponse
@@ -231,7 +230,6 @@ class ContractController extends Controller
                 [],
                 $contractUser->language
             );
-            //$notificationTitle = 'Ein Vertrag wurde für dich freigegeben';
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'green',

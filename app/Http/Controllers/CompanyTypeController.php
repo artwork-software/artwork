@@ -34,7 +34,7 @@ class CompanyTypeController extends Controller
     public function destroy(CompanyType $companyType): \Illuminate\Http\RedirectResponse
     {
         $companyType->delete();
-        return Redirect::back()->with('success', 'CompanyType deleted');
+        return Redirect::back();
     }
 
     public function forceDelete(int $id)
@@ -43,7 +43,7 @@ class CompanyTypeController extends Controller
 
         $companyType->forceDelete();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'CompanyType deleted');
+        return Redirect::route('projects.settings.trashed');
     }
 
     public function restore(int $id)
@@ -52,6 +52,6 @@ class CompanyTypeController extends Controller
 
         $companyType->restore();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'CompanyType restored');
+        return Redirect::route('projects.settings.trashed');
     }
 }

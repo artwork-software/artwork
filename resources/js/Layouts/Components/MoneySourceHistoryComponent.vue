@@ -26,7 +26,12 @@
                                     {{ $t('deleted User')}}
                                 </div>
                                 <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
-                                    {{ historyItem.changes[0].message }}
+                                    {{
+                                        $t(
+                                            historyItem.changes[0].translationKey,
+                                            historyItem.changes[0].translationKeyPlaceholderValues
+                                        )
+                                    }}
                                 </div>
                             </div>
                         </div>

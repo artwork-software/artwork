@@ -9,12 +9,15 @@ use Illuminate\Support\Facades\Auth;
 
 class NewHistoryService
 {
-    protected int $modelId;
+    private int $modelId;
 
-    protected string $historyText;
+    private string $translationKey;
 
-    protected string $type = 'project';
-    protected mixed $modelObject;
+    private array $translationKeyPlaceholderValues = [];
+
+    private string $type = 'project';
+
+    private mixed $modelObject;
 
     public function __construct($modelObject = null)
     {
@@ -43,14 +46,27 @@ class NewHistoryService
         $this->modelId = $modelId;
     }
 
-    public function getHistoryText(): string
+    public function getTranslationKey(): string
     {
-        return $this->historyText;
+        return $this->translationKey;
     }
 
-    public function setHistoryText(string $historyText): void
+    public function setTranslationKey(string $translationKey): void
     {
-        $this->historyText = $historyText;
+        $this->translationKey = $translationKey;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getTranslationKeyPlaceholderValues(): array
+    {
+        return $this->translationKeyPlaceholderValues;
+    }
+
+    public function setTranslationKeyPlaceholderValues(array $translationKeyPlaceholderValues): void
+    {
+        $this->translationKeyPlaceholderValues = $translationKeyPlaceholderValues;
     }
 
     public function getType(): string
@@ -78,7 +94,12 @@ class NewHistoryService
             'phone_number' => $user->phone_number,
             'description' => $user->description
         ];
-        $array[] = ['type' => $this->getType(), 'message' => $this->getHistoryText(), 'changed_by' => $userObj];
+        $array[] = [
+            'type' => $this->getType(),
+            'translationKey' => $this->getTranslationKey(),
+            'translationKeyPlaceholderValues' => $this->getTranslationKeyPlaceholderValues(),
+            'changed_by' => $userObj
+        ];
         if ($this->getType() === 'shift') {
             $shift = Shift::find($this->getModelId());
             $array[] = [
@@ -100,8 +121,12 @@ class NewHistoryService
         ]);
     }
 
-    public function createHistory(int $modelId, string $historyText, string $type = 'project'): void
-    {
+    public function createHistory(
+        int $modelId,
+        string $translationKey,
+        array $translationKeyPlaceholderValues = [],
+        string $type = 'project'
+    ): void {
         $user = Auth::user();
         $userObj = [
             'id' => $user->id,
@@ -115,7 +140,12 @@ class NewHistoryService
             'phone_number' => $user->phone_number,
             'description' => $user->description
         ];
-        $array[] = ['type' => $type, 'message' => $historyText, 'changed_by' => $userObj];
+        $array[] = [
+            'type' => $type,
+            'translationKey' => $translationKey,
+            'translationKeyPlaceholderValues' => $translationKeyPlaceholderValues,
+            'changed_by' => $userObj
+        ];
         if ($type === 'shift') {
             $shift = Shift::find($modelId);
             $array[] = [

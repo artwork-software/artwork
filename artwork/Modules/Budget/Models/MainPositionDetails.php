@@ -22,9 +22,12 @@ class MainPositionDetails extends Model
     use HasFactory;
     use BelongsToMainPosition;
 
-    protected $guarded = [];
-
     protected $table = 'main_position_details';
+
+    protected $fillable = [
+        'main_position_id',
+        'column_id'
+    ];
 
     public function comments(): MorphMany
     {

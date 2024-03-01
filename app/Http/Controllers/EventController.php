@@ -56,9 +56,9 @@ class EventController extends Controller
 
     protected ?string $notificationKey = '';
 
-    private Authenticatable $user;
+    protected Authenticatable $user;
 
-    private UserShiftCalendarFilter $userShiftCalendarFilter;
+    protected UserShiftCalendarFilter $userShiftCalendarFilter;
 
     public function __construct(
         private readonly CollisionService $collisionService,

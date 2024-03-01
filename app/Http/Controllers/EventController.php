@@ -36,6 +36,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,11 +56,9 @@ class EventController extends Controller
 
     protected ?string $notificationKey = '';
 
-    private $user;
+    private Authenticatable $user;
 
     private UserShiftCalendarFilter $userShiftCalendarFilter;
-
-    private UserCalendarFilter $userCalendarFilter;
 
     public function __construct(
         private readonly CollisionService $collisionService,
@@ -77,25 +76,25 @@ class EventController extends Controller
     public function viewEventIndex(CalendarController $calendarController): Response
     {
         $this->user = Auth::user();
-        $this->userCalendarFilter = $this->user->calendar_filter()->first();
+        $userCalendarFilter = $this->user->calendar_filter()->first();
         $this->userShiftCalendarFilter = $this->user->shift_calendar_filter()->first();
         $events = [];
-        if (!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
+        if (!is_null($userCalendarFilter->start_date) && !is_null($userCalendarFilter->end_date)) {
             $showCalendar = $calendarController->createCalendarData(
                 'individual',
                 null,
                 null,
-                $this->userCalendarFilter->start_date,
-                $this->userCalendarFilter->end_date
+                $userCalendarFilter->start_date,
+                $userCalendarFilter->end_date
             );
 
             $eventsOfDay = collect();
 
-            if ($this->userCalendarFilter->start_date === $this->userCalendarFilter->end_date) {
+            if ($userCalendarFilter->start_date === $userCalendarFilter->end_date) {
                 $eventsOfDay = Collection::make(CalendarEventResource::collection($calendarController
                     ->getEventsOfInterval(
-                        $this->userCalendarFilter->start_date,
-                        $this->userCalendarFilter->end_date
+                        $userCalendarFilter->start_date,
+                        $userCalendarFilter->end_date
                     ))->resolve());
             }
 
@@ -114,9 +113,9 @@ class EventController extends Controller
 
         $eventsAtAGlance = [];
 
-        if (!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
-            $startDate = Carbon::create($this->userCalendarFilter->start_date)->startOfDay();
-            $endDate = Carbon::create($this->userCalendarFilter->end_date)->endOfDay();
+        if (!is_null($userCalendarFilter->start_date) && !is_null($userCalendarFilter->end_date)) {
+            $startDate = Carbon::create($userCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($userCalendarFilter->end_date)->endOfDay();
         } else {
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();

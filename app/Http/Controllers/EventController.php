@@ -36,6 +36,7 @@ use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,11 +56,9 @@ class EventController extends Controller
 
     protected ?string $notificationKey = '';
 
-    private $user;
+    protected Authenticatable $user;
 
-    private UserShiftCalendarFilter $userShiftCalendarFilter;
-
-    private UserCalendarFilter $userCalendarFilter;
+    protected UserShiftCalendarFilter $userShiftCalendarFilter;
 
     public function __construct(
         private readonly CollisionService $collisionService,
@@ -77,26 +76,32 @@ class EventController extends Controller
     public function viewEventIndex(CalendarController $calendarController): Response
     {
         $this->user = Auth::user();
-        $this->userCalendarFilter = $this->user->calendar_filter()->first();
-        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter()->first();
+        $userCalendarFilter = $this->user->calendar_filter()->first();
+        $this->userShiftCalendarFilter = $this->user
+            ->shift_calendar_filter()->first();
         $events = [];
-        if (!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
+        if (
+            !is_null($userCalendarFilter->start_date)
+            && !is_null($userCalendarFilter->end_date)
+        ) {
             $showCalendar = $calendarController->createCalendarData(
                 'individual',
                 null,
                 null,
-                $this->userCalendarFilter->start_date,
-                $this->userCalendarFilter->end_date
+                $userCalendarFilter->start_date,
+                $userCalendarFilter->end_date
             );
 
             $eventsOfDay = collect();
 
-            if ($this->userCalendarFilter->start_date === $this->userCalendarFilter->end_date) {
-                $eventsOfDay = Collection::make(CalendarEventResource::collection($calendarController
+            if ($userCalendarFilter->start_date === $userCalendarFilter->end_date) {
+                $eventsOfDay = Collection::make(
+                    CalendarEventResource::collection($calendarController
                     ->getEventsOfInterval(
-                        $this->userCalendarFilter->start_date,
-                        $this->userCalendarFilter->end_date
-                    ))->resolve());
+                        $userCalendarFilter->start_date,
+                        $userCalendarFilter->end_date
+                    ))->resolve()
+                );
             }
 
             $events = new CalendarEventCollectionResourceModel(
@@ -114,9 +119,9 @@ class EventController extends Controller
 
         $eventsAtAGlance = [];
 
-        if (!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
-            $startDate = Carbon::create($this->userCalendarFilter->start_date)->startOfDay();
-            $endDate = Carbon::create($this->userCalendarFilter->end_date)->endOfDay();
+        if (!is_null($userCalendarFilter->start_date) && !is_null($userCalendarFilter->end_date)) {
+            $startDate = Carbon::create($userCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($userCalendarFilter->end_date)->endOfDay();
         } else {
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
@@ -777,7 +782,6 @@ class EventController extends Controller
         $this->notificationService->setButtons(['accept', 'decline']);
         if (!empty($admins)) {
             foreach ($admins as $admin) {
-                dd($admin->language);
                 // notification.event.new_room_request
                 $notificationTitle = __('notification.event.new_room_request', [], $admin->language);
                 $broadcastMessage = [
@@ -869,7 +873,6 @@ class EventController extends Controller
         ProjectController $projectController
     ): CalendarEventResource {
         $this->authorize('update', $event);
-
         if (!$request->noNotifications) {
             $projectManagers = [];
             $this->notificationService->setNotificationKey($this->notificationKey);
@@ -1355,7 +1358,8 @@ class EventController extends Controller
         }
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
+        $this->notificationService
+            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
 
         $this->notificationService->setRoomId($event->room_id);
         $this->notificationService->setEventId($event->id);
@@ -1476,7 +1480,8 @@ class EventController extends Controller
 
             $this->notificationService->setIcon('blue');
             $this->notificationService->setPriority(1);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
             $this->notificationService->setRoomId($event->room_id);
             $this->notificationService->setEventId($event->id);
             $this->notificationService->setProjectId($event->project_id);
@@ -1575,7 +1580,8 @@ class EventController extends Controller
 
         $this->notificationService->setIcon('blue');
         $this->notificationService->setPriority(1);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
+        $this->notificationService
+            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
 
         $this->notificationService->setRoomId($event->room_id);
         $this->notificationService->setEventId($event->id);

@@ -77,9 +77,13 @@ class EventController extends Controller
     {
         $this->user = Auth::user();
         $userCalendarFilter = $this->user->calendar_filter()->first();
-        $this->userShiftCalendarFilter = $this->user->shift_calendar_filter()->first();
+        $this->userShiftCalendarFilter = $this->user
+            ->shift_calendar_filter()->first();
         $events = [];
-        if (!is_null($userCalendarFilter->start_date) && !is_null($userCalendarFilter->end_date)) {
+        if (
+            !is_null($userCalendarFilter->start_date)
+            && !is_null($userCalendarFilter->end_date)
+        ) {
             $showCalendar = $calendarController->createCalendarData(
                 'individual',
                 null,
@@ -91,11 +95,13 @@ class EventController extends Controller
             $eventsOfDay = collect();
 
             if ($userCalendarFilter->start_date === $userCalendarFilter->end_date) {
-                $eventsOfDay = Collection::make(CalendarEventResource::collection($calendarController
+                $eventsOfDay = Collection::make(
+                    CalendarEventResource::collection($calendarController
                     ->getEventsOfInterval(
                         $userCalendarFilter->start_date,
                         $userCalendarFilter->end_date
-                    ))->resolve());
+                    ))->resolve()
+                );
             }
 
             $events = new CalendarEventCollectionResourceModel(

@@ -702,9 +702,7 @@ class EventController extends Controller
 
 
         if (!empty($collision['created_by'])) {
-            $user = User::find($collision['created_by']);
-            // notification.event.conflict
-            $notificationTitle = __('notification.event.conflict', [], $user->language);
+            $notificationTitle = __('notification.event.conflict', [], $collision['created_by']->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'error',
@@ -720,7 +718,7 @@ class EventController extends Controller
                         [
                             'date_time' => Carbon::parse($collision['event']->start_time)->translatedFormat('d.m.Y H:i')
                         ],
-                        $user->language
+                        $collision['created_by']->language
                     ),
                     'created_by' => $collision['created_by']
                 ],
@@ -749,7 +747,7 @@ class EventController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setNotificationTo($user);
+            $this->notificationService->setNotificationTo($collision['created_by']);
             $this->notificationService->createNotification();
         }
     }
@@ -779,6 +777,7 @@ class EventController extends Controller
         $this->notificationService->setButtons(['accept', 'decline']);
         if (!empty($admins)) {
             foreach ($admins as $admin) {
+                dd($admin->language);
                 // notification.event.new_room_request
                 $notificationTitle = __('notification.event.new_room_request', [], $admin->language);
                 $broadcastMessage = [

@@ -777,7 +777,6 @@ class EventController extends Controller
         $this->notificationService->setButtons(['accept', 'decline']);
         if (!empty($admins)) {
             foreach ($admins as $admin) {
-                dd($admin->language);
                 // notification.event.new_room_request
                 $notificationTitle = __('notification.event.new_room_request', [], $admin->language);
                 $broadcastMessage = [
@@ -869,7 +868,6 @@ class EventController extends Controller
         ProjectController $projectController
     ): CalendarEventResource {
         $this->authorize('update', $event);
-
         if (!$request->noNotifications) {
             $projectManagers = [];
             $this->notificationService->setNotificationKey($this->notificationKey);
@@ -1355,7 +1353,8 @@ class EventController extends Controller
         }
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
+        $this->notificationService
+            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
 
         $this->notificationService->setRoomId($event->room_id);
         $this->notificationService->setEventId($event->id);
@@ -1476,7 +1475,8 @@ class EventController extends Controller
 
             $this->notificationService->setIcon('blue');
             $this->notificationService->setPriority(1);
-            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
             $this->notificationService->setRoomId($event->room_id);
             $this->notificationService->setEventId($event->id);
             $this->notificationService->setProjectId($event->project_id);
@@ -1575,7 +1575,8 @@ class EventController extends Controller
 
         $this->notificationService->setIcon('blue');
         $this->notificationService->setPriority(1);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
+        $this->notificationService
+            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST);
 
         $this->notificationService->setRoomId($event->room_id);
         $this->notificationService->setEventId($event->id);

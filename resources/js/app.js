@@ -37,6 +37,8 @@ const i18n = VueI18n.createI18n({
 
 const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Laravel';
 
+
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => require(`./Pages/${name}.vue`),
@@ -49,6 +51,10 @@ createInertiaApp({
         app.use(VueMathjax)
         app.use(i18n)
         app.mount(el);
+        app.config.globalProperties.$updateLocale = function (newLocale) {
+            this.$i18n.locale = newLocale; // Für VueI18n 9.x und Vue 3
+            document.documentElement.lang = newLocale;
+        };
     },
 });
 

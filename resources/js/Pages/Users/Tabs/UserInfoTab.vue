@@ -387,6 +387,7 @@ export default {
         },
         editUser() {
             this.userForm.language = this.selectedLanguage.id;
+            this.$updateLocale(this.selectedLanguage.id);
             if (this.hasAdminRole()) {
                 this.userForm.email = this.user_to_edit.email;
             }
@@ -397,7 +398,7 @@ export default {
             }
             this.userForm.patch(
                 route('user.update', {user: this.user_to_edit.id}), {
-                preserveScroll: true,
+                preserveScroll: true, preserveState: false,
                 onSuccess: () => this.openSuccessModal()
             });
             this.nameError = false;

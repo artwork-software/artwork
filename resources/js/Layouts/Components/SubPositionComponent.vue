@@ -21,7 +21,6 @@
                 <div class="flex flex-wrap w-8">
                     <div class="flex">
                         <Menu as="div" class="my-auto relative" v-if="this.$can('edit budget templates') || !table.is_template">
-                             <!-- v-show="showMenu === 'subPosition' + subPosition.id"-->
                             <div class="flex">
                                 <MenuButton class="flex bg-tagBg p-0.5 rounded-full">
                                     <DotsVerticalIcon class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto" aria-hidden="true"/>
@@ -35,7 +34,7 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                                 </svg>
-                                                Festschreiben
+                                                {{ $t('Commitment') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
@@ -43,13 +42,13 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                                 </svg>
-                                                Festschreibung aufheben
+                                                {{ $t('Canceling a fixed term') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <span @click="openDeleteSubPositionModal(subPosition)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <TrashIcon class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
-                                                Löschen
+                                                {{ $t('Delete') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
@@ -57,7 +56,7 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
                                                 </svg>
-                                                Duplizieren
+                                                {{ $t('Duplicate') }}
                                             </a>
                                         </MenuItem>
                                     </div>
@@ -136,19 +135,18 @@
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                             </svg>
-                                            Ausklammern
+                                            {{ $t('Exclude') }}
                                         </span>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }"
                                               v-else
                                               @click="updateRowCommented(row.id, false)">
                                         <span
-                                            @click=""
                                             :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                             </svg>
-                                            Positionen einbeziehen
+                                            {{ $t('Include positions') }}
                                         </span>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -158,7 +156,7 @@
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                             </svg>
-                                            Duplizieren
+                                            {{ $t('Duplicate') }}
                                         </span>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -168,7 +166,7 @@
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                             </svg>
-                                            Löschen
+                                            {{ $t('Delete') }}
                                         </span>
                                     </MenuItem>
                                 </div>
@@ -179,14 +177,14 @@
                 <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id" :sub-position-id="subPosition.id"/>
                 <div @click="addRowToSubPosition(subPosition, row)" v-if="this.$can('edit budget templates') || !table.is_template" class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
                     <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
-                        Zeile
+                        {{ $t('Row') }}
                         <PlusCircleIcon class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
                     </div>
                 </div>
             </div>
             <div v-else @click="addRowToSubPosition(subPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                 <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
-                    Zeile
+                    {{ $t('Row') }}
                     <PlusCircleIcon class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
                 </div>
             </div>
@@ -215,23 +213,20 @@
         </table>
         <div @click="addSubPosition(mainPosition.id, subPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
             <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
-                Unterposition
+                {{ $t('Sub position') }}
                 <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full" />
             </div>
         </div>
     </th>
+    <confirmation-component
+        v-if="showDeleteModal"
+        :confirm="$t('Delete')"
+        :titel="this.confirmationTitle"
+        :description="this.confirmationDescription"
+        @closed="afterConfirm"
+    />
 </template>
-
-<confirmation-component
-    v-if="showDeleteModal"
-    confirm="Löschen"
-    :titel="this.confirmationTitle"
-    :description="this.confirmationDescription"
-    @closed="afterConfirm"/>
-
-
 <script>
-
 import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -288,9 +283,9 @@ export default {
                 position: 0
             },
             verifiedTexts: {
-                title: 'Verifizierung',
+                title: this.$t('Verification'),
                 positionTitle: '',
-                description: 'Sind alle Zahlen richtig kalkuliert? Ist die Kalkulation plausibel? Lasse deine Hauptposition durch eine Nutzer*in verifizieren. '
+                description: this.$t('Have all figures been calculated correctly? Is the calculation plausible? Have your main item verified by a user.')
             },
             submitVerifiedModalData: useForm({
                 is_main: false,
@@ -467,8 +462,8 @@ export default {
             return this.columns.some(column => column.is_locked === true);
         },
         openDeleteSubPositionModal(subPosition) {
-            this.confirmationTitle = 'Unterposition löschen';
-            this.confirmationDescription = 'Bist du sicher, dass du die Unterposition ' + subPosition.name + ' löschen möchtest?'
+            this.confirmationTitle = this.$t('Delete sub-item');
+            this.confirmationDescription = this.$t('Are you sure you want to delete the sub-item', [subPosition.name]);
             this.subPositionToDelete = subPosition;
             this.showDeleteModal = true;
             this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.subPositionToDelete, 'sub')
@@ -511,15 +506,14 @@ export default {
             this.rowToDelete = row;
             this.showDeleteModal = true;
             if(!this.checkColumnsLocked()){
-                this.confirmationTitle = 'Zeile löschen';
-                this.confirmationDescription = 'Bist du sicher, dass du diese Zeile löschen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
+                this.confirmationTitle = this.$t('Delete row');
+                this.confirmationDescription = this.$t('Are you sure you want to delete this line? All links etc. will also be deleted.');
                 this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.rowToDelete, 'row')
             }else{
-                this.confirmationTitle = 'Zeile löschen nicht möglich'
-                this.confirmationDescription = 'Solange eine Spalte gesperrt ist, kannst du keine Zeile löschen.'
+                this.confirmationTitle = this.$t('Delete line not possible');
+                this.confirmationDescription = this.$t('As long as a column is locked, you cannot delete a row.');
                 this.$emit('openErrorModal', this.confirmationTitle, this.confirmationDescription)
             }
-
         },
         async handleCellClick(cell, type = '') {
             if (type === 'comment') {
@@ -535,16 +529,14 @@ export default {
             } else {
                 cell.clicked = !cell.clicked
 
-                if(cell.clicked) {
+                if (cell.clicked) {
                     await nextTick()
 
                     this.$refs[`cell-${cell.id}`][0].select();
                 }
             }
-
         },
         addSubPosition(mainPositionId, subPosition = null) {
-
             let subPositionBefore = subPosition
 
             if (!subPositionBefore) {
@@ -591,7 +583,6 @@ export default {
                     cssString += ' xsDark '
                 }
             }
-
 
             return cssString
         },

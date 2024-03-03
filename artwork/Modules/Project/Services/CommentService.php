@@ -16,26 +16,24 @@ class CommentService
     public function __construct(
         private readonly CommentRepository $commentRepository,
         private readonly NewHistoryService $historyService
-    )
-    {
+    ) {
         $this->historyService->setModel(Project::class);
     }
 
     public function create(
-        string           $text,
-        User             $user,
-        ?Project         $project = null,
-        ?ProjectFile     $projectFile = null,
+        string $text,
+        User $user,
+        ?Project $project = null,
+        ?ProjectFile $projectFile = null,
         ?MoneySourceFile $moneySourceFile = null,
-        ?Contract        $contract = null,
-    ): Comment
-    {
+        ?Contract $contract = null,
+    ): Comment {
         $comment = new Comment();
         $comment->text = $text;
         $comment->user()->associate($user);
         if ($project) {
             $comment->project()->associate($project);
-            $this->historyService->createHistory($project->id, 'Kommentar hinzugefügt');
+            $this->historyService->createHistory($project->id, 'Comment added');
         }
         if ($projectFile) {
             $comment->project_file()->associate($projectFile);
@@ -51,12 +49,14 @@ class CommentService
 
     public function save(Comment $comment): Comment
     {
-        return $this->commentRepository->save($comment);
+        $this->commentRepository->save($comment);
+
+        return $comment;
     }
 
     public function delete(Comment $comment): void
     {
-        $this->historyService->createHistory($comment->project->id, 'Kommentar gelöscht');
+        $this->historyService->createHistory($comment->project->id, 'Comment deleted');
         $comment->delete();
     }
 }

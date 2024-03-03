@@ -5,7 +5,7 @@
             <img alt="" src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-2xl my-2">
-                    Teams zuweisen
+                    {{ $t('Assign teams')}}
                 </div>
 
                 <XIcon @click="emitClose"
@@ -13,7 +13,7 @@
                     aria-hidden="true"/>
 
                 <div class="text-secondary tracking-tight leading-6 sub">
-                    Tippe den Namen des Teams ein, dem du die Checkliste zuweisen möchtest.
+                    {{ $t('Enter the name of the team to which you want to assign the checklist.')}}
                 </div>
                 <div class="mt-10">
                     <!--   Search for Departments    -->
@@ -36,7 +36,7 @@
                         <div v-if="departmentQuery && (searchedDepartments.length === 0)"
                             key="no-item"
                             class="p-4 font-bold text-white">
-                            Keine Ergebnisse gefunden
+                            {{ $t('No results found')}}
                         </div>
                     </div>
                 </div>
@@ -50,13 +50,13 @@
                         <div class="pl-3 pt-1">{{ department.name }}</div>
                     </div>
                     <button type="button" @click="removeDepartment(department)">
-                        <span class="sr-only">Team aus Checkliste entfernen</span>
+                        <span class="sr-only">{{ $t('Remove team from checklist')}}</span>
                         <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-primary rounded-full"/>
                     </button>
                 </div>
 
                 <AddButton @click="submitDepartments"
-                           text="Zuweisen"
+                           :text="$t('Assign')"
                            mode="modal"
                     class="mt-8 px-12 py-3" />
 

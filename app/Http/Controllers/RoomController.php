@@ -33,8 +33,7 @@ class RoomController extends Controller
     public function __construct(
         protected readonly RoomService $roomService,
         protected readonly CollisionService $collisionService
-    )
-    {
+    ) {
     }
 
     /**
@@ -118,7 +117,7 @@ class RoomController extends Controller
             $room->categories()->sync($request->room_categories);
         }
 
-        return Redirect::route('areas.management')->with('success', 'Room created.');
+        return Redirect::route('areas.management');
     }
 
     public function show(Room $room, CalendarController $calendarController): Response|ResponseFactory
@@ -241,14 +240,14 @@ class RoomController extends Controller
             $scheduling->create($user->id, 'ROOM_CHANGES', 'ROOMS', $roomId);
         }
 
-        return Redirect::back()->with('success', 'Room updated');
+        return Redirect::back();
     }
 
     public function duplicate(Room $room): RedirectResponse
     {
         $this->roomService->duplicateByRoomModel($room);
 
-        return Redirect::route('areas.management')->with('success', 'Room created.');
+        return Redirect::route('areas.management');
     }
 
     public function updateOrder(Request $request): RedirectResponse
@@ -275,7 +274,7 @@ class RoomController extends Controller
     {
         $room->delete();
 
-        return Redirect::route('areas.management')->with('success', 'Room moved to trash');
+        return Redirect::route('areas.management');
     }
 
     public function forceDelete(int $id): RedirectResponse
@@ -283,7 +282,7 @@ class RoomController extends Controller
         $room = Room::onlyTrashed()->findOrFail($id);
         $room->forceDelete();
 
-        return Redirect::route('rooms.trashed')->with('success', 'Room restored');
+        return Redirect::route('rooms.trashed');
     }
 
     public function restore(int $id): RedirectResponse
@@ -291,7 +290,7 @@ class RoomController extends Controller
         $room = Room::onlyTrashed()->findOrFail($id);
         $room->restore();
 
-        return Redirect::route('rooms.trashed')->with('success', 'Room restored');
+        return Redirect::route('rooms.trashed');
     }
 
     /**
@@ -299,12 +298,22 @@ class RoomController extends Controller
      */
     public function collisionsCount(Request $request): array
     {
-        $startDate = Carbon::parse($request['params']['start'])->setTimezone(config('app.timezone'));
-        $endDate = Carbon::parse($request['params']['end'])->setTimezone(config('app.timezone'));
+        $params = $request->get('params');
+        $startDate = Carbon::parse($params['start'])->setTimezone(config('app.timezone'));
+        $endDate = Carbon::parse($params['end'])->setTimezone(config('app.timezone'));
+        $currentEventId = $params['currentEventId'] ?? null;
+
         $collisions = [];
-        $this->roomService->getAllWithoutTrashed()->each(function(Room $room) use (&$collisions, $startDate, $endDate){
-            $collisions[$room->id] = $this->collisionService->findCollisionCountForRoom($room, $startDate, $endDate);
-        });
+        $this->roomService->getAllWithoutTrashed()->each(
+            function (Room $room) use (&$collisions, $startDate, $endDate, $currentEventId): void {
+                $collisions[$room->id] = $this->collisionService->findCollisionCountForRoom(
+                    $room,
+                    $startDate,
+                    $endDate,
+                    $currentEventId
+                );
+            }
+        );
         return $collisions;
     }
 }

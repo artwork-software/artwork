@@ -62,4 +62,9 @@ class SageAssignedData extends Model
     {
         return $builder->where('column_cell_id', $columnCellId);
     }
+
+    public function scopeBySageId(Builder $builder, int $sageId): Builder
+    {
+        return $builder->where('sage_id', $sageId);
+    }
 }

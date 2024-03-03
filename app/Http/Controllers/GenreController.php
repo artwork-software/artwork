@@ -19,7 +19,7 @@ class GenreController extends Controller
         Genre::create([
             'name' => $request->name,
         ]);
-        return Redirect::back()->with('success', 'Genre created');
+        return Redirect::back();
     }
 
     /**
@@ -27,31 +27,19 @@ class GenreController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Genre  $genre
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function update(Request $request, Genre $genre): \Illuminate\Http\RedirectResponse
+    public function update(Request $request, Genre $genre): RedirectResponse
     {
         $genre->update($request->only('name'));
 
-        /*
-        if (Auth::user()->can('update projects')) {
-            $genre->projects()->sync(
-                collect($request->assigned_project_ids)
-                    ->map(function ($project_id) {
-                        return $project_id;
-                    })
-            );
-        } else {
-            return response()->json(['error' => 'Not authorized to assign projects to a genre.'], 403);
-        }
-        */
-        return Redirect::back()->with('success', 'Genre updated');
+        return Redirect::back();
     }
 
     public function destroy(Genre $genre): RedirectResponse
     {
         $genre->delete();
-        return Redirect::back()->with('success', 'Genre deleted');
+        return Redirect::back();
     }
 
     public function forceDelete(int $id): RedirectResponse
@@ -60,7 +48,7 @@ class GenreController extends Controller
 
         $genre->forceDelete();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'Genre deleted');
+        return Redirect::route('projects.settings.trashed');
     }
 
     public function restore(int $id): RedirectResponse
@@ -69,6 +57,6 @@ class GenreController extends Controller
 
         $genre->restore();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'Genre restored');
+        return Redirect::route('projects.settings.trashed');
     }
 }

@@ -4,18 +4,17 @@
             <img src="/Svgs/Overlays/illu_room_admin_edit.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="headline1 mt-2 mb-6">
-                    Zugriff auf Raum
+                    {{$t('Access to room')}}
                 </div>
                 <XIcon @click="emit('close')"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
                 <div class="xsLight">
-                    Definiere wer den Raum editieren und Belegungen freigeben darf (Raumadmin), und wer den Raum
-                    anfragen darf.
+                    {{ $t('Define who can edit the room and release bookings (room admin), and who can request the room.')}}
                 </div>
                 <div class="mt-6 relative">
                     <div class="my-auto w-full">
-                        <input placeholder="Tippe die Namen von Usern ein"
+                        <input :placeholder="$t('Type in the names of users')"
                                id="userSearch"
                                v-model="user_query"
                                autocomplete="off"
@@ -56,7 +55,7 @@
                                 {{ user.first_name }} {{ user.last_name }}
                                     </span>
                             <button type="button" @click="deleteUserFromRoom(user)">
-                                <span class="sr-only">User als Raumadmin entfernen</span>
+                                <span class="sr-only">{{$t('Remove user as room admin')}}</span>
                                 <XCircleIcon class="ml-2 h-5 w-5 hover:text-error "/>
                             </button>
 
@@ -67,7 +66,7 @@
                                    class="ml-8 cursor-pointer h-6 w-6 text-success border-2 border-secondary bg-darkGrayBg focus:border-none"/>
                             <p :class="[user.is_room_admin ? 'text-primary' : 'text-secondary', 'subpixel-antialiased']"
                                class="ml-1.5 text-sm subpixel-antialiased align-text-middle">
-                                Raumadmin
+                                {{ $t('Room admin')}}
                             </p>
 
                             <input type="checkbox"
@@ -77,7 +76,7 @@
                                    class="ml-8 cursor-pointer h-6 w-6 text-success border-2 border-secondary bg-darkGrayBg focus:border-none"/>
                             <p :class="[user.can_request_room ? 'text-primary' : 'text-secondary', 'subpixel-antialiased']"
                                class="ml-1.5 text-sm subpixel-antialiased align-text-middle">
-                                Anfrageberechtigt
+                                {{$t('Authorized to request')}}
                             </p>
                         </div>
                         <hr class="my-4 border-silverGray">
@@ -86,7 +85,7 @@
                 <div class="flex justify-center">
                     <FormButton
                         @click="updateRoomUsers"
-                        text="Speichern"
+                        :text="$t('Save')"
                         class="mt-8" />
                 </div>
 

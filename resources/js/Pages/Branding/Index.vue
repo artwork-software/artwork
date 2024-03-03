@@ -6,15 +6,14 @@
                 {{ this.$page.props.flash.success }}
             </div>
             <div class="max-w-2xl">
-                <h2 class="headline2 my-2">Branding</h2>
+                <h2 class="headline2 my-2">{{ $t('Branding') }}</h2>
                 <div class="xsLight">
-                    Damit dein artwork eindeutig deinem Unternehmen zugeordnet werden kann, lade hier deine eigenen
-                    artwork Logos und deine Login-Illustration hoch.
+                    {{ $t('To ensure your artwork is clearly associated with your company, please upload your custom artwork logos and login illustration here.') }}
                 </div>
             </div>
             <jet-input-error :message="uploadDocumentFeedback"/>
             <label class="block mt-6 mb-4 xsDark">
-                Logo groß (Upload per Klick oder Drag & Drop)
+                {{ $t('Big Logo (Upload by click or drag & drop)') }}
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
@@ -28,7 +27,7 @@
                            @change="updateBigLogoPreview">
                     <div class="flex my-auto h-40 items-center xsLight"
                          v-if="$page.props.big_logo === null && bigLogoPreview === null">
-                        Ziehe hier dein großes <br/> artwork Logo hin
+                        {{ $t('Drag your large artwork logo here') }}
                     </div>
                     <div class="cursor-pointer" v-else-if="!bigLogoPreview">
                         <img :src="$page.props.big_logo" alt="Logo" class="rounded-md h-40 w-40">
@@ -37,13 +36,12 @@
                 <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                     <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                     <span class="ml-2 my-auto hind">
-                        Lade dein Logo als .svg, .png, .gif oder .jpg hoch. Das Logo wird z.B. auf der Login-Seite
-                        und in der gesamten E-Mail-Kommunikation genutzt.
+                        {{ $t('Upload your logo in .svg, .png, .gif, or .jpg format. The logo will be used on the login page and throughout email communications.') }}
                     </span>
                 </div>
             </div>
             <label class="block mt-12 mb-4 xsDark">
-                Logo klein (Upload per Klick oder Drag & Drop)
+                {{ $t('Small Logo (Upload by click or drag & drop') }}
             </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
@@ -55,7 +53,7 @@
                     <input type="file" class="hidden" ref="smallLogo" @change="updateSmallLogoPreview">
                     <div class="xsLight flex my-auto h-40 items-center"
                          v-if="$page.props.small_logo === null && smallLogoPreview === null">
-                        Ziehe hier dein kleines <br/> artwork Logo hin
+                        {{ $t('Drag your small artwork logo here') }}
                     </div>
                     <div class="cursor-pointer" v-else-if="!smallLogoPreview">
                         <img :src="$page.props.small_logo" alt="Logo" class="rounded-md h-40 w-40">
@@ -64,12 +62,13 @@
                 <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                     <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                     <span class="hind ml-2 my-auto">
-                        Lade dein Logo als .svg, .png, .gif oder .jpg hoch. Das Logo wird z.B. in der Sidebar genutzt.
+                        {{ $t('Upload your logo in .svg, .png, .gif, or .jpg format. The logo will be used in the header of your artwork.') }}
                     </span>
                 </div>
             </div>
             <label class="block mt-12 mb-4 xsDark">
-                Login-Illustration </label>
+                {{ $t('Login Illustration (Upload by click or drag & drop)') }}
+            </label>
             <div class="grid grid-cols-6 gap-x-12 items-center">
                 <div
                     class="flex col-span-2 w-full justify-center border-2 bg-stone-50 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
@@ -79,7 +78,7 @@
                     <div v-show="!bannerPreview" class="space-y-1 text-center">
                         <div class="xsLight flex my-auto h-40 items-center"
                              v-if="$page.props.banner === null && bannerPreview === null">
-                            Ziehe hier deine <br/> Login-Illustration hin
+                            {{ $t('Drag your login illustration here') }}
                             <input id="banner-upload"
                                    ref="banner"
                                    @change="updateBannerPreview"
@@ -89,13 +88,13 @@
                             />
                         </div>
                         <div class="cursor-pointer" v-else>
-                            <img :src="$page.props.banner" alt="Aktuelles Banner" class="rounded-md h-40 w-40">
+                            <img :src="$page.props.banner" :alt="$t('Current banner')" class="rounded-md h-40 w-40">
                         </div>
                     </div>
                     <div class="cursor-pointer">
                         <img v-show="bannerPreview"
                              :src="bannerPreview"
-                             alt="Aktuelles Banner"
+                             :alt="$t('Current banner')"
                              class="rounded-md h-40 w-40"
                         >
                         <input type="file" class="hidden"
@@ -106,14 +105,13 @@
                 <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                     <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                     <span class="ml-2 my-auto hind">
-                        Lade deine Illustration als .svg, .png, .gif oder .jpg hoch. Die Illustration wird auf
-                        der Login-Seite genutzt.
+                        {{ $t('Upload your illustration in .svg, .png, .gif, or .jpg format. The illustration will be used on the login page.') }}
                     </span>
                 </div>
             </div>
             <div class="mt-6 items-center">
                 <FormButton
-                    text="Änderungen speichern"
+                    :text="$t('Save changes')"
                     @click.prevent="changeLogos"
                     />
             </div>
@@ -165,7 +163,7 @@ export default defineComponent({
               "image/gif"
             ]
 
-            if (allowedTypes.includes(file.type)) {
+            if (allowedTypes.includes(file?.type)) {
                 const reader = new FileReader();
 
                 reader.onload = (e) => {
@@ -187,8 +185,9 @@ export default defineComponent({
 
                 reader.readAsDataURL(file);
             } else {
-                this.uploadDocumentFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, " +
-                    ".svg, .png und .gif akzeptiert.";
+                this.uploadDocumentFeedback = this.$t(
+                    'Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted.'
+                );
             }
         },
         uploadDraggedBigLogo(event) {

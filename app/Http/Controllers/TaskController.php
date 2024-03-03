@@ -92,10 +92,14 @@ class TaskController extends Controller
         $this->history = new NewHistoryService(Project::class);
         $this->history->createHistory(
             $checklist->project_id,
-            'Aufgabe ' . $request->name . ' zu ' . $checklist->name . ' hinzugefügt'
+            'Task added to',
+            [
+                $request->name,
+                $checklist->name
+            ]
         );
         $this->createNotificationForAllChecklistUser($checklist);
-        return Redirect::back()->with('success', 'Task created.');
+        return Redirect::back();
     }
 
     private function createNotificationForAllChecklistUser(Checklist $checklist): void
@@ -170,14 +174,18 @@ class TaskController extends Controller
             $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
             $this->history->createHistory(
                 $checklist->project_id,
-                'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert'
+                'Task changed from',
+                [
+                    $task->name,
+                    $checklist->name
+                ]
             );
 
 
             $this->createNotificationUpdateTask($task);
         }
 
-        return Redirect::back()->with('success', 'Task updated');
+        return Redirect::back();
     }
 
     private function createNotificationUpdateTask(Task $task): void
@@ -217,10 +225,14 @@ class TaskController extends Controller
         $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
         $this->history->createHistory(
             $checklist->project_id,
-            'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' gelöscht'
+            'Task deleted from',
+            [
+                $task->name,
+                $checklist->name
+            ]
         );
 
         $task->delete();
-        return Redirect::back()->with('success', 'Task deleted');
+        return Redirect::back();
     }
 }

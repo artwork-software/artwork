@@ -6,15 +6,13 @@
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap w-full">
                             <div class="flex flex-wrap w-full">
-                                <h2 class="headline1 flex w-full">Finanzierungsquellen</h2>
-                                <h2 class="mt-10 headline2 w-full">Quellenkategorien</h2>
+                                <h2 class="headline1 flex w-full">{{  $t('Sources of funding') }}</h2>
+                                <h2 class="mt-10 headline2 w-full">{{$t('Source categories')}}</h2>
                                 <div class="xsLight flex mt-4 w-full">
-                                    Lege Kategorien fest. Nach diesen kann anschließend in der
-                                    Übersicht gefiltert werden.
+                                    {{$t('Define categories. These can then be filtered in the overview.')}}
                                 </div>
                                 <div v-if="showInvalidCategoryNameErrorText" class="text-red-600 text-sm mt-4">
-                                    Sie haben einen ungültigen Namen angegeben. Am Anfang und Ende sind keine
-                                    Leerzeichen erlaubt. Ebenso ist es unzulässig ausschließlich Leerzeichen einzugeben.
+                                    {{ $t('You have entered an invalid name. No spaces are allowed at the beginning or end. It is also not permitted to enter only spaces.')}}
                                 </div>
                                 <div class=" w-full grid grid-cols-2 grid-flow-col grid-rows-2">
                                     <!-- Finanzierungsquellenkategorien -->
@@ -30,7 +28,7 @@
                                                 subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base
                                                  peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5
                                                   peer-focus:text-sm ">
-                                                Kategorie eingeben
+                                                {{$t('Enter Category')}}
                                             </label>
                                         </div>
 
@@ -62,11 +60,9 @@
         </div>
         <!-- Delete Category Modal -->
         <ConfirmationComponent v-if="categoryDeleteModalVisible"
-                               confirm="Quellenkategorie löschen"
-                               titel="Quellenkategorie löschen"
-                               description="Bist du sicher, dass du die Quellenkategorie löschen möchtest? Damit sind
-                                    alle Zuordnungen der Finanzierungsquellen zu dieser Kategorie unwiderruflich
-                                    gelöscht."
+                               :confirm="$t('Delete source category')"
+                               :titel="$t('Delete source category')"
+                               :description="$t('Are you sure you want to delete the source category? This irrevocably deletes all assignments of funding sources to this category.')"
                                @closed="afterDeleteCategoryConfirm"/>
     </app-layout>
 </template>

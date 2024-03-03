@@ -2,9 +2,9 @@
     <app-layout>
         <div class="max-w-screen-xl ml-14 mr-40 mb-4">
             <div class="mb-5">
-                <h2 class="headline1 mb-2">Tooleinstellungen</h2>
+                <h2 class="headline1 mb-2">{{ $t('Toolsettings') }}</h2>
                 <div class="headline3Light">
-                    Definiere globale Einstellungen für dein artwork.
+                    {{ $t('Define global settings for your artwork.') }}
                 </div>
             </div>
             <ToolSettingsTabs class="mb-5"/>

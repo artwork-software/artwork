@@ -32,7 +32,7 @@ class CurrencyController extends Controller
     public function destroy(Currency $currency): \Illuminate\Http\RedirectResponse
     {
         $currency->delete();
-        return Redirect::back()->with('success', 'Currency deleted');
+        return Redirect::back();
     }
 
     public function forceDelete(int $id)
@@ -41,7 +41,7 @@ class CurrencyController extends Controller
 
         $currency->forceDelete();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'Currency deleted');
+        return Redirect::route('projects.settings.trashed');
     }
 
     public function restore(int $id)
@@ -50,6 +50,6 @@ class CurrencyController extends Controller
 
         $currency->restore();
 
-        return Redirect::route('projects.settings.trashed')->with('success', 'Currency restored');
+        return Redirect::route('projects.settings.trashed');
     }
 }

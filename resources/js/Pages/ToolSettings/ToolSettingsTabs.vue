@@ -25,19 +25,19 @@ export default defineComponent({
         return {
             tabs: [
                 {
-                    name: 'Branding',
+                    name: this.$t('Branding'),
                     href: route('tool.branding'),
                     current: route().current('tool.branding'),
                     hasPermission: this.$can('change tool settings')
                 },
                 {
-                    name: 'Kommunikation & Rechtliches',
+                    name: this.$t('Communication & Legal'),
                     href: route('tool.communication-and-legal'),
                     current: route().current('tool.communication-and-legal'),
                     hasPermission: this.$can('change tool settings')
                 },
                 {
-                    name: 'Schnittstelllen',
+                    name: this.$t('Interfaces'),
                     href: route('tool.interfaces'),
                     current: route().current('tool.interfaces'),
                     hasPermission: this.$can('change tool settings')

@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\FileUpload;
-
 use App\Support\Services\NewHistoryService;
-use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomFile;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -46,7 +44,11 @@ class RoomFileController extends Controller
             'basename' => $basename,
         ]);
 
-        $this->historyController->createHistory($room->id, 'Dokument ' . $original_name . ' wurde hinzugefügt');
+        $this->historyController->createHistory(
+            $room->id,
+            'Document was added',
+            [$original_name]
+        );
 
         return Redirect::back();
     }
@@ -55,8 +57,11 @@ class RoomFileController extends Controller
     {
         $this->authorize('view projects');
 
-        $this->historyController
-            ->createHistory($roomFile->room_id, 'Dokument ' . $roomFile->name . ' wurde heruntergeladen');
+        $this->historyController->createHistory(
+            $roomFile->room_id,
+            'Document has been downloaded',
+            [$roomFile->name]
+        );
 
         return Storage::download('room_files/' . $roomFile->basename, $roomFile->name);
     }
@@ -66,8 +71,11 @@ class RoomFileController extends Controller
         //dd($roomFile);
         $this->authorize('view', $roomFile->room->area);
 
-        $this->historyController
-            ->createHistory($roomFile->room_id, 'Dokument ' . $roomFile->name . ' wurde entfernt');
+        $this->historyController->createHistory(
+            $roomFile->room_id,
+            'Document has been removed',
+            [$roomFile->name]
+        );
 
         $roomFile->delete();
 

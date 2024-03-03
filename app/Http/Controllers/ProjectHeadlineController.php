@@ -56,14 +56,16 @@ class ProjectHeadlineController extends Controller
         if ($oldHeadLine->pivot->text === null && $newHeadLine->pivot->text !== null) {
             $this->history->createHistory(
                 $project->id,
-                $projectHeadline->name . ' wurde hinzugefügt',
+                'Headline added',
+                [$projectHeadline->name],
                 'public_changes'
             );
         }
         if ($oldHeadLine->pivot->text !== null && $newHeadLine->pivot->text === null) {
             $this->history->createHistory(
                 $project->id,
-                $projectHeadline->name . ' wurde entfernt',
+                'Headline removed',
+                [$projectHeadline->name],
                 'public_changes'
             );
         }
@@ -74,7 +76,8 @@ class ProjectHeadlineController extends Controller
         ) {
             $this->history->createHistory(
                 $project->id,
-                $projectHeadline->name . ' wurde geändert',
+                'Headline text modified',
+                [$projectHeadline->name],
                 'public_changes'
             );
         }

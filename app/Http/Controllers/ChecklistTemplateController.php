@@ -52,7 +52,7 @@ class ChecklistTemplateController extends Controller
             $this->createFromScratch($request);
         }
 
-        return Redirect::route('checklist_templates.management')->with('success', 'ChecklistTemplate created.');
+        return Redirect::route('checklist_templates.management');
     }
 
     protected function createFromChecklist(Request $request): void
@@ -119,14 +119,13 @@ class ChecklistTemplateController extends Controller
             }
         }
 
-        return Redirect::route('checklist_templates.management', $checklistTemplate->id)
-            ->with('success', 'ChecklistTemplate updated');
+        return Redirect::route('checklist_templates.management', $checklistTemplate->id);
     }
 
     public function destroy(ChecklistTemplate $checklistTemplate): RedirectResponse
     {
         $checklistTemplate->delete();
 
-        return Redirect::back()->with('success', 'ChecklistTemplate deleted');
+        return Redirect::back();
     }
 }

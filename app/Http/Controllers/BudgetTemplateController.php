@@ -15,6 +15,7 @@ use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
 class BudgetTemplateController extends Controller
@@ -83,7 +84,7 @@ class BudgetTemplateController extends Controller
     public function store(Table $table, Request $request): RedirectResponse
     {
         $this->createTemplate($request->template_name, $table);
-        return back()->with('success');
+        return Redirect::back();
     }
 
     private function createTemplate($name, $oldTable, $isTemplate = true, $projectId = null): void
@@ -168,7 +169,7 @@ class BudgetTemplateController extends Controller
         });
     }
 
-    public function useTemplate(Table $table, Request $request)
+    public function useTemplate(Table $table, Request $request): RedirectResponse
     {
         $project = Project::find($request->project_id);
 
@@ -176,7 +177,7 @@ class BudgetTemplateController extends Controller
 
         $this->createTemplate($table->name, $table, false, $project->id);
 
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function useTemplateFromProject(Request $request): void

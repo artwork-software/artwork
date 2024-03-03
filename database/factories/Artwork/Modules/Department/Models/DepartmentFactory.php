@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class DepartmentFactory extends Factory
 {
-    protected  $model = Department::class;
+    protected $model = Department::class;
 
     /**
      * Define the model's default state.

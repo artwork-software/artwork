@@ -2,22 +2,21 @@
     <AppLayout>
         <div class="max-w-screen-lg ml-14 mr-40">
             <div class="">
-                <h2 class="headline1">Schichteinstellungen</h2>
+                <h2 class="headline1">{{$t('Shift Settings')}}</h2>
                 <div class="xsLight mt-2">
-                    Definiere globale Einstellungen für die Schichtplanung.
+                    {{$t('Define global settings for shift scheduling.')}}
                 </div>
             </div>
 
 
             <div class="mt-10">
-                <h3 class="headline2 mb-2">Gewerke</h3>
+                <h3 class="headline2 mb-2">{{$t('Crafts')}}</h3>
                 <p class="xsLight">
-                    Definiere Gewerke, welchen du später Mitarbeiter*innen sowie Schichten zuteilen kannst.
-                    Zusätzlich kannst du hier festlegen welche Nutzer*innen welche Art von Mitarbeiter*innen Schichten zuteilen dürfen.
+                    {{$t('Define crafts to which you can later assign employees and shifts. Additionally, you can specify which users are allowed to assign what type of employee shifts.')}}
                 </p>
             </div>
 
-            <AddButtonSmall text="Neues Gewerk" class="mt-5" @click="openAddCraftsModal = true" />
+            <AddButtonSmall :text="$t('New Craft')" class="mt-5" @click="openAddCraftsModal = true" />
 
             <ul role="list" class="divide-y divide-gray-100">
                 <li v-for="craft in crafts" :key="craft" class="flex justify-between gap-x-6 py-5">
@@ -25,11 +24,11 @@
                         <div class="min-w-0 flex-auto">
                             <p class="text-sm font-semibold leading-6 text-gray-900">{{ craft.name }} ({{ craft.abbreviation }})</p>
                             <div class="" v-if="craft.assignable_by_all">
-                                <p class="mt-1 truncate xsLight">Von allen Schichtplaner*innen zuteilbar</p>
+                                <p class="mt-1 truncate xsLight">{{$t('Assignable by all schedulers')}}</p>
                             </div>
                             <div v-else>
                                 <p class="mt-1 truncate xsLight">
-                                    Darf ausschließlich zugeteilt werden von:
+                                    {{$t('Can only be assigned by:')}}
                                     <span class="" v-for="(user, index) in craft.users">
                                         {{ user.full_name }}<span>, </span>
                                     </span>
@@ -63,7 +62,7 @@
                                                 <PencilAltIcon
                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                     aria-hidden="true"/>
-                                                Bearbeiten
+                                                {{$t('Edit')}}
                                             </a>
                                         </MenuItem>
                                         <MenuItem @click="openDeleteCraftModal(craft)"
@@ -73,7 +72,7 @@
                                                 <TrashIcon
                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                     aria-hidden="true"/>
-                                                Löschen
+                                                {{$t('Delete')}}
                                             </a>
                                         </MenuItem>
                                     </div>
@@ -84,17 +83,15 @@
                 </li>
             </ul>
             <div class="mt-10">
-                <h4 class="mb-2 headline2">Schichtrelevante Termintypen</h4>
+                <h4 class="mb-2 headline2">{{$t('Shift-relevant Event Types')}}</h4>
                 <p class="xsLight">
-                    Lege fest, welche Termintypen standardmäßig als Schichtrelevant angezeigt werden.
-                    Diese werden dann automatisch im Projekttab „Schichten“ angezeigt.
-                    Auf Projektebene kannst du weitere Termine als schichtrelevant definieren.
+                    {{$t("Determine which types of events are displayed as shift-relevant by default. These will then automatically appear in the 'shifts' tab of the project. You can also define additional events as shift-relevant for each project.")}}
                 </p>
                 <div class="mt-3">
                     <Listbox as="div">
                         <div class="relative mt-2 w-1/2">
                             <ListboxButton class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
-                                <span class="block truncate text-left pl-3">Termintypen wählen</span>
+                                <span class="block truncate text-left pl-3">{{$t('Select Event Types')}}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
@@ -122,12 +119,12 @@
                 </div>
             </div>
             <div class="mt-10">
-                <h4 class="mb-2 headline2">Qualifitkationen</h4>
-                <p class="xsLight">Lege Qualifikationen an oder bearbeite sie</p>
+                <h4 class="mb-2 headline2">{{$t('Qualifications')}}</h4>
+                <p class="xsLight">{{$t('Create or edit qualifications')}}</p>
                 <AddButtonSmall text="Neue Qualifikation" class="mt-5" @click="this.openShiftQualificationModal('create')" />
                 <div class="mt-5">
                     <div class="mb-5 xsLight" v-if="shiftQualifications.length === 0">
-                        Bisher wurden keine Qualifikationen angelegt.
+                        {{$t('No qualifications have been created yet.')}}
                     </div>
                     <ul v-else role="list" class="w-full">
                         <li v-for="(shiftQualification) in shiftQualifications"
@@ -139,7 +136,7 @@
                                 {{ shiftQualification.name }}
                                 <span v-if="shiftQualification.available"
                                       class="xxsLight">
-                                    (Bei neuen Schichten berücksichtigt)
+                                    {{$t('(Considered for new shifts)')}}
                                 </span>
                             </span>
                             <PencilAltIcon class="h-5 w-5" aria-hidden="true"/>
@@ -157,20 +154,20 @@
         />
         <success-modal
             v-if="this.$page.props.flash.success?.shift_qualification"
-            title="Qualifikation"
+            :title="$t('Qualification')"
             :description="this.$page.props.flash.success?.shift_qualification"
-            button="Meldung schließen"
+            :button="$t('Close message')"
             @closed="this.$page.props.flash.success.shift_qualification = null"
         />
         <error-component
             v-if="this.$page.props.flash.error?.shift_qualification"
-            titel="Qualifikation"
+            :titel="$t('Qualification')"
             :description="this.$page.props.flash.error?.shift_qualification"
             @closed="this.$page.props.flash.error.shift_qualification = null"
-            confirm="Meldung schließen"
+            :confirm="$t('Close message')"
         />
         <AddCraftsModal @closed="closeAddCraftModal" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" />
-        <ConfirmDeleteModal title="Gewerk löschen" description="Bist du sicher, dass du das ausgewählte Gewerk löschen möchtest?" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
+        <ConfirmDeleteModal :title="$t('Delete craft')" :description="$t('Are you sure you want to delete the selected craft?')" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
     </AppLayout>
 </template>
 <script>

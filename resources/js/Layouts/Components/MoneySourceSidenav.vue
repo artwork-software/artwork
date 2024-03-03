@@ -2,7 +2,7 @@
     <div class="w-full mt-36">
         <div class="w-full flex-grow items-center mb-4">
             <div class="text-secondary flex justify-between text-md font-semibold">
-                Freigegeben für
+                {{ $t('Approved for')}}
                 <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
                     class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                     @click="openEditUsersModal">
@@ -22,7 +22,7 @@
             </div>
             <div class="flex flex-wrap">
                 <div class="flex w-full xsLight mt-1">
-                    Zuständig
+                    {{ $t('Responsible')}}
                 </div>
                 <div class="ml-3 flex">
                     <div v-for="user in users">
@@ -32,7 +32,7 @@
                     </div>
                 </div>
                 <div class="flex w-full xsLight mt-2">
-                    Zugriff
+                    {{$t('Access')}}
                 </div>
                 <div class="ml-3 flex">
                     <div  v-for="user in users">
@@ -47,7 +47,7 @@
         <div class="w-full items-center mb-4">
             <div class="text-secondary flex items-center justify-between text-md font-semibold my-2">
                 <div class="flex items-center">
-                    Quellenkategorien
+                    {{ $t('Source categories')}}
                     <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySourceCategories ? 'rotate-180' : '']"
                                      @click="showMoneySourceCategories = !showMoneySourceCategories"/>
                 </div>
@@ -81,7 +81,7 @@
         <div class="w-full items-center mb-4">
             <div class="text-secondary flex items-center justify-between text-md font-semibold my-2">
                 <div class="flex items-center">
-                Finanzierte Projekte
+                {{ $t('Financed projects')}}
                     <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showLinkedProjects ? 'rotate-180' : '']"
                                      @click="showLinkedProjects = !showLinkedProjects"/>
                 </div>
@@ -105,13 +105,13 @@
             </div>
             <div v-if="showLinkedProjects" class="text-secondary text-md" v-for="linkedProject in linkedProjects">
                 <Link class="underline" v-if="linkedProject.id" :href="route('projects.show.budget',{project: linkedProject.id})">{{ linkedProject.name }} </Link>
-                 | {{ positionSumsPerProject[linkedProject.id] }} € genutzt
+                 | {{ positionSumsPerProject[linkedProject.id] }} € {{$t('used')}}
             </div>
         </div>
         <div class="border-t-2 my-5 w-full border-secondary border-opacity-30" />
         <div class="w-full flex items-center mb-4">
             <div class="text-secondary text-md font-semibold">
-                Dokumente
+                {{$t('Documents')}}
             </div>
             <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySourceFiles ? 'rotate-180' : '']"
                              @click="showMoneySourceFiles = !showMoneySourceFiles"/>
@@ -132,13 +132,13 @@
                 </div>
             </div>
             <div v-else>
-                <div class="text-secondary text-sm my-2">Keine Dokumente vorhanden</div>
+                <div class="text-secondary text-sm my-2">{{$t('No documents available')}}</div>
             </div>
         </div>
         <div class="border-t-2 my-5 w-full border-secondary border-opacity-30" />
         <div class="w-full flex-grow items-center mb-4">
             <div class="text-secondary text-md font-semibold mb-3 flex justify-between">
-                Aufgaben
+                {{ $t('Tasks')}}
                 <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
                     class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                     @click="openAddMoneySourceTask">

@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UserCalendarSettings extends Model
 {
     use HasFactory;
+
     protected $hidden = [
         'id',
         'user_id',

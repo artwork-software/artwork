@@ -9,16 +9,16 @@
                 <div>
                     <h1 class="my-1 flex">
                         <div class="flex-grow headline1">
-                            Als Vorlage speichern
+                            {{ $t('Save as template') }}
                         </div>
                     </h1>
                     <h2 class="xsLight mb-2 mt-8">
-                        Speichere deine Kalkulation und mache sie allen Usern als Vorlage nutzbar.
+                        {{ $t('Save your calculation and make it available to all users as a template.') }}
                     </h2>
                     <div class="flex items-center w-full mr-2">
                         <div class="w-full">
                             <input type="text"
-                                   placeholder="Name der Vorlage?*"
+                                   :placeholder="$t('Name of the template*')"
                                    v-model="this.templateName"
                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
@@ -27,7 +27,7 @@
                         <FormButton
                             @click="createBudgetTemplate"
                             :disabled="templateName === ''"
-                            text="Als Vorlage speichern"
+                            :text="$t('Save as template')"
                             class="mt-8"
                            />
                     </div>

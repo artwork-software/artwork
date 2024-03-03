@@ -302,7 +302,7 @@ class ProjectController extends Controller
         $eventRelevantEventTypeIds = EventType::where('relevant_for_shift', true)->pluck('id')->toArray();
         $project->shiftRelevantEventTypes()->sync(collect($eventRelevantEventTypeIds));
 
-        return Redirect::route('projects', $project)->with('success', 'Project created.');
+        return Redirect::route('projects', $project);
     }
 
     //@todo: fix phpcs error - refactor function because complexity is rising
@@ -316,9 +316,7 @@ class ProjectController extends Controller
         $oldRegistrationDeadline = $project->registration_deadline;
         $oldClosedSociety = $project->closed_society;
 
-        $project->update(array_filter($request->all(), function ($field) {
-            return !is_null($field) || empty($field);
-        }));
+        $project->update($request->all());
 
         $newNumOfGuest = $project->num_of_guests;
         $newEntryFee = $project->entry_fee;
@@ -327,79 +325,52 @@ class ProjectController extends Controller
         $newRegistrationDeadline = $project->registration_deadline;
         $newClosedSociety = $project->closed_society;
 
-
-        // Geändert
-        if ($oldNumOfGuest !== $newNumOfGuest && $oldNumOfGuest !== null && $newNumOfGuest !== null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
-        }
-
-        if ($oldClosedSociety !== $newClosedSociety && $oldClosedSociety !== null && $oldClosedSociety !== null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
-        }
-
-        if ($oldEntryFee !== $newEntryFee && $oldEntryFee !== null && $oldEntryFee !== null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
-        }
-
-        if ($oldRegisterBy !== $newRegisterBy && $oldRegisterBy !== null && $oldRegisterBy !== null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
+        if (
+            $oldNumOfGuest !== $newNumOfGuest ||
+            $oldClosedSociety !== $newClosedSociety ||
+            $oldEntryFee !== $newEntryFee ||
+            $oldRegisterBy !== $newRegisterBy ||
+            $oldRegistrationRequired !== $newRegistrationRequired ||
+            $oldRegistrationDeadline !== $newRegistrationDeadline
+        ) {
+            $this->history->createHistory(
+                $project->id,
+                'Entrance and registration has been changed',
+                [],
+                'public_changes'
+            );
         }
 
         if (
-            $oldRegistrationRequired !== $newRegistrationRequired &&
-            $oldRegistrationRequired !== null &&
-            $oldRegistrationRequired !== null
+            $oldNumOfGuest !== null && $newNumOfGuest === null ||
+            $oldClosedSociety !== null && $newClosedSociety === null ||
+            $oldEntryFee !== null && $newEntryFee === null ||
+            $oldRegisterBy !== null && $newRegisterBy === null ||
+            $oldRegistrationRequired !== null && $newRegistrationRequired === null ||
+            $oldRegistrationDeadline !== null && $newRegistrationDeadline === null
         ) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
+            $this->history->createHistory(
+                $project->id,
+                'Entrance and registration has been removed',
+                [],
+                'public_changes'
+            );
         }
 
         if (
-            $oldRegistrationDeadline !== $newRegistrationDeadline &&
-            $oldRegistrationDeadline !== null &&
-            $oldRegistrationDeadline !== null
+            $oldNumOfGuest === null && $newNumOfGuest !== null ||
+            $oldClosedSociety === null && $newClosedSociety !== null ||
+            $oldEntryFee === null && $newEntryFee !== null ||
+            $oldRegisterBy === null && $newRegisterBy !== null ||
+            $oldRegistrationRequired === null && $newRegistrationRequired !== null ||
+            $oldRegistrationDeadline === null && $newRegistrationDeadline !== null
         ) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
-        }
-
-        // enfernt
-        if ($oldNumOfGuest !== null && $newNumOfGuest === null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
-        }
-        if ($oldClosedSociety !== null && $newClosedSociety === null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
-        }
-        if ($oldEntryFee !== null && $newEntryFee === null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
-        }
-        if ($oldRegisterBy !== null && $newRegisterBy === null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
-        }
-        if ($oldRegistrationRequired !== null && $newRegistrationRequired === null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
-        }
-        if ($oldRegistrationDeadline !== null && $newRegistrationDeadline === null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
-        }
-
-
-        // hinzugefügt
-        if ($oldNumOfGuest === null && $newNumOfGuest !== null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
-        }
-        if ($oldClosedSociety === null && $newClosedSociety !== null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
-        }
-        if ($oldEntryFee === null && $newEntryFee !== null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
-        }
-        if ($oldRegisterBy === null && $newRegisterBy !== null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
-        }
-        if ($oldRegistrationRequired === null && $newRegistrationRequired !== null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
-        }
-        if ($oldRegistrationDeadline === null && $newRegistrationDeadline !== null) {
-            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
+            $this->history->createHistory(
+                $project->id,
+                'Entrance and registration has been added',
+                [],
+                'public_changes'
+            );
         }
 
         $this->setPublicChangesNotification($project->id);
@@ -562,7 +533,7 @@ class ProjectController extends Controller
         if ($request->giveBudgetAccess) {
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
-            $notificationTitle = 'Du hast Budgetzugriff in ' . $project->name . ' erhalten';
+            $notificationTitle = __('notifications.project.budget.add', ['project' => $project->name], $user->language);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -577,7 +548,11 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
         }
         $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
-        $notificationTitle = 'Neue Verifizierungsanfrage';
+        $notificationTitle = __(
+            'notifications.project.budget.new_verify_request',
+            [],
+            User::find($request->user)->language
+        );
         $budgetData = new stdClass();
         $budgetData->position_id = $mainPosition->id;
         $budgetData->requested_by = Auth::id();
@@ -616,21 +591,28 @@ class ProjectController extends Controller
         ]);
         $this->history->createHistory(
             $project->id,
-            'Hauptposition „' . $mainPosition->name . '“ zur Verifizierung angefragt',
+            'Main position requested for verification',
+            [$mainPosition->name],
             'budget'
         );
-        return back()->with('success');
+
+        return Redirect::back();
     }
 
     public function takeBackVerification(Request $request): RedirectResponse
     {
-        $notificationTitle = 'Verifizierungsanfrage gelöscht';
+
         $budgetData = new stdClass();
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypesEnum::BUDGET_VERIFICATION_TAKE_BACK;
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
+            $notificationTitle = __(
+                'notifications.project.budget.new_verify_request',
+                [],
+                User::find($verifiedRequest->requested)->language
+            );
             $table = $mainPosition->table()->first();
             $project = $table->project()->first();
             // Delete Function Updated to new Notification System
@@ -667,7 +649,8 @@ class ProjectController extends Controller
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $this->history->createHistory(
                 $project->id,
-                'Hauptposition „' . $mainPosition->name . '“ Verifizierungsanfrage zurückgenommen',
+                'Main position Verification request canceled',
+                [$mainPosition->name],
                 'budget'
             );
         }
@@ -677,6 +660,11 @@ class ProjectController extends Controller
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
             $table = $mainPosition->table()->first();
+            $notificationTitle = __(
+                'notifications.project.budget.new_verify_request',
+                [],
+                User::find($verifiedRequest->requested)->language
+            );
             $project = $table->project()->first();
             // Delete Function Updated to new Notification System
             $this->deleteOldNotification($subPosition->id, $verifiedRequest->requested);
@@ -713,11 +701,12 @@ class ProjectController extends Controller
             $verifiedRequest->delete();
             $this->history->createHistory(
                 $project->id,
-                'Unterposition „' . $subPosition->name . '“ Verifizierungsanfrage zurückgenommen',
+                'Sub position Verification request canceled',
+                [$subPosition->name],
                 'budget'
             );
         }
-        return back()->with(['success']);
+        return Redirect::back();
     }
 
     private function deleteOldNotification($positionId, $requestedId): void
@@ -731,7 +720,7 @@ class ProjectController extends Controller
 
     public function removeVerification(Request $request): RedirectResponse
     {
-        $notificationTitle = 'Verifizierung in Budget aufgehoben';
+
         $budgetData = new stdClass();
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypesEnum::BUDGET_VERIFICATION_DELETED;
@@ -739,6 +728,11 @@ class ProjectController extends Controller
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
+            $notificationTitle = __(
+                'notifications.project.budget.verify_removed',
+                [],
+                User::find($verifiedRequest->requested)->language
+            );
             $this->removeMainPositionCellVerifiedValue($mainPosition);
             $project = $mainPosition->table()->first()->project()->first();
             $budgetData->position_id = $mainPosition->id;
@@ -774,7 +768,8 @@ class ProjectController extends Controller
             $verifiedRequest->delete();
             $this->history->createHistory(
                 $project->id,
-                'Hauptposition „' . $mainPosition->name . '“ Verifizierung aufgehoben',
+                'Main position Verification canceled',
+                [$mainPosition->name],
                 'budget'
             );
         }
@@ -783,6 +778,11 @@ class ProjectController extends Controller
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
+            $notificationTitle = __(
+                'notifications.project.budget.verify_removed',
+                [],
+                User::find($verifiedRequest->requested)->language
+            );
             $this->removeSubPositionCellVerifiedValue($subPosition);
             $project = $mainPosition->table()->first()->project()->first();
             $budgetData->position_id = $mainPosition->id;
@@ -819,12 +819,13 @@ class ProjectController extends Controller
             $verifiedRequest->delete();
             $this->history->createHistory(
                 $project->id,
-                'Unterposition „' . $subPosition->name . '“ Verifizierung aufgehoben',
+                'Sub position Verification removed',
+                [$subPosition->name],
                 'budget'
             );
         }
 
-        return back()->with(['success']);
+        return Redirect::back();
     }
 
     public function verifiedRequestSubPosition(Request $request): RedirectResponse
@@ -836,7 +837,11 @@ class ProjectController extends Controller
             $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
             $user = User::find($request->user);
             // Notification
-            $notificationTitle = 'Du hast Budgetzugriff in ' . $project->name . ' erhalten';
+            $notificationTitle = __(
+                'notifications.project.budget.add',
+                [],
+                $user->language
+            );
             $project = $mainPosition->table()->first()->project()->first();
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
@@ -866,7 +871,11 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
         }
         $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
-        $notificationTitle = 'Neue Verifizierungsanfrage';
+        $notificationTitle = __(
+            'notifications.project.budget.new_verify_request',
+            [],
+            User::find($request->user)->language
+        );
         $budgetData = new stdClass();
         $budgetData->position_id = $subPosition->id;
         $budgetData->requested_by = Auth::id();
@@ -907,10 +916,11 @@ class ProjectController extends Controller
 
         $this->history->createHistory(
             $project->id,
-            'Unterposition „' . $subPosition->name . '“ zur Verifizierung angefragt',
+            'Sub position requested for verification',
+            [$subPosition->name],
             'budget'
         );
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function verifiedSubPosition(Request $request): RedirectResponse
@@ -928,11 +938,12 @@ class ProjectController extends Controller
 
         $this->history->createHistory(
             $request->project_id,
-            'Unterposition „' . $subPosition->name . '“ verifiziert',
+            'Sub position verified',
+            [$subPosition->name],
             'budget'
         );
 
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function fixSubPosition(Request $request): RedirectResponse
@@ -940,49 +951,57 @@ class ProjectController extends Controller
         $subPosition = SubPosition::find($request->subPositionId);
         $this->setSubPositionCellVerifiedValue($subPosition);
         $subPosition->update(['is_fixed' => true]);
-        $notificationTitle = 'Budget festgeschrieben';
+
         $project = Project::find($request->project_id);
         $budgetData = new stdClass();
         $budgetData->position_id = $subPosition->id;
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST;
-        $broadcastMessage = [
-            'id' => rand(1, 1000000),
-            'type' => 'success',
-            'message' => $notificationTitle
-        ];
-        $notificationDescription = [
-            1 => [
-                'type' => 'string',
-                'title' => $subPosition->name,
-                'href' => null
-            ],
-            2 => [
-                'type' => 'link',
-                'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show.budget', $project->id) : null,
-            ]
-        ];
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('red');
-        $this->notificationService->setPriority(2);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setBudgetData($budgetData);
-        $this->notificationService->setDescription($notificationDescription);
 
         foreach ($project->access_budget()->get() as $user) {
+            $notificationTitle = __(
+                'notifications.project.budget.new_verify_request',
+                [],
+                $user->language
+            );
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => $subPosition->name,
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'link',
+                    'title' =>  $project ? $project->name : '',
+                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                ]
+            ];
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setBudgetData($budgetData);
+            $this->notificationService->setDescription($notificationDescription);
+
             $this->notificationService->setNotificationTo($user);
             $this->notificationService->createNotification();
         }
 
         $this->history->createHistory(
             $project->id,
-            'Unterposition „' . $subPosition->name . '“ festgeschrieben',
+            'Sub position fixed',
+            [$subPosition->name],
             'budget'
         );
 
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function unfixSubPosition(Request $request): RedirectResponse
@@ -990,49 +1009,56 @@ class ProjectController extends Controller
         $subPosition = SubPosition::find($request->subPositionId);
         $this->removeSubPositionCellVerifiedValue($subPosition);
         $subPosition->update(['is_fixed' => false]);
-        $notificationTitle = 'Festschreibung in Budget aufgehoben';
         $project = Project::find($request->project_id);
         $budgetData = new stdClass();
         $budgetData->position_id = $subPosition->id;
         $budgetData->requested_by = Auth::id();
         $budgetData->changeType = BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST;
-        $broadcastMessage = [
-            'id' => rand(1, 1000000),
-            'type' => 'success',
-            'message' => $notificationTitle
-        ];
-        $notificationDescription = [
-            1 => [
-                'type' => 'string',
-                'title' => $subPosition->name,
-                'href' => null
-            ],
-            2 => [
-                'type' => 'link',
-                'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show.budget', $project->id) : null,
-            ]
-        ];
 
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('red');
-        $this->notificationService->setPriority(2);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setBudgetData($budgetData);
-        $this->notificationService->setDescription($notificationDescription);
         foreach ($project->access_budget()->get() as $user) {
+            $notificationTitle = __(
+                'notifications.project.budget.unfixed',
+                [],
+                $user->language
+            );
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => $subPosition->name,
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'link',
+                    'title' =>  $project ? $project->name : '',
+                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                ]
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setBudgetData($budgetData);
+            $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($user);
             $this->notificationService->createNotification();
         }
 
         $this->history->createHistory(
             $request->project_id,
-            'Unterposition „' . $subPosition->name . '“ Festschreibung aufgehoben',
+            'Sub position Fixing canceled',
+            [$subPosition->name],
             'budget'
         );
 
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function fixMainPosition(Request $request): RedirectResponse
@@ -1042,10 +1068,11 @@ class ProjectController extends Controller
         $mainPosition->update(['is_fixed' => true]);
         $this->history->createHistory(
             $request->project_id,
-            'Hauptposition „' . $mainPosition->name . '“ festgeschrieben',
+            'Main position fixed',
+            [$mainPosition->name],
             'budget'
         );
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function unfixMainPosition(Request $request): RedirectResponse
@@ -1055,10 +1082,11 @@ class ProjectController extends Controller
         $mainPosition->update(['is_fixed' => false]);
         $this->history->createHistory(
             $request->project_id,
-            'Hauptposition „' . $mainPosition->name . '“ Festschreibung aufgehoben',
+            'Main position Fixing canceled',
+            [$mainPosition->name],
             'budget'
         );
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function resetTable(Project $project, TableService $tableService): RedirectResponse
@@ -1068,7 +1096,7 @@ class ProjectController extends Controller
         //$this->generateBasicBudgetValues($project);
         $this->budgetService->generateBasicBudgetValues($project);
 
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function verifiedMainPosition(Request $request): RedirectResponse
@@ -1086,10 +1114,12 @@ class ProjectController extends Controller
             ->delete();
         $this->history->createHistory(
             $request->project_id,
-            'Hauptposition „' . $mainPosition->name . '“ verifiziert',
+            'Main position verified',
+            [$mainPosition->name],
             'budget'
         );
-        return back()->with('success');
+
+        return Redirect::back();
     }
 
     private function setSubPositionCellVerifiedValue(SubPosition $subPosition): void
@@ -1231,6 +1261,7 @@ class ProjectController extends Controller
     {
         $table = Table::find($request->table_id);
         if ($request->column_type === 'empty') {
+            /** @var Column $column */
             $column = $table->columns()->create([
                 'name' => 'empty',
                 'subName' => '-',
@@ -1245,15 +1276,19 @@ class ProjectController extends Controller
                 function (Builder $query) use ($request): void {
                     $query->where('table_id', $request->table_id);
                 }
-            )->pluck('id');
+            )->get();
 
             foreach ($subPositionRows as $subPositionRow) {
-                $column->subPositionRows()->attach($subPositionRow, [
-                    'value' => 0,
-                    'verified_value' => null,
-                    'linked_money_source_id' => null,
-                    'commented' => SubPositionRow::find($subPositionRow)->commented
-                ]);
+                $column->cells()->create(
+                    [
+                        'column_id' => $column->id,
+                        'sub_position_row_id' => $subPositionRow->id,
+                        'value' => 0,
+                        'verified_value' => null,
+                        'linked_money_source_id' => null,
+                        'commented' => $subPositionRow->commented
+                    ]
+                );
             }
 
             $subPositions = SubPosition::whereHas('mainPosition', function (Builder $query) use ($request): void {
@@ -1297,7 +1332,7 @@ class ProjectController extends Controller
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
                     ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
                     ->first();
-                $sum = (int)$firstColumn->value + (int)$secondColumn->value;
+                $sum = $firstColumn->value + $secondColumn->value;
                 ColumnCell::create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
@@ -1323,7 +1358,7 @@ class ProjectController extends Controller
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)
                     ->where('sub_position_row_id', $firstColumn->sub_position_row_id)
                     ->first();
-                $sum = (int)$firstColumn->value - (int)$secondColumn->value;
+                $sum = $firstColumn->value - $secondColumn->value;
                 ColumnCell::create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
@@ -1349,7 +1384,11 @@ class ProjectController extends Controller
         if ($request->is_verified) {
             $this->history->createHistory(
                 $project->id,
-                '„' . $cell->value . '“ in „' . $request->value . '“ geändert',
+                'Cell value changed',
+                [
+                    $cell->value,
+                    $request->value
+                ],
                 'budget'
             );
         }
@@ -1368,7 +1407,7 @@ class ProjectController extends Controller
     {
         $column = Column::find($request->columnId);
         $column->update(['color' => $request->color]);
-        return back()->with('success', 'color changed');
+        return Redirect::back();
     }
 
     public function addSubPositionRow(Request $request): void
@@ -1518,7 +1557,7 @@ class ProjectController extends Controller
             $cell->update(['value' => $cell->calculations()->sum('value')]);
         }
 
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function addCalculation(ColumnCell $cell, Request $request): void
@@ -1591,14 +1630,14 @@ class ProjectController extends Controller
     {
         $column = Column::find($request->columnId);
         $column->update(['is_locked' => true, 'locked_by' => Auth::id()]);
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function unlockColumn(Request $request): RedirectResponse
     {
         $column = Column::find($request->columnId);
         $column->update(['is_locked' => false, 'locked_by' => null]);
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function updateProjectState(Request $request, Project $project): void
@@ -1607,14 +1646,17 @@ class ProjectController extends Controller
         $project->update(['state' => $request->state_id]);
         $newState = $project->state()->first();
 
-        if (!empty($newState) && $oldState !== $newState) {
-            $this->history->createHistory($project->id, 'Projektstatus hat sich geändert', 'public_changes');
-        }
-        if (empty($oldState) && !empty($newState)) {
-            $this->history->createHistory($project->id, 'Projektstatus hat sich geändert', 'public_changes');
-        }
-        if (!empty($oldState) && empty($newState)) {
-            $this->history->createHistory($project->id, 'Projektstatus hat sich geändert', 'public_changes');
+        if (
+            !empty($newState) && $oldState !== $newState ||
+            empty($oldState) && !empty($newState) ||
+            !empty($oldState) && empty($newState)
+        ) {
+            $this->history->createHistory(
+                $project->id,
+                'Project status has changed',
+                [],
+                'public_changes'
+            );
         }
 
         $this->setPublicChangesNotification($project->id);
@@ -1651,7 +1693,7 @@ class ProjectController extends Controller
         }
 
         /** @var Collection $roomsWithAudience */
-        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+        $roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectInformation', [
             // needed for the ProjectShowHeaderComponent
@@ -1746,7 +1788,7 @@ class ProjectController extends Controller
         }
 
         /** @var Collection $roomsWithAudience */
-        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+        $roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectCalendar', [
             // needed for the ProjectShowHeaderComponent
@@ -1829,7 +1871,7 @@ class ProjectController extends Controller
         }
 
         /** @var Collection $roomsWithAudience */
-        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+        $roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectChecklists', [
             'project' => new ProjectChecklistResource($project),
@@ -1970,7 +2012,7 @@ class ProjectController extends Controller
         }
 
         /** @var Collection $roomsWithAudience */
-        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+        $roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectShifts', [
             'project' => new ProjectShiftResource($project),
@@ -2000,7 +2042,7 @@ class ProjectController extends Controller
     }
 
     //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function projectBudgetTab(
         Project $project,
         SageAssignedDataCommentService $sageAssignedDataCommentService
@@ -2108,7 +2150,7 @@ class ProjectController extends Controller
         }
 
         /** @var Collection $roomsWithAudience */
-        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+        $roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectBudget', [
             'project' => new ProjectBudgetResource($project),
@@ -2233,7 +2275,7 @@ class ProjectController extends Controller
         }
 
         /** @var Collection $roomsWithAudience */
-        $roomsWithAudience = Room::withAudience()->get()->pluck('name', 'id');
+        $roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
 
         return inertia('Projects/SingleProjectComments', [
             'project' => new ProjectCommentResource($project),
@@ -2428,7 +2470,8 @@ class ProjectController extends Controller
             if (!in_array($newSector->id, $oldSectorIds)) {
                 $this->history->createHistory(
                     $projectId,
-                    'Bereich ' . $newSector->name . ' hinzugefügt',
+                    'Added area',
+                    [$newSector->name],
                     'public_changes'
                 );
             }
@@ -2438,7 +2481,8 @@ class ProjectController extends Controller
             if (!in_array($oldSectorId, $newSectorIds)) {
                 $this->history->createHistory(
                     $projectId,
-                    'Bereich ' . $oldSectorNames[$oldSectorId] . ' gelöscht',
+                    'Deleted area',
+                    [$oldSectorNames[$oldSectorId]],
                     'public_changes'
                 );
             }
@@ -2469,7 +2513,8 @@ class ProjectController extends Controller
             if (!in_array($newGenre->id, $oldGenreIds)) {
                 $this->history->createHistory(
                     $projectId,
-                    'Genre ' . $newGenre->name . ' hinzugefügt',
+                    'Added genre',
+                    [$newGenre->name],
                     'public_changes'
                 );
             }
@@ -2479,7 +2524,8 @@ class ProjectController extends Controller
             if (!in_array($oldGenreId, $newGenreIds)) {
                 $this->history->createHistory(
                     $projectId,
-                    'Genre ' . $oldGenreNames[$oldGenreId] . ' gelöscht',
+                    'Deleted genre',
+                    [$oldGenreNames[$oldGenreId]],
                     'public_changes'
                 );
             }
@@ -2504,7 +2550,8 @@ class ProjectController extends Controller
             if (!in_array($newCategory->id, $oldCategoryIds)) {
                 $this->history->createHistory(
                     $projectId,
-                    'Kategorie ' . $newCategory->name . ' hinzugefügt',
+                    'Added category',
+                    [$newCategory->name],
                     'public_changes'
                 );
             }
@@ -2514,7 +2561,8 @@ class ProjectController extends Controller
             if (!in_array($oldCategoryId, $newCategoryIds)) {
                 $this->history->createHistory(
                     $projectId,
-                    'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' gelöscht',
+                    'Deleted category',
+                    [$oldCategoryNames[$oldCategoryId]],
                     'public_changes'
                 );
             }
@@ -2526,7 +2574,12 @@ class ProjectController extends Controller
     private function checkProjectNameChanges($projectId, $oldName, $newName): void
     {
         if ($oldName !== $newName) {
-            $this->history->createHistory($projectId, 'Projektname geändert', 'public_changes');
+            $this->history->createHistory(
+                $projectId,
+                'Project name changed',
+                [],
+                'public_changes'
+            );
             $this->setPublicChangesNotification($projectId);
         }
     }
@@ -2537,7 +2590,12 @@ class ProjectController extends Controller
         string|null $newProjectBudgetDeadline
     ): void {
         if ($oldProjectBudgetDeadline !== $newProjectBudgetDeadline) {
-            $this->history->createHistory($projectId, 'Projekt Stichtag Budget geändert', 'public_changes');
+            $this->history->createHistory(
+                $projectId,
+                'Project budget deadline changed',
+                [],
+                'public_changes'
+            );
             $this->setPublicChangesNotification($projectId);
         }
     }
@@ -2564,7 +2622,11 @@ class ProjectController extends Controller
         foreach ($newDepartments as $newDepartment) {
             $newDepartmentIds[] = $newDepartment->id;
             if (!in_array($newDepartment->id, $oldDepartmentIds)) {
-                $this->history->createHistory($projectId, 'Projektteam ' . $newDepartment->name . ' hinzugefügt');
+                $this->history->createHistory(
+                    $projectId,
+                    'Department added to project team',
+                    [$newDepartment->name]
+                );
             }
         }
 
@@ -2572,7 +2634,8 @@ class ProjectController extends Controller
             if (!in_array($oldDepartmentId, $newDepartmentIds)) {
                 $this->history->createHistory(
                     $projectId,
-                    'Projektteam ' . $oldDepartmentNames[$oldDepartmentId] . ' entfernt'
+                    'Department removed from project team',
+                    [$oldDepartmentNames[$oldDepartmentId]]
                 );
             }
         }
@@ -2581,13 +2644,28 @@ class ProjectController extends Controller
     private function checkProjectDescriptionChanges($projectId, $oldDescription, $newDescription): void
     {
         if (strlen($newDescription) === null) {
-            $this->history->createHistory($projectId, 'Kurzbeschreibung gelöscht', 'public_changes');
+            $this->history->createHistory(
+                $projectId,
+                'Short description deleted',
+                [],
+                'public_changes'
+            );
         }
         if ($oldDescription === null && $newDescription !== null) {
-            $this->history->createHistory($projectId, 'Kurzbeschreibung hinzugefügt', 'public_changes');
+            $this->history->createHistory(
+                $projectId,
+                'Short description added',
+                [],
+                'public_changes'
+            );
         }
         if ($oldDescription !== $newDescription && $oldDescription !== null && strlen($newDescription) !== null) {
-            $this->history->createHistory($projectId, 'Kurzbeschreibung geändert', 'public_changes');
+            $this->history->createHistory(
+                $projectId,
+                'Short description changed',
+                [],
+                'public_changes'
+            );
         }
         $this->setPublicChangesNotification($projectId);
     }
@@ -2634,7 +2712,9 @@ class ProjectController extends Controller
             $managerIdsAfter[$managerAfter->id] = $managerAfter->id;
             // if added a new project manager, send notification to this user
             if (!in_array($managerAfter->id, $managerIdsBefore)) {
-                $notificationTitle = 'Du wurdest zur Projektleitung von ' . $project->name . ' ernannt';
+                $notificationTitle = __('notification.project.leader.add', [
+                    'project' => $project->name
+                ], $managerAfter->language);
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -2658,7 +2738,9 @@ class ProjectController extends Controller
             $budgetIdsAfter[$budgetAfter->id] = $budgetAfter->id;
             // if added a new project manager, send notification to this user
             if (!in_array($budgetAfter->id, $budgetIdsBefore)) {
-                $notificationTitle = 'Du hast Budgetzugriff in ' . $project->name . ' erhalten';
+                $notificationTitle = __('notification.project.budget.add', [
+                    'project' => $project->name
+                ], $budgetAfter->language);
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -2681,7 +2763,9 @@ class ProjectController extends Controller
         foreach ($managerIdsBefore as $managerBefore) {
             if (!in_array($managerBefore, $managerIdsAfter)) {
                 $user = User::find($managerBefore);
-                $notificationTitle = 'Du wurdest als Projektleitung von ' . $project->name . ' gelöscht';
+                $notificationTitle = __('notification.project.leader.remove', [
+                    'project' => $project->name
+                ], $user->language);
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'error',
@@ -2700,7 +2784,9 @@ class ProjectController extends Controller
         foreach ($budgetIdsBefore as $budgetBefore) {
             if (!in_array($budgetBefore, $budgetIdsAfter)) {
                 $user = User::find($budgetBefore);
-                $notificationTitle = 'Dein Budgetzugriff in ' . $project->name . ' wurde gelöscht';
+                $notificationTitle = __('notification.project.budget.remove', [
+                    'project' => $project->name
+                ], $user->language);
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'error',
@@ -2719,7 +2805,9 @@ class ProjectController extends Controller
         foreach ($userIdsAfter as $userIdAfter) {
             if (!in_array($userIdAfter, $userIdsBefore)) {
                 $user = User::find($userIdAfter);
-                $notificationTitle = 'Du wurdest zu ' . $project->name . ' hinzugefügt';
+                $notificationTitle = __('notification.project.member.add', [
+                    'project' => $project->name
+                ], $user->language);
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -2733,12 +2821,20 @@ class ProjectController extends Controller
                 $this->notificationService->setProjectId($project->id);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
+
+                $this->history->createHistory(
+                    $project->id,
+                    'User added to project team',
+                    [$user->first_name . ' ' . $user->last_name]
+                );
             }
         }
         foreach ($userIdsBefore as $userIdBefore) {
             if (!in_array($userIdBefore, $userIdsAfter)) {
                 $user = User::find($userIdBefore);
-                $notificationTitle = 'Du wurdest aus ' . $project->name . ' gelöscht';
+                $notificationTitle = __('notification.project.member.remove', [
+                    'project' => $project->name
+                ], $user->language);
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -2752,6 +2848,12 @@ class ProjectController extends Controller
                 $this->notificationService->setProjectId($project->id);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
+
+                $this->history->createHistory(
+                    $project->id,
+                    'User removed from project team',
+                    [$user->first_name . ' ' . $user->last_name]
+                );
             }
         }
     }
@@ -2805,7 +2907,7 @@ class ProjectController extends Controller
             $newProject->headlines()->attach($headline->id, ['text' => $headline->pivot->text]);
         });
 
-        return Redirect::route('projects.show.info', $newProject->id)->with('success', 'Project created.');
+        return Redirect::route('projects.show.info', $newProject->id);
     }
 
     public function destroy(Project $project): RedirectResponse
@@ -2816,21 +2918,22 @@ class ProjectController extends Controller
             $checklist->tasks()->delete();
         }
 
-        $notificationTitle = $project->name . ' wurde gelöscht';
-        $broadcastMessage = [
-            'id' => rand(1, 1000000),
-            'type' => 'error',
-            'message' => $notificationTitle
-        ];
-
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('red');
-        $this->notificationService->setPriority(2);
-        $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PROJECT);
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setProjectId($project->id);
-
         foreach ($project->users()->get() as $user) {
+            $notificationTitle = __('notification.project.delete', [
+                'project' => $project->name
+            ], $user->language);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
+            $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_PROJECT);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setProjectId($project->id);
             $this->notificationService->setNotificationTo($user);
             $this->notificationService->createNotification();
         }
@@ -2839,7 +2942,7 @@ class ProjectController extends Controller
 
         $project->delete();
 
-        return Redirect::route('projects')->with('success', 'Project moved to trash');
+        return Redirect::route('projects');
     }
 
     public function forceDelete(int $id): RedirectResponse
@@ -2851,7 +2954,7 @@ class ProjectController extends Controller
         $project->events()->withTrashed()->forceDelete();
         $project->project_histories()->delete();
 
-        return Redirect::route('projects.trashed')->with('success', 'Project deleted');
+        return Redirect::route('projects.trashed');
     }
 
     public function restore(int $id): RedirectResponse
@@ -2861,7 +2964,7 @@ class ProjectController extends Controller
         $project->restore();
         $project->events()->withTrashed()->restore();
 
-        return Redirect::route('projects.trashed')->with('success', 'Project restored');
+        return Redirect::route('projects.trashed');
     }
 
     public function getTrashedSettings(): Response|ResponseFactory
@@ -2927,13 +3030,13 @@ class ProjectController extends Controller
 
         $row->cells()->whereIntegerInRaw('id', $cellIds)->update(['commented' => $request->commented]);
 
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function updateCommentedStatusOfCell(Request $request, ColumnCell $columnCell): RedirectResponse
     {
         $columnCell->update(['commented' => $request->commented]);
-        return back()->with('success');
+        return Redirect::back();
     }
 
     public function updateKeyVisual(Request $request, Project $project): RedirectResponse
@@ -2950,7 +3053,7 @@ class ProjectController extends Controller
 
             if ($img->width() < 1080) {
                 throw ValidationException::withMessages([
-                    'keyVisual' => 'Die Breite des Key Visuals sollte mindestens 1080px betragen.'
+                    'keyVisual' => __('notification.key_visual.width')
                 ]);
             }
 
@@ -2968,16 +3071,26 @@ class ProjectController extends Controller
         $newKeyVisual = $project->key_visual_path;
 
         if ($oldKeyVisual !== $newKeyVisual) {
-            $this->history->createHistory($project->id, 'Key Visual wurde geändert', 'public_changes');
+            $this->history->createHistory(
+                $project->id,
+                'Key visual has been changed',
+                [],
+                'public_changes'
+            );
         }
 
         if ($newKeyVisual === '') {
-            $this->history->createHistory($project->id, 'Key Visual wurde entfernt', 'public_changes');
+            $this->history->createHistory(
+                $project->id,
+                'Key visual has been removed',
+                [],
+                'public_changes'
+            );
         }
 
         $this->setPublicChangesNotification($project->id);
 
-        return Redirect::back()->with('success', 'Key Visual hinzugefügt');
+        return Redirect::back();
     }
 
     public function downloadKeyVisual(Project $project): StreamedResponse
@@ -3105,7 +3218,7 @@ class ProjectController extends Controller
     public function pin(Project $project): RedirectResponse
     {
         $this->projectService->pin($project);
-        return Redirect::route('projects')->with('success', 'Project pinned.');
+        return Redirect::route('projects');
     }
 
     public function updateCopyright(Request $request, Project $project): RedirectResponse
@@ -3125,19 +3238,19 @@ class ProjectController extends Controller
 
         $this->checkProjectCostCenterChanges($project->id, $oldCostCenter, $costCenter->id ?? null);
 
-        return Redirect::back()->with('success', 'Project updated.');
+        return Redirect::back();
     }
 
     private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter): void
     {
         if ($newCostCenter === null && $oldCostCenter !== null) {
-            $this->history->createHistory($projectId, 'Kostenträger gelöscht');
+            $this->history->createHistory($projectId, 'Cost center deleted');
         }
         if ($oldCostCenter === null && $newCostCenter !== null) {
-            $this->history->createHistory($projectId, 'Kostenträger hinzugefügt');
+            $this->history->createHistory($projectId, 'Cost center added');
         }
         if ($oldCostCenter !== $newCostCenter && $oldCostCenter !== null && $newCostCenter !== null) {
-            $this->history->createHistory($projectId, 'Kostenträger geändert');
+            $this->history->createHistory($projectId, 'Cost center changed');
         }
     }
 }

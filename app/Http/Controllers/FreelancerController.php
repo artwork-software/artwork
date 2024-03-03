@@ -68,7 +68,8 @@ class FreelancerController extends Controller
             'vacationSelectCalendar' => $this->calendarService
                 ->createVacationAndAvailabilityPeriodCalendar(request('vacationMonth')),
             'createShowDate' => [
-                $selectedPeriodDate->locale('de')->isoFormat('MMMM YYYY'),
+                $selectedPeriodDate->locale(\session()->get('locale') ?? config('app.fallback_locale'))
+                    ->isoFormat('MMMM YYYY'),
                 $selectedPeriodDate->copy()->startOfMonth()->toDate()
             ],
             'showVacationsAndAvailabilitiesDate' => $selectedDate->format('Y-m-d'),
@@ -131,7 +132,7 @@ class FreelancerController extends Controller
             'work_description' => $request->get('workDescription')
         ]);
 
-        return Redirect::back()->with('success', ['workProfile' => 'Arbeitsprofil erfolgreich aktualisiert']);
+        return Redirect::back()->with('success', ['workProfile' => __('flash-messages.workProfile.changed')]);
     }
 
     /**
@@ -186,7 +187,7 @@ class FreelancerController extends Controller
             $freelancer->assignedCrafts()->attach(Craft::find($request->get('craftId')));
         }
 
-        return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
+        return Redirect::back()->with('success', ['craft' => __('flash-messages.craft.assigned')]);
     }
 
     /**
@@ -198,7 +199,7 @@ class FreelancerController extends Controller
 
         $freelancer->assignedCrafts()->detach($craft);
 
-        return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
+        return Redirect::back()->with('success', ['craft' => __('flash-messages.craft.removed')]);
     }
 
     public function updateProfileImage(Request $request, Freelancer $freelancer): void

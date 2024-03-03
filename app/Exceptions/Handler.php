@@ -16,9 +16,9 @@ class Handler extends ExceptionHandler
 
     public function register(): void
     {
-        $this->reportable(function (Throwable $e) {
+        $this->reportable(function (Throwable $e): void {
             if (app()->bound('sentry')) {
-                if(env('APP_ENV', 'local') === 'local' || app()->runningUnitTests()) {
+                if (env('APP_ENV', 'local') === 'local' || app()->runningUnitTests()) {
                     return;
                 }
                 app('sentry')->captureException($e);

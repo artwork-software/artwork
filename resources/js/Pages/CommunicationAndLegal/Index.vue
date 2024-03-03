@@ -4,49 +4,47 @@
              class="w-full font-bold text-sm border-1 border-green-600 rounded bg-green-600 p-2 text-white mb-3">
             {{ this.$page.props.flash.success }}
         </div>
-        <h2 class="headline2">Kommunikation & Rechtliches</h2>
+        <h2 class="headline2">{{ $t('Communication & Legal') }}</h2>
         <div class="xsLight mt-4">
-            Definiere hier den Footer-Text für sämtliche System-E-Mails und gib' die Links zur
-            Impressum- und Datenschutzseite deines Unternehmens an. Darüber hinaus kannst du eine
-            E-Mail Adresse definieren die beim versenden von E-Mails verwendet wird.
+            {{ $t("Define the footer text for all system emails here, and provide the links to your company's legal notice and privacy policy pages. Additionally, you can specify an email address to be used for sending emails.") }}
         </div>
         <div class="mt-4">
             <div class="mt-4 col-span-9 grid grid-cols-9">
                 <div class="sm:col-span-3">
-                    <inputComponent v-model="mailForm.businessName" placeholder="Unsere Organisation"/>
+                    <inputComponent v-model="mailForm.businessName" :placeholder="$t('Our Organization')"/>
                 </div>
             </div>
             <div class="mt-4 col-span-9 grid grid-cols-9">
                 <div class="sm:col-span-3">
-                    <inputComponent v-model="mailForm.impressumLink" placeholder="Link zum Impressum"/>
+                    <inputComponent v-model="mailForm.impressumLink" :placeholder="$t('Link to Legal Notice')"/>
                     <span v-if="showInvalidImpressumLinkErrorText"
                           class="errorText">
-                        Keine gültige URL (Beispiel: http://google.de)
+                        {{ $t('Invalid URL (Example: http://google.com)') }}
                     </span>
                 </div>
             </div>
             <div class="mt-4 col-span-9 grid grid-cols-9">
                 <div class="sm:col-span-3">
-                    <inputComponent v-model="mailForm.privacyLink" placeholder="Link zum Datenschutz"/>
+                    <inputComponent v-model="mailForm.privacyLink" :placeholder="$t('Link to Privacy Policy')"/>
                     <span v-if="showInvalidPrivacyLinkErrorText"
                           class="errorText">
-                        Keine gültige URL (Beispiel: http://google.de)
+                        {{ $t('Invalid URL (Example: http://google.com)') }}
                     </span>
                 </div>
             </div>
             <div class="mt-4 col-span-9 grid grid-cols-9">
                 <div class="sm:col-span-3">
-                    <inputComponent v-model="mailForm.businessEmail" placeholder="Geschäfts-E-Mail-Adresse"/>
+                    <inputComponent v-model="mailForm.businessEmail" :placeholder="$t('Business Email')"/>
                     <span v-if="showInvalidBusinessEmailAddressErrorText"
                           class="errorText">
-                        Keine gültige E-Mail Adresse
+                        {{ $t('Invalid Email Address') }}
                     </span>
                 </div>
             </div>
             <div class="mt-4 col-span-9 grid grid-cols-9">
                 <div class="sm:col-span-8">
                     <textarea
-                        placeholder="E-Mail-Footer"
+                        :placeholder="$t('Email-Footer')"
                         v-model="mailForm.emailFooter"
                         rows="4"
                         class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-2 w-full placeholder:xsLight border-2 border-gray-300 "/>
@@ -56,7 +54,7 @@
         <div class="mt-4 items-center">
             <FormButton
                 @click.prevent="changeEmailData"
-                text="Änderungen speichern"
+                :text="$t('Save changes')"
             />
         </div>
     </ToolSettingsHeader>

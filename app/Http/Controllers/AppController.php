@@ -41,7 +41,7 @@ class AppController extends Controller
             'toggle_hints' => !$user->toggle_hints
         ]);
 
-        return Redirect::back()->with('success', 'Hilfe umgeschaltet');
+        return Redirect::back();
     }
 
     //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsProjectStatus
@@ -56,7 +56,7 @@ class AppController extends Controller
             'project_status' => !$calendarSettings->project_status
         ]);
 
-        return Redirect::back()->with('success', 'Einstellung gespeichert');
+        return Redirect::back();
     }
 
     //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsOptions
@@ -71,7 +71,7 @@ class AppController extends Controller
             'options' => !$calendarSettings->options
         ]);
 
-        return Redirect::back()->with('success', 'Einstellung gespeichert');
+        return Redirect::back();
     }
 
     //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsProjectManagement
@@ -86,7 +86,7 @@ class AppController extends Controller
             'project_management' => !$calendarSettings->project_management
         ]);
 
-        return Redirect::back()->with('success', 'Einstellung gespeichert');
+        return Redirect::back();
     }
 
     //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsRepeatingEvents
@@ -101,7 +101,7 @@ class AppController extends Controller
             'repeating_events' => !$calendarSettings->repeating_events
         ]);
 
-        return Redirect::back()->with('success', 'Einstellung gespeichert');
+        return Redirect::back();
     }
 
     //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsWorkShifts
@@ -116,7 +116,7 @@ class AppController extends Controller
             'work_shifts' => !$calendarSettings->work_shifts
         ]);
 
-        return Redirect::back()->with('success', 'Einstellung gespeichert');
+        return Redirect::back();
     }
 
     public function index(GeneralSettings $settings): RedirectResponse

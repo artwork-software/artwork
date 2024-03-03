@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('vacation_conflicts', function (Blueprint $table) {
+        Schema::create('vacation_conflicts', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('vacation_id');
             $table->unsignedBigInteger('shift_id');
@@ -30,7 +30,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('vacation_conflicts');
     }

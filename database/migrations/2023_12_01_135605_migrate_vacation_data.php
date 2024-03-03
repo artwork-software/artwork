@@ -1,8 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,15 +10,15 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        \Illuminate\Support\Facades\DB::table('user_vacations')
-            ->orderBy('id')->each(function(\stdClass $vacation) {
+        DB::table('user_vacations')
+            ->orderBy('id')->each(function (\stdClass $vacation): void {
                 $this->insertToVacation($vacation, \App\Models\User::class);
             });
 
-        \Illuminate\Support\Facades\DB::table('freelancer_vacations')
-            ->orderBy('id')->each(function(\stdClass $vacation) {
+        DB::table('freelancer_vacations')
+            ->orderBy('id')->each(function (\stdClass $vacation): void {
                 $this->insertToVacation($vacation, \App\Models\Freelancer::class);
             });
     }
@@ -29,14 +28,13 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
-
     }
 
     private function insertToVacation(\stdClass $model, string $baseClass): void
     {
-        \Illuminate\Support\Facades\DB::table('vacations')
+        DB::table('vacations')
             ->insert([
                 'vacationer_type' => $baseClass,
                 'vacationer_id' => $model->id,

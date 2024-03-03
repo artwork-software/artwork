@@ -35,4 +35,6 @@ enum PermissionNameEnum : string
     case VIEW_SHIFT_PLAN = 'can view shift plan';
     case CAN_COMMIT_SHIFTS = 'can commit shifts';
     case EDIT_EXTERNAL_USERS_CONDITIONS = 'can edit external users conditions';
+
+    case VIEW_AND_DELETE_SAGE100_API_DATA = 'can view and delete sage100-api-data';
 }

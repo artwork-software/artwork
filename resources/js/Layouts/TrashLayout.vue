@@ -2,9 +2,10 @@
     <div class="max-w-screen-xl">
         <div class="flex-wrap max-w-5xl">
             <div class="flex flex-wrap mx-10 ml-14">
-                <h2 class="font-black text-primary font-lexend text-3xl w-full">Papierkorb</h2>
-                <p class="text-secondary tracking-tight leading-6 subpixel-antialiased mt-5">Du kannst Objekte aus deinem Papierkorb wieder herstellen oder endgültig
-                    löschen. Nach 30 Tagen werden Objekte automatisch endgültig gelöscht.</p>
+                <h2 class="font-black text-primary font-lexend text-3xl w-full">{{  $t('Wastebasket') }}</h2>
+                <p class="text-secondary tracking-tight leading-6 subpixel-antialiased mt-5">{{
+                         $t('You can restore objects from your recycle bin or delete them permanently. Items are automatically deleted permanently after 30 days.')
+                    }}</p>
                 <div class="flex flex-wrap w-full">
 
                     <div class="w-full mt-5 flex my-auto justify-between">
@@ -29,6 +30,7 @@
                                         ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="page in trashSites"
+                                                       v-show="page.available"
                                                        :key="page.name"
                                                        :value="page"
                                                        v-slot="{ active, selected }">
@@ -73,42 +75,51 @@ export default {
     data() {
         return {
             selectedTrash: null,
-
         }
     },
     watch: {
-      selectedTrash: {
+        selectedTrash: {
           handler() {
               Inertia.get(this.selectedTrash.href)
           },
           deep: true
-      }
+        }
     },
     created() {
-      this.selectedTrash = this.trashSites[this.$page.component]
+        this.selectedTrash = this.trashSites[this.$page.component]
     },
     computed: {
         trashSites() {
             return {
                 'Trash/Projects': {
-                    name: 'Projekte',
-                    href: route('projects.trashed')
+                    name: this.$t('Projects'),
+                    href: route('projects.trashed'),
+                    available: true
                 },
                 'Trash/Areas': {
-                    name: 'Areale',
-                    href: route('areas.trashed')
+                    name: this.$t('Areas'),
+                    href: route('areas.trashed'),
+                    available: true
                 },
                 'Trash/Rooms': {
-                    name: 'Räume',
-                    href: route('rooms.trashed')
+                    name: this.$t('Rooms'),
+                    href: route('rooms.trashed'),
+                    available: true
                 },
                 'Trash/Events': {
-                    name: 'Termine',
-                    href: route('events.trashed')
+                    name: this.$t('Events'),
+                    href: route('events.trashed'),
+                    available: true
                 },
                 'Trash/ProjectSettings': {
-                    name: 'Projekteinstellungen',
-                    href: route('projects.settings.trashed')
+                    name: this.$t('Project Settings'),
+                    href: route('projects.settings.trashed'),
+                    available: true
+                },
+                'Trash/SageNotAssignedData': {
+                    name: this.$t('Sage API data sets'),
+                    href: route('sageNotAssignedData.trashed'),
+                    available: this.$can('can view and delete sage100-api-data')
                 }
             }
         }

@@ -2,35 +2,35 @@
     <div class="w-full mt-24">
         <div class="flex">
             <div class="text-secondary text-md">
-                Zugriff auf Raum
+                {{$t('Access to room')}}
             </div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                            @click="openRoomAccessModal"/>
         </div>
-        <div class="text-secondary text-sm mt-4">RAUMADMIN</div>
+        <div class="text-secondary text-sm mt-4 uppercase">{{$t('Room admin')}}</div>
         <div class="flex" v-if="room.room_admins.length > 0">
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in room.room_admins">
                 <UserPopoverTooltip :user="user" height="11" width="11" :id="user.id"/>
             </div>
         </div>
         <div v-else class="text-secondary text-sm mt-2">
-            Noch keine Raumadmins vorhanden
+            {{$t('No room admins available yet')}}
         </div>
-        <div class="text-secondary text-sm mt-4">ANFRAGEBERECHTIGT</div>
+        <div class="text-secondary text-sm mt-4 uppercase">{{ $t('Authorized to request')}}</div>
         <div class="flex" v-if="room.requestable_by.length > 0">
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in room.requestable_by">
                 <UserPopoverTooltip :user="user" height="11" width="11" :id="user.id"/>
             </div>
         </div>
         <div v-else class="text-secondary text-sm mt-2">
-            Bislang ist kein Nutzer anfrageberechtigt
+            {{ $t('So far, no user is authorized to make inquiries')}}
         </div>
 
         <hr class="my-10 border-darkGray">
 
         <div class="flex">
             <div class="text-secondary text-md">
-                Raumeigenschaften
+                {{$t('Room properties')}}
             </div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                            @click="openEditRoomAttributesModal"/>
@@ -52,14 +52,14 @@
             </div>
         </div>
         <div v-else class="text-secondary text-sm mt-4">
-            Noch keine Eigenschaften ausgewählt
+            {{$t('No properties selected yet')}}
         </div>
 
         <hr class="my-10 border-darkGray">
 
         <div class="flex items-center">
             <div class="text-secondary text-md">
-                Dokumente
+                {{ $t('Documents')}}
             </div>
             <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showRoomFiles ? 'rotate-180' : '']"
                              @click="showRoomFiles = !showRoomFiles"/>
@@ -88,7 +88,7 @@
                 />
             </div>
             <div v-else>
-                <div class="text-secondary text-sm mt-4">Keine Dokumente vorhanden</div>
+                <div class="text-secondary text-sm mt-4">{{ $t('No documents available')}}</div>
             </div>
         </div>
         <RoomAccessModal

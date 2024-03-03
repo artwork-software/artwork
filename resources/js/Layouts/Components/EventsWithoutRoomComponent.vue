@@ -9,12 +9,11 @@
                 <div>
                     <h1 class="my-1 flex">
                         <div class="flex-grow headline1">
-                            Termine ohne Raum
+                            {{$t('Events without room')}}
                         </div>
                     </h1>
                     <h2 class="xsLight">
-                        Diese Raumbelegungsanfragen wurden vom Raumadmin abgelehnt. Sage die Termine ab oder verschiebe
-                        sie in einen anderen Raum.
+                        {{$t('These room booking requests have been rejected by the room admin. Cancel the appointments or move them to another room.')}}
                     </h2>
                 </div>
                 <!--    Form    -->
@@ -124,13 +123,13 @@
                                         type="text"
                                         v-model="event.eventName"
                                         id="eventTitle"
-                                        placeholder="Terminname*"
+                                        :placeholder="$t('Event name') + '*'"
                                         :disabled="!event.canEdit"
                                         class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     <input v-else type="text"
                                            v-model="event.eventName"
                                            id="eventTitle"
-                                           placeholder="Terminname"
+                                           :placeholder="$t('Event name')"
                                            :disabled="!event.canEdit"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
@@ -141,30 +140,31 @@
                             <!--    Properties    -->
                             <div class="flex py-2">
                                 <div v-if="event.audience">
-                                    <TagComponent icon="audience" displayed-text="Mit Publikum"
+                                    <TagComponent icon="audience" :displayed-text="$t('With audience')"
                                                   hideX="true"></TagComponent>
                                 </div>
                                 <div v-if="event.isLoud">
-                                    <TagComponent displayed-text="es wird laut" hideX="true"></TagComponent>
+                                    <TagComponent :displayed-text="$t('It gets loud')" hideX="true"></TagComponent>
                                 </div>
                             </div>
 
                             <!--    Time    -->
                             <SwitchGroup as="div" class="flex items-center">
                                 <Switch v-model="event.allDay"
+                                        @update:modelValue="checkChanges(event)"
                                         :class="[event.allDay ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
                                     <span aria-hidden="true"
                                           :class="[event.allDay ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                                 </Switch>
                                 <SwitchLabel as="span" class="ml-3 text-sm">
                                     <span :class="[event.allDay ? 'xsDark' : 'xsLight', 'text-sm']">
-                                        Ganztägig
+                                        {{$t('Full day')}}
                                     </span>
                                 </SwitchLabel>
                             </SwitchGroup>
                             <div class="flex py-1 flex-col sm:flex-row align-baseline">
                                 <div class="sm:w-1/2">
-                                    <label for="startDate" class="xsLight">Start</label>
+                                    <label for="startDate" class="xsLight">{{$t('Start*')}}</label>
                                     <div class="w-full flex">
                                         <input v-model="event.startDate"
                                                id="startDate"
@@ -185,7 +185,7 @@
                                     <p class="text-xs text-red-800">{{ event.error?.start?.join('. ') }}</p>
                                 </div>
                                 <div class="sm:w-1/2">
-                                    <label for="endDate" class="xsLight">Ende</label>
+                                    <label for="endDate" class="xsLight">{{ $t('End*') }}</label>
                                     <div class="w-full flex">
                                         <input v-model="event.endDate"
                                                id="endDate"
@@ -206,9 +206,10 @@
                                     <p class="text-xs text-red-800">{{ event.error?.end?.join('. ') }}</p>
                                 </div>
                             </div>
+                            <div class="text-xs text-red-800" v-if="event.helpTextLength">{{ event.helpTextLength }}</div>
                             <!-- Serien Termin -->
-                            <div v-if="event?.is_series" class="xsLight mt-2">Termin ist Teil eines Wiederholungstermines</div>
-                            <div v-if="event?.is_series" class="xsLight mb-2">Turnus: {{ event.selectedFrequencyName }} bis zum {{ convertDateFormat(event.series.end_date) }}</div>
+                            <div v-if="event?.is_series" class="xsLight mt-2">{{ $t('Event is part of a repeat event') }}</div>
+                            <div v-if="event?.is_series" class="xsLight mb-2">{{ $t('Cycle: {0} to {1}', {0: event.selectedFrequencyName, 1: convertDateFormat(event.series.end_date) } )}}</div>
                             <!--    Room    -->
                             <div class="py-1">
                                 <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!event.canEdit">
@@ -221,7 +222,7 @@
                                             {{ this.rooms.find(room => room.id === event.roomId)?.name }}
                                         </div>
                                         <div v-else class="flex-grow xsLight text-left subpixel-antialiased">
-                                            Raum wählen*
+                                            {{$t('Select room')}}*
                                         </div>
                                         <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </ListboxButton>
@@ -232,8 +233,13 @@
                                                        :key="room.name"
                                                        :value="room.id"
                                                        v-slot="{ active, selected }">
-                                            <div :class="[selected ? 'text-white' : '']">
+                                            <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
                                                 {{ room.name }}
+                                                <img
+                                                    v-if="event.roomCollisionArray[room.id] > 0"
+                                                    src="/Svgs/IconSvgs/icon_warning_white.svg"
+                                                    class="h-4 w-4 mx-2" alt="conflictIcon"
+                                                />
                                             </div>
                                             <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                         </ListboxOption>
@@ -246,12 +252,12 @@
                                     <input type="checkbox"
                                            v-model="event.showProjectInfo"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300">
-                                    <span :class="[event.showProjectInfo ? 'xsDark' : 'xsLight', 'text-sm ml-2']">Termin einem Projekt zuordnen</span>
+                                    <span :class="[event.showProjectInfo ? 'xsDark' : 'xsLight', 'text-sm ml-2']">{{$t('Assign event to a project')}}</span>
                                 </div>
                                 <!--    Project    -->
                                 <div v-if="event.showProjectInfo">
                                     <div class="xsLight flex" v-if="!event.creatingProject">
-                                        Aktuell zugeordnet zu:
+                                        {{$t('Currently assigned to:')}}
                                         <a v-if="event.projectId"
                                            :href="route('projects.show.calendar', {project: event.projectId})"
                                            class="ml-3 flex xsDark">
@@ -268,14 +274,14 @@
                                         </div>
                                     </div>
                                     <div class="xsLight" v-if="event.creatingProject">
-                                        Das Projekt wird beim Abspeichern erstellt.
+                                       {{$t('The project is created when it is saved.')}}
                                     </div>
 
                                     <div class="my-2" v-if="event.canEdit">
                                         <div class="flex pb-2">
                                             <span class="mr-4 text-sm"
                                                   :class="[!event.creatingProject ? 'xsDark' : 'xsLight', '']">
-                                                Bestehendes Projekt
+                                                {{$t('Existing project')}}
                                             </span>
                                             <label for="project-toggle"
                                                    class="inline-flex relative items-center cursor-pointer">
@@ -292,12 +298,12 @@
                                             </label>
                                             <span class="ml-4 text-sm"
                                                   :class="[event.creatingProject ? 'xsDark' : 'xsLight', '']">
-                                                Neues Projekt
+                                                {{$t('New project')}}
                                             </span>
                                             <div v-if="showHints" class="ml-3 flex">
                                                 <SvgCollection svgName="arrowLeft" class="mt-1"/>
                                                 <div class="hind text-secondary ml-1 my-auto text-sm">
-                                                    Lege gleichzeitig ein neues Projekt an
+                                                    {{$t('Create a new project at the same time')}}
                                                 </div>
                                             </div>
                                         </div>
@@ -307,7 +313,7 @@
                                                @keyup="this.projectName = event.projectName"
                                                v-model="event.projectName"
                                                autocomplete="off"
-                                               :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
+                                               :placeholder="creatingProject ? $t('New project name') : $t('Search project')"
                                                class="h-10 border-2 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                                         <div
@@ -327,12 +333,12 @@
                                 </div>
                                 <!--    Description    -->
                                 <div class="py-2">
-                                <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
+                                <textarea :placeholder="$t('What do I need to bear in mind for the event?')"
                                           id="description"
                                           :disabled="!event.canEdit"
                                           v-model="event.description"
                                           rows="4"
-                                          class="border-gray-300 border-2 resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                          class="border-gray-300 border-2 resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1"/>
                                 </div>
                                 <!-- Attribute Menu -->
                                 <Menu as="div" class="inline-block text-left w-full">
@@ -343,7 +349,7 @@
                                             <span class="float-left flex xsLight subpixel-antialiased"><img
                                                 src="/Svgs/IconSvgs/icon_adjustments.svg"
                                                 class="mr-2"
-                                                alt="attributeIcon"/>Termineigenschaften wählen</span>
+                                                alt="attributeIcon"/>{{$t('Select appointment properties')}}</span>
                                             <ChevronDownIcon
                                                 class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                                 aria-hidden="true"
@@ -371,7 +377,7 @@
 
                                                     <div
                                                         :class="[event.audience ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">
-                                                        Mit Publikum
+                                                        {{$t('With audience')}}
                                                     </div>
                                                 </div>
                                                 <div class="flex w-full mb-2">
@@ -381,8 +387,7 @@
                                                            class="checkBoxOnDark"/>
                                                     <div
                                                         :class="[event.isLoud ? 'text-white' : 'text-secondary', 'subpixel-antialiased mx-2']">
-                                                        Es
-                                                        wird laut
+                                                        {{$t('It gets loud')}}
                                                     </div>
                                                 </div>
                                             </div>
@@ -398,7 +403,7 @@
                                     @click="updateOrCreateEvent(event)"
                                 >
                                     {{
-                                        (isAdmin || selectedRoom?.everyone_can_book) ? 'Speichern' : 'Belegung anfragen'
+                                        (isAdmin || selectedRoom?.everyone_can_book) ? $t('Save') : $t('Request occupancy')
                                     }}
                                 </button>
                             </div>
@@ -417,7 +422,7 @@
                             </div>
                             <div class="w-full flex">
                                 <div class="flex w-1/2 xxsDark items-center my-auto" v-if="event.projectId">
-                                    Projekt:
+                                    {{$t('Project')}}:
                                     <a :href="route('projects.show.calendar', {project: event.projectId})"
                                        class="ml-1 xxsDarkBold items-center flex">
                                         {{ event.projectName }}
@@ -425,7 +430,7 @@
                                 </div>
                                 <div class="flex items-center w-1/2 mb-1">
                                     <div class="truncate flex xxsDark max-w-60 mt-1">
-                                        erstellt von
+                                        {{$t('Created by')}}
                                         <div class="xxsDarkBold ml-1"> {{ event.created_by.first_name }}
                                             {{ event.created_by.last_name }}
                                         </div>
@@ -474,9 +479,9 @@
     <!-- Event löschen Modal -->
     <confirmation-component
         v-if="deleteComponentVisible"
-        confirm="Löschen"
-        titel="Termin löschen"
-        :description="'Bist du sicher, dass du den Termin ' + this.eventToDelete.title + ' in den Papierkorb legen möchtest? Du kannst ihn innerhalb von 30 Tagen wiederherstellen.'"
+        :confirm="$t('Delete')"
+        :titel="$t('Delete event')"
+        :description="$t('Are you sure you want to put the event {0} in the trash? You can restore it within 30 days.', [eventToDelete.eventName] )"
         @closed="afterConfirm"/>
 
 </template>
@@ -484,7 +489,13 @@
 <script>
 
 import JetDialogModal from "@/Jetstream/DialogModal";
-import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
+import {
+    ChevronDownIcon,
+    DotsVerticalIcon,
+    PencilAltIcon,
+    XCircleIcon,
+    XIcon
+} from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
     Listbox,
@@ -496,7 +507,11 @@ import {
     MenuItem,
     MenuItems, Switch, SwitchGroup, SwitchLabel
 } from "@headlessui/vue";
-import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
+import {
+    CheckIcon,
+    ChevronUpIcon,
+    TrashIcon
+} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
@@ -534,7 +549,6 @@ export default {
         ConfirmationComponent,
         TagComponent
     },
-
     data() {
         return {
             startDate: null,
@@ -553,7 +567,6 @@ export default {
             error: null,
             creatingProject: false,
             projectSearchResults: [],
-            collisionCount: 0,
             description: null,
             canEdit: false,
             deleteComponentVisible: false,
@@ -565,28 +578,32 @@ export default {
             frequencies: [
                 {
                     id: 1,
-                    name: 'Täglich'
+                    name: this.$t('Daily')
                 },
                 {
                     id: 2,
-                    name: 'Wöchentlich'
+                    name: this.$t('Weekly')
                 },
                 {
                     id: 3,
-                    name: 'Alle 2 Wochen'
+                    name: this.$t('Every 2 weeks')
                 },
                 {
                     id: 4,
-                    name: 'Monatlich'
+                    name: this.$t('Monthly')
                 }
             ]
         }
     },
-
-    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'eventsWithoutRoom', 'removeNotificationOnAction'],
-
+    props: [
+        'showHints',
+        'eventTypes',
+        'rooms',
+        'isAdmin',
+        'eventsWithoutRoom',
+        'removeNotificationOnAction'
+    ],
     emits: ['closed'],
-
     watch: {
         projectName: {
             deep: true,
@@ -598,14 +615,7 @@ export default {
                 axios.get('/projects/search', {params: {query: this.projectName}})
                     .then(response => this.projectSearchResults = response.data)
             },
-        },
-        event: {
-            immediate: true,
-            deep: true,
-            handler: function () {
-                this.openModal()
-            },
-        },
+        }
     },
     computed: {
         computedEventsWithoutRoom: function () {
@@ -628,9 +638,7 @@ export default {
             this.firstCall = false;
             return this.eventsWithoutRoom;
         },
-
     },
-
     methods: {
         getTimeOfDate(date) {
             //returns hours and minutes in format HH:mm, if necessary with leading zeros, from given date object
@@ -642,7 +650,6 @@ export default {
             return date.getFullYear() + "-" +
                 (date.getMonth() + 1).toString().padStart(2, '0') + '-' +
                 date.getDate().toString().padStart(2, '0');
-
         },
         convertDateFormat(dateString) {
             const parts = dateString.split('-');
@@ -654,7 +661,7 @@ export default {
             if (matchedFrequency) {
                 return matchedFrequency.name;
             } else {
-                return 'Kein Turnus ausgewählt';
+                return this.$t('No cycle selected');
             }
         },
         onLinkingProject(project, event) {
@@ -665,13 +672,9 @@ export default {
             event.showProjectSearchResults = false;
             this.projectSearchResults = [];
         },
-        openModal() {
-        },
-
         closeModal(bool) {
             this.$emit('closed', bool);
         },
-
         /**
          * Format date and time to ISO 8601 with timezone UTC
          *
@@ -683,15 +686,9 @@ export default {
             if (date === null || time === null) return null;
             return (new Date(date + ' ' + time)).toISOString()
         },
-
         checkChanges(event) {
             this.updateTimes(event);
-            this.checkCollisions(event)
         },
-        checkTypeChange(event) {
-            this.checkCollisions(event);
-        },
-
         /**
          * If the user selects a start, end, and room
          * call the server to get information if there are any collision
@@ -699,28 +696,51 @@ export default {
          * @returns {Promise<void>}
          */
         async checkCollisions(event) {
-            if (!(event.startTime && event.startDate && event.endTime && event.endDate && event.roomId)) {
-                event.collisionCount = 0
-                return;
-            }
+            if (
+                event.startTime && event.startDate && event.endTime && event.endDate ||
+                event.allDay && event.startDate && event.endDate
+            ) {
+                let startFull = this.formatDate(event.startDate, !event.allDay ? event.startTime : '00:00');
+                let endFull = this.formatDate(event.endDate, !event.allDay ? event.endTime : '23:59');
 
-            await axios
-                .get('/events/collision', {
+                await axios.post('/collision/room', {
                     params: {
-                        start: this.formatDate(event.startDate, event.startTime),
-                        end: this.formatDate(event.endDate, event.endTime),
-                        roomId: event.roomId,
+                        start: startFull,
+                        end: endFull
                     }
-                })
-                .then(response => event.collisionCount = response.data);
+                }).then(response => event.roomCollisionArray = response.data);
+            }
         },
         updateTimes(event) {
-            this.validateStartBeforeEndTime(event);
+            if (event.startDate) {
+                if (!event.endDate && this.checkYear(event.startDate)) {
+                  event.endDate = event.startDate;
+                }
+                if (event.startTime) {
+                    if (!event.endTime) {
+                          if (event.startTime === '23:00') {
+                            event.endTime = '23:59';
+                          } else {
+                              let startHours = event.startTime.slice(0, 2);
+                              if (startHours === '23') {
+                                  event.endTime = '00:' + event.startTime.slice(3, 5);
+                                  let date = new Date();
+                                  event.endDate = new Date(
+                                      date.setDate(new Date(event.endDate).getDate() + 1)
+                                  ).toISOString().slice(0, 10);
+                              } else {
+                                  event.endTime = this.getNextHourString(event.startTime)
+                              }
+                        }
+                    }
+                }
+            }
 
+            this.validateStartBeforeEndTime(event);
             this.checkCollisions(event);
+            this.checkEventTimeLength(event);
         },
         async validateStartBeforeEndTime(event) {
-
             event.error = null;
             if (event.startDate && event.endDate && event.startTime && event.endTime) {
                 let startFull = this.setCombinedTimeString(event.startDate, event.startTime, 'start');
@@ -731,21 +751,49 @@ export default {
             }
 
         },
+        checkEventTimeLength(event) {
+            if (event.allDay) {
+                event.helpTextLength = '';
+                return;
+            }
+            // check if event min 30min
+            let startFull = new Date(event.startDate + ' ' + event.startTime);
+            let endFull = new Date(event.endDate + ' ' + event.endTime);
+
+            const minimumEnd = this.addMinutes(startFull, 30);
+            if (minimumEnd <= endFull) {
+                event.helpTextLength = '';
+            } else {
+                event.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
+            }
+        },
+        addMinutes(date, minutes) {
+            date.setMinutes(date.getMinutes() + minutes);
+            return date;
+        },
         setCombinedTimeString(date, time, target) {
             let combinedDateString = (date.toString() + ' ' + time);
             const offset = new Date(combinedDateString).getTimezoneOffset()
 
             if (target === 'start') {
                 if (offset === -60) {
-                    return new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                    return new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
+                    ).toISOString().slice(0, 16);
                 } else {
-                    return new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                    return new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
+                    ).toISOString().slice(0, 16);
                 }
             } else if (target === 'end') {
                 if (offset === -60) {
-                    return new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                    return new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
+                    ).toISOString().slice(0, 16);
                 } else {
-                    return new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                    return new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
+                    ).toISOString().slice(0, 16);
                 }
             }
         },
@@ -764,7 +812,6 @@ export default {
             event.projectId = null;
             event.projectName = '';
         },
-
         /**
          * Creates an event and reloads all events
          *
@@ -772,7 +819,7 @@ export default {
          */
         async updateOrCreateEvent(event) {
             if (this.removeNotificationOnAction && (this.selectedRoom?.everyone_can_book || this.isAdmin)) {
-              this.isOption = true;
+                this.isOption = true;
             }
             return await axios
                 .put('/events/' + event?.id, this.eventData(event))
@@ -816,5 +863,3 @@ export default {
     },
 }
 </script>
-
-<style scoped></style>

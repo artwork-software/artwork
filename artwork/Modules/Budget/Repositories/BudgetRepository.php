@@ -6,5 +6,4 @@ use Artwork\Core\Database\Repository\BaseRepository;
 
 class BudgetRepository extends BaseRepository
 {
-
 }

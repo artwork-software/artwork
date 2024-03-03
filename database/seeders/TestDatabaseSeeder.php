@@ -11,7 +11,6 @@ class TestDatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             SettingsSeeder::class,
-            TestContentSeeder::class,
             AuthUserSeeder::class,
         ]);
     }

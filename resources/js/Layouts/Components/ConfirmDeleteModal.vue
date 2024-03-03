@@ -4,7 +4,6 @@
             <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0" enter-to="opacity-100" leave="ease-in duration-200" leave-from="opacity-100" leave-to="opacity-0">
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
             </TransitionChild>
-
             <div class="fixed inset-0 z-50 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
@@ -26,16 +25,20 @@
                                 <FormButton
                                     @click="deleteElement(true)"
                                     :text="buttonText" />
-                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">Nein, doch nicht</p>
+                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">
+                                    {{ $t('No, not really') }}
+                                </p>
                             </div>
                             <div v-if="isSeriesDelete" class="flex justify-between mt-5 items-center pr-4">
                                 <FormButton
                                     @click="deleteElement(true)"
                                     :text="buttonText" />
-                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="complete_delete">Serieneintrag komplett löschen</p>
+                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="complete_delete">
+                                    {{ $t('Delete series entry completely') }}
+                                </p>
                             </div>
                             <div v-if="is_budget && !isSeriesDelete" class="flex justify-between mt-5 pl-4 items-center pr-4">
-                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">Weiter ohne zu speichern</p>
+                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">{{ $t('Continue without saving') }}</p>
                                 <FormButton
                                     @click="deleteElement(true)"
                                     :text="buttonText" />
@@ -71,7 +74,7 @@ export default {
     data(){
         return {
             open: true,
-            buttonText: this.button ? this.button : 'Löschen'
+            buttonText: this.button ? this.button : this.$t('Delete')
         }
     },
     props: ['title', 'description', 'button', 'is_budget', 'isSeriesDelete'],
@@ -89,7 +92,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

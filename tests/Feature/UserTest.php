@@ -54,9 +54,14 @@ test('users can update update other users', function () {
 
 test('users cannot update users without permission', function () {
 
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'first_name' => 'updater user'
+    ]);
+    $user->revokePermissionTo(\App\Enums\PermissionNameEnum::TEAM_UPDATE->value);
 
-    $user_to_edit = User::factory()->create();
+    $user_to_edit = User::factory()->create([
+        'first_name' => 'updated user'
+    ]);
 
     $this->actingAs($user);
 

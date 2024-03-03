@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -25,4 +24,9 @@ class CollectingSociety extends Model
     protected $fillable = [
         'name'
     ];
+
+    public function prunable(): Builder
+    {
+        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
+    }
 }

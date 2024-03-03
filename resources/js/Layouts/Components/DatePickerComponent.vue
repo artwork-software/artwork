@@ -24,7 +24,7 @@
                                  v-model="dateValuePicker"/>
     </div>
     <div class="font-medium text-gray-900" v-else>
-        Projektzeitraum: {{new Date(dateValueArray[0]).format("DD.MM.YYYY")}} - {{new Date(dateValueArray[1]).format("DD.MM.YYYY")}}
+        {{$t('Project period')}}: {{new Date(dateValueArray[0]).format("DD.MM.YYYY")}} - {{new Date(dateValueArray[1]).format("DD.MM.YYYY")}}
     </div>
     <div v-if="hasError" class="text-error mt-1 mx-2">{{ errorMessage }}</div>
 </template>
@@ -40,88 +40,11 @@ import {CalendarIcon} from "@heroicons/vue/outline";
 import Permissions from "@/mixins/Permissions.vue";
 
 
-const datePickerOptions = ref({
-    shortcuts: {
-        today: 'Heute',
-        yesterday: 'Gestern',
-        past: period => 'Letzte ' + period + ' Tage',
-        currentMonth: 'Aktueller Monat',
-        pastMonth: 'Letzter Monat'
-    },
-    footer: {
-        apply: 'Anwenden',
-        cancel: 'Abbrechen'
-    }
-})
 const formatter = ref({
     date: 'YYYY-MM-DD',
     month: 'MMM'
 })
 
-const customShortcuts = () => {
-    return [
-        {
-            label: 'Heute',
-            atClick: () => {
-                const date = new Date();
-                return [
-                    new Date(),
-                    new Date()
-                ];
-            }
-        },
-        {
-            label: 'Aktuelle Woche',
-            atClick: () => {
-                const today = new Date();
-                const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)));
-                const lastDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + 6));
-
-                return [firstDayOfWeek, lastDayOfWeek];
-            }
-        },
-        {
-            label: 'Aktueller Monat',
-            atClick: () => {
-                const today = new Date();
-                const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-                const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-                return [firstDayOfMonth, lastDayOfMonth];
-            }
-        },
-        {
-            label: 'Aktuelles Jahr',
-            atClick: () => {
-                const today = new Date();
-                const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
-                const lastDayOfYear = new Date(today.getFullYear(), 11, 31);
-
-                return [firstDayOfYear, lastDayOfYear];
-            }
-        },
-        {
-            label: 'Nächste 30 Tage',
-            atClick: () => {
-                const today = new Date();
-                const next30DaysStart = new Date(today.setDate(today.getDate() + 1));
-                const next30DaysEnd = new Date(today.setDate(today.getDate() + 29));
-
-                return [next30DaysStart, next30DaysEnd];
-            }
-        },
-        {
-            label: 'Nächste 90 Tage',
-            atClick: () => {
-                const today = new Date();
-                const next90DaysStart = new Date(today.setDate(today.getDate() + 1));
-                const next90DaysEnd = new Date(today.setDate(today.getDate() + 89));
-
-                return [next90DaysStart, next90DaysEnd];
-            }
-        }
-    ]
-}
 
 export default {
     mixins: [Permissions],
@@ -131,14 +54,88 @@ export default {
     data() {
         return {
             dateValue: this.dateValueArray ? this.dateValueArray : [],
-            datePickerOptions: datePickerOptions,
+            datePickerOptions: {
+                shortcuts: {
+                    today: this.$t('Today'),
+                    yesterday: this.$t('Yesterday'),
+                    past: period => this.$t('Last {0} days' , [period]),
+                    currentMonth: this.$t('Current month'),
+                    pastMonth: this.$t('Past month')
+                },
+                footer: {
+                    apply: this.$t('Apply'),
+                    cancel: this.$t('Cancel')
+                }
+            },
             dateValuePicker: this.dateValueArray ? this.dateValueArray: [],
             formatter: formatter,
             showDateRangePicker: false,
             refreshPage: false,
-            customShortcuts: customShortcuts,
+            customShortcuts: [
+                {
+                    label: this.$t('Today'),
+                    atClick: () => {
+                        const date = new Date();
+                        return [
+                            new Date(),
+                            new Date()
+                        ];
+                    }
+                },
+                {
+                    label: this.$t('Current week'),
+                    atClick: () => {
+                        const today = new Date();
+                        const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)));
+                        const lastDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + 6));
+
+                        return [firstDayOfWeek, lastDayOfWeek];
+                    }
+                },
+                {
+                    label: this.$t('Current month'),
+                    atClick: () => {
+                        const today = new Date();
+                        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+                        return [firstDayOfMonth, lastDayOfMonth];
+                    }
+                },
+                {
+                    label: this.$t('Current year'),
+                    atClick: () => {
+                        const today = new Date();
+                        const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+                        const lastDayOfYear = new Date(today.getFullYear(), 11, 31);
+
+                        return [firstDayOfYear, lastDayOfYear];
+                    }
+                },
+                {
+                    label: this.$t('Next 30 days'),
+                    atClick: () => {
+                        const today = new Date();
+                        const next30DaysStart = new Date(today.setDate(today.getDate() + 1));
+                        const next30DaysEnd = new Date(today.setDate(today.getDate() + 29));
+
+                        return [next30DaysStart, next30DaysEnd];
+                    }
+                },
+                {
+                    label: this.$t('Next 90 days'),
+                    atClick: () => {
+                        const today = new Date();
+                        const next90DaysStart = new Date(today.setDate(today.getDate() + 1));
+                        const next90DaysEnd = new Date(today.setDate(today.getDate() + 89));
+
+                        return [next90DaysStart, next90DaysEnd];
+                    }
+                }
+            ],
             errorMessage: '',
             hasError: false,
+
         }
     },
     watch: {
@@ -155,7 +152,7 @@ export default {
             const endDate = new Date(this.dateValueArray[1]);
 
             if (endDate < startDate) {
-                this.errorMessage = 'Das Enddatum muss nach dem Startdatum liegen.';
+                this.errorMessage = this.$t('The end date must be after the start date.');
                 this.hasError = true;
             } else {
                 this.errorMessage = '';

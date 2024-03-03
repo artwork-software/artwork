@@ -5,12 +5,12 @@
                 <img src="/Svgs/Logos/artwork_logo_big.svg"/>
             </div>
             <div class="flex items-center">
-                <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">Administrator erstellen</h2>
+                <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">{{$t('Create administrator')}}</h2>
                 <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
             </div>
             <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3 mt-1">
-                    <label for="first_name" class="text-sm font-bold text-secondary">Vorname</label>
+                    <label for="first_name" class="text-sm font-bold text-secondary">{{ $t('First name')}}</label>
                     <input
                         v-model="form.first_name"
                         id="first_name"
@@ -19,7 +19,7 @@
                         class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
-                    <label for="last_name" class="text-sm font-bold text-secondary">Name</label>
+                    <label for="last_name" class="text-sm font-bold text-secondary">{{  $t('name') }}</label>
                     <input
                         v-model="form.last_name"
                         id="last_name"
@@ -28,7 +28,7 @@
                         class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
-                    <label for="email" class="text-sm font-bold text-secondary">Email</label>
+                    <label for="email" class="text-sm font-bold text-secondary">{{  $t('Email') }}</label>
                     <input
                         v-model="form.email"
                         id="email"
@@ -37,7 +37,7 @@
                         class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
-                    <label for="phoneNumber" class="text-sm font-bold text-secondary">Telefonnummer</label>
+                    <label for="phoneNumber" class="text-sm font-bold text-secondary">{{ $t('Phone number') }}</label>
                     <input
                         v-model="form.phone_number"
                         id="phoneNumber"
@@ -45,7 +45,7 @@
                         class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
-                    <label for="business" class="text-sm font-bold text-secondary">Unternehmen</label>
+                    <label for="business" class="text-sm font-bold text-secondary">{{ $t('Company')}}</label>
                     <input
                         v-model="form.business"
                         id="business"
@@ -55,7 +55,7 @@
                 </div>
 
                 <div class="sm:col-span-3 mt-1">
-                    <label for="position" class="text-sm font-bold text-secondary">Position</label>
+                    <label for="position" class="text-sm font-bold text-secondary">{{ $t('Position')}}</label>
                     <input
                         v-model="form.position"
                         id="position"
@@ -67,7 +67,7 @@
 
             <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3 mt-1">
-                    <label for="password" class="text-sm font-bold text-secondary">Passwort</label>
+                    <label for="password" class="text-sm font-bold text-secondary">{{ $t('Password')}}</label>
                     <input
                         v-model="form.password"
                         id="password"
@@ -80,7 +80,7 @@
 
                 <div v-if="form.password.length>0" class="sm:col-span-3 flex items-center">
 
-                    <span class="text-xs text-secondary">Schwach</span>
+                    <span class="text-xs text-secondary">{{$t('Weak')}}</span>
 
                     <div class="mx-6 mt-1 w-full bg-gray-200 h-1 dark:bg-gray-700">
                         <div :class="[pw_feedback < 1
@@ -92,22 +92,21 @@
                         </div>
                     </div>
 
-                    <span class="text-xs">Stark</span>
+                    <span class="text-xs">{{ $t('Strong')}}</span>
                 </div>
             </div>
             <div class="flex items-center text-secondary">
                 <SvgCollection svgName="arrowTopLeft" class="m-3"/>
 
                 <div class="hind w-full">
-                    Das Passwort muss mind. 10 Zeichen lang sein, mind. 1 Ziffer, Groß- und Kleinbuchstaben und
-                    Sonderzeichen beinhalten.
+                    {{ $t('The password must be at least 10 characters long, contain at least 1 digit, upper and lower case letters and special characters.')}}
                 </div>
             </div>
 
             <button type="submit"
                 class="px-28 py-3 mt-5 bg-indigo-900 hover:bg-secondary text-xl uppercase text-white disabled:bg-secondary disabled:cursor-not-allowed"
                 :disabled="form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === ''">
-                Registrieren
+                {{$t('Register')}}
             </button>
         </form>
     </div>

@@ -9,14 +9,14 @@
                 <!--   Heading   -->
                 <div class="my-1">
                     <div class="flex-grow headline1 mb-6">
-                        {{ moneySource.is_group ? 'Finanzierungsquellengruppe' : 'Finanzierungsquelle' }}
+                        {{ moneySource.is_group ? $t('Funding source group') : $t('Source of funding') }}
                     </div>
                     <div class="flex items-center w-full mt-4">
                         <div class="mt-2 xsDark text-xs flex items-center"
                              v-if="moneySource.users">
                             <div class="flex items-center mb-4">
                                 <div class="mr-2">
-                                    zuständig:
+                                    {{ $t('responsible')}}:
                                 </div>
                                 <div v-for="(user,index) in moneySource.users">
                                     <NewUserToolTip :height="7" :width="7" v-if="user"
@@ -25,7 +25,7 @@
                             </div>
                         </div>
                         <div class="flex mt-2 mb-4 ml-12 xsDark items-center">
-                            erstellt von
+                            {{ $t('Created by')}}
                             <div class="ml-1">
                             <NewUserToolTip :height="7" :width="7" v-if="moneySource.creator"
                                             :user="moneySource.creator" :id="moneySource.creator.id + 'creator'"/>
@@ -39,7 +39,7 @@
                                 <input type="text"
                                        v-model="this.editSingleSourceForm.name"
                                        id="sourceName"
-                                       placeholder="Titel*"
+                                       :placeholder="$t('Title*')"
                                        class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                             <div class="flex mb-2 space-x-2">
@@ -47,14 +47,14 @@
                                     <input type="number"
                                            v-model="this.editSingleSourceForm.amount"
                                            id="sourceAmount"
-                                           placeholder="Summe*"
+                                           :placeholder="$t('Sum*')"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                                 <div class="w-1/2">
                                     <input type="text"
                                            v-model="this.editSingleSourceForm.source_name"
                                            id="nameOfSource"
-                                           placeholder="Quelle"
+                                           :placeholder="$t('Source')"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                             </div>
@@ -63,14 +63,14 @@
                                     <input type="date"
                                            v-model="this.editSingleSourceForm.start_date"
                                            id="sourceStartDate"
-                                           placeholder="Laufzeit Start"
+                                           :placeholder="$t('Runtime Start')"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                                 <div class="w-1/2">
                                     <input type="date"
                                            v-model="this.editSingleSourceForm.end_date"
                                            id="sourceEndDate"
-                                           placeholder="Laufzeit Ende"
+                                           :placeholder="$t('Runtime End')"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                             </div>
@@ -79,14 +79,14 @@
                                     <input type="text" onfocus="(this.type='date')"
                                            v-model="this.editSingleSourceForm.funding_start_date"
                                            id="sourceStartDate"
-                                           placeholder="Förderzeitraum Start"
+                                           :placeholder="$t('Funding period Start')"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                                 <div class="w-1/2">
                                     <input type="text" onfocus="(this.type='date')"
                                            v-model="this.editSingleSourceForm.funding_end_date"
                                            id="sourceEndDate"
-                                           placeholder="Förderzeitraum Ende"
+                                           :placeholder="$t('Funding period End')"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                             </div>
@@ -94,7 +94,7 @@
                                 <div class="relative w-full">
                                     <div class="w-full">
                                         <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                               placeholder="Wer ist zuständig?"
+                                               :placeholder="$t('Who is responsible?')"
                                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     </div>
                                     <transition leave-active-class="transition ease-in duration-100"
@@ -129,7 +129,7 @@
                                             {{ user.first_name }} {{ user.last_name }}
                                             </span>
                                             <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
-                                                <span class="sr-only">User aus Finanzierungsquelle entfernen</span>
+                                                <span class="sr-only">{{ $t('Remove user from funding source')}}</span>
                                                 <XIcon
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
@@ -142,7 +142,7 @@
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
-                                    Gehört zu Finanzierungsquellen-Gruppe
+                                    {{ $t('Belongs to funding Sources Group')}}
                                 </label>
                             </div>
                             <div v-if="this.hasGroup" class="mb-2">
@@ -150,7 +150,7 @@
                                     <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
                                         <div class="flex-grow flex text-left xsDark">
                                             {{
-                                                this.selectedMoneySourceGroup ? this.selectedMoneySourceGroup.name : 'Finanzierungsgruppe suchen'
+                                                this.selectedMoneySourceGroup ? this.selectedMoneySourceGroup.name : $t('Search for a funding group')
                                             }}
                                         </div>
                                         <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
@@ -170,11 +170,11 @@
                                 </Listbox>
                             </div>
                             <div class="flex">
-                                    <textarea placeholder="Kommentar/Notiz"
+                                    <textarea :placeholder="$t('Comment / Note')"
                                               id="description"
                                               v-model="this.editSingleSourceForm.description"
                                               rows="4"
-                                              class="border-2 placeholder-xsLight focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                              class="border-2 placeholder-xsLight focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
                             </div>
                             <div class="flex justify-center mt-2">
                                 <AddButton mode="modal" class="text-white resize-none"
@@ -188,14 +188,14 @@
                             <input type="text"
                                    v-model="this.editSourceGroupForm.name"
                                    id="sourceName"
-                                   placeholder="Titel*"
+                                   :placeholder="$t('Title*')"
                                    class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <div class="mb-2">
                             <div class="relative w-full">
                                 <div class="w-full">
                                     <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                           placeholder="Wer ist zuständig?"
+                                           :placeholder="$t('Who is responsible?')"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                                 <transition leave-active-class="transition ease-in duration-100"
@@ -230,7 +230,7 @@
                                             {{ user.first_name }} {{ user.last_name }}
                                             </span>
                                             <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
-                                                <span class="sr-only">User aus Finanzierungsquelle entfernen</span>
+                                                <span class="sr-only">{{ $t('Remove user from funding source')}}</span>
                                                 <XIcon
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
@@ -242,7 +242,7 @@
                             <div class="relative w-full">
                                 <div class="w-full">
                                     <input id="userSearch" v-model="moneySource_query" type="text" autocomplete="off"
-                                           placeholder="Welche Finanzierungsquellen gehören zu dieser Gruppe?"
+                                           :placeholder="$t('Which sources of funding belong to this group?')"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                                 <transition leave-active-class="transition ease-in duration-100"
@@ -281,15 +281,15 @@
                             </div>
                         </div>
                         <div class="flex">
-                                    <textarea placeholder="Kommentar/Notiz"
+                                    <textarea :placeholder="$t('Comment / Note')"
                                               id="description"
                                               v-model="this.editSourceGroupForm.description"
                                               rows="4"
-                                              class="border-2 placeholder-xsLight focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                              class="border-2 placeholder-xsLight focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
                         </div>
                         <div class="flex justify-center mt-2">
                             <AddButton mode="modal" class="bg-primary text-white resize-none"
-                                       @click="editGroupSource()" text="Speichern"/>
+                                       @click="editGroupSource()" :text="$t('Save')"/>
                         </div>
                     </div>
                 </div>
@@ -359,8 +359,8 @@ export default {
     computed: {
         tabs() {
             return [
-                {name: 'Einzelquelle', href: '#', current: this.isSingleSourceTab},
-                {name: 'Gruppe', href: '#', current: this.isGroupTab},
+                {name: this.$t('Single source'), href: '#', current: this.isSingleSourceTab},
+                {name: this.$t('Group'), href: '#', current: this.isGroupTab},
             ]
         },
         subMoneySources() {
@@ -501,7 +501,7 @@ export default {
             this.usersToAdd = [];
             this.isSingleSourceTab = false;
             this.isGroupTab = false;
-            if (selectedTab.name === 'Einzelquelle') {
+            if (selectedTab.name === this.$t('Single source')) {
                 this.isSingleSourceTab = true;
             } else {
                 this.isGroupTab = true;

@@ -1,10 +1,10 @@
 <template>
     <div class="headline3 mb-2">
-        Arbeitsprofil
+        {{ $t('Work profile') }}
     </div>
     <div class="mb-2">
         <div class="headline6Light">
-            Bearbeite das Arbeitsprofil der Nutzer*in hier.
+            {{ $t("Edit the user's work profile here.")}}
         </div>
         <hr class="mb-2">
         <div v-if="this.$page.props.flash.success?.workProfile"
@@ -13,38 +13,38 @@
         </div>
         <div class="w-2/3 mb-2">
             <label for="jobTitle" class="text-sm subpixel-antialiased text-secondary">
-                Arbeitsbezeichnung
+                {{ $t('Job title') }}
             </label>
             <input id="jobTitle"
                    v-model="workProfileForm.workName"
-                   placeholder="Noch keine Bezeichnung angegeben"
+                   :placeholder="$t('No designation specified yet')"
                    type="text"
                    class="w-full text-base font-normal mt-1 inputMain focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"/>
         </div>
         <div class="w-2/3 mb-2">
             <label for="jobDescription" class="text-sm subpixel-antialiased text-secondary">
-                Arbeitsbeschreibung
+                {{ $t('Job description') }}
             </label>
             <textarea
                 id="jobDescription"
                 v-model="workProfileForm.workDescription"
-                placeholder="Noch keine Beschreibung angegeben"
+                :placeholder="$t('No description given yet')"
                 rows="4"
                 class="w-full text-base font-normal mt-1 inputMain resize-none xsDark focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"/>
         </div>
         <div class="w-2/3 flex flex-row justify-center">
             <FormButton
-                text="Speichern"
+                :text="$t('Save')"
                 @click="updateWorkProfile"
                 />
         </div>
     </div>
     <div class="headline3 mb-2">
-        Gewerke
+        {{ $t('Crafts') }}
     </div>
     <div class="mb-2">
         <div class="headline6Light">
-            Gewerkseinstellungen
+            {{ $t('Craft settings') }}
         </div>
         <hr class="mb-2">
         <SwitchGroup as="div" class="flex items-center">
@@ -54,11 +54,11 @@
                       :class="[craftSettingsForm.canBeAssignedToShifts ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
             </Switch>
             <SwitchLabel as="span" class="ml-2 text-sm">
-                <span class="text-secondary">Darf zu Schichten eingeteilt werden</span>
+                <span class="text-secondary">{{ $t('May be assigned to shifts') }}</span>
             </SwitchLabel>
         </SwitchGroup>
         <div class="mt-2 headline6Light">
-            Schicht-Qualifikationen
+            {{ $t('Shift qualifications')}}
         </div>
         <hr class="mb-2">
         <SwitchGroup v-for="shiftQualification in computedShiftQualifications" as="div" class="flex items-center">
@@ -69,13 +69,13 @@
                       :class="[shiftQualification.toggled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
             </Switch>
             <SwitchLabel as="span" class="ml-2 text-sm">
-                <span class="text-secondary">Als {{shiftQualification.name}} einsetzbar</span>
+                <span class="text-secondary">{{ $t('Can be used as {shiftQualificationName}', { shiftQualificationName: shiftQualification.name }) }}</span>
             </SwitchLabel>
         </SwitchGroup>
     </div>
     <div v-if="userType === 'user'" class="mb-2">
         <div class="headline6Light">
-            Schichtplaner für
+            {{ $t('Shift planner for')}}
         </div>
         <hr class="mb-2">
         <div class="flex flex-row">
@@ -85,13 +85,13 @@
                           :key="craft.id"
                           :displayed-text="craft.name" hide-x="true"/>
             <span v-else class="text-xs text-gray-500">
-                Nicht als Schichtplaner zugeteilt.
+                {{ $t('Not assigned as shift planner.') }}
             </span>
         </div>
     </div>
     <div v-if="this.craftSettingsForm.canBeAssignedToShifts" class="mb-2">
         <div class="headline6Light">
-            In folgenden Gewerken einsetzbar
+            {{  $t('Can be used in the following crafts') }}
         </div>
         <hr class="mb-2">
         <div v-if="this.$page.props.flash.success?.craft"
@@ -99,7 +99,7 @@
             {{ this.$page.props.flash.success?.craft }}
         </div>
         <label for="selectedCraftToAdd" class="text-sm subpixel-antialiased text-secondary">
-            Neue Gewerke zuordnen
+            {{  $t('Assign new crafts') }}
         </label>
         <div class="w-full mb-2 flex items-center">
             <Listbox as="div" id="selectedCraftToAdd" class="w-2/3 relative" v-model="this.selectedCraftToAssign">
@@ -112,7 +112,7 @@
                         }}
                     </div>
                     <div v-else class="flex-grow xsLight text-left subpixel-antialiased">
-                        Gewerk wählen
+                        {{  $t('Select craft') }}
                     </div>
                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                 </ListboxButton>
@@ -120,7 +120,7 @@
                     <ListboxOption v-if="this.user.assignableCrafts.length === 0" :key="0" :value="null"
                                    class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between ">
                         <div class="h-5 text-gray-300">
-                            Es gibt keine weiteren Gewerke die zugeordnet werden können.
+                            {{ $t('There are no other crafts that can be assigned.') }}
                         </div>
                     </ListboxOption>
                     <ListboxOption v-else v-for="assignableCraft in this.user.assignableCrafts"
@@ -137,7 +137,7 @@
             </Listbox>
             <AddButtonSmall
                 :disabled="this.selectedCraftToAssign === null"
-                text="Gewerk zuordnen"
+                :text="$t('Assign craft')"
                 @click="assignCraft()"
                 class="ml-4"
                 />

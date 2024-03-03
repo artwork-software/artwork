@@ -1,7 +1,7 @@
 <template>
     <div class="w-full mt-24">
         <div class="w-full flex items-center">
-            <div class="text-secondary text-md">Kostenträger: {{ project?.cost_center?.name }}</div>
+            <div class="text-secondary text-md">{{$t('Cost unit:')}} {{ project?.cost_center?.name }}</div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                            @click="openCopyrightModal"/>
             <ProjectCopyrightModal
@@ -13,18 +13,18 @@
                 :collecting-societies="collectingSocieties"
             />
         </div>
-        <div class="text-secondary text-md">Urheberrecht: {{ project.own_copyright ? 'Ja' : 'Nein' }}</div>
+        <div class="text-secondary text-md">{{$t('Copyright')}}: {{ project.own_copyright ? $t('Yes') : $t('No') }}</div>
         <div class="text-secondary text-sm mt-2" v-if="project.own_copyright">
             {{ project?.collecting_society?.name }},
-            {{ project.law_size === "SMALL" ? 'kleines Recht' : 'großes Recht' }},
-            {{ project.live_music ? 'mit Livemusik' : 'ohne Livemusik' }}
+            {{ project.law_size === "SMALL" ? $t('Small law') : $t('Big law') }},
+            {{ project.live_music ? $t('with live music') : $t('without live music') }}
         </div>
         <div class="text-secondary text-sm"  v-if="project.own_copyright">{{ project.cost_center_description }}</div>
 
         <hr class="my-10 border-darkGray">
 
         <div class="w-full flex items-center mb-4" v-if="this.$canAny(['can manage global project budgets']) || this.hasAdminRole() || this.hasBudgetAccess() || this.projectManagerIds.includes(this.$page.props.user.id)">
-            <div class="text-secondary text-md">Dokumente</div>
+            <div class="text-secondary text-md">{{$t('Documents')}}</div>
             <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showProjectFiles ? 'rotate-180' : '']"
                              @click="showProjectFiles = !showProjectFiles"/>
             <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
@@ -60,7 +60,7 @@
                 />
             </div>
             <div v-else>
-                <div class="text-secondary text-sm mt-2">Keine Dokumente vorhanden</div>
+                <div class="text-secondary text-sm mt-2">{{$t('No documents available')}}</div>
             </div>
         </div>
         <div
@@ -68,7 +68,7 @@
             <hr class="my-10 border-darkGray">
 
             <div class="w-full flex items-center mb-4">
-                <div class="text-secondary text-md">Verträge</div>
+                <div class="text-secondary text-md">{{ $t('Contracts')}}</div>
                 <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showContracts ? 'rotate-180' : '']"
                                  @click="showContracts = !showContracts"/>
                 <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
@@ -101,7 +101,7 @@
                     </div>
                 </div>
                 <div v-else>
-                    <div class="text-secondary text-sm mt-2">Keine Verträge vorhanden</div>
+                    <div class="text-secondary text-sm mt-2">{{$t('No contracts available')}}</div>
                 </div>
 
             </div>
@@ -110,7 +110,7 @@
                 <hr class="my-10 border-darkGray">
 
                 <div class="w-full flex items-center mb-4">
-                    <div class="text-secondary text-md">Verlinkte Finanzierungsquellen</div>
+                    <div class="text-secondary text-md">{{$t('Linked sources of funding')}}</div>
                     <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySources ? 'rotate-180' : '']"
                                      @click="showMoneySources = !showMoneySources"/>
                 </div>
@@ -126,7 +126,7 @@
                         </div>
                     </div>
                     <div v-else>
-                        <div class="text-secondary text-sm mt-2">Keine Finanzierungsquellen vorhanden</div>
+                        <div class="text-secondary text-sm mt-2">{{$t('No sources of funding available')}}</div>
                     </div>
                 </div>
             </div>

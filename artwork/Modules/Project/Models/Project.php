@@ -50,6 +50,7 @@ use Laravel\Scout\Searchable;
  * @property int $is_group
  * @property int $state
  * @property string $budget_deadline
+ * @property Table|null $table
  */
 class Project extends Model
 {
@@ -218,7 +219,7 @@ class Project extends Model
 
     public function prunable(): Builder
     {
-        return static::where('deleted_at', '<=', now()->subMonth());
+        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
     }
 
     public function groups(): BelongsToMany

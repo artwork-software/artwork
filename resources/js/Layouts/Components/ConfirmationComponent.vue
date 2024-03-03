@@ -15,11 +15,11 @@
                 <div class="flex justify-between mt-6">
                     <FormButton
                         @click="closeModal(true)"
-                        :text="confirm ?? 'Ja'"
+                        :text="confirm ?? $t('Yes')"
                     />
                     <div class="my-auto xsLight cursor-pointer"
                         @click="closeModal(false)">
-                        {{ cancel ?? 'Nein, doch nicht' }}
+                        {{ cancel ?? $t('No, not really') }}
                     </div>
                 </div>
             </div>

@@ -70,7 +70,7 @@ class EventTypeController extends Controller
             'abbreviation'
         ));
 
-        return Redirect::route('event_types.management')->with('success', 'EventType updated');
+        return Redirect::route('event_types.management');
     }
 
     /**
@@ -88,7 +88,7 @@ class EventTypeController extends Controller
             }
             $eventType->delete();
 
-            return Redirect::route('event_types.management')->with('success', 'EventType deleted');
+            return Redirect::route('event_types.management');
         } else {
             return response()->json(['error' => 'This EventType cant be deleted.'], 403);
         }

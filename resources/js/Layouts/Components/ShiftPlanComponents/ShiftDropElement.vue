@@ -346,19 +346,18 @@ export default defineComponent({
 
             switch (userType) {
                 case 0:
-                    userDescription = 'Mitarbeiter*in';
+                    userDescription = this.$t('Employee');
                     break;
                 case 1:
-                    userDescription = 'Externe/r Mitarbeiter*in';
+                    userDescription = this.$t('Freelancer');
                     break;
                 case 2:
-                    userDescription = 'Dienstleister*in';
+                    userDescription = this.$t('ServiceProvider');
                     break;
             }
 
             this.$emit(
-                'dropFeedback',
-                userDescription + ' bereits zur Schicht eingeteilt.'
+                'dropFeedback', this.$t('{0} already assigned to a shift.', userDescription)
             );
         },
         droppedUserCannotBeAssignedToCraft(droppedUser) {
@@ -369,19 +368,19 @@ export default defineComponent({
 
             switch (userType) {
                 case 0:
-                    userDescription = 'Mitarbeiter*in';
+                    userDescription = this.$t('Employee');
                     break;
                 case 1:
-                    userDescription = 'Externe/r Mitarbeiter*in';
+                    userDescription = this.$t('Freelancer');
                     break;
                 case 2:
-                    userDescription = 'Dienstleister*in';
+                    userDescription = this.$t('ServiceProvider');
                     break;
             }
 
             this.$emit(
                 'dropFeedback',
-                userDescription + ' kann nicht zu Schichten von diesem Gewerk zugewiesen werden.'
+                this.$t('{0} cannot be assigned to shifts of this craft.', userDescription)
             );
         },
         droppedUserHasNoQualifications(droppedUser) {
@@ -392,20 +391,19 @@ export default defineComponent({
 
             switch (userType) {
                 case 0:
-                    userDescription = 'Mitarbeiter*in';
+                    userDescription = this.$t('Employee');
                     break;
                 case 1:
-                    userDescription = 'Externe/r Mitarbeiter*in';
+                    userDescription = this.$t('Freelancer');
                     break;
                 case 2:
-                    userDescription = 'Dienstleister*in';
+                    userDescription = this.$t('ServiceProvider');
                     break;
             }
 
             this.$emit(
                 'dropFeedback',
-                userDescription + ' besitzt keine zugewiesenen Qualifikationen und kann daher nicht' +
-                    ' zugeordnet werden.'
+                this.$t('{0} has no qualifications and therefore cannot be assigned.', userDescription)
             );
         },
         dropFeedbackNoSlotsForQualification(userType) {
@@ -413,20 +411,19 @@ export default defineComponent({
 
             switch (userType) {
                 case 0:
-                    userDescription = 'diesem/dieser Mitarbeiter*in';
+                    userDescription = this.$t('Employee');
                     break;
                 case 1:
-                    userDescription = 'diesem/dieser externe Mitarbeiter*in';
+                    userDescription = this.$t('Freelancer');
                     break;
                 case 2:
-                    userDescription = 'diesem/dieser Dienstleister*in';
+                    userDescription = this.$t('ServiceProvider');
                     break;
             }
 
             this.$emit(
                 'dropFeedback',
-                'Es gibt keine Position die von ' + userDescription +
-                ' mit den verfügbaren Qualifikationen besetzt werden kann.'
+                this.$t('There is no position that can be filled by {0} with the available qualifications.', userDescription)
             );
         },
         openMultipleShiftQualificationSlotsAvailableModal(droppedUser, availableShiftQualificationSlots) {

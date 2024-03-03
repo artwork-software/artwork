@@ -12,9 +12,10 @@ class TaskDashboardResource extends JsonResource
     /**
      * @return array<string, mixed>
      */
-    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass, Generic.Metrics.CyclomaticComplexity.TooHigh
     public function toArray($request): array
     {
+        $deadline = $this->deadline ? Carbon::parse($this->deadline) : null;
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -22,8 +23,8 @@ class TaskDashboardResource extends JsonResource
             'projectName' => $this->checklist?->project?->name,
             'projectId' => $this->checklist?->project?->id,
             'description' => $this->description,
-            'deadline' => $this->deadline ? Carbon::parse($this->deadline)->format('d.m.Y, H:i') : null,
-            'isDeadlineInFuture' => $this->deadline?->isFuture(),
+            'deadline' =>  $deadline?->format('d.m.Y, H:i'),
+            'isDeadlineInFuture' => $deadline?->isFuture(),
             'done' => $this->done,
             'done_by_user' => $this->user_who_done,
             'done_at' => $this->done_at?->format('d.m.Y, H:i'),

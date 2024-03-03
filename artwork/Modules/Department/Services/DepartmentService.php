@@ -112,13 +112,15 @@ class DepartmentService
 
         foreach ($previousTeamMemberIds as $previousTeamMemberId) {
             if (!$currentTeamMemberIds->contains($previousTeamMemberId)) {
+                $user = $this->userService->findUser($previousTeamMemberId);
                 $this->sendTeamNotification(
-                    'Du wurdest aus Team ' . $department->name . ' gelöscht',
+                    //'Du wurdest aus Team ' . $department->name . ' gelöscht',
+                    __('notification.department.remove', ['department' => $department->name], $user->language),
                     'red',
                     2,
                     'error',
                     $department->id,
-                    $this->userService->findUser($previousTeamMemberId)
+                    $user
                 );
             }
         }
@@ -134,7 +136,7 @@ class DepartmentService
     {
         foreach ($this->departmentRepository->getDepartmentUsers($department) as $user) {
             $this->sendTeamNotification(
-                'Team "' . $department->name . '" wurde gelöscht',
+                __('notification.department.delete', ['department' => $department->name], $user->language),
                 'red',
                 2,
                 'error',
@@ -156,7 +158,7 @@ class DepartmentService
     public function sendAddedToDepartmentNotification(Department $department, User $user): void
     {
         $this->sendTeamNotification(
-            'Du wurdest zu Team ' . $department->name . ' hinzugefügt',
+            __('notification.department.add', ['department' => $department->name], $user->language),
             'green',
             3,
             'success',

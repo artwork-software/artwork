@@ -4,14 +4,14 @@
             <div class="flex flex-1 flex-wrap">
                 <div class="flex justify-between w-full">
                     <div class="flex gap-x-4">
-                        <h2 class="headline1 flex">Checklistenvorlagen</h2>
+                        <h2 class="headline1 flex">{{ $t('Checklist templates')}}</h2>
                         <Link class="-mt-1" :href="route('checklist_templates.create')">
-                            <AddButtonSmall text="Neue Vorlage" />
+                            <AddButtonSmall :text="$t('New template')" />
                         </Link>
                         <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                             <span
-                                class="ml-1 mt-2 hind">Lege neue Checklistenvorlagen an</span>
+                                class="ml-1 mt-2 hind">{{$t('Create new checklist templates')}}</span>
                         </div>
                     </div>
                     <div class="flex items-center">
@@ -20,7 +20,7 @@
                             <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                         </div>
                         <div v-else class="flex items-center w-full w-64 mr-12">
-                            <inputComponent v-model="template_query" placeholder="Suche nach Projekten" />
+                            <inputComponent v-model="template_query" :placeholder="$t('Search for projects')" />
                             <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                         </div>
                     </div>
@@ -34,8 +34,8 @@
                             <div class="flex my-auto items-center">
                                 <Link :href="getEditHref(template)" class="mr-3 sDark">
                                     {{ template.name }} </Link>
-                                <p class="ml-1 xsLight my-auto"> angelegt am
-                                    {{ template.created_at }} von
+                                <p class="ml-1 xsLight my-auto">
+                                    {{ $t('created on { created_at } by', { created_at: template.created_at })}}
                                 </p>
                                 <UserPopoverTooltip :height="6" :width="6" :user="template.user" :id="template.user.id" class="ml-2"/>
                             </div>
@@ -58,7 +58,7 @@
                                         </div>
                                         <div class="flex">
                                                     <span
-                                                        class="ml-2 hind mt-2">Bearbeite eine Vorlage</span>
+                                                        class="ml-2 hind mt-2">{{ $t('Edit a template')}}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -73,11 +73,11 @@
                                         <div class="py-1">
                                             <MenuItem v-slot="{ active }">
                                                 <a :href="getEditHref(template)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                                     <PencilAltIcon
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
-                                                    Bearbeiten
+                                                    {{ $t('edit')}}
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }">
@@ -86,7 +86,7 @@
                                                     <DuplicateIcon
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
-                                                    Duplizieren
+                                                    {{$t('Duplicate')}}
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }">
@@ -95,7 +95,7 @@
                                                     <TrashIcon
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
-                                                    Löschen
+                                                    {{ $t('Delete') }}
                                                 </a>
                                             </MenuItem>
                                         </div>
@@ -112,8 +112,8 @@
                             <div class="flex my-auto items-center">
                                 <p class="mr-3 sDark">
                                     {{ template.name }} </p>
-                                <p class="ml-1 xsLight my-auto"> angelegt am
-                                    {{ template.created_at }} von
+                                <p class="ml-1 xsLight my-auto">
+                                    {{ $t('created on { created_at } by', { created_at: template.created_at })}}
                                 </p>
                                 <UserPopoverTooltip :height="6" :width="6" :user="template.user" :id="template.user.id" class="ml-2"/>
                             </div>
@@ -136,7 +136,7 @@
                                         </div>
                                         <div class="flex">
                                                     <span
-                                                        class="ml-2 hind mt-2">Bearbeite eine Vorlage</span>
+                                                        class="ml-2 hind mt-2">{{ $t('Edit a template')}}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -151,11 +151,11 @@
                                         <div class="py-1">
                                             <MenuItem v-slot="{ active }">
                                                 <a :href="getEditHref(template)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                                     <PencilAltIcon
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
-                                                    Bearbeiten
+                                                    {{ $t('edit')}}
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }">
@@ -164,7 +164,7 @@
                                                     <DuplicateIcon
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
-                                                    Duplizieren
+                                                    {{$t('Duplicate')}}
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }">
@@ -173,7 +173,7 @@
                                                     <TrashIcon
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
-                                                    Löschen
+                                                    {{ $t('Delete') }}
                                                 </a>
                                             </MenuItem>
                                         </div>
@@ -191,23 +191,23 @@
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="headline1 my-2">
-                        Checklistenvorlage löschen
+                        {{$t('Delete checklist template')}}
                     </div>
                     <XIcon @click="closeDeleteTemplateModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="errorText">
-                        Bist du sicher, dass du die Checklistenvorlage {{ templateToDelete.name }} löschen möchtest?
+                        {{ $t('Are you sure you want to delete the checklist template {0}?', [templateToDelete.name])}}
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="deleteTemplate">
-                            Löschen
+                            {{  $t('Delete') }}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteTemplateModal()"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -321,11 +321,11 @@ export default {
         },
         openSuccessModal(type){
             if(type === 'delete'){
-                this.successHeading = 'Löschen erfolgreich';
-                this.successText = 'Die Checklistenvorlage wurde erfolgreich gelöscht.';
+                this.successHeading = this.$t('Delete successful');
+                this.successText = this.$t('The checklist template has been successfully deleted.')
             }else if(type === 'edit'){
-                this.successHeading = 'Checklistenvorlage erfolgreich bearbeitet';
-                this.successText = 'Die Änderungen wurden erfolgreich gespeichert.';
+                this.successHeading = this.$t('Checklist template successfully edited');
+                this.successText = this.$t('The changes have been saved successfully.');
             }
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)

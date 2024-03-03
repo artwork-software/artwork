@@ -4,30 +4,29 @@
             <!-- Greetings Div -->
             <div class="mr-2 w-4/6">
                 <div class="ml-12 mt-10">
-                    <h2 class="headline1 flex mb-4">Benachrichtigungen</h2>
+                    <h2 class="headline1 flex mb-4">{{$t('Notifications')}}</h2>
                 </div>
             </div>
-
         </div>
         <div class="ml-12 mt-8">
             <div class="mb-4 border-gray-200 dark:border-gray-700">
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
                     <li class="mr-2" role="presentation">
                         <button
-                            :class="[openTab === 'notifications' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']"
-                            @click="openTab = 'notifications'">BENACHRICHTIGUNGEN
+                            :class="[openTab === 'notifications' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                            @click="openTab = 'notifications'">{{$t('Notifications')}}
                         </button>
                     </li>
                     <li class="mr-2" role="presentation">
                         <button
-                            :class="[openTab === 'mailSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']"
-                            @click="openTab = 'mailSettings'">E-MAIL-EINSTELLUNGEN
+                            :class="[openTab === 'mailSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                            @click="openTab = 'mailSettings'">{{$t('E-mail settings')}}
                         </button>
                     </li>
                     <li class="mr-2" role="presentation">
                         <button
-                            :class="[openTab === 'pushSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']"
-                            @click="openTab = 'pushSettings'">PUSH-EINSTELLUNGEN
+                            :class="[openTab === 'pushSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold uppercase']"
+                            @click="openTab = 'pushSettings'">{{ $t('Push settings')}}
                         </button>
                     </li>
                 </ul>
@@ -37,7 +36,7 @@
                     <div class="col-span-8">
                         <!-- Raumbelegungen und Termine Notifications -->
                         <NotificationSectionComponent :readNotifications="readNotifications['EVENTS']"
-                                                      name="Raumbelegungen & Termine" :rooms="rooms"
+                                                      :name="$t('Room bookings & events')" :rooms="rooms"
                                                       :projects="projects"
                                                       :event-types="eventTypes"
                                                       :notifications="notifications['EVENTS']"
@@ -48,7 +47,7 @@
                                                       :room-collisions="roomCollisions"/>
                         <!-- Räume und Raumbelegungsanfragen -->
                         <NotificationSectionComponent :readNotifications="readNotifications['ROOMS']"
-                                                      name="Räume & Raumbelegungsanfragen" :rooms="rooms"
+                                                      :name="$t('Rooms & room booking requests')" :rooms="rooms"
                                                       :projects="projects" :event-types="eventTypes"
                                                       :notifications="notifications['ROOMS']"
                                                       :history-objects="historyObjects"
@@ -57,7 +56,7 @@
                                                       :project="project"
                                                       :room-collisions="roomCollisions"/>
                         <!-- Aufgaben -->
-                        <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" name="Aufgaben"
+                        <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" :name="$t('Tasks')"
                                                       :rooms="rooms" :projects="projects" :event-types="eventTypes"
                                                       :notifications="notifications['TASKS']"
                                                       :history-objects="historyObjects"
@@ -67,7 +66,7 @@
                                                       :room-collisions="roomCollisions"/>
                         <!-- Projekte & Teams -->
                         <NotificationSectionComponent :readNotifications="readNotifications['PROJECTS']"
-                                                      name="Projekte & Teams" :rooms="rooms" :projects="projects"
+                                                      :name="$t('Projects & Teams')" :rooms="rooms" :projects="projects"
                                                       :event-types="eventTypes"
                                                       :notifications="notifications['PROJECTS']"
                                                       :history-objects="historyObjects"
@@ -76,7 +75,7 @@
                                                       :project="project"
                                                       :room-collisions="roomCollisions"/>
                         <NotificationSectionComponent :readNotifications="readNotifications['BUDGET']"
-                                                      name="Projektbudgets & Finanzierungsquellen" :rooms="rooms" :projects="projects"
+                                                      :name="$t('Project budgets & sources of funding')" :rooms="rooms" :projects="projects"
                                                       :event-types="eventTypes"
                                                       :notifications="notifications['BUDGET']"
                                                       :history-objects="historyObjects"
@@ -85,7 +84,7 @@
                                                       :project="project"
                                                       :room-collisions="roomCollisions"/>
                         <NotificationSectionComponent :readNotifications="readNotifications['SHIFTS']"
-                                                      name="Schichtplanung" :rooms="rooms" :projects="projects"
+                                                      :name="$t('Shift planning')" :rooms="rooms" :projects="projects"
                                                       :event-types="eventTypes"
                                                       :notifications="notifications['SHIFTS']"
                                                       :history-objects="historyObjects"
@@ -109,9 +108,8 @@
                                 </div>
                             </div>
                         </div>
-
                        <div class="mt-4" v-if="hasAdminRole() || $canAny(['change system notification'])">
-                           <SecondaryButton text="Benachrichtigung an alle ändern" class="col-span-12" @click="showGlobalNotificationModal = true"/>
+                           <SecondaryButton :text="$t('Change notification to all')" class="col-span-12" @click="showGlobalNotificationModal = true"/>
                        </div>
                     </div>
                 </div>
@@ -130,23 +128,11 @@
                 </div>
             </div>
         </div>
-        <event-without-room-new-request-component
-            v-if="showEventWithoutRoomComponent"
-            @closed="onEventWithoutRoomComponentClose()"
-            :showHints="$page.props?.can?.show_hints"
-            :eventTypes="eventTypes"
-            :rooms="rooms"
-            :event="this.eventToEdit"
-            :projects="this.projects"
-            :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
-        />
-
         <GlobalNotificationModal v-if="showGlobalNotificationModal" @closed="showGlobalNotificationModal = false" :global-notification="globalNotification"/>
     </app-layout>
 </template>
 
 <script>
-
 import {defineComponent} from 'vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -159,7 +145,13 @@ import {
     TrashIcon,
     XIcon
 } from '@heroicons/vue/outline'
-import {CheckIcon, ChevronRightIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
+import {
+    CheckIcon,
+    ChevronRightIcon,
+    ChevronUpIcon,
+    PlusSmIcon,
+    XCircleIcon
+} from '@heroicons/vue/solid'
 
 import {
     Listbox,
@@ -179,7 +171,10 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import Checkbox from "@/Layouts/Components/Checkbox";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
+import {
+    Link,
+    useForm
+} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
@@ -187,7 +182,6 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
-import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent";
 import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings";
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent";
 import NotificationPushSettings from "@/Layouts/Components/NotificationPushSettings";
@@ -195,7 +189,6 @@ import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequest
 import Permissions from "@/mixins/Permissions.vue";
 import GlobalNotificationModal from "@/Pages/Notifications/Components/GlobalNotificationModal.vue";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
-
 
 export default defineComponent({
     mixins: [Permissions],
@@ -243,44 +236,29 @@ export default defineComponent({
         ChevronRightIcon,
         NotificationEventInfoRow,
         NotificationUserIcon,
-        EventWithoutRoomNewRequestComponent,
         AnswerEventRequestComponent,
-
     },
-    props: ['historyObjects','notifications', 'rooms', 'eventTypes', 'projects', 'readNotifications', 'notificationSettings', 'notificationFrequencies', 'groupTypes', 'event', 'project', 'wantedSplit', 'roomCollisions', 'globalNotification'],
-    created() {
-
-    },
-    methods: {
-        formatDate(isoDate) {
-            if(isoDate?.split('T').length > 1){
-                return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
-            }else if(isoDate?.split(' ').length > 1){
-                return isoDate.split(' ')[0].substring(8, 10) + '.' + isoDate.split(' ')[0].substring(5, 7) + '.' + isoDate.split(' ')[0].substring(0, 4) + ', ' + isoDate.split(' ')[1].substring(0, 5)
-            }
-        },
-        isErrorType(type, notification) {
-            if (type.indexOf('RoomRequestNotification') !== -1 && notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1 || notification.data.title === 'Termin abgesagt') {
-                return true;
-            }
-            return false;
-        },
-        openEventWithoutRoomComponent(event) {
-            this.eventToEdit = event;
-            this.showEventWithoutRoomComponent = true;
-        },
-        onEventWithoutRoomComponentClose() {
-            this.showEventWithoutRoomComponent = false;
-        },
-    },
-    watch: {},
+    props: [
+        'historyObjects',
+        'notifications',
+        'rooms',
+        'eventTypes',
+        'projects',
+        'readNotifications',
+        'notificationSettings',
+        'notificationFrequencies',
+        'groupTypes',
+        'event',
+        'project',
+        'wantedSplit',
+        'roomCollisions',
+        'globalNotification'
+    ],
     data() {
         return {
             openTab: 'notifications',
             showRoomsAndEvents: true,
             showRoomsAndRoomRequests: true,
-            eventToEdit: null,
-            showEventWithoutRoomComponent: false,
             deleteComponentVisible: false,
             answerRequestModalVisible: false,
             requestToAnswer: null,
@@ -291,8 +269,25 @@ export default defineComponent({
             showGlobalNotificationModal: false
         }
     },
-    setup() {
-        return {}
+    methods: {
+        formatDate(isoDate) {
+            if (isoDate?.split('T').length > 1) {
+                return isoDate.split('T')[0].substring(8, 10) + '.' +
+                    isoDate.split('T')[0].substring(5, 7) + '.' +
+                    isoDate.split('T')[0].substring(0, 4) + ', ' +
+                    isoDate.split('T')[1].substring(0, 5)
+            } else if(isoDate?.split(' ').length > 1) {
+                return isoDate.split(' ')[0].substring(8, 10) + '.' +
+                    isoDate.split(' ')[0].substring(5, 7) + '.' +
+                    isoDate.split(' ')[0].substring(0, 4) + ', ' +
+                    isoDate.split(' ')[1].substring(0, 5)
+            }
+        },
+        isErrorType(type, notification) {
+            return type.indexOf('RoomRequestNotification') !== -1 && notification.data.accepted === false ||
+                type.indexOf('ConflictNotification') !== -1 ||
+                notification.data.title === 'Termin abgesagt';
+        }
     }
 })
 </script>

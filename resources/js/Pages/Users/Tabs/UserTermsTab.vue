@@ -2,14 +2,14 @@
     <div>
         <div>
             <div class="headline3 py-4">
-                Stunden & Vergütung
+                {{ $t('Hours & remuneration')}}
             </div>
 
             <div v-if="user_type !== 'service_provider' && user_type !== 'freelancer'" class="flex">
                 <input type="number" v-model="userForm.weekly_working_hours" placeholder="h"
                        class="w-28 shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block"/>
                 <div class="ml-4 h-10 flex items-center">
-                    h/Woche lt. Vertrag
+                    {{ $t('h/week as per contract') }}
                 </div>
             </div>
             <div class="flex">
@@ -20,7 +20,7 @@
                 </div>
             </div>
             <div class="py-1">
-                            <textarea placeholder="Weitere Informationen (variable Vergütung, Zuschläge, etc.)"
+                            <textarea :placeholder="$t('Further information (variable remuneration, bonuses, etc.)')"
                                       id="salary_description"
                                       v-model="userForm.salary_description"
                                       rows="4"
@@ -30,7 +30,8 @@
 
         <FormButton
             @click="updateUserTerms"
-            text="Änderungen speichern"
+            class="inline-flex items-center"
+            :text="$t('Save changes')"
         />
     </div>
 
@@ -38,24 +39,15 @@
     <SuccessModal
         :show="showSuccessModal"
         @closed="closeSuccessModal"
-        title="Nutzer*in erfolgreich bearbeitet"
-        description="Die Änderungen wurden erfolgreich gespeichert."
-        button="Schließen"
+        :title="$t('User successfully edited')"
+        :description="$t('The changes have been saved successfully.')"
+        :button="$t('Close')"
     />
 
 </template>
 
 <script>
 
-
-import ProjectShowHeaderComponent from "@/Pages/Projects/Components/ProjectShowHeaderComponent.vue";
-import InfoTab from "@/Pages/Projects/Components/TabComponents/InfoTab.vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
-import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
-import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue";
-import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
-import ProjectSidenav from "@/Layouts/Components/ProjectSidenav.vue";
-import UserEditHeader from "@/Pages/Users/Components/UserEditHeader.vue";
 import {CheckIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";

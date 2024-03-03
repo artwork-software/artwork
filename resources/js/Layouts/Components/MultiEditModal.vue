@@ -9,11 +9,11 @@
                 <div>
                     <h1 class="my-1 flex">
                         <div class="flex-grow headline1">
-                            Termine verschieben
+                            {{$t('Move events')}}
                         </div>
                     </h1>
                     <h2  class="xsLight mb-2">
-                        Möchtest du alle selektierten Termine in einen anderen Raum oder um einen bestimmten Zeitraum verschieben?
+                        {{$t('Would you like to move all selected appointments to another room or by a certain period of time?')}}
                     </h2>
                 </div>
 
@@ -22,7 +22,7 @@
                         <Listbox as="div" class="sm:col-span-3" v-model="selectedRoom">
                             <div class="relative">
                                 <ListboxButton class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex justify-between items-center">
-                                    <div v-if="selectedRoom === null">Keine Raumverschiebung</div>
+                                    <div v-if="selectedRoom === null">{{ $t('No room displacement')}}</div>
                                     <div v-else> {{ selectedRoom?.name }}</div>
                                     <div class="mr-3">
                                         <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
@@ -35,7 +35,7 @@
                                                    v-slot="{ active, selected }">
                                         <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
                                             <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
-                                                Keine Raumverschiebung
+                                                {{ $t('No room displacement')}}
                                             </div>
                                             <div v-if="selected">
                                                 <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
@@ -131,7 +131,7 @@
                     <div class="mb-2">
                         <input type="text"
                                v-model="editEvents.date"
-                               :placeholder="editEvents.date === null ? 'Keine Verschiebung auf Datum' : '' "
+                               :placeholder="editEvents.date === null ? $t('No postponement to date') : '' "
                                onfocus="(this.type='date')"
                                id="eventTitle"
                                class="h-12 sDark inputMain placeholder:text-black placeholder:font-semibold text-sm placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
@@ -139,7 +139,7 @@
                     </div>
 
                     <div class="w-full flex justify-center">
-                        <AddButton mode="modal" class="!bg-buttonBlue hover:!bg-buttonHover text-white resize-none py-4 px-6" text="Speichern"  @click="saveMultiEdit"/>
+                        <AddButton mode="modal" class="!bg-buttonBlue hover:!bg-buttonHover text-white resize-none py-4 px-6" :text="$t('Save')"  @click="saveMultiEdit"/>
                     </div>
                 </div>
             </div>
@@ -212,11 +212,11 @@ export default {
                 {id: 2, type: '-'},
             ],
             timeTypes: [
-                {id: 1, value: 'Stunde(n)'},
-                {id: 2, value: 'Tag(e)'},
-                {id: 3, value: 'Woche(n)'},
-                {id: 4, value: 'Monat(e)'},
-                {id: 5, value: 'Jahr(e)'},
+                {id: 1, value: this.$t('Hour(s)')},
+                {id: 2, value: this.$t('Day(s)')},
+                {id: 3, value: this.$t('Week(s)')},
+                {id: 4, value: this.$t('Month(s)')},
+                {id: 5, value: this.$t('Year(s)')},
             ],
             editEvents: useForm({
                 events: this.checkedEvents,
@@ -227,7 +227,7 @@ export default {
                 date: null
             }),
             selectedCalculationType: {id: 1, type: '+'},
-            selectedTimeType: {id: 1, value: 'Stunde(n)'},
+            selectedTimeType: {id: 1, value: this.$t('Hour(s)')},
             selectedRoom: null,
         }
     },

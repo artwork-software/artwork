@@ -18,16 +18,15 @@
                             </div>
                             <div class="relative z-40">
                                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    Neue*r Nutzer*in
+                                    {{ $t('New user') }}
                                 </div>
                                 <p class="xsLight subpixel-antialiased">
-                                    Wen möchtest du zum artwork hinzufügen? Du kannst Nutzer*innen mit artwork-Zugang oder externe Mitarbeiter*innen, sowie Dienstleister (Unternehmen) ohne artwork-Zugang hinzufügen.
+                                    {{ $t('Who would you like to add to artwork? You can add users with artwork access or external employees, as well as service providers (companies) without artwork access.')}}
                                 </p>
 
                                 <div class="mt-10">
                                     <div class="px-6">
                                         <fieldset class="mt-4">
-                                            <legend class="sr-only">Notification method</legend>
                                             <div class="space-y-4">
                                                 <div v-for="addMethod in addMethods" :key="addMethod.id" class="flex items-center">
                                                     <input v-model="selectedMethod" :key="addMethod.id" :value="addMethod" :id="addMethod.id" name="notification-method" type="radio" :checked="addMethod.id === 'intern'" class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600" />
@@ -40,7 +39,7 @@
                             </div>
                             <div class="flex justify-center mt-5">
                                 <FormButton
-                                    text="Hinzufügen"
+                                    :text="$t('Add')"
                                     @click="addUsers"
                                 />
                             </div>
@@ -87,11 +86,11 @@ export default defineComponent({
         return {
             open: true,
             addMethods: [
-                { id: 'intern', title: 'Nutzer*in intern' },
-                { id: 'extern', title: 'Mitarbeiter*in extern ' },
-                { id: 'service_provider', title: 'Dienstleister (Unternehmen)' },
+                { id: 'intern', title: this.$t('Internal user') },
+                { id: 'extern', title: this.$t('External employee') },
+                { id: 'service_provider', title: this.$t('Service provider (company)') },
             ],
-            selectedMethod: { id: 'intern', title: 'Nutzer*in intern' },
+            selectedMethod: { id: 'intern', title: this.$t('Internal user') },
         }
     },
     emits: ['closeModal', 'openUserModal'],

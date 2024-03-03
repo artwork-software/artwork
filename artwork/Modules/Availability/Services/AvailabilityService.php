@@ -29,8 +29,11 @@ class AvailabilityService
         $this->historyService->setModel(Availability::class);
     }
 
+    //@todo: fix phpcs error - fix complexity
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function create(Available $available, $data): Available|Model
     {
+        /** @var Availability $firstAvailable */
         $firstAvailable = $available->availabilities()->create([
             'start_time' => $data->start_time,
             'end_time' => $data->end_time,
@@ -104,7 +107,7 @@ class AvailabilityService
             }
         }
 
-        $this->createHistory($firstAvailable, 'Verfügbarkeit hinzugefügt');
+        $this->createHistory($firstAvailable, 'Availability added');
         $this->announceChanges($firstAvailable);
 
         return $firstAvailable;
@@ -133,35 +136,6 @@ class AvailabilityService
         );
 
         return $newAvailability;
-
-        /*$oldFrom = $availability->from;
-        $oldUntil = $availability->until;
-
-        $availability->from = $from;
-        $availability->until = $until;
-        $vacation = $this->availabilityRepository->save($availability);
-
-        $newFrom = $availability->from;
-        $newUntil = $availability->until;
-
-        if ($oldFrom !== $newFrom) {
-            $this->createHistory(
-                $availability,
-                'Verfügbarkeit geändert von ' . Carbon::parse($oldFrom)
-                    ->format('d.m.Y') . ' zu ' . Carbon::parse($newFrom)->format('d.m.Y')
-            );
-        }
-
-        if ($oldUntil !== $newUntil) {
-            $this->createHistory(
-                $availability,
-                'Verfügbarkeit geändert bis: ' . Carbon::parse($oldUntil)
-                    ->format('d.m.Y') . ' zu ' . Carbon::parse($newUntil)->format('d.m.Y')
-            );
-        }
-        $this->announceChanges($availability);
-
-        return $vacation;*/
     }
 
     public function findVacationsByUserId(int $id): Collection
@@ -189,9 +163,9 @@ class AvailabilityService
         $this->availabilityRepository->delete($availability);
     }
 
-    protected function createHistory(Availability $availability, string $text): void
+    protected function createHistory(Availability $availability, string $translationKey): void
     {
-        $this->historyService->setHistoryText($text);
+        $this->historyService->setTranslationKey($translationKey);
         $this->historyService->setModelId($availability->id);
         $this->historyService->setType('vacation');
         $this->historyService->create();

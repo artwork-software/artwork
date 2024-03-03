@@ -3,7 +3,7 @@
         <div class="ml-9">
            <div class="px-5" v-if="showHeadLine">
                <div class="flex items-center justify-between ">
-                   <h2 class="headline1">Dienstpläne & Schichtvorlagen</h2>
+                   <h2 class="headline1">{{$t('Duty rosters & shift templates')}}</h2>
                </div>
                <ShiftTabs />
 

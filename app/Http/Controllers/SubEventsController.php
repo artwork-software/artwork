@@ -49,7 +49,11 @@ class SubEventsController extends Controller
         $room = $event->room()->first();
         $roomAdmins = $room->users()->wherePivot('is_admin', true)->get();
         foreach ($roomAdmins as $roomAdmin) {
-            $notificationTitle = 'Lauter Termin im Nebenraum';
+            $notificationTitle = __(
+                'notification.event.adjoining_is_loud',
+                [],
+                $roomAdmin->language
+            );
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'error',

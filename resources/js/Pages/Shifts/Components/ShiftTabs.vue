@@ -21,8 +21,8 @@ export default defineComponent({
     data(){
         return {
             tabs: [
-                { name: 'Dienstpläne', href: route('shifts.plan'), current: route().current('shifts.plan') },
-                { name: 'Schichtvorlagen', href: route('shifts.presets'), current: route().current('shifts.presets') }
+                { name: this.$t('Duty rosters'), href: route('shifts.plan'), current: route().current('shifts.plan') },
+                { name: this.$t('Shift templates'), href: route('shifts.presets'), current: route().current('shifts.presets') }
             ]
         }
     }

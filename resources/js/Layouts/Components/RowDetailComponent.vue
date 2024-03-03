@@ -9,7 +9,7 @@
                 <div>
                     <h1 class="my-1 flex">
                         <div class="flex-grow headline1">
-                            Details
+                            {{ $t('Details')}}
                         </div>
                     </h1>
                     <div class="mb-4">
@@ -66,18 +66,16 @@
                     </div>
                     <div v-if="isExcludeTab">
                         <h2 class="xsLight mb-2 mt-4">
-                            Ausgeklammerte Posten werden nicht in das Projektbudget gerechnet. So kannst du zB. internes
-                            Personal, virtuelle Kosten wie Eigenleistungen oä. aufführen, ohne dass diese Einfluss auf
-                            das Projektbudget haben.
+                            {{$t('Excluded items are not included in the project budget. For example, you can list internal personnel, virtual costs such as internal services, etc. without these having an impact on the project budget.')}}
                         </h2>
                         <div class="flex items-center justify-start my-6">
                             <input v-model="isExcluded" type="checkbox"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[isExcluded ? 'xsDark' : 'xsLight']"
-                               class="ml-4 my-auto text-sm"> Ausklammern</p>
+                               class="ml-4 my-auto text-sm"> {{$t('Exclude')}}</p>
                         </div>
                         <div class="flex justify-center">
-                            <AddButton @click="updateCommentedStatus()" text="Speichern"
+                            <AddButton @click="updateCommentedStatus()" :text="$t('Save')"
                                        class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
                         </div>
                     </div>
@@ -148,8 +146,8 @@ export default {
     computed: {
         tabs() {
             return [
-                {name: 'Kommentar', href: '#', current: this.isCommentTab},
-                {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
+                {name: this.$t('Comment'), href: '#', current: this.isCommentTab},
+                {name: this.$t('Exclude'), href: '#', current: this.isExcludeTab},
             ]
         },
     },
@@ -170,9 +168,9 @@ export default {
         changeTab(selectedTab) {
             this.isCommentTab = false;
             this.isExcludeTab = false;
-            if (selectedTab.name === 'Kommentar') {
+            if (selectedTab.name === this.$t('Comment')) {
                 this.isCommentTab = true;
-            } else if (selectedTab.name === 'Ausklammern') {
+            } else if (selectedTab.name === this.$t('Exclude')) {
                 this.isExcludeTab = true;
             }
         },

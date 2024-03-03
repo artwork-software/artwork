@@ -5,12 +5,10 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\FileUpload;
 use Artwork\Modules\Project\Models\Comment;
-
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,40 +67,47 @@ class ProjectFileController extends Controller
             $projectFile->comments()->save($comment);
         }
 
-        $this->history->createHistory($project->id, 'Datei ' . $original_name . ' hinzugefügt', 'public_changes');
+        $this->history->createHistory(
+            $project->id,
+            'Added file',
+            [$original_name],
+            'public_changes'
+        );
         $projectController->setPublicChangesNotification($project->id);
 
         $projectFileUsers =  $projectFile->accessingUsers()->get();
-        $notificationTitle = 'Ein Dokument wurde für dich freigegeben';
-        $broadcastMessage = [
-            'id' => rand(1, 1000000),
-            'type' => 'success',
-            'message' => $notificationTitle
-        ];
-        $notificationDescription = [
-            1 => [
-                'type' => 'string',
-                'title' => $original_name,
-                'href' => null
-            ],
-            2 => [
-                'type' => 'link',
-                'title' =>  $project->name,
-                'href' => route('projects.show.budget', $project->id),
-            ]
-        ];
 
-        $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
         $this->notificationService->setNotificationConstEnum(
             NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED
         );
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
+
         $this->notificationService->setProjectId($project->id);
-        $this->notificationService->setDescription($notificationDescription);
 
         foreach ($projectFileUsers as $projectFileUser) {
+            $notificationTitle = __('notifications.project.file.permission_add', [], $projectFileUser->language);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => $original_name,
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'link',
+                    'title' =>  $project->name,
+                    'href' => route('projects.show.budget', $project->id),
+                ]
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($projectFileUser);
             $this->notificationService->createNotification();
         }
@@ -150,36 +155,36 @@ class ProjectFileController extends Controller
 
         $project = $projectFile->project()->first();
         $projectFileUsers =  $projectFile->accessingUsers()->get();
-        $notificationTitle = 'Ein Dokument wurde geändert';
-        $broadcastMessage = [
-            'id' => rand(1, 1000000),
-            'type' => 'success',
-            'message' => $notificationTitle
-        ];
-        $notificationDescription = [
-            1 => [
-                'type' => 'string',
-                'title' => $original_name === '' ? $projectFile->name : $original_name,
-                'href' => null
-            ],
-            2 => [
-                'type' => 'link',
-                'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show.budget', $project->id) : null,
-            ]
-        ];
-
-        $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
         $this->notificationService->setNotificationConstEnum(
             NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED
         );
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setProjectId($project->id);
-        $this->notificationService->setDescription($notificationDescription);
 
         foreach ($projectFileUsers as $projectFileUser) {
+            $notificationTitle = __('notifications.project.file.changed', [], $projectFileUser->language);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => $original_name === '' ? $projectFile->name : $original_name,
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'link',
+                    'title' =>  $project ? $project->name : '',
+                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                ]
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($projectFileUser);
             $this->notificationService->createNotification();
         }
@@ -190,40 +195,46 @@ class ProjectFileController extends Controller
     {
         $this->authorize('view', $projectFile->project);
         $project = $projectFile->project()->first();
-        $this->history->createHistory($project->id, 'Datei ' . $projectFile->name . ' gelöscht', 'public_changes');
+        $this->history->createHistory(
+            $project->id,
+            'Deleted file',
+            [$projectFile->name],
+            'public_changes'
+        );
         $projectController->setPublicChangesNotification($project->id);
 
         $projectFileUsers =  $projectFile->accessingUsers()->get();
-        $notificationTitle = 'Ein Dokument wurde gelöscht';
-        $broadcastMessage = [
-            'id' => rand(1, 1000000),
-            'type' => 'error',
-            'message' => $notificationTitle
-        ];
-        $notificationDescription = [
-            1 => [
-                'type' => 'string',
-                'title' => $projectFile->name,
-                'href' => null
-            ],
-            2 => [
-                'type' => 'link',
-                'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show.budget', $project->id) : null,
-            ]
-        ];
 
-        $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('red');
         $this->notificationService->setPriority(2);
         $this->notificationService->setNotificationConstEnum(
             NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED
         );
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setDescription($notificationDescription);
         $this->notificationService->setProjectId($project->id);
 
         foreach ($projectFileUsers as $projectFileUser) {
+            $notificationTitle = __('notifications.project.file.deleted', [], $projectFileUser->language);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => $projectFile->name,
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'link',
+                    'title' =>  $project ? $project->name : '',
+                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                ]
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($projectFileUser);
             $this->notificationService->createNotification();
         }

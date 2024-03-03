@@ -7,17 +7,18 @@
                         <span v-if="!project.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
                         </span>
-                    Gehört zu <a :href="'/projects/' + currentGroup.id" class="text-buttonBlue ml-1">
+                    {{ $t('Belongs to') }} <a :href="'/projects/' + currentGroup.id" class="text-buttonBlue ml-1">
                     {{ currentGroup?.name }}</a>
                 </div>
             </div>
             <div v-if="openTab === 'info'">
                 <div class="flex z-10" v-if="this.project.key_visual_path !== null">
-                    <img :src="'/storage/keyVisual/header_' + this.project.key_visual_path" alt="Aktuelles Key-Visual"
+                    <img :src="'/storage/keyVisual/header_' + this.project.key_visual_path"
+                         :alt="$t('Current key visual')"
                          class="rounded-md mx-auto h-[200px]">
                 </div>
                 <div v-else class="w-full h-40 bg-gray-200 flex justify-center items-center">
-                    <img src="/images/place.png" alt="Aktuelles Key-Visual"
+                    <img src="/images/place.png" :alt="$t('Current key visual')"
                          class="rounded-md h-[200px]">
                 </div>
             </div>
@@ -59,7 +60,7 @@
                                         <PencilAltIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
-                                        Basisdaten bearbeiten
+                                        {{ $t('Edit basic data') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
@@ -68,7 +69,7 @@
                                         <DuplicateIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
-                                        Duplizieren
+                                        {{ $t('Duplicate') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem
@@ -79,7 +80,7 @@
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
-                                        In den Papierkorb legen
+                                        {{ $t('Put in the trash') }}
                                     </a>
                                 </MenuItem>
                             </div>
@@ -91,37 +92,37 @@
                 <TagComponent v-for="projectGroup in projectGroups" :method="deleteProjectFromGroup"
                               :displayed-text="projectGroup.name" :property="projectGroup"></TagComponent>
             </div>
-
             <div class="w-full mt-1 text-secondary subpixel-antialiased">
                 <div v-if="firstEventInProject && lastEventInProject">
-                    Zeitraum/Öffnungszeiten: {{ firstEventInProject?.start_time }} <span
-                    v-if="firstEventInProject?.start_time">Uhr -</span> {{ lastEventInProject?.end_time }} <span
-                    v-if="lastEventInProject?.end_time">Uhr</span>
+                    {{ $t('Time period/opening hours') }}: {{ firstEventInProject?.start_time }}
+                    <span v-if="firstEventInProject?.start_time">{{ $t('Clock') }} -</span>
+                    {{ lastEventInProject?.end_time }}
+                    <span v-if="lastEventInProject?.end_time">{{ $t('Clock') }}</span>
                 </div>
                 <div v-if="roomsWithAudience">
-                    Termine mit Publikum in: <span>{{ locationString() }}</span>
+                    {{ $t('Appointments with audience in') }}: <span>{{ locationString() }}</span>
                 </div>
                 <div v-if="!roomsWithAudience && !(firstEventInProject && lastEventInProject)">
-                    Noch keine Termine innerhalb dieses Projektes
+                    {{ $t('No appointments within this project yet') }}
                 </div>
             </div>
             <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center"
                  v-if="project.project_history.length">
                 <div>
-                    zuletzt geändert:
+                    {{ $t('last modified') }}:
                 </div>
                 <UserPopoverTooltip :user="project.project_history[0]?.changes[0]?.changed_by"
                                     :id="project.project_history[0]?.changes[0]?.changed_by.id" height="4" width="4"
                                     class="ml-2"/>
                 <span class="ml-2 subpixel-antialiased">
-                        {{ project.project_history[0]?.created_at }}
-                    </span>
+                    {{ project.project_history[0]?.created_at }}
+                </span>
                 <button class="ml-4 subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
                         @click="openProjectHistoryModal()">
                     <ChevronRightIcon
                         class="-mr-0.5 h-4 w-4  group-hover:text-white"
                         aria-hidden="true"/>
-                    Verlauf ansehen
+                    {{ $t('View history') }}
                 </button>
             </div>
         </div>
@@ -131,18 +132,18 @@
             <div class="hidden sm:block">
                 <div class="border-gray-200">
                     <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
-                        <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab?.name"
+                        <Link v-for="tab in tabs" :key="tab?.name"
+                           :href="tab.href"
                            :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
-                           :aria-current="tab.current ? 'page' : undefined" v-show="tab?.show">
-                            {{ tab?.name }}
-                        </a>
+                           :aria-current="tab.current ? 'page' : undefined" v-show="tab.show">
+                            {{ tab.name }}
+                        </Link>
                     </nav>
                 </div>
             </div>
         </div>
         <slot></slot>
     </div>
-
     <project-data-edit-modal
         :show="editingProject"
         :project-state="projectState"
@@ -152,49 +153,44 @@
         :current-group="this.currentGroup"
         :states="states"
     />
-    <!-- Project History Modal -->
     <project-history-component
         @closed="closeProjectHistoryModal"
         v-if="showProjectHistory"
         :project_history="project.project_history"
         :access_budget="project.access_budget"
-    ></project-history-component>
-
-    <!-- Delete Project Modal -->
+    />
     <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
         <template #content>
             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                    Projekt löschen
+                    {{ $t('Delete project') }}
                 </div>
                 <XIcon @click="closeDeleteProjectModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-error subpixel-antialiased">
-                    Bist du sicher, dass du das Projekt {{ projectToDelete.name }} löschen willst?
+                    {{ $t('Are you sure you want to delete the project?', [projectToDelete.name]) }}
                 </div>
                 <div class="flex justify-between mt-6">
                     <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="deleteProject">
-                        Löschen
+                        {{ $t('Delete') }}
                     </button>
                     <div class="flex my-auto">
                             <span @click="closeDeleteProjectModal()"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">
+                                {{ $t('No, not really') }}
+                            </span>
                     </div>
                 </div>
             </div>
         </template>
-
     </jet-dialog-modal>
-
 </template>
 
-
 <script>
-
 import {ChevronRightIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
 import {DuplicateIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
@@ -206,6 +202,7 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import {Inertia} from "@inertiajs/inertia";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import {Link} from "@inertiajs/inertia-vue3";
 
 export default {
     components: {
@@ -224,8 +221,10 @@ export default {
         Menu,
         MenuButton,
         MenuItem,
-        MenuItems
+        MenuItems,
+        Link
     },
+    mixins: [Permissions],
     props: [
         'project',
         'currentGroup',
@@ -253,22 +252,42 @@ export default {
     computed: {
         tabs() {
             return [
-                {name: 'Projektinformationen', href: '#', current: this.openTab === 'info', show: true},
-                {name: 'Ablaufplan', href: '#', current: this.openTab === 'calendar', show: true},
-                {name: 'Checklisten', href: '#', current: this.openTab === 'checklist', show: true},
                 {
-                    name: 'Schichten',
-                    href: '#',
+                    name: this.$t('Project information'),
+                    href: route('projects.show.info', {project: this.project.id}),
+                    current: this.openTab === 'info',
+                    show: true
+                },
+                {
+                    name: this.$t('Schedule'),
+                    href: route('projects.show.calendar', {project: this.project.id}),
+                    current: this.openTab === 'calendar',
+                    show: true
+                },
+                {
+                    name: this.$t('Checklists'),
+                    href: route('projects.show.checklist', {project: this.project.id}),
+                    current: this.openTab === 'checklist',
+                    show: true
+                },
+                {
+                    name: this.$t('Shifts'),
+                    href: route('projects.show.shift', {project: this.project.id}),
                     current: this.openTab === 'shift',
                     show: this.hasAdminRole() || this.$can('can plan shifts')
                 },
                 {
-                    name: 'Budget',
-                    href: '#',
+                    name: this.$t('Budget'),
+                    href: route('projects.show.budget', {project: this.project.id}),
                     current: this.openTab === 'budget',
                     show: this.hasAdminRole() || this.hasBudgetAccess() || this.projectManagerIds.includes(this.$page.props.user.id) || this.$canAny(['can manage global project budgets','can manage all project budgets without docs'])
                 },
-                {name: 'Kommentare', href: '#', current: this.openTab === 'comment', show: true},
+                {
+                    name: this.$t('Comments'),
+                    href: route('projects.show.comment', {project: this.project.id}),
+                    current: this.openTab === 'comment',
+                    show: true
+                },
             ]
         },
     },
@@ -316,29 +335,7 @@ export default {
         },
         locationString() {
             return Object.values(this.roomsWithAudience).join(", ");
-        },
-        changeTab(selectedTab) {
-            if (selectedTab.name === 'Ablaufplan') {
-                Inertia.get(route('projects.show.calendar', {project: this.project.id}));
-            } else if (selectedTab.name === 'Checklisten') {
-                Inertia.get(route('projects.show.checklist', {project: this.project.id}));
-            } else if (selectedTab.name === 'Projektinformationen') {
-                Inertia.get(route('projects.show.info', {project: this.project.id}));
-            } else if (selectedTab.name === 'Kommentare') {
-                Inertia.get(route('projects.show.comment', {project: this.project.id}));
-            } else if (selectedTab.name === 'Schichten') {
-                Inertia.get(route('projects.show.shift', {project: this.project.id}));
-            } else if (selectedTab.name === 'Budget') {
-                Inertia.get(route('projects.show.budget', {project: this.project.id}));
-            } else {
-                Inertia.get(route('projects.show.info', {project: this.project.id}));
-            }
-        },
-    },
-    mixins: [Permissions],
+        }
+    }
 }
 </script>
-
-<style scoped>
-
-</style>

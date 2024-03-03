@@ -138,42 +138,47 @@ class ContractController extends Controller
         }
 
         $contractUsers =  $contract->accessingUsers()->get();
-        $notificationTitle = 'Ein Vertrag wurde für dich freigegeben';
-        $broadcastMessage = [
-            'id' => rand(1, 1000000),
-            'type' => 'error',
-            'message' => $notificationTitle
-        ];
-        $notificationDescription = [
-            1 => [
-                'type' => 'string',
-                'title' => $original_name,
-                'href' => null
-            ],
-            2 => [
-                'type' => 'link',
-                'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show.budget', $project->id) : null,
-            ]
-        ];
 
-        $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
         $this->notificationService->setProjectId($project->id);
         $this->notificationService
             ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setDescription($notificationDescription);
 
         foreach ($contractUsers as $contractUser) {
+            $notificationTitle = __(
+                'notification.contract.add',
+                [],
+                $contractUser->language
+            );
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => $original_name,
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'link',
+                    'title' =>  $project ? $project->name : '',
+                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                ]
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($contractUser);
             $this->notificationService->createNotification();
         }
 
         $contract->save();
 
-        return Redirect::route('contracts.view.index')->with('success', 'Project created.');
+        return Redirect::route('contracts.view.index');
     }
 
     public function download(Contract $contract): StreamedResponse
@@ -210,35 +215,42 @@ class ContractController extends Controller
         $project = $contract->project()->first();
         $contractUsers = $contract->accessingUsers()->get();
 
-        $notificationTitle = 'Ein Vertrag wurde für dich freigegeben';
-        $broadcastMessage = [
-            'id' => rand(1, 1000000),
-            'type' => 'green',
-            'message' => $notificationTitle
-        ];
-        $notificationDescription = [
-            1 => [
-                'type' => 'string',
-                'title' => $original_name,
-                'href' => null
-            ],
-            2 => [
-                'type' => 'link',
-                'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show.budget', $project->id) : null,
-            ]
-        ];
 
-        $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setIcon('green');
         $this->notificationService->setPriority(3);
         $this->notificationService->setProjectId($project->id);
         $this->notificationService
             ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setDescription($notificationDescription);
+
 
         foreach ($contractUsers as $contractUser) {
+            // notification.contract.add
+            $notificationTitle = __(
+                'notification.contract.add',
+                [],
+                $contractUser->language
+            );
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'green',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => $original_name,
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'link',
+                    'title' =>  $project ? $project->name : '',
+                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                ]
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($contractUser);
             $this->notificationService->createNotification();
         }
@@ -267,40 +279,43 @@ class ContractController extends Controller
     {
         $project = $contract->project()->first();
         $contractUsers =  $contract->accessingUsers()->get();
-        $notificationTitle = 'Ein Vertrag wurde gelöscht';
-        $broadcastMessage = [
-            'id' => rand(1, 1000000),
-            'type' => 'error',
-            'message' => $notificationTitle
-        ];
-        $notificationDescription = [
-            1 => [
-                'type' => 'string',
-                'title' => $contract->name,
-                'href' => null
-            ],
-            2 => [
-                'type' => 'link',
-                'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show.budget', $project->id) : null,
-            ],
-            3 => [
-                'type' => 'string',
-                'title' => $contract->contract_partner ? $contract->contract_partner : '',
-                'href' => null
-            ],
-        ];
 
-        $this->notificationService->setTitle($notificationTitle);
-        $this->notificationService->setIcon('red');
-        $this->notificationService->setPriority(2);
-        $this->notificationService->setProjectId($project->id);
-        $this->notificationService
-            ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
-        $this->notificationService->setBroadcastMessage($broadcastMessage);
-        $this->notificationService->setDescription($notificationDescription);
+
 
         foreach ($contractUsers as $contractUser) {
+            // notification.contract.delete
+            $notificationTitle = __('notification.contract.delete', [], $contractUser->language);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $notificationDescription = [
+                1 => [
+                    'type' => 'string',
+                    'title' => $contract->name,
+                    'href' => null
+                ],
+                2 => [
+                    'type' => 'link',
+                    'title' =>  $project ? $project->name : '',
+                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                ],
+                3 => [
+                    'type' => 'string',
+                    'title' => $contract->contract_partner ? $contract->contract_partner : '',
+                    'href' => null
+                ],
+            ];
+
+            $this->notificationService->setTitle($notificationTitle);
+            $this->notificationService->setIcon('red');
+            $this->notificationService->setPriority(2);
+            $this->notificationService->setProjectId($project->id);
+            $this->notificationService
+                ->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED);
+            $this->notificationService->setBroadcastMessage($broadcastMessage);
+            $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo($contractUser);
             $this->notificationService->createNotification();
         }

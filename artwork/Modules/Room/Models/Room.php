@@ -1,9 +1,11 @@
 <?php
+
 namespace Artwork\Modules\Room\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
-
 use App\Models\Event;
+use App\Models\RoomRoomAttributeMapping;
+use App\Models\RoomRoomCategoryMapping;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Area\Models\BelongsToArea;
@@ -126,7 +128,7 @@ class Room extends Model
 
     public function prunable(): Builder
     {
-        return static::where('deleted_at', '<=', now()->subMonth())
+        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed()
             ->orWhere('temporary', true)
             ->where('end_date', '<=', now());
     }
@@ -146,8 +148,9 @@ class Room extends Model
         );
     }
 
-    public function scopeWithAudience(Builder $query): Builder
+    public function scopeWithAudience(Builder $query, int $projectId): Builder
     {
-        return $query->whereRelation('events', 'audience', '=', true);
+        return $query->whereRelation('events', 'audience', '=', true)
+            ->whereRelation('events', 'project_id', '=', $projectId);
     }
 }

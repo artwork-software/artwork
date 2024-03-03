@@ -54,7 +54,7 @@
                                             <DuplicateIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Bearbeiten
+                                            {{ $t('Edit') }}
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -63,7 +63,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Leeren
+                                            {{ $t('Clear') }}
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -72,7 +72,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Löschen
+                                            {{ $t('Delete') }}
                                         </a>
                                     </MenuItem>
                                 </div>
@@ -181,9 +181,19 @@ import {defineComponent} from 'vue'
 import {XIcon} from "@heroicons/vue/solid";
 import DropElement from "@/Pages/Projects/Components/DropElement.vue";
 import dayjs from "dayjs";
-import {DotsVerticalIcon, DuplicateIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
+import {
+    DotsVerticalIcon,
+    DuplicateIcon,
+    PencilAltIcon,
+    TrashIcon
+} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems
+} from "@headlessui/vue";
 import AddShiftModal from "@/Pages/Projects/Components/AddShiftModal.vue";
 import ChooseDeleteUserShiftModal from "@/Pages/Projects/Components/ChooseDeleteUserShiftModal.vue";
 import Helper from "@/mixins/Helper.vue";
@@ -336,10 +346,13 @@ export default defineComponent({
             }
         },
         deleteShift(shift_id) {
-            this.$inertia.delete(route('shifts.destroy', {shift: shift_id}), {
-                preserveScroll: true,
-                preserveState: true,
-            });
+            this.$inertia.delete(
+                route('shifts.destroy', {shift: shift_id}),
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                }
+            );
         },
         editShift() {
             this.openEditShiftModal = true;

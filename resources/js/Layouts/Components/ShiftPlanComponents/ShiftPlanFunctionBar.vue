@@ -13,7 +13,7 @@
                 </div>
             </div>
             <div class="flex items-center" v-if="this.$can('can commit shifts') || this.hasAdminRole()">
-                <SecondaryButton text="Alle Schichten festsetzen" @click="showConfirmCommitModal = true" />
+                <SecondaryButton :text="$t('Lock all shifts')" @click="showConfirmCommitModal = true" />
             </div>
 
             <div class="ml-5 flex items-center" >
@@ -22,7 +22,7 @@
                     <ChevronRightIcon
                         class="-mr-0.5 h-4 w-4  group-hover:text-white"
                         aria-hidden="true"/>
-                    Verlauf ansehen
+                    {{ $t('View history')}}
                 </button>
             </div>
 
@@ -52,9 +52,9 @@
         v-if="showConfirmCommitModal"
         @closed="showConfirmCommitModal = false"
         @delete="commitAllShifts"
-        title="Dienstplan festschreiben"
-        description="Bist du sicher, dass du den Dienstplan festschreiben möchtest?"
-        button="Festschreiben"
+        :title="$t('Fixed Shiftplan')"
+        :description="$t('Are you sure you want to set the shift plan?')"
+        :button="$t('Fixing')"
     />
 </template>
 

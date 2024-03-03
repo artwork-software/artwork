@@ -52,7 +52,11 @@ class MoneySourceFileController extends Controller
             ]);
             $moneySourceFile->comments()->save($comment);
         }
-        $this->history->createHistory($moneySource->id, 'Dokument ' . $original_name . ' hochgeladen');
+        $this->history->createHistory(
+            $moneySource->id,
+            'Document uploaded',
+            [$original_name]
+        );
         return Redirect::back();
     }
 
@@ -91,7 +95,11 @@ class MoneySourceFileController extends Controller
 
     public function destroy(MoneySource $moneySource, MoneySourceFile $moneySourceFile): RedirectResponse
     {
-        $this->history->createHistory($moneySource->id, 'Dokument ' . $moneySourceFile->name . ' gelöscht');
+        $this->history->createHistory(
+            $moneySource->id,
+            'Document deleted',
+            [$moneySourceFile->name]
+        );
         $moneySourceFile->delete();
 
         return Redirect::back();

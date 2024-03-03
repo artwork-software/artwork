@@ -70,7 +70,7 @@ class RoomService
         return Room::query()
             ->unless(
                 is_null($roomIds),
-                fn(\Illuminate\Database\Eloquent\Builder $builder) => $builder->whereIn('id', $roomIds)
+                fn(Builder $builder) => $builder->whereIn('id', $roomIds)
             )
             ->unless(
                 is_null($roomAttributeIds),
@@ -167,7 +167,7 @@ class RoomService
         $room->adjoiningRooms()->sync($request->adjoiningRooms);
         $room->roomAdmins()->sync($request->roomAdmins);
         $this->roomRepository->save($room);
-        $this->history->createHistory($room->id, 'Raum erstellt');
+        $this->history->createHistory($room->id, 'Room created');
         return $room;
     }
 
@@ -191,18 +191,18 @@ class RoomService
         $newEndDate
     ): void {
         if ($oldTemporary && !$newTemporary) {
-            $this->history->createHistory($roomId, 'Temporärer Zeitraum gelöscht');
+            $this->history->createHistory($roomId, 'Temporary time period deleted');
             return;
         }
         if ($newTemporary && !$oldTemporary) {
-            $this->history->createHistory($roomId, 'Temporärer Zeitraum hinzugefügt');
+            $this->history->createHistory($roomId, 'Temporary time period added');
             return;
         }
 
         // add check if temporary not changed
         if ($oldTemporary && $newTemporary) {
             if ($oldStartDate !== $newStartDate || $oldEndDate !== $newEndDate) {
-                $this->history->createHistory($roomId, 'Temporärer Zeitraum geändert');
+                $this->history->createHistory($roomId, 'Temporary time period changed');
                 return;
             }
         }
@@ -228,13 +228,21 @@ class RoomService
         foreach ($newCategories as $newCategory) {
             $newCategoryIds[] = $newCategory->id;
             if (!in_array($newCategory->id, $oldCategoryIds)) {
-                $this->history->createHistory($roomId, 'Kategorie ' . $newCategory->name . ' wurde hinzugefügt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Added category',
+                    [$newCategory->name]
+                );
             }
         }
 
         foreach ($oldCategoryIds as $oldCategoryId) {
             if (!in_array($oldCategoryId, $newCategoryIds)) {
-                $this->history->createHistory($roomId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' wurde entfernt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Deleted category',
+                    [$oldCategoryNames[$oldCategoryId]]
+                );
             }
         }
     }
@@ -259,13 +267,21 @@ class RoomService
         foreach ($newAttributes as $newAttribute) {
             $newAttributeIds[] = $newAttribute->id;
             if (!in_array($newAttribute->id, $oldAttributeIds)) {
-                $this->history->createHistory($roomId, 'Attribut ' . $newAttribute->name . ' wurde hinzugefügt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Added attribute',
+                    [$newAttribute->name]
+                );
             }
         }
 
         foreach ($oldAttributeIds as $oldAttributeId) {
             if (!in_array($oldAttributeId, $newAttributeIds)) {
-                $this->history->createHistory($roomId, 'Attribut ' . $oldAttributeNames[$oldAttributeId] . ' wurde entfernt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Deleted attribute',
+                    [$oldAttributeNames[$oldAttributeId]]
+                );
             }
         }
     }
@@ -279,7 +295,7 @@ class RoomService
     public function checkTitleChanges($roomId, $oldTitle, $newTitle): void
     {
         if ($oldTitle !== $newTitle) {
-            $this->history->createHistory($roomId, 'Raumname wurde geändert');
+            $this->history->createHistory($roomId, 'Room name has been changed');
         }
     }
 
@@ -293,7 +309,7 @@ class RoomService
     {
         // check changes in room description
         if ($oldDescription !== $newDescription) {
-            $this->history->createHistory($roomId, 'Beschreibung wurde geändert');
+            $this->history->createHistory($roomId, 'Description has been changed');
         }
     }
 
@@ -317,13 +333,21 @@ class RoomService
         foreach ($newAdjoiningRooms as $newAdjoiningRoom) {
             $newAdjoiningRoomIds[] = $newAdjoiningRoom->id;
             if (!in_array($newAdjoiningRoom->id, $oldAdjoiningRoomIds)) {
-                $this->history->createHistory($roomId, 'Nebenraum ' . $newAdjoiningRoom->name . ' wurde hinzugefügt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Adjoining room was added',
+                    [$newAdjoiningRoom->name]
+                );
             }
         }
 
         foreach ($oldAdjoiningRoomIds as $oldAdjoiningRoomId) {
             if (!in_array($oldAdjoiningRoomId, $newAdjoiningRoomIds)) {
-                $this->history->createHistory($roomId, 'Nebenraum ' . $oldAdjoiningRoomName[$oldAdjoiningRoomId] . ' wurde entfernt');
+                $this->history->createHistory(
+                    $roomId,
+                    'Adjoining room has been removed',
+                    [$oldAdjoiningRoomName[$oldAdjoiningRoomId]]
+                );
             }
         }
     }
@@ -344,10 +368,13 @@ class RoomService
 
         foreach ($roomAdminsAfter as $roomAdminAfter) {
             $roomAdminIdsAfter[] = $roomAdminAfter->id;
-            // if added a new room admin, send notification to this user
             if (!in_array($roomAdminAfter->id, $roomAdminIdsBefore)) {
-                $notificationTitle = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
                 $user = User::find($roomAdminAfter->id);
+                $notificationTitle = __(
+                    'notifications.room.leader.add',
+                    ['room' => $room->name],
+                    $user->language
+                );
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -360,7 +387,11 @@ class RoomService
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
-                $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin hinzugefügt');
+                $this->history->createHistory(
+                    $room->id,
+                    'Added as room admin',
+                    [$user->first_name]
+                );
             }
         }
 
@@ -368,7 +399,11 @@ class RoomService
         foreach ($roomAdminIdsBefore as $roomAdminBefore) {
             if (!in_array($roomAdminBefore, $roomAdminIdsAfter)) {
                 $user = User::find($roomAdminBefore);
-                $notificationTitle = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
+                $notificationTitle = __(
+                    'notifications.room.leader.remove',
+                    ['room' => $room->name],
+                    $user->language
+                );
                 $broadcastMessage = [
                     'id' => random_int(1, 1000000),
                     'type' => 'error',
@@ -381,7 +416,11 @@ class RoomService
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
-                $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin entfernt');
+                $this->history->createHistory(
+                    $room->id,
+                    'Removed as room admin',
+                    [$user->first_name]
+                );
             }
         }
     }
@@ -415,7 +454,9 @@ class RoomService
             ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
             ->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
                 // Erstelle einen Zeitraum für das Event, der innerhalb der gewünschten Periode liegt
-                $eventStart = $event->start_time->isBefore($calendarPeriod->start) ? $calendarPeriod->start : $event->start_time;
+                $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
+                    $calendarPeriod->start :
+                    $event->start_time;
                 $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
                 $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
 
@@ -425,13 +466,19 @@ class RoomService
                 }
             });
         foreach ($actualEvents as $key => $value) {
-            $eventsForRoom[$key] = ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection($value)];
+            $eventsForRoom[$key] = [
+                'roomName' => $room->name,
+                'events' => CalendarShowEventResource::collection($value)
+            ];
         }
         return collect($eventsForRoom);
     }
 
-    public function collectEventsForRooms(array|Collection $roomsWithEvents, CarbonPeriod $calendarPeriod, ?Project $project = null): Collection
-    {
+    public function collectEventsForRooms(
+        array|Collection $roomsWithEvents,
+        CarbonPeriod $calendarPeriod,
+        ?Project $project = null
+    ): Collection {
         $roomEvents = collect();
 
         foreach ($roomsWithEvents as $room) {
@@ -440,12 +487,20 @@ class RoomService
         return $roomEvents;
     }
 
-    private function fillPeriodWithEmptyEventData(Room $room, CarbonPeriod $calendarPeriod): array
-    {
+    /**
+     * @return array<string, mixed>
+     */
+    private function fillPeriodWithEmptyEventData(
+        Room $room,
+        CarbonPeriod $calendarPeriod
+    ): array {
         $eventsForRoom = [];
         /** @var Collection $eventsForRoom */
         foreach ($calendarPeriod as $date) {
-            $eventsForRoom[$date->format('d.m.')] = ['roomName' => $room->name, 'events' => CalendarShowEventResource::collection([])];
+            $eventsForRoom[$date->format('d.m.')] = [
+                'roomName' => $room->name,
+                'events' => CalendarShowEventResource::collection([])
+            ];
         }
         return $eventsForRoom;
     }

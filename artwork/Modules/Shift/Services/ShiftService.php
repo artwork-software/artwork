@@ -41,8 +41,11 @@ class ShiftService
     {
         $this->getNewHistoryService(Shift::class)->createHistory(
             $shift->id,
-            'Alle eingeplanten Mitarbeiter wurde von Schicht (' . $shift->craft->abbreviation .
-            ' - ' . $shift->event->eventName . ') entfernt',
+            'All scheduled employees have been removed from shift',
+            [
+                $shift->craft->abbreviation,
+                $shift->event->eventName
+            ],
             'shift'
         );
     }

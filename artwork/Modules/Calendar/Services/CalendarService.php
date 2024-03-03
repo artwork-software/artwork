@@ -5,10 +5,13 @@ namespace Artwork\Modules\Calendar\Services;
 use App\Models\Freelancer;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class CalendarService
 {
-    public function createVacationAndAvailabilityPeriodCalendar($month = null): \Illuminate\Support\Collection
+    public function createVacationAndAvailabilityPeriodCalendar($month = null): Collection
     {
         $date = Carbon::today();
         $daysInMonth = $date->daysInMonth;
@@ -40,6 +43,13 @@ class CalendarService
         return $days->chunk(7);
     }
 
+    /**
+     * @return array<string, mixed>
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
+    //@todo: fix phpcs error - fix complexity
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function getAvailabilityData(?Freelancer $freelancer = null, ?User $user = null, $month = null): array
     {
         $vacationDays = [];
@@ -121,7 +131,7 @@ class CalendarService
         }
 
         $dateToShow = [
-            $currentMonth->locale('de')->isoFormat('MMMM YYYY'),
+            $currentMonth->locale(\session()->get('locale') ?? config('app.fallback_locale'))->isoFormat('MMMM YYYY'),
             $currentMonth->copy()->startOfMonth()->toDate()
         ];
 

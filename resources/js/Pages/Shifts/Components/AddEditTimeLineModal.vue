@@ -17,10 +17,10 @@
                             </div>
                             <div class="relative z-40">
                                 <div class="font-black font-lexend text-primary text-3xl my-2">
-                                    Timeline erstellen
+                                    {{$t('Create timeline')}}
                                 </div>
                                 <p class="xsLight subpixel-antialiased">
-                                    Lege die Schichtrelevanten Zeiten fest. Du kannst Schichten jeweils entlang dieser Timeline erstellen.
+                                    {{$t('Define the shift-relevant times. You can create shifts along this timeline.')}}
                                 </p>
                                 <div class="mt-10">
                                     <div class="mb-4" v-for="time in timeLine">
@@ -31,7 +31,7 @@
                                             <div>
                                                 <input type="text"
                                                        onfocus="(this.type='time')"
-                                                       placeholder="Start*"
+                                                       :placeholder="$t('Start*')"
                                                        v-model="addTimeLineForm.start"
                                                        class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                                        required
@@ -41,7 +41,7 @@
                                             <div>
                                                 <input type="text"
                                                        onfocus="(this.type='time')"
-                                                       placeholder="Ende*"
+                                                       :placeholder="$t('End*')"
                                                        v-model="addTimeLineForm.end"
                                                        maxlength="3"
                                                        required
@@ -56,7 +56,7 @@
                                                     rows="4"
                                                     name="comment"
                                                     id="comment"
-                                                    class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                    class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"
                                                 />
                                             </div>
                                         </div>
@@ -66,7 +66,7 @@
                                     </div>
                                     <div class="h-1">
                                         <div
-                                            class="mt-5 w-full h-1 border-b-2 border-dashed !flex items-center justify-center relative cursor-pointer hidden group-hover:block" @click="showAddTimeLineForm = true">
+                                            class="mt-5 w-full h-1 border-b-2 border-dashed flex items-center justify-center relative cursor-pointer group-hover:block" @click="showAddTimeLineForm = true">
                                             <div class="absolute flex items-center justify-center w-full ">
                                                 <PlusCircleIcon class="h-6 w-6"/>
                                             </div>
@@ -76,7 +76,7 @@
                             </div>
                             <div class="flex justify-center mt-5">
                                 <FormButton
-                                    text="Speichern"
+                                    :text="$t('Save')"
                                     @click="saveTimeLines"
                                     />
                             </div>
@@ -177,10 +177,10 @@ export default defineComponent({
         },
         checkTime() {
             if (this.addTimeLineForm.start === null || this.addTimeLineForm.end === null) {
-                this.helpText = 'Bitte fülle beide Felder aus.';
+                this.helpText = this.$t('Please fill in both fields.');
                 return false;
             } else if (this.addTimeLineForm.start >= this.addTimeLineForm.end) {
-                this.helpText = 'Die Startzeit muss vor der Endzeit liegen.';
+                this.helpText = this.$t('The start time must be before the end time.');
                 return false;
             } else {
                 this.helpText = '';

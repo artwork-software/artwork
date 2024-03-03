@@ -20,17 +20,14 @@
                                 <div v-if="hasAdminRole() || $canAny(['change system notification'])">
 
                                     <div class="headline2 mt-12 mb-6">
-                                        Benachrichtigung an alle
+                                        {{ $t('Notification to all')}}
                                     </div>
                                     <div class="xsLight">
-                                        Teile allen Usern etwas Wichtiges mit - z.B. Änderungen oder neue Funktionen im artwork oder
-                                        wichtige Mitteilungen, die
-                                        das ganze Haus betreffen. Die Nachricht können alle User in den Benachrichtigungen einsehen (auch
-                                        die Externen!).
+                                        {{ $t('Share something important with all users - e.g. changes or new functions in the artwork or important messages that affect the whole house. All users can view the message in the notifications (including external users!).')}}
                                     </div>
                                     <div>
                                         <label class="block mt-12 mb-2 xsLight">
-                                            Bild </label>
+                                            {{$t('Image')}} </label>
                                         <div class="items-center">
                                             <div
                                                 class="flex w-full justify-center border-2 bg-stone-50 w-5/12 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
@@ -40,19 +37,19 @@
                                                 <div v-show="!notificationImagePreview" class="space-y-1 text-center">
                                                     <div class="xsLight flex my-auto h-40 items-center"
                                                          v-if="this.globalNotificationForm.notificationImage === null && notificationImagePreview === null">
-                                                        Ziehe hier dein <br/> Bild für die Benachrichtigung hin
+                                                        {{ $t('Drag your image here for the notification')}}
                                                         <input id="notificationImage-upload" ref="notificationImage"
                                                                @change="updateNotificationImagePreview()"
                                                                name="file-upload" type="file" class="sr-only"/>
                                                     </div>
                                                     <div class="cursor-pointer" v-else>
-                                                        <img :src="this.globalNotificationForm.notificationImage" alt="Aktuelles Bild"
+                                                        <img :src="this.globalNotificationForm.notificationImage" :alt="$t('Current picture')"
                                                              class="rounded-md h-40 w-40">
                                                     </div>
                                                 </div>
                                                 <div class="cursor-pointer">
                                                     <img v-show="notificationImagePreview" :src="notificationImagePreview"
-                                                         alt="Aktuelles Banner"
+                                                         :alt="$t('Current banner')"
                                                          class="rounded-md h-40 w-40">
                                                     <input type="file" class="hidden"
                                                            ref="notificationImage"
@@ -67,18 +64,18 @@
                                     <div class="grid grid-cols-2 gap-4 mt-4">
                                         <div class="">
                                             <label for="deadlineDate" class="flex items-center xsLight">
-                                                Titel:
+                                                {{$t('Title')}}:
                                             </label>
                                             <input type="text"
                                                    v-model="this.globalNotificationForm.notificationName"
                                                    id="eventTitle"
-                                                   placeholder="Titel*"
+                                                   :placeholder="$t('Title')+ '*'"
                                                    class="sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                                         </div>
                                         <div>
                                             <label for="deadlineDate" class="flex items-center xsLight">
-                                                Ablaufdatum:
+                                                {{ $t('Expiration date')}}:
                                             </label>
                                             <div class="flex items-center w-full">
                                                 <input v-model="this.globalNotificationForm.notificationDeadlineDate"
@@ -95,7 +92,7 @@
                                         </div>
                                     </div>
                                     <div class="py-2">
-                                        <textarea placeholder="Benachrichtigung*"
+                                        <textarea :placeholder="$t('Notification') + '*'"
                                                   id="description"
                                                   v-model="this.globalNotificationForm.notificationDescription"
                                                   rows="4"
@@ -107,13 +104,13 @@
                                             @click="createGlobalNotification()"
                                             v-if="!globalNotification.title"
                                             class="flex"
-                                            text="Benachrichtigung teilen"
+                                            :text="$t('Share notification')"
                                         />
                                         <FormButton
                                             @click="deleteGlobalNotification(globalNotification.id)"
                                             v-else
                                             class="flex"
-                                            text="Benachrichtigung löschen"
+                                            :text="$t('Delete notification')"
                                         />
                                     </div>
                                 </div>
@@ -153,7 +150,7 @@ export default {
         return {
             open: true,
             notificationImagePreview: null,
-            buttonText: this.button ? this.button : 'Löschen',
+            buttonText: this.button ? this.button : this.$t('Delete'),
             globalNotificationForm: this.$inertia.form({
                 notificationImage: this.globalNotification?.image_url,
                 notificationName: this.globalNotification?.title,
@@ -179,7 +176,7 @@ export default {
                 "image/gif"
             ]
 
-            if (allowedTypes.includes(file.type)) {
+            if (allowedTypes.includes(file?.type)) {
 
                 const reader = new FileReader();
 
@@ -209,7 +206,7 @@ export default {
                 reader.readAsDataURL(file);
 
             } else {
-                this.uploadDocumentFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert."
+                this.uploadDocumentFeedback = this.$t('Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted.')
             }
         },
         getDateOfDate(isoDate) {

@@ -106,7 +106,7 @@ class ServiceProviderController extends Controller
             'work_description' => $request->get('workDescription')
         ]);
 
-        return Redirect::back()->with('success', ['workProfile' => 'Arbeitsprofil erfolgreich aktualisiert']);
+        return Redirect::back()->with('success', ['workProfile' => __('flash-messages.workProfile.changed')]);
     }
 
     /**
@@ -161,7 +161,7 @@ class ServiceProviderController extends Controller
             $serviceProvider->assignedCrafts()->attach(Craft::find($request->get('craftId')));
         }
 
-        return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich zugeordnet.']);
+        return Redirect::back()->with('success', ['craft' => __('flash-messages.craft.assigned')]);
     }
 
     /**
@@ -173,7 +173,7 @@ class ServiceProviderController extends Controller
 
         $serviceProvider->assignedCrafts()->detach($craft);
 
-        return Redirect::back()->with('success', ['craft' => 'Gewerk erfolgreich entfernt.']);
+        return Redirect::back()->with('success', ['craft' => __('flash-messages.craft.removed')]);
     }
 
     public function destroy(ServiceProvider $serviceProvider): RedirectResponse

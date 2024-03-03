@@ -14,26 +14,26 @@
                     <h1 class="my-1 flex">
                         <div class="flex-grow headline1">
                             {{
-                                this.event?.id ? this.event?.occupancy_option ? 'Belegung ändern & zusagen' : 'Termin' : 'Neue Raumbelegung'
+                                this.event?.id ? this.event?.occupancy_option ? $t('Change & confirm occupancy') : $t('Event') : $t('New room allocation')
                             }}
                         </div>
                     </h1>
                     <h2 v-if="!this.event?.id" class="xsLight my-3">
-                        Bitte beachte, dass du Vor- und Nachbereitungszeit einplanst.
+                        {{ $t('Please make sure that you allow for preparation and follow-up time.')}}
                     </h2>
                     <div v-else class="flex items-center">
-                        erstellt von
+                        {{ $t('Created by')}}
                         <div v-if="this.event.created_by">
                             <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="7"
                                                 width="7" class="ml-2"/>
                         </div>
                         <div class="xsLight ml-3" v-else>
-                            gelöschte Nutzer:in
+                            {{ $t('deleted User')}}
                         </div>
                     </div>
                 </div>
                 <div v-else class="flex-grow headline1">
-                    Termin
+                    {{ $t('Event')}}
                 </div>
                 <!--    Form    -->
                 <!--    Type and Title    -->
@@ -100,7 +100,7 @@
                         <input type="text"
                                v-model="this.eventName"
                                id="eventTitle"
-                               :placeholder="selectedEventType?.individual_name ? 'Terminname*' : 'Terminname'"
+                               :placeholder="selectedEventType?.individual_name ? $t('Event name') + '*' : $t('Event name')"
                                :disabled="!canEdit"
                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
@@ -114,7 +114,7 @@
 
                 <div v-if="!canEdit" class="flex w-full">
                     <div class="w-1/2 flex items-center my-auto" v-if="this.selectedProject?.id">
-                        Zugeordnet zu: <a
+                        {{$t('assigned to')}}: <a
                         :href="route('projects.show.calendar', {project: selectedProject.id})"
                         class="ml-3 mt-1 text-sm items-center flex font-bold font-lexend text-primary">
                         {{ this.selectedProject?.name }}
@@ -122,7 +122,7 @@
                     </div>
                     <div v-if="this.event.created_by" class="flex items-center w-1/2">
                         <p class="truncate xsLight subpixel-antialiased max-w-60">
-                            erstellt von
+                            {{ $t('Created by')}}
                             <UserPopoverTooltip :user="this.event.created_by" :id="this.event.created_by.id" height="9"
                                                 width="9" class="ml-2"/>
                         </p>
@@ -153,20 +153,21 @@
                 <div v-if="canEdit" class="w-full">
                     <SwitchGroup as="div" class="flex items-center">
                         <Switch v-model="this.allDayEvent"
+                                @update:modelValue="checkChanges"
                                 :class="[this.allDayEvent ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
                             <span aria-hidden="true"
                                   :class="[this.allDayEvent ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                         </Switch>
                         <SwitchLabel as="span" class="ml-3 text-sm">
                             <span :class="[this.allDayEvent ? 'xsDark' : 'xsLight', 'text-sm']">
-                                Ganztägig
+                                {{$t('Full day')}}
                             </span>
                         </SwitchLabel>
                     </SwitchGroup>
                 </div>
                 <div v-if="canEdit" class="flex pb-1 flex-col sm:flex-row align-baseline">
                     <div class="sm:w-1/2 mr-1">
-                        <label for="startDate" class="xxsLight">Start</label>
+                        <label for="startDate" class="xxsLight">{{ $t('Start*') }}</label>
                         <div class="w-full flex">
                             <input v-model="startDate"
                                    id="startDate"
@@ -187,7 +188,7 @@
                         <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
                     </div>
                     <div class="sm:w-1/2 ml-1">
-                        <label for="endDate" class="xxsLight">Ende</label>
+                        <label for="endDate" class="xxsLight">{{$t('End*')}}</label>
                         <div class="w-full flex">
                             <input v-model="endDate"
                                    id="endDate"
@@ -228,7 +229,7 @@
                         </Switch>
                         <SwitchLabel as="span" class="ml-3 text-sm">
                             <span :class="[series ? 'xsDark' : 'xsLight', 'text-sm']">
-                                Wiederholungstermin
+                                {{ $t('Repeat event')}}
                             </span>
                         </SwitchLabel>
                     </SwitchGroup>
@@ -275,7 +276,7 @@
                                         v-model="seriesEndDate"
                                         id="endDate"
                                         :type="seriesEndDate ? 'date' : 'text'"
-                                        placeholder="Enddatum Wiederholungstermin"
+                                        :placeholder="$t('End date Repeat event')"
                                         required
                                         @focus="input => input.target.type = 'date'"
                                         class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
@@ -284,9 +285,9 @@
                         </div>
                     </div>
                 </div>
-                <div v-else-if="event?.is_series" class="xsLight mt-2">Termin ist Teil eines Wiederholungstermines</div>
-                <div v-if="event?.is_series" class="xsLight mb-2">Turnus: {{ selectedFrequency.name }} bis zum
-                    {{ convertDateFormat(seriesEndDate) }}
+                <div v-else-if="event?.is_series" class="xsLight mt-2">{{ $t('Event is part of a repeat event')}}</div>
+                <div v-if="event?.is_series" class="xsLight mb-2">
+                    {{ $t('Cycle: {0} to {1}', { 0: selectedFrequency.name, 1: convertDateFormat(seriesEndDate)})}}
                 </div>
                 <!--    Room    -->
                 <div class="pt-1 mb-4" v-if="canEdit">
@@ -298,16 +299,18 @@
                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
                         <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
-                            <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                            <ListboxOption v-for="room in this.rooms"
+                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
                                 <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                    {{ room.name }} <img
-                                    v-if="this.roomCollisionArray ? this.roomCollisionArray[room.id] > 0 : false"
-                                    src="/Svgs/IconSvgs/icon_warning_white.svg"
-                                    class="h-4 w-4 mx-2" alt="conflictIcon"/>
+                                    {{ room.name }}
+                                    <img
+                                        v-if="this.roomCollisionArray[room.id] > 0"
+                                        src="/Svgs/IconSvgs/icon_warning_white.svg"
+                                        class="h-4 w-4 mx-2" alt="conflictIcon"
+                                    />
                                 </div>
                                 <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                             </ListboxOption>
@@ -316,18 +319,23 @@
                     <Listbox as="div" v-model="selectedRoom" id="room" v-else>
                         <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
                             <div class="flex-grow xsLight text-left subpixel-antialiased">
-                                Raum wählen*
+                                {{$t('Select room')}}*
                             </div>
                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
-                        <ListboxOptions class="w-[88%] bg-primary max-h-32 overflow-y-auto text-sm absolute z-50">
+                        <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between"
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
-                                <div :class="[selected ? 'text-white' : '']">
+                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
                                     {{ room.name }}
+                                    <img
+                                        v-if="this.roomCollisionArray[room.id] > 0"
+                                        src="/Svgs/IconSvgs/icon_warning_white.svg"
+                                        class="h-4 w-4 mx-2" alt="conflictIcon"
+                                    />
                                 </div>
                                 <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                             </ListboxOption>
@@ -345,11 +353,11 @@
                             <div class="my-3">
                                 <input type="checkbox" v-model="showProjectInfo"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300">
-                                <span :class="[showProjectInfo ? 'xsDark' : 'xsLight', 'text-sm ml-2']">Termin einem Projekt zuordnen</span>
+                                <span :class="[showProjectInfo ? 'xsDark' : 'xsLight', 'text-sm ml-2']">{{$t('Assign event to a project')}}</span>
                             </div>
                             <div v-if="showProjectInfo">
                                 <div class="xsLight flex" v-if="!this.creatingProject">
-                                    Aktuell zugeordnet zu:
+                                    {{$t('Currently assigned to:')}}
                                     <a v-if="this.selectedProject?.id"
                                        :href="route('projects.show.calendar', {project: selectedProject.id})"
                                        class="ml-3 flex xsDark">
@@ -367,14 +375,14 @@
                                     </div>
                                 </div>
                                 <div class="xsLight" v-if="this.creatingProject">
-                                    Das Projekt wird beim Abspeichern erstellt.
+                                    {{ $t('The project is created when it is saved.') }}
                                 </div>
 
                                 <div class="my-2" v-if="this.canEdit">
                                     <div class="flex pb-2">
                             <span class="mr-4 "
                                   :class="[!creatingProject ? 'xsDark' : 'xsLight',]">
-                                Bestehendes Projekt
+                                {{$t('Existing project')}}
                             </span>
                                         <div class="flex">
                                             <label for="project-toggle"
@@ -392,19 +400,19 @@
                                             </label>
                                             <span class="ml-4 text-sm"
                                                   :class="[creatingProject ? 'xsDark' : 'xsLight']">
-                                Neues Projekt
+                                {{$t('New project')}}
                             </span>
                                             <div v-if="showHints" class="ml-3 flex">
                                                 <SvgCollection svgName="arrowLeft" class="mt-1"/>
                                                 <div class=" ml-1 my-auto hind">
-                                                    Lege gleichzeitig ein neues Projekt an
+                                                    {{ $t('Create a new project at the same time')}}
                                                 </div>
                                             </div>
                                         </div>
 
                                     </div>
                                     <input type="text"
-                                           :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
+                                           :placeholder="creatingProject ? $t('New project name') : $t('Search project')"
                                            v-model="projectName"
                                            class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
@@ -425,22 +433,22 @@
                         <p class="text-xs text-red-800">{{ error?.projectName?.join('. ') }}</p>
                         <!--    Description    -->
                         <div class="py-2">
-                    <textarea v-if="canEdit" placeholder="Was gibt es bei dem Termin zu beachten?"
+                    <textarea v-if="canEdit" :placeholder="$t('What do I need to bear in mind for the event?')"
                               id="description"
                               :disabled="!canEdit"
                               v-model="description"
                               rows="4"
-                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
                             <div v-else-if="this.description" class="mt-4 xsDark">
                                 {{ this.description }}
                             </div>
                             <div v-if="this.event?.occupancy_option && canEdit">
-                        <textarea v-if="canEdit" placeholder="Kommentar zur Belegung (Anfragende*r wird benachrichtigt)"
+                        <textarea v-if="canEdit" :placeholder="$t('Comment on the booking (inquirer will be notified)')"
                                   id="adminComment"
                                   :disabled="!canEdit"
                                   v-model="adminComment"
                                   rows="4"
-                                  class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                  class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
                             </div>
                             <div v-if="this.event?.occupancy_option && (isRoomAdmin || this.hasAdminRole()) "
                                  class="flex py-2 items-center">
@@ -459,7 +467,7 @@
                                 </label>
                                 <span class="ml-2 text-sm"
                                       :class="[accept ? 'xsDark' : 'xsLight']">
-                                Zusagen
+                                {{ $t('Commitments')}}
                         </span>
                                 <div class="ml-12 flex items-center">
                                     <label for="optionAccept-toggle"
@@ -478,7 +486,7 @@
                                     </label>
                                     <span class="ml-2 text-sm"
                                           :class="[optionAccept ? 'xsDark' : 'xsLight']">
-                                Optional zusagen
+                                {{ $t('Optional commitment')}}
                         </span>
                                 </div>
                             </div>
@@ -507,7 +515,7 @@
                         </div>
                         <div v-if="!this.$can('request room occupancy')">
                             <div class="errorText">
-                                Dir fehlt das Recht eine Raumbelegung anzufragen.
+                                {{$t('You do not have the permission to request a room reservation.')}}
                             </div>
                         </div>
                         <div v-if="showComments" class="my-6" v-for="comment in this.event.comments">
@@ -534,7 +542,7 @@
                             <span class="float-left flex xsLight subpixel-antialiased"><img
                                 src="/Svgs/IconSvgs/icon_adjustments.svg"
                                 class="mr-2"
-                                alt="attributeIcon"/>Termineigenschaften wählen</span>
+                                alt="attributeIcon"/>{{$t('Select appointment properties')}}</span>
                                     <ChevronDownIcon
                                         class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                         aria-hidden="true"
@@ -561,7 +569,7 @@
                                                  alt="audienceIcon"/>
 
                                             <div :class="[audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
-                                                Mit Publikum
+                                                {{$t('With audience')}}
                                             </div>
                                         </div>
                                         <div class="flex w-full mb-2">
@@ -569,8 +577,8 @@
                                                    :disabled="!canEdit"
                                                    type="checkbox"
                                                    class="checkBoxOnDark"/>
-                                            <div :class="[isLoud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">Es
-                                                wird laut
+                                            <div :class="[isLoud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">
+                                                {{ $t('It gets loud')}}
                                             </div>
                                         </div>
                                     </div>
@@ -580,10 +588,10 @@
                         <!--    Properties    -->
                         <div class="flex py-2">
                             <div v-if="audience">
-                                <TagComponent icon="audience" displayed-text="Mit Publikum" hideX="true"></TagComponent>
+                                <TagComponent icon="audience" :displayed-text="$t('With audience')" hideX="true"></TagComponent>
                             </div>
                             <div v-if="isLoud">
-                                <TagComponent displayed-text="es wird laut" hideX="true"></TagComponent>
+                                <TagComponent :displayed-text="$t('It gets loud')" hideX="true"></TagComponent>
                             </div>
                         </div>
                     </div>
@@ -595,14 +603,14 @@
                         <FormButton
                             :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
                             @click="updateOrCreateEvent()"
-                            :text="this.event?.occupancy_option ? this.accept ? 'Zusagen' : this.optionAccept ? 'Optional zusagen' : this.adminComment !== '' ? 'Nachricht senden' : 'Speichern' : 'Speichern'"
+                            :text="this.event?.occupancy_option ? this.accept ? $t('Commitments') : this.optionAccept ? $t('Optional commitment') : this.adminComment !== '' ? $t('Send message') : $t('Save') : $t('Save')"
                         />
                     </div>
                     <div class="flex justify-center w-full py-4" v-else>
                         <FormButton
                             :disabled="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || !this.$can('request room occupancy')"
                             @click="updateOrCreateEvent(true)"
-                            text="Belegung anfragen"
+                            :text="$t('Request occupancy')"
                         />
                     </div>
                 </div>
@@ -613,9 +621,9 @@
     <!-- Event löschen Modal -->
     <confirmation-component
         v-if="deleteComponentVisible"
-        confirm="Löschen"
-        titel="Termin löschen"
-        :description="'Bist du sicher, dass du den Termin ' + this.event.title + ' in den Papierkorb legen möchtest? Du kannst ihn innerhalb von 30 Tagen wiederherstellen.'"
+        :confirm="$t('Delete')"
+        :titel="$t('Delete event?')"
+        :description="$t('Are you sure you want to put the event {0} in the trash? You can restore it within 30 days.', [this.event.title ?? ''])"
         @closed="afterConfirm"/>
 
     <ChangeAllSubmitModal
@@ -628,9 +636,6 @@
 
 
 <script>
-
-import {ref} from "vue";
-
 const options = [
     {
         name: 'Option 1',
@@ -647,19 +652,33 @@ const options = [
 ];
 
 import JetDialogModal from "@/Jetstream/DialogModal";
-import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
+import {
+    ChevronDownIcon,
+    DotsVerticalIcon,
+    PencilAltIcon,
+    XCircleIcon,
+    XIcon
+} from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
     Listbox,
-    ListboxButton, ListboxLabel,
+    ListboxButton,
+    ListboxLabel,
     ListboxOption,
     ListboxOptions,
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems, Switch, SwitchGroup, SwitchLabel
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
-import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
+import {
+    CheckIcon,
+    ChevronUpIcon,
+    TrashIcon
+} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
@@ -675,7 +694,9 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'EventComponent',
-    mixins: [Permissions],
+    mixins: [
+        Permissions
+    ],
     components: {
         FormButton,
         UserPopoverTooltip,
@@ -714,7 +735,6 @@ export default {
             options,
         }
     },
-
     data() {
         return {
             submit: true,
@@ -764,7 +784,6 @@ export default {
             error: null,
             creatingProject: false,
             projectSearchResults: [],
-            collisionCount: 0,
             description: null,
             canEdit: null,
             declinedRoomId: null,
@@ -788,11 +807,18 @@ export default {
             helpTextLengthRoom: ''
         }
     },
-
-    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event', 'project', 'wantedRoomId', 'roomCollisions', 'showComments'],
-
+    props: [
+        'showHints',
+        'eventTypes',
+        'rooms',
+        'isAdmin',
+        'event',
+        'project',
+        'wantedRoomId',
+        'roomCollisions',
+        'showComments'
+    ],
     emits: ['closed'],
-
     watch: {
         selectedRoom: {
             deep: true,
@@ -828,7 +854,9 @@ export default {
             return adminIds;
         },
         isRoomAdmin() {
-            return this.rooms.find(room => room.id === this.event?.roomId)?.admins.some(admin => admin.id === this.$page.props.user.id) || false;
+            return this.rooms.find(room => room.id === this.event?.roomId)?.admins.some(
+                admin => admin.id === this.$page.props.user.id
+            ) || false;
         },
         isCreator() {
             return this.event ? this.event.created_by?.id === this.$page.props.user.id : false
@@ -898,12 +926,10 @@ export default {
                 this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId)
             }
 
-
             this.description = this.event.description
 
             this.checkCollisions();
         },
-
         closeModal(bool) {
             this.startDate = null;
             this.startTime = null;
@@ -913,7 +939,6 @@ export default {
             this.selectedProject = null;
             this.$emit('closed', bool);
         },
-
         /**
          * Format date and time to ISO 8601 with timezone UTC
          *
@@ -925,7 +950,6 @@ export default {
             if (date === null || time === null) return null;
             return (new Date(date + ' ' + time)).toISOString()
         },
-
         checkChanges() {
             if (this.selectedRoom) {
                 if (this.selectedRoom.temporary) {
@@ -949,26 +973,8 @@ export default {
                 }
             }
 
-
             this.updateTimes(this.event);
-
-            if (this.event?.start && this.event?.end) {
-
-                axios.post('/collision/room', {
-                    params: {
-                        start: this.event?.start,
-                        end: this.event?.end,
-                    }
-                })
-                    .then(response => this.roomCollisionArray = response.data);
-            }
-
-
         },
-        checkTypeChange() {
-
-        },
-
         /**
          * If the user selects a start, end, and room
          * call the server to get information if there are any collision
@@ -976,31 +982,19 @@ export default {
          * @returns {Promise<void>}
          */
         async checkCollisions() {
-            if (this.startTime && this.startDate && this.endTime && this.endDate) {
-                let startFull = this.formatDate(this.startDate, this.startTime);
-                let endFull = this.formatDate(this.endDate, this.endTime);
-                if (this.selectedRoom) {
-                    await axios
-                        .get('/events/collision', {
-                            params: {
-                                start: startFull,
-                                end: endFull,
-                                roomId: this.selectedRoom?.id,
-                            }
-                        })
-                        .then(response => this.collisionCount = response.data);
-                }
+            if (
+                this.startTime && this.startDate && this.endTime && this.endDate ||
+                this.allDayEvent && this.startDate && this.endDate
+            ) {
+                let startFull = this.formatDate(this.startDate, this.startTime ?? '00:00');
+                let endFull = this.formatDate(this.endDate, this.endTime ?? '23:59');
                 await axios.post('/collision/room', {
                     params: {
                         start: startFull,
-                        end: endFull,
+                        end: endFull
                     }
                 }).then(response => this.roomCollisionArray = response.data);
-            } else {
-                this.collisionCount = 0
             }
-
-
         },
         checkYear(date) {
             return (parseInt(date.split('-')[0]) > 1900);
@@ -1019,7 +1013,9 @@ export default {
                             if (startHours === '23') {
                                 this.endTime = '00:' + this.startTime.slice(3, 5);
                                 let date = new Date();
-                                this.endDate = new Date(date.setDate(new Date(this.endDate).getDate() + 1)).toISOString().slice(0, 10);
+                                this.endDate = new Date(
+                                    date.setDate(new Date(this.endDate).getDate() + 1)
+                                ).toISOString().slice(0, 10);
                             } else {
                                 this.endTime = this.getNextHourString(this.startTime)
                             }
@@ -1028,15 +1024,11 @@ export default {
                 }
             }
 
-
             this.validateStartBeforeEndTime();
-
             this.checkCollisions();
             this.checkEventTimeLength()
-
         },
         async validateStartBeforeEndTime() {
-
             this.error = null;
             if (this.startDate && this.endDate && this.startTime && this.endTime) {
                 this.setCombinedTimeString(this.startDate, this.startTime, 'start');
@@ -1045,7 +1037,6 @@ export default {
                     .post('/events', {start: this.startFull, end: this.endFull}, {headers: {'X-Dry-Run': true}})
                     .catch(error => this.error = error.response.data.errors);
             }
-
         },
         checkEventTimeLength() {
             // check if event min 30min
@@ -1069,15 +1060,23 @@ export default {
 
             if (target === 'start') {
                 if (offset === -60) {
-                    this.startFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                    this.startFull = new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
+                    ).toISOString().slice(0, 16);
                 } else {
-                    this.startFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                    this.startFull = new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
+                    ).toISOString().slice(0, 16);
                 }
             } else if (target === 'end') {
                 if (offset === -60) {
-                    this.endFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                    this.endFull = new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)
+                    ).toISOString().slice(0, 16);
                 } else {
-                    this.endFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                    this.endFull = new Date(
+                        new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)
+                    ).toISOString().slice(0, 16);
                 }
             }
         },
@@ -1098,7 +1097,12 @@ export default {
          */
         async updateOrCreateEvent(isOption = false) {
             this.isOption = isOption;
-            this.handleAllDayEventChange();
+
+            if (this.allDayEvent) {
+                // Set startTime to "00:00" and endTime to "23:59" for all-day event
+                this.startTime = "00:00";
+                this.endTime = "23:59";
+            }
 
             if (this.accept === false && this.optionAccept === false) {
                 this.isOption = true;
@@ -1129,12 +1133,7 @@ export default {
                         })
                         .catch(error => this.error = error.response.data.errors);
                 }
-
-
             }
-
-
-            /**/
         },
         async singleSaveEvent() {
             return await axios
@@ -1158,7 +1157,6 @@ export default {
         closeSeriesEditModal() {
             this.showSeriesEdit = false;
         },
-
         async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;
 
@@ -1193,16 +1191,6 @@ export default {
                 }
             }
         },
-        handleAllDayEventChange() {
-            if (this.allDayEvent) {
-                // Set startTime to "00:00" and endTime to "23:59" for all-day event
-                this.startTime = "00:00";
-                this.endTime = "23:59";
-            } else {
-                // Handle other logic if needed when allDayEvent is false
-            }
-        },
-
         eventData() {
             return {
                 title: this.title,
@@ -1235,5 +1223,3 @@ export default {
     },
 }
 </script>
-
-<style scoped></style>

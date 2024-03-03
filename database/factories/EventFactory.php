@@ -24,6 +24,7 @@ class EventFactory extends Factory
 
         return [
             'name' => $this->faker->text(20),
+            'eventName' => $this->faker->text(20),
             'description' => $this->faker->text,
             'start_time' => $startTime->toDateTimeString(),
             'end_time' => $startTime->addHours($this->faker->numberBetween(1, 8))->toDateTimeString(),

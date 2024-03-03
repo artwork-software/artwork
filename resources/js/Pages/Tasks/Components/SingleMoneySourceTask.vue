@@ -41,7 +41,7 @@ export default {
                 <div v-if="!task.done && task.deadline"
                      class="ml-2 my-auto pt-1 xsLight "
                      :class="task.isDeadlineInFuture ? '' : 'text-error'">
-                    bis {{ task.deadline }}
+                    {{ $t('until')}} {{ task.deadline }}
                 </div>
             </div>
             <div class="my-auto">

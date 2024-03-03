@@ -14,6 +14,7 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -52,6 +53,7 @@ class Event extends Model
     use HasChangesHistory;
     use HasFactory;
     use SoftDeletes;
+    use Prunable;
 
     protected $with = ['series', 'event_type', 'subEvents'];
 
@@ -244,7 +246,10 @@ class Event extends Model
             $this->end_time->isBetween($event->start_time, $event->end_time);
     }
 
-    // scopes
+    public function prunable(): Builder
+    {
+        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
+    }
 
     public function scopeHasNoRoom(Builder $builder): Builder
     {
@@ -259,5 +264,39 @@ class Event extends Model
     public function scopeByEventTypeId(Builder $builder, int $eventTypeId): Builder
     {
         return $builder->where('event_type_id', $eventTypeId);
+    }
+
+    public function scopeStartAndEndTimeOverlap(Builder $builder, Carbon $start, Carbon $end): Builder
+    {
+        return $builder->where(
+            function ($query) use ($start, $end): void {
+                // Events, die innerhalb des gegebenen Zeitraums starten und enden
+                $query->whereBetween('start_time', [$start, $end])
+                    ->whereBetween('end_time', [$start, $end]);
+            }
+        )->orWhere(
+            function ($query) use ($start, $end): void {
+                // Events, die vor dem gegebenen Startdatum beginnen und nach dem gegebenen Enddatum enden
+                $query->where('start_time', '<', $start)
+                    ->where('end_time', '>', $end);
+            }
+        )->orWhere(
+            function ($query) use ($start, $end): void {
+            // Events, die vor dem gegebenen Startdatum beginnen und innerhalb des gegebenen Zeitraums enden
+                $query->where('start_time', '<', $start)
+                ->whereBetween('end_time', [$start, $end]);
+            }
+        )->orWhere(
+            function ($query) use ($start, $end): void {
+                // Events, die innerhalb des gegebenen Zeitraums starten und nach dem gegebenen Enddatum enden
+                $query->whereBetween('start_time', [$start, $end])
+                ->where('end_time', '>', $end);
+            }
+        );
+    }
+
+    public function scopeIsNotId(Builder $builder, int $eventId): Builder
+    {
+        return $builder->where('id', '!=', $eventId);
     }
 }

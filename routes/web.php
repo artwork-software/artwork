@@ -46,6 +46,7 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\RowCommentController;
 use App\Http\Controllers\SageAssignedDataCommentController;
+use App\Http\Controllers\SageNotAssignedDataController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\ServiceProviderContactsController;
 use App\Http\Controllers\ServiceProviderController;
@@ -253,14 +254,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
 
     //ProjectTabs
-    Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])->name('projects.show.info')->middleware(CanViewProject::class);
+    Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])
+        ->name('projects.show.info')
+        ->middleware(CanViewProject::class);
     Route::get('/projects/{project}/calendar', [ProjectController::class, 'projectCalendarTab'])
         ->name('projects.show.calendar')->middleware(CanViewProject::class);
     ;
     Route::get('/projects/{project}/checklist', [ProjectController::class, 'projectChecklistTab'])
         ->name('projects.show.checklist')->middleware(CanViewProject::class);
     ;
-    Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])->name('projects.show.shift')->can('can plan shifts');
+    Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])
+        ->name('projects.show.shift')->can('can plan shifts');
     Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
         ->name('projects.export.budget');
     Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])
@@ -429,7 +433,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     // Event Api
     Route::get('/events', [EventController::class, 'eventIndex'])->name('events.index');
-    Route::get('/events/collision', [EventController::class, 'getCollisionCount'])->name('events.collisions');
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
@@ -467,7 +470,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/collision/room', [RoomController::class, 'collisionsCount'])->name('collisions.room');
     Route::patch('/notifications', [NotificationController::class, 'setOnRead'])->name('notifications.setReadAt');
-    Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])->name('notifications.setReadAtAll');
+    Route::patch('/notifications/all', [NotificationController::class, 'setOnReadAll'])
+        ->name('notifications.setReadAtAll');
     Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
     Route::patch('/user/settings/{setting}', [NotificationController::class, 'updateSetting'])
         ->name('notifications.settings');
@@ -707,6 +711,33 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('project.budget.sub-position.delete');
             Route::delete('/table/{table}', [ProjectController::class, 'deleteTable'])
                 ->name('project.budget.table.delete');
+
+            Route::get('/sageNotAssignedData/trashed', [SageNotAssignedDataController::class, 'getTrashed'])
+                ->name('sageNotAssignedData.trashed');
+
+            Route::delete(
+                '/sageNotAssignedData/{sageNotAssignedData}',
+                [
+                    SageNotAssignedDataController::class, 'destroy'
+                ]
+            )
+                ->name('sageNotAssignedData.destroy');
+            Route::delete(
+                '/sageNotAssignedData/{sageNotAssignedData}/forceDelete',
+                [
+                    SageNotAssignedDataController::class, 'forceDelete'
+                ]
+            )
+                ->name('sageNotAssignedData.forceDelete')
+                ->withTrashed();
+            Route::patch(
+                '/sageNotAssignedData/{sageNotAssignedData}/restore',
+                [
+                    SageNotAssignedDataController::class, 'restore'
+                ]
+            )
+                ->name('sageNotAssignedData.restore')
+                ->withTrashed();
 
             Route::resource('sageAssignedDataComments', SageAssignedDataCommentController::class)
                 ->only(['store', 'destroy']);

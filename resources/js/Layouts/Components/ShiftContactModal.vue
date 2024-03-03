@@ -7,27 +7,28 @@
                    class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="headline1">
-                Ansprechpartner*innen
+                {{ $t('Contact persons') }}
             </div>
             <div class="xsLight my-4">
-                Lege Ansprechpartner*innen für diese Schichtplanung fest
+                {{ $t('Define contact persons for this shift planning') }}
             </div>
             <div class="w-full grid grid-cols-2">
-                <div class="flex flex-wrap mt-4 mr-4 col-span-1" v-for="user in this.project.project_managers">
+                <div class="flex flex-wrap mt-4 mr-4 col-span-1" v-for="user in this.projectManagers">
                     <div class="flex">
                         <div class="mr-4">
-
-                            <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
-                                 class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                            <img :data-tooltip-target="user?.id"
+                                 :src="user?.profile_photo_url"
+                                 :alt="user?.name"
+                                 class="ring-white ring-2 rounded-full h-11 w-11 object-cover"
+                            />
                         </div>
                         <div>
                             <div>
                                 <div class="xsDark">
                                     {{ user.first_name }} {{ user.last_name }}
-
                                 </div>
-                                <div class="xxsLight tracking-wider">
-                                    PROJEKTLEITUNG
+                                <div class="xxsLight tracking-wider uppercase">
+                                    {{ $t('Project management') }}
                                 </div>
                             </div>
                         </div>
@@ -36,7 +37,7 @@
             </div>
             <div class="w-full relative">
                 <div class="my-auto w-full mr-12">
-                    <input placeholder="Mitarbeiter*in"
+                    <input :placeholder="$t('Employee')"
                            id="userSearch"
                            v-model="user_query"
                            autocomplete="off"
@@ -64,28 +65,26 @@
                 </transition>
             </div>
             <div class="mt-4 w-full">
-                    <span v-for="(user,index) in project.shift_contacts"
-                          class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
-                            <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full object-cover"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
-                                <span class="flex ml-4 sDark">
-                                {{ user.first_name }} {{ user.last_name }}
-                                    </span>
-                            </div>
-                            <button type="button" @click="deleteUserFromContactArray(user)">
-                                <span class="sr-only">User als Ansprechpartner entfernen</span>
-                                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
-                            </button>
+                <span v-for="(user,index) in this.shift_contacts"
+                      class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
+                    <div class="flex items-center">
+                        <img class="flex h-11 w-11 rounded-full object-cover"
+                             :src="user.profile_photo_url"
+                             alt=""/>
+                        <span class="flex ml-4 sDark">
+                            {{ user.first_name }} {{ user.last_name }}
                         </span>
+                    </div>
+                    <button type="button" @click="deleteUserFromContactArray(user)">
+                        <span class="sr-only">{{ $t('Remove user as contact person') }}</span>
+                        <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
+                    </button>
+                </span>
             </div>
-
             <div class="flex justify-center mt-2">
-                <AddButton mode="modal" text="Speichern" @click="changeShiftContacts"/>
+                <AddButton mode="modal" :text="$t('Save')" @click="changeShiftContacts"/>
             </div>
         </template>
-
     </jet-dialog-modal>
 </template>
 
@@ -101,10 +100,12 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 export default {
     mixins: [Permissions],
     name: "ShiftContactModal",
-    props: {
-        show: Boolean,
-        project: Object
-    },
+    props: [
+        'show',
+        'assignedShiftContacts',
+        'projectId',
+        'projectManagers'
+    ],
     components: {
         XCircleIcon,
         UserTooltip,
@@ -119,6 +120,8 @@ export default {
         return {
             user_search_results: [],
             user_query: '',
+            //remove reference to original object by destructuring to new array
+            shift_contacts: [...this.assignedShiftContacts]
         }
     },
     watch: {
@@ -138,33 +141,29 @@ export default {
     methods: {
         changeShiftContacts() {
             let contactIds = [];
-            this.project.shift_contacts.forEach((contact) => {
+            this.shift_contacts.forEach((contact) => {
                 contactIds.push(contact.id);
             })
-            this.$inertia.patch(route('projects.update.shift_contacts', {project: this.project.id}), {
+            this.$inertia.patch(route('projects.update.shift_contacts', {project: this.projectId}), {
                 contactIds: contactIds,
             });
             this.$emit('closeModal')
         },
         addUserToContactArray(user) {
             let contactIds = [];
-            this.project.shift_contacts.forEach((contact) => {
+            this.shift_contacts.forEach((contact) => {
                 contactIds.push(contact.id)
             })
             if (!contactIds.includes(user.id)) {
-                this.project.shift_contacts.push(user);
+                this.shift_contacts.push(user);
             }
             this.user_query = '';
         },
         deleteUserFromContactArray(user) {
-            if (this.project.shift_contacts.includes(user)) {
-                this.project.shift_contacts.splice(this.project.shift_contacts.indexOf(user), 1);
+            if (this.shift_contacts.includes(user)) {
+                this.shift_contacts.splice(this.shift_contacts.indexOf(user), 1);
             }
         },
     }
 }
 </script>
-
-<style scoped>
-
-</style>

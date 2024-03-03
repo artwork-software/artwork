@@ -22,18 +22,21 @@ class CraftController extends Controller
             $craft->update(['assignable_by_all' => false]);
             $craft->users()->sync($craftStoreRequest->users);
         }
+
         return Redirect::back();
     }
 
     public function update(CraftUpdateRequest $craftUpdateRequest, Craft $craft): RedirectResponse
     {
         $this->craftService->updateByRequest($craftUpdateRequest, $craft);
+
         return Redirect::back();
     }
 
     public function destroy(Craft $craft): RedirectResponse
     {
         $this->craftService->delete($craft);
-        return Redirect::back()->with('success', 'Craft deleted');
+
+        return Redirect::back();
     }
 }

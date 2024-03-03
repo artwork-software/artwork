@@ -87,9 +87,13 @@ class ShiftFreelancerService
     ): void {
         $this->getNewHistoryService(Shift::class)->createHistory(
             $shift->id,
-            'Freelancer ' . $freelancer->getNameAttribute() . ' wurde zur Schicht (' .
-                $shift->craft->abbreviation . ' - ' . $shift->event->eventName . ') als "' .
-                $shiftQualification->name . '" hinzugefügt',
+            'Freelancer was added to the shift as',
+            [
+                $freelancer->getNameAttribute(),
+                $shift->craft->abbreviation,
+                $shift->event->eventName,
+                $shiftQualification->name
+            ],
             'shift'
         );
     }
@@ -214,7 +218,7 @@ class ShiftFreelancerService
         );
     }
 
-    public function removeFromShiftByUserIdAndShiftId(int $freelancerId, int $shiftId): ShiftFreelancer
+    public function removeFromShiftByUserIdAndShiftId(int $freelancerId, int $shiftId): void
     {
         $this->removeFromShift(
             $this->shiftFreelancerRepository->findByUserIdAndShiftId(
@@ -236,8 +240,12 @@ class ShiftFreelancerService
     {
         $this->getNewHistoryService(Shift::class)->createHistory(
             $shift->id,
-            'Freelancer ' . $freelancer->getNameAttribute() . ' wurde von Schicht (' .
-            $shift->craft->abbreviation . ' - ' . $shift->event->eventName . ') entfernt',
+            'Freelancer was removed from shiftFreelancer',
+            [
+                $freelancer->getNameAttribute(),
+                $shift->craft->abbreviation,
+                $shift->event->eventName
+            ],
             'shift'
         );
     }

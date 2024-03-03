@@ -4,9 +4,11 @@ namespace Artwork\Modules\Budget\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Project\Models\Project;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -26,6 +28,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SageNotAssignedData extends Model
 {
     use HasFactory;
+    use SoftDeletes;
+    use Prunable;
 
     protected $fillable = [
         'project_id',
@@ -47,8 +51,8 @@ class SageNotAssignedData extends Model
         return $this->belongsTo(Project::class, 'project_id', 'id', 'projects');
     }
 
-    public function getBuchungsdatumAttribute(string $value): string
+    public function prunable(): Builder
     {
-        return Carbon::createFromTimeString($value)->format('d.m.Y');
+        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
     }
 }

@@ -6,20 +6,17 @@
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap w-full">
                             <div class="flex flex-wrap w-full">
-                                <h2 class="headline1 flex w-full">Räume & Areale</h2>
+                                <h2 class="headline1 flex w-full">{{ $t('Rooms & areas')}}</h2>
                                 <div class="xsLight flex mt-4 w-full">
-                                    Lege Areale und Räume an und weise einzelnen Räumen Nebenräume zu. Definiere
-                                    zusätzlich globale Eigenschaften für Räume.
+                                    {{ $t('Create areas and rooms and assign side rooms to individual rooms. Also define global properties for rooms.')}}
                                 </div>
 
-                                <h2 class="mt-10 headline2 w-full">Raumeigenschaften</h2>
+                                <h2 class="mt-10 headline2 w-full">{{ $t('Room properties')}}</h2>
                                 <div class="xsLight flex mt-4 w-full">
-                                    Lege Raumkategorien und -eigenschaften fest. Nach diesen kann anschließend in den
-                                    Kalendern gefiltert werden.
+                                    {{ $t('Define room categories and properties. These can then be filtered in the calendars.')}}
                                 </div>
                                 <div v-if="showInvalidNameErrorText" class="text-red-600 text-sm mt-4">
-                                    Sie haben einen ungültigen Namen angegeben. Am Anfang und Ende sind keine
-                                    Leerzeichen erlaubt. Ebenso ist es unzulässig ausschließlich Leerzeichen einzugeben.
+                                    {{$t('You have entered an invalid name. No spaces are allowed at the beginning or end. It is also not permitted to enter only spaces.')}}
                                 </div>
                                 <div class=" w-full grid grid-cols-2 grid-flow-col grid-rows-2">
                                     <!-- Raumkategorien -->
@@ -35,7 +32,7 @@
                                                 subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base
                                                  peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5
                                                   peer-focus:text-sm ">
-                                                Raumkategorie eingeben
+                                                {{ $t('Enter room category')}}
                                             </label>
                                         </div>
 
@@ -73,7 +70,7 @@
                                                 subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base
                                                  peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5
                                                   peer-focus:text-sm ">
-                                                Raumeigenschaft eingeben
+                                                {{ $t('Enter room property')}}
                                             </label>
                                         </div>
 
@@ -101,17 +98,17 @@
                                 </div>
 
                                 <div class="flex w-full justify-between mt-6">
-                                    <h2 class=" mt-10 headline2">Areale</h2>
+                                    <h2 class=" mt-10 headline2">{{$t('Areas ')}}</h2>
                                 </div>
                                 <div class="flex w-full justify-between mt-6">
                                     <div class="flex">
                                         <div>
-                                            <AddButtonBig @click="openAddAreaModal" text="Areal hinzufügen"/>
+                                            <AddButtonBig @click="openAddAreaModal" :text="$t('Add area')"/>
                                         </div>
                                         <div v-if="this.$page.props.show_hints" class="flex">
                                             <SvgCollection svgName="arrowLeft" class="ml-2 mt-4"/>
                                             <span
-                                                class="ml-1 mt-4 hind">Lege neue Areale an</span>
+                                                class="ml-1 mt-4 hind">{{ $t('Create new areas')}}</span>
                                         </div>
                                     </div>
 
@@ -155,11 +152,11 @@
                                                             <div class="py-1">
                                                                 <MenuItem v-slot="{ active }">
                                                                     <a @click="openEditAreaModal(area)"
-                                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                                                         <PencilAltIcon
                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                             aria-hidden="true"/>
-                                                                        Bearbeiten
+                                                                        {{ $t('edit')}}
                                                                     </a>
                                                                 </MenuItem>
                                                                 <MenuItem v-slot="{ active }">
@@ -169,7 +166,7 @@
                                                                         <DuplicateIcon
                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                             aria-hidden="true"/>
-                                                                        Duplizieren
+                                                                        {{ $t('Duplicate')}}
                                                                     </a>
                                                                 </MenuItem>
                                                                 <MenuItem v-slot="{ active }">
@@ -178,7 +175,7 @@
                                                                         <TrashIcon
                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                             aria-hidden="true"/>
-                                                                        In den Papierkorb
+                                                                        {{ $t('In the wastebasket')}}
                                                                     </a>
                                                                 </MenuItem>
                                                                 <MenuItem v-slot="{ active }">
@@ -187,7 +184,7 @@
                                                                         <PencilAltIcon
                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                             aria-hidden="true"/>
-                                                                        Alle Räume entfernen
+                                                                        {{ $t('Remove all rooms')}}
                                                                     </a>
                                                                 </MenuItem>
                                                             </div>
@@ -198,12 +195,12 @@
                                         </div>
                                         <div class="flex w-full mt-6" v-if="this.opened_areas.includes(area.id)">
                                             <div class="">
-                                                <AddButtonBig @click="openAddRoomModal(area)" text="Raum hinzufügen" />
+                                                <AddButtonBig @click="openAddRoomModal(area)" :text="$t('Add room')" />
                                             </div>
                                             <div v-if="this.$page.props.show_hints" class="flex">
                                                 <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                                 <span
-                                                    class="hind text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Räume an</span>
+                                                    class="hind text-secondary tracking-tight ml-1 text-xl">{{ $t('Create new rooms')}}</span>
                                             </div>
                                         </div>
                                         <div class="mt-6 mb-12" v-if="this.opened_areas.includes(area.id)">
@@ -228,7 +225,7 @@
                                                                     </Link>
                                                                     <div
                                                                         class="ml-6 mt-1 flex items-center xsLight my-auto">
-                                                                        angelegt am {{ element.created_at }} von
+                                                                        {{$t('created on { created_at } by', {'crated_at': element.created_at })}}
                                                                         <UserPopoverTooltip :user="element.created_by"
                                                                                             :id="element.created_by.id"
                                                                                             :height="6" :width="6"
@@ -258,11 +255,11 @@
                                                                             <div class="py-1">
                                                                                 <MenuItem v-slot="{ active }">
                                                                                     <a @click="openEditRoomModal(element)"
-                                                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                                                                         <PencilAltIcon
                                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                             aria-hidden="true"/>
-                                                                                        Bearbeiten
+                                                                                        {{ $t('edit')}}
                                                                                     </a>
                                                                                 </MenuItem>
                                                                                 <MenuItem v-slot="{ active }">
@@ -272,7 +269,7 @@
                                                                                         <DuplicateIcon
                                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                             aria-hidden="true"/>
-                                                                                        Duplizieren
+                                                                                        {{ $t('Duplicate')}}
                                                                                     </a>
                                                                                 </MenuItem>
                                                                                 <MenuItem v-slot="{ active }">
@@ -281,7 +278,7 @@
                                                                                         <TrashIcon
                                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                             aria-hidden="true"/>
-                                                                                        In den Papierkorb
+                                                                                        {{ $t('In the wastebasket')}}
                                                                                     </a>
                                                                                 </MenuItem>
                                                                             </div>
@@ -299,8 +296,7 @@
                                                  class="mt-12">
                                                 <h2 v-on:click="switchVisibility(area.id)"
                                                     class="pb-2 flex xxsDarkBold cursor-pointer">
-                                                    Temporäre
-                                                    Räume
+                                                    {{ $t('Temporary rooms')}}
                                                     <ChevronUpIcon v-if="showTemporaryRooms.includes(area.id)"
                                                                    class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
                                                     <ChevronDownIcon v-else
@@ -330,7 +326,7 @@
                                                                         </Link>
                                                                         <div
                                                                             class="ml-6 flex items-center xsLight my-auto">
-                                                                            angelegt am {{ element.created_at }} von
+                                                                            {{$t('created on { created_at } by', {'crated_at': element.created_at })}}
                                                                             <UserPopoverTooltip
                                                                                 :user="element.created_by"
                                                                                 :id="element.created_by.id"
@@ -362,11 +358,11 @@
                                                                                 <div class="py-1">
                                                                                     <MenuItem v-slot="{ active }">
                                                                                         <a @click="openEditRoomModal(element)"
-                                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
                                                                                             <PencilAltIcon
                                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                                 aria-hidden="true"/>
-                                                                                            Bearbeiten
+                                                                                            {{ $t('edit')}}
                                                                                         </a>
                                                                                     </MenuItem>
                                                                                     <MenuItem v-slot="{ active }">
@@ -376,7 +372,7 @@
                                                                                             <DuplicateIcon
                                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                                 aria-hidden="true"/>
-                                                                                            Duplizieren
+                                                                                            {{ $t('Duplicate')}}
                                                                                         </a>
                                                                                     </MenuItem>
                                                                                     <MenuItem v-slot="{ active }">
@@ -385,7 +381,7 @@
                                                                                             <TrashIcon
                                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                                 aria-hidden="true"/>
-                                                                                            In den Papierkorb
+                                                                                            {{ $t('In the wastebasket')}}
                                                                                         </a>
                                                                                     </MenuItem>
                                                                                 </div>
@@ -416,7 +412,7 @@
             <img src="/Svgs/Overlays/illu_area_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="headline1 my-2">
-                    Neues Areal
+                    {{ $t('New area')}}
                 </div>
                 <XIcon @click="closeAddAreaModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
@@ -427,8 +423,8 @@
                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary sDark focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="roomNameEdit"
-                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                            des Areals*
+                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
+                            {{$t('Name of the area')}}*
                         </label>
                         <jet-input-error :message="newAreaForm.error" class="mt-2"/>
                     </div>
@@ -436,7 +432,9 @@
                     <div class="w-full items-center text-center mt-4">
                         <FormButton
                             :disabled="newAreaForm.name.length === 0"
-                            text="Anlegen"
+                            :text="$t('Create')"
+                            class="mt-8"
+                            @click="addArea"
                         />
                     </div>
                 </div>
@@ -449,7 +447,7 @@
             <img src="/Svgs/Overlays/illu_area_edit.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="headline1 my-2">
-                    Areal bearbeiten
+                    {{$t('Edit area')}}
                 </div>
                 <XIcon @click="closeEditAreaModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
@@ -460,8 +458,8 @@
                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="areaEditName"
-                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                            des Areals*
+                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
+                            {{$t('Name of the area')}}*
                         </label>
                         <jet-input-error :message="editAreaForm.error" class="mt-2"/>
                     </div>
@@ -469,7 +467,7 @@
                     <div class="w-full items-center text-center">
                         <FormButton
                             :disabled="editAreaForm.name.length === 0"
-                            text="Speichern"
+                            :text="$t('Save')"
                             @click="editArea"
                             class="mt-8 inline-flex items-center"
                             />
@@ -484,13 +482,13 @@
             <img src="/Svgs/Overlays/illu_room_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3 overflow-y-auto">
                 <div class="headline1 my-2">
-                    Neuer Raum
+                    {{ $t('New room')}}
                 </div>
                 <XIcon @click="closeAddRoomModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
                 <div class="mt-4">
-                    <div class="text-secondary">Lege einen neuen Raum an.</div>
+                    <div class="text-secondary">{{$t('Create a new room.')}}</div>
                     <div class="flex mt-6 relative">
                         <input id="roomName" v-model="newRoomForm.name" type="text"
                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
@@ -501,13 +499,13 @@
                                  peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5
                                   peer-focus:text-sm "
                         >
-                            Raumname*
+                            {{ $t('Room name')}}*
                         </label>
                         <jet-input-error :message="newRoomForm.error" class="mt-2"/>
                     </div>
                     <div class="mt-8">
                                             <textarea
-                                                placeholder="Kurzbeschreibung"
+                                                :placeholder="$t('Short description')"
                                                 v-model="newRoomForm.description" rows="4"
                                                 class="placeholder-secondary border-2 resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-2 w-full font-semibold border border-gray-300 "/>
                     </div>
@@ -517,7 +515,7 @@
                             <MenuButton
                                 class="mt-1 border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                             >
-                                <span class="font-semibold float-left text-secondary">Raumeigenschaften wählen</span>
+                                <span class="font-semibold float-left text-secondary">{{$t('Select room properties')}}</span>
                                 <ChevronDownIcon
                                     class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                     aria-hidden="true"
@@ -542,7 +540,7 @@
                                         <DisclosureButton
                                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                         >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
+                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Room categories')}}</span>
                                             <ChevronDownIcon
                                                 :class="open ? 'rotate-180 transform' : ''"
                                                 class="h-4 w-4 mt-0.5 text-white"
@@ -564,7 +562,7 @@
                                                     {{ category.name }}
                                                 </p>
                                             </div>
-                                            <div v-else class="text-secondary">Noch keine Raumkategorien angelegt</div>
+                                            <div v-else class="text-secondary">{{$t('No room categories created yet')}}</div>
                                         </DisclosurePanel>
                                     </Disclosure>
 
@@ -572,7 +570,7 @@
                                         <DisclosureButton
                                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                         >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Nebenräume</span>
+                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Adjoining rooms')}}</span>
                                             <ChevronDownIcon
                                                 :class="open ? 'rotate-180 transform' : ''"
                                                 class="h-4 w-4 mt-0.5 text-white"
@@ -596,7 +594,7 @@
                                                         {{ room.name }}
                                                     </p>
                                                 </div>
-                                                <div v-else class="text-secondary">Noch keine Räume angelegt</div>
+                                                <div v-else class="text-secondary">{{ $t('No rooms created yet')}}</div>
                                             </div>
 
                                         </DisclosurePanel>
@@ -607,7 +605,7 @@
                                         <DisclosureButton
                                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                         >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumeigenschaften</span>
+                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Room properties')}}</span>
                                             <ChevronDownIcon
                                                 :class="open ? 'rotate-180 transform' : ''"
                                                 class="h-4 w-4 mt-0.5 text-white"
@@ -629,7 +627,8 @@
                                                     {{ attribute.name }}
                                                 </p>
                                             </div>
-                                            <div v-else class="text-secondary">Noch keine Raumeigenschaften angelegt
+                                            <div v-else class="text-secondary">
+                                                {{ $t('No room properties created yet')}}
                                             </div>
                                         </DisclosurePanel>
                                     </Disclosure>
@@ -658,7 +657,7 @@
                         <span v-for="(room, index) in newRoomForm.adjoining_roomsToDisplay"
                               class="flex rounded-full items-center font-medium text-tagText
                                          border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                            Nebenraum von {{ room.name }}
+                            {{ $t('adjoining room from')}} {{ room.name }}
                             <button @click="newRoomForm.adjoining_roomsToDisplay.splice(index,1)" type="button">
                                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                             </button>
@@ -675,17 +674,17 @@
                         <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                             <span
-                                class="ml-1 my-auto hind">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
+                                class="ml-1 my-auto hind">{{ $t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')}}</span>
                         </div>
                     </div>
                     <div class="flex" v-if="newRoomForm.temporary">
                         <input
                             v-model="newRoomForm.start_date" id="startDate"
-                            placeholder="Zu erledigen bis?" type="date"
+                            :placeholder="$t('To be completed by?')" type="date"
                             class="border-gray-300 placeholder-secondary mr-2 w-full"/>
                         <input
                             v-model="newRoomForm.end_date" id="endDate"
-                            placeholder="Zu erledigen bis?" type="date"
+                            :placeholder="$t('To be completed by?')" type="date"
                             class="border-gray-300 placeholder-secondary w-full"/>
                     </div>
                     <div class="flex items-center my-6">
@@ -693,18 +692,18 @@
                                type="checkbox"
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                         <p :class="[newRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
-                           class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
+                           class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone')}}</p>
                         <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                             <span
-                                class="ml-1 my-auto hind">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>
+                                class="ml-1 my-auto hind">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
                         </div>
                     </div>
                     <div class="w-full items-center text-center">
                         <FormButton
                             @click="addRoom"
                             :disabled="newRoomForm.name.length === 0"
-                            text="Anlegen"
+                            :text="$t('Create')"
                             class="inline-flex items-center mt-4"
                         />
                     </div>
@@ -718,7 +717,7 @@
             <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="headline1 my-2">
-                    Raum bearbeiten
+                    {{$t('Edit room')}}
                 </div>
                 <XIcon @click="closeEditRoomModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
@@ -729,13 +728,14 @@
                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary sDark focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="roomNameEdit"
-                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Raumname*
+                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
+                            {{ $t('Room name')}}*
                         </label>
                         <jet-input-error :message="editRoomForm.error" class="mt-2"/>
                     </div>
                     <div class="mt-8">
                                             <textarea
-                                                placeholder="Kurzbeschreibung"
+                                                :placeholder="$t('Short description')"
                                                 v-model="editRoomForm.description" rows="4"
                                                 class="focus:border-black placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
                     </div>
@@ -744,7 +744,7 @@
                             <MenuButton
                                 class="mt-1 border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                             >
-                                <span class="font-semibold float-left text-secondary">Raumeigenschaften wählen</span>
+                                <span class="font-semibold float-left text-secondary">{{ $t('Select room properties')}}</span>
                                 <ChevronDownIcon
                                     class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                     aria-hidden="true"
@@ -769,7 +769,7 @@
                                         <DisclosureButton
                                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                         >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
+                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{$t('Room categories')}}</span>
                                             <ChevronDownIcon
                                                 :class="open ? 'rotate-180 transform' : ''"
                                                 class="h-4 w-4 mt-0.5 text-white"
@@ -792,7 +792,7 @@
                                                     {{ category.name }}
                                                 </p>
                                             </div>
-                                            <div v-else class="text-secondary">Noch keine Raumkategorien angelegt</div>
+                                            <div v-else class="text-secondary">{{$t('No room categories created yet')}}</div>
                                         </DisclosurePanel>
                                     </Disclosure>
 
@@ -800,7 +800,7 @@
                                         <DisclosureButton
                                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                         >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Nebenräume</span>
+                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Adjoining rooms')}}</span>
                                             <ChevronDownIcon
                                                 :class="open ? 'rotate-180 transform' : ''"
                                                 class="h-4 w-4 mt-0.5 text-white"
@@ -824,7 +824,7 @@
                                                         {{ room.name }}
                                                     </p>
                                                 </div>
-                                                <div v-else class="text-secondary">Noch keine Räume angelegt</div>
+                                                <div v-else class="text-secondary">{{$t('No rooms created yet')}}</div>
                                             </div>
 
                                         </DisclosurePanel>
@@ -835,7 +835,7 @@
                                         <DisclosureButton
                                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                         >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumeigenschaften</span>
+                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{$t('Room properties')}}</span>
                                             <ChevronDownIcon
                                                 :class="open ? 'rotate-180 transform' : ''"
                                                 class="h-4 w-4 mt-0.5 text-white"
@@ -857,7 +857,8 @@
                                                     {{ attribute.name }}
                                                 </p>
                                             </div>
-                                            <div v-else class="text-secondary">Noch keine Raumeigenschaften angelegt
+                                            <div v-else class="text-secondary">
+                                                {{ $t('No room properties created yet')}}
                                             </div>
                                         </DisclosurePanel>
                                     </Disclosure>
@@ -888,7 +889,7 @@
                         <span v-for="(room, index) in editRoomForm.adjoining_roomsToDisplay"
                               class="flex rounded-full items-center font-medium text-tagText
                                          border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        Nebenraum von {{ room.name }}
+                                        {{ $t('adjoining room from')}} {{ room.name }}
                                         <button @click="editRoomForm.adjoining_roomsToDisplay.splice(index,1)"
                                                 type="button">
                                             <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
@@ -902,21 +903,21 @@
                                type="checkbox"
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                         <p :class="[editRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
-                           class="ml-4 my-auto text-sm">Temporärer Raum</p>
+                           class="ml-4 my-auto text-sm">{{$t('Temporary room')}}</p>
                         <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                             <span
-                                class="ml-1 my-auto hind">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
+                                class="ml-1 my-auto hind">{{ $t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')}}</span>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-x-3" v-if="editRoomForm.temporary">
                         <input
                             v-model="editRoomForm.start_date_dt_local" id="startDateEdit"
-                            placeholder="Zu erledigen bis?" type="date"
+                            :placeholder="$t('To be completed by?')" type="date"
                             class="border-gray-300 col-span-1 placeholder-secondary mr-2 w-full"/>
                         <input
                             v-model="editRoomForm.end_date_dt_local" id="endDateEdit"
-                            placeholder="Zu erledigen bis?" type="date"
+                            :placeholder="$t('To be completed by?')" type="date"
                             class="border-gray-300 col-span-1 placeholder-secondary w-full"/>
                     </div>
 
@@ -925,11 +926,11 @@
                                type="checkbox"
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                         <p :class="[editRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
-                           class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
+                           class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone')}}</p>
                         <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                             <span
-                                class="ml-1 my-auto hind">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>
+                                class="ml-1 my-auto hind">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
                         </div>
                     </div>
 
@@ -937,7 +938,7 @@
                         <FormButton
                             @click="editRoom"
                             :disabled="editRoomForm.name.length === 0"
-                            text="Speichern"
+                            :text="$t('Save')"
                             class="inline-flex items-center mt-8"
                             />
                     </div>
@@ -955,35 +956,33 @@
     />
     <!-- Delete Area Modal -->
     <ConfirmationComponent v-if="showSoftDeleteAreaModal"
-                           confirm="In den Papierkorb"
-                           titel="Areal in den Papierkorb"
+                           :confirm="$t('In the wastebasket')"
+                           :titel="$t('Area in the trash')"
                            :description="areaDeleteDescriptionText"
                            @closed="afterSoftDeleteAreaConfirm"/>
     <!-- Delete All Rooms from Area Modal -->
     <ConfirmationComponent v-if="showDeleteAllRoomsModal"
-                           confirm="In den Papierkorb"
-                           titel="Alle Räume entfernen"
-                           description="Bist du sicher, dass du alle Räume aus diesem Areal in den Papierkorb legen möchtest?"
+                           :confirm="$t('In the wastebasket')"
+                           :titel="$t('Remove all rooms')"
+                           :description="$t('Are you sure you want to put all the rooms in this area in the waste bin?')"
                            @closed="afterSoftDeleteAllRoomsConfirm"/>
     <!-- Delete Room Modal -->
     <ConfirmationComponent v-if="showSoftDeleteRoomModal"
-                           confirm="Raum löschen"
-                           titel="Raum in den Papierkorb"
+                           :confirm="$t('Delete room')"
+                           :titel="$t('Room in the wastebasket')"
                            :description="roomDeleteDescriptionText"
                            @closed="afterSoftDeleteRoomConfirm"/>
     <!-- Delete Room Category Modal -->
     <ConfirmationComponent v-if="roomCategoryDeleteModalVisible"
-                           confirm="Raumkategorie löschen"
-                           titel="Raumkategorie löschen"
-                           description="Bist du sicher, dass du die Raumkategorie löschen möchtest? Damit sind
-                                        alle Zuordnungen der Räume zu dieser Raumkategorie unwiderruflich gelöscht."
+                           :confirm="$t('Delete room category')"
+                           :titel="$t('Delete room category')"
+                           :description="$t('Are you sure you want to delete the room category? This irrevocably deletes all room assignments to this room category.')"
                            @closed="afterDeleteRoomCategoryConfirm"/>
     <!-- Delete Room Attribute Modal -->
     <ConfirmationComponent v-if="roomAttributeDeleteModalVisible"
-                           confirm="Raumeigenschaft löschen"
-                           titel="Raumeigenschaft löschen"
-                           description="Bist du sicher, dass du die Raumeigenschaft löschen möchtest? Damit sind
-                                          alle Zuordnungen der Räume zu dieser Raumeigenschaft unwiderruflich gelöscht."
+                           :confirm="$t('Delete room property')"
+                           :titel="$t('Delete room property')"
+                           :description="$t('Are you sure you want to delete the room property? This irrevocably deletes all room assignments for this room property.')"
                            @closed="afterDeleteRoomAttributeConfirm"/>
 </template>
 
@@ -1132,11 +1131,10 @@ export default defineComponent({
     },
     computed: {
         roomDeleteDescriptionText() {
-            return `Bist du sicher, dass du den Raum ${this.roomToSoftDelete.name} in den Papierkorb legen möchtest?`;
+            return this.$t('Are you sure you want to put the room {0} in the trash?', [this.roomToSoftDelete.name]);
         },
         areaDeleteDescriptionText() {
-            return `Bist du sicher,dass du das Areal ${this.areaToSoftDelete.name} mit allen Räumen in den Papierkorb
-            legen möchtest?`
+            return this.$t('Are you sure you want to put the area {0} with all rooms in the waste bin?', [this.areaToSoftDelete.name]);
         }
     },
     methods: {
@@ -1323,8 +1321,8 @@ export default defineComponent({
         softDeleteArea() {
             this.$inertia.delete(`/areas/${this.areaToSoftDelete.id}`);
             this.closeSoftDeleteAreaModal()
-            this.successHeading = "Areal im Papierkorb"
-            this.successDescription = "Das Areal und alle zugehörigen Räume wurden erfolgreich in den Papierkorb gelegt."
+            this.successHeading = this.$t('Area in the wastebasket')
+            this.successDescription = this.$t('The area and all associated rooms have been successfully trashed.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
         },
@@ -1347,8 +1345,8 @@ export default defineComponent({
                 this.$inertia.delete(`/rooms/${room.id}`);
             })
             this.closeDeleteAllRoomsModal();
-            this.successHeading = "Raum im Papierkorb"
-            this.successDescription = "Die Räume wurden erfolgreich in den Papierkorb gelegt."
+            this.successHeading = this.$t('Room in the wastebasket')
+            this.successDescription = this.$t('The rooms have been successfully moved to the trash.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
         },
@@ -1399,8 +1397,8 @@ export default defineComponent({
         softDeleteRoom() {
             this.$inertia.delete(`/rooms/${this.roomToSoftDelete.id}`);
             this.closeSoftDeleteRoomModal();
-            this.successHeading = "Raum im Papierkorb"
-            this.successDescription = "Der Raum wurde erfolgreich in den Papierkorb gelegt."
+            this.successHeading = this.$t('Room in the wastebasket')
+            this.successDescription = this.$t('The rooms have been successfully moved to the trash.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000);
         },

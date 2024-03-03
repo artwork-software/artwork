@@ -1,31 +1,27 @@
 <template>
     <jet-dialog-modal :show="editingChecklistTeams" @close="emitClose">
         <template #content>
-
             <img alt="" src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-2xl my-2">
-                    Nutzer*innen zuweisen
+                    {{ $t('Assign users') }}
                 </div>
-
                 <XIcon @click="emitClose"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
-
                 <div class="text-secondary tracking-tight leading-6 sub">
-                    Tippe den Namen des Nutzer*innen ein, dem du die Checkliste zuweisen möchtest.
+                    {{ $t('Enter the name of the user to whom you want to assign the checklist.') }}
                 </div>
                 <div class="mt-10">
-                    <!--   Search for Departments    -->
                     <div class="my-auto w-full">
-                        <input id="departmentSearch" placeholder="Name"
+                        <input id="departmentSearch"
+                               placeholder="Name"
                                v-model="userQuery"
                                type="text"
                                autocomplete="off"
-                               class="pl-2 h-12 w-full focus:border-primary border border-2 border-gray-300 text-primary focus:outline-none focus:ring-0 placeholder-secondary"/>
+                               class="pl-2 h-12 w-full focus:border-primary border border-2 border-gray-300 text-primary focus:outline-none focus:ring-0 placeholder-secondary"
+                        />
                     </div>
-
-                    <!--    Department Search Results    -->
                     <div class="absolute max-h-60 bg-primary shadow-lg text-sm flex flex-col w-9/12">
                         <button v-for="(user, index) in searchedUsers"
                                 :key="index"
@@ -39,11 +35,10 @@
                         <div v-if="userQuery && (searchedUsers.length === 0)"
                              key="no-item"
                              class="p-4 font-bold text-white">
-                            Keine Ergebnisse gefunden
+                            {{ $t('No results found') }}
                         </div>
                     </div>
                 </div>
-                <!--    Team list    -->
                 <div v-for="(user,index) in selectedUsers"
                      class="mt-4 font-bold text-primary flex"
                      :key="index">
@@ -54,14 +49,14 @@
                         {{ user.first_name }} {{ user.last_name }}
                     </div>
                     <button type="button" @click="removeUser(user)">
-                        <span class="sr-only">User aus Checkliste entfernen</span>
+                        <span class="sr-only">{{ $t('Remove user from checklist') }}</span>
                         <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-primary rounded-full"/>
                     </button>
                 </div>
 
                 <FormButton
                     @click="submitUsers"
-                    text="Zuweisen"
+                    :text="$t('Assign')"
                     class="mt-8" />
                 <!-- <p v-if="error" class="text-red-800 text-xs">{{ error }}</p> -->
             </div>
@@ -70,12 +65,10 @@
 </template>
 
 <script>
-
 import {XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import AddButton from "@/Layouts/Components/AddButton";
-import {useForm} from "@inertiajs/inertia-vue3";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
@@ -90,23 +83,20 @@ export default {
         JetDialogModal,
         AddButton
     },
-
     emits: ['closed'],
-
-    props: ['checklistId', 'users', 'editingChecklistTeams'],
-
+    props: [
+        'checklistId',
+        'users',
+        'editingChecklistTeams'
+    ],
     data() {
         return {
             selectedUsers: [],
             searchedUsers: [],
             userQuery: null,
-            error: null,
-            checklist: useForm({
-
-            })
+            error: null
         }
     },
-
     methods: {
         addUserToChecklist(user) {
             if (!this.selectedUsers.find((selected) => selected.id === user.id)) {
@@ -115,11 +105,9 @@ export default {
             this.userQuery = null;
             this.searchedUsers = [];
         },
-
         removeUser(user) {
             this.selectedUsers.splice(this.selectedUsers.indexOf(user),1);
         },
-
         async submitUsers() {
             await axios
                 .patch(`/checklists/${this.checklistId}`, {
@@ -128,12 +116,10 @@ export default {
                 .then(response => this.emitClose())
                 .catch(error => this.emitClose());
         },
-
         emitClose() {
             this.$emit('closed')
         },
     },
-
     watch: {
         userQuery: {
             handler() {
@@ -155,7 +141,3 @@ export default {
     },
 }
 </script>
-
-<style scoped>
-</style>
-

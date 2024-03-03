@@ -33,7 +33,7 @@
                           :class="[atAGlance ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full border border-gray-200 bg-white shadow ring-0 transition-transform duration-200 ease-in-out']"/>
                 </Switch>
                 <SwitchLabel as="span" class="ml-3 text-sm">
-                    <span class="font-medium text-gray-900">Auf einen Blick</span>
+                    <span class="font-medium text-gray-900">{{ $t('At a glance')}}</span>
                 </SwitchLabel>
             </SwitchGroup>
                 <SwitchGroup v-if="!roomMode"  as="div" class="flex items-center ml-3">
@@ -47,7 +47,7 @@
                               :class="[multiEdit ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full border border-gray-200 bg-white shadow ring-0 transition-transform duration-200 ease-in-out']"/>
                     </Switch>
                     <SwitchLabel as="span" class="ml-3 text-sm">
-                        <span class="font-medium text-gray-900">Multiedit</span>
+                        <span class="font-medium text-gray-900">{{ $t('Multiedit')}}</span>
                     </SwitchLabel>
                 </SwitchGroup>
             </div>
@@ -97,45 +97,45 @@
                         leave-to-class="transform scale-95 opacity-0"
                     >
                         <MenuItems class="w-80 absolute right-0 top-12 origin-top-right rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                            <div class="w-44 p-6">
+                            <div class="w-76 p-6">
                                 <div class="flex py-1" v-if="!project">
                                     <input v-model="userCalendarSettings.project_status"
                                            type="checkbox"
                                            class="checkBoxOnDark"/>
-                                    <p :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">Projektstatus</p>
+                                    <div :class="userCalendarSettings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                       class=" ml-4 my-auto text-secondary">{{ $t('Project Status')}}</div>
                                 </div>
                                 <div class="flex py-1">
                                     <input v-model="userCalendarSettings.options"
                                            type="checkbox"
                                            class="checkBoxOnDark"/>
                                     <p :class="userCalendarSettings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">Optionspriorisierung</p>
+                                       class=" ml-4 my-auto text-secondary">{{ $t('Option prioritization')}}</p>
                                 </div>
                                 <div class="flex py-1" v-if="!project">
                                     <input v-model="userCalendarSettings.project_management"
                                            type="checkbox"
                                            class="checkBoxOnDark"/>
                                     <p :class="userCalendarSettings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">Projektleitungen</p>
+                                       class=" ml-4 my-auto text-secondary">{{$t('Project managers')}}</p>
                                 </div>
                                 <div class="flex py-1">
                                     <input v-model="userCalendarSettings.repeating_events"
                                            type="checkbox"
                                            class="checkBoxOnDark"/>
                                     <p :class="userCalendarSettings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">Wiederholungstermin</p>
+                                       class=" ml-4 my-auto text-secondary">{{ $t('Repeat event')}}</p>
                                 </div>
                                 <div class="flex py-1" v-if="this.$canAny(['can manage workers', 'can plan shifts'])">
                                     <input v-model="userCalendarSettings.work_shifts"
                                            type="checkbox"
                                            class="checkBoxOnDark"/>
                                     <p :class="userCalendarSettings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
-                                       class=" ml-4 my-auto text-secondary">Schichten</p>
+                                       class=" ml-4 my-auto text-secondary">{{$t('Shifts')}}</p>
                                 </div>
                             </div>
                             <div class="flex justify-end">
-                                <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">Speichern</button>
+                                <button class="text-sm mx-3 mb-4" @click="saveUserCalendarSettings">{{ $t('Save') }}</button>
                             </div>
                         </MenuItems>
                     </transition>
@@ -144,7 +144,7 @@
             <AddButtonSmall
                 v-if="$can('request room occupancy')"
                 @click="openEventComponent()"
-                text="Neue Belegung"
+                :text="$t('New occupancy')"
             />
             <div @click="showPDFConfigModal = true">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-7 w-7 mx-2 cursor-pointer">

@@ -6,6 +6,7 @@ use App\Sage100\Sage100;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
@@ -13,6 +14,7 @@ use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\ColumnService;
 use Artwork\Modules\Budget\Services\SageAssignedDataService;
 use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
+use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Carbon\Carbon;
@@ -29,6 +31,8 @@ class Sage100Service
     ) {
     }
 
+    //@todo: fix phpcs error - fix complexity and nesting level
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function importDataToBudget(int|null $count): int
     {
         //import php timeout 10 minutes
@@ -37,7 +41,12 @@ class Sage100Service
         $data = $this->getData($count);
         $foundedProjects = [];
         $addedData = [];
+
         foreach ($data as $item) {
+            //if sageAssignedData is existing the dataset will not be imported again
+            if ($this->sageAssignedDataService->findBySageId($item['ID']) instanceof SageAssignedData) {
+                continue;
+            }
             $projects = $this->projectService->getProjectsByCostCenter($item['KstTraeger']);
             foreach ($projects as $project) {
                 if (!in_array($project->id, $foundedProjects)) {
@@ -56,11 +65,11 @@ class Sage100Service
                             table_id:   $project->table()->first()->id
                         );
 
-                        $subPositionRows = SubPositionRow::whereHas(
+                        $subPositionRows = SubPositionRow::query()->whereRelation(
                             'subPosition.mainPosition',
-                            function (Builder $query) use ($project): void {
-                                $query->where('table_id', $project->table()->first()->id);
-                            }
+                            'table_id',
+                            '=',
+                            $project->table->id
                         )->get();
 
                         foreach ($subPositionRows as $subPositionRow) {
@@ -70,7 +79,7 @@ class Sage100Service
                                 'value' => 0,
                                 'verified_value' => null,
                                 'linked_money_source_id' => null,
-                                'commented' => SubPositionRow::find($subPositionRow->id)->commented
+                                'commented' => $subPositionRow->commented
                             ]);
                         }
 
@@ -114,7 +123,6 @@ class Sage100Service
                             foreach ($foundedKST as $kst) {
                                 SageNotAssignedData::query()
                                     ->where('sage_id', $item['ID'])
-                                    ->where('project_id', $project->id)
                                     ->firstOr(function () use ($item, $project): void {
                                         $this->sageNotAssignedDataService->createFromSageApiData($item, $project->id);
                                     });
@@ -157,7 +165,6 @@ class Sage100Service
                             $sageColumnCell = $sageColumn->cells()
                                 ->where('column_id', $sageColumn->id)
                                 ->where('sub_position_row_id', $singleKTO->sub_position_row_id)
-                                ->get()
                                 ->first();
                             $sageColumnCell->update(['value' => $item['Buchungsbetrag']]);
 
@@ -218,6 +225,7 @@ class Sage100Service
         $table = Table::find($request->table_id);
         $columns = $table->columns()->whereNot('type', 'sage')->get();
         $subPosition = SubPosition::find($request->sub_position_id);
+        /** @var Project $project */
         $project = $table->project()->first();
         /** @var SageNotAssignedData $sageNotAssignedData */
         $sageNotAssignedData = SageNotAssignedData::find($request->sage_data_id);
@@ -225,7 +233,7 @@ class Sage100Service
 
         if (!$sageColumn instanceof Column) {
             $sageColumn = $this->columnService->createColumnInTable(
-                table:      $project->table()->first(),
+                table:      $project->table,
                 name:       'Sage Abgleich',
                 subName:    '-',
                 type:       'sage'
@@ -235,11 +243,11 @@ class Sage100Service
                 table_id:   $project->table()->first()->id
             );
 
-            $subPositionRows = SubPositionRow::whereHas(
+            $subPositionRows = SubPositionRow::query()->whereRelation(
                 'subPosition.mainPosition',
-                function (Builder $query) use ($project): void {
-                    $query->where('table_id', $project->table()->first()->id);
-                }
+                'table_id',
+                '=',
+                $project->table->id
             )->get();
 
             /** @var SubPositionRow $subPositionRow */
@@ -250,7 +258,7 @@ class Sage100Service
                     'value' => 0,
                     'verified_value' => null,
                     'linked_money_source_id' => null,
-                    'commented' => SubPositionRow::find($subPositionRow)->commented
+                    'commented' => $subPositionRow->commented
                 ]);
             }
 
@@ -347,7 +355,7 @@ class Sage100Service
             $sageColumnCell->id,
             $sageNotAssignedData
         );
-        $this->sageNotAssignedDataService->delete($sageNotAssignedData);
+        $this->sageNotAssignedDataService->forceDelete($sageNotAssignedData);
     }
 
     private function getData(int|null $count)

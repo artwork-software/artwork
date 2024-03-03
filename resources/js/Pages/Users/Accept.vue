@@ -5,12 +5,12 @@
                 <img src="/Svgs/Logos/artwork_logo_big.svg"/>
             </div>
             <div class="flex items-center">
-                <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">Einladung annehmen</h2>
+                <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">{{$t('Accept Invitation')}}</h2>
                 <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
             </div>
             <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3 mt-1">
-                    <label for="first_name" class="text-sm font-bold text-secondary">Vorname</label>
+                    <label for="first_name" class="text-sm font-bold text-secondary">{{$t('First name')}}</label>
                     <input
                         v-model="form.first_name"
                         id="first_name"
@@ -38,7 +38,7 @@
                         class="bg-gray-100 focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
-                    <label for="phoneNumber" class="text-sm font-bold text-secondary">Telefonnummer</label>
+                    <label for="phoneNumber" class="text-sm font-bold text-secondary">{{$t('Phone number')}}</label>
                     <input
                         v-model="form.phone_number"
                         id="phoneNumber"
@@ -46,7 +46,7 @@
                         class="focus:ring-black focus:border-indigo-600 border-2 w-full sm:text-sm border-gray-200"/>
                 </div>
                 <div class="sm:col-span-3 mt-1">
-                    <label for="phoneNumber" class="text-sm font-bold text-secondary">Unternehmen</label>
+                    <label for="phoneNumber" class="text-sm font-bold text-secondary">{{$t('Company')}}</label>
                     <input
                         v-model="form.business"
                         id="business"
@@ -66,7 +66,7 @@
             </div>
             <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-3 mt-1">
-                    <label for="password" class="text-sm font-bold text-secondary">Passwort</label>
+                    <label for="password" class="text-sm font-bold text-secondary">{{ $t('Password')}}</label>
                     <input
                         v-model="form.password"
                         id="password"
@@ -77,7 +77,7 @@
                     <jet-input-error :message="form.errors.password" class="mt-2"/>
                 </div>
                 <div v-if="form.password.length>0" class="sm:col-span-3 flex items-center">
-                    <span class="text-xs text-secondary">Schwach</span>
+                    <span class="text-xs text-secondary">{{$t('Weak')}}</span>
                     <div class="mx-6 mt-1 w-full bg-gray-200 h-1 dark:bg-gray-700">
                         <div :class="[pw_feedback < 1
                                 ? 'bg-error'
@@ -87,20 +87,19 @@
                                 'h-1']" :style="{width: `${(pw_feedback + 1) / 5 * 100}%`}">
                         </div>
                     </div>
-                    <span class="text-xs">Stark</span>
+                    <span class="text-xs">{{ $t('Strong')}}</span>
                 </div>
             </div>
             <div class="flex items-center text-secondary">
                 <SvgCollection svgName="arrowTopLeft" class="m-3"/>
 
                 <div class="hind w-full">
-                    Das Passwort muss mind. 10 Zeichen lang sein, mind. 1 Ziffer, Groß- und Kleinbuchstaben und
-                    Sonderzeichen beinhalten.
+                    {{$t('The password must be at least 10 characters long, contain at least 1 digit, upper and lower case letters and special characters.')}}
                 </div>
             </div>
             <button :disabled="form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === ''" :class="[form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === '' ? 'bg-secondary hover:bg-secondary' : '']" type="submit"
                     class="flex px-44 py-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover focus:outline-none">
-                Registrieren
+                {{ $t('Register')}}
             </button>
         </form>
     </div>

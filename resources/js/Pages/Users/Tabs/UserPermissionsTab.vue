@@ -1,7 +1,7 @@
 <template>
     <div>
         <div>
-            <h2 class="mb-8 headline2">Nutzerrechte</h2>
+            <h2 class="mb-8 headline2">{{ $t('User rights')}}</h2>
         </div>
 
         <div class="bg-userBg py-10">
@@ -9,7 +9,7 @@
                 <div
                     class="uppercase mb-3 text-xs columnSubName flex items-center cursor-pointer"
                     @click="showGlobalRoles = !showGlobalRoles">
-                    globale Rollen
+                    {{ $t('Global roles')}}
                     <div class="flex items-center ml-2">
                         <SvgCollection svg-name="arrowUp"
                                        v-if="showGlobalRoles"></SvgCollection>
@@ -41,8 +41,7 @@
                         <div :id="role.name" role="tooltip"
                              v-if="role.name_de === 'Adminrechte'"
                              class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
-                            Administratoren haben im gesamten System Lese- und Schreibrechte -
-                            weitere Einstellungen entfallen
+                            {{ $t('Administrators have read and write access to the entire system No further settings are required')}}
                             <div class="tooltip-arrow" data-popper-arrow></div>
                         </div>
                         <div :id="role.name" role="tooltip" v-else
@@ -56,21 +55,26 @@
         </div>
         <div>
             <div v-if="showUserPermissions" class="flex flex-col w-full ">
-                <div class="w-full mb-3" v-for="(permissions, group) in all_permissions">
+                <div class="w-full mb-3"
+                     v-for="(group, groupName) in this.computedGroupedPermissions"
+                     v-show="group.shown"
+                >
                     <div
                         class="uppercase my-3 text-xs columnSubName flex items-center cursor-pointer"
-                        @click="permissions.show = !permissions.show">
-                        {{ group }}
+                        @click="group.show = typeof group.show === 'undefined' ? false : !group.show">
+                        {{ groupName }}
                         <div class="flex items-center ml-2">
                             <SvgCollection svg-name="arrowUp"
-                                           v-if="!permissions.show"></SvgCollection>
+                                           v-if="typeof group.show === 'undefined' ? true : group.show"
+                            />
                             <SvgCollection svg-name="arrowDown"
-                                           v-if="permissions.show"></SvgCollection>
+                                           v-else
+                            />
                         </div>
                     </div>
-                    <div v-if="!permissions.show"
+                    <div v-if="typeof group.show === 'undefined' || group.show"
                          class="relative justify-between flex items-center w-full"
-                         v-for="(permission, index) in permissions"
+                         v-for="(permission, index) in group.permissions"
                          :key=index>
                         <div class="flex items-center h-7">
                             <input
@@ -82,9 +86,7 @@
 
                             <div class="ml-3 text-sm">
                                 <label for="permissions"
-                                       :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'xsDark' : 'xsLight']">{{
-                                        permission.name_de
-                                    }}</label>
+                                       :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'xsDark' : 'xsLight']">{{ permission.name_de }}</label>
                             </div>
                         </div>
                         <div class="justify-end">
@@ -110,7 +112,7 @@
                 </div>
             </div>
             <div class="flex mt-12">
-                <span @click="openDeleteUserModal()" class="xsLight cursor-pointer">Nutzer*in endgültig löschen</span>
+                <span @click="openDeleteUserModal()" class="xsLight cursor-pointer">{{ $t('Permanently delete user')}}</span>
             </div>
         </div>
     </div>
@@ -119,9 +121,9 @@
     <SuccessModal
         :show="showSuccessModal"
         @closed="closeSuccessModal"
-        title="Nutzer*in erfolgreich bearbeitet"
-        description="Die Änderungen wurden erfolgreich gespeichert."
-        button="Schließen"
+        :title="$t('User successfully edited')"
+        :description="$t('The changes have been saved successfully.')"
+        :button="$t('Close')"
     />
     <!-- Nutzer*in löschen Modal -->
     <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
@@ -129,24 +131,23 @@
             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Nutzer*in löschen
+                    {{ $t('Delete user')}}
                 </div>
                 <XIcon @click="closeDeleteUserModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="errorText">
-                    Bist du sicher, dass du {{ user_to_edit.last_name + "," }} {{ user_to_edit.first_name }} aus dem
-                    System löschen möchtest?
+                    {{ $t('re you sure you want to delete {last_name}, {first_name} from the system?', {last_name: user_to_edit.last_name, first_name: user_to_edit.first_name})}}
                 </div>
                 <div class="flex justify-between mt-6">
                     <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="deleteUser">
-                        Löschen
+                        {{ $t('Delete') }}
                     </button>
                     <div class="flex my-auto">
                             <span @click="closeDeleteUserModal()"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
                     </div>
                 </div>
             </div>
@@ -175,6 +176,7 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {Inertia} from "@inertiajs/inertia";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import {reactive} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
@@ -214,6 +216,37 @@ export default {
             }),
         }
     },
+    computed: {
+        computedGroupedPermissions() {
+            let groupedPermissions = {};
+
+            for (const [group, permissions] of Object.entries(this.all_permissions)) {
+                groupedPermissions[group] = {
+                    shown: true,
+                    permissions: []
+                };
+
+                permissions.forEach((permission) => {
+                    //permissions depending on specific logic to be displayed
+                    if (permission.name === 'can view and delete sage100-api-data') {
+                        //this permission is only added when sage api is enabled
+                        if (this.$page.props.sageApiEnabled) {
+                            groupedPermissions[group].permissions.push(permission);
+                        }
+                        return;
+                    }
+
+                    //other permissions are pushed anytime
+                    groupedPermissions[group].permissions.push(permission);
+                });
+
+                //groups are only shown when there are permissions to display
+                groupedPermissions[group].shown = groupedPermissions[group].permissions.length > 0;
+            }
+
+            return reactive(groupedPermissions);
+        }
+    },
     methods: {
         editUser() {
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
@@ -236,8 +269,3 @@ export default {
     }
 }
 </script>
-
-
-<style scoped>
-
-</style>

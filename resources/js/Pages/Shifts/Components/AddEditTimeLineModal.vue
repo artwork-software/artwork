@@ -75,7 +75,10 @@
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
-                                <AddButton mode="modal" text="Speichern" @click="saveTimeLines"/>
+                                <FormButton
+                                    text="Speichern"
+                                    @click="saveTimeLines"
+                                    />
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -93,10 +96,12 @@ import {PlusCircleIcon} from "@heroicons/vue/outline";
 import SingleTimeLine from "@/Pages/Projects/Components/SingleTimeLine.vue";
 import Input from "@/Jetstream/Input.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     name: "AddEditTimeLineModal",
     components: {
+        FormButton,
         SingleTimeLine,
         Input,
         AddButton,

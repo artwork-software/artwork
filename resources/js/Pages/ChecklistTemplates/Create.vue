@@ -80,11 +80,11 @@
                 </div>
                 <div class="pt-8">
                     <div class="mt-2 items-center">
-                        <AddButton v-if="!showSuccess" @click="createChecklistTemplate"
-                                   class="py-3 px-5 border bg-primary hover:bg-primaryHover
-                                 focus:outline-none border-transparent text-base font-bold text-xl uppercase
-                                  shadow-sm text-secondaryHover"
-                                   text="Vorlage anlegen" mode="modal"/>
+                        <FormButton
+                            v-if="!showSuccess"
+                            @click="createChecklistTemplate"
+                            text="Vorlage anlegen"
+                            />
                         <button v-else type="submit"
                                 class="items-center rounded-full px-16 py-1 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                         >
@@ -223,12 +223,14 @@ import AddButton from "@/Layouts/Components/AddButton";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Button from "@/Jetstream/Button";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
     name: "Template Create",
     props: [],
     components: {
+        FormButton,
         Button,
         TeamIconCollection,
         AppLayout,

@@ -23,22 +23,22 @@
                                 <p class="text-error subpixel-antialiased">{{ description }}</p>
                             </div>
                             <div class="flex justify-between mt-5 items-center pr-4" v-if="!is_budget && !isSeriesDelete">
-                                <AddButton mode="modal" @click="deleteElement(true)"
-                                           class="!border-2 !border-buttonBlue text-white bg-buttonBlue hover:bg-buttonHover !hover:border-transparent resize-none"
-                                           :text="buttonText"/>
+                                <FormButton
+                                    @click="deleteElement(true)"
+                                    :text="buttonText" />
                                 <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">Nein, doch nicht</p>
                             </div>
                             <div v-if="isSeriesDelete" class="flex justify-between mt-5 items-center pr-4">
-                                <AddButton mode="modal" @click="deleteElement(true)"
-                                           class="!border-2 !border-buttonBlue text-white bg-buttonBlue hover:bg-buttonHover !hover:border-transparent resize-none"
-                                           :text="buttonText"/>
+                                <FormButton
+                                    @click="deleteElement(true)"
+                                    :text="buttonText" />
                                 <p class="cursor-pointer text-sm mt-3 text-secondary" @click="complete_delete">Serieneintrag komplett löschen</p>
                             </div>
                             <div v-if="is_budget && !isSeriesDelete" class="flex justify-between mt-5 pl-4 items-center pr-4">
                                 <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">Weiter ohne zu speichern</p>
-                                <AddButton mode="modal" @click="deleteElement(true)"
-                                           class="!border-2 !border-buttonBlue text-white bg-buttonBlue hover:bg-buttonHover !hover:border-transparent resize-none"
-                                           :text="buttonText"/>
+                                <FormButton
+                                    @click="deleteElement(true)"
+                                    :text="buttonText" />
 
                             </div>
                         </DialogPanel>
@@ -54,11 +54,13 @@ import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from 
 import {XIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: "ConfirmDeleteModal",
     mixins: [Permissions],
     components: {
+        FormButton,
         AddButton,
         Dialog,
         DialogTitle,

@@ -221,11 +221,11 @@
                     </div>
                 </div>
                 <div class="flex justify-center w-full py-4">
-                    <button :disabled="!submit" :class="!submit ? 'bg-secondary hover:bg-secondary' : ''"
-                            class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
-                            @click="updateOrCreateEvent()">
-                        Belegen
-                    </button>
+                    <FormButton
+                        :disabled="!submit"
+                        @click="updateOrCreateEvent()"
+                        text="Belegen"
+                        />
                 </div>
         </template>
     </jet-dialog-modal>
@@ -251,6 +251,7 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import dayjs from "dayjs";
 import Permissions from "@/mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: "AddSubEventModal",
@@ -267,6 +268,7 @@ export default {
 
     },
     components: {
+        FormButton,
         SwitchLabel,
         Switch,
         SwitchGroup,

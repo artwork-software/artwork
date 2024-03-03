@@ -103,9 +103,10 @@
             </div>
             <div class="mt-8">
                 <div class="flex">
-                    <AddButton @click="editUser"
-                               class=" inline-flex items-center px-12 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                               text="Einstellungen ändern" mode="modal"/>
+                    <FormButton
+                        @click="editUser"
+                        text="Einstellungen ändern"
+                        />
                 </div>
             </div>
             <div class="flex mt-12">
@@ -174,9 +175,11 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {Inertia} from "@inertiajs/inertia";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     components: {
+        FormButton,
         SuccessModal,
         JetDialogModal, CheckIcon,
         XIcon,

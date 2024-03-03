@@ -112,7 +112,10 @@
                 </div>
             </div>
             <div class="mt-6 items-center">
-                <AddButton @click.prevent="changeLogos" text="Änderungen speichern" mode="modal"/>
+                <FormButton
+                    text="Änderungen speichern"
+                    @click.prevent="changeLogos"
+                    />
             </div>
         </form>
     </ToolSettingsHeader>
@@ -126,9 +129,11 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     components: {
+        FormButton,
         JetInputError,
         AddButton,
         SvgCollection,

@@ -17,11 +17,11 @@
                     </div>
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="declineRequest">
-                        Absagen
-                    </button>
+                    <FormButton
+                        @click="declineRequest"
+                        text="Absagen"
+                        class="inline-flex items-center"
+                    />
                     <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
                                   class="xsLight cursor-pointer">Nein, doch nicht</span>
@@ -41,10 +41,13 @@ import {AdjustmentsIcon} from "@heroicons/vue/outline";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: "NotificationDeclineEvent",
-    components: {NewUserToolTip, EventTypeIconCollection, AdjustmentsIcon, Button, UserTooltip, JetDialogModal, XIcon},
+    components: {
+        FormButton,
+        NewUserToolTip, EventTypeIconCollection, AdjustmentsIcon, Button, UserTooltip, JetDialogModal, XIcon},
     emits: ['closed'],
     props: ['requestToDecline', 'eventTypes'],
     data(){

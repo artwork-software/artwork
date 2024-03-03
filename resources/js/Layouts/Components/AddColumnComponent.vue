@@ -136,10 +136,12 @@
 
                         </div>
                     </div>
-                    <div class="flex justify-center">
-                        <AddButton @click="addColumn()" :disabled="selectedType !== 'empty' && ((selectedFirstColumn === null || selectedSecondColumn === null) || (selectedFirstColumn === selectedSecondColumn))" :class="selectedType !== 'empty' && ((selectedFirstColumn === null || selectedSecondColumn === null) || (selectedFirstColumn === selectedSecondColumn)) ? 'bg-secondary hover:bg-secondary cursor-pointer-none' : ''"
-                                   class="mt-8 py-3 flex" text="Spalte anlegen"
-                                   mode="modal"></AddButton>
+                    <div class="flex justify-center mt-8">
+                        <FormButton
+                            @click="addColumn"
+                            :disabled="selectedType !== 'empty' && ((selectedFirstColumn === null || selectedSecondColumn === null) || (selectedFirstColumn === selectedSecondColumn))"
+                            text="Spalte anlegen"
+                        />
                     </div>
                 </div>
             </div>
@@ -162,11 +164,13 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'AddColumnComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         AddButton,
         ListboxOptions,
         ListboxOption,

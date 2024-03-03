@@ -592,24 +592,18 @@
                 <div v-if="canEdit">
                     <div class="flex justify-center w-full py-4"
                          v-if="(isAdmin || selectedRoom?.everyone_can_book || roomAdminIds.includes(this.$page.props.user.id))">
-                        <button
+                        <FormButton
                             :disabled="this.selectedRoom === null || !submit  || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
-                            :class="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || (this.startTime === null && !this.allDayEvent) || this.startDate === null  || (this.endTime === null && !this.allDayEvent) || this.endDate === null || (this.accept === false && this.optionAccept === false && adminComment === '') ? 'bg-secondary hover:bg-secondary' : 'cursor-pointer'"
-                            class="bg-buttonBlue hover:bg-buttonHover py-2 px-8 rounded-full text-white"
-                            @click="updateOrCreateEvent()">
-                            {{
-                                this.event?.occupancy_option ? this.accept ? 'Zusagen' : this.optionAccept ? 'Optional zusagen' : this.adminComment !== '' ? 'Nachricht senden' : 'Speichern' : 'Speichern'
-                            }}
-                        </button>
+                            @click="updateOrCreateEvent()"
+                            :text="this.event?.occupancy_option ? this.accept ? 'Zusagen' : this.optionAccept ? 'Optional zusagen' : this.adminComment !== '' ? 'Nachricht senden' : 'Speichern' : 'Speichern'"
+                        />
                     </div>
                     <div class="flex justify-center w-full py-4" v-else>
-                        <button
+                        <FormButton
                             :disabled="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || !this.$can('request room occupancy')"
-                            :class="this.selectedRoom === null || !submit || endDate > seriesEndDate || series && !seriesEndDate || (this.startTime === null && !this.allDayEvent) || this.startDate === null  || (this.endTime === null && !this.allDayEvent) || this.endDate === null || !this.$can('request room occupancy') ? 'bg-secondary hover:bg-secondary' : ''"
-                            class="bg-buttonBlue hover:bg-buttonHover py-2 px-8 rounded-full text-white"
-                            @click="updateOrCreateEvent(true)">
-                            Belegung anfragen
-                        </button>
+                            @click="updateOrCreateEvent(true)"
+                            text="Belegung anfragen"
+                        />
                     </div>
                 </div>
             </div>
@@ -677,11 +671,13 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         UserPopoverTooltip,
         NewUserToolTip,
         ChangeAllSubmitModal,

@@ -94,7 +94,9 @@
                                 </div>
                             </div>
                             <div class="flex justify-between mt-5">
-                                <AddButton mode="modal" text="Speichern" @click="saveShift"/>
+                                <FormButton
+                                    text="Speichern"
+                                    @click="saveShift" />
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -123,11 +125,13 @@ import Input from "@/Jetstream/Input.vue";
 import {ChevronDownIcon, PlusCircleIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     name: "AddEditShiftPresetModal",
     mixins: [Permissions],
     components: {
+        FormButton,
         ConfirmationModal,
         CheckIcon,
         ChevronDownIcon,

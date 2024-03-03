@@ -279,11 +279,11 @@
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="declineRequest">
-                            Absagen
-                        </button>
+                        <FormButton
+                            @click="declineRequest"
+                            text="Absagen"
+                            class="inline-flex items-center"
+                            />
                         <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
                                   class="xsLight cursor-pointer">Nein, doch nicht</span>
@@ -329,11 +329,13 @@ import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollectio
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        FormButton,
         UserPopoverTooltip,
         ListboxLabel,
         SvgCollection,

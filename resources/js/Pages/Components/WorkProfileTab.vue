@@ -33,7 +33,10 @@
                 class="w-full text-base font-normal mt-1 inputMain resize-none xsDark focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"/>
         </div>
         <div class="w-2/3 flex flex-row justify-center">
-            <AddButton mode="secondary" text="Speichern" @click="updateWorkProfile()"/>
+            <FormButton
+                text="Speichern"
+                @click="updateWorkProfile"
+                />
         </div>
     </div>
     <div class="headline3 mb-2">
@@ -132,7 +135,12 @@
                     </ListboxOption>
                 </ListboxOptions>
             </Listbox>
-            <AddButton :disabled="this.selectedCraftToAssign === null" style="margin-top: 0;" mode="secondary" text="Gewerk zuordnen" @click="assignCraft()"/>
+            <AddButtonSmall
+                :disabled="this.selectedCraftToAssign === null"
+                text="Gewerk zuordnen"
+                @click="assignCraft()"
+                class="ml-4"
+                />
         </div>
         <div class="w-2/3 flex flex-row flex-wrap">
             <TagComponent v-for="craft in user.assignedCrafts" :tag="craft" :key="craft.id" :displayed-text="craft.name" :method="removeCraft" :property="craft.id"/>
@@ -151,9 +159,13 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon} from "@heroicons/vue/outline";
 import {Inertia} from "@inertiajs/inertia";
 import {reactive} from "vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 
 export default {
     components: {
+        AddButtonSmall,
+        FormButton,
         ListboxOption,
         ListboxOptions,
         ListboxButton,

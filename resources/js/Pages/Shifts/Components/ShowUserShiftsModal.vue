@@ -85,9 +85,10 @@
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
-                                <AddButton mode="modal" @click="checkVacation"
-                                           class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none"
-                                           text="Speichern"/>
+                                <FormButton
+                                    text="Speichern"
+                                    @click="checkVacation"
+                                    />
                             </div>
 
                         </DialogPanel>
@@ -105,10 +106,12 @@ import {XIcon} from "@heroicons/vue/solid";
 import Button from "@/Jetstream/Button.vue";
 import {Inertia} from "@inertiajs/inertia";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     name: "showUserShiftsModal",
     components: {
+        FormButton,
         SvgCollection,
         Button,
         AddButton,

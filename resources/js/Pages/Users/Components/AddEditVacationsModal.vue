@@ -178,10 +178,10 @@
                                     <button class="text-[#3017AD] text-xs underline underline-offset-2" @click="saveOrUpdateVacation(true)">Speichern & weitere Einträge machen</button>
                                 </div>
                                 <div >
-                                    <AddButton v-if="vacation.isDirty && !vacation.id" @click="saveOrUpdateVacation(false)" type="save" mode="modal" text="Speichern"/>
-                                    <AddButton v-if="vacation.isDirty && vacation.id" @click="saveOrUpdateVacation(false)" type="save" mode="modal" text="Bearbeiten"/>
-                                    <AddButton v-if="!vacation.isDirty && vacation.id" @click="checkVacationType" type="delete" mode="modal" text="Löschen"/>
-                                    <AddButton v-if="!vacation.isDirty && !vacation.id" @click="closeModal(true)" type="delete" mode="modal" text="Abbrechen"/>
+                                    <BaseButton v-if="vacation.isDirty && !vacation.id" @click="saveOrUpdateVacation(false)" text="Speichern"/>
+                                    <BaseButton v-if="vacation.isDirty && vacation.id" @click="saveOrUpdateVacation(false)" text="Bearbeiten"/>
+                                    <BaseButton v-if="!vacation.isDirty && vacation.id" @click="checkVacationType" background-color="bg-red-600 hover:bg-red-700" text="Löschen"/>
+                                    <BaseButton v-if="!vacation.isDirty && !vacation.id" @click="checkVacationType" background-color="bg-red-600 hover:bg-red-700" text="Abbrechen"/>
                                 </div>
                             </div>
 
@@ -212,10 +212,12 @@ import dayjs from "dayjs";
 import {Inertia} from "@inertiajs/inertia";
 import Button from "@/Jetstream/Button.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 
 export default {
     name: "AddEditVacationsModal",
     components: {
+        BaseButton,
         ConfirmDeleteModal,
         ChevronRightIcon, Button, ChevronLeftIcon,
         AddButton, XIcon, Dialog, DialogTitle, DialogPanel, TransitionChild, TransitionRoot, CalendarIcon

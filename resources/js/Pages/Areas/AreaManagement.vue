@@ -433,13 +433,11 @@
                         <jet-input-error :message="newAreaForm.error" class="mt-2"/>
                     </div>
 
-                    <div class="w-full items-center text-center">
-                        <AddButton :class="[newAreaForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="addArea"
-                                   :disabled="newAreaForm.name.length === 0" text="Anlegen" mode="modal"/>
+                    <div class="w-full items-center text-center mt-4">
+                        <FormButton
+                            :disabled="newAreaForm.name.length === 0"
+                            text="Anlegen"
+                        />
                     </div>
                 </div>
             </div>
@@ -469,12 +467,12 @@
                     </div>
 
                     <div class="w-full items-center text-center">
-                        <AddButton :class="[editAreaForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base tracking-wider font-bold shadow-sm text-secondaryHover"
-                                   @click="editArea"
-                                   :disabled="editAreaForm.name.length === 0" text="Speichern" mode="modal"/>
+                        <FormButton
+                            :disabled="editAreaForm.name.length === 0"
+                            text="Speichern"
+                            @click="editArea"
+                            class="mt-8 inline-flex items-center"
+                            />
                     </div>
                 </div>
             </div>
@@ -703,12 +701,12 @@
                         </div>
                     </div>
                     <div class="w-full items-center text-center">
-                        <AddButton :class="[newRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="addRoom"
-                                   :disabled="newRoomForm.name.length === 0" text="Anlegen" mode="modal"/>
+                        <FormButton
+                            @click="addRoom"
+                            :disabled="newRoomForm.name.length === 0"
+                            text="Anlegen"
+                            class="inline-flex items-center mt-4"
+                        />
                     </div>
                 </div>
             </div>
@@ -936,12 +934,12 @@
                     </div>
 
                     <div class="w-full items-center text-center">
-                        <AddButton :class="[editRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-8 inline-flex items-center px-24 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="editRoom"
-                                   :disabled="editRoomForm.name.length === 0" text="Speichern" mode="modal"/>
+                        <FormButton
+                            @click="editRoom"
+                            :disabled="editRoomForm.name.length === 0"
+                            text="Speichern"
+                            class="inline-flex items-center mt-8"
+                            />
                     </div>
 
                 </div>
@@ -1019,10 +1017,12 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        FormButton,
         AddButtonBig,
         SuccessModal,
         ConfirmationComponent,

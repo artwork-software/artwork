@@ -2,16 +2,17 @@
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 
 export default {
-    name: "SaveButton",
+    name: "FormButton",
     components: {BaseButton},
     props: {
-        disabled: Boolean
+        text: String,
+        disabled: Boolean,
     }
 }
 </script>
 
 <template>
-    <BaseButton text="Speichern" :disabled="disabled" horizontalPadding="px-24" vertical-padding="py-4" />
+    <BaseButton :text="text" :disabled="disabled" horizontalPadding="px-24" vertical-padding="py-4" class="font-semibold" />
 </template>
 
 <style scoped>

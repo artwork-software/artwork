@@ -103,10 +103,18 @@
                                     </div>
 
                                     <div class="w-full flex justify-center">
-                                        <AddButton @click="createGlobalNotification()" v-if="!globalNotification.title" class="flex"
-                                                   text="Benachrichtigung teilen" mode="modal"/>
-                                        <AddButton v-else @click="deleteGlobalNotification(globalNotification.id)" type="secondary"
-                                                   text="Benachrichtigung löschen"></AddButton>
+                                        <FormButton
+                                            @click="createGlobalNotification()"
+                                            v-if="!globalNotification.title"
+                                            class="flex"
+                                            text="Benachrichtigung teilen"
+                                        />
+                                        <FormButton
+                                            @click="deleteGlobalNotification(globalNotification.id)"
+                                            v-else
+                                            class="flex"
+                                            text="Benachrichtigung löschen"
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -126,11 +134,13 @@ import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from 
 import {XIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: "GlobalNotificationModal",
     mixins: [Permissions],
     components: {
+        FormButton,
         AddButton,
         Dialog,
         DialogTitle,

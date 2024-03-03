@@ -17,7 +17,7 @@
                 </p>
             </div>
 
-            <AddButton text="Neues Gewerk" class="!ml-0 mt-5" @click="openAddCraftsModal = true"/>
+            <AddButtonSmall text="Neues Gewerk" class="mt-5" @click="openAddCraftsModal = true" />
 
             <ul role="list" class="divide-y divide-gray-100">
                 <li v-for="craft in crafts" :key="craft" class="flex justify-between gap-x-6 py-5">
@@ -124,7 +124,7 @@
             <div class="mt-10">
                 <h4 class="mb-2 headline2">Qualifitkationen</h4>
                 <p class="xsLight">Lege Qualifikationen an oder bearbeite sie</p>
-                <AddButton text="Neue Qualifikation" class="!ml-0 mt-5" @click="this.openShiftQualificationModal('create')"/>
+                <AddButtonSmall text="Neue Qualifikation" class="mt-5" @click="this.openShiftQualificationModal('create')" />
                 <div class="mt-5">
                     <div class="mb-5 xsLight" v-if="shiftQualifications.length === 0">
                         Bisher wurden keine Qualifikationen angelegt.
@@ -196,10 +196,12 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import ShiftQualificationModal from "@/Layouts/Components/ShiftQualificationModal.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     components: {
+        AddButtonSmall,
         ErrorComponent,
         SuccessModal,
         ShiftQualificationModal,

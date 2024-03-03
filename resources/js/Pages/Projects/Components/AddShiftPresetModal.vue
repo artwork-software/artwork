@@ -72,7 +72,11 @@
                                 </div>
                             </div>
                             <div class="flex justify-center">
-                                <AddButton mode="modal" :text="preset ? 'Vorlage speichern' : 'Vorlage anlegen'" @click="savePreset"/>
+                                <FormButton
+                                    :text="preset ? 'Vorlage speichern' : 'Vorlage anlegen'"
+                                    @click="savePreset"
+                                    class="mt-3"
+                                />
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -100,10 +104,12 @@ import {
 } from "@headlessui/vue";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     name: "AddShiftPresetModal",
     components: {
+        FormButton,
         CheckIcon, ChevronDownIcon, EventTypeIconCollection,
         SingleTimeLine,
         Input,

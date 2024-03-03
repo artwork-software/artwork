@@ -73,19 +73,18 @@
                                     <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                                 </div>
                             </div>
-                            <button @click="openProjectExportBudgetsByBudgetDeadlineModal()"
-                                    type="button"
-                                    class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton focus:outline-none bg-buttonBlue hover:bg-buttonHover">
+                            <BaseButton
+                                text="Excel-Export"
+                                @click="openProjectExportBudgetsByBudgetDeadlineModal">
                                 <DocumentReportIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
-                                <p class="text-sm">Excel-Export</p>
-                            </button>
+                            </BaseButton>
                         </div>
                         <div class="flex relative" v-if="$can('create and edit own project') || $role('artwork admin')">
-                            <div v-if="this.$page.props.show_hints" class="flex mt-1 absolute w-40 right-32">
+                            <div v-if="this.$page.props.show_hints" class="flex mt-1 absolute w-40 right-20">
                                 <span class="hind ml-1 my-auto">Lege neue Projekte an</span>
                                 <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
                             </div>
-                            <AddButton @click="openCreateProjectModal" text="Neu" mode="page"/>
+                            <AddButtonSmall @click="openCreateProjectModal" text="Neu"/>
                         </div>
                     </div>
                     <div id="selectedFilter" class="mt-3">
@@ -426,9 +425,13 @@ import ProjectCreateModal from "@/Layouts/Components/ProjectCreateModal.vue";
 import ProjectExportBudgetsByBudgetDeadlineModal from "@/Layouts/Components/ProjectExportBudgetsByBudgetDeadlineModal.vue";
 import {IconPin} from "@tabler/icons-vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 
 export default defineComponent({
     components: {
+        AddButtonSmall,
+        BaseButton,
         SuccessModal,
         IconPin,
         ProjectExportBudgetsByBudgetDeadlineModal,

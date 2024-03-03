@@ -59,11 +59,10 @@
                     </button>
                 </div>
 
-                <AddButton @click="submitUsers"
-                           text="Zuweisen"
-                           mode="modal"
-                           class="mt-8 px-12 py-3" />
-
+                <FormButton
+                    @click="submitUsers"
+                    text="Zuweisen"
+                    class="mt-8" />
                 <!-- <p v-if="error" class="text-red-800 text-xs">{{ error }}</p> -->
             </div>
         </template>
@@ -78,11 +77,13 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import AddButton from "@/Layouts/Components/AddButton";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'AddChecklistUserModal',
     mixins: [Permissions],
     components: {
+        FormButton,
         XIcon,
         XCircleIcon,
         TeamIconCollection,

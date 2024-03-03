@@ -111,7 +111,7 @@
                         </div>
 
                        <div class="mt-4" v-if="hasAdminRole() || $canAny(['change system notification'])">
-                           <AddButton text="Benachrichtigung an alle ändern" mode="modal" type="secondary" class="col-span-12 !ml-0" @click="showGlobalNotificationModal = true"/>
+                           <SecondaryButton text="Benachrichtigung an alle ändern" class="col-span-12" @click="showGlobalNotificationModal = true"/>
                        </div>
                     </div>
                 </div>
@@ -194,11 +194,13 @@ import NotificationPushSettings from "@/Layouts/Components/NotificationPushSetti
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent";
 import Permissions from "@/mixins/Permissions.vue";
 import GlobalNotificationModal from "@/Pages/Notifications/Components/GlobalNotificationModal.vue";
+import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
 
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        SecondaryButton,
         GlobalNotificationModal,
         NotificationPushSettings,
         NotificationSectionComponent,

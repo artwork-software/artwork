@@ -232,11 +232,12 @@
                             </div>
                         </div>
                         <div class="w-full items-center text-center">
-                            <AddButton
-                                :class="[this.createProjectForm.name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                class="mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
+                            <FormButton
                                 @click="addProject"
-                                :disabled="this.createProjectForm.name === ''" text="Anlegen" mode="modal"/>
+                                :disabled="this.createProjectForm.name === ''"
+                                text="Anlegen"
+                                class="mt-8 inline-flex items-center"
+                            />
                         </div>
                     </div>
                 </div>
@@ -482,10 +483,12 @@ import {
     MenuButton,
     MenuItems
 } from "@headlessui/vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'ProjectCreateModal',
     components: {
+        FormButton,
         ListboxOption,
         ListboxOptions,
         ListboxButton,

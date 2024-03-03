@@ -7,7 +7,14 @@ export default {
     props: {
         text: String,
         disabled: Boolean,
-        horizontalPadding: String,
+        horizontalPadding: {
+            type: String,
+            default: "px-4"
+        },
+        verticalPadding: {
+            type: String,
+            default: "py-2"
+        },
         textColor: {
             type: String,
             default: "text-white"
@@ -33,8 +40,8 @@ export default {
        type="button"
        :disabled="disabled"
        :class="[disabled ? 'bg-secondary' : `${backgroundColor} hover:bg-buttonHover`,
-       $props.horizontalPadding, textColor, borderWidth, borderColor]"
-       class="flex py-2 mt-1 items-center rounded-full shadow-sm hover:shadow-blueButton focus:outline-none"
+       $props.horizontalPadding, textColor, borderWidth, borderColor, verticalPadding]"
+       class="flex mt-1 items-center rounded-full shadow-sm hover:shadow-blueButton focus:outline-none"
     >
         <!-- slot for the icon -->
         <slot></slot>

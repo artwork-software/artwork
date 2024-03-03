@@ -42,10 +42,7 @@
 
 
                             <div>
-                                <button :disabled="this.form.email === '' || this.form.password === ''" :class="[this.form.email === '' || this.form.password === '' ? 'bg-secondary hover:bg-secondary' : '']" type="submit"
-                                        class="flex px-44 py-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover focus:outline-none">
-                                    <p class="text-sm">Login</p>
-                                </button>
+                                <BaseButton :text="'Login'" :disabled="form.email === '' || form.password === ''" horizontal-padding="px-44" vertical-padding="py-4" type="submit" />
                             </div>
                         </form>
 
@@ -92,16 +89,16 @@ import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 import {Head, Link} from '@inertiajs/inertia-vue3';
 import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
-import AddButton from "@/Layouts/Components/AddButton";
 import JetInputError from "@/Jetstream/InputError.vue";
 import Permissions from "@/mixins/Permissions.vue";
-
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 
 const rememberCheckbox = {name: 'Angemeldet bleiben', checked: false, showIcon: false}
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        BaseButton,
         SvgCollection,
         Head,
         JetAuthenticationCard,
@@ -114,7 +111,6 @@ export default defineComponent({
         JetValidationErrors,
         Link,
         Checkbox,
-        AddButton
     },
     props: {
         canResetPassword: Boolean,

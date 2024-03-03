@@ -11,7 +11,7 @@ export default {
 </script>
 
 <template>
-    <BaseButton text="Speichern" :disabled="disabled" horizontalPadding="px-24" vertical-padding="py-4" />
+    <BaseButton :text="$t('Save')" :disabled="disabled" horizontalPadding="px-24" vertical-padding="py-4" />
 </template>
 
 <style scoped>

@@ -10,10 +10,8 @@ use Illuminate\Database\Seeder;
 
 class PermissionPresetSeeder extends Seeder
 {
-    public function __construct(
-        private readonly PermissionRepository $permissionRepository,
-        private readonly PermissionPresetRepository $permissionPresetRepository
-    ) {
+    public function __construct()
+    {
     }
 
     /**
@@ -23,55 +21,58 @@ class PermissionPresetSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->permissionPresetRepository->save(
+        $permissionRepository = app()->get(PermissionRepository::class);
+        $permissionPresetRepository = app()->get(PermissionPresetRepository::class);
+
+        $permissionPresetRepository->save(
             new PermissionPreset([
                 'name' => 'Standard User',
                 'permissions' => [
-                    $this->permissionRepository->getIdByName(PermissionNameEnum::PROJECT_VIEW->value),
-                    $this->permissionRepository->getIdByName(PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value),
-                    $this->permissionRepository->getIdByName(PermissionNameEnum::EVENT_REQUEST->value),
-                    $this->permissionRepository->getIdByName(PermissionNameEnum::CONTRACT_SEE_DOWNLOAD->value)
+                    $permissionRepository->getIdByName(PermissionNameEnum::PROJECT_VIEW->value),
+                    $permissionRepository->getIdByName(PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value),
+                    $permissionRepository->getIdByName(PermissionNameEnum::EVENT_REQUEST->value),
+                    $permissionRepository->getIdByName(PermissionNameEnum::CONTRACT_SEE_DOWNLOAD->value)
                 ]
             ])
         );
 
-        $this->permissionPresetRepository->save(
+        $permissionPresetRepository->save(
             new PermissionPreset([
                 'name' => 'Vertrags- & Dokumentenadmin',
                 'permissions' => [
-                    $this->permissionRepository->getIdByName(PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value),
-                    $this->permissionRepository
+                    $permissionRepository->getIdByName(PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value),
+                    $permissionRepository
                         ->getIdByName(PermissionNameEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value)
                 ]
             ])
         );
 
-        $this->permissionPresetRepository->save(
+        $permissionPresetRepository->save(
             new PermissionPreset([
                 'name' => 'Budgetadmin',
                 'permissions' => [
-                    $this->permissionRepository->getIdByName(PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value),
-                    $this->permissionRepository
+                    $permissionRepository->getIdByName(PermissionNameEnum::GLOBAL_PROJECT_BUDGET_ADMIN->value),
+                    $permissionRepository
                         ->getIdByName(PermissionNameEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value)
                 ]
             ])
         );
 
-        $this->permissionPresetRepository->save(
+        $permissionPresetRepository->save(
             new PermissionPreset([
                 'name' => 'Disponent*in',
                 'permissions' => [
-                    $this->permissionRepository->getIdByName(PermissionNameEnum::ROOM_UPDATE->value)
+                    $permissionRepository->getIdByName(PermissionNameEnum::ROOM_UPDATE->value)
                 ]
             ])
         );
 
-        $this->permissionPresetRepository->save(
+        $permissionPresetRepository->save(
             new PermissionPreset([
                 'name' => 'Finanzierungsquellenadmin',
                 'permissions' => [
-                    $this->permissionRepository->getIdByName(PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value),
-                    $this->permissionRepository->getIdByName(PermissionNameEnum::MONEY_SOURCE_EDIT_DELETE->value)
+                    $permissionRepository->getIdByName(PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value),
+                    $permissionRepository->getIdByName(PermissionNameEnum::MONEY_SOURCE_EDIT_DELETE->value)
                 ]
             ])
         );

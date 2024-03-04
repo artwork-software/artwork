@@ -9,7 +9,7 @@ use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Event>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\Artwork\Modules\Event\Models\Event>
  */
 class EventFactory extends Factory
 {

@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Models\HasAvailability;
+use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Comment;
@@ -18,7 +20,7 @@ use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Models\UserShiftQualification;
 use Artwork\Modules\Vacation\Models\GoesOnVacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
-use Artwork\Modules\Checklist\Models\Checklist;
+use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -29,7 +31,6 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
@@ -70,7 +71,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Collection<\Room> created_rooms
  * @property Collection<\Room> admin_rooms
  * @property Collection<\App\Models\Task> done_tasks
- * @property Collection<\App\Models\Event> events
+ * @property Collection<\Artwork\Modules\Event\Models\Event> events
  * @property Collection<\App\Models\Task> $privateTasks
  *
  * What is this sorcery?

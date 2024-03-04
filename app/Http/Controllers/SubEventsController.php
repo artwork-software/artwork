@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
-use App\Models\Event;
-use App\Models\SubEvents;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\SubEvents\Models\SubEvent;
 use Illuminate\Http\Request;
 
 class SubEventsController extends Controller
@@ -31,7 +31,7 @@ class SubEventsController extends Controller
 
     public function store(Request $request): void
     {
-        SubEvents::create($request->only([
+        SubEvent::create($request->only([
             'event_id',
             'eventName',
             'description',
@@ -75,11 +75,11 @@ class SubEventsController extends Controller
     {
     }
 
-    public function edit(SubEvents $subEvents): void
+    public function edit(SubEvent $subEvents): void
     {
     }
 
-    public function update(Request $request, SubEvents $subEvents): void
+    public function update(Request $request, SubEvent $subEvents): void
     {
         $subEvents->update($request->only([
             'eventName',
@@ -94,7 +94,7 @@ class SubEventsController extends Controller
         ]));
     }
 
-    public function destroy(SubEvents $subEvents): void
+    public function destroy(SubEvent $subEvents): void
     {
         $subEvents->forceDelete();
     }

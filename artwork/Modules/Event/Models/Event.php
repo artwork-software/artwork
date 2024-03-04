@@ -1,22 +1,26 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\Event\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Builders\EventBuilder;
+use App\Models\EventType;
+use App\Models\SeriesEvents;
+use App\Models\User;
+use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\SubEvents\Models\SubEvent;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -45,8 +49,14 @@ use Illuminate\Support\Collection;
  * @property string $deleted_at
  * @property bool $accepted
  * @property string $option_string
+ * @property Project|null $project
+ * @property Room|null $room
+ * @property EventType $event_type
+ * @property User $creator
+ * @property \Illuminate\Database\Eloquent\Collection<SubEvent> $subEvents
  * @property \Illuminate\Database\Eloquent\Collection<Shift> $shifts
- * @property \Illuminate\Database\Eloquent\Collection<Timeline> $timeline
+ * @property \Illuminate\Database\Eloquent\Collection<Timeline> $timelines
+ * @property \Illuminate\Database\Eloquent\Collection<EventComment> $comments
  */
 class Event extends Model
 {
@@ -55,7 +65,11 @@ class Event extends Model
     use SoftDeletes;
     use Prunable;
 
-    protected $with = ['series', 'event_type', 'subEvents'];
+    protected $with = [
+        'series',
+        'event_type',
+        'subEvents'
+    ];
 
     protected $fillable = [
         'name',
@@ -101,25 +115,10 @@ class Event extends Model
 
     public function comments(): HasMany
     {
-        return $this->hasMany(EventComments::class)->orderBy('id', 'DESC');
+        return $this->hasMany(EventComment::class)->orderBy('id', 'DESC');
     }
 
-    /**
-     * @return array<string, string>
-     */
-    public function getDaysOfEventAttribute(): array
-    {
-        $days_period = CarbonPeriod::create($this->start_time, $this->end_time);
-        $days = [];
-
-        foreach ($days_period as $day) {
-            $days[] = $day->format('d.m.Y');
-        }
-
-        return $days;
-    }
-
-    public function timeline(): HasMany
+    public function timelines(): HasMany
     {
         return $this->hasMany(Timeline::class);
     }
@@ -127,6 +126,58 @@ class Event extends Model
     public function shifts(): HasMany
     {
         return $this->hasMany(Shift::class);
+    }
+
+    //@todo: fix phpcs error - refactor function name to eventType
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function event_type(): BelongsTo
+    {
+        return $this->belongsTo(
+            EventType::class,
+            'event_type_id',
+            'id',
+            'event_types'
+        );
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(
+            Room::class,
+            'room_id',
+            'id',
+            'rooms'
+        );
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(
+            Project::class,
+            'project_id',
+            'id',
+            'projects'
+        );
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'user_id',
+            'id',
+            'users'
+        );
+    }
+
+    public function series(): HasOne
+    {
+        return $this->hasOne(SeriesEvents::class, 'id', 'series_id');
+    }
+
+    public function subEvents(): HasMany
+    {
+        return $this->hasMany(SubEvent::class)->orderBy('start_time', 'ASC');
     }
 
     public function getStartTimeWithoutDayAttribute(): string
@@ -144,58 +195,19 @@ class Event extends Model
         return $date->format('Y-m-d H:i:s');
     }
 
-    //@todo: fix phpcs error - refactor function name to eventType
-    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
-    public function event_type(): BelongsTo
+    /**
+     * @return array<string, string>
+     */
+    public function getDaysOfEventAttribute(): array
     {
-        return $this->belongsTo(EventType::class, 'event_type_id', 'id', 'event_types');
-    }
+        $days_period = CarbonPeriod::create($this->start_time, $this->end_time);
+        $days = [];
 
-    public function room(): BelongsTo
-    {
-        return $this->belongsTo(Room::class, 'room_id', 'id', 'rooms');
-    }
+        foreach ($days_period as $day) {
+            $days[] = $day->format('d.m.Y');
+        }
 
-    public function project(): BelongsTo
-    {
-        return $this->belongsTo(Project::class, 'project_id', 'id', 'projects');
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id', 'id', 'users');
-    }
-
-    public function roomAdministrators(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'room_user', 'user_id', 'room_id', 'room_id', 'id');
-    }
-
-    public function sameRoomEvents(): HasMany
-    {
-        return $this->hasMany(Event::class, 'room_id', 'room_id');
-    }
-
-    public function adjoiningEvents(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Event::class,
-            'adjoining_room_main_room',
-            'main_room_id',
-            'adjoining_room_id',
-            'room_id',
-            'room_id'
-        );
-    }
-
-    public function series(): HasOne
-    {
-        return $this->hasOne(SeriesEvents::class, 'id', 'series_id');
-    }
-
-    public function subEvents(): HasMany
-    {
-        return $this->hasMany(SubEvents::class)->orderBy('start_time', 'ASC');
+        return $days;
     }
 
     public function newEloquentBuilder($query): EventBuilder

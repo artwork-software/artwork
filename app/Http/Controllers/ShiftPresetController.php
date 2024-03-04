@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Event;
 use Artwork\Modules\Craft\EventTypeService;
 use Artwork\Modules\Craft\Services\CraftService;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftPreset\Services\ShiftPresetService;

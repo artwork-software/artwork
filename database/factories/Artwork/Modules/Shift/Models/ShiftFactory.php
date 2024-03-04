@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Artwork\Modules\Shift\Models;
 
-use App\Models\Event;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

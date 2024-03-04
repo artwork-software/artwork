@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
-use App\Models\Task;
-use Artwork\Modules\Checklist\Models\Checklist;
-use App\Models\Event;
 use App\Models\Scheduling;
+use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;

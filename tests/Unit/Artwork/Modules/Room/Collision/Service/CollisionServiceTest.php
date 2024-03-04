@@ -5,7 +5,7 @@ use Artwork\Modules\Room\Collision\Service\CollisionService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
 
-test('find Collisions', function (Room $room, int $expectation) {
+test('find Collisions', function (Room $room, int $expectation): void {
     /** @var CollisionService $collisionService */
     $collisionService = app()->get(CollisionService::class);
     /** @var RoomService $roomService */

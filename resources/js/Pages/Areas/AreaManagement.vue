@@ -175,7 +175,7 @@
                                                                         <TrashIcon
                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                             aria-hidden="true"/>
-                                                                        {{ $t('In the wastebasket')}}
+                                                                        {{ $t('In the recycle bin')}}
                                                                     </a>
                                                                 </MenuItem>
                                                                 <MenuItem v-slot="{ active }">
@@ -278,7 +278,7 @@
                                                                                         <TrashIcon
                                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                             aria-hidden="true"/>
-                                                                                        {{ $t('In the wastebasket')}}
+                                                                                        {{ $t('In the recycle bin')}}
                                                                                     </a>
                                                                                 </MenuItem>
                                                                             </div>
@@ -381,7 +381,7 @@
                                                                                             <TrashIcon
                                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                                 aria-hidden="true"/>
-                                                                                            {{ $t('In the wastebasket')}}
+                                                                                            {{ $t('In the recycle bin')}}
                                                                                         </a>
                                                                                     </MenuItem>
                                                                                 </div>
@@ -956,20 +956,20 @@
     />
     <!-- Delete Area Modal -->
     <ConfirmationComponent v-if="showSoftDeleteAreaModal"
-                           :confirm="$t('In the wastebasket')"
+                           :confirm="$t('In the recycle bin')"
                            :titel="$t('Area in the trash')"
                            :description="areaDeleteDescriptionText"
                            @closed="afterSoftDeleteAreaConfirm"/>
     <!-- Delete All Rooms from Area Modal -->
     <ConfirmationComponent v-if="showDeleteAllRoomsModal"
-                           :confirm="$t('In the wastebasket')"
+                           :confirm="$t('In the recycle bin')"
                            :titel="$t('Remove all rooms')"
-                           :description="$t('Are you sure you want to put all the rooms in this area in the waste bin?')"
+                           :description="$t('Are you sure you want to put all the rooms in this area in the recycle bin?')"
                            @closed="afterSoftDeleteAllRoomsConfirm"/>
     <!-- Delete Room Modal -->
     <ConfirmationComponent v-if="showSoftDeleteRoomModal"
                            :confirm="$t('Delete room')"
-                           :titel="$t('Room in the wastebasket')"
+                           :titel="$t('Room in the recycle bin')"
                            :description="roomDeleteDescriptionText"
                            @closed="afterSoftDeleteRoomConfirm"/>
     <!-- Delete Room Category Modal -->
@@ -1134,7 +1134,7 @@ export default defineComponent({
             return this.$t('Are you sure you want to put the room {0} in the trash?', [this.roomToSoftDelete.name]);
         },
         areaDeleteDescriptionText() {
-            return this.$t('Are you sure you want to put the area {0} with all rooms in the waste bin?', [this.areaToSoftDelete.name]);
+            return this.$t('Are you sure you want to put the area {0} with all rooms in the recycle bin?', [this.areaToSoftDelete.name]);
         }
     },
     methods: {
@@ -1321,7 +1321,7 @@ export default defineComponent({
         softDeleteArea() {
             this.$inertia.delete(`/areas/${this.areaToSoftDelete.id}`);
             this.closeSoftDeleteAreaModal()
-            this.successHeading = this.$t('Area in the wastebasket')
+            this.successHeading = this.$t('Area in the recycle bin')
             this.successDescription = this.$t('The area and all associated rooms have been successfully trashed.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
@@ -1345,7 +1345,7 @@ export default defineComponent({
                 this.$inertia.delete(`/rooms/${room.id}`);
             })
             this.closeDeleteAllRoomsModal();
-            this.successHeading = this.$t('Room in the wastebasket')
+            this.successHeading = this.$t('Room in the recycle bin')
             this.successDescription = this.$t('The rooms have been successfully moved to the trash.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
@@ -1397,7 +1397,7 @@ export default defineComponent({
         softDeleteRoom() {
             this.$inertia.delete(`/rooms/${this.roomToSoftDelete.id}`);
             this.closeSoftDeleteRoomModal();
-            this.successHeading = this.$t('Room in the wastebasket')
+            this.successHeading = this.$t('Room in the recycle bin')
             this.successDescription = this.$t('The rooms have been successfully moved to the trash.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000);

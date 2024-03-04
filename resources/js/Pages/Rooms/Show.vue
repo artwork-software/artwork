@@ -55,7 +55,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            {{$t('In the wastebasket')}}
+                                            {{$t('In the recycle bin')}}
                                         </a>
                                     </MenuItem>
                                 </div>
@@ -513,7 +513,7 @@
     <!-- Delete Room Modal -->
     <ConfirmationComponent v-if="showSoftDeleteRoomModal"
                            :confirm="$t('Delete room')"
-                           :titel="$t('Room in the wastebasket')"
+                           :titel="$t('Room in the recycle bin')"
                            :description="roomDeleteDescriptionText"
                            @closed="afterSoftDeleteRoomConfirm"/>
 </template>
@@ -956,7 +956,7 @@ export default {
         softDeleteRoom() {
             this.$inertia.delete(`/rooms/${this.roomToSoftDelete.id}`);
             this.closeSoftDeleteRoomModal();
-            this.successHeading = this.$t('Room in the wastebasket')
+            this.successHeading = this.$t('Room in the recycle bin')
             this.successDescription = this.$t('The room has been successfully moved to the trash.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000);

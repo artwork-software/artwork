@@ -27,7 +27,7 @@
                                     <div class="ml-3 text-sm font-bold">
                                         <span v-if="user.element.resource !== 'ServiceProviderShiftResource'">
                                             {{ user.element.first_name }} {{ user.element.last_name }}
-                                            <span v-if="user.resource === 'FreelancerShiftResource'">
+                                            <span v-if="user.element.resource === 'FreelancerShiftResource'">
                                             ({{ $t('external')}})
                                             </span>
                                             <span v-else>

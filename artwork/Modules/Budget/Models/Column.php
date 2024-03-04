@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
+ * @property int $id
  * @property int $project_id
  * @property int $table_id
  * @property string $name
@@ -50,6 +51,11 @@ class Column extends Model
     protected $with = [
         'lockedBy'
     ];
+
+    public function table(): BelongsTo
+    {
+        return $this->belongsTo(Table::class, 'table_id', 'id', 'tables');
+    }
 
     public function cells(): HasMany
     {

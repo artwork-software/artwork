@@ -22,7 +22,10 @@ class BudgetSumDetails extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'type',
+        'column_id'
+    ];
 
     public function comments(): MorphMany
     {

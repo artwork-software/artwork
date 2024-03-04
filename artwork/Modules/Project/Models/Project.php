@@ -93,9 +93,6 @@ class Project extends Model
 
     protected $with = ['shiftRelevantEventTypes', 'state'];
 
-
-    //@todo: fix phpcs error - refactor function name to costCenter
-    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
     public function costCenter(): BelongsTo
     {
         return $this->belongsTo(CostCenter::class, 'cost_center_id', 'id', 'cost_center');
@@ -251,5 +248,10 @@ class Project extends Model
             'id' => $this->id,
             'name' => $this->name,
         ];
+    }
+
+    public function scopeByCostCenter(Builder $builder, string $costCenter): Builder
+    {
+        return $builder->whereRelation('costCenter', 'name', $costCenter);
     }
 }

@@ -3,10 +3,11 @@
 namespace Artwork\Modules\Timeline\Models;
 
 use App\Casts\TimeWithoutSeconds;
-use App\Models\Event;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Event\Models\Event;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -14,12 +15,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $start
  * @property string $end
  * @property string $description
+ * @property Event $event
  * @property string $created_at
  * @property string $updated_at
+ * @property string $deleted_at
  */
 class Timeline extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'event_id',

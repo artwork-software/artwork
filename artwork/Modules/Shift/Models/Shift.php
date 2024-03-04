@@ -4,18 +4,19 @@ namespace Artwork\Modules\Shift\Models;
 
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Casts\TimeWithoutSeconds;
-use App\Models\Event;
 use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use App\Models\User;
+use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
 /**
@@ -32,24 +33,23 @@ use Illuminate\Support\Collection;
  * @property string|null $event_end_day
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * @property-read \Artwork\Modules\Craft\Models\Craft $craft
- * @property-read \App\Models\Event $event
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Freelancer[] $freelancer
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $users
+ * @property-read Craft $craft
+ * @property-read Event $event
+ * @property-read Collection<Freelancer> $freelancer
+ * @property-read Collection<User> $users
+ * @property-read Collection<ServiceProvider> $serviceProvider
  * @property-read \Illuminate\Support\Collection $history
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\ServiceProvider[] $serviceProvider
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $masters
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\User[] $employees
  * @property-read array $allUsers
  * @property-read bool $infringement
  * @property-read string $break_formatted
- * @property-read \App\Models\User|null $committedBy
+ * @property-read User|null $committedBy
  * @property-read Collection<ShiftsQualifications> $shiftsQualifications
  */
 class Shift extends Model
 {
     use HasFactory;
     use HasChangesHistory;
+    use SoftDeletes;
 
     protected $fillable = [
         'event_id',
@@ -71,7 +71,13 @@ class Shift extends Model
         'is_committed' => 'boolean'
     ];
 
-    protected $with = ['craft', 'users', 'freelancer', 'serviceProvider', 'committedBy'];
+    protected $with = [
+        'craft',
+        'users',
+        'freelancer',
+        'serviceProvider',
+        'committedBy'
+    ];
 
     protected $appends = [
         'break_formatted',

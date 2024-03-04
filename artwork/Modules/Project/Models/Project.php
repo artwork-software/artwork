@@ -5,10 +5,8 @@ namespace Artwork\Modules\Project\Models;
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Models\Category;
 use App\Models\CollectingSociety;
-use Artwork\Modules\Project\Models\Comment;
 use App\Models\Contract;
 use App\Models\CostCenter;
-use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\MoneySource;
@@ -18,8 +16,8 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Room\Models\Room;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -51,6 +49,7 @@ use Laravel\Scout\Searchable;
  * @property int $state
  * @property string $budget_deadline
  * @property Table|null $table
+ * @property Collection<User> $managerUsers
  */
 class Project extends Model
 {

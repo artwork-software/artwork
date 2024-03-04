@@ -12,9 +12,4 @@ class SageNotAssignedDataRepository extends BaseRepository
     {
         return SageNotAssignedData::onlyTrashed()->get();
     }
-
-    public function restore(SageNotAssignedData $sageNotAssignedData): bool
-    {
-        return $sageNotAssignedData->restore();
-    }
 }

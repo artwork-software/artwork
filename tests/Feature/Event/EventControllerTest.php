@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\Event;
-use App\Models\EventComments;
 use App\Models\Freelancer;
 use App\Models\FreelancerVacation;
 use App\Models\Task;
@@ -12,6 +10,8 @@ use App\Models\UserShiftCalendarFilter;
 use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
 use Artwork\Modules\Checklist\Models\Checklist;
+use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\EventComment\Models\EventComment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
@@ -19,7 +19,6 @@ use Artwork\Modules\Timeline\Models\Timeline;
 use Illuminate\Support\Facades\Event as EventFacade;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Inertia\Testing\AssertableInertia;
-
 use function Pest\Faker\fake;
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertDatabaseMissing;
@@ -266,13 +265,13 @@ test('answer on event for single user', function () {
 
     $event = Event::factory()->create();
 
-    assertDatabaseMissing((new EventComments())->getTable(), ['comment' => 'test']);
+    assertDatabaseMissing((new EventComment())->getTable(), ['comment' => 'test']);
 
     $this->post(route('event.answer', $event->id), [
         'comment' => 'test',
     ]);
 
-    assertDatabaseHas((new EventComments())->getTable(), ['comment' => 'test']);
+    assertDatabaseHas((new EventComment())->getTable(), ['comment' => 'test']);
 
     NotificationFacade::assertSentTo($event->room->user, RoomRequestNotification::class);
 });
@@ -290,13 +289,13 @@ test('answer on event for admins', function () {
     }
 
     $event->room->users()->sync($data);
-    assertDatabaseMissing((new EventComments())->getTable(), ['comment' => 'test']);
+    assertDatabaseMissing((new EventComment())->getTable(), ['comment' => 'test']);
 
     $this->post(route('event.answer', $event->id), [
         'comment' => 'test',
     ]);
 
-    assertDatabaseHas((new EventComments())->getTable(), ['comment' => 'test']);
+    assertDatabaseHas((new EventComment())->getTable(), ['comment' => 'test']);
 
     foreach ($admins as $admin) {
         NotificationFacade::assertSentTo($admin, RoomRequestNotification::class);

@@ -50,4 +50,108 @@ class ProjectService
     {
         return $this->projectRepository->findById($id);
     }
+
+    public function softDelete(Project $project): bool
+    {
+        $checklists = $project->checklists;
+
+        foreach ($checklists as $checklist) {
+            $checklist->tasks()->delete();
+            $checklist->delete();
+        }
+        // Soft delete the shifts
+
+        // Soft delete the budget with all its relations
+        $table = $project->table;
+        if ($table) {
+            // Soft delete the budget
+            $mainPositions = $table->mainPositions()->get();
+            foreach ($mainPositions as $mainPosition) {
+                $subPositions = $mainPosition->subPositions()->get();
+                foreach ($subPositions as $subPosition) {
+                    $subPositionRows = $subPosition->subPositionRows()->get();
+                    foreach ($subPositionRows as $subPositionRow) {
+                        $cells = $subPositionRow->cells()->get();
+                        $comments = $subPositionRow->comments()->get();
+                        foreach ($comments as $comment) {
+                            $comment->delete();
+                        }
+                        foreach ($cells as $cell) {
+                            $cell->comments()->delete();
+                            $cell->calculations()->delete();
+                            $cell->delete();
+                        }
+                        $subPositionRow->delete();
+                    }
+                    $subPosition->verified()->delete();
+                    $subPosition->subPositionSumDetails()->delete();
+                    $subPosition->delete();
+                }
+                $mainPosition->verified()->delete();
+                $mainPosition->mainPositionSumDetails()->delete();
+                $mainPosition->delete();
+            }
+            $columns = $table->columns()->get();
+            foreach ($columns as $column) {
+                $budgetSumDetails = $column->budgetSumDetails()->get();
+                foreach ($budgetSumDetails as $budgetSumDetail) {
+                    $budgetSumDetail->comments()->delete();
+                    $budgetSumDetail->delete();
+                }
+                $column->delete();
+            }
+            $table->delete();
+        }
+
+        // soft delete the comments
+        $project->comments()->delete();
+
+        $project->project_files()->delete();
+
+        return $project->delete();
+    }
+
+    public function forceDelete(Project $project): bool
+    {
+        $checklists = $project->checklists;
+
+        foreach ($checklists as $checklist) {
+            $checklist->tasks()->forceDelete();
+            $checklist->forceDelete();
+        }
+        // Soft delete the shifts
+
+
+        // Soft delete the budget
+        $project->table()->forceDelete();
+
+        // soft delete the comments
+        $project->comments()->forceDelete();
+
+
+        $project->project_files()->forceDelete();
+
+        return $project->forceDelete();
+    }
+
+    public function restore(Project $project): bool
+    {
+        $checklists = $project->checklists()->onlyTrashed()->get();
+
+        foreach ($checklists as $checklist) {
+            $checklist->tasks()->restore();
+            $checklist->restore();
+        }
+        // Soft delete the shifts
+
+        // Soft delete the budget
+        $project->table()->restore();
+
+        // soft delete the comments
+        $project->comments()->restore();
+
+        $project->project_files()->restore();
+
+        return $project->restore();
+    }
 }

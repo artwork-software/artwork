@@ -2912,11 +2912,11 @@ class ProjectController extends Controller
 
     public function destroy(Project $project): RedirectResponse
     {
-        $project->events()->delete();
+        //$project->events()->delete();
 
-        foreach ($project->checklists() as $checklist) {
+        /*foreach ($project->checklists() as $checklist) {
             $checklist->tasks()->delete();
-        }
+        }*/
 
         foreach ($project->users()->get() as $user) {
             $notificationTitle = __('notification.project.delete', [
@@ -2938,9 +2938,11 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $project->checklists()->delete();
+        //$project->checklists()->delete();
 
-        $project->delete();
+        //$project->delete();
+
+        $this->projectService->softDelete($project);
 
         return Redirect::route('projects');
     }
@@ -2954,6 +2956,8 @@ class ProjectController extends Controller
         $project->events()->withTrashed()->forceDelete();
         $project->project_histories()->delete();
 
+
+
         return Redirect::route('projects.trashed');
     }
 
@@ -2961,9 +2965,9 @@ class ProjectController extends Controller
     {
         $project = Project::onlyTrashed()->findOrFail($id);
 
-        $project->restore();
-        $project->events()->withTrashed()->restore();
-
+        if ($project) {
+            $this->projectService->restore($project);
+        }
         return Redirect::route('projects.trashed');
     }
 

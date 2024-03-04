@@ -8,6 +8,7 @@ use Artwork\Modules\Project\Models\Traits\BelongsToProject;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
 /**
@@ -23,6 +24,7 @@ class Table extends Model
 {
     use HasFactory;
     use BelongsToProject;
+    use SoftDeletes;
 
     protected $fillable = [
         'project_id',

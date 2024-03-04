@@ -154,9 +154,13 @@ class ChecklistController extends Controller
             'Checklist removed',
             [$checklist->name]
         );
-        $checklist->delete();
+        $checklist->forceDelete();
         $historyService->checklistUpdated($checklist);
 
         return Redirect::back();
+    }
+
+    public function forceDelete(): void
+    {
     }
 }

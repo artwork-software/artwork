@@ -5,6 +5,7 @@ namespace Artwork\Modules\Budget\Models;
 use Artwork\Modules\User\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -19,6 +20,7 @@ class SumComment extends Model
 {
     use HasFactory;
     use BelongsToUser;
+    use SoftDeletes;
 
     protected $fillable = [
         'commentable_type',

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -21,6 +22,7 @@ class MainPositionDetails extends Model
 {
     use HasFactory;
     use BelongsToMainPosition;
+    use SoftDeletes;
 
     protected $table = 'main_position_details';
 

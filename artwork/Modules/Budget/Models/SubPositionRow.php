@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -22,6 +23,7 @@ class SubPositionRow extends Model
 {
     use HasFactory;
     use BelongsToSubPosition;
+    use SoftDeletes;
 
     protected $fillable = [
         'sub_position_id',

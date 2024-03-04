@@ -34,8 +34,11 @@
                     <div v-for="file of files">{{ file.name }}</div>
                 </div>
                 <div class="justify-center flex w-full my-6">
-                    <AddButton :text="$t('Upload document')" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
-                               @click="storeFiles"/>
+                    <FormButton
+                        :text="$t('Upload document')"
+                        @click="storeFiles"
+                        :disabled="files.length < 1"
+                    />
                 </div>
             </div>
         </template>
@@ -49,6 +52,7 @@ import {XIcon} from "@heroicons/vue/outline";
 import {ref} from "vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 const props = defineProps({
     show: Boolean,

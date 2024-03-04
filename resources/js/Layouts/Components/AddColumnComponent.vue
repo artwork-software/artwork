@@ -130,11 +130,11 @@
                             </Listbox>
                         </div>
                     </div>
-                    <div class="flex justify-center">
-                        <AddButton :disabled="selectedType !== 'empty' && ((selectedFirstColumn === null || selectedSecondColumn === null) || (selectedFirstColumn === selectedSecondColumn))" :class="selectedType !== 'empty' && ((selectedFirstColumn === null || selectedSecondColumn === null) || (selectedFirstColumn === selectedSecondColumn)) ? 'bg-secondary hover:bg-secondary cursor-pointer-none' : ''"
-                                   class="mt-8 py-3 flex" :text="$t('Create column')"
-                                   mode="modal"
-                                   @click="addColumn()"
+                    <div class="flex justify-center mt-8">
+                        <FormButton
+                            @click="addColumn"
+                            :disabled="selectedType !== 'empty' && ((selectedFirstColumn === null || selectedSecondColumn === null) || (selectedFirstColumn === selectedSecondColumn))"
+                            :text="$t('Create column')"
                         />
                     </div>
                 </div>
@@ -160,11 +160,13 @@ import {
 } from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'AddColumnComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         AddButton,
         ListboxOptions,
         ListboxOption,

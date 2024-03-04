@@ -289,11 +289,10 @@
                                 </div>
                             </div>
                             <div class="flex justify-center mt-2">
-                                <AddButton :disabled="!isFormComplete()"
-                                           mode="modal"
-                                           class="text-white resize-none"
-                                           @click="createSingleSource()"
-                                           :text="$t('Creating a source of funding')"
+                                <FormButton
+                                    :text="$t('Creating a source of funding')"
+                                    :disabled="!isFormComplete()"
+                                    @click="createSingleSource()"
                                 />
                             </div>
                         </div>
@@ -444,11 +443,15 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton";
 import Permissions from "@/mixins/Permissions.vue";
 import {Inertia} from "@inertiajs/inertia";
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
+        BaseButton,
         Input,
         JetDialogModal,
         XIcon,

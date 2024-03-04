@@ -83,10 +83,10 @@
                     </div>
                 </div>
                 <div class="flex justify-center">
-                    <AddButton @click="updateRoomUsers"
-                               :text="$t('Save')"
-                               mode="modal"
-                               class="mt-8 px-12 py-3"/>
+                    <FormButton
+                        @click="updateRoomUsers"
+                        :text="$t('Save')"
+                        class="mt-8" />
                 </div>
 
             </div>
@@ -102,6 +102,7 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {onMounted, ref, watch} from "vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 const props = defineProps({
     show: Boolean,

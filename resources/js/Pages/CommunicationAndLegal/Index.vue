@@ -52,7 +52,10 @@
             </div>
         </div>
         <div class="mt-4 items-center">
-            <AddButton @click.prevent="changeEmailData" :text="$t('Save changes')" mode="modal"/>
+            <FormButton
+                @click.prevent="changeEmailData"
+                :text="$t('Save changes')"
+            />
         </div>
     </ToolSettingsHeader>
 </template>
@@ -63,9 +66,11 @@ import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     components: {
+        FormButton,
         ToolSettingsHeader,
         AddButton,
         InputComponent

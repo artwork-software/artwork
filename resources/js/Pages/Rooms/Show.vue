@@ -276,14 +276,11 @@
                             </div>
                         </div>
 
-                        <div class="flex justify-center">
-                            <AddButton @click="editRoom"
-                                       :text="$t(Save)"
-                                       mode="modal"
-                                       :class="[editRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                       :disabled="editRoomForm.name.length === 0"
-                                       class="mt-8 px-24 py-3"/>
+                        <div class="flex justify-center pt-8">
+                            <SaveButton
+                                :disabled="editRoomForm.name.length === 0"
+                                @click="editRoom"
+                            />
                         </div>
 
                     </div>
@@ -480,11 +477,11 @@
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="declineRequest">
-                            {{$t('Cancellations')}}
-                        </button>
+                        <FormButton
+                            @click="declineRequest"
+                            :text="$t('Cancellations')"
+                            class="inline-flex items-center"
+                        />
                         <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
                                   class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
@@ -575,6 +572,8 @@ import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import SaveButton from "@/Layouts/Components/General/Buttons/SaveButton.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 
 export default {
@@ -606,6 +605,8 @@ export default {
         'user_filters'
     ],
     components: {
+        FormButton,
+        SaveButton,
         SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,

@@ -1,12 +1,12 @@
 <template>
     <div class="col-span-2 ml-14 pt-4 pr-14">
-        <div class="flex w-full items-center mb-8">
+        <div class="flex w-full items-center mb-8 gap-x-4">
             <h2 class="text-xl leading-6 font-bold font-lexend text-primary">
                 {{ $t('Checklists') }}
             </h2>
             <div class="flex items-center"
                  v-if="$role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                <AddButton @click="openAddChecklistModal" :text="$t('New checklist')" mode="page"/>
+                <AddButtonSmall @click="openAddChecklistModal" :text="$t('New checklist')" />
                 <div v-if="this.$page.props.show_hints" class="flex ml-2">
                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
                     <span class="hind ml-1">
@@ -773,13 +773,11 @@
                             </span>
                         </div>
                     </div>
-                    <div class="w-full items-center text-center">
-                        <AddButton :class="[editChecklistForm.name.length === 0 ? 'bg-secondary': 'focus:outline-none']"
-                                   class="mt-4 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="editChecklist"
-                                   :disabled="editChecklistForm.name.length === 0"
-                                   :text="$t('Save')"
-                                   mode="modal"
+                    <div class="w-full items-center text-center mt-4">
+                        <FormButton
+                            :disabled="editChecklistForm.name.length === 0"
+                            @click="editChecklist"
+                            :text="$t('Save')"
                         />
                     </div>
                 </div>
@@ -961,6 +959,8 @@ import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserM
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
@@ -972,6 +972,8 @@ export default {
         'projectManagerIds'
     ],
     components: {
+        FormButton,
+        AddButtonSmall,
         UserPopoverTooltip,
         NewUserToolTip,
         AddChecklistUserModal,

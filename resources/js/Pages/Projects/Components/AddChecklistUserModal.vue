@@ -53,10 +53,12 @@
                         <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-primary rounded-full"/>
                     </button>
                 </div>
-                <AddButton @click="submitUsers"
-                           :text="$t('Assign')"
-                           mode="modal"
-                           class="mt-8 px-12 py-3" />
+
+                <FormButton
+                    @click="submitUsers"
+                    :text="$t('Assign')"
+                    class="mt-8" />
+                <!-- <p v-if="error" class="text-red-800 text-xs">{{ error }}</p> -->
             </div>
         </template>
     </jet-dialog-modal>
@@ -68,11 +70,13 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import AddButton from "@/Layouts/Components/AddButton";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'AddChecklistUserModal',
     mixins: [Permissions],
     components: {
+        FormButton,
         XIcon,
         XCircleIcon,
         TeamIconCollection,

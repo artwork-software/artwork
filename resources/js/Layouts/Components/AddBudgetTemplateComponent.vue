@@ -24,11 +24,12 @@
                         </div>
                     </div>
                     <div class="flex justify-center">
-                        <AddButton @click="createBudgetTemplate()" :disabled="templateName === ''"
-                                   :class="templateName === '' ? 'bg-secondary hover:bg-secondary cursor-pointer-none' : ''"
-                                   class="mt-8 py-3 flex"
-                                   :text="$t('Save as template')"
-                                   mode="modal"></AddButton>
+                        <FormButton
+                            @click="createBudgetTemplate"
+                            :disabled="templateName === ''"
+                            :text="$t('Save as template')"
+                            class="mt-8"
+                           />
                     </div>
                 </div>
             </div>
@@ -44,11 +45,13 @@ import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'AddBudgetTemplateComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         Input,
         AddButton,
         JetDialogModal,

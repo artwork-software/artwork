@@ -40,8 +40,11 @@
                     <div v-for="file of files">{{ file.name }}</div>
                 </div>
                 <div class="justify-center flex w-full my-6">
-                    <AddButton :text="$t('Upload document')" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
-                               @click="storeFiles"/>
+                    <FormButton
+                        :text="$t('Upload document')"
+                        :disabled="files.length < 1"
+                        @click="storeFiles"
+                    />
                 </div>
             </div>
 
@@ -57,6 +60,7 @@ import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
@@ -67,6 +71,7 @@ export default {
         moneySourceId: Number
     },
     components: {
+        FormButton,
         JetDialogModal,
         JetInputError,
         AddButton,

@@ -72,9 +72,10 @@
                                 </div>
                             </div>
                             <div class="flex justify-center">
-                                <AddButton mode="modal"
-                                           :text="preset ? $t('Save template') : $t('Create template')"
-                                           @click="savePreset"
+                                <FormButton
+                                    :text="preset ? $t('Save template') : $t('Create template')"
+                                    @click="savePreset"
+                                    class="mt-3"
                                 />
                             </div>
                         </DialogPanel>
@@ -103,10 +104,12 @@ import {
 } from "@headlessui/vue";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     name: "AddShiftPresetModal",
     components: {
+        FormButton,
         CheckIcon, ChevronDownIcon, EventTypeIconCollection,
         SingleTimeLine,
         Input,

@@ -103,7 +103,7 @@
                                 <div class="flex w-full justify-between mt-6">
                                     <div class="flex">
                                         <div>
-                                            <AddButton @click="openAddAreaModal" :text="$t('Add area')" mode="page"/>
+                                            <AddButtonBig @click="openAddAreaModal" :text="$t('Add area')"/>
                                         </div>
                                         <div v-if="this.$page.props.show_hints" class="flex">
                                             <SvgCollection svgName="arrowLeft" class="ml-2 mt-4"/>
@@ -195,8 +195,7 @@
                                         </div>
                                         <div class="flex w-full mt-6" v-if="this.opened_areas.includes(area.id)">
                                             <div class="">
-                                                <AddButton @click="openAddRoomModal(area)" :text="$t('Add room')"
-                                                           mode="page"/>
+                                                <AddButtonBig @click="openAddRoomModal(area)" :text="$t('Add room')" />
                                             </div>
                                             <div v-if="this.$page.props.show_hints" class="flex">
                                                 <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -430,13 +429,13 @@
                         <jet-input-error :message="newAreaForm.error" class="mt-2"/>
                     </div>
 
-                    <div class="w-full items-center text-center">
-                        <AddButton :class="[newAreaForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="addArea"
-                                   :disabled="newAreaForm.name.length === 0" :text="$t('Create')" mode="modal"/>
+                    <div class="w-full items-center text-center mt-4">
+                        <FormButton
+                            :disabled="newAreaForm.name.length === 0"
+                            :text="$t('Create')"
+                            class="mt-8"
+                            @click="addArea"
+                        />
                     </div>
                 </div>
             </div>
@@ -466,12 +465,12 @@
                     </div>
 
                     <div class="w-full items-center text-center">
-                        <AddButton :class="[editAreaForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base tracking-wider font-bold shadow-sm text-secondaryHover"
-                                   @click="editArea"
-                                   :disabled="editAreaForm.name.length === 0" :text="$t('Save')" mode="modal"/>
+                        <FormButton
+                            :disabled="editAreaForm.name.length === 0"
+                            :text="$t('Save')"
+                            @click="editArea"
+                            class="mt-8 inline-flex items-center"
+                            />
                     </div>
                 </div>
             </div>
@@ -701,12 +700,12 @@
                         </div>
                     </div>
                     <div class="w-full items-center text-center">
-                        <AddButton :class="[newRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="addRoom"
-                                   :disabled="newRoomForm.name.length === 0" :text="$t('Create')" mode="modal"/>
+                        <FormButton
+                            @click="addRoom"
+                            :disabled="newRoomForm.name.length === 0"
+                            :text="$t('Create')"
+                            class="inline-flex items-center mt-4"
+                        />
                     </div>
                 </div>
             </div>
@@ -936,12 +935,12 @@
                     </div>
 
                     <div class="w-full items-center text-center">
-                        <AddButton :class="[editRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-8 inline-flex items-center px-24 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="editRoom"
-                                   :disabled="editRoomForm.name.length === 0" :text="$t('Save')" mode="modal"/>
+                        <FormButton
+                            @click="editRoom"
+                            :disabled="editRoomForm.name.length === 0"
+                            :text="$t('Save')"
+                            class="inline-flex items-center mt-8"
+                            />
                     </div>
 
                 </div>
@@ -1016,10 +1015,14 @@ import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        FormButton,
+        AddButtonBig,
         SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,

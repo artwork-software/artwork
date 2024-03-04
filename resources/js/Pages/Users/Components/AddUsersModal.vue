@@ -38,7 +38,10 @@
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
-                                <AddButton mode="modal" :text="$t('Add')" @click="addUsers"/>
+                                <FormButton
+                                    :text="$t('Add')"
+                                    @click="addUsers"
+                                />
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -63,10 +66,12 @@ import {
     TransitionChild,
     TransitionRoot
 } from "@headlessui/vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     name: "AddUsersModal",
     components: {
+        FormButton,
         ConfirmationModal,
         CheckIcon, ChevronDownIcon,
         Input,

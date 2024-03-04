@@ -28,10 +28,11 @@
             </div>
         </div>
 
-
-        <AddButton @click="updateUserTerms"
-                   class=" inline-flex items-center px-12 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                   :text="$t('Save changes')" mode="modal"/>
+        <FormButton
+            @click="updateUserTerms"
+            class="inline-flex items-center"
+            :text="$t('Save changes')"
+        />
     </div>
 
     <!-- Success Modal -->
@@ -55,9 +56,11 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import {Menu, MenuButton, MenuItem, MenuItems, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     components: {
+        FormButton,
         SuccessModal,
         CheckIcon,
         XIcon,

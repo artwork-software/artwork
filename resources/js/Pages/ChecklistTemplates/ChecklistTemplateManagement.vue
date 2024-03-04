@@ -3,10 +3,10 @@
         <div class="max-w-screen-lg ml-14 mr-40">
             <div class="flex flex-1 flex-wrap">
                 <div class="flex justify-between w-full">
-                    <div class="flex">
+                    <div class="flex gap-x-4">
                         <h2 class="headline1 flex">{{ $t('Checklist templates')}}</h2>
                         <Link class="-mt-1" :href="route('checklist_templates.create')">
-                            <AddButton :text="$t('New template')" mode="page"/>
+                            <AddButtonSmall :text="$t('New template')" />
                         </Link>
                         <div v-if="this.$page.props.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
@@ -242,12 +242,14 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 
 export default {
     mixins: [Permissions],
     name: "Checklist Management",
     props: ['checklist_templates'],
     components: {
+        AddButtonSmall,
         SuccessModal,
         UserPopoverTooltip,
         AddButton,

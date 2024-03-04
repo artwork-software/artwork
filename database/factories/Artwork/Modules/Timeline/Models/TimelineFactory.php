@@ -2,7 +2,7 @@
 
 namespace Database\Factories\Artwork\Modules\Timeline\Models;
 
-use App\Models\Event;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

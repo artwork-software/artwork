@@ -181,8 +181,7 @@ class ShiftFreelancerService
         /** @var Freelancer $freelancer */
         $freelancer = $shiftFreelancerPivot->freelancer;
 
-        $this->shiftFreelancerRepository->delete($shiftFreelancerPivot);
-
+        $this->forceDelete($shiftFreelancerPivot);
         $this->shiftCountService->handleShiftFreelancersShiftCount($shift, $freelancer->id);
 
         if ($shift->is_committed) {
@@ -258,5 +257,20 @@ class ShiftFreelancerService
     private function checkAvailabilityConflicts(Shift $shift, Freelancer $freelancer): void
     {
         $this->availabilityConflictService->checkAvailabilityConflictsShifts($shift, null, $freelancer);
+    }
+
+    public function delete(ShiftFreelancer $shiftFreelancer): bool
+    {
+        return $this->shiftFreelancerRepository->delete($shiftFreelancer);
+    }
+
+    public function forceDelete(ShiftFreelancer $shiftFreelancer): bool
+    {
+        return $this->shiftFreelancerRepository->forceDelete($shiftFreelancer);
+    }
+
+    public function restore(ShiftFreelancer $shiftFreelancer): bool
+    {
+        return $this->shiftFreelancerRepository->restore($shiftFreelancer);
     }
 }

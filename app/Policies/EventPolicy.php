@@ -3,8 +3,8 @@
 namespace App\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Models\Event;
 use App\Models\User;
+use Artwork\Modules\Event\Models\Event;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class EventPolicy

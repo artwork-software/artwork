@@ -38,7 +38,7 @@ class ShiftServiceProviderService
         int $shiftQualificationId,
         array|null $seriesShiftData = null
     ): void {
-        $shiftFreelancerPivot = $this->shiftServiceProviderRepository->createForShift(
+        $shiftServiceProviderPivot = $this->shiftServiceProviderRepository->createForShift(
             $shift->id,
             $serviceProviderId,
             $shiftQualificationId
@@ -49,8 +49,8 @@ class ShiftServiceProviderService
         if ($shift->is_committed) {
             $this->createAssignedToShiftHistoryEntry(
                 $shift,
-                $shiftFreelancerPivot->serviceProvider,
-                $shiftFreelancerPivot->shiftQualification
+                $shiftServiceProviderPivot->serviceProvider,
+                $shiftServiceProviderPivot->shiftQualification
             );
         }
 
@@ -173,7 +173,7 @@ class ShiftServiceProviderService
         /** @var ServiceProvider $serviceProvider */
         $serviceProvider = $shiftServiceProviderPivot->serviceProvider;
 
-        $this->shiftFreelancerRepository->delete($shiftServiceProviderPivot);
+        $this->forceDelete($shiftServiceProviderPivot);
 
         $this->shiftCountService->handleShiftServiceProvidersShiftCount($shift, $serviceProvider->id);
 
@@ -228,5 +228,20 @@ class ShiftServiceProviderService
             ),
             true
         );
+    }
+
+    public function delete(ShiftServiceProvider $shiftServiceProvider): bool
+    {
+        return $this->shiftServiceProviderRepository->delete($shiftServiceProvider);
+    }
+
+    public function forceDelete(ShiftServiceProvider $shiftServiceProvider): bool
+    {
+        return $this->shiftServiceProviderRepository->forceDelete($shiftServiceProvider);
+    }
+
+    public function restore(ShiftServiceProvider $shiftServiceProvider): bool
+    {
+        return $this->shiftServiceProviderRepository->restore($shiftServiceProvider);
     }
 }

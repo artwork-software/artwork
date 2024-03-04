@@ -3,17 +3,17 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
-use Artwork\Modules\Area\Models\Area;
-use Artwork\Modules\Checklist\Models\Checklist;
-use Artwork\Modules\Project\Models\Comment;
-use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\Sector;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
+use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Illuminate\Database\Seeder;

@@ -34,7 +34,6 @@ use App\Models\CompanyType;
 use App\Models\ContractType;
 use App\Models\CostCenter;
 use App\Models\Currency;
-use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Filter;
 use App\Models\Freelancer;
@@ -68,6 +67,7 @@ use Artwork\Modules\Budget\Services\SubPositionService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -77,6 +77,7 @@ use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
+use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -1927,12 +1928,12 @@ class ProjectController extends Controller
         $shiftRelevantEventTypes = $project->shiftRelevantEventTypes()->pluck('event_type_id');
         $shiftRelevantEvents = $project->events()
             ->whereIn('event_type_id', $shiftRelevantEventTypes)
-            ->with(['timeline', 'shifts', 'event_type', 'room'])
+            ->with(['timelines', 'shifts', 'event_type', 'room'])
             ->get();
 
         $eventsWithRelevant = [];
         foreach ($shiftRelevantEvents as $event) {
-            $timeline = $event->timeline()->get()->toArray();
+            $timeline = $event->timelines()->get()->toArray();
 
             foreach ($timeline as &$singleTimeLine) {
                 $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
@@ -2306,7 +2307,7 @@ class ProjectController extends Controller
 
     public function addTimeLineRow(Event $event, Request $request): void
     {
-        $event->timeline()->create(
+        $event->timelines()->create(
             $request->validate(
                 [
                     'start' => 'required',
@@ -3120,9 +3121,9 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
-    public function deleteTimeLineRow(Timeline $timeLine): void
+    public function deleteTimeLineRow(Timeline $timeline, TimelineService $timelineService): void
     {
-        $timeLine->delete();
+        $timelineService->forceDelete($timeline);
     }
 
     public function duplicateColumn(Column $column): void

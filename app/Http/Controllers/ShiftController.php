@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
 use App\Enums\RoleNameEnum;
-use App\Models\Event;
 use App\Models\User;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
@@ -34,6 +34,7 @@ class ShiftController extends Controller
     public function __construct(
         private readonly AvailabilityConflictService $availabilityConflictService,
         private readonly VacationConflictService $vacationConflictService,
+        private readonly ShiftService $shiftService
     ) {
         $this->history = new NewHistoryService('Artwork\Modules\Shift\Models\Shift');
         $this->notificationService = new NotificationService();
@@ -650,7 +651,7 @@ class ShiftController extends Controller
             });
         }
 
-        $shift->delete();
+        $this->shiftService->forceDelete($shift);
     }
 
     public function saveMultiEdit(

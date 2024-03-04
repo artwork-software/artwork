@@ -43,4 +43,9 @@ class ShiftsQualificationsService
             );
         }
     }
+
+    public function delete(ShiftsQualifications $shiftsQualification): bool
+    {
+        return $this->shiftsQualificationsRepository->delete($shiftsQualification);
+    }
 }

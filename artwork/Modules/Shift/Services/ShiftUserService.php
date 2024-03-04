@@ -551,8 +551,7 @@ class ShiftUserService
         /** @var User $user */
         $user = $shiftUserPivot->user;
 
-        $this->shiftUserRepository->delete($shiftUserPivot);
-
+        $this->forceDelete($shiftUserPivot);
         $this->shiftCountService->handleShiftUsersShiftCount($shift, $user->id);
 
         if ($shift->is_committed) {
@@ -664,5 +663,20 @@ class ShiftUserService
     private function checkAvailabilityConflicts(Shift $shift, User $user): void
     {
         $this->availabilityConflictService->checkAvailabilityConflictsShifts($shift, $user);
+    }
+
+    public function delete(ShiftUser $shiftUser): bool
+    {
+        return $this->shiftUserRepository->delete($shiftUser);
+    }
+
+    public function forceDelete(ShiftUser $shiftUser): bool
+    {
+        return $this->shiftUserRepository->forceDelete($shiftUser);
+    }
+
+    public function restore(ShiftUser $shiftUser): bool
+    {
+        return $this->shiftUserRepository->restore($shiftUser);
     }
 }

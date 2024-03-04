@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 use function Pest\Laravel\assertDatabaseMissing;
 use function Pest\Laravel\assertDatabaseHas;
 
-test('production seeder works', function ():void {
+test('production seeder works', function (): void {
 
     Artisan::call('migrate:fresh --force');
 

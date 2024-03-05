@@ -4,6 +4,7 @@ namespace Artwork\Modules\Budget\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -17,6 +18,7 @@ class SubPositionVerified extends Model
 {
     use HasFactory;
     use BelongsToSubPosition;
+    use SoftDeletes;
 
     protected $fillable = [
         'sub_position_id',

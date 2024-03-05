@@ -24,6 +24,7 @@ class ProjectFile extends Model
     use HasFactory;
     use SoftDeletes;
     use BelongsToProject;
+    use SoftDeletes;
 
     protected $guarded = [
         'id'

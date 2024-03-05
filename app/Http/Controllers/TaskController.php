@@ -232,7 +232,7 @@ class TaskController extends Controller
             ]
         );
 
-        $task->delete();
+        $task->forceDelete();
         return Redirect::back();
     }
 }

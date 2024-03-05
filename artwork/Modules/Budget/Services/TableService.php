@@ -38,16 +38,16 @@ class TableService
         return $this->tableRepository->save($table);
     }
 
-    public function delete(Table $table): void
+    public function forceDelete(Table $table): void
     {
         $table->mainPositions->each(function (MainPosition $mainPosition): void {
-            $this->mainPositionService->delete($mainPosition);
+            $this->mainPositionService->forceDelete($mainPosition);
         });
 
         $table->columns->each(function (Column $column): void {
-            $this->columnService->delete($column);
+            $this->columnService->forceDelete($column);
         });
 
-        $this->tableRepository->delete($table);
+        $this->tableRepository->forceDelete($table);
     }
 }

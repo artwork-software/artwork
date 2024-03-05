@@ -12,8 +12,8 @@ class SubPositionVerifiedService
     ) {
     }
 
-    public function delete(SubPositionVerified $subPositionVerified): void
+    public function forceDelete(SubPositionVerified $subPositionVerified): void
     {
-        $this->subPositionVerifiedRepository->delete($subPositionVerified);
+        $this->subPositionVerifiedRepository->forceDelete($subPositionVerified);
     }
 }

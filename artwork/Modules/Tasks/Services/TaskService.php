@@ -27,4 +27,33 @@ class TaskService
     {
         $this->taskRepository->syncWithoutDetach($task->task_users(), $ids);
     }
+
+    public function deleteAll(Collection|array $tasks): void
+    {
+        /** @var Task $task */
+        foreach ($tasks as $task) {
+            $task->delete();
+        }
+    }
+
+    public function restoreAll(Collection|array $tasks): void
+    {
+        /** @var Task $task */
+        foreach ($tasks as $task) {
+            $task->restore();
+        }
+    }
+
+    public function forceDeleteAll(Collection|array $tasks): void
+    {
+        /** @var Task $task */
+        foreach ($tasks as $task) {
+            $task->forceDelete();
+        }
+    }
+
+    public function restore(Task $task): void
+    {
+        $task->restore();
+    }
 }

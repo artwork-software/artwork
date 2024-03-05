@@ -11,6 +11,7 @@ use Artwork\Modules\Project\Models\Traits\BelongsToProject;
 use Artwork\Modules\User\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -31,6 +32,7 @@ class Comment extends Model
     use BelongsToProject;
     use BelongsToUser;
     use BelongsToContract;
+    use SoftDeletes;
 
     protected $fillable = [
         'text',

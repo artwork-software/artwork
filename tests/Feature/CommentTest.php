@@ -8,7 +8,7 @@ use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Project\Models\Project;
 use Inertia\Testing\AssertableInertia as Assert;
 
-beforeEach(function () {
+beforeEach(function (): void {
 
     $this->auth_user = User::factory()->create();
 
@@ -21,10 +21,9 @@ beforeEach(function () {
     $this->task = Task::factory()->create();
 
     $this->comment = Comment::factory()->create();
-
 });
 
-test('users that are assigned to a project can create comments on it', function () {
+test('users that are assigned to a project can create comments on it', function (): void {
 
     $this->project->users()->attach($this->auth_user);
     $this->project->comments()->save($this->comment);
@@ -41,10 +40,9 @@ test('users that are assigned to a project can create comments on it', function 
         'text' => 'TestComment',
         'project_id' => $this->project->id
     ]);
-
 });
 
-test('users cant create comments on projects they arent assigned to', function () {
+test('users cant create comments on projects they arent assigned to', function (): void {
 
     $this->actingAs($this->auth_user);
 
@@ -78,7 +76,7 @@ test('users cant create comments on projects they arent assigned to', function (
 //    $response->assertStatus(200);
 //});
 
-test('users can update their own comments', function () {
+test('users can update their own comments', function (): void {
 
     $this->actingAs($this->auth_user);
 
@@ -94,10 +92,9 @@ test('users can update their own comments', function () {
     $this->assertDatabaseHas('comments', [
         'text' => 'TestComment'
     ]);
-
 });
 
-test('users can delete their own comments', function () {
+test('users can delete their own comments', function (): void {
 
     $this->actingAs($this->auth_user);
 
@@ -111,7 +108,3 @@ test('users can delete their own comments', function () {
         'id' => $this->comment->id
     ]);
 });
-
-
-
-

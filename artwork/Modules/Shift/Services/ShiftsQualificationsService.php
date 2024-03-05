@@ -48,4 +48,9 @@ class ShiftsQualificationsService
     {
         return $this->shiftsQualificationsRepository->delete($shiftsQualification);
     }
+
+    public function restore(ShiftsQualifications $shiftsQualification): bool
+    {
+        return $this->shiftsQualificationsRepository->restore($shiftsQualification);
+    }
 }

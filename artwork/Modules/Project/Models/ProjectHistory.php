@@ -6,6 +6,7 @@ use Artwork\Modules\User\Models\BelongsToUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -19,6 +20,7 @@ class ProjectHistory extends Model
 {
     use HasFactory;
     use BelongsToUser;
+    use SoftDeletes;
 
     protected $guarded = [
         'id'

@@ -25,8 +25,27 @@ readonly class SubEventService
         }
     }
 
+    public function restoreSubEvents(Collection|array $subEvents): void
+    {
+        foreach ($subEvents as $subEvent) {
+            $this->restore($subEvent);
+        }
+    }
+
     public function restore(SubEvent $subEvent): bool
     {
         return $this->subEventRepository->restore($subEvent);
+    }
+
+    public function forceDeleteSubEvents(Collection|array $subEvents): void
+    {
+        foreach ($subEvents as $subEvent) {
+            $this->forceDelete($subEvent);
+        }
+    }
+
+    public function forceDelete(SubEvent $subEvent): bool
+    {
+        return $this->subEventRepository->forceDelete($subEvent);
     }
 }

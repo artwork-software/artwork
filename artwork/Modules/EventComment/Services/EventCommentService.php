@@ -26,6 +26,14 @@ readonly class EventCommentService
         }
     }
 
+    public function restoreEventComments(Collection|array $eventComments): void
+    {
+        /** @var EventComment $eventComment */
+        foreach ($eventComments as $eventComment) {
+            $this->restore($eventComment);
+        }
+    }
+
     public function forceDelete(EventComment $eventComment): bool
     {
         return $this->eventCommentRepository->forceDelete($eventComment);

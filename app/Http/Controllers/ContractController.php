@@ -319,7 +319,7 @@ class ContractController extends Controller
             $this->notificationService->setNotificationTo($contractUser);
             $this->notificationService->createNotification();
         }
-        $contract->delete();
+        $contract->forceDelete();
         return Redirect::back();
     }
 

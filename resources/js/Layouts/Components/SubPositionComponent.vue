@@ -27,7 +27,7 @@
                                 </MenuButton>
                             </div>
                             <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-                                <MenuItems class="origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                <MenuItems class="z-50 origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                     <div class="py-1">
                                         <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
                                             <span @click="fixSubPosition(subPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -410,8 +410,6 @@ export default {
         afterConfirm(bool) {
             if (!bool) return this.showDeleteModal = false;
 
-            this.deletePosition();
-
         },
         updateSubPositionName(subPosition) {
             this.$inertia.patch(route('project.budget.sub-position.update-name'), {
@@ -465,7 +463,6 @@ export default {
             this.confirmationTitle = this.$t('Delete sub-item');
             this.confirmationDescription = this.$t('Are you sure you want to delete the sub-item', [subPosition.name]);
             this.subPositionToDelete = subPosition;
-            this.showDeleteModal = true;
             this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.subPositionToDelete, 'sub')
         },
         addRowToSubPosition(subPosition, row = null) {
@@ -504,7 +501,6 @@ export default {
         },
         openDeleteRowModal(row) {
             this.rowToDelete = row;
-            this.showDeleteModal = true;
             if(!this.checkColumnsLocked()){
                 this.confirmationTitle = this.$t('Delete row');
                 this.confirmationDescription = this.$t('Are you sure you want to delete this line? All links etc. will also be deleted.');

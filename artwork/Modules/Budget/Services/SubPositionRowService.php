@@ -16,16 +16,16 @@ class SubPositionRowService
     ) {
     }
 
-    public function delete(SubPositionRow $subPositionRow): void
+    public function forceDelete(SubPositionRow $subPositionRow): void
     {
         $subPositionRow->comments->each(function (RowComment $rowComment): void {
-            $this->rowCommentService->delete($rowComment);
+            $this->rowCommentService->forceDelete($rowComment);
         });
 
         $subPositionRow->cells->each(function (ColumnCell $columnCell): void {
-            $this->columnCellService->delete($columnCell);
+            $this->columnCellService->forceDelete($columnCell);
         });
 
-        $this->subPositionRowRepository->delete($subPositionRow);
+        $this->subPositionRowRepository->forceDelete($subPositionRow);
     }
 }

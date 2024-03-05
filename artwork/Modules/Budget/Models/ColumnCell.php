@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -30,6 +31,7 @@ class ColumnCell extends Model
 {
     use HasFactory;
     use BelongsToColumn;
+    use SoftDeletes;
 
     protected $table = 'column_sub_position_row';
 

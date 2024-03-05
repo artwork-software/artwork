@@ -12,8 +12,8 @@ class CellCommentService
     ) {
     }
 
-    public function delete(CellComment $cellComment): void
+    public function forceDelete(CellComment $cellComment): void
     {
-        $this->cellCommentRepository->delete($cellComment);
+        $this->cellCommentRepository->forceDelete($cellComment);
     }
 }

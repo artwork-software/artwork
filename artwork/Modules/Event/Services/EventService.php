@@ -19,6 +19,7 @@ use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\SubEvents\Services\SubEventService;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 
 readonly class EventService
 {
@@ -103,6 +104,85 @@ readonly class EventService
         $this->eventRepository->delete($event);
     }
 
+    public function deleteAll(Collection|array $events): void
+    {
+        /** @var Event $event */
+        foreach ($events as $event) {
+            if (!empty($event->project_id)) {
+                $projectHistory = new NewHistoryService(Project::class);
+                $projectHistory->createHistory($event->project->id, 'Schedule deleted');
+            }
+
+            $this->createEventDeletedNotificationsForProjectManagers($event);
+            $this->createEventDeletedNotification($event);
+
+            $this->eventCommentService->deleteEventComments($event->comments);
+            $this->timelineService->deleteTimelines($event->timelines);
+            $this->shiftService->deleteShifts($event->shifts);
+            $this->subEventService->deleteSubEvents($event->subEvents);
+
+            broadcast(new OccupancyUpdated())->toOthers();
+
+            $this->notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
+
+            $this->eventRepository->delete($event);
+        }
+    }
+
+    public function restore(Event $event): void
+    {
+        $this->eventRepository->restore($event);
+        if (!empty($event->project_id)) {
+            $projectHistory = new NewHistoryService(Project::class);
+            $projectHistory->createHistory($event->project_id, 'Schedule deleted');
+        }
+        $this->eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
+        $this->timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
+        $this->shiftService->restoreShifts($event->shifts()->onlyTrashed()->get());
+        $this->subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
+
+        broadcast(new OccupancyUpdated())->toOthers();
+
+        //$this->notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
+    }
+
+    public function forceDeleteAll(Collection|array $events): void
+    {
+        /** @var Event $event */
+        foreach ($events as $event) {
+            $this->eventCommentService->deleteEventComments($event->comments);
+            $this->timelineService->forceDeleteTimelines($event->timelines);
+            $this->shiftService->forceDeleteShifts($event->shifts);
+            $this->subEventService->forceDeleteSubEvents($event->subEvents);
+
+            $this->notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
+
+            $this->eventRepository->forceDelete($event);
+        }
+    }
+
+    public function restoreAll(Collection|array $events): void
+    {
+        /** @var Event $event */
+        foreach ($events as $event) {
+            $this->eventRepository->restore($event);
+            if (!empty($event->project_id)) {
+                $projectHistory = new NewHistoryService(Project::class);
+                $projectHistory->createHistory($event->project_id, 'Schedule deleted');
+            }
+
+            //$this->createEventDeletedNotificationsForProjectManagers($event);
+            //$this->createEventDeletedNotification($event);
+            $this->eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
+            $this->timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
+            $this->shiftService->restoreShifts($event->shifts()->onlyTrashed()->get());
+            $this->subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
+
+            broadcast(new OccupancyUpdated())->toOthers();
+
+            //$this->notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
+        }
+    }
     private function createEventDeletedNotificationsForProjectManagers(Event $event): void
     {
         if (is_null($event->project) || $event->project->managerUsers->isEmpty()) {

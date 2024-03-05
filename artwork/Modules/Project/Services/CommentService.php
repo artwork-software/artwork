@@ -10,6 +10,7 @@ use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Repositories\CommentRepository;
+use Illuminate\Database\Eloquent\Collection;
 
 class CommentService
 {
@@ -59,4 +60,42 @@ class CommentService
         $this->historyService->createHistory($comment->project->id, 'Comment deleted');
         $comment->delete();
     }
+
+    public function deleteAll(array|Collection $comments): void
+    {
+        /** @var Comment $comment */
+        foreach ($comments as $comment) {
+            $this->delete($comment);
+        }
+    }
+
+
+    public function restoreAll(array|Collection $comments): void
+    {
+        /** @var Comment $comment */
+        foreach ($comments as $comment) {
+            $this->restore($comment);
+        }
+    }
+
+    public function forceDeleteAll(array|Collection $comments): void
+    {
+        /** @var Comment $comment */
+        foreach ($comments as $comment) {
+            $this->forceDelete($comment);
+        }
+    }
+
+    public function restore(Comment $comment): void
+    {
+        //$this->historyService->createHistory($comment->project->id, 'Comment restored');
+        $comment->restore();
+    }
+
+    public function forceDelete(Comment $comment): void
+    {
+        //$this->historyService->createHistory($comment->project->id, 'Comment force deleted');
+        $comment->forceDelete();
+    }
+
 }

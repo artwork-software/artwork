@@ -39,6 +39,14 @@ class TimelineService
         }
     }
 
+    public function restoreTimelines(Collection|array $timelines): void
+    {
+        /** @var Timeline $timeline */
+        foreach ($timelines as $timeline) {
+            $this->restore($timeline);
+        }
+    }
+
     public function forceDelete(Timeline $timeline): bool
     {
         return $this->timelineRepository->forceDelete($timeline);

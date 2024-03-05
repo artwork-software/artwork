@@ -3,6 +3,8 @@
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\BudgetAccountManagementController;
+use App\Http\Controllers\BudgetGeneralController;
 use App\Http\Controllers\BudgetTemplateController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
@@ -747,10 +749,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/project/{project}/budget/reset', [ProjectController::class, 'resetTable'])
         ->name('project.budget.reset.table');
 
-    // Templates
-    Route::get('/templates/index', [BudgetTemplateController::class, 'index'])
-        ->name('templates.view.index')
-        ->can('view budget templates');
+    // Budget Settings
+    Route::group(['prefix' => 'budget-settings'], function (): void {
+        Route::get('/general', [BudgetGeneralController::class, 'index'])
+            ->name('budget-settings.general');
+        Route::patch('/general/{budgetColumnSetting}', [BudgetGeneralController::class, 'update'])
+            ->name('budget-settings.general.update');
+
+        Route::get('/account-management', [BudgetAccountManagementController::class, 'index'])
+            ->name('budget-settings.account-management');
+
+        Route::get('/templates', [BudgetTemplateController::class, 'index'])
+            ->name('budget-settings.templates')
+            ->can('view budget templates');
+    });
+
 
 
     Route::post('/project/{project}/copyright/update', [ProjectController::class, 'updateCopyright'])

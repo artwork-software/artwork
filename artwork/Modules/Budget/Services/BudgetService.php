@@ -4,16 +4,18 @@ namespace Artwork\Modules\Budget\Services;
 
 use App\Enums\BudgetTypesEnum;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
+use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-class BudgetService
+readonly class BudgetService
 {
     public function __construct(
-        private readonly TableService $budgetTableService,
-        private readonly ColumnService $budgetColumnService,
-        private readonly MainPositionService $mainPositionService,
+        private TableService $budgetTableService,
+        private ColumnService $budgetColumnService,
+        private MainPositionService $mainPositionService,
+        private BudgetColumnSettingService $budgetColumnSettingService
     ) {
     }
 
@@ -30,19 +32,19 @@ class BudgetService
 
             $columns[] = $this->budgetColumnService->createColumnInTable(
                 table: $table,
-                name: 'KTO',
+                name: $this->budgetColumnSettingService->getColumnNameByColumnPosition(0),
                 subName: '',
                 type: 'empty'
             );
             $columns[] = $this->budgetColumnService->createColumnInTable(
                 table: $table,
-                name: 'A',
+                name: $this->budgetColumnSettingService->getColumnNameByColumnPosition(1),
                 subName: '',
                 type: 'empty'
             );
             $columns[] = $this->budgetColumnService->createColumnInTable(
                 table: $table,
-                name: 'Position',
+                name: $this->budgetColumnSettingService->getColumnNameByColumnPosition(2),
                 subName: '',
                 type: 'empty'
             );

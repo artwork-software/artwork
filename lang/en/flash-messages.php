@@ -44,4 +44,12 @@ return [
             'update' => 'Qualification could not be updated, please try again.'
         ]
     ],
+    'budget-general-setting' => [
+        'success' => [
+            'update' => 'Setting was successfully saved.'
+        ],
+        'error' => [
+            'update' => 'Setting could not be saved, please try again.'
+        ]
+    ]
 ];

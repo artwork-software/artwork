@@ -17,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class BudgetTemplateController extends Controller
 {
@@ -31,7 +32,7 @@ class BudgetTemplateController extends Controller
      * Display a listing of the resource.
      *
      */
-    public function index(): \Inertia\Response
+    public function index(): Response
     {
         $selectedCell = request('selectedCell')
             ? ColumnCell::find(request('selectedCell'))
@@ -48,7 +49,7 @@ class BudgetTemplateController extends Controller
             $templates = Table::where('is_template', true)->get();
         }
 
-        return Inertia::render('BudgetTemplates/BudgetTemplateManagement', [
+        return Inertia::render('BudgetSettingsTemplates/Index', [
             'budget' => [
                 'table' => Table::where('is_template', true)
                     ->with([

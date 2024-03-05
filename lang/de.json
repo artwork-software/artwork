@@ -1491,6 +1491,13 @@
     "Employee was added to the shift as": "Mitarbeiter \"{0}\" wurde zur Schicht (\"{1}\" - \"{2}\") als \"{3}\" hinzugefügt",
     "Employee was removed from shift": "Mitarbeiter \"{0}\" wurde von Schicht (\"{1}\" - \"{2}\") entfernt",
     "Service provider was added to the shift as": "Dienstleister \"{0}\" wurde zur Schicht (\"{1}\" - \"{2}\") als \"{3}\" hinzugefügt",
-    "All scheduled employees have been removed from shift": "Alle eingeplanten Mitarbeiter wurde von Schicht (\"{0}\" - \"{1}\") entfernt"
-
+    "All scheduled employees have been removed from shift": "Alle eingeplanten Mitarbeiter wurde von Schicht (\"{0}\" - \"{1}\") entfernt",
+    "Budget settings": "Budgeteinstellungen",
+    "Define settings for your budget.": "Definiere Einstellungen für dein Budget.",
+    "General": "Allgemein",
+    "Account management": "Kontenpflege",
+    "Specify here what the first three columns of new budget tables should be called": "Lege hier fest wie die ersten drei Spalten neuer Budgettabellen heißen sollen",
+    "Column": "Spalte",
+    "Success": "Erfolg",
+    "Error": "Fehler"
 }

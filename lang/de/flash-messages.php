@@ -44,4 +44,12 @@ return [
             'update' => 'Qualifikation konnte nicht aktualisiert werden, bitte versuche es erneut.'
         ]
     ],
+    'budget-general-setting' => [
+        'success' => [
+            'update' => 'Einstellung wurde erfolgreich gespeichert.'
+        ],
+        'error' => [
+            'update' => 'Einstellung konnte nicht gespeichert werden, bitte versuche es erneut.'
+        ]
+    ]
 ];

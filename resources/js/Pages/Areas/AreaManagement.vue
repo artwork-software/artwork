@@ -225,7 +225,7 @@
                                                                     </Link>
                                                                     <div
                                                                         class="ml-6 mt-1 flex items-center xsLight my-auto">
-                                                                        {{$t('created on { created_at } by', {'crated_at': element.created_at })}}
+                                                                        {{$t('created on { created_at } by', {'created_at': element.created_at })}}
                                                                         <UserPopoverTooltip :user="element.created_by"
                                                                                             :id="element.created_by.id"
                                                                                             :height="6" :width="6"

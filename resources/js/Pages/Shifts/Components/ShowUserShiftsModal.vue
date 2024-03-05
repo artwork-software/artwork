@@ -25,9 +25,9 @@
                                         <img :src="user.element.profile_photo_url" class="object-cover h-10 w-10 rounded-full" alt="">
                                     </div>
                                     <div class="ml-3 text-sm font-bold">
-                                        <span v-if="user.element.resource !== 'ServiceProviderShiftResource'">
+                                        <span v-if="user.element.resource !== 'ServiceProviderShiftPlanResource'">
                                             {{ user.element.first_name }} {{ user.element.last_name }}
-                                            <span v-if="user.element.resource === 'FreelancerShiftResource'">
+                                            <span v-if="user.element.resource === 'FreelancerShiftPlanResource'">
                                             ({{ $t('external')}})
                                             </span>
                                             <span v-else>

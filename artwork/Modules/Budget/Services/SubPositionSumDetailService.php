@@ -16,16 +16,16 @@ class SubPositionSumDetailService
     ) {
     }
 
-    public function delete(SubPositionSumDetail $subPositionSumDetail): void
+    public function forceDelete(SubPositionSumDetail $subPositionSumDetail): void
     {
         $subPositionSumDetail->comments->each(function (SumComment $sumComment): void {
-            $this->sumCommentService->delete($sumComment);
+            $this->sumCommentService->forceDelete($sumComment);
         });
 
         if (($sumMoneySource = $subPositionSumDetail->sumMoneySource) instanceof SumMoneySource) {
-            $this->sumMoneySourceService->delete($sumMoneySource);
+            $this->sumMoneySourceService->forceDelete($sumMoneySource);
         }
 
-        $this->subPositionSumDetailRepository->delete($subPositionSumDetail);
+        $this->subPositionSumDetailRepository->forceDelete($subPositionSumDetail);
     }
 }

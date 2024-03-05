@@ -35,20 +35,20 @@ class MainPositionService
         return $this->mainPositionRepository->save($mainPosition);
     }
 
-    public function delete(MainPosition $mainPosition): void
+    public function forceDelete(MainPosition $mainPosition): void
     {
         if (($mainPositionVerified = $mainPosition->verified) instanceof MainPositionVerified) {
-            $this->mainPositionVerifiedService->delete($mainPositionVerified);
+            $this->mainPositionVerifiedService->forceDelete($mainPositionVerified);
         }
 
         $mainPosition->mainPositionSumDetails->each(function (MainPositionDetails $mainPositionDetails): void {
-            $this->mainPositionDetailsService->delete($mainPositionDetails);
+            $this->mainPositionDetailsService->forceDelete($mainPositionDetails);
         });
 
         $mainPosition->subPositions->each(function (SubPosition $subPosition): void {
-            $this->subPositionService->delete($subPosition);
+            $this->subPositionService->forceDelete($subPosition);
         });
 
-        $this->mainPositionRepository->delete($mainPosition);
+        $this->mainPositionRepository->forceDelete($mainPosition);
     }
 }

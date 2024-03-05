@@ -249,6 +249,11 @@ class Project extends Model
         ];
     }
 
+    public function scopeWhereNotDeleted(Builder $builder): Builder
+    {
+        return $builder->whereNull('deleted_at');
+    }
+
     public function scopeByCostCenter(Builder $builder, string $costCenter): Builder
     {
         return $builder->whereRelation('costCenter', 'name', $costCenter);

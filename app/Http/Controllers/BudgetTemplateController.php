@@ -202,6 +202,6 @@ class BudgetTemplateController extends Controller
         /** @var Table $tableToDelete */
         $tableToDelete = $project->table()->first();
 
-        $this->tableService->delete($tableToDelete);
+        $this->tableService->forceDelete($tableToDelete);
     }
 }

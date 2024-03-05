@@ -12,8 +12,8 @@ class MainPositionVerifiedService
     ) {
     }
 
-    public function delete(MainPositionVerified $mainPositionVerified): void
+    public function forceDelete(MainPositionVerified $mainPositionVerified): void
     {
-        $this->mainPositionVerifiedRepository->delete($mainPositionVerified);
+        $this->mainPositionVerifiedRepository->forceDelete($mainPositionVerified);
     }
 }

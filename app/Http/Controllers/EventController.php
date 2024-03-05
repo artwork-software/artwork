@@ -1781,6 +1781,11 @@ class EventController extends Controller
         $event = Event::onlyTrashed()->findOrFail($id);
         $event->subEvents()->restore();
         $event->restore();
+
+        if (!$event->project()->exists()) {
+            $event->project_id = null;
+            $event->save();
+        }
         broadcast(new OccupancyUpdated())->toOthers();
 
         return Redirect::route('events.trashed');

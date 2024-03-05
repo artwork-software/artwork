@@ -84,6 +84,47 @@ readonly class ShiftService
         }
     }
 
+    public function restoreShifts(Collection|array $shifts): void
+    {
+
+        /** @var Shift $shift */
+        foreach ($shifts as $shift) {
+            $shift->restore();
+            $shift->shiftsQualifications()->onlyTrashed()->each(
+                fn($shiftsQualification) => $this->shiftsQualificationsService->restore($shiftsQualification)
+            );
+
+            // restore shift users and freelancers from pivot table
+            $shift->users()->each(
+                fn($user) => $this->shiftUserService->restore($user->pivot)
+            );
+
+            $shift->freelancer()->each(
+                fn($freelancer) => $this->shiftFreelancerService->restore($freelancer->pivot)
+            );
+
+            $shift->serviceProvider()->each(
+                fn($serviceProvider) => $this->shiftServiceProviderService->restore($serviceProvider->pivot)
+            );
+
+            /*foreach ($shift->shiftsQualifications()->onlyTrashed()->get() as $shiftsQualification) {
+                $this->shiftsQualificationsService->restore($shiftsQualification);
+            }*/
+
+            /*$shift->users()->onlyTrashed()->each(
+                fn($user) => $this->shiftUserService->restore($user->pivot)
+            );
+
+            $shift->freelancer()->onlyTrashed()->each(
+                fn($freelancer) => $this->shiftFreelancerService->restore($freelancer->pivot)
+            );
+
+            $shift->serviceProvider()->onlyTrashed()->each(
+                fn($serviceProvider) => $this->shiftServiceProviderService->restore($serviceProvider->pivot)
+            );*/
+        }
+    }
+
     public function forceDelete(Shift $shift): bool
     {
         //relations are deleted on cascade

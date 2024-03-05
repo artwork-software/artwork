@@ -646,7 +646,7 @@ class ProjectController extends Controller
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo(User::find($verifiedRequest->requested));
             $this->notificationService->createNotification();
-            $verifiedRequest->delete();
+            $verifiedRequest->forceDelete();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $this->history->createHistory(
                 $project->id,
@@ -699,7 +699,7 @@ class ProjectController extends Controller
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->createNotification();
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            $verifiedRequest->delete();
+            $verifiedRequest->forceDelete();
             $this->history->createHistory(
                 $project->id,
                 'Sub position Verification request canceled',
@@ -766,7 +766,7 @@ class ProjectController extends Controller
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->createNotification();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            $verifiedRequest->delete();
+            $verifiedRequest->forceDelete();
             $this->history->createHistory(
                 $project->id,
                 'Main position Verification canceled',
@@ -817,7 +817,7 @@ class ProjectController extends Controller
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->createNotification();
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            $verifiedRequest->delete();
+            $verifiedRequest->forceDelete();
             $this->history->createHistory(
                 $project->id,
                 'Sub position Verification removed',
@@ -1206,7 +1206,7 @@ class ProjectController extends Controller
 
     public function columnDelete(Column $column, ColumnService $columnService): RedirectResponse
     {
-        $columnService->delete($column);
+        $columnService->forceDelete($column);
 
         return Redirect::back();
     }
@@ -2953,11 +2953,9 @@ class ProjectController extends Controller
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
 
-        $project->forceDelete();
-        $project->events()->withTrashed()->forceDelete();
-        $project->project_histories()->delete();
-
-
+        if ($project) {
+            $this->projectService->forceDelete($project);
+        }
 
         return Redirect::route('projects.trashed');
     }
@@ -2997,14 +2995,14 @@ class ProjectController extends Controller
         SubPositionRow $subPositionRow,
         SubPositionRowService $subPositionRowService
     ): RedirectResponse {
-        $subPositionRowService->delete($subPositionRow);
+        $subPositionRowService->forceDelete($subPositionRow);
 
         return Redirect::back();
     }
 
     public function deleteTable(Table $table, TableService $tableService): RedirectResponse
     {
-        $tableService->delete($table);
+        $tableService->forceDelete($table);
 
         return Redirect::back();
     }
@@ -3013,7 +3011,7 @@ class ProjectController extends Controller
         MainPosition $mainPosition,
         MainPositionService $mainPositionService
     ): RedirectResponse {
-        $mainPositionService->delete($mainPosition);
+        $mainPositionService->forceDelete($mainPosition);
 
         return Redirect::back();
     }
@@ -3022,7 +3020,7 @@ class ProjectController extends Controller
         SubPosition $subPosition,
         SubPositionService $subPositionService
     ): RedirectResponse {
-        $subPositionService->delete($subPosition);
+        $subPositionService->forceDelete($subPosition);
 
         return Redirect::back();
     }
@@ -3135,7 +3133,7 @@ class ProjectController extends Controller
         $newColumn = $column->replicate();
         $newColumn->save();
         $newColumn->update(['name' => $column->name . ' (Kopie)']);
-        $newColumn->cells()->delete();
+        $newColumn->cells()->forceDelete();
         $newColumn->cells()->createMany($column->cells()->get()->toArray());
     }
 
@@ -3155,7 +3153,7 @@ class ProjectController extends Controller
             $newSubPositionRow->update(
                 ['name' => $subPositionRow->name . ' (Kopie)', 'sub_position_id' => $newSubPosition->id]
             );
-            $newSubPositionRow->cells()->delete();
+            $newSubPositionRow->cells()->forceDelete();
             $newSubPositionRow->cells()->createMany($subPositionRow->cells()->get()->toArray());
         }
     }

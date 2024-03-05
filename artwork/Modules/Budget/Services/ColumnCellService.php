@@ -19,14 +19,14 @@ class ColumnCellService
     ) {
     }
 
-    public function delete(ColumnCell $columnCell): void
+    public function forceDelete(ColumnCell $columnCell): void
     {
         $columnCell->comments->each(function (CellComment $cellComment): void {
-            $this->cellCommentService->delete($cellComment);
+            $this->cellCommentService->forceDelete($cellComment);
         });
 
         $columnCell->calculations->each(function (CellCalculation $cellCalculation): void {
-            $this->cellCalculationsService->delete($cellCalculation);
+            $this->cellCalculationsService->forceDelete($cellCalculation);
         });
 
         if (!$columnCell->subPositionRow->subPosition->mainPosition->table->is_template) {
@@ -36,11 +36,11 @@ class ColumnCellService
                     $columnCell->subPositionRow->subPosition->mainPosition->table->project_id
                 );
 
-                $this->sageAssignedDataService->delete($sageAssignedData);
+                $this->sageAssignedDataService->forceDelete($sageAssignedData);
             }
         }
 
-        $this->columnCellRepository->delete($columnCell);
+        $this->columnCellRepository->forceDelete($columnCell);
     }
 
     public function resetCellCalculationsPosition(ColumnCell $columnCell): void

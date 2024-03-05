@@ -1,11 +1,14 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\EventComment\Models;
 
+use App\Models\User;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -13,12 +16,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property string $comment
  * @property bool $is_admin_comment
+ * @property Event $event
+ * @property User $user
  * @property Carbon $created_at
  * @property string $updated_at
+ * @property string $deleted_at
  */
-class EventComments extends Model
+class EventComment extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'event_id',
@@ -38,11 +45,21 @@ class EventComments extends Model
 
     public function event(): BelongsTo
     {
-        return $this->belongsTo(Event::class);
+        return $this->belongsTo(
+            Event::class,
+            'event_id',
+            'id',
+            'events'
+        );
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(
+            User::class,
+            'user_id',
+            'id',
+            'users'
+        );
     }
 }

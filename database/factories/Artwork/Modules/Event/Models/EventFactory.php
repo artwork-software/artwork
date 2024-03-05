@@ -1,18 +1,21 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\Artwork\Modules\Event\Models;
 
 use App\Models\EventType;
 use App\Models\User;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Event>
+ * @extends Factory<Event>
  */
 class EventFactory extends Factory
 {
+    protected $model = Event::class;
+
     /**
      * Define the model's default state.
      *

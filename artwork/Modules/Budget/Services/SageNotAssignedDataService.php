@@ -66,9 +66,9 @@ class SageNotAssignedDataService
         $this->sageNotAssignedDataRepository->delete($sageNotAssignedData);
     }
 
-    public function forceDelete(SageNotAssignedData $sageNotAssignedData): void
+    public function forceDelete(SageNotAssignedData $sageNotAssignedData): bool
     {
-        $this->sageNotAssignedDataRepository->forceDelete($sageNotAssignedData);
+        return $this->sageNotAssignedDataRepository->forceDelete($sageNotAssignedData);
     }
 
     public function getTrashed(): Collection

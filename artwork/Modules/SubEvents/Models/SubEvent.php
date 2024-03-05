@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\SubEvents\Models;
 
+use App\Models\EventType;
+use App\Models\User;
+use Artwork\Core\Database\Models\Model;
+use Artwork\Modules\Event\Models\Event;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -19,10 +22,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $allDay
  * @property int $event_type_id
  * @property int $user_id
+ * @property EventType $type
+ * @property Event $event
+ * @property User $creator
  * @property string $created_at
  * @property string $updated_at
+ * @property string $deleted_at
  */
-class SubEvents extends Model
+class SubEvent extends Model
 {
     use HasFactory;
     use SoftDeletes;
@@ -50,16 +57,31 @@ class SubEvents extends Model
 
     public function type(): BelongsTo
     {
-        return $this->belongsTo(EventType::class, 'event_type_id');
+        return $this->belongsTo(
+            EventType::class,
+            'event_type_id',
+            'id',
+            'event_types'
+        );
     }
 
     public function event(): BelongsTo
     {
-        return $this->belongsTo(Event::class);
+        return $this->belongsTo(
+            Event::class,
+            'event_id',
+            'id',
+            'events'
+        );
     }
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(
+            User::class,
+            'user_id',
+            'id',
+            'users'
+        );
     }
 }

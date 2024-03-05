@@ -51,7 +51,6 @@ import JetInputError from '@/Jetstream/InputError.vue'
 import {XIcon} from "@heroicons/vue/outline";
 import {ref} from "vue";
 import {useForm} from "@inertiajs/inertia-vue3";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 const props = defineProps({

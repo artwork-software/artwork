@@ -151,7 +151,6 @@
 <script>
 import Permissions from "@/mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
@@ -175,7 +174,6 @@ export default {
         SwitchGroup,
         SwitchLabel,
         TagComponent,
-        AddButton,
         Input
     },
     mixins: [Permissions],

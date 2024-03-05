@@ -88,7 +88,6 @@
 
 <script>
 import {defineComponent} from 'vue'
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {CheckIcon, XIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon, PlusCircleIcon} from "@heroicons/vue/outline";
 import SingleTimeLine from "@/Pages/Projects/Components/SingleTimeLine.vue";
@@ -113,7 +112,6 @@ export default defineComponent({
         CheckIcon, ChevronDownIcon, EventTypeIconCollection,
         SingleTimeLine,
         Input,
-        AddButton,
         Dialog,
         DialogTitle,
         TransitionChild,

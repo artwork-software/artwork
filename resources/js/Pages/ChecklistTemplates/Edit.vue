@@ -41,7 +41,7 @@
                 <div class="flex">
                     <div class="flex w-full mt-12">
                         <div>
-                            <AddButton class="!ml-0" @click="openAddTaskModal()" :text="$t('New task')" mode="page"/>
+                            <AddButtonBig @click="openAddTaskModal()" :text="$t('New task')"/>
                         </div>
                         <div v-if="this.$page.props.show_hints" class="flex">
                             <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -86,10 +86,9 @@
                     </draggable>
                 </div>
                 <div class="mt-10">
-                    <AddButton v-if="!showSuccess"
-                               class="!ml-0 bg-primary hover:bg-primaryHover focus:outline-none items-center px-20 py-3 border border-transparent text-base font-bold shadow-sm text-secondaryHover"
+                    <FormButton v-if="!showSuccess"
                                @click="editChecklistTemplate"
-                               :text="$t('Save')" mode="page" />
+                               :text="$t('Save')" />
                     <button v-else
                             class="px-24 rounded-full items-center py-2.5 border bg-success focus:outline-none border-transparent"
                     >
@@ -124,12 +123,9 @@
                                                 v-model="newTaskDescription" rows="3"
                                                 class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
                         </div>
-                        <AddButton :class="this.newTaskName === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none'"
-                                   class="mt-6 mx-auto items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="addTaskToTemplate"
+                        <FormButton @click="addTaskToTemplate"
                                    :disabled="this.newTaskName === ''"
-                                   :text="$t('Add')" mode="modal"/>
+                                   :text="$t('Add')"/>
                     </div>
 
                 </div>
@@ -200,10 +196,9 @@
                             </button>
                         </span>
                     </div>
-                    <AddButton
-                        class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                    <FormButton
                         @click="closeChangeUsersModal"
-                        :text="$t('Assign')" mode="modal" />
+                        :text="$t('Assign')"/>
                 </div>
             </template>
         </jet-dialog-modal>
@@ -224,14 +219,17 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import draggable from "vuedraggable";
 import {Inertia} from "@inertiajs/inertia";
 import {useForm} from "@inertiajs/inertia-vue3";
-import AddButton from "@/Layouts/Components/AddButton";
 import Permissions from "@/mixins/Permissions.vue";
+import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
     name: "Template Edit",
     props: ['checklist_template'],
     components: {
+        FormButton,
+        AddButtonBig,
         TeamIconCollection,
         AppLayout,
         Menu,
@@ -252,7 +250,6 @@ export default {
         ChevronDownIcon,
         PlusSmIcon,
         draggable,
-        AddButton
     },
     data() {
         return {

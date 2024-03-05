@@ -22,7 +22,7 @@
                 />
 
                 <div class="flex justify-between mt-6">
-                    <AddButton class="px-20 py-4" @click="emit('update', newName)" :text="$t('Save')" mode="modal"/>
+                    <FormButton @click="emit('update', newName)" :text="$t('Save')"/>
                     <div class="flex my-auto">
                             <span @click="emit('closeModal')"
                                   class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
@@ -37,7 +37,7 @@
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from "@heroicons/vue/outline"
 import {ref} from "vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 const props = defineProps({
     show: Boolean,

@@ -158,7 +158,6 @@ import {
     CheckIcon,
     ChevronDownIcon
 } from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
@@ -167,7 +166,6 @@ export default {
     mixins: [Permissions],
     components: {
         FormButton,
-        AddButton,
         ListboxOptions,
         ListboxOption,
         ListboxButton,

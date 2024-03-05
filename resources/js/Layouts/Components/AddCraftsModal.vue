@@ -120,7 +120,6 @@ import {
     TransitionRoot
 } from "@headlessui/vue";
 import {CheckIcon, XCircleIcon, XIcon} from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {ChevronDownIcon} from "@heroicons/vue/outline";
 import Input from "@/Jetstream/Input.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
@@ -135,7 +134,7 @@ export default defineComponent({
         TagComponent,
         Input,
         ChevronDownIcon, CheckIcon, ListboxButton, ListboxOption, ListboxOptions, Listbox,
-        AddButton, Dialog, TransitionChild, XIcon, TransitionRoot, DialogPanel, SwitchGroup, Switch, SwitchLabel
+        Dialog, TransitionChild, XIcon, TransitionRoot, DialogPanel, SwitchGroup, Switch, SwitchLabel
     },
     props: ['craftToEdit', 'usersWithPermission'],
     data(){

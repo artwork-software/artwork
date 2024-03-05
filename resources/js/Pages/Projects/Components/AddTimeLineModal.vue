@@ -83,7 +83,7 @@
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
-                                <AddButton mode="modal" :text="$t('Save')" @click="saveTimeLines"/>
+                                <FormButton :text="$t('Save')" @click="saveTimeLines"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -98,7 +98,6 @@ import {
     XCircleIcon,
     XIcon
 } from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import {
     Dialog,
@@ -111,15 +110,16 @@ import Input from "@/Jetstream/Input.vue";
 import {PlusCircleIcon} from "@heroicons/vue/outline";
 import SingleTimeLine from "@/Pages/Projects/Components/SingleTimeLine.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     name: "AddTimeLineModal",
     mixins: [Permissions],
     components: {
+        FormButton,
         XCircleIcon,
         SingleTimeLine,
         Input,
-        AddButton,
         Dialog,
         DialogTitle,
         TransitionChild,

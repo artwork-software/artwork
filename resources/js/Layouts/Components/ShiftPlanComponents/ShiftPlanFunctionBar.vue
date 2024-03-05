@@ -70,7 +70,6 @@ import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {Inertia} from "@inertiajs/inertia";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
@@ -82,7 +81,6 @@ export default {
     components: {
         SecondaryButton,
         ConfirmDeleteModal,
-        AddButton,
         BaseFilterTag,
         ShiftPlanFilter,
         Dropdown,

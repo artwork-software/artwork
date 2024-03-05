@@ -229,7 +229,6 @@
 <script>
 
 import  {Inertia} from "@inertiajs/inertia";
-import AddButton from "@/Layouts/Components/AddButton";
 import {SearchIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, DuplicateIcon, XIcon} from "@heroicons/vue/outline";
 import {CheckIcon, PlusSmIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
@@ -252,7 +251,6 @@ export default {
         AddButtonSmall,
         SuccessModal,
         UserPopoverTooltip,
-        AddButton,
         PlusSmIcon,
         SvgCollection,
         AppLayout,

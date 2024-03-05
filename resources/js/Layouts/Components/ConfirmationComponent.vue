@@ -30,7 +30,6 @@
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton";
 import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -42,7 +41,6 @@ export default {
         FormButton,
         JetDialogModal,
         XIcon,
-        AddButton,
         CheckIcon
     },
     props: ['titel', 'description', 'confirm', 'cancel'],

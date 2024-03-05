@@ -99,7 +99,6 @@
 <script setup>
 import {XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {onMounted, ref, watch} from "vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";

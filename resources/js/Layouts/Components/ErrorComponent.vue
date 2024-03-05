@@ -13,7 +13,7 @@
                     {{ description }}
                 </div>
                 <div class="flex justify-start mt-6">
-                    <AddButton class="px-20 py-4" @click="closeModal(true)" :text="confirm ?? $t('Yes')" mode="modal"/>
+                    <FormButton @click="closeModal(true)" :text="confirm ?? $t('Yes')"/>
                 </div>
             </div>
         </template>
@@ -24,17 +24,17 @@
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton";
 import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
     name: 'ErrorComponent',
     components: {
+        FormButton,
         JetDialogModal,
         XIcon,
-        AddButton,
         CheckIcon
     },
     props: [

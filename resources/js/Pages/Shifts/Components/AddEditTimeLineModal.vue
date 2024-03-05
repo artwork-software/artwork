@@ -90,7 +90,6 @@
 <script>
 import {defineComponent} from 'vue'
 import {XCircleIcon, XIcon} from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import {PlusCircleIcon} from "@heroicons/vue/outline";
 import SingleTimeLine from "@/Pages/Projects/Components/SingleTimeLine.vue";
@@ -104,7 +103,6 @@ export default defineComponent({
         FormButton,
         SingleTimeLine,
         Input,
-        AddButton,
         Dialog,
         DialogTitle,
         TransitionChild,

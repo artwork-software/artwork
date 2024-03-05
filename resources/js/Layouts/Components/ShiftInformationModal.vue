@@ -18,7 +18,7 @@
                       rows="4"
                       class="mt-2 border-2 placeholder:xsLight placeholder:subpixel-antialiased focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
             <div class="flex justify-center mt-2">
-                <AddButton mode="modal" :text="$t('Save')" @click="changeShiftDescription"/>
+                <FormButton :text="$t('Save')" @click="changeShiftDescription"/>
             </div>
         </template>
 
@@ -28,9 +28,9 @@
 <script>
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon, DownloadIcon} from "@heroicons/vue/outline";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
@@ -40,9 +40,9 @@ export default {
         project: Object
     },
     components: {
+        FormButton,
         JetDialogModal,
         JetInputError,
-        AddButton,
         XIcon,
         DownloadIcon
     },

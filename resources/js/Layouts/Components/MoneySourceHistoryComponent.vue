@@ -47,7 +47,6 @@
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton";
 import {CheckIcon} from "@heroicons/vue/solid";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
@@ -59,7 +58,6 @@ export default {
         NewUserToolTip,
         JetDialogModal,
         XIcon,
-        AddButton,
         CheckIcon
     },
     props: ['history'],

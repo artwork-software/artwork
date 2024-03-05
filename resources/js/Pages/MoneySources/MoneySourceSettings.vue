@@ -71,7 +71,6 @@
 
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Button from "@/Jetstream/Button";
-import AddButton from "@/Layouts/Components/AddButton";
 import {
     XIcon
 } from "@heroicons/vue/outline";
@@ -87,7 +86,6 @@ export default defineComponent({
     components: {
         ConfirmationComponent,
         JetDialogModal,
-        AddButton,
         Button,
         AppLayout,
         CheckIcon,

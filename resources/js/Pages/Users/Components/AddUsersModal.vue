@@ -54,7 +54,6 @@
 import {defineComponent} from 'vue'
 import {CheckIcon, XIcon} from "@heroicons/vue/solid";
 import Input from "@/Jetstream/Input.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {ChevronDownIcon, PlusCircleIcon} from "@heroicons/vue/outline";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import {
@@ -75,7 +74,6 @@ export default defineComponent({
         ConfirmationModal,
         CheckIcon, ChevronDownIcon,
         Input,
-        AddButton,
         Dialog,
         DialogTitle,
         TransitionChild,

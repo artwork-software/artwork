@@ -134,7 +134,6 @@
 
 <script>
 import {defineComponent} from 'vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
     ChevronDownIcon,
@@ -198,7 +197,6 @@ export default defineComponent({
         NotificationPushSettings,
         NotificationSectionComponent,
         NotificationFrequencySettings,
-        AddButton,
         TeamIconCollection,
         UserTooltip,
         SvgCollection,

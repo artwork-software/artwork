@@ -105,7 +105,6 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import Label from "@/Jetstream/Label.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 const shiftQualificationIcons = [
     {iconName: 'user-icon'},
@@ -124,7 +123,6 @@ export default defineComponent({
     name: 'ShiftQualificationModal',
     components: {
         FormButton,
-        AddButton,
         Label,
         ShiftQualificationIconCollection,
         Menu,

@@ -94,8 +94,7 @@
                     </div>
                 </div>
                 <div class="w-full items-center text-center">
-                    <AddButton @click="editMoneySourceUsers" :text="$t('Save')" mode="modal"
-                               class=" inline-flex mt-8 items-center px-12 py-3 border bg-buttonBlue hover:bg-buttonHover focus:outline-none border-transparent  font-bold tracking-wider text-lg shadow-sm text-secondaryHover"
+                    <FormButton @click="editMoneySourceUsers" :text="$t('Save')"
                     />
                 </div>
             </div>
@@ -112,19 +111,18 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui
 
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
-import {useForm} from "@inertiajs/inertia-vue3";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'AddBudgetTemplateComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         Dropdown,
-        AddButton,
         JetDialogModal,
         XIcon,
         CheckIcon,

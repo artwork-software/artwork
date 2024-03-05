@@ -426,7 +426,6 @@ import {Inertia} from "@inertiajs/inertia";
 import {Link} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
-import AddButton from "@/Layouts/Components/AddButton";
 import projects from "@/Pages/Trash/Projects";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
@@ -463,7 +462,6 @@ export default defineComponent({
         ProjectHistoryComponent,
         NewUserToolTip,
         TagComponent,
-        AddButton,
         CategoryIconCollection,
         TeamIconCollection,
         SvgCollection,

@@ -68,9 +68,9 @@
 
     <div v-show="multiEdit"
          class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
-        <AddButton mode="modal" class="bg-buttonBlue hover:bg-buttonHover text-white resize-none" :text="$t('Move events')"
+        <FormButton :text="$t('Move events')"
                    @click="openMultiEditModal"/>
-        <AddButton mode="modal" @click="openDeleteSelectedEventsModal = true"
+        <FormButton @click="openDeleteSelectedEventsModal = true"
                    class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none"
                    :text="$t('Delete events')"/>
     </div>
@@ -95,8 +95,8 @@ import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomCo
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 
 
@@ -104,8 +104,9 @@ export default {
     name: "IndividualCalendarAtGlanceComponent",
     mixins: [Permissions],
     components: {
+        FormButton,
         ConfirmDeleteModal,
-        AddButton, MultiEditModal,
+        MultiEditModal,
         SingleCalendarEvent,
         CalendarFunctionBar,
         EventComponent,

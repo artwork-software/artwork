@@ -452,11 +452,9 @@
                             </div>
                         </div>
                         <div class="w-full items-center text-center">
-                            <AddButton
-                                :class="[this.createProjectForm.name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                class="mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
+                            <FormButton
                                 @click="addProject"
-                                :disabled="this.createProjectForm.name === ''" :text="$t('Create')" mode="modal"/>
+                                :disabled="this.createProjectForm.name === ''" :text="$t('Create')"/>
                         </div>
                     </div>
                 </div>
@@ -472,7 +470,6 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon, XIcon} from "@heroicons/vue/outline";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {
     Disclosure,
@@ -503,7 +500,6 @@ export default {
         MenuItems,
         MenuButton,
         XIcon,
-        AddButton,
         ChevronDownIcon,
         CheckIcon,
         JetDialogModal,

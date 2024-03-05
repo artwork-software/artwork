@@ -173,7 +173,6 @@
 <script>
 import {defineComponent} from 'vue'
 import AppLayout from "@/Layouts/AppLayout.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {CheckIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon, DuplicateIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
 import {
@@ -220,7 +219,6 @@ export default defineComponent({
         DuplicateIcon,
         TrashIcon,
         DotsVerticalIcon,
-        AddButton,
         AppLayout
     },
     props: ['crafts', 'eventTypes', 'usersWithPermission', 'shiftQualifications'],

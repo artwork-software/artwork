@@ -147,10 +147,8 @@
                     </span>
                 </div>
                 <div class="w-full items-center text-center">
-                    <AddButton @click="editProjectTeam"
+                    <FormButton @click="editProjectTeam"
                                :text="$t('Save')"
-                               mode="modal"
-                               class=" inline-flex mt-8 items-center px-12 py-3 border bg-buttonBlue hover:bg-buttonHover focus:outline-none border-transparent text-base font-bold tracking-wider text-lg shadow-sm text-secondaryHover"
                     />
                 </div>
             </div>
@@ -161,20 +159,20 @@
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {XCircleIcon, XIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
     name: "ProjectEditTeamModal",
     components: {
+        FormButton,
         Dropdown,
         JetDialogModal,
         TeamIconCollection,
-        AddButton,
         XCircleIcon,
         XIcon
     },

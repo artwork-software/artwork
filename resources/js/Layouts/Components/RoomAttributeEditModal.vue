@@ -125,7 +125,6 @@
 <script setup>
 import JetDialogModal from "@/Jetstream/DialogModal";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import {Menu, MenuButton, MenuItems} from "@headlessui/vue";
 import {XIcon, ChevronDownIcon} from "@heroicons/vue/outline";

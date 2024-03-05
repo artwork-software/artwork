@@ -205,7 +205,6 @@
 </template>
 <script>
 import {ChevronLeftIcon, ChevronRightIcon, XIcon, CalendarIcon} from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
@@ -220,7 +219,7 @@ export default {
         BaseButton,
         ConfirmDeleteModal,
         ChevronRightIcon, Button, ChevronLeftIcon,
-        AddButton, XIcon, Dialog, DialogTitle, DialogPanel, TransitionChild, TransitionRoot, CalendarIcon
+        XIcon, Dialog, DialogTitle, DialogPanel, TransitionChild, TransitionRoot, CalendarIcon
     },
     data(){
         return {

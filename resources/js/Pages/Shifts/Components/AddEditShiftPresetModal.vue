@@ -108,7 +108,6 @@
 <script>
 import {defineComponent} from 'vue'
 import {CheckIcon, XIcon} from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import {
     Dialog,
@@ -136,7 +135,6 @@ export default defineComponent({
         CheckIcon,
         ChevronDownIcon,
         Input,
-        AddButton,
         Dialog,
         DialogTitle,
         TransitionChild,

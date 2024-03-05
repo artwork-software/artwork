@@ -440,7 +440,6 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmEventRequestCompo
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
@@ -452,7 +451,6 @@ export default {
     components: {
         VueMathjax,
         DeclineEventModal,
-        AddButton,
         EventComponent,
         ConfirmDeleteModal,
         ConfirmationComponent,

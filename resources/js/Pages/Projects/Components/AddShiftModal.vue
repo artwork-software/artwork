@@ -104,7 +104,7 @@
                                 </div>
                             </div>
                             <div class="flex justify-center mt-5">
-                                <AddButton mode="modal" :text="$t('Save')" @click="saveShift"/>
+                                <FormButton :text="$t('Save')" @click="saveShift"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -116,7 +116,6 @@
 <script>
 import {defineComponent} from 'vue'
 import {CheckIcon, XIcon} from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import {
     Dialog,
@@ -137,17 +136,18 @@ import {
 import {useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     name: "AddShiftModal",
     mixins: [Permissions],
     components: {
+        FormButton,
         ChangeAllSubmitModal,
         ConfirmationModal,
         CheckIcon,
         ChevronDownIcon,
         Input,
-        AddButton,
         Dialog,
         DialogTitle,
         TransitionChild,

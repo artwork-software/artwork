@@ -37,19 +37,18 @@
             {{ helpText }}
         </div>
     </div>
-
-    <AddButton :disabled="disabled" :text="$t('Save')" class="!ml-0 mt-5" @click="updateTemporaryEmploy" />
+    <FormButton :disabled="disabled" :text="$t('Save')" class="mt-3" @click="updateTemporaryEmploy" />
 </template>
 <script>
 import {defineComponent} from 'vue'
 import { Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue'
 import {useForm} from "@inertiajs/inertia-vue3";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import dayjs from "dayjs";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 export default defineComponent({
     name: "TemporarilyHired",
     components: {
-        AddButton,
+        FormButton,
         Switch, SwitchGroup, SwitchLabel
     },
     props: ['user'],

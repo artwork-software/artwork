@@ -119,7 +119,6 @@
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal";
 import JetInputError from '@/Jetstream/InputError.vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import {
     DownloadIcon,
     XIcon,
@@ -157,7 +156,6 @@ export default {
         BaseFilterTag,
         JetDialogModal,
         JetInputError,
-        AddButton,
         XIcon,
         DownloadIcon,
         ChevronDownIcon,

@@ -89,8 +89,8 @@
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="flex justify-center mt-6">
-                    <AddButton class="px-20 py-4" @click="closeModal(true)" :text="$t('Confirm occupancy with room change')"
-                               mode="modal"/>
+                    <FormButton @click="closeModal(true)" :text="$t('Confirm occupancy with room change')"
+                    />
                 </div>
             </div>
         </template>
@@ -102,20 +102,20 @@
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {ChevronDownIcon, XIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton";
 import {CheckIcon} from "@heroicons/vue/solid";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'AnswerEventRequestWithRoomChangeComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         JetDialogModal,
         XIcon,
-        AddButton,
         CheckIcon,
         EventTypeIconCollection,
         TagComponent,

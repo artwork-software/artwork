@@ -100,7 +100,6 @@
 </template>
 <script>
 import {defineComponent} from 'vue'
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import {XIcon} from "@heroicons/vue/solid";
 import Button from "@/Jetstream/Button.vue";
@@ -114,7 +113,6 @@ export default defineComponent({
         FormButton,
         SvgCollection,
         Button,
-        AddButton,
         Dialog,
         DialogTitle,
         TransitionChild,

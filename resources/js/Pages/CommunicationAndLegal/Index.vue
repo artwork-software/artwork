@@ -63,7 +63,6 @@
 <script>
 import {defineComponent} from "vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -72,7 +71,6 @@ export default defineComponent({
     components: {
         FormButton,
         ToolSettingsHeader,
-        AddButton,
         InputComponent
     },
     data() {

@@ -57,7 +57,6 @@
 <script>
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon} from "@heroicons/vue/outline";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
@@ -73,7 +72,6 @@ export default {
         FormButton,
         JetDialogModal,
         JetInputError,
-        AddButton,
         XIcon
     },
     data() {

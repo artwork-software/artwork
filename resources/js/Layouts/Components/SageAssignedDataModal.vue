@@ -49,13 +49,12 @@
                                       class="resize-none border-2 border-gray-300 text-md p-4"
                             />
                             <div class="flex justify-center mt-6">
-                                <AddButton :disabled="
+                                <FormButton :disabled="
                                                 this.bookingDataCommentForm.comment === null ||
                                                 this.bookingDataCommentForm.comment === ''
                                            "
                                            @click="this.saveComment()"
                                            :text="$t('Save')"
-                                           mode="modal"
                                 />
                             </div>
                         </div>
@@ -92,16 +91,16 @@ import {defineComponent} from 'vue';
 import {XIcon} from "@heroicons/vue/outline";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {TrashIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
 import {Inertia} from "@inertiajs/inertia";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     components: {
+        FormButton,
         UserPopoverTooltip,
-        AddButton,
         JetDialogModal,
         XIcon,
         TrashIcon

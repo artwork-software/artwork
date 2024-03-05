@@ -68,7 +68,6 @@
 import {XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
-import AddButton from "@/Layouts/Components/AddButton";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
@@ -81,7 +80,6 @@ export default {
         XCircleIcon,
         TeamIconCollection,
         JetDialogModal,
-        AddButton
     },
     emits: ['closed'],
     props: [

@@ -61,7 +61,7 @@
                 </div>
             </div>
             <div class="flex justify-center mt-2">
-                <AddButton mode="modal" :text="$t('Save')" @click="changeShiftRelevantEventTypes"/>
+                <FormButton :text="$t('Save')" @click="changeShiftRelevantEventTypes"/>
             </div>
         </template>
     </jet-dialog-modal>
@@ -70,12 +70,12 @@
 <script>
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon, DownloadIcon, ChevronDownIcon} from "@heroicons/vue/outline";
 import Permissions from "@/mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
@@ -86,11 +86,11 @@ export default {
         eventTypes: Array
     },
     components: {
+        FormButton,
         TagComponent,
         ChevronDownIcon, Input,
         JetDialogModal,
         JetInputError,
-        AddButton,
         XIcon,
         DownloadIcon,
         Menu,

@@ -277,7 +277,7 @@
                         </div>
 
                         <div class="flex justify-center pt-8">
-                            <SaveButton
+                            <FormButton
                                 :disabled="editRoomForm.name.length === 0"
                                 @click="editRoom"
                             />
@@ -561,7 +561,6 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
-import AddButton from "@/Layouts/Components/AddButton";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
@@ -572,7 +571,6 @@ import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
-import SaveButton from "@/Layouts/Components/General/Buttons/SaveButton.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 
@@ -606,7 +604,6 @@ export default {
     ],
     components: {
         FormButton,
-        SaveButton,
         SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,
@@ -648,7 +645,6 @@ export default {
         ListboxOption,
         ListboxOptions,
         CalendarComponent,
-        AddButton,
         ChevronRightIcon,
         RoomHistoryComponent,
         SingleRoomCalendarComponent

@@ -63,7 +63,7 @@
                 </div>
             </div>
             <div class="justify-center flex w-full mt-6 mb-3">
-                <AddButton :text="$t('Save')" mode="modal" class="px-12 py-3"
+                <FormButton :text="$t('Save')"
                            @click="updateProjectEntranceData"/>
             </div>
         </template>
@@ -74,8 +74,8 @@
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from "@heroicons/vue/outline";
 import {ref} from "vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 const props = defineProps({
     show: Boolean,

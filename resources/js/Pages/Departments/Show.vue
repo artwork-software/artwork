@@ -256,7 +256,6 @@
 
 <script>
 
-import AddButton from "@/Layouts/Components/AddButton";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -312,7 +311,6 @@ export default {
     components: {
         FormButton,
         UserPopoverTooltip,
-        AddButton,
         TeamIconCollection,
         AppLayout,
         Menu,

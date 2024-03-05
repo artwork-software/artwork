@@ -40,11 +40,9 @@
                         </div>
                     </div>
                     <div class="flex justify-center">
-                        <AddButton @click="useProjectBudgetAsTemplate()"
+                        <FormButton @click="useProjectBudgetAsTemplate()"
                                    :disabled="selectedProject === null"
-                                   :class="selectedProject === null ? 'bg-secondary hover:bg-secondary cursor-pointer-none' : ''"
-                                   class="mt-8 py-3 flex" :text="$t('Import calculation')"
-                                   mode="modal"
+                                   :text="$t('Import calculation')"
                         />
                     </div>
                 </div>
@@ -57,16 +55,16 @@
 
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'UseTemplateFromProjectBudgetComponent',
     mixins: [Permissions],
     components: {
-        AddButton,
+        FormButton,
         JetDialogModal,
         XIcon,
         CheckIcon,

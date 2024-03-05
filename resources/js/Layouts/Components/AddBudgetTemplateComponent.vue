@@ -40,7 +40,6 @@
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import Input from "@/Layouts/Components/InputComponent.vue";
@@ -53,7 +52,6 @@ export default {
     components: {
         FormButton,
         Input,
-        AddButton,
         JetDialogModal,
         XIcon,
         CheckIcon,

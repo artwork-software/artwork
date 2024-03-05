@@ -991,7 +991,6 @@
 import AppLayout from '@/Layouts/AppLayout.vue'
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Button from "@/Jetstream/Button";
-import AddButton from "@/Layouts/Components/AddButton";
 import {
     DotsVerticalIcon,
     InformationCircleIcon,
@@ -1026,7 +1025,6 @@ export default defineComponent({
         SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,
-        AddButton,
         UserTooltip,
         SvgCollection,
         Button,

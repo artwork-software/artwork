@@ -129,7 +129,6 @@
 <script>
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
 import {XIcon} from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
@@ -138,7 +137,6 @@ export default {
     mixins: [Permissions],
     components: {
         FormButton,
-        AddButton,
         Dialog,
         DialogTitle,
         TransitionChild,

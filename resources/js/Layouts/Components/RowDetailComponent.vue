@@ -58,10 +58,9 @@
                             </div>
                         </div>
                         <div class="flex justify-center">
-                            <AddButton @click="addCommentToRow()" text="Speichern"
+                            <FormButton @click="addCommentToRow()" text="Speichern"
                                        :disabled="this.commentForm.description === null && this.commentForm.description === ''"
-                                       :class="this.commentForm.description === null || this.commentForm.description === '' ? 'bg-secondary hover:bg-secondary' : ''"
-                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
+                            ></FormButton>
                         </div>
                     </div>
                     <div v-if="isExcludeTab">
@@ -75,8 +74,8 @@
                                class="ml-4 my-auto text-sm"> {{$t('Exclude')}}</p>
                         </div>
                         <div class="flex justify-center">
-                            <AddButton @click="updateCommentedStatus()" :text="$t('Save')"
-                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
+                            <FormButton @click="updateCommentedStatus()" :text="$t('Save')"
+                            ></FormButton>
                         </div>
                     </div>
                 </div>
@@ -92,23 +91,23 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions, RadioGroup, Radio
 
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {CheckIcon, ChevronDownIcon, PlusCircleIcon, XIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 
 export default {
     name: 'CellDetailComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         UserPopoverTooltip,
         NewUserToolTip,
         UserTooltip,
-        AddButton,
         ListboxOptions,
         ListboxOption,
         ListboxButton,

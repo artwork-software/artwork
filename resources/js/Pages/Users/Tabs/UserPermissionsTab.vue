@@ -168,7 +168,6 @@ import {
     XIcon
 } from "@heroicons/vue/outline";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
@@ -187,7 +186,6 @@ export default {
         XIcon,
         PencilAltIcon,
         JetInputError,
-        AddButton,
         DotsVerticalIcon,
         TeamIconCollection,
         TrashIcon,

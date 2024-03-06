@@ -461,7 +461,7 @@ class RoomService
                 $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
 
                 foreach ($eventPeriod as $date) {
-                    $dateKey = $date->format('d.m.');
+                    $dateKey = $date->format('d.m.Y');
                     $actualEvents[$dateKey][] = $event;
                 }
             });
@@ -497,7 +497,7 @@ class RoomService
         $eventsForRoom = [];
         /** @var Collection $eventsForRoom */
         foreach ($calendarPeriod as $date) {
-            $eventsForRoom[$date->format('d.m.')] = [
+            $eventsForRoom[$date->format('d.m.Y')] = [
                 'roomName' => $room->name,
                 'events' => CalendarShowEventResource::collection([])
             ];

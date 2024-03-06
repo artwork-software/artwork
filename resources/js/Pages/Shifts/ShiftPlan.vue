@@ -35,11 +35,11 @@
                                     <th class="xsDark flex items-center -mt-2 h-28 w-44"
                                         :class="[index % 2 === 0 ? 'bg-backgroundGray' : 'bg-secondaryHover', isFullscreen || this.showUserOverview ? 'stickyYAxisNoMarginLeft' : 'stickyYAxisNoMarginLeft']">
                                         <Link class="flex font-semibold items-center ml-4">
-                                            {{ room[days[0].day].roomName }}
+                                            {{ room[days[0].full_day].roomName }}
                                         </Link>
                                     </th>
                                     <td v-for="day in days" style="width:200px;" class="max-h-28 overflow-y-auto cell">
-                                        <div v-for="event in room[day.day].events.data" class="mb-1">
+                                        <div v-for="event in room[day.full_day].events.data" class="mb-1">
                                             <SingleShiftPlanEvent
                                                 v-if="event.shifts.length > 0"
                                                 :multiEditMode="multiEditMode"

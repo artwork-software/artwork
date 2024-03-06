@@ -61,7 +61,7 @@
                               hide-x="true"/>
             </div>
             <div class="justify-center flex w-full my-6">
-                <AddButton :disabled="moneySourceCategories.length === 0" :text="$t('Save')" mode="modal" class="px-6 py-3" @click="attachCategories"/>
+                <FormButton :disabled="moneySourceCategories.length === 0" :text="$t('Save')" @click="attachCategories"/>
             </div>
         </template>
     </jet-dialog-modal>
@@ -70,18 +70,19 @@
 <script>
 import Permissions from "@/mixins/Permissions.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {ChevronDownIcon, XIcon} from "@heroicons/vue/outline";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Inertia} from "@inertiajs/inertia";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
     name: "MoneySourceCategoriesModal",
     components: {
+        FormButton,
         TagComponent,
         MenuItem,
         MenuItems,
@@ -91,7 +92,6 @@ export default {
         ChevronDownIcon,
         BaseFilterDisclosure,
         JetDialogModal,
-        AddButton,
         XIcon
     },
     props: ['show', 'closeModal', 'moneySourceId', 'moneySourceCategories', 'moneySourceCurrentCategories'],

@@ -46,7 +46,7 @@
                                               class="border-2 placeholder:xsLight placeholder:subpixel-antialiased focus:xsDark resize-none text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <div class="flex justify-center mt-2">
-                            <AddButton mode="modal" class="bg-buttonBlue hover:bg-buttonHover text-white resize-none" @click="createTask()" :text="$t('Save')"/>
+                            <FormButton @click="createTask()" :text="$t('Save')"/>
                         </div>
                     </div>
                 </div>
@@ -78,13 +78,14 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
-import AddButton from "@/Layouts/Components/AddButton";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         Input,
         JetDialogModal,
         XIcon,
@@ -108,7 +109,6 @@ export default {
         ConfirmationComponent,
         TagComponent,
         InputComponent,
-        AddButton
     },
     computed: {
     },

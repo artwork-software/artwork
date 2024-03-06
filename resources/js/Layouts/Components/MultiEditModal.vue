@@ -139,7 +139,7 @@
                     </div>
 
                     <div class="w-full flex justify-center">
-                        <AddButton mode="modal" class="!bg-buttonBlue hover:!bg-buttonHover text-white resize-none py-4 px-6" :text="$t('Save')"  @click="saveMultiEdit"/>
+                        <FormButton :text="$t('Save')"  @click="saveMultiEdit"/>
                     </div>
                 </div>
             </div>
@@ -172,14 +172,14 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'MultiEditModal',
     mixins: [Permissions],
     components: {
-        AddButton,
+        FormButton,
         Input,
         JetDialogModal,
         XIcon,

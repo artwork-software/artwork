@@ -60,10 +60,8 @@
                             </div>
                         </div>
                         <div class="flex justify-center">
-                            <AddButton @click="addCommentToCell()" :text="$t('Save')"
+                            <FormButton @click="addCommentToCell()" :text="$t('Save')"
                                        :disabled="commentForm.comment === null && commentForm.comment === ''"
-                                       :class="commentForm.comment === null || commentForm.comment === '' ? 'bg-secondary hover:bg-secondary' : ''"
-                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"
                             />
                         </div>
                     </div>
@@ -148,10 +146,8 @@
 
                         </div>
                         <div class="flex justify-center">
-                            <AddButton :disabled="selectedMoneySource === null"
-                                       class="mt-8 py-5 px-24 flex"
+                            <FormButton :disabled="selectedMoneySource === null"
                                        :text="$t('Save')"
-                                       mode="modal"
                                        @click="updateMoneySourceLink()"
                             />
                         </div>
@@ -166,19 +162,19 @@
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, RadioGroup, RadioGroupOption} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {CheckIcon, ChevronDownIcon, PlusCircleIcon, XIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 export default {
     name: 'SumDetailComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         NewUserToolTip,
         UserTooltip,
-        AddButton,
         ListboxOptions,
         ListboxOption,
         ListboxButton,

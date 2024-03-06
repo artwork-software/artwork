@@ -16,16 +16,16 @@ class MainPositionDetailsService
     ) {
     }
 
-    public function delete(MainPositionDetails $mainPositionDetails): void
+    public function forceDelete(MainPositionDetails $mainPositionDetails): void
     {
         $mainPositionDetails->comments->each(function (SumComment $sumComment): void {
-            $this->sumCommentService->delete($sumComment);
+            $this->sumCommentService->forceDelete($sumComment);
         });
 
         if (($sumMoneySource = $mainPositionDetails->sumMoneySource) instanceof SumMoneySource) {
-            $this->sumMoneySourceService->delete($sumMoneySource);
+            $this->sumMoneySourceService->forceDelete($sumMoneySource);
         }
 
-        $this->mainPositionDetailsRepository->delete($mainPositionDetails);
+        $this->mainPositionDetailsRepository->forceDelete($mainPositionDetails);
     }
 }

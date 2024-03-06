@@ -115,7 +115,6 @@ import {ChevronDownIcon} from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {ChevronRightIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
-import AddButton from "@/Layouts/Components/AddButton";
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
@@ -141,7 +140,6 @@ export default  {
         ChevronDownIcon,
         ChevronUpIcon,
         ConfirmationComponent,
-        AddButton,
         NotificationEventInfoRow,
         ChevronRightIcon,
         NotificationUserIcon,

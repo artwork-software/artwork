@@ -92,7 +92,7 @@
                     <div v-for="file in files">{{ $t('New document')}}: {{ file?.name }}</div>
                 </div>
                 <div class="justify-center flex w-full my-6">
-                    <AddButton :text="$t('Save')" mode="modal" class="px-6 py-3"
+                    <FormButton :text="$t('Save')"
                                @click="updateFile"/>
                 </div>
                 <div class="w-full my-4">
@@ -117,10 +117,10 @@
 <script>
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon, DownloadIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: "ProjectFileEditModal",
@@ -132,9 +132,9 @@ export default {
         file: Object
     },
     components: {
+        FormButton,
         JetDialogModal,
         JetInputError,
-        AddButton,
         XIcon,
         DownloadIcon
     },

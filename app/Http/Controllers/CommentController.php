@@ -65,7 +65,7 @@ class CommentController extends Controller
 
     public function destroy(Comment $comment): RedirectResponse
     {
-        $this->commentService->delete($comment);
+        $this->commentService->forceDelete($comment);
         return Redirect::back();
     }
 }

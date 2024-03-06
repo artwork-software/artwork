@@ -56,11 +56,8 @@
                         </transition>
                     </Listbox>
                     <div class="flex justify-center">
-                        <AddButton @click="useTemplate()" :disabled="selectedTemplate === null"
-                                   :class="selectedTemplate === null ? 'bg-secondary hover:bg-secondary cursor-pointer-none' : ''"
-                                   class="mt-8 py-3 flex"
+                        <FormButton @click="useTemplate()" :disabled="selectedTemplate === null"
                                    :text="$t('Import template')"
-                                   mode="modal"
                         />
                     </div>
                 </div>
@@ -82,14 +79,14 @@ import {
     CheckIcon,
     ChevronDownIcon
 } from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'UseTemplateComponent',
     mixins: [Permissions],
     components: {
-        AddButton,
+        FormButton,
         ListboxOptions,
         ListboxOption,
         ListboxButton,

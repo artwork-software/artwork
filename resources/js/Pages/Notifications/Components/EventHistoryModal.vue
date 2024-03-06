@@ -52,7 +52,6 @@ import Permissions from "@/mixins/Permissions.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {XIcon} from "@heroicons/vue/outline";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 
 export default {
@@ -62,7 +61,6 @@ export default {
         NewUserToolTip,
         JetDialogModal,
         XIcon,
-        AddButton,
         CheckIcon
     },
     props: ['project_history'],

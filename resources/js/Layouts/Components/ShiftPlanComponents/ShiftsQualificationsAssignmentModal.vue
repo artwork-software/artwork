@@ -59,14 +59,12 @@
 import {defineComponent} from "vue";
 import {XIcon} from "@heroicons/vue/outline";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default defineComponent({
     name: 'ShiftsQualificationsAssignmentModal',
     components: {
         UserPopoverTooltip,
-        AddButton,
         XIcon,
         JetDialogModal
     },

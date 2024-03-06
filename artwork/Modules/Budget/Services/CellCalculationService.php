@@ -12,9 +12,9 @@ class CellCalculationService
     ) {
     }
 
-    public function delete(CellCalculation $cellCalculation): void
+    public function forceDelete(CellCalculation $cellCalculation): void
     {
-        $this->cellCalculationsRepository->delete($cellCalculation);
+        $this->cellCalculationsRepository->forceDelete($cellCalculation);
     }
 
     public function update(CellCalculation $cellCalculation, array $attributes): void

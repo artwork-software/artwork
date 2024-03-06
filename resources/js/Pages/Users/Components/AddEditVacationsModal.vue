@@ -178,10 +178,10 @@
                                     <button class="text-[#3017AD] text-xs underline underline-offset-2" @click="saveOrUpdateVacation(true)">{{ $t('Save & make further entries')}}</button>
                                 </div>
                                 <div >
-                                    <AddButton v-if="vacation.isDirty && !vacation.id" @click="saveOrUpdateVacation(false)" type="save" mode="modal" :text="$t('Save')"/>
-                                    <AddButton v-if="vacation.isDirty && vacation.id" @click="saveOrUpdateVacation(false)" type="save" mode="modal" :text="$t('Bearbeiten')"/>
-                                    <AddButton v-if="!vacation.isDirty && vacation.id" @click="checkVacationType" type="delete" mode="modal" :text="$t('Delete')"/>
-                                    <AddButton v-if="!vacation.isDirty && !vacation.id" @click="closeModal(true)" type="delete" mode="modal" :text="$t('Cancel')"/>
+                                    <BaseButton v-if="vacation.isDirty && !vacation.id" @click="saveOrUpdateVacation(false)" :text="$t('Save')"/>
+                                    <BaseButton v-if="vacation.isDirty && vacation.id" @click="saveOrUpdateVacation(false)" :text="$t('Bearbeiten')"/>
+                                    <BaseButton v-if="!vacation.isDirty && vacation.id" @click="checkVacationType" background-color="bg-red-600 hover:bg-red-700" :text="$t('Delete')"/>
+                                    <BaseButton v-if="!vacation.isDirty && !vacation.id" @click="checkVacationType" background-color="bg-red-600 hover:bg-red-700" :text="$t('Cancel')"/>
                                 </div>
                             </div>
 
@@ -205,20 +205,21 @@
 </template>
 <script>
 import {ChevronLeftIcon, ChevronRightIcon, XIcon, CalendarIcon} from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
 import {Inertia} from "@inertiajs/inertia";
 import Button from "@/Jetstream/Button.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 
 export default {
     name: "AddEditVacationsModal",
     components: {
+        BaseButton,
         ConfirmDeleteModal,
         ChevronRightIcon, Button, ChevronLeftIcon,
-        AddButton, XIcon, Dialog, DialogTitle, DialogPanel, TransitionChild, TransitionRoot, CalendarIcon
+        XIcon, Dialog, DialogTitle, DialogPanel, TransitionChild, TransitionRoot, CalendarIcon
     },
     data(){
         return {

@@ -83,6 +83,11 @@ class SageAssignedDataService
         $this->sageAssignedDataRepository->delete($sageAssignedData);
     }
 
+    public function forceDelete(SageAssignedData $sageAssignedData): bool
+    {
+        return $this->sageAssignedDataRepository->forceDelete($sageAssignedData);
+    }
+
     public function findBySageId(int $sageId): SageAssignedData|null
     {
         return $this->sageAssignedDataRepository->findBySageId($sageId);

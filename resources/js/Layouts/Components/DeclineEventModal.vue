@@ -77,11 +77,11 @@
                     </div>
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-buttonBlue hover:bg-buttonHover rounded-full focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="declineRequest">
-                        {{ $t('Cancellations')}}
-                    </button>
+                    <FormButton
+                        @click="declineRequest"
+                        :text="$t('Cancellations')"
+                        class="inline-flex items-center"
+                    />
                     <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
                                   class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
@@ -104,6 +104,7 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: "DeclineEventModal",
@@ -114,6 +115,7 @@ export default {
         }
     },
     components: {
+        FormButton,
         UserPopoverTooltip,
         NewUserToolTip, EventTypeIconCollection, AdjustmentsIcon, Button, UserTooltip, JetDialogModal, XIcon},
     emits: ['closed', 'declined'],

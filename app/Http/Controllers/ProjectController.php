@@ -34,7 +34,6 @@ use App\Models\CompanyType;
 use App\Models\ContractType;
 use App\Models\CostCenter;
 use App\Models\Currency;
-use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Filter;
 use App\Models\Freelancer;
@@ -69,6 +68,7 @@ use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\ProjectService;
@@ -78,6 +78,7 @@ use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
+use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -647,7 +648,7 @@ class ProjectController extends Controller
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->setNotificationTo(User::find($verifiedRequest->requested));
             $this->notificationService->createNotification();
-            $verifiedRequest->delete();
+            $verifiedRequest->forceDelete();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $this->history->createHistory(
                 $project->id,
@@ -700,7 +701,7 @@ class ProjectController extends Controller
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->createNotification();
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            $verifiedRequest->delete();
+            $verifiedRequest->forceDelete();
             $this->history->createHistory(
                 $project->id,
                 'Sub position Verification request canceled',
@@ -767,7 +768,7 @@ class ProjectController extends Controller
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->createNotification();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            $verifiedRequest->delete();
+            $verifiedRequest->forceDelete();
             $this->history->createHistory(
                 $project->id,
                 'Main position Verification canceled',
@@ -818,7 +819,7 @@ class ProjectController extends Controller
             $this->notificationService->setDescription($notificationDescription);
             $this->notificationService->createNotification();
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            $verifiedRequest->delete();
+            $verifiedRequest->forceDelete();
             $this->history->createHistory(
                 $project->id,
                 'Sub position Verification removed',
@@ -1207,7 +1208,7 @@ class ProjectController extends Controller
 
     public function columnDelete(Column $column, ColumnService $columnService): RedirectResponse
     {
-        $columnService->delete($column);
+        $columnService->forceDelete($column);
 
         return Redirect::back();
     }
@@ -1929,12 +1930,12 @@ class ProjectController extends Controller
         $shiftRelevantEventTypes = $project->shiftRelevantEventTypes()->pluck('event_type_id');
         $shiftRelevantEvents = $project->events()
             ->whereIn('event_type_id', $shiftRelevantEventTypes)
-            ->with(['timeline', 'shifts', 'event_type', 'room'])
+            ->with(['timelines', 'shifts', 'event_type', 'room'])
             ->get();
 
         $eventsWithRelevant = [];
         foreach ($shiftRelevantEvents as $event) {
-            $timeline = $event->timeline()->get()->toArray();
+            $timeline = $event->timelines()->get()->toArray();
 
             foreach ($timeline as &$singleTimeLine) {
                 $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
@@ -2308,7 +2309,7 @@ class ProjectController extends Controller
 
     public function addTimeLineRow(Event $event, Request $request): void
     {
-        $event->timeline()->create(
+        $event->timelines()->create(
             $request->validate(
                 [
                     'start' => 'required',
@@ -2914,11 +2915,11 @@ class ProjectController extends Controller
 
     public function destroy(Project $project): RedirectResponse
     {
-        $project->events()->delete();
+        //$project->events()->delete();
 
-        foreach ($project->checklists() as $checklist) {
+        /*foreach ($project->checklists() as $checklist) {
             $checklist->tasks()->delete();
-        }
+        }*/
 
         foreach ($project->users()->get() as $user) {
             $notificationTitle = __('notification.project.delete', [
@@ -2940,9 +2941,11 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $project->checklists()->delete();
+        //$project->checklists()->delete();
 
-        $project->delete();
+        //$project->delete();
+
+        $this->projectService->softDelete($project);
 
         return Redirect::route('projects');
     }
@@ -2952,9 +2955,9 @@ class ProjectController extends Controller
         /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
 
-        $project->forceDelete();
-        $project->events()->withTrashed()->forceDelete();
-        $project->project_histories()->delete();
+        if ($project) {
+            $this->projectService->forceDelete($project);
+        }
 
         return Redirect::route('projects.trashed');
     }
@@ -2963,9 +2966,9 @@ class ProjectController extends Controller
     {
         $project = Project::onlyTrashed()->findOrFail($id);
 
-        $project->restore();
-        $project->events()->withTrashed()->restore();
-
+        if ($project) {
+            $this->projectService->restore($project);
+        }
         return Redirect::route('projects.trashed');
     }
 
@@ -2994,14 +2997,14 @@ class ProjectController extends Controller
         SubPositionRow $subPositionRow,
         SubPositionRowService $subPositionRowService
     ): RedirectResponse {
-        $subPositionRowService->delete($subPositionRow);
+        $subPositionRowService->forceDelete($subPositionRow);
 
         return Redirect::back();
     }
 
     public function deleteTable(Table $table, TableService $tableService): RedirectResponse
     {
-        $tableService->delete($table);
+        $tableService->forceDelete($table);
 
         return Redirect::back();
     }
@@ -3010,7 +3013,7 @@ class ProjectController extends Controller
         MainPosition $mainPosition,
         MainPositionService $mainPositionService
     ): RedirectResponse {
-        $mainPositionService->delete($mainPosition);
+        $mainPositionService->forceDelete($mainPosition);
 
         return Redirect::back();
     }
@@ -3019,7 +3022,7 @@ class ProjectController extends Controller
         SubPosition $subPosition,
         SubPositionService $subPositionService
     ): RedirectResponse {
-        $subPositionService->delete($subPosition);
+        $subPositionService->forceDelete($subPosition);
 
         return Redirect::back();
     }
@@ -3122,9 +3125,9 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 
-    public function deleteTimeLineRow(Timeline $timeLine): void
+    public function deleteTimeLineRow(Timeline $timeline, TimelineService $timelineService): void
     {
-        $timeLine->delete();
+        $timelineService->forceDelete($timeline);
     }
 
     public function duplicateColumn(Column $column): void
@@ -3132,7 +3135,7 @@ class ProjectController extends Controller
         $newColumn = $column->replicate();
         $newColumn->save();
         $newColumn->update(['name' => $column->name . ' (Kopie)']);
-        $newColumn->cells()->delete();
+        $newColumn->cells()->forceDelete();
         $newColumn->cells()->createMany($column->cells()->get()->toArray());
     }
 
@@ -3152,7 +3155,7 @@ class ProjectController extends Controller
             $newSubPositionRow->update(
                 ['name' => $subPositionRow->name . ' (Kopie)', 'sub_position_id' => $newSubPosition->id]
             );
-            $newSubPositionRow->cells()->delete();
+            $newSubPositionRow->cells()->forceDelete();
             $newSubPositionRow->cells()->createMany($subPositionRow->cells()->get()->toArray());
         }
     }

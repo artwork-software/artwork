@@ -55,10 +55,9 @@
                     </button>
                 </div>
 
-                <AddButton @click="submitDepartments"
+                <FormButton @click="submitDepartments"
                            :text="$t('Assign')"
-                           mode="modal"
-                    class="mt-8 px-12 py-3" />
+                />
 
                 <!-- <p v-if="error" class="text-red-800 text-xs">{{ error }}</p> -->
             </div>
@@ -71,18 +70,18 @@
 import {XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
-import AddButton from "@/Layouts/Components/AddButton";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'ChecklistTeamComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         XIcon,
         XCircleIcon,
         TeamIconCollection,
         JetDialogModal,
-        AddButton
     },
 
     emits: ['closed'],

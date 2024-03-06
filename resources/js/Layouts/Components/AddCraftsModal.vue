@@ -95,7 +95,10 @@
                                 </div>
                             </div>
                             <div class="flex items-center justify-center mt-5">
-                                <AddButton mode="modal" text="Speichern" class="!ml-0" @click="saveCraft"/>
+                                <FormButton
+                                    text="Speichern"
+                                    @click="saveCraft"
+                                />
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -117,20 +120,21 @@ import {
     TransitionRoot
 } from "@headlessui/vue";
 import {CheckIcon, XCircleIcon, XIcon} from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {ChevronDownIcon} from "@heroicons/vue/outline";
 import Input from "@/Jetstream/Input.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     name: "AddCraftsModal",
     components: {
+        FormButton,
         XCircleIcon,
         TagComponent,
         Input,
         ChevronDownIcon, CheckIcon, ListboxButton, ListboxOption, ListboxOptions, Listbox,
-        AddButton, Dialog, TransitionChild, XIcon, TransitionRoot, DialogPanel, SwitchGroup, Switch, SwitchLabel
+        Dialog, TransitionChild, XIcon, TransitionRoot, DialogPanel, SwitchGroup, Switch, SwitchLabel
     },
     props: ['craftToEdit', 'usersWithPermission'],
     data(){

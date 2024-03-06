@@ -20,12 +20,9 @@
                         </div>
                     </div>
                     <div class="flex justify-center">
-                        <AddButton @click="updateBudgetTemplateName()"
+                        <FormButton @click="updateBudgetTemplateName()"
                                    :disabled="tableName === ''"
-                                   :class="tableName === '' ? 'bg-secondary hover:bg-secondary cursor-pointer-none' : ''"
-                                   class="mt-8 py-3 flex"
                                    :text="$t('Rename')"
-                                   mode="modal"
                         />
                     </div>
                 </div>
@@ -37,16 +34,16 @@
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'RenameTableComponent',
     mixins: [Permissions],
     components: {
-        AddButton,
+        FormButton,
         JetDialogModal,
         XIcon,
         CheckIcon,

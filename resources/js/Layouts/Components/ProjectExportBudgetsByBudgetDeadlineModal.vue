@@ -55,7 +55,6 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon, DocumentReportIcon, XIcon} from "@heroicons/vue/outline";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
 
 export default {
@@ -66,7 +65,6 @@ export default {
         DisclosureButton,
         Disclosure,
         XIcon,
-        AddButton,
         ChevronDownIcon,
         CheckIcon,
         JetDialogModal,

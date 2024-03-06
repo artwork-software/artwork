@@ -12,7 +12,7 @@
                         <div class="flex-grow flex items-center headline1">
                             Details
                             <svg v-if="cell.column.is_locked" xmlns="http://www.w3.org/2000/svg" width="16"
-                                         height="20" class="mr-2 ml-4 flex items-center mt-0.5" viewBox="0 0 11.975 13.686">
+                                 height="20" class="mr-2 ml-4 flex items-center mt-0.5" viewBox="0 0 11.975 13.686">
                                 <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
                                       d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
                                       fill="#27233C"/>
@@ -66,12 +66,20 @@
                             <div class="grid grid-cols-2 group h-2">
                                 <div class="hidden group-hover:block col-span-1">
                                     <div class="w-full relative">
-                                        <div @click="addCalculation(cell.id, calculation.position)" v-if="!cell.column.is_locked" class="cursor-pointer h-1 border-dashed border-t-2 border-indigo-500">
+                                        <div @click="addCalculation(cell.id, calculation.position)"
+                                             v-if="!cell.column.is_locked"
+                                             class="cursor-pointer h-1 border-dashed border-t-2 border-indigo-500">
                                             <div class="flex flex-col justify-center absolute -top-7 left-1/2">
-                                                <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">{{ $t('Add below') }}</div>
-                                                <div class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 object-cover">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">
+                                                    {{ $t('Add below') }}
+                                                </div>
+                                                <div
+                                                    class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                         viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                         class="w-6 h-6 object-cover">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                              d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                     </svg>
                                                 </div>
                                             </div>
@@ -80,12 +88,20 @@
                                 </div>
                                 <div class="hidden group-hover:block col-span-1">
                                     <div class="w-full relative">
-                                        <div @click="deleteCalculationFromCell(calculation)" v-if="!cell.column.is_locked" class="cursor-pointer h-1 border-dashed border-t-2 border-red-500">
+                                        <div @click="deleteCalculationFromCell(calculation)"
+                                             v-if="!cell.column.is_locked"
+                                             class="cursor-pointer h-1 border-dashed border-t-2 border-red-500">
                                             <div class="flex flex-col justify-center absolute -top-7 left-1/2">
-                                                <div class="uppercase text-red-500 text-xs font-semibold -ml-12">{{ $t('Delete above') }}</div>
-                                                <div class="shadow-[0px_0px_5px_0px_#f56565] rounded-full text-white bg-red-300 w-fit ">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 object-cover">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                <div class="uppercase text-red-500 text-xs font-semibold -ml-12">
+                                                    {{ $t('Delete above') }}
+                                                </div>
+                                                <div
+                                                    class="shadow-[0px_0px_5px_0px_#f56565] rounded-full text-white bg-red-300 w-fit ">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                         viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                         class="w-6 h-6 object-cover">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                              d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                     </svg>
                                                 </div>
                                             </div>
@@ -98,12 +114,19 @@
                         <div class="group h-2" v-show="this.cell.calculations?.length < 0">
                             <div class="hidden group-hover:block col-span-1">
                                 <div class="w-full relative">
-                                    <div @click="addCalculation(cell.id)" v-if="!cell.column.is_locked" class="cursor-pointer h-1 border-dashed border-t-2 border-indigo-500">
+                                    <div @click="addCalculation(cell.id)" v-if="!cell.column.is_locked"
+                                         class="cursor-pointer h-1 border-dashed border-t-2 border-indigo-500">
                                         <div class="flex flex-col justify-center absolute -top-7 left-1/2">
-                                            <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">{{ $t('Add below') }}</div>
-                                            <div class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 object-cover">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">
+                                                {{ $t('Add below') }}
+                                            </div>
+                                            <div
+                                                class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                     stroke-width="1.5" stroke="currentColor"
+                                                     class="w-6 h-6 object-cover">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                          d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                 </svg>
                                             </div>
                                         </div>
@@ -120,11 +143,11 @@
                             </div>
                         </div>
                         <div class="flex justify-center mt-6">
-                            <AddButton @click="saveCalculation()"
-                                       :text="$t('Save')"
-                                       :disabled="cell.column.is_locked"
-                                       class="text-sm ml-0 py-5 xsWhiteBold"
-                            />
+                            <FormButton
+                                @click="saveCalculation()"
+                                :text="$t('Save')"
+                                :disabled="cell.column.is_locked"
+                            ></FormButton>
                         </div>
                     </div>
                     <!-- Commentary Tab -->
@@ -151,9 +174,10 @@
                                             {{ formatDate(comment.created_at) }}
                                         </div>
                                     </div>
-                                    <button v-show="commentHovered === comment.id && comment.user_id === $page.props.user.id"
-                                            type="button"
-                                            @click="deleteCommentFromCell(comment)">
+                                    <button
+                                        v-show="commentHovered === comment.id && comment.user_id === $page.props.user.id"
+                                        type="button"
+                                        @click="deleteCommentFromCell(comment)">
                                         <span class="sr-only">{{ $t('Remove comment from project') }}</span>
                                         <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
                                     </button>
@@ -164,11 +188,9 @@
                             </div>
                         </div>
                         <div class="flex justify-center">
-                            <AddButton @click="addCommentToCell()" :text="$t('Save')"
-                                       :disabled="this.commentForm.description === null && this.commentForm.description === ''"
-                                       :class="this.commentForm.description === null || this.commentForm.description === '' ? 'bg-secondary hover:bg-secondary' : ''"
-                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"
-                            />
+                            <FormButton @click="addCommentToCell()" :text="$t('Save')"
+                                        :disabled="this.commentForm.description === null && this.commentForm.description === ''"
+                            ></FormButton>
                         </div>
                     </div>
                     <!-- Link Tab -->
@@ -186,27 +208,30 @@
                             <div class="flex w-full" v-if="!cell.column.is_locked">
                                 <div class="relative w-full">
                                     <div class="w-full flex">
-                                    <Listbox as="div" v-model="linkedType" id="linked_type">
-                                        <ListboxButton  class="inputMain w-12 h-10 cursor-pointer truncate flex p-2">
-                                            <div class="flex-grow xsLight text-left subpixel-antialiased">
-                                                {{ linkedType.name }}
-                                            </div>
-                                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                        </ListboxButton>
-                                        <ListboxOptions class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                            <ListboxOption v-for="type in this.linkTypes"
-                                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
-                                                           :key="type.name"
-                                                           :value="type"
-                                                           v-slot="{ active, selected }">
-                                                <div :class="[selected ? 'text-white' : '']">
-                                                    {{ type.name }}
+                                        <Listbox as="div" v-model="linkedType" id="linked_type">
+                                            <ListboxButton class="inputMain w-12 h-10 cursor-pointer truncate flex p-2">
+                                                <div class="flex-grow xsLight text-left subpixel-antialiased">
+                                                    {{ linkedType.name }}
                                                 </div>
-                                                <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </Listbox>
-                                        <input id="userSearch" v-model="moneySource_query" type="text" autocomplete="off"
+                                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                            </ListboxButton>
+                                            <ListboxOptions
+                                                class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                                <ListboxOption v-for="type in this.linkTypes"
+                                                               class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                               :key="type.name"
+                                                               :value="type"
+                                                               v-slot="{ active, selected }">
+                                                    <div :class="[selected ? 'text-white' : '']">
+                                                        {{ type.name }}
+                                                    </div>
+                                                    <CheckIcon v-if="selected" class="h-5 w-5 text-success"
+                                                               aria-hidden="true"/>
+                                                </ListboxOption>
+                                            </ListboxOptions>
+                                        </Listbox>
+                                        <input id="userSearch" v-model="moneySource_query" type="text"
+                                               autocomplete="off"
                                                :placeholder="$t('Which funding source do you want to link the value to?')"
                                                class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                         />
@@ -214,12 +239,14 @@
                                     <transition leave-active-class="transition ease-in duration-100"
                                                 leave-from-class="opacity-100"
                                                 leave-to-class="opacity-0">
-                                        <div v-if="moneySource_search_results.length > 0 && moneySource_query.length > 0"
-                                             class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                        <div
+                                            v-if="moneySource_search_results.length > 0 && moneySource_query.length > 0"
+                                            class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm">
                                             <div class="border-gray-200">
-                                                <div v-for="(moneySource, index) in moneySource_search_results" :key="index"
+                                                <div v-for="(moneySource, index) in moneySource_search_results"
+                                                     :key="index"
                                                      class="flex items-center cursor-pointer">
                                                     <div class="flex-1 text-sm py-4">
                                                         <p @click="selectMoneySource(moneySource)"
@@ -234,7 +261,7 @@
                                     <div class="flex xsDark mt-2">
                                         {{ $t('Linked with') }}:
                                         <div class="xsDark mx-2">
-                                            {{selectedMoneySource?.name}}
+                                            {{ selectedMoneySource?.name }}
                                         </div>
                                         {{ $t('as') }}
                                         <div v-if="linkedType.type === 'EARNING'" class="xsDark mx-2">
@@ -249,7 +276,7 @@
                             <div class="flex xsDark" v-else>
                                 {{ $t('Linked with') }}:
                                 <div class="xsDark mx-2">
-                                    {{selectedMoneySource.name}}
+                                    {{ selectedMoneySource.name }}
                                 </div>
                                 {{ $t('as') }}
                                 <div v-if="linkedType.type === 'EARNING'" class="xsDark mx-2">
@@ -261,10 +288,11 @@
                             </div>
                         </div>
                         <div class="flex justify-center">
-                            <AddButton :disabled="cell.column.is_locked || selectedMoneySource === null"
-                                       class="mt-8 py-5 px-24" :text="$t('Save')"
-                                       @click="updateMoneySourceLink()"
-                           />
+                            <FormButton
+                                :text="$t('Save')"
+                                @click="updateMoneySourceLink()"
+                                :disabled="cell.column.is_locked || selectedMoneySource === null"
+                            />
                         </div>
                     </div>
                 </div>
@@ -293,7 +321,6 @@ import {
 } from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {CheckIcon, ChevronDownIcon, PlusCircleIcon, XIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
@@ -302,17 +329,18 @@ import Permissions from "@/mixins/Permissions.vue";
 import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'CellDetailComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         ConfirmDeleteModal,
         ConfirmationComponent,
         ConfirmationModal,
         NewUserToolTip,
         UserTooltip,
-        AddButton,
         ListboxOptions,
         ListboxOption,
         ListboxButton,
@@ -448,12 +476,12 @@ export default {
                 minute: '2-digit'
             });
         },
-        closeConfirmCalculationModal(){
+        closeConfirmCalculationModal() {
             this.showConfirmCalculationModal = false;
             this.closeModal(true);
         },
         openModal() {
-            if(this.cell.calculations.length === 0){
+            if (this.cell.calculations.length === 0) {
                 this.$inertia.post(
                     route('project.budget.cell-calculation.add', this.cell.id),
                     {},
@@ -463,9 +491,9 @@ export default {
                 )
             }
         },
-        selectMoneySource(moneySource){
-          this.selectedMoneySource = moneySource;
-          this.moneySource_query = '';
+        selectMoneySource(moneySource) {
+            this.selectedMoneySource = moneySource;
+            this.moneySource_query = '';
         },
         changeTab(selectedTab) {
             this.isCalculateTab = false;
@@ -531,7 +559,7 @@ export default {
                 this.saveAllCalculations()
             }
         },
-        saveAllCalculations(){
+        saveAllCalculations() {
             this.$inertia.patch(
                 route('project.budget.cell-calculation.update'),
                 {
@@ -560,11 +588,11 @@ export default {
             );
         },
         addCommentToCell() {
-            if(!this.commentForm.description){
+            if (!this.commentForm.description) {
                 return;
             }
             this.commentForm.post(
-                route('project.budget.cell.comment.store', { columnCell: this.cell.id }),
+                route('project.budget.cell.comment.store', {columnCell: this.cell.id}),
                 {
                     preserveScroll: true
                 }

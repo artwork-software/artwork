@@ -116,10 +116,7 @@
 
                         <div class="pt-5">
                             <div class="mt-2 items-center">
-                                <AddButton v-if="!showSuccess" @click="updateProfileInformation()"
-                                    class="mt-8 px-10 py-3"
-                                    :text="$t('Save profile changes')" mode="modal"
-                                />
+                                <FormButton v-if="!showSuccess" @click="updateProfileInformation()" :text="$t('Save profile changes')" />
                                 <button v-else type="submit"
                                     class="items-center py-1 mt-5 rounded-full px-28 border bg-success"
                                 >
@@ -208,11 +205,7 @@
                             {{ $t('Saved.')}}
                         </jet-action-message>
                     </div>
-                    <AddButton @click="updatePassword"
-                        class="px-10 py-3 mt-4"
-                        :text="$t('Change password')"
-                        mode="modal"
-                    />
+                    <BaseButton @click="updatePassword" :text="$t('Change password')" />
                 </div>
             </div>
             <div class="flex ml-20 mt-12">
@@ -242,16 +235,12 @@
                             </div>
                         </div>
                         <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
-                            <AddButton
-                                class="my-auto px-3 py-3"
+                            <FormButton
                                 :text="$t('Select file')"
-                                mode="modal"
                                 @click.prevent="selectNewPhoto"/>
-                            <AddButton
-                                class=" ml-3 my-auto px-3 py-3"
+                            <FormButton
                                 @click.prevent="deletePhoto"
                                 :text="$t('Delete current profile picture')"
-                                mode="modal"
                                 v-if="user.profile_photo_path" />
                         </div>
                     </div>
@@ -260,10 +249,8 @@
 
                     <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
                     <div class="mt-6">
-                        <AddButton
-                            class="px-8 py-3"
+                        <FormButton
                             :text="$t('Save new profile picture')"
-                            mode="modal"
                             @click="validateTypeAndChange" />
                     </div>
                 </div>
@@ -326,14 +313,16 @@ import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import {Inertia} from "@inertiajs/inertia";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
-import AddButton from "@/Layouts/Components/AddButton";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 
 export default defineComponent({
     components: {
+        BaseButton,
+        FormButton,
         TeamTooltip,
-        AddButton,
         JetActionMessage,
         JetButton,
         JetFormSection,

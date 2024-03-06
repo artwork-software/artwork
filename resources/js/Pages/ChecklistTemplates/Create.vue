@@ -81,8 +81,11 @@
                 </div>
                 <div class="pt-8">
                     <div class="mt-2 items-center">
-                        <AddButton v-if="!showSuccess" @click="createChecklistTemplate"
-                                   :text="$t('Create template')" mode="modal"/>
+                        <FormButton
+                            v-if="!showSuccess"
+                            @click="createChecklistTemplate"
+                            :text="$t('Create template')"
+                            />
                         <button v-else type="submit"
                                 class="items-center rounded-full px-16 py-1 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                         >
@@ -119,12 +122,10 @@
                                                 v-model="newTaskDescription" rows="3"
                                                 class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full font-semibold border "/>
                         </div>
-                        <AddButton :class="this.newTaskName === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none'"
-                                   class="mt-6 mx-auto items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
+                        <FormButton
                                    @click="addTaskToTemplate"
                                    :disabled="this.newTaskName === ''"
-                                   :text="$t('Add')" mode="modal"/>
+                                   :text="$t('Add')"/>
                     </div>
 
                 </div>
@@ -195,10 +196,9 @@
                             </button>
                         </span>
                     </div>
-                    <AddButton
-                        class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                    <FormButton
                         @click="closeChangeUsersModal"
-                        :text="$t('Assign')" mode="modal" />
+                        :text="$t('Assign')" />
                 </div>
             </template>
         </jet-dialog-modal>
@@ -217,16 +217,17 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import draggable from "vuedraggable";
-import AddButton from "@/Layouts/Components/AddButton";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Button from "@/Jetstream/Button";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
     name: "Template Create",
     props: [],
     components: {
+        FormButton,
         Button,
         TeamIconCollection,
         AppLayout,
@@ -248,7 +249,6 @@ export default {
         ChevronDownIcon,
         PlusSmIcon,
         draggable,
-        AddButton
     },
     data() {
         return {

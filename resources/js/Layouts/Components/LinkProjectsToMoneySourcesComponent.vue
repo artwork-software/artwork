@@ -63,9 +63,9 @@
                             </div>
                             </span>
                         <div class="flex justify-center">
-                            <AddButton @click="updateLinkedProjects()"
-                                       class="mt-8 py-5 px-24 flex" :text="$t('Save')"
-                                       mode="modal"></AddButton>
+                            <FormButton @click="updateLinkedProjects()"
+                                        :text="$t('Save')"
+                                       ></FormButton>
                         </div>
                     </div>
                 </div>
@@ -76,24 +76,18 @@
 </template>
 
 <script>
-
-import {Listbox, ListboxButton, ListboxOption, ListboxOptions, RadioGroup, RadioGroupOption} from "@headlessui/vue";
-
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {CheckIcon, ChevronDownIcon, PlusCircleIcon, XIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton.vue";
-import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
-import {useForm} from "@inertiajs/inertia-vue3";
-import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 
 export default {
     name: 'LinkProjectsToMoneySourcesComponent',
     mixins: [Permissions],
     components: {
-        AddButton,
+        FormButton,
         JetDialogModal,
         XIcon,
         CheckIcon,

@@ -78,10 +78,8 @@
 
                 </div>
                 <div class="w-full flex justify-center my-6">
-                    <AddButton
+                    <FormButton
                         :text="$t('Save')"
-                        mode="modal"
-                        class="px-6 py-3"
                         @click="updateData"
                     />
                 </div>
@@ -94,7 +92,6 @@
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, ChevronDownIcon, CheckIcon} from "@heroicons/vue/outline";
 import ProjectCollectingSocietiesMenu from "@/Layouts/Components/ProjectCollectingSocietiesMenu.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {
     Listbox,
@@ -103,6 +100,7 @@ import {
     ListboxButton
 } from "@headlessui/vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
@@ -111,10 +109,10 @@ export default {
         'show', 'project', 'collectingSocieties'
     ],
     components: {
+        FormButton,
         JetDialogModal,
         XIcon,
         ProjectCollectingSocietiesMenu,
-        AddButton,
         ChevronDownIcon,
         CheckIcon,
         Listbox,

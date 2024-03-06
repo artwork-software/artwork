@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Event;
+use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 

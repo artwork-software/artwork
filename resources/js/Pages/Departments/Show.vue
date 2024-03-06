@@ -97,9 +97,11 @@
                 </div>
                 <div class="pt-12">
                     <div class="mt-4 items-center">
-                        <AddButton v-if="!showSuccess" @click="editTeam"
-                                   class="border bg-buttonBlue px-5 hover:bg-buttonHover focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
-                                   :text="$t('Save changes')" mode="modal"/>
+                        <FormButton
+                            v-if="!showSuccess"
+                            @click="editTeam"
+                            :text="$t('Save changes')"
+                            />
                         <button v-else
                                 class="px-20 rounded-full items-center py-1 border bg-success focus:outline-none border-transparent"
                         >
@@ -237,9 +239,11 @@
                         </span>
                     </div>
                     <div class="w-full items-center text-center">
-                        <AddButton @click="editTeam"
-                                   class=" inline-flex mt-8 items-center px-12 py-3 border bg-buttonBlue hover:bg-buttonHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                                   :text="$t('Save')" mode="modal"/>
+                        <FormButton
+                            @click="editTeam"
+                            :text="$t('Save')"
+                            class="inline-flex items-center mt-8"
+                        />
                     </div>
 
                 </div>
@@ -252,7 +256,6 @@
 
 <script>
 
-import AddButton from "@/Layouts/Components/AddButton";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -299,14 +302,15 @@ import {Inertia} from "@inertiajs/inertia";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
     name: "Show",
     props: ['department'],
     components: {
+        FormButton,
         UserPopoverTooltip,
-        AddButton,
         TeamIconCollection,
         AppLayout,
         Menu,

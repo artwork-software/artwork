@@ -148,7 +148,7 @@
                         <textarea rows="4" v-model="freelancerData.note" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Note')" />
                     </div>
                 </div>
-                <AddButton class="mt-5 !ml-0" text="Änderung Speichern" :disabled="checkCanEdit" :readonly="checkCanEdit" type="secondary" @click="saveFreelancer" />
+                <FormButton class="mt-5 !ml-0" :text="$t('Save changes')" :disabled="checkCanEdit" :readonly="checkCanEdit" type="secondary" @click="saveFreelancer" />
             </div>
             <div v-if="currentTab === 3">
                 <UserTermsTab user_type="freelancer" :user_to_edit="freelancer"></UserTermsTab>
@@ -167,7 +167,6 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {useForm} from "@inertiajs/inertia-vue3";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
 import UserTermsTab from "@/Pages/Users/Tabs/UserTermsTab.vue";
@@ -175,17 +174,18 @@ import Availability from "@/Pages/Users/Components/Availability.vue";
 import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPlan.vue";
 import WorkProfileTab from "@/Pages/Components/WorkProfileTab.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: "Show",
     mixins: [Permissions],
     components: {
+        FormButton,
         SuccessModal,
         WorkProfileTab,
         UserShiftPlan,
         Availability,
         UserTermsTab,
-        AddButton,
         PencilAltIcon,
         DotsVerticalIcon,
         TrashIcon,

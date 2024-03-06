@@ -10,7 +10,7 @@
             <div class="mt-4 max-w-2xl">
                 <div class="flex">
                     <h2 class="headline2 my-2">{{$t('Event Types')}}</h2>
-                    <AddButton @click="openAddEventTypeModal" :text="$t('New Event Type')" mode="page"/>
+                    <AddButtonBig @click="openAddEventTypeModal" :text="$t('New Event Type')"/>
                     <div v-if="this.$page.props.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                         <span class="hind ml-1 my-auto">{{$t('Create new Event Types')}}</span>
@@ -179,11 +179,10 @@
                             </div>
                         </div>
                         <div class="mt-2 w-full items-center text-center">
-                            <AddButton
-                                :class="[this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
+                            <FormButton
                                 @click="addEventType"
-                                :disabled="this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === ''" :text="$t('Create event type')" mode="modal" />
+                                :disabled="this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === ''"
+                                :text="$t('Create event type')" />
                         </div>
                     </div>
                 </div>
@@ -262,10 +261,11 @@
                             </div>
                         </div>
                         <div class="mt-8 w-full justify-center flex">
-                            <AddButton
-                                class="inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
+                            <FormButton
                                 @click="editEventType"
-                                :disabled="this.editEventTypeForm.name === '' || this.editEventTypeForm.svg_name === ''" :text="$t('Save')" mode="modal" />
+                                :disabled="this.editEventTypeForm.name === '' || this.editEventTypeForm.svg_name === ''"
+                                :text="$t('Save')"
+                            />
                         </div>
                     </div>
                 </div>
@@ -324,7 +324,6 @@
 
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import AddButton from "@/Layouts/Components/AddButton";
 import {DotsVerticalIcon, TrashIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline"
 import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
@@ -332,6 +331,8 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import Permissions from "@/mixins/Permissions.vue";
+import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
@@ -372,7 +373,8 @@ export default {
         }
     },
     components: {
-        AddButton,
+        FormButton,
+        AddButtonBig,
         AppLayout,
         XCircleIcon,
         PlusSmIcon,

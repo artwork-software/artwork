@@ -2,8 +2,8 @@
 
 namespace Artwork\Modules\Event\Repositories;
 
-use App\Models\Event;
 use Artwork\Core\Database\Repository\BaseRepository;
+use Artwork\Modules\Event\Models\Event;
 use Illuminate\Database\Eloquent\Collection;
 
 class EventRepository extends BaseRepository

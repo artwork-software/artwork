@@ -55,7 +55,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            {{$t('In the wastebasket')}}
+                                            {{$t('In the recycle bin')}}
                                         </a>
                                     </MenuItem>
                                 </div>
@@ -276,14 +276,11 @@
                             </div>
                         </div>
 
-                        <div class="flex justify-center">
-                            <AddButton @click="editRoom"
-                                       :text="$t(Save)"
-                                       mode="modal"
-                                       :class="[editRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                       :disabled="editRoomForm.name.length === 0"
-                                       class="mt-8 px-24 py-3"/>
+                        <div class="flex justify-center pt-8">
+                            <FormButton
+                                :disabled="editRoomForm.name.length === 0"
+                                @click="editRoom"
+                            />
                         </div>
 
                     </div>
@@ -480,11 +477,11 @@
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="declineRequest">
-                            {{$t('Cancellations')}}
-                        </button>
+                        <FormButton
+                            @click="declineRequest"
+                            :text="$t('Cancellations')"
+                            class="inline-flex items-center"
+                        />
                         <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
                                   class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
@@ -516,7 +513,7 @@
     <!-- Delete Room Modal -->
     <ConfirmationComponent v-if="showSoftDeleteRoomModal"
                            :confirm="$t('Delete room')"
-                           :titel="$t('Room in the wastebasket')"
+                           :titel="$t('Room in the recycle bin')"
                            :description="roomDeleteDescriptionText"
                            @closed="afterSoftDeleteRoomConfirm"/>
 </template>
@@ -564,7 +561,6 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
-import AddButton from "@/Layouts/Components/AddButton";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
@@ -575,6 +571,7 @@ import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 
 export default {
@@ -606,6 +603,7 @@ export default {
         'user_filters'
     ],
     components: {
+        FormButton,
         SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,
@@ -647,7 +645,6 @@ export default {
         ListboxOption,
         ListboxOptions,
         CalendarComponent,
-        AddButton,
         ChevronRightIcon,
         RoomHistoryComponent,
         SingleRoomCalendarComponent
@@ -955,7 +952,7 @@ export default {
         softDeleteRoom() {
             this.$inertia.delete(`/rooms/${this.roomToSoftDelete.id}`);
             this.closeSoftDeleteRoomModal();
-            this.successHeading = this.$t('Room in the wastebasket')
+            this.successHeading = this.$t('Room in the recycle bin')
             this.successDescription = this.$t('The room has been successfully moved to the trash.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000);

@@ -136,7 +136,7 @@
                     </div>
                 </div>
 
-                <AddButton class="mt-5 !ml-0" :text="$t('Save change')" type="secondary" @click="saveProvider" />
+                <FormButton class="mt-5 !ml-0" :text="$t('Save change')" @click="saveProvider" />
 
 
                 <div class="mt-10 mb-10">
@@ -190,7 +190,6 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import {DotsVerticalIcon, PencilAltIcon, PlusCircleIcon, TrashIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {useForm} from "@inertiajs/inertia-vue3";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
 import SingleContact from "@/Pages/ServiceProvider/Components/SingleContact.vue";
@@ -199,18 +198,19 @@ import UserShiftPlan from "@/Layouts/Components/ShiftPlanComponents/UserShiftPla
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import WorkProfileTab from "@/Pages/Components/WorkProfileTab.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     name: "Show",
     mixins: [Permissions],
     components: {
+        FormButton,
         SuccessModal,
         WorkProfileTab,
         BaseSidenav,
         UserShiftPlan,
         UserTermsTab,
         SingleContact,
-        AddButton,
         PencilAltIcon,
         DotsVerticalIcon,
         TrashIcon,

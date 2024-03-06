@@ -26,15 +26,42 @@ class TimelineService
         return $timeline;
     }
 
-    public function delete(Timeline $timeline): void
+    public function delete(Timeline $timeline): bool
     {
-        $this->timelineRepository->delete($timeline);
+        return $this->timelineRepository->delete($timeline);
     }
 
     public function deleteTimelines(Collection|array $timelines): void
     {
+        /** @var Timeline $timeline */
         foreach ($timelines as $timeline) {
             $this->delete($timeline);
         }
+    }
+
+    public function restoreTimelines(Collection|array $timelines): void
+    {
+        /** @var Timeline $timeline */
+        foreach ($timelines as $timeline) {
+            $this->restore($timeline);
+        }
+    }
+
+    public function forceDelete(Timeline $timeline): bool
+    {
+        return $this->timelineRepository->forceDelete($timeline);
+    }
+
+    public function forceDeleteTimelines(Collection|array $timelines): void
+    {
+        /** @var Timeline $timeline */
+        foreach ($timelines as $timeline) {
+            $this->forceDelete($timeline);
+        }
+    }
+
+    public function restore(Timeline $timeline): void
+    {
+        $this->timelineRepository->restore($timeline);
     }
 }

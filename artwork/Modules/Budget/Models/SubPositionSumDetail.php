@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -21,13 +22,14 @@ class SubPositionSumDetail extends Model
 {
     use HasFactory;
     use BelongsToSubPosition;
+    use SoftDeletes;
+
+    protected $table = 'subposition_sum_details';
 
     protected $fillable = [
         'sub_position_id',
         'column_id'
     ];
-
-    protected $table = 'subposition_sum_details';
 
     public function comments(): MorphMany
     {

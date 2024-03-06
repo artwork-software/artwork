@@ -2,7 +2,7 @@
     <div class="max-w-screen-xl">
         <div class="flex-wrap max-w-5xl">
             <div class="flex flex-wrap mx-10 ml-14">
-                <h2 class="font-black text-primary font-lexend text-3xl w-full">{{  $t('Wastebasket') }}</h2>
+                <h2 class="font-black text-primary font-lexend text-3xl w-full">{{  $t('Recycle bin') }}</h2>
                 <p class="text-secondary tracking-tight leading-6 subpixel-antialiased mt-5">{{
                          $t('You can restore objects from your recycle bin or delete them permanently. Items are automatically deleted permanently after 30 days.')
                     }}</p>

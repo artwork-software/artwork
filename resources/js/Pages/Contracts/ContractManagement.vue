@@ -63,7 +63,10 @@
                                         </BaseFilter>
                                     </div>
                                     <div>
-                                        <AddButton @click="openContractUploadModal" :text="$t('New')" mode="page"/>
+                                        <AddButtonBig
+                                            :text="$t('New')"
+                                            @click="openContractUploadModal"
+                                        />
                                     </div>
 
                                 </div>
@@ -126,23 +129,25 @@ import ContractFilter from "@/Layouts/Components/ContractFilter";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
 import Permissions from "@/mixins/Permissions.vue";
 import ContractUploadModal from "@/Layouts/Components/ContractUploadModal.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import ContractDeleteModal from "@/Layouts/Components/ContractDeleteModal.vue";
 import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import {XIcon} from "@heroicons/vue/outline";
 import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 
 export default {
     mixins: [Permissions],
     name: "ContractManagement",
     components: {
+        AddButtonBig,
+        FormButton,
         BaseFilterCheckboxList, XIcon, BaseFilterDisclosure,
         BaseFilter,
         ContractEditModal,
         ContractDeleteModal,
-        AddButton,
         ContractUploadModal,
         BaseFilterTag,
         ContractFilter,

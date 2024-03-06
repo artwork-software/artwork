@@ -21,7 +21,7 @@ class HistoryServiceTest extends TestCase
         $task = Task::factory()->create();
 
         Config::set('history.task.deleted', 'Some deletion Text with {swap}');
-        $task->delete();
+        $task->forceDelete();
 
         $history = (new HistoryService())->modelUpdated($task, $project, ['{swap}' => 'Swappy']);
 

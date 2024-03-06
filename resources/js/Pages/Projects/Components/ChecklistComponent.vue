@@ -1,12 +1,12 @@
 <template>
     <div class="col-span-2 ml-14 pt-4 pr-14">
-        <div class="flex w-full items-center mb-8">
+        <div class="flex w-full items-center mb-8 gap-x-4">
             <h2 class="text-xl leading-6 font-bold font-lexend text-primary">
                 {{ $t('Checklists') }}
             </h2>
             <div class="flex items-center"
                  v-if="$role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                <AddButton @click="openAddChecklistModal" :text="$t('New checklist')" mode="page"/>
+                <AddButtonSmall @click="openAddChecklistModal" :text="$t('New checklist')" />
                 <div v-if="this.$page.props.show_hints" class="flex ml-2">
                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
                     <span class="hind ml-1">
@@ -148,9 +148,8 @@
                                 <div class="flex"
                                      v-if="this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin')">
                                     <div>
-                                        <AddButton @click="openAddTaskModal(checklist)"
+                                        <AddButtonBig @click="openAddTaskModal(checklist)"
                                                    :text="$t('New task')"
-                                                   mode="page"
                                         />
                                     </div>
                                     <div v-if="this.$page.props.show_hints" class="flex">
@@ -369,9 +368,9 @@
                             <div class="flex w-full mt-6"
                                  v-if="this.opened_checklists.includes(checklist.id)">
                                 <div class="">
-                                    <AddButton @click="openAddTaskModal(checklist)"
+                                    <AddButtonBig @click="openAddTaskModal(checklist)"
                                                :text="$t('New task')"
-                                               mode="page"/>
+                                               />
                                 </div>
                                 <div v-if="this.$page.props.show_hints" class="flex">
                                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -590,13 +589,11 @@
                         />
                     </div>
                     <div class="w-full items-center text-center">
-                        <AddButton
-                            :class="[this.taskForm.name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-lg tracking-wider shadow-sm text-secondaryHover"
+                        <FormButton
                             @click="addTask"
+                            class="mt-4"
                             :disabled="this.taskForm.name === ''"
                             :text="$t('Add')"
-                            mode="modal"
                         />
                     </div>
                 </div>
@@ -691,7 +688,7 @@
                                   class="placeholder-secondary resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full font-semibold border "/>
                     </div>
                     <div class="flex justify-center">
-                        <AddButton :text="$t('Save')"
+                        <FormButton :text="$t('Save')"
                                    @click="editTask"
                                    :disabled="taskToEditForm.name === ''"
                         />
@@ -773,13 +770,11 @@
                             </span>
                         </div>
                     </div>
-                    <div class="w-full items-center text-center">
-                        <AddButton :class="[editChecklistForm.name.length === 0 ? 'bg-secondary': 'focus:outline-none']"
-                                   class="mt-4 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="editChecklist"
-                                   :disabled="editChecklistForm.name.length === 0"
-                                   :text="$t('Save')"
-                                   mode="modal"
+                    <div class="w-full items-center text-center mt-4">
+                        <FormButton
+                            :disabled="editChecklistForm.name.length === 0"
+                            @click="editChecklist"
+                            :text="$t('Save')"
                         />
                     </div>
                 </div>
@@ -891,16 +886,11 @@
                         </div>
                     </div>
                     <div class="w-full items-center text-center">
-                        <AddButton :class="[
-                                        checklistForm.name.length === 0 && !selectedTemplate.id ?
-                                            'bg-secondary':
-                                            'bg-buttonBlue hover:bg-buttonHover focus:outline-none'
-                                   ]"
-                                   class="mt-4 items-center px-20 py-3 border border-transparent text-base font-bold shadow-sm text-secondaryHover"
+                        <FormButton
                                    @click="addChecklist"
                                    :disabled="checklistForm.name.length === 0 && !selectedTemplate.id"
                                    :text="$t('Create')"
-                                   mode="modal"/>
+                                   />
                     </div>
                 </div>
             </div>
@@ -910,7 +900,6 @@
 
 <script>
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import Checkbox from "@/Jetstream/Checkbox.vue";
@@ -961,6 +950,9 @@ import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserM
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 
 export default {
     mixins: [Permissions],
@@ -972,11 +964,13 @@ export default {
         'projectManagerIds'
     ],
     components: {
+        AddButtonBig,
+        FormButton,
+        AddButtonSmall,
         UserPopoverTooltip,
         NewUserToolTip,
         AddChecklistUserModal,
         TagComponent,
-        AddButton,
         TeamTooltip,
         CategoryIconCollection,
         Checkbox,

@@ -109,11 +109,8 @@
                 </div>
             </div>
             <div class="justify-center flex w-full my-6">
-                <AddButton :text="$t('Save')"
-                           mode="modal"
-                           class="px-6 py-3"
-                           :disabled="name.length < 1"
-                           @click="updateProjectData"/>
+                <FormButton :text="$t('Save')" :disabled="name.length < 1"
+                            @click="updateProjectData"/>
             </div>
         </template>
     </jet-dialog-modal>
@@ -122,7 +119,6 @@
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal";
 import JetInputError from '@/Jetstream/InputError.vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import {
     DownloadIcon,
     XIcon,
@@ -138,6 +134,7 @@ import {
 import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
@@ -150,6 +147,7 @@ export default {
         states: Array
     },
     components: {
+        FormButton,
         Input,
         ListboxOption,
         ListboxOptions,
@@ -158,7 +156,6 @@ export default {
         BaseFilterTag,
         JetDialogModal,
         JetInputError,
-        AddButton,
         XIcon,
         DownloadIcon,
         ChevronDownIcon,

@@ -12,8 +12,8 @@ class SumCommentService
     ) {
     }
 
-    public function delete(SumComment $sumComment): void
+    public function forceDelete(SumComment $sumComment): void
     {
-        $this->sumCommentRepository->delete($sumComment);
+        $this->sumCommentRepository->forceDelete($sumComment);
     }
 }

@@ -6,7 +6,7 @@
              class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-indigo-500/50'">
             <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit">
-                <a v-if="event.projectId" type="button" :href="getEditHref(event.projectId)"
+                <a v-if="event.projectId && !project" type="button" :href="getEditHref(event.projectId)"
                    class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <img src="/Svgs/IconSvgs/icon_connected.svg" class="h-4 w-4"/>
                 </a>
@@ -440,7 +440,6 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmEventRequestCompo
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
@@ -452,7 +451,6 @@ export default {
     components: {
         VueMathjax,
         DeclineEventModal,
-        AddButton,
         EventComponent,
         ConfirmDeleteModal,
         ConfirmationComponent,

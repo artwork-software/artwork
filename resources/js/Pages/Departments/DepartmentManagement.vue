@@ -6,7 +6,7 @@
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
                             <h2 class="headline1 flex">Alle Teams</h2>
-                            <AddButton class="mt-0" @click="openAddTeamModal" :text="$t('Create Team')" mode="page"/>
+                            <AddButtonBig class="mt-0" @click="openAddTeamModal" :text="$t('Create Team')"/>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 <span
@@ -366,11 +366,9 @@
                             </span>
                         </div>
                         <div class="w-full items-center text-center">
-                            <AddButton
-                                :class="[this.form.name === '' || this.form.svg_name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                class="mt-8 inline-flex items-center px-10 py-3 border focus:outline-none border-transparent text-base font-bold text-lg tracking-wider shadow-sm text-secondaryHover"
+                            <FormButton
                                 @click="addTeam"
-                                :disabled="this.form.name === '' || this.form.svg_name === ''" mode="modal"
+                                :disabled="this.form.name === '' || this.form.svg_name === ''"
                                 :text="$t('Create Team')"/>
                         </div>
                     </div>
@@ -454,7 +452,6 @@
 <script>
 
 import {defineComponent} from 'vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
     DotsVerticalIcon,
@@ -496,6 +493,8 @@ import Permissions from "@/mixins/Permissions.vue";
 import UserHeader from "@/Pages/Users/UserHeader.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -531,10 +530,11 @@ const iconMenuItems = [
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        FormButton,
+        AddButtonBig,
         SuccessModal,
         UserPopoverTooltip,
         UserHeader,
-        AddButton,
         TeamIconCollection,
         UserTooltip,
         SvgCollection,

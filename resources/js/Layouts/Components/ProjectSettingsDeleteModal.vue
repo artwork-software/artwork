@@ -13,7 +13,7 @@
                     {{ description }}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <AddButton class="px-20 py-4" @click="$emit('delete')" :text="$t('Delete')" mode="modal"/>
+                    <FormButton @click="$emit('delete')" :text="$t('Delete')"/>
                     <div class="flex my-auto">
                             <span @click="$emit('closeModal')"
                                   class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
@@ -27,8 +27,8 @@
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from "@heroicons/vue/outline"
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 export default {
     mixins: [Permissions],
     name: "ProjectSettingsDeleteModal",
@@ -38,7 +38,7 @@ export default {
         description: String
     },
     components: {
-        AddButton,
+        FormButton,
         JetDialogModal,
         XIcon
     }

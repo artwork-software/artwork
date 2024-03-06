@@ -12,8 +12,8 @@ class RowCommentService
     ) {
     }
 
-    public function delete(RowComment $rowComment): void
+    public function forceDelete(RowComment $rowComment): void
     {
-        $this->rowCommentRepository->delete($rowComment);
+        $this->rowCommentRepository->forceDelete($rowComment);
     }
 }

@@ -59,7 +59,7 @@
                                 <div class="py-0.5" v-for="event in room[day.day].events.data">
                                     <SingleCalendarEvent
                                         class="relative"
-                                        :project="false"
+                                        :project="project ? project : false"
                                         :multiEdit="multiEdit"
                                         :zoom-factor="zoomFactor"
                                         :width="zoomFactor * 204"
@@ -105,9 +105,9 @@
 
         <div v-show="multiEdit"
              class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
-            <AddButton mode="modal" class="bg-primary text-white resize-none" :text="$t('Move events')"
+            <FormButton :text="$t('Move events')"
                        @click="openMultiEditModal"/>
-            <AddButton mode="modal" @click="openDeleteSelectedEventsModal = true"
+            <FormButton @click="openDeleteSelectedEventsModal = true"
                        class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none"
                        :text="$t('Delete events')"/>
         </div>
@@ -133,23 +133,23 @@ import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomCo
 import {ExclamationIcon} from "@heroicons/vue/outline";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {Inertia} from "@inertiajs/inertia";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import CalendarEventTooltip from "@/Layouts/Components/CalendarEventTooltip.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 
 export default {
     name: "IndividualCalendarComponent",
     mixins: [Permissions],
     components: {
+        FormButton,
         Link,
         ConfirmDeleteModal,
         CalendarEventTooltip,
         MultiEditModal,
-        AddButton,
         CalendarFunctionBar,
         SingleCalendarEvent,
         IndividualCalendarFilterComponent,

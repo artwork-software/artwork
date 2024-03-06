@@ -97,7 +97,6 @@ import ToolSettingsHeader from "@/Pages/ToolSettings/ToolSettingsHeader.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import Input from "@/Jetstream/Input.vue";
 import {RefreshIcon, InformationCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
@@ -112,7 +111,6 @@ export default defineComponent({
         ConfirmationComponent,
         SvgCollection,
         Input,
-        AddButton,
         AppLayout,
         ToolSettingsHeader,
         InputComponent,

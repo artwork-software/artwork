@@ -6,6 +6,7 @@ use App\Models\MoneySource;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SumMoneySource extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'sourceable_type',

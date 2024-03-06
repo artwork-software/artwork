@@ -177,8 +177,8 @@
                                               class="border-2 placeholder-xsLight focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
                             </div>
                             <div class="flex justify-center mt-2">
-                                <AddButton mode="modal" class="text-white resize-none"
-                                           @click="editSingleSource()" text="Speichern"/>
+                                <FormButton
+                                           @click="editSingleSource()" :text="$t('Save')"/>
                             </div>
                         </div>
                     </div>
@@ -288,7 +288,7 @@
                                               class="border-2 placeholder-xsLight focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
                         </div>
                         <div class="flex justify-center mt-2">
-                            <AddButton mode="modal" class="bg-primary text-white resize-none"
+                            <FormButton
                                        @click="editGroupSource()" :text="$t('Save')"/>
                         </div>
                     </div>
@@ -322,14 +322,15 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
-import AddButton from "@/Layouts/Components/AddButton";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'EventComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         NewUserToolTip,
         Input,
         JetDialogModal,
@@ -354,7 +355,6 @@ export default {
         ConfirmationComponent,
         TagComponent,
         InputComponent,
-        AddButton,
     },
     computed: {
         tabs() {

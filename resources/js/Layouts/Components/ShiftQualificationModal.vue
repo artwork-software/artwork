@@ -85,17 +85,12 @@
                     </p>
                 </div>
                 <div class="w-full text-center mb-6">
-                    <AddButton :class="[
-                            this.shiftQualificationForm.icon === null || this.shiftQualificationForm.name === null ?
-                                'bg-secondary':
-                                'bg-buttonBlue hover:bg-buttonHover focus:outline-none',
-                                'mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-secondaryHover'
-                        ]"
-                               @click="save"
-                               :disabled="this.shiftQualificationForm.icon === null || this.shiftQualificationForm.name === null"
-                               :text="this.mode === 'create' ? $t('Create') : $t('Save')"
-                               mode="modal"
-                    />
+                    <FormButton
+                        @click="save"
+                        :disabled="this.shiftQualificationForm.icon === null || this.shiftQualificationForm.name === null"
+                        :text="this.mode === 'create' ? $t('Create') : $t('Save')"
+                        class="mt-8 inline-flex items-center"
+                        />
                 </div>
             </div>
         </template>
@@ -110,7 +105,7 @@ import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import Label from "@/Jetstream/Label.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 const shiftQualificationIcons = [
     {iconName: 'user-icon'},
     {iconName: 'academic-cap-icon'},
@@ -127,7 +122,7 @@ const shiftQualificationIcons = [
 export default defineComponent({
     name: 'ShiftQualificationModal',
     components: {
-        AddButton,
+        FormButton,
         Label,
         ShiftQualificationIconCollection,
         Menu,

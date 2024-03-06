@@ -167,9 +167,11 @@
         </div>
         <div class="mt-8">
             <div class="flex">
-                <AddButton @click="editUser"
-                           class=" inline-flex items-center px-12 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                           :text="$t('Change settings')" mode="modal"/>
+                <FormButton
+                    @click="editUser"
+                    class="inline-flex items-center"
+                    :text="$t('Change settings')"
+                    />
             </div>
         </div>
         <div class="">
@@ -213,9 +215,7 @@
                     </div>
                 </div>
                 <div class="w-full items-center text-center">
-                    <AddButton class="mt-4 bg-buttonBlue hover:buttonHover focus:outline-none inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                               @click="saveNewTeams" text="Speichern" mode="modal"/>
+                    <FormButton @click="saveNewTeams" :text="$t('Save')"/>
                 </div>
             </div>
         </template>
@@ -243,26 +243,17 @@
                         </div>
                     </div>
                     <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
-                        <AddButton
-                            class="my-auto px-3 py-3"
-                            :text="$t('Select file')"
-                            mode="modal"
-                            @click.prevent="selectNewPhoto"/>
-                        <AddButton
-                            class=" ml-3 my-auto px-3 py-3"
-                            @click.prevent="deletePhoto"
-                            :text="$t('Delete current profile picture')"
-                            mode="modal"
-                            v-if="this.user_to_edit.profile_photo_url" />
+                        <BaseButton :text="$t('Select file')" @click.prevent="selectNewPhoto" />
+                        <BaseButton @click.prevent="deletePhoto"
+                                    :text="$t('Delete current profile picture')"
+                                    v-if="this.user_to_edit.profile_photo_url" />
                     </div>
                 </div>
                 <jet-input-error :message="updateProfilePictureFeedback" class="mt-2"/>
                 <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
                 <div class="mt-6">
-                    <AddButton
-                        class="px-8 py-3"
+                    <BaseButton
                         :text="$t('Save new profile picture')"
-                        mode="modal"
                         @click="validateTypeAndChange" />
                 </div>
             </div>
@@ -280,25 +271,29 @@
 
 import {CheckIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XIcon, ChevronDownIcon } from "@heroicons/vue/outline";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue';
+import SecondaryButton from "@/Jetstream/SecondaryButton.vue";
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 
 
 
 export default {
     components: {
+        BaseButton,
+        SecondaryButton,
+        FormButton,
         SuccessModal,
         CheckIcon,
         JetDialogModal, XIcon,
         PencilAltIcon,
         JetInputError,
-        AddButton,
         DotsVerticalIcon,
         TeamIconCollection,
         TrashIcon,

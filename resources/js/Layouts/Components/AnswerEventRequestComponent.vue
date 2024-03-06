@@ -16,7 +16,7 @@
                     {{ type === 'accept' ? $t('Confirm') : $t('Reject')}}?
                 </div>
                 <div class="flex justify-between mt-6">
-                    <AddButton class="px-20 py-4" @click="closeModal(true)" :text="$t('Confirm')" mode="modal"/>
+                    <FormButton @click="closeModal(true)" :text="$t('Confirm')"/>
                     <div class="flex my-auto">
                             <span @click="closeModal(false)"
                                   class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
@@ -32,17 +32,17 @@
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton";
 import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'AnswerEventRequestComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         JetDialogModal,
         XIcon,
-        AddButton,
         CheckIcon
     },
     props: ['type','request','rooms','projects','eventTypes'],

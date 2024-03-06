@@ -200,9 +200,9 @@
                                         </MenuItems>
                                     </transition>
                                 </Menu>
-                                <div class="flex"
+                                <div class="flex ml-3"
                                      v-if="$can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
-                                    <AddButton @click="openAddMoneySourceModal" :text="$t('New')" mode="page"/>
+                                    <AddButtonSmall @click="openAddMoneySourceModal" :text="$t('New')"/>
                                 </div>
                             </div>
                         </div>
@@ -380,9 +380,8 @@
                     <input class="w-1/2" type="date" v-model="timeSpanFilterEnd"/>
                 </div>
                 <div class="w-full flex justify-center my-3">
-                    <AddButton :disabled="timeSpanFilterStart === null || timeSpanFilterEnd === null"
+                    <FormButton :disabled="timeSpanFilterStart === null || timeSpanFilterEnd === null"
                                :text="$t('Filtering')"
-                               mode="modal"
                                @click="activateTimeSpanFilter"/>
                 </div>
             </div>
@@ -421,7 +420,6 @@ import {
     ArrowNarrowDownIcon,
     ArrowNarrowUpIcon
 } from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import CreateMoneySourceComponent from "@/Layouts/Components/CreateMoneySourceComponent";
@@ -436,11 +434,15 @@ import Label from "@/Jetstream/Label.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        FormButton,
+        AddButtonSmall,
         NewUserToolTip,
         MoneySourceHistoryComponent,
         JetDialogModal,
@@ -462,7 +464,6 @@ export default defineComponent({
         MenuItem,
         MenuItems,
         ChevronDownIcon,
-        AddButton,
         SvgCollection,
         SearchIcon,
         InputComponent,

@@ -18,7 +18,6 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Builder;
 
 class Sage100Service
 {
@@ -31,6 +30,11 @@ class Sage100Service
     ) {
     }
 
+    private function getData(int|null $count)
+    {
+        return app(Sage100::class)->getData($this->buildQuery($count));
+    }
+
     //@todo: fix phpcs error - fix complexity and nesting level
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function importDataToBudget(int|null $count): int
@@ -38,103 +42,44 @@ class Sage100Service
         //import php timeout 10 minutes
         ini_set('max_execution_time', '600');
 
-        $data = $this->getData($count);
-        $foundedProjects = [];
         $addedData = [];
 
-        foreach ($data as $item) {
+        foreach (($data = $this->getData($count)) as $item) {
             //if sageAssignedData is existing the dataset will not be imported again
             if ($this->sageAssignedDataService->findBySageId($item['ID']) instanceof SageAssignedData) {
                 continue;
             }
             $projects = $this->projectService->getProjectsByCostCenter($item['KstTraeger']);
+            /** @var Project $project */
             foreach ($projects as $project) {
-                if (!in_array($project->id, $foundedProjects)) {
-                    // check if project has a sage column in first table and create if not
-                    $check = $project->table()->first()->columns()->where('type', 'sage')->exists();
-                    if (!$check) {
-                        // create column
-                        $sageColumn = $this->columnService->createColumnInTable(
-                            table:      $project->table()->first(),
-                            name:       'Sage Abgleich',
-                            subName:    '-',
-                            type:       'sage'
-                        );
-
-                        $this->columnService->setColumnSubName(
-                            table_id:   $project->table()->first()->id
-                        );
-
-                        $subPositionRows = SubPositionRow::query()->whereRelation(
-                            'subPosition.mainPosition',
-                            'table_id',
-                            '=',
-                            $project->table->id
-                        )->get();
-
-                        foreach ($subPositionRows as $subPositionRow) {
-                            $subPositionRow->cells()->create([
-                                'column_id' => $sageColumn->id,
-                                'sub_position_row_id' => $subPositionRow->id,
-                                'value' => 0,
-                                'verified_value' => null,
-                                'linked_money_source_id' => null,
-                                'commented' => $subPositionRow->commented
-                            ]);
-                        }
-
-                        $subPositions = SubPosition::whereHas(
-                            'mainPosition',
-                            function (Builder $query) use ($project): void {
-                                $query->where('table_id', $project->table()->first()->id);
-                            }
-                        )->get();
-
-                        $sageColumn->subPositionSumDetails()->createMany(
-                            $subPositions->map(fn($subPosition) => [
-                                'sub_position_id' => $subPosition->id
-                            ])->all()
-                        );
-
-                        $mainPositions = MainPosition::where('table_id', $project->table()->first()->id)->get();
-
-                        $sageColumn->mainPositionSumDetails()->createMany(
-                            $mainPositions->map(fn($mainPosition) => [
-                                'main_position_id' => $mainPosition->id
-                            ])->all()
-                        );
-
-                        $sageColumn->budgetSumDetails()->create([
-                            'type' => 'COST'
-                        ]);
-
-                        $sageColumn->budgetSumDetails()->create([
-                            'type' => 'EARNING'
-                        ]);
-                    }
+                    /** @var Column|null $sageColumn */
+                    $sageColumn = $project->table->columns->where('type', 'sage')->first();
+                if (!$sageColumn instanceof Column) {
+                    $sageColumn = $this->createSageColumnForTable($project->table);
                 }
-                $foundedKTO = ColumnCell::where('value', $item['SaKto'])->get();
 
-                if ($foundedKTO->count() > 1) {
-                    foreach ($foundedKTO as $kto) {
-                        $foundedKST = ColumnCell::where('value', $item['KstStelle'])
-                            ->where('sub_position_row_id', $kto->sub_position_row_id)->get();
-                        if ($foundedKST->count() > 1) {
-                            foreach ($foundedKST as $kst) {
+                $foundKTOs = ColumnCell::where('value', $item['SaKto'])->get();
+                if ($foundKTOs->count() > 1) {
+                    foreach ($foundKTOs as $foundKTO) {
+                        $foundKSTs = ColumnCell::where('value', $item['KstStelle'])
+                            ->where('sub_position_row_id', $foundKTO->sub_position_row_id)->get();
+                        if ($foundKSTs->count() > 1) {
+                            foreach ($foundKSTs as $kst) {
                                 SageNotAssignedData::query()
                                     ->where('sage_id', $item['ID'])
                                     ->firstOr(function () use ($item, $project): void {
-                                        $this->sageNotAssignedDataService->createFromSageApiData($item, $project->id);
+                                        $this->sageNotAssignedDataService->createFromSageApiData(
+                                            $item,
+                                            $project->id
+                                        );
                                     });
                                 $addedData[] = $item;
                             }
                         } else {
-                            if ($kto->sub_position_row_id === $foundedKST->first()->sub_position_row_id) {
-                                $sageColumn = $project->table()->first()->columns()->where('type', 'sage')->first();
+                            if ($foundKTO->sub_position_row_id === $foundKSTs->first()->sub_position_row_id) {
                                 $sageColumnCell = $sageColumn->cells()
                                     ->where('column_id', $sageColumn->id)
-                                    ->where('sub_position_row_id', $kto->sub_position_row_id)
-                                    ->get()
+                                    ->where('sub_position_row_id', $foundKTO->sub_position_row_id)
                                     ->first();
                                 $sageColumnCell->update(['value' => $item['Buchungsbetrag']]);
 
@@ -148,23 +93,24 @@ class Sage100Service
                             } else {
                                 SageNotAssignedData::where('sage_id', $item['ID'])
                                     ->firstOr(function () use ($project, $item): void {
-                                        $this->sageNotAssignedDataService->createFromSageApiData($item, $project->id);
+                                        $this->sageNotAssignedDataService->createFromSageApiData(
+                                            $item,
+                                            $project->id
+                                        );
                                     });
                                 $addedData[] = $item;
                             }
                         }
                     }
                 } else {
-                    $singleKTO = $foundedKTO->first();
-                    $foundedKST = ColumnCell::where('value', $item['KstStelle'])->first();
-                    /** @var Column $sageColumn */
-                    $sageColumn = $project->table()->first()->columns()->where('type', 'sage')->first();
+                    $foundKTO = $foundKTOs->first();
+                    $foundKST = ColumnCell::where('value', $item['KstStelle'])->first();
 
-                    if ($singleKTO && $foundedKST) {
-                        if ($singleKTO->sub_position_row_id === $foundedKST->sub_position_row_id) {
+                    if ($foundKTO && $foundKST) {
+                        if ($foundKTO->sub_position_row_id === $foundKST->sub_position_row_id) {
                             $sageColumnCell = $sageColumn->cells()
                                 ->where('column_id', $sageColumn->id)
-                                ->where('sub_position_row_id', $singleKTO->sub_position_row_id)
+                                ->where('sub_position_row_id', $foundKTO->sub_position_row_id)
                                 ->first();
                             $sageColumnCell->update(['value' => $item['Buchungsbetrag']]);
 
@@ -173,15 +119,13 @@ class Sage100Service
                                 $item,
                                 $project->id
                             );
-
-                            $addedData[] = $item;
                         } else {
                             SageNotAssignedData::where('sage_id', $item['ID'])
                                 ->firstOr(function () use ($project, $item): void {
                                     $this->sageNotAssignedDataService->createFromSageApiData($item, $project->id);
                                 });
-                            $addedData[] = $item;
                         }
+                        $addedData[] = $item;
                     } else {
                         SageNotAssignedData::where('sage_id', $item['ID'])
                             ->firstOr(function () use ($project, $item): void {
@@ -191,7 +135,6 @@ class Sage100Service
                     }
                 }
 
-                $foundedProjects[] = $project->id;
                 if (!in_array($item, $addedData)) {
                     SageNotAssignedData::where('sage_id', $item['ID'])
                         ->firstOr(function () use ($project, $item): void {
@@ -212,84 +155,34 @@ class Sage100Service
         }
 
         if (!empty($data)) {
-            $lastDataset = array_pop($data);
-            if (!is_null($lastDataset) && isset($lastDataset['Buchungsdatum'])) {
-                $this->sageApiSettingsService->updateBookingDate(Carbon::parse($lastDataset['Buchungsdatum']));
-            }
+            $this->updateSageApiSettingsBookingDateFromData($data);
         }
         return 0;
     }
 
+    private function updateSageApiSettingsBookingDateFromData(array $data): void
+    {
+        $lastDataset = array_pop($data);
+        if (isset($lastDataset['Buchungsdatum'])) {
+            $this->sageApiSettingsService->updateBookingDate(Carbon::parse($lastDataset['Buchungsdatum']));
+        }
+    }
+
     public function dropData($request): void
     {
+        /** @var Table $table */
         $table = Table::find($request->table_id);
         $columns = $table->columns()->whereNot('type', 'sage')->get();
+
         $subPosition = SubPosition::find($request->sub_position_id);
-        /** @var Project $project */
-        $project = $table->project()->first();
+        $project = $table->project;
         /** @var SageNotAssignedData $sageNotAssignedData */
         $sageNotAssignedData = SageNotAssignedData::find($request->sage_data_id);
-        $sageColumn = $project->table()->first()->columns()->where('type', 'sage')->first();
 
+        /** @var Column|null $sageColumn */
+        $sageColumn = $table->columns->where('type', 'sage')->first();
         if (!$sageColumn instanceof Column) {
-            $sageColumn = $this->columnService->createColumnInTable(
-                table:      $project->table,
-                name:       'Sage Abgleich',
-                subName:    '-',
-                type:       'sage'
-            );
-
-            $this->columnService->setColumnSubName(
-                table_id:   $project->table()->first()->id
-            );
-
-            $subPositionRows = SubPositionRow::query()->whereRelation(
-                'subPosition.mainPosition',
-                'table_id',
-                '=',
-                $project->table->id
-            )->get();
-
-            /** @var SubPositionRow $subPositionRow */
-            foreach ($subPositionRows as $subPositionRow) {
-                $sageColumn->cells()->create([
-                    'column_id' => $sageColumn->id,
-                    'sub_position_row_id' => $subPositionRow->id,
-                    'value' => 0,
-                    'verified_value' => null,
-                    'linked_money_source_id' => null,
-                    'commented' => $subPositionRow->commented
-                ]);
-            }
-
-            $subPositions = SubPosition::whereHas(
-                'mainPosition',
-                function (Builder $query) use ($project): void {
-                    $query->where('table_id', $project->table()->first()->id);
-                }
-            )->get();
-
-            $sageColumn->subPositionSumDetails()->createMany(
-                $subPositions->map(fn($subPosition) => [
-                    'sub_position_id' => $subPosition->id
-                ])->all()
-            );
-
-            $mainPositions = MainPosition::where('table_id', $project->table()->first()->id)->get();
-
-            $sageColumn->mainPositionSumDetails()->createMany(
-                $mainPositions->map(fn($mainPosition) => [
-                    'main_position_id' => $mainPosition->id
-                ])->all()
-            );
-
-            $sageColumn->budgetSumDetails()->create([
-                'type' => 'COST'
-            ]);
-
-            $sageColumn->budgetSumDetails()->create([
-                'type' => 'EARNING'
-            ]);
+            $sageColumn = $this->createSageColumnForTable($project->table);
         }
 
         SubPositionRow::query()
@@ -302,44 +195,45 @@ class Sage100Service
             'position' => $request->positionBefore + 1
         ]);
 
-        $firstThreeColumns = $columns->shift(3);
-        foreach ($firstThreeColumns as $column) {
-            if ($column->name === 'KTO') {
-                $subPositionRow->cells()->create([
-                    'column_id' => $column->id,
-                    'sub_position_row_id' => $subPositionRow->id,
-                    'value' => $sageNotAssignedData->sa_kto,
-                    'verified_value' => null,
-                    'linked_money_source_id' => null,
-                ]);
-            } elseif ($column->name === 'KST') {
-                $subPositionRow->cells()->create([
-                    'column_id' => $column->id,
-                    'sub_position_row_id' => $subPositionRow->id,
-                    'value' => $sageNotAssignedData->kst_stelle,
-                    'verified_value' => null,
-                    'linked_money_source_id' => null,
-                ]);
-            } elseif ($column->name === 'Beschreibung') {
-                $subPositionRow->cells()->create([
-                    'column_id' => $column->id,
-                    'sub_position_row_id' => $subPositionRow->id,
-                    'value' => $sageNotAssignedData->buchungstext,
-                    'verified_value' => null,
-                    'linked_money_source_id' => null,
-                ]);
+        $columns->each(function ($column, $index) use ($subPositionRow, $sageNotAssignedData): void {
+            switch ($index) {
+                case 0:
+                    $subPositionRow->cells()->create([
+                        'column_id' => $column->id,
+                        'sub_position_row_id' => $subPositionRow->id,
+                        'value' => $sageNotAssignedData->sa_kto,
+                        'verified_value' => null,
+                        'linked_money_source_id' => null,
+                    ]);
+                    break;
+                case 1:
+                    $subPositionRow->cells()->create([
+                        'column_id' => $column->id,
+                        'sub_position_row_id' => $subPositionRow->id,
+                        'value' => $sageNotAssignedData->kst_stelle,
+                        'verified_value' => null,
+                        'linked_money_source_id' => null,
+                    ]);
+                    break;
+                case 2:
+                    $subPositionRow->cells()->create([
+                        'column_id' => $column->id,
+                        'sub_position_row_id' => $subPositionRow->id,
+                        'value' => $sageNotAssignedData->buchungstext,
+                        'verified_value' => null,
+                        'linked_money_source_id' => null,
+                    ]);
+                    break;
+                default:
+                    $subPositionRow->cells()->create([
+                        'column_id' => $column->id,
+                        'sub_position_row_id' => $subPositionRow->id,
+                        'value' => 0,
+                        'verified_value' => null,
+                        'linked_money_source_id' => null,
+                    ]);
             }
-        }
-
-        foreach ($columns as $column) {
-            $subPositionRow->cells()->create([
-                'column_id' => $column->id,
-                'sub_position_row_id' => $subPositionRow->id,
-                'value' => 0,
-                'verified_value' => null,
-                'linked_money_source_id' => null,
-            ]);
-        }
+        });
 
         $sageColumnCell = ColumnCell::create([
             'column_id' => $sageColumn->id,
@@ -356,11 +250,6 @@ class Sage100Service
             $sageNotAssignedData
         );
         $this->sageNotAssignedDataService->forceDelete($sageNotAssignedData);
-    }
-
-    private function getData(int|null $count)
-    {
-        return app(Sage100::class)->getData($this->buildQuery($count));
     }
 
     /**
@@ -381,5 +270,40 @@ class Sage100Service
         $query['orderBy'] = 'Buchungsdatum asc';
 
         return $query;
+    }
+
+    private function createSageColumnForTable(Table $table): Column
+    {
+        $sageColumn = $this->columnService->createColumnInTable($table, 'Sage Abgleich', '-', 'sage');
+
+        $this->columnService->setColumnSubName($table->id);
+
+        $table->mainPositions->each(function (MainPosition $mainPosition) use ($sageColumn): void {
+            $mainPosition->subPositions->each(function (SubPosition $subPosition) use ($sageColumn): void {
+                $subPosition->subPositionRows->each(function (SubPositionRow $subPositionRow) use ($sageColumn): void {
+                    $subPositionRow->cells()->create([
+                        'column_id' => $sageColumn->id,
+                        'value' => 0,
+                        'verified_value' => null,
+                        'linked_money_source_id' => null,
+                        'commented' => $subPositionRow->commented
+                    ]);
+                });
+
+                $sageColumn->subPositionSumDetails()->create(['sub_position_id' => $subPosition->id]);
+            });
+
+            $sageColumn->mainPositionSumDetails()->create(['main_position_id' => $mainPosition->id]);
+        });
+
+        $sageColumn->budgetSumDetails()->create([
+            'type' => 'COST'
+        ]);
+
+        $sageColumn->budgetSumDetails()->create([
+            'type' => 'EARNING'
+        ]);
+
+        return $sageColumn;
     }
 }

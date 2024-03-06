@@ -93,7 +93,7 @@
                                 </div>
 
                               <div class="flex justify-center">
-                                  <AddButton mode="modal" @click="createPdf()" class="!border-2 !border-buttonBlue text-white bg-buttonBlue hover:bg-buttonHover !hover:border-transparent resize-none" :text="$t('Export PDF')"/>
+                                  <FormButton @click="createPdf()" :text="$t('Export PDF')"/>
                               </div>
                             </div>
                         </DialogPanel>
@@ -107,15 +107,15 @@
 <script>
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot, Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from '@headlessui/vue'
 import {XIcon} from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import {useForm, usePage} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 export default {
     name: "PdfConfigModal",
     mixins: [Permissions],
     components: {
-        AddButton,
+        FormButton,
         Dialog,
         DialogTitle,
         TransitionChild,

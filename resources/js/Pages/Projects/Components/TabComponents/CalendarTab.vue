@@ -9,6 +9,7 @@
                     :eventTypes=this.eventTypes initial-view="day"
                     :events="this.events.events"
                     :rooms="this.rooms"
+                    :project="project"
                     :events-without-room="eventsWithoutRoom"
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"

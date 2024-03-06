@@ -13,7 +13,7 @@
                     {{ $t('Are you sure you want to delete this document from the system?')}}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <AddButton :text="$t('Delete')" mode="modal" class="px-20 py-3"
+                    <FormButton :text="$t('Delete')"
                                @click="destroy" />
                     <div class="flex my-auto">
                             <span @click="closeModal"
@@ -29,16 +29,16 @@
 
 <script>
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon} from "@heroicons/vue/outline";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
     name: "MoneySourceFileDeleteModal",
     components: {
+        FormButton,
         JetDialogModal,
-        AddButton,
         XIcon
     },
     props: {

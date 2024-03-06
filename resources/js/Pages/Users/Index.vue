@@ -335,8 +335,7 @@
                         </span>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <AddButton :text="$t('Delete')" mode="modal" class="px-20 py-3"
-                                   @click="deleteUser"/>
+                        <FormButton :text="$t('Delete')" @click="deleteUser" />
                         <div class="flex my-auto">
                             <span @click="closeDeleteUserModal()"
                                   class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
@@ -378,7 +377,6 @@ import {Inertia} from "@inertiajs/inertia";
 
 
 import {defineComponent} from 'vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import {
     Disclosure,
     DisclosureButton,
@@ -413,13 +411,14 @@ import Permissions from "@/mixins/Permissions.vue";
 import UserHeader from "@/Pages/Users/UserHeader.vue";
 import AddUsersModal from "@/Pages/Users/Components/AddUsersModal.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        FormButton,
         SuccessModal,
         AddUsersModal,
-        AddButton,
         FlowbiteModal,
         UserHeader,
         DotsVerticalIcon,

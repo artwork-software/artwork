@@ -12,8 +12,8 @@ class SumMoneySourceService
     ) {
     }
 
-    public function delete(SumMoneySource $sumMoneySource): void
+    public function forceDelete(SumMoneySource $sumMoneySource): void
     {
-        $this->sumMoneySourceRepository->delete($sumMoneySource);
+        $this->sumMoneySourceRepository->forceDelete($sumMoneySource);
     }
 }

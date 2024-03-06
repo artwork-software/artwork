@@ -16,16 +16,16 @@ class BudgetSumDetailsService
     ) {
     }
 
-    public function delete(BudgetSumDetails $budgetSumDetails): void
+    public function forceDelete(BudgetSumDetails $budgetSumDetails): void
     {
         $budgetSumDetails->comments->each(function (SumComment $sumComment): void {
-            $this->sumCommentService->delete($sumComment);
+            $this->sumCommentService->forceDelete($sumComment);
         });
 
         if (($sumMoneySource = $budgetSumDetails->sumMoneySource) instanceof SumMoneySource) {
-            $this->sumMoneySourceService->delete($sumMoneySource);
+            $this->sumMoneySourceService->forceDelete($sumMoneySource);
         }
 
-        $this->budgetSumDetailsRepository->delete($budgetSumDetails);
+        $this->budgetSumDetailsRepository->forceDelete($budgetSumDetails);
     }
 }

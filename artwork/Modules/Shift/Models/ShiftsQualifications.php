@@ -6,6 +6,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $shift_id
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class ShiftsQualifications extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'shift_id',
         'shift_qualification_id',

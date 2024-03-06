@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\ShiftPreset\Services;
 
-use App\Models\Event;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\PresetShift\Services\PresetShiftService;
 use Artwork\Modules\PresetShift\Services\PresetShiftsShiftsQualificationsService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;

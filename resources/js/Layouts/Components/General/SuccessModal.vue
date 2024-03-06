@@ -22,8 +22,7 @@
                                 <p class="text-green-500 subpixel-antialiased">{{ description }}</p>
                             </div>
                             <div class="flex justify-between mt-5 items-center pr-4">
-                                <AddButton mode="modal" @click="closeModal(true)"
-                                           class="!border-2 !border-buttonBlue text-white bg-buttonBlue hover:bg-buttonHover !hover:border-transparent resize-none"
+                                <FormButton @click="closeModal(true)"
                                            :text="$t(buttonText)"/>
                             </div>
                         </DialogPanel>
@@ -37,14 +36,14 @@
 <script>
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
 import {XIcon} from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: "SuccessModal",
     mixins: [Permissions],
     components: {
-        AddButton,
+        FormButton,
         Dialog,
         DialogTitle,
         TransitionChild,

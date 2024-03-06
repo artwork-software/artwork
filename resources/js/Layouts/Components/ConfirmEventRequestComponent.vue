@@ -14,8 +14,8 @@
                     {{$t('Would you like to submit a room request for')}} {{requestToApprove.room.name}} | {{requestToApprove.eventType.name}}, {{requestToApprove.eventName}} | {{requestToApprove.project.name}} | {{requestToApprove.start}} - {{requestToApprove.end}} {{ mode === 'warning' ? $t('Confirm') : $t('Reject')}}?
                 </div>
                 <div class="flex justify-between mt-6">
-                    <AddButton v-if="!showCheckButton" class="px-20 py-4" @click="closeModal(true)" mode="modal" :text="mode === 'warning' ? $t('Confirm') : $t('Reject')" />
-                    <AddButton v-else class="px-20 py-4" @click="closeModal(true)" mode="modal"><CheckIcon class="h-6 w-6 text-secondaryHover"/></AddButton>
+                    <FormButton v-if="!showCheckButton" @click="closeModal(true)" :text="mode === 'warning' ? $t('Confirm') : $t('Reject')" />
+                    <FormButton v-else @click="closeModal(true)"><CheckIcon class="h-6 w-6 text-secondaryHover"/></FormButton>
                     <div v-if="!showCheckButton" class="my-auto xsLight cursor-pointer"
                         @click="closeModal(false)">
                         {{ $t('No, not really')}}
@@ -31,17 +31,17 @@
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton";
 import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'ConfirmationComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         JetDialogModal,
         XIcon,
-        AddButton,
         CheckIcon
     },
     props: ['showModal','requestToApprove','mode'],

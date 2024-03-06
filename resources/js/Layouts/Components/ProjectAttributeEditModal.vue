@@ -117,9 +117,7 @@
                 </div>
             </div>
             <div class="justify-center flex w-full my-6 mt-32">
-                <AddButton :text="$t('Save')"
-                           mode="modal"
-                           class="px-6 py-3"
+                <FormButton :text="$t('Save')"
                            @click="updateProjectData"/>
             </div>
         </template>
@@ -129,12 +127,12 @@
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal";
 import JetInputError from '@/Jetstream/InputError.vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import {DownloadIcon, XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import {Menu, MenuButton, MenuItems} from "@headlessui/vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
@@ -150,6 +148,7 @@ export default {
         projectSectorIdArray: Array,
     },
     components: {
+        FormButton,
         Menu,
         MenuItems,
         MenuButton,
@@ -157,7 +156,6 @@ export default {
         BaseFilterTag,
         JetDialogModal,
         JetInputError,
-        AddButton,
         XIcon,
         DownloadIcon,
         ChevronDownIcon

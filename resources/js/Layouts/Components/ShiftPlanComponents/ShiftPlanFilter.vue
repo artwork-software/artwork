@@ -36,8 +36,6 @@
                                 <label @click="saveFilter"
                                        class="cursor-pointer text-white text-xs">{{ $t('Save')}}</label>
                             </button>
-                            <!-- <AddButton text="Speichern" class="text-sm ml-0"
-                                       @click="saveFilter"></AddButton> -->
                         </div>
                         <hr class="border-gray-500 mt-4 mb-4">
                     </div>

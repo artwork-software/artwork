@@ -113,7 +113,7 @@
                                 </div>
                             </div>
                             <div class="flex justify-center">
-                                <AddButton mode="modal" :text="$t('Import template')" @click="importTemplate"/>
+                                <FormButton :text="$t('Import template')" @click="importTemplate"/>
                             </div>
                         </DialogPanel>
                     </TransitionChild>
@@ -125,7 +125,6 @@
 
 <script>
 import {defineComponent} from 'vue'
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {
     CheckIcon,
     XIcon
@@ -152,16 +151,17 @@ import {
 } from "@headlessui/vue";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     name: "ImportShiftTemplate",
     components: {
+        FormButton,
         CheckIcon,
         ChevronDownIcon,
         EventTypeIconCollection,
         SingleTimeLine,
         Input,
-        AddButton,
         Dialog,
         DialogTitle,
         TransitionChild,

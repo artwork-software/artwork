@@ -374,7 +374,6 @@
 <script>
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import {PlusCircleIcon, XIcon} from "@heroicons/vue/outline";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from "@heroicons/vue/solid";
@@ -407,7 +406,6 @@ export default {
         ContractTaskForm,
         JetDialogModal,
         JetInputError,
-        AddButton,
         XIcon,
         Listbox,
         ListboxOption,

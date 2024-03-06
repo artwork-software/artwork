@@ -328,7 +328,6 @@ import {
 import {CheckIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link} from "@inertiajs/inertia-vue3";
-import AddButton from "@/Layouts/Components/AddButton";
 import EventComponent from "@/Layouts/Components/EventComponent";
 import CalendarFilterTagComponent from "@/Layouts/Components/CalendarFilterTagComponent";
 import Button from "@/Jetstream/Button";
@@ -384,7 +383,6 @@ export default {
         PencilAltIcon,
         TrashIcon,
         DotsVerticalIcon,
-        AddButton,
         Link,
         EventComponent,
         EventsWithoutRoomComponent,

@@ -55,9 +55,9 @@
                         />
                     </span>
                     <Disclosure as="div">
-                        <div class="flex mt-4 mb-10">
+                        <div class="flex mt-4 mb-4">
                             <DisclosureButton>
-                                <AddButton :text="$t('Assign to teams')" mode="page"/>
+                                <AddButtonSmall :text="$t('Assign to teams')"/>
                             </DisclosureButton>
                             <div v-if="this.$page.props.show_hints && form.departments.length === 0" class="flex mt-2">
                                 <SvgCollection svgName="arrowLeft" class="mt-2 ml-2"/>
@@ -147,16 +147,10 @@
                     </div>
                 </div>
                 <div class="w-full items-center text-center">
-                    <AddButton :class="[
-                            form.processing || (form.user_emails.length === 0) ?
-                                'bg-secondary':
-                                'bg-buttonBlue hover:bg-buttonHover focus:outline-none',
-                                'mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-secondaryHover'
-                        ]"
+                    <FormButton
                         @click="addUser"
                         :disabled="form.processing || (form.user_emails.length === 0)"
                         :text="$t('Invite')"
-                        mode="modal"
                     />
                 </div>
             </div>
@@ -168,7 +162,6 @@
 import Permissions from "@/mixins/Permissions.vue";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon} from "@heroicons/vue/outline";
 import {ChevronDownIcon, ChevronUpIcon, XCircleIcon, CheckIcon} from '@heroicons/vue/solid'
 import Checkbox from "@/Layouts/Components/Checkbox.vue";
@@ -176,13 +169,16 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import {Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: "InviteUsersModal",
     mixins: [Permissions],
     components: {
+        FormButton,
+        AddButtonSmall,
         JetDialogModal,
-        AddButton,
         JetInputError,
         XIcon,
         ChevronDownIcon,

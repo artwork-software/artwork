@@ -103,7 +103,7 @@
                                 <div class="flex w-full justify-between mt-6">
                                     <div class="flex">
                                         <div>
-                                            <AddButton @click="openAddAreaModal" :text="$t('Add area')" mode="page"/>
+                                            <AddButtonBig @click="openAddAreaModal" :text="$t('Add area')"/>
                                         </div>
                                         <div v-if="this.$page.props.show_hints" class="flex">
                                             <SvgCollection svgName="arrowLeft" class="ml-2 mt-4"/>
@@ -175,7 +175,7 @@
                                                                         <TrashIcon
                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                             aria-hidden="true"/>
-                                                                        {{ $t('In the wastebasket')}}
+                                                                        {{ $t('In the recycle bin')}}
                                                                     </a>
                                                                 </MenuItem>
                                                                 <MenuItem v-slot="{ active }">
@@ -195,8 +195,7 @@
                                         </div>
                                         <div class="flex w-full mt-6" v-if="this.opened_areas.includes(area.id)">
                                             <div class="">
-                                                <AddButton @click="openAddRoomModal(area)" :text="$t('Add room')"
-                                                           mode="page"/>
+                                                <AddButtonBig @click="openAddRoomModal(area)" :text="$t('Add room')" />
                                             </div>
                                             <div v-if="this.$page.props.show_hints" class="flex">
                                                 <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -226,7 +225,7 @@
                                                                     </Link>
                                                                     <div
                                                                         class="ml-6 mt-1 flex items-center xsLight my-auto">
-                                                                        {{$t('created on { created_at } by', {'crated_at': element.created_at })}}
+                                                                        {{$t('created on { created_at } by', {'created_at': element.created_at })}}
                                                                         <UserPopoverTooltip :user="element.created_by"
                                                                                             :id="element.created_by.id"
                                                                                             :height="6" :width="6"
@@ -279,7 +278,7 @@
                                                                                         <TrashIcon
                                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                             aria-hidden="true"/>
-                                                                                        {{ $t('In the wastebasket')}}
+                                                                                        {{ $t('In the recycle bin')}}
                                                                                     </a>
                                                                                 </MenuItem>
                                                                             </div>
@@ -382,7 +381,7 @@
                                                                                             <TrashIcon
                                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                                 aria-hidden="true"/>
-                                                                                            {{ $t('In the wastebasket')}}
+                                                                                            {{ $t('In the recycle bin')}}
                                                                                         </a>
                                                                                     </MenuItem>
                                                                                 </div>
@@ -430,13 +429,13 @@
                         <jet-input-error :message="newAreaForm.error" class="mt-2"/>
                     </div>
 
-                    <div class="w-full items-center text-center">
-                        <AddButton :class="[newAreaForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="addArea"
-                                   :disabled="newAreaForm.name.length === 0" :text="$t('Create')" mode="modal"/>
+                    <div class="w-full items-center text-center mt-4">
+                        <FormButton
+                            :disabled="newAreaForm.name.length === 0"
+                            :text="$t('Create')"
+                            class="mt-8"
+                            @click="addArea"
+                        />
                     </div>
                 </div>
             </div>
@@ -466,12 +465,12 @@
                     </div>
 
                     <div class="w-full items-center text-center">
-                        <AddButton :class="[editAreaForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base tracking-wider font-bold shadow-sm text-secondaryHover"
-                                   @click="editArea"
-                                   :disabled="editAreaForm.name.length === 0" :text="$t('Save')" mode="modal"/>
+                        <FormButton
+                            :disabled="editAreaForm.name.length === 0"
+                            :text="$t('Save')"
+                            @click="editArea"
+                            class="mt-8 inline-flex items-center"
+                            />
                     </div>
                 </div>
             </div>
@@ -701,12 +700,12 @@
                         </div>
                     </div>
                     <div class="w-full items-center text-center">
-                        <AddButton :class="[newRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="addRoom"
-                                   :disabled="newRoomForm.name.length === 0" :text="$t('Create')" mode="modal"/>
+                        <FormButton
+                            @click="addRoom"
+                            :disabled="newRoomForm.name.length === 0"
+                            :text="$t('Create')"
+                            class="inline-flex items-center mt-4"
+                        />
                     </div>
                 </div>
             </div>
@@ -936,12 +935,12 @@
                     </div>
 
                     <div class="w-full items-center text-center">
-                        <AddButton :class="[editRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                   class="mt-8 inline-flex items-center px-24 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                   @click="editRoom"
-                                   :disabled="editRoomForm.name.length === 0" :text="$t('Save')" mode="modal"/>
+                        <FormButton
+                            @click="editRoom"
+                            :disabled="editRoomForm.name.length === 0"
+                            :text="$t('Save')"
+                            class="inline-flex items-center mt-8"
+                            />
                     </div>
 
                 </div>
@@ -957,20 +956,20 @@
     />
     <!-- Delete Area Modal -->
     <ConfirmationComponent v-if="showSoftDeleteAreaModal"
-                           :confirm="$t('In the wastebasket')"
+                           :confirm="$t('In the recycle bin')"
                            :titel="$t('Area in the trash')"
                            :description="areaDeleteDescriptionText"
                            @closed="afterSoftDeleteAreaConfirm"/>
     <!-- Delete All Rooms from Area Modal -->
     <ConfirmationComponent v-if="showDeleteAllRoomsModal"
-                           :confirm="$t('In the wastebasket')"
+                           :confirm="$t('In the recycle bin')"
                            :titel="$t('Remove all rooms')"
-                           :description="$t('Are you sure you want to put all the rooms in this area in the waste bin?')"
+                           :description="$t('Are you sure you want to put all the rooms in this area in the recycle bin?')"
                            @closed="afterSoftDeleteAllRoomsConfirm"/>
     <!-- Delete Room Modal -->
     <ConfirmationComponent v-if="showSoftDeleteRoomModal"
                            :confirm="$t('Delete room')"
-                           :titel="$t('Room in the wastebasket')"
+                           :titel="$t('Room in the recycle bin')"
                            :description="roomDeleteDescriptionText"
                            @closed="afterSoftDeleteRoomConfirm"/>
     <!-- Delete Room Category Modal -->
@@ -992,7 +991,6 @@
 import AppLayout from '@/Layouts/AppLayout.vue'
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Button from "@/Jetstream/Button";
-import AddButton from "@/Layouts/Components/AddButton";
 import {
     DotsVerticalIcon,
     InformationCircleIcon,
@@ -1016,14 +1014,17 @@ import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        FormButton,
+        AddButtonBig,
         SuccessModal,
         ConfirmationComponent,
         UserPopoverTooltip,
-        AddButton,
         UserTooltip,
         SvgCollection,
         Button,
@@ -1131,7 +1132,7 @@ export default defineComponent({
             return this.$t('Are you sure you want to put the room {0} in the trash?', [this.roomToSoftDelete.name]);
         },
         areaDeleteDescriptionText() {
-            return this.$t('Are you sure you want to put the area {0} with all rooms in the waste bin?', [this.areaToSoftDelete.name]);
+            return this.$t('Are you sure you want to put the area {0} with all rooms in the recycle bin?', [this.areaToSoftDelete.name]);
         }
     },
     methods: {
@@ -1318,7 +1319,7 @@ export default defineComponent({
         softDeleteArea() {
             this.$inertia.delete(`/areas/${this.areaToSoftDelete.id}`);
             this.closeSoftDeleteAreaModal()
-            this.successHeading = this.$t('Area in the wastebasket')
+            this.successHeading = this.$t('Area in the recycle bin')
             this.successDescription = this.$t('The area and all associated rooms have been successfully trashed.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
@@ -1342,7 +1343,7 @@ export default defineComponent({
                 this.$inertia.delete(`/rooms/${room.id}`);
             })
             this.closeDeleteAllRoomsModal();
-            this.successHeading = this.$t('Room in the wastebasket')
+            this.successHeading = this.$t('Room in the recycle bin')
             this.successDescription = this.$t('The rooms have been successfully moved to the trash.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
@@ -1394,7 +1395,7 @@ export default defineComponent({
         softDeleteRoom() {
             this.$inertia.delete(`/rooms/${this.roomToSoftDelete.id}`);
             this.closeSoftDeleteRoomModal();
-            this.successHeading = this.$t('Room in the wastebasket')
+            this.successHeading = this.$t('Room in the recycle bin')
             this.successDescription = this.$t('The rooms have been successfully moved to the trash.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000);

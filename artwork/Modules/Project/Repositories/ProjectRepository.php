@@ -26,9 +26,9 @@ class ProjectRepository extends BaseRepository
 
     public function getProjectsByCostCenter(string $costCenter): Collection
     {
-        return Project::whereHas('costCenter', function ($query) use ($costCenter): void {
-            $query->where('name', '=', $costCenter);
-        })->without(['shiftRelevantEventTypes', 'state'])
-            ->with(['table', 'table.mainPositions.subPositions.subPositionRows.cells'])->get();
+        return Project::byCostCenter($costCenter)
+            ->without(['shiftRelevantEventTypes', 'state'])
+            ->with(['table', 'table.columns', 'table.mainPositions.subPositions.subPositionRows.cells'])
+            ->get();
     }
 }

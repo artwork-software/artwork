@@ -202,6 +202,9 @@
         </div>
     </div>
 
+    <component>
+
+    </component>
 </template>
 
 <script>

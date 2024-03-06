@@ -67,16 +67,9 @@
                     </div>
                 </div>
                 <div class="w-full items-center text-center">
-                    <AddButton :class="[
-                            this.permissionPresetForm.permissions.length === 0 || this.permissionPresetForm.name === '' ?
-                                'bg-secondary':
-                                'bg-buttonBlue hover:bg-buttonHover focus:outline-none',
-                                'mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-secondaryHover'
-                        ]"
-                               @click="save"
+                    <FormButton @click="save"
                                :disabled="this.permissionPresetForm.permissions.length === 0 || this.permissionPresetForm.name === ''"
                                :text="this.mode === 'create' ? $t('Create') : $t('Save')"
-                               mode="modal"
                     />
                 </div>
             </div>
@@ -88,16 +81,16 @@
 import {defineComponent} from "vue";
 import {XIcon} from "@heroicons/vue/outline";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import TextToolTip from "@/Layouts/Components/TextToolTip.vue";
 import Label from "@/Jetstream/Label.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
     components: {
+        FormButton,
         Label,
         TextToolTip,
-        AddButton,
         JetDialogModal,
         XIcon,
     },

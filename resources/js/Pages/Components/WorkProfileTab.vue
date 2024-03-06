@@ -33,7 +33,10 @@
                 class="w-full text-base font-normal mt-1 inputMain resize-none xsDark focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"/>
         </div>
         <div class="w-2/3 flex flex-row justify-center">
-            <AddButton mode="secondary" :text="$t('Save')" @click="updateWorkProfile()"/>
+            <FormButton
+                :text="$t('Save')"
+                @click="updateWorkProfile"
+                />
         </div>
     </div>
     <div class="headline3 mb-2">
@@ -132,7 +135,12 @@
                     </ListboxOption>
                 </ListboxOptions>
             </Listbox>
-            <AddButton :disabled="this.selectedCraftToAssign === null" style="margin-top: 0;" mode="secondary" :text="$t('Assign craft')" @click="assignCraft()"/>
+            <AddButtonSmall
+                :disabled="this.selectedCraftToAssign === null"
+                :text="$t('Assign craft')"
+                @click="assignCraft()"
+                class="ml-4"
+                />
         </div>
         <div class="w-2/3 flex flex-row flex-wrap">
             <TagComponent v-for="craft in user.assignedCrafts" :tag="craft" :key="craft.id" :displayed-text="craft.name" :method="removeCraft" :property="craft.id"/>
@@ -143,7 +151,6 @@
 <script>
 import Permissions from "@/mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
@@ -151,9 +158,13 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import {ChevronDownIcon} from "@heroicons/vue/outline";
 import {Inertia} from "@inertiajs/inertia";
 import {reactive} from "vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 
 export default {
     components: {
+        AddButtonSmall,
+        FormButton,
         ListboxOption,
         ListboxOptions,
         ListboxButton,
@@ -163,7 +174,6 @@ export default {
         SwitchGroup,
         SwitchLabel,
         TagComponent,
-        AddButton,
         Input
     },
     mixins: [Permissions],

@@ -4,13 +4,11 @@
         <span class="xxsLight">{{ budget.requested_position.name }}</span><span class="xxsLight ml-3"><a :href="route('projects.show.budget', budget.project.id)" class="text-indigo-700">{{ budget.project.name }}</a></span>
     </div>
     <div class="mt-2 flex" v-if="budget.changeType === 'BUDGET_VERIFICATION_REQUEST'">
-        <AddButton
+        <FormButton
             @click="redirectToBudget"
-            class="flex"
-            :text="$t('Check calculation')" mode="modal"/>
-        <AddButton
-            type="secondary"
-            :text="$t('Delete request')"></AddButton>
+            :text="$t('Check calculation')"/>
+        <FormButton
+            :text="$t('Delete request')"></FormButton>
     </div>
 </template>
 
@@ -18,13 +16,13 @@
 import Button from "@/Jetstream/Button.vue";
 import {XIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     mixins: [Permissions],
     name: "NotificationBudgetRequest",
-    components: {AddButton, Button, XIcon, Link},
+    components: {FormButton, Button, XIcon, Link},
     props: ['budget'],
     methods: {
         redirectToBudget(){

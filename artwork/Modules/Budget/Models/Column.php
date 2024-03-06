@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
+ * @property int $id
  * @property int $project_id
  * @property int $table_id
  * @property string $name
@@ -29,6 +31,7 @@ class Column extends Model
 {
     use HasFactory;
     use BelongsToTable;
+    use SoftDeletes;
 
     protected $fillable = [
         'table_id',
@@ -50,6 +53,11 @@ class Column extends Model
     protected $with = [
         'lockedBy'
     ];
+
+    public function table(): BelongsTo
+    {
+        return $this->belongsTo(Table::class, 'table_id', 'id', 'tables');
+    }
 
     public function cells(): HasMany
     {

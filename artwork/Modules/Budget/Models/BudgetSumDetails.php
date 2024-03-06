@@ -8,6 +8,7 @@ use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -21,8 +22,12 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 class BudgetSumDetails extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'type',
+        'column_id'
+    ];
 
     public function comments(): MorphMany
     {

@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Room\Collision\Service;
 
-use App\Models\Event;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 

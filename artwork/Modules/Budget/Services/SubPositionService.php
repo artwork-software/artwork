@@ -18,20 +18,20 @@ class SubPositionService
     ) {
     }
 
-    public function delete(SubPosition $subPosition): void
+    public function forceDelete(SubPosition $subPosition): void
     {
         if (($subPositionVerified = $subPosition->verified) instanceof SubPositionVerified) {
-            $this->subPositionVerifiedService->delete($subPositionVerified);
+            $this->subPositionVerifiedService->forceDelete($subPositionVerified);
         }
 
         $subPosition->subPositionSumDetails->each(function (SubPositionSumDetail $subPositionSumDetail): void {
-            $this->subPositionSumDetailService->delete($subPositionSumDetail);
+            $this->subPositionSumDetailService->forceDelete($subPositionSumDetail);
         });
 
         $subPosition->subPositionRows->each(function (SubPositionRow $subPositionRow): void {
-            $this->subPositionRowService->delete($subPositionRow);
+            $this->subPositionRowService->forceDelete($subPositionRow);
         });
 
-        $this->subPositionRepository->delete($subPosition);
+        $this->subPositionRepository->forceDelete($subPosition);
     }
 }

@@ -113,8 +113,10 @@
                 </div>
             </div>
             <div class="justify-center flex w-full my-6 mt-44">
-                <AddButton :text="$t('Save')" mode="modal" class="px-6 py-3"
-                           @click="saveRoomData"/>
+                <FormButton
+                    :text="$t('Save')"
+                    @click="saveRoomData"
+                    />
             </div>
         </template>
     </jet-dialog-modal>
@@ -123,12 +125,12 @@
 <script setup>
 import JetDialogModal from "@/Jetstream/DialogModal";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
-import AddButton from "@/Layouts/Components/AddButton.vue";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import {Menu, MenuButton, MenuItems} from "@headlessui/vue";
 import {XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
 import {onMounted, ref} from "vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 const props = defineProps({
     show: Boolean,

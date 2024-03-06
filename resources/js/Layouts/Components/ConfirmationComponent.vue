@@ -13,7 +13,10 @@
                     {{ description }}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <AddButton class="px-20 py-4" @click="closeModal(true)" :text="confirm ?? $t('Yes')" mode="modal"/>
+                    <FormButton
+                        @click="closeModal(true)"
+                        :text="confirm ?? $t('Yes')"
+                    />
                     <div class="my-auto xsLight cursor-pointer"
                         @click="closeModal(false)">
                         {{ cancel ?? $t('No, not really') }}
@@ -27,17 +30,17 @@
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
-import AddButton from "@/Layouts/Components/AddButton";
 import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
     name: 'ConfirmationComponent',
     mixins: [Permissions],
     components: {
+        FormButton,
         JetDialogModal,
         XIcon,
-        AddButton,
         CheckIcon
     },
     props: ['titel', 'description', 'confirm', 'cancel'],

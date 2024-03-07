@@ -10,7 +10,7 @@
                     </div>
                     <div class="w-full flex items-center justify-between">
                         <div class="w-full flex items-center">
-                            <BaseFilter :only-icon="true" :left="true">
+                            <BaseFilter only-icon="true" :left="true">
                                 <div class="w-full">
                                     <div class="flex justify-end mb-3">
                                             <span class="xxsLight cursor-pointer text-right w-full" @click="removeFilter">

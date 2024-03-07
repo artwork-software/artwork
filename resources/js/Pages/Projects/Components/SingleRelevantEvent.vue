@@ -6,11 +6,11 @@
             <div class="flex items-center">
                 {{ event.event?.start_time }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
                 <span v-if="event.event.is_series" class="ml-3">
-                    <SvgCollection svg-name="iconRepeat"/>
+                    <IconRepeat class="h-4 w-4" />
                 </span>
                 <div class="ml-4 cursor-pointer" @click="showShift = !showShift">
-                    <ChevronDownIcon class="h-4 w-4" v-if="!showShift"/>
-                    <ChevronUpIcon class="h-4 w-4" v-else/>
+                    <IconChevronDown class="h-4 w-4" v-if="!showShift"/>
+                    <IconChevronUp class="h-4 w-4" v-else/>
                 </div>
             </div>
             <div class="mt-1">
@@ -18,7 +18,7 @@
                     <div class="flex p-0.5 rounded-full">
                         <MenuButton
                             class="flex p-0.5 rounded-full">
-                            <DotsVerticalIcon
+                            <IconDotsVertical stroke-width="1.5"
                                 class=" flex-shrink-0 h-4 w-4 my-auto"
                                 aria-hidden="true"/>
                         </MenuButton>
@@ -35,21 +35,21 @@
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="openDeleteConfirmModal"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
+                                        <IconTrash stroke-width="1.5" class="w-5 h-5 mr-3" />
                                         {{ $t('Delete shift planning') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="saveShiftAsPreset"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
+                                        <IconFilePlus stroke-width="1.5" class="w-5 h-5 mr-3" />
                                         {{ $t('Save shift planning as a template') }}
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="showImportShiftTemplateModal = true"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <img src="/Svgs/IconSvgs/icon_menu_item.svg" class="w-5 h-5 mr-3"  alt="">
+                                        <IconFileImport stroke-width="1.5" class="w-5 h-5 mr-3" />
                                         {{ $t('Import shift planning from template') }}
                                     </a>
                                 </MenuItem>
@@ -103,6 +103,7 @@ import AddShiftPresetModal from "@/Pages/Projects/Components/AddShiftPresetModal
 import {ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/outline";
 import ImportShiftTemplate from "@/Pages/Projects/Components/ImportShiftTemplate.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
     name: "SingleRelevantEvent",
@@ -114,6 +115,7 @@ export default defineComponent({
         'shiftQualifications'
     ],
     emits: ['dropFeedback'],
+    mixins: [IconLib],
     components: {
         SvgCollection,
         ImportShiftTemplate,

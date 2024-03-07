@@ -49,10 +49,10 @@
                                              active ?
                                              'bg-primaryHover text-secondaryHover' :
                                              'text-secondary',
-                                             'group px-3 py-2 text-sm subpixel-antialiased'
+                                             'group px-3 py-2 text-sm subpixel-antialiased flex items-center justify-center'
                                          ]">
                                         <ShiftQualificationIconCollection
-                                            class="h-12 w-12 mx-auto cursor-pointer"
+                                            class="h-12 w-12 mx-auto cursor-pointer flex items-center justify-center"
                                             :iconName=shiftQualificationIcon.iconName
                                             alt="Qualifikation-Icon"
                                         />

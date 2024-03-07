@@ -57,17 +57,17 @@
                                    class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
                                    <button @click="downloadKeyVisual" type="button"
                                            class="mr-3 inline-flex rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                       <SvgCollection svg-name="ArrowDownTray" class="h-5 w-5" aria-hidden="true"/>
+                                       <IconDownload class="h-5 w-5" aria-hidden="true"/>
                                    </button>
                                    <button @click="selectNewKeyVisual" type="button"
                                            class="mr-3 inline-flex rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                       <PencilAltIcon
+                                       <IconEdit
                                            class="h-5 w-5 text-primaryText group-hover:text-white"
                                            aria-hidden="true"/>
                                    </button>
                                    <button @click="deleteKeyVisual" type="button"
                                            class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                                       <XIcon class="h-5 w-5 text-primaryText group-hover:text-white"
+                                       <IconX class="h-5 w-5 text-primaryText group-hover:text-white"
                                               aria-hidden="true"/>
                                    </button>
                                </div>
@@ -113,11 +113,11 @@
                                 <div v-for="project_file in project.project_files"
                                      class="cursor-pointer group flex items-center">
                                     <div :data-tooltip-target="project_file.name" class="flex truncate">
-                                        <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
+                                        <IconFileText class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
                                         <p @click="downloadFile(project_file)" class="ml-2 truncate">
                                             {{ project_file.name }}</p>
 
-                                        <XCircleIcon
+                                        <IconCircleX
                                             v-if="$role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                             @click="openConfirmDeleteModal(project_file)"
                                             class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
@@ -158,6 +158,7 @@ import Permissions from "@/mixins/Permissions.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {nextTick} from "vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default{
     components: {
@@ -174,7 +175,7 @@ export default{
         'projectWriteIds',
         'projectManagerIds',
     ],
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     data() {
         return{
             descriptionClicked: false,

@@ -23,19 +23,15 @@
 
                 <!-- <img alt="small-logo" v-else :src="$page.props.small_logo" class="rounded-full h-16 w-16"/> -->
                 <div class="flex-1 w-full space-y-1 mt-8 overflow-y-auto managementMenu">
-                    <a v-for="item in navigation" :key="item.name" :href="item.href"
-                       :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight  hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center', item.has_permission ? 'block': 'hidden']">
+                    <a v-for="item in navigation" :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center', item.has_permission ? 'block': 'hidden']">
                         <div class="flex items-center">
-                            <img :src="isCurrent(item.route) ? item.svgSrc_active : item.svgSrc"
-                                 alt="menu-item"
-                                 :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'xxsLight group-hover:text-secondaryHover', 'mb-1']"
-                                 aria-hidden="true"/>
+                            <component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                             <div class="ml-4 w-32" v-if="fullSidenav">
                                 {{ item.name }}
                             </div>
                         </div>
                     </a>
-                    <Menu as="div" class="my-auto w-full flex flex-1" v-show="
+                    <Menu as="div" class="flex flex-col items-center" v-show="
                         $canAny([
                             'usermanagement',
                             'admin checklistTemplates',
@@ -49,15 +45,10 @@
                             'create, delete and update rooms'
                         ]) || hasAdminRole()
                         ">
-                            <MenuButton ref="menuButton" @click="setHeightOfMenuItems" class="w-full flex items-center" :class="fullSidenav ? 'ml-6' : ''"
-                            >
-                                <div
-                                    class="flex w-full items-center cursor-pointer p-1 hover:bg-primaryHover rounded-md" :class="fullSidenav ? '' : '-mt-2'">
-                                    <img :class=" fullSidenav ? 'h-9 w-9' : 'h-16 w-16'" class=""
-                                         :src="isCurrent(this.managementRoutes) ? '/Svgs/IconSvgs/icon_system_settings_active.svg' : '/Svgs/IconSvgs/icon_system_settings_idle.svg'"
-                                         alt="Systemeinstellungen"
-                                         aria-hidden="true"/>
-                                    <div :class="[isCurrent(this.managementRoutes) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight group-hover:text-secondaryHover', ' items-center']" class="ml-4" v-show="fullSidenav">
+                            <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.managementRoutes) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
+                                <div class="flex items-center" :class="fullSidenav ? '' : ''">
+                                    <component :is="IconAdjustmentsAlt" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :class="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                    <div class="ml-4 w-32 text-left" v-if="fullSidenav">
                                         System
                                     </div>
                                 </div>
@@ -216,6 +207,15 @@ import {Link, usePage} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {isAdmin} from "@/Helper/PermissionHelper";
 import Permissions from "@/mixins/Permissions.vue";
+import {
+    IconAdjustmentsAlt,
+    IconCalendarMonth,
+    IconCalendarUser,
+    IconCurrencyEuro, IconFileText,
+    IconGeometry, IconLayoutDashboard,
+    IconListCheck,
+    IconUsers
+} from "@tabler/icons-vue";
 
 const userNavigation = [
     {name: 'Your Profile', href: '#'},
@@ -316,7 +316,8 @@ export default {
                     route: ['/dashboard'],
                     svgSrc: '/Svgs/Sidebar/icon_dashboard.svg',
                     svgSrc_active: '/Svgs/Sidebar/icon_dashboard_active.svg',
-                    has_permission: true
+                    has_permission: true,
+                    icon: IconLayoutDashboard
                 },
                 {
                     name: this.$t('Projects'),
@@ -324,7 +325,8 @@ export default {
                     route: ['/projects'],
                     svgSrc: '/Svgs/Sidebar/icon_projects.svg',
                     svgSrc_active: '/Svgs/Sidebar/icon_projects_active.svg',
-                    has_permission: true
+                    has_permission: true,
+                    icon: IconGeometry
                 },
                 {
                     name: this.$t('Room assignment'),
@@ -332,7 +334,8 @@ export default {
                     route: ['/calendar/view'],
                     svgSrc: '/Svgs/Sidebar/icon_calendar.svg',
                     svgSrc_active: '/Svgs/Sidebar/icon_calendar_active.svg',
-                    has_permission: true
+                    has_permission: true,
+                    icon: IconCalendarMonth
                 },
                 {
                     name: this.$t('Shift plan'),
@@ -340,7 +343,8 @@ export default {
                     route: ['/shifts/view'],
                     svgSrc: '/Svgs/Sidebar/icon_shift_plan.svg',
                     svgSrc_active: '/Svgs/Sidebar/icon_shift_plan_active.svg',
-                    has_permission: this.$can('can view shift plan') || this.hasAdminRole()
+                    has_permission: this.$can('can view shift plan') || this.hasAdminRole(),
+                    icon: IconCalendarUser
                 },
                 {
                     name: this.$t('Tasks'),
@@ -348,7 +352,8 @@ export default {
                     route: ['/tasks/own'],
                     svgSrc: '/Svgs/Sidebar/icon_tasks.svg',
                     svgSrc_active: '/Svgs/Sidebar/icon_tasks_active.svg',
-                    has_permission: true
+                    has_permission: true,
+                    icon: IconListCheck
                 },
 
                 {
@@ -357,7 +362,8 @@ export default {
                     route: ['/money_sources'],
                     svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',
                     svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg',
-                    has_permission: this.$canAny(['view edit add money_sources', 'can edit and delete money sources']) || this.hasAdminRole()
+                    has_permission: this.$canAny(['view edit add money_sources', 'can edit and delete money sources']) || this.hasAdminRole(),
+                    icon: IconCurrencyEuro
                 },
                 {
                     name: this.$t('Users'),
@@ -365,7 +371,8 @@ export default {
                     route: ['/users'],
                     svgSrc: '/Svgs/Sidebar/icon_users_teams.svg',
                     svgSrc_active: '/Svgs/Sidebar/icon_users_teams_active.svg',
-                    has_permission: true
+                    has_permission: true,
+                    icon: IconUsers
                 },
 
                 {
@@ -374,12 +381,14 @@ export default {
                     route: ['/contracts/view'],
                     svgSrc: '/Svgs/Sidebar/icon_contract.svg',
                     svgSrc_active: '/Svgs/Sidebar/icon_contract_active.svg',
-                    has_permission: true
+                    has_permission: true,
+                    icon: IconFileText
                 }
             ]
         }
     },
     methods: {
+        IconAdjustmentsAlt,
         usePage,
         getTrashRoute() {
 

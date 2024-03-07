@@ -1,30 +1,44 @@
 <template>
-    <div class="fixed bg-primary h-screen w-[26rem] top-0 z-40 transition-all duration-200 "
-         :class="show ? 'right-0 overflow-y-scroll' : '-right-[25.7rem]'">
-            <div @click="$emit('toggle')" :class="show ? 'fixed' : 'bg-primary absolute'" class="cursor-pointer pr-2 py-2 h-auto right-[26rem] bg-primary top-44 text-secondary">
-                <img src="/Svgs/IconSvgs/sidebar_icon.svg"
-                     alt="sidenav_icon"
-                     class="w-5 h-5"
-                     :class="show ? 'fixed bg-primary pr-1 pb-1' : 'rotate-180 bg-primary absolute'"
-                     />
-                <div v-show="!show" class="xsLight ml-5">
-                    {{$t('Details')}}
+    <TransitionRoot as="template" :show="show">
+        <TransitionChild as="template" enter="transform transition ease-in-out duration-500 sm:duration-700" enter-from="translate-x-full" enter-to="translate-x-0" leave="transform transition ease-in-out duration-500 sm:duration-700" leave-from="translate-x-0" leave-to="translate-x-full">
+            <div class="fixed right-0 top-0 z-30 h-screen bg-primary w-[26rem]">
+                <div class="">
+                    <div>
+                        <div class="mt-32 ml-8 mr-8 text-secondary">
+                            <slot></slot>
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </TransitionChild>
+    </TransitionRoot>
 
+    <div class="fixed top-44 right-0 cursor-pointer z-100 transition-all duration-700" :class="{'right-[25.7rem]': show}" @click="$emit('toggle')">
+        <div class="bg-primary px-2 py-1.5 flex items-center">
+            <IconChevronsLeft class="w-5 h-5 xsLight" v-if="!show"/>
+            <IconChevronsRight class="w-5 h-5 xsLight" v-else/>
+            <div v-show="!show" class="xsLight ml-1  transition-all duration-700">
+                {{$t('Details')}}
             </div>
-            <div class="mt-32 ml-8 mr-8 text-secondary">
-                <slot></slot>
-            </div>
+        </div>
     </div>
 </template>
 
 <script>
 
 import Permissions from "@/mixins/Permissions.vue";
-
+import IconLib from "@/mixins/IconLib.vue";
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 export default {
     name: "BaseSidenav",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
+    components: {
+        Dialog,
+        DialogPanel,
+        DialogTitle,
+        TransitionChild,
+        TransitionRoot
+    },
     props: {
         show: Boolean
     },

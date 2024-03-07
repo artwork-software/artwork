@@ -18,14 +18,11 @@
                         <SvgCollection svgName="smallArrowRight" class="ml-2 mt-1"/>
                     </div>
                     <button
-                        :class="[
-                            commentForm.text === '' ?
-                                'bg-secondary' :
-                                'bg-primary hover:bg-primaryHover focus:outline-none',
-                            'mr-1 mb-1 rounded-full mt-2 ml-1 text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover'
-                        ]"
                         @click="addCommentToProject" :disabled="commentForm.text === ''">
-                        <CheckIcon class="h-4 w-4"></CheckIcon>
+                        <IconCircleCheckFilled class="h-8 w-8" :class="[commentForm.text === '' ?
+                                '!text-secondary' :
+                                '!text-primary hover:!text-primaryHover focus:outline-none',
+                            'mr-1 mb-1 rounded-full ml-1 text-sm border border-transparent uppercase shadow-sm text-secondaryHover']"></IconCircleCheckFilled>
                     </button>
                 </div>
             </div>
@@ -44,7 +41,7 @@
                         <button v-show="commentHovered === comment.id && ($role('artwork admin') || $can('write projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.user.id)" type="button"
                                 @click="deleteCommentFromProject(comment)">
                             <span class="sr-only">{{ $t('Remove comment from project') }}</span>
-                            <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
+                            <IconCircleXFilled class="ml-2 h-7 w-7 hover:text-error"/>
                         </button>
                     </div>
                     <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
@@ -68,6 +65,7 @@ import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     components: {
@@ -76,7 +74,7 @@ export default {
         UserTooltip,
         PencilAltIcon, XCircleIcon, DocumentTextIcon, SvgCollection, XIcon, JetInputError
     },
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     props: [
         'project',
         'isMemberOfADepartment',

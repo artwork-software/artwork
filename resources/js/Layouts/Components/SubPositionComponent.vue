@@ -6,15 +6,15 @@
                     {{ subPosition.name }}
                 </div>
                 <button class="my-auto w-6 ml-3" @click="openCloseMainPosition">
-                    <ChevronUpIcon v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto" />
-                    <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto" />
+                    <IconChevronUp stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto" />
+                    <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto" />
                 </button>
             </div>
             <div v-else class="flex w-full">
                 <input class="my-2 ml-1 xxsDark" type="text" v-model="subPosition.name" @focusout="updateSubPositionName(subPosition); subPosition.clicked = !subPosition.clicked">
                 <button class="my-auto w-6 ml-3" @click="subPosition.closed = !subPosition.closed">
-                    <ChevronUpIcon v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto" />
-                    <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto" />
+                    <IconChevronUp stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto" />
+                    <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto" />
                 </button>
             </div>
             <div class="flex items-center justify-end">
@@ -23,7 +23,7 @@
                         <Menu as="div" class="my-auto relative" v-if="this.$can('edit budget templates') || !table.is_template">
                             <div class="flex">
                                 <MenuButton class="flex bg-tagBg p-0.5 rounded-full">
-                                    <DotsVerticalIcon class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto" aria-hidden="true"/>
+                                    <IconDotsVertical stroke-width="1.5" class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto" aria-hidden="true"/>
                                 </MenuButton>
                             </div>
                             <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
@@ -31,31 +31,25 @@
                                     <div class="py-1">
                                         <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
                                             <span @click="fixSubPosition(subPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                                </svg>
+                                                <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
                                                 {{ $t('Commitment') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
                                             <span @click="unfixSubPosition(subPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                                </svg>
+                                                <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
                                                 {{ $t('Canceling a fixed term') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <span @click="openDeleteSubPositionModal(subPosition)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <TrashIcon class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                                <IconTrash stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
                                                 {{ $t('Delete') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <a @click="duplicateSubpostion(subPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
-                                                </svg>
+                                                <IconClipboardCopy stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
                                                 {{ $t('Duplicate') }}
                                             </a>
                                         </MenuItem>
@@ -95,14 +89,14 @@
                             </div>
                             <div class="flex items-center" :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'" v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
                                 <input :ref="`cell-${cell.id}`" :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'" class="my-2 xsDark  appearance-none z-10" type="text" :disabled="!this.$can('edit budget templates') && table.is_template" v-model="cell.value" @keypress="isNumber($event, index)" @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
-                                <PlusCircleIcon v-if="index > 2" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
+                                <IconCirclePlus stroke-width="1.5" v-if="index > 2" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
                             </div>
                             <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']" class="my-4 h-6 flex items-center justify-end" @click="cell.clicked = !cell.clicked && cell.column.is_locked" v-else>
                                 <img v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)" src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg" class="h-6 w-6 mr-1"/>
                                 <img v-if="cell.comments_count > 0 || cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
                                 <img v-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
                                 {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
-                                <PlusCircleIcon v-if="index > 2 && cell.clicked" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
+                                <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
                             </div>
                         </td>
                     </div>
@@ -111,7 +105,7 @@
                         <div class="flex">
                             <MenuButton
                                 class="flex bg-tagBg p-0.5 rounded-full">
-                                <DotsVerticalIcon
+                                <IconDotsVertical stroke-width="1.5"
                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
@@ -132,9 +126,7 @@
                                         <span
                                             @click=""
                                             :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                            </svg>
+                                            <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
                                             {{ $t('Exclude') }}
                                         </span>
                                     </MenuItem>
@@ -143,9 +135,7 @@
                                               @click="updateRowCommented(row.id, false)">
                                         <span
                                             :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                            </svg>
+                                            <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
                                             {{ $t('Include positions') }}
                                         </span>
                                     </MenuItem>
@@ -153,9 +143,7 @@
                                         <span
                                             @click="duplicateRow(row.id)"
                                             :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                            </svg>
+                                            <IconCopy stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
                                             {{ $t('Duplicate') }}
                                         </span>
                                     </MenuItem>
@@ -163,9 +151,7 @@
                                         <span
                                             @click="openDeleteRowModal(row)"
                                             :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                            </svg>
+                                            <IconTrash  stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
                                             {{ $t('Delete') }}
                                         </span>
                                     </MenuItem>
@@ -178,14 +164,14 @@
                 <div @click="addRowToSubPosition(subPosition, row)" v-if="this.$can('edit budget templates') || !table.is_template" class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
                     <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                         {{ $t('Row') }}
-                        <PlusCircleIcon class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
+                        <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
                     </div>
                 </div>
             </div>
             <div v-else @click="addRowToSubPosition(subPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                 <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                     {{ $t('Row') }}
-                    <PlusCircleIcon class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
+                    <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
                 </div>
             </div>
             <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id" :sub-position-id="subPosition.id"/>
@@ -203,7 +189,7 @@
                                 {{subPosition.columnSums[column.id]?.sum.toLocaleString() }}
                             </span>
                             <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openSubPositionSumDetailModal(subPosition, column)" v-if="this.$can('edit budget templates') || !table.is_template">
-                                <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
+                                <IconCirclePlus stroke-width="1.5" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
                             </div>
                         </div>
                     </div>
@@ -214,7 +200,7 @@
         <div @click="addSubPosition(mainPosition.id, subPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
             <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                 {{ $t('Sub position') }}
-                <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full" />
+                <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full" />
             </div>
         </div>
     </th>
@@ -235,9 +221,10 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import {nextTick} from "vue";
 import Permissions from "@/mixins/Permissions.vue";
 import SageDataDropElement from "@/Pages/Projects/Components/SageDataDropElement.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     name: "SubPositionComponent",
     components: {
         SageDataDropElement,

@@ -33,6 +33,7 @@
         "@headlessui/vue": "^1.7.12",
         "@heroicons/vue": "^1.0.6",
         "@sentry/vue": "^7.40.0",
+        "@tabler/icons": "^2.47.0",
         "@tabler/icons-vue": "^2.43.0",
         "@vuepic/vue-datepicker": "^3.2.2",
         "dayjs": "^1.11.7",

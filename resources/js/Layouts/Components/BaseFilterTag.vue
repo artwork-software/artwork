@@ -9,7 +9,7 @@
             <button
                 @click="$emit('removeFilter', filter)"
                 type="button">
-                <XIcon v-if="type !== 'calendar'" class="ml-1 h-4 w-4 hover:text-error "/>
+                <IconX v-if="type !== 'calendar'" class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
     </div>
 </template>
@@ -19,10 +19,11 @@ import {
     XIcon
 } from '@heroicons/vue/outline';
 import Permissions from "@/mixins/Permissions.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "BaseFilterTag",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     props: {
         filter: Object,
         type: {

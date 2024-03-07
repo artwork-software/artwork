@@ -1,9 +1,7 @@
 <template>
-    <Menu as="div" class="relative inline-block flex items-center text-left">
-        <div class="">
-            <MenuButton v-if="!onlyIcon"
-                class="w-52 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-            >
+    <Menu as="div" class="relative flex items-center text-left">
+        <div class="flex items-center">
+            <MenuButton v-if="!onlyIcon" class="w-52 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
                 <span class="float-left xsDark">Filter</span>
                 <ChevronDownIcon
                     class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
@@ -11,7 +9,7 @@
                 />
             </MenuButton>
             <MenuButton v-else>
-                <img src="/Svgs/IconSvgs/icon_filter.svg" class="h-6 w-6 mx-2" />
+                <IconFilter class="h-6 w-6 mx-2" />
             </MenuButton>
         </div>
         <transition
@@ -43,10 +41,11 @@ import {
     ChevronDownIcon,
 } from '@heroicons/vue/outline';
 import Permissions from "@/mixins/Permissions.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "BaseFilter",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         Menu,
         MenuItems,

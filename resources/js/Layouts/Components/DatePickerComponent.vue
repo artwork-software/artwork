@@ -1,7 +1,7 @@
 <template>
     <div v-if="!project">
         <div class="flex items-center">
-            <CalendarIcon class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
+            <IconCalendar class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
             <input v-model="dateValueArray[0]"
                    @change="this.updateTimes"
                    id="startDate"
@@ -38,6 +38,7 @@ import {ref} from "vue";
 import {Inertia} from "@inertiajs/inertia";
 import {CalendarIcon} from "@heroicons/vue/outline";
 import Permissions from "@/mixins/Permissions.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 
 const formatter = ref({
@@ -47,7 +48,7 @@ const formatter = ref({
 
 
 export default {
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     name: "DatePickerComponent",
     components: {VueTailwindDatepicker, CalendarIcon},
     props: ['dateValueArray','project', 'is_shift_plan'],
@@ -58,7 +59,7 @@ export default {
                 shortcuts: {
                     today: this.$t('Today'),
                     yesterday: this.$t('Yesterday'),
-                    past: period => this.$t('Last {0} days' , [period]),
+                    past: period => this.$t('Last {0} days', [period]),
                     currentMonth: this.$t('Current month'),
                     pastMonth: this.$t('Past month')
                 },

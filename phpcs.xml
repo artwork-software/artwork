@@ -52,4 +52,7 @@
     <rule ref="PEAR.Classes.ClassDeclaration"/>
     <rule ref="PSR2.Namespaces.NamespaceDeclaration"/>
     <rule ref="Squiz.PHP.Eval"/>
+    <rule ref="PEAR">
+        <exclude name="PEAR.Commenting.FileComment.Missing"/>
+    </rule>
 </ruleset>

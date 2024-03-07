@@ -436,8 +436,14 @@ class RoomService
         return $this->roomRepository->allWithoutTrashed();
     }
 
-    public function collectEventsForRoom(Room $room, CarbonPeriod $calendarPeriod, ?Project $project = null, $shiftPlan = false): Collection
-    {
+    //@todo: fix phpcs error - complexity too high
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    public function collectEventsForRoom(
+        Room $room,
+        CarbonPeriod $calendarPeriod,
+        ?Project $project = null,
+        $shiftPlan = false
+    ): Collection {
         $user = Auth::user();
         if (!$shiftPlan) {
             $calendarFilter = $user->calendar_filter()->first();

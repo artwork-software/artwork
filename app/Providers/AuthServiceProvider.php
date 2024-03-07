@@ -4,26 +4,13 @@ namespace App\Providers;
 
 use App\Enums\RoleNameEnum;
 use App\Models\Category;
-use App\Models\Freelancer;
-use App\Models\GeneralSettings;
-use App\Models\ServiceProvider as ServiceProviderModel;
-use App\Policies\FreelancerPolicy;
-use App\Policies\SageApiSettingsPolicy;
-use App\Policies\ServiceProviderPolicy;
-use App\Policies\GeneralSettingsPolicy;
-use Artwork\Modules\Budget\Models\SageAssignedDataComment;
-use Artwork\Modules\Budget\Models\SageNotAssignedData;
-use Artwork\Modules\Budget\Policies\SageAssignedDataCommentPolicy;
-use Artwork\Modules\Budget\Policies\SageNotAssignedDataPolicy;
-use Artwork\Modules\BudgetColumnSetting\Models\BudgetColumnSetting;
-use Artwork\Modules\BudgetColumnSetting\Policies\BudgetColumnSettingPolicy;
-use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\ChecklistTemplate;
-use Artwork\Modules\Project\Models\Comment;
 use App\Models\Contract;
+use App\Models\Freelancer;
 use App\Models\Genre;
 use App\Models\Invitation;
 use App\Models\Sector;
+use App\Models\ServiceProvider as ServiceProviderModel;
 use App\Models\TaskTemplate;
 use App\Models\User;
 use App\Policies\AreaPolicy;
@@ -33,16 +20,33 @@ use App\Policies\ChecklistTemplatePolicy;
 use App\Policies\CommentPolicy;
 use App\Policies\ContractPolicy;
 use App\Policies\DepartmentPolicy;
+use App\Policies\FreelancerPolicy;
 use App\Policies\GenrePolicy;
 use App\Policies\InvitationPolicy;
 use App\Policies\ProjectPolicy;
+use App\Policies\SageApiSettingsPolicy;
 use App\Policies\SectorPolicy;
+use App\Policies\ServiceProviderPolicy;
 use App\Policies\TaskTemplatePolicy;
 use App\Policies\UserPolicy;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Budget\Models\SageAssignedDataComment;
+use Artwork\Modules\Budget\Models\SageNotAssignedData;
+use Artwork\Modules\Budget\Policies\SageAssignedDataCommentPolicy;
+use Artwork\Modules\Budget\Policies\SageNotAssignedDataPolicy;
+use Artwork\Modules\BudgetColumnSetting\Models\BudgetColumnSetting;
+use Artwork\Modules\BudgetColumnSetting\Policies\BudgetColumnSettingPolicy;
+use Artwork\Modules\BudgetManagementAccount\Models\BudgetManagementAccount;
+use Artwork\Modules\BudgetManagementAccount\Policies\BudgetManagementAccountPolicy;
+use Artwork\Modules\BudgetManagementCostUnit\Models\BudgetManagementCostUnit;
+use Artwork\Modules\BudgetManagementCostUnit\Policies\BudgetManagementCostUnitPolicy;
+use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Policies\GeneralSettingsPolicy;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\ShiftQualification\Policies\ShiftQualificationPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -71,7 +75,9 @@ class AuthServiceProvider extends ServiceProvider
         SageApiSettings::class => SageApiSettingsPolicy::class,
         SageAssignedDataComment::class => SageAssignedDataCommentPolicy::class,
         SageNotAssignedData::class => SageNotAssignedDataPolicy::class,
-        BudgetColumnSetting::class => BudgetColumnSettingPolicy::class
+        BudgetColumnSetting::class => BudgetColumnSettingPolicy::class,
+        BudgetManagementAccount::class => BudgetManagementAccountPolicy::class,
+        BudgetManagementCostUnit::class => BudgetManagementCostUnitPolicy::class
     ];
 
     public function boot(): void

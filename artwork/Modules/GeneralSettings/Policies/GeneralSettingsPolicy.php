@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Policies;
+namespace Artwork\Modules\GeneralSettings\Policies;
 
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -22,5 +22,13 @@ class GeneralSettingsPolicy
     public function updateEmailSettings(User $user): bool
     {
         return $user->can('change tool settings');
+    }
+
+    public function updateBudgetAccountManagementGlobal(User $user): bool
+    {
+        return $user->canAny([
+            'can manage global project budgets',
+            'can manage all project budgets without docs'
+        ]);
     }
 }

@@ -305,8 +305,13 @@ class UserController extends Controller
             );
         }
 
-        $user->syncPermissions($request->permissions);
-        $user->syncRoles($request->roles);
+        if ($request->permissions) {
+            $user->syncPermissions($request->permissions);
+        }
+
+        if ($request->roles) {
+            $user->syncRoles($request->roles);
+        }
 
         Session::put('locale', $user->language);
 

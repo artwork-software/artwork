@@ -5,6 +5,8 @@ use App\Http\Controllers\AreaController;
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\BudgetAccountManagementController;
 use App\Http\Controllers\BudgetGeneralController;
+use App\Http\Controllers\BudgetManagementAccountController;
+use App\Http\Controllers\BudgetManagementCostUnitController;
 use App\Http\Controllers\BudgetTemplateController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
@@ -26,6 +28,7 @@ use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\ExportPDFController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
+use App\Http\Controllers\GeneralSettingsController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
@@ -758,6 +761,41 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
         Route::get('/account-management', [BudgetAccountManagementController::class, 'index'])
             ->name('budget-settings.account-management');
+        Route::patch(
+            '/account-management/updateGlobalSetting',
+            [
+                GeneralSettingsController::class,
+                'updateBudgetAccountManagementGlobal'
+            ]
+        )->name('budget-settings.account-management.updateBudgetAccountManagementGlobal');
+        Route::post(
+            '/account-management/account',
+            [
+                BudgetManagementAccountController::class,
+                'store'
+            ]
+        )->name('budget-settings.account-management.store-account');
+        Route::delete(
+            '/account-management/account/{budgetManagementAccount}',
+            [
+                BudgetManagementAccountController::class,
+                'destroy'
+            ]
+        )->name('budget-settings.account-management.destroy-account');
+        Route::post(
+            '/account-management/cost-unit',
+            [
+                BudgetManagementCostUnitController::class,
+                'store'
+            ]
+        )->name('budget-settings.account-management.store-cost-unit');
+        Route::delete(
+            '/account-management/cost-unit/{budgetManagementCostUnit}',
+            [
+                BudgetManagementCostUnitController::class,
+                'destroy'
+            ]
+        )->name('budget-settings.account-management.destroy-cost-unit');
 
         Route::get('/templates', [BudgetTemplateController::class, 'index'])
             ->name('budget-settings.templates')

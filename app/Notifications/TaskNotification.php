@@ -3,7 +3,7 @@
 namespace App\Notifications;
 
 use App\Enums\NotificationFrequency;
-use App\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Notifications\Messages\BroadcastMessage;

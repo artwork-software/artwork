@@ -51,5 +51,27 @@ return [
         'error' => [
             'update' => 'Einstellung konnte nicht gespeichert werden, bitte versuche es erneut.'
         ]
+    ],
+    'budget-account-management' => [
+        'success' => [
+            'account' => [
+                'create' => 'Konto erfolgreich gespeichert.',
+                'delete' => 'Konto erfolgreich gelöscht.'
+            ],
+            'cost-unit' => [
+                'create' => 'Kostenstelle erfolgreich gespeichert.',
+                'delete' => 'Kostenstelle erfolgreich gelöscht.'
+            ]
+        ],
+        'error' => [
+            'account' => [
+                'create' => 'Konto konnte nicht gespeichert werden, bitte erneut versuchen.',
+                'delete' => 'Konto konnte nicht gelöscht werden, bitte erneut versuchen.'
+            ],
+            'cost_unit' => [
+                'create' => 'Kostenstelle konnte nicht gespeichert werden, bitte erneut versuchen.',
+                'delete' => 'Kostenstelle konnte nicht gelöscht werden, bitte erneut versuchen.'
+            ]
+        ]
     ]
 ];

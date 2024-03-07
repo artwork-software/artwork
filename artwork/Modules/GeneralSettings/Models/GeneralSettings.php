@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace Artwork\Modules\GeneralSettings\Models;
 
 use Spatie\LaravelSettings\Settings;
 
@@ -25,6 +25,8 @@ class GeneralSettings extends Settings
     public string $email_footer;
 
     public string $business_email;
+
+    public bool $budget_account_management_global;
 
     public static function group(): string
     {

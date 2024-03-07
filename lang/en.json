@@ -1500,5 +1500,19 @@
     "Specify here what the first three columns of new budget tables should be called": "Specify here what the first three columns of new budget tables should be called",
     "Column": "Column",
     "Success": "Success",
-    "Error": "Error"
+    "Error": "Error",
+    "Accounts and cost units are used in each 1project budget for column 1 and column 2": "Accounts and cost units are used in each project budget for column 1 and column 2",
+    "Selectable accounts": "Selectable accounts",
+    "Account number": "Account number",
+    "Description": "Description",
+    "Selectable cost units": "Selectable cost units",
+    "Cost unit number": "Cost unit number",
+    "Search account": "Search account",
+    "Search cost center": "Search cost center",
+    "Should the account really be deleted?": "Should the account \"{0}\" really be deleted?",
+    "Delete cost center": "Delete cost center",
+    "Should the cost center really be deleted?": "Should the cost center \"{0}\" really be deleted?",
+    "The account number must contain at least one character.": "The account number must contain at least one character.",
+    "The cost center number must contain at least one character.": "The cost center number must contain at least one character.",
+    "The description must contain at least one character.": "The description must contain at least one character."
 }

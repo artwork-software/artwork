@@ -4,8 +4,8 @@ namespace Artwork\Core\Database\Repository;
 
 use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use InvalidArgumentException;
 use Throwable;
 
 abstract class BaseRepository
@@ -22,6 +22,7 @@ abstract class BaseRepository
     public function saveOrFail(Model|Pivot $model): Model|Pivot
     {
         $model->saveOrFail();
+
         return $model;
     }
 
@@ -66,7 +67,7 @@ abstract class BaseRepository
     public function restore(Model|Pivot $model): bool
     {
         if (!in_array(SoftDeletes::class, class_uses($model))) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Class is not using SoftDeletes-trait, therefore ' . __FUNCTION__ . ' can not be executed'
             );
         }
@@ -77,7 +78,7 @@ abstract class BaseRepository
     public function restoreQuietly(Model|Pivot $model): bool
     {
         if (!in_array(SoftDeletes::class, class_uses($model))) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Class is not using SoftDeletes-trait, therefore ' . __FUNCTION__ . ' can not be executed'
             );
         }

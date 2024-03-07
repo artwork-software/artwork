@@ -17,7 +17,7 @@
                                                 {{ moneySourceFilter.name }}</p>
                                             <span
                                                 class="inset-y-0 flex items-center pr-2 pointer-events-none">
-                                                <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
+                                                <IconChevronDown stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                                              </span>
                                         </div>
                                     </ListboxButton>
@@ -44,20 +44,20 @@
                             <div class="flex items-center">
                                 <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
                                      class="cursor-pointer inset-y-0 mr-3">
-                                    <SearchIcon class="h-5 w-5" aria-hidden="true"/>
+                                    <IconSearch stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                                 </div>
                                 <div v-else class="flex items-center w-full mr-2">
                                     <input type="text"
                                            :placeholder="$t('Search for sources')"
                                            v-model="moneySource_query"
                                            class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                    <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
+                                    <IconX class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                                 </div>
                             </div>
                             <div class="flex items-center">
                                 <div class="flex items-center relative h-10 w-10">
-                                    <img @click="showMoneySourceFilters = !showMoneySourceFilters"
-                                         src="/Svgs/IconSvgs/icon_filter.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
+                                    <IconFilter stroke-width="1.5" @click="showMoneySourceFilters = !showMoneySourceFilters"
+                                          class="h-6 w-6 mx-2 cursor-pointer"/>
                                     <div v-if="showMoneySourceFilters"
                                          class="w-72 absolute top-10 h-auto bg-primary p-2 flex flex-col z-50">
                                         <Disclosure v-slot="{ open }">
@@ -130,8 +130,8 @@
                                     <div class="flex">
                                         <MenuButton
                                             class="flex">
-                                            <img src="/Svgs/IconSvgs/icon_sort.svg"
-                                                 class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                            <IconArrowsSort stroke-width="1.5"
+                                                 class=" flex-shrink-0 h-6 w-6 my-auto"
                                                  aria-hidden="true" :alt="$t('Sort')"/>
                                         </MenuButton>
                                     </div>
@@ -148,11 +148,11 @@
                                                     <div @click="changeSortAlgorithm('name')"
                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         {{$t('Alphabetical')}}
-                                                        <ArrowNarrowDownIcon
+                                                        <IconSortDescending
                                                             v-if="sortType === 'name' && sortOrder === 'descending'"
                                                             class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        <ArrowNarrowUpIcon
+                                                        <IconSortAscending
                                                             v-if="sortType === 'name' && sortOrder === 'ascending'"
                                                             class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                     </div>
@@ -161,11 +161,11 @@
                                                     <div @click="changeSortAlgorithm('funding_start_date')"
                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         {{$t('Start date')}}
-                                                        <ArrowNarrowDownIcon
+                                                        <IconSortDescending
                                                             v-if="sortType === 'funding_start_date' && sortOrder === 'descending'"
                                                             class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        <ArrowNarrowUpIcon
+                                                        <IconSortAscending
                                                             v-if="sortType === 'funding_start_date' && sortOrder === 'ascending'"
                                                             class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                     </div>
@@ -174,11 +174,11 @@
                                                     <div @click="changeSortAlgorithm('funding_end_date')"
                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         {{$t('End date')}}
-                                                        <ArrowNarrowDownIcon
+                                                        <IconSortDescending
                                                             v-if="sortType === 'funding_end_date' && sortOrder === 'descending'"
                                                             class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        <ArrowNarrowUpIcon
+                                                        <IconSortAscending
                                                             v-if="sortType === 'funding_end_date' && sortOrder === 'ascending'"
                                                             class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                     </div>
@@ -187,11 +187,11 @@
                                                     <div @click="changeSortAlgorithm('created_at')"
                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         {{ $t('Created on')}}
-                                                        <ArrowNarrowDownIcon
+                                                        <IconSortDescending
                                                             v-if="sortType === 'created_at' && sortOrder === 'descending'"
                                                             class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        <ArrowNarrowUpIcon
+                                                        <IconSortAscending
                                                             v-if="sortType === 'created_at' && sortOrder === 'ascending'"
                                                             class="ml-2 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                     </div>
@@ -246,14 +246,14 @@
                                     <div
                                         v-if="moneySource.pinned_by_users && moneySource.pinned_by_users.includes($page.props.user.id)"
                                         class="flex items-center xxsLight subpixel-antialiased ml-14 mt-1">
-                                        <IconPin class="h-5 w-5 mr-4 text-primary"/>
+                                        <IconPinned  stroke-width="1.5" class="h-5 w-5 mr-4 text-primary"/>
                                     </div>
                                     <div class="flex">
                                         <Menu as="div" class="my-auto relative">
                                             <div class="flex">
                                                 <MenuButton
                                                     class="flex bg-tagBg p-0.5 rounded-full">
-                                                    <DotsVerticalIcon
+                                                    <IconDotsVertical stroke-width="1.5"
                                                         class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                         aria-hidden="true"/>
                                                 </MenuButton>
@@ -270,7 +270,7 @@
                                                         <MenuItem class="cursor-pointer" v-slot="{ active }">
                                                             <a :href="getEditHref(moneySource)"
                                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                                <PencilAltIcon
+                                                                <IconEdit stroke-width="1.5"
                                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                     aria-hidden="true"/>
                                                                 {{ $t('edit')}}
@@ -280,7 +280,7 @@
                                                                   v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                                             <a @click="duplicateMoneySource(moneySource)"
                                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                <DuplicateIcon
+                                                                <IconCopy stroke-width="1.5"
                                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                     aria-hidden="true"/>
                                                                 {{ $t('Duplicate')}}
@@ -300,7 +300,7 @@
                                                                   v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('can edit and delete money sources') || $role('artwork admin')">
                                                             <a @click="openDeleteSourceModal(moneySource)"
                                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                <TrashIcon
+                                                                <IconTrash stroke-width="1.5"
                                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                     aria-hidden="true"/>
                                                                 {{ $t('Delete')}}
@@ -436,10 +436,11 @@ import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistory
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 
 export default defineComponent({
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         AddButtonSmall,

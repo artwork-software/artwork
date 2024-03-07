@@ -36,7 +36,7 @@
                                             <button
                                                 :class="[moneySourceCategoryInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                                 @click="addMoneySourceCategory" :disabled="!moneySourceCategoryInput">
-                                                <CheckIcon class="h-5 w-5"></CheckIcon>
+                                                <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                                             </button>
                                         </div>
                                     </div>
@@ -47,7 +47,7 @@
                                             border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                             {{ category.name }}
                                             <button type="button" @click="this.showCategoryDeleteModal(category)">
-                                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                                <IconX  stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                                             </button>
                                         </span>
                                     </div>
@@ -80,9 +80,10 @@ import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         ConfirmationComponent,
         JetDialogModal,

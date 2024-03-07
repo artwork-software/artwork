@@ -11,7 +11,7 @@ import {
     IconRepeat, IconUsersGroup, IconChevronsLeft, IconChevronsRight, IconUpload, IconDownload, IconCircleX,
     IconCircleCheckFilled, IconUserPlus, IconListDetails, IconCircleXFilled, IconBrandRedhat, IconBell,
     IconMessageDots, IconBook, IconBriefcase, IconCamera, IconClipboard, IconEye, IconMovie, IconUser,
-    IconExclamationCircle
+    IconExclamationCircle, IconSortDescending, IconSortAscending, IconArrowsSort, IconCheck
 } from "@tabler/icons-vue";
 export default {
     components: {
@@ -30,7 +30,7 @@ export default {
         IconRepeat, IconUsersGroup, IconChevronsLeft, IconChevronsRight, IconUpload, IconDownload, IconCircleX,
         IconCircleCheckFilled, IconUserPlus, IconListDetails, IconCircleXFilled, IconBrandRedhat, IconBell,
         IconMessageDots, IconBook, IconBriefcase, IconCamera, IconClipboard, IconEye, IconMovie, IconUser,
-        IconExclamationCircle
+        IconExclamationCircle, IconSortDescending, IconSortAscending, IconArrowsSort, IconCheck
     }
 }
 </script>

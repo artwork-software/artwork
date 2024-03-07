@@ -3,7 +3,7 @@
         <template #content>
             <img alt="Finanzierungsquelle erstellen" src="/Svgs/Overlays/illu_money_source_create.svg"
                  class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+            <IconX @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
@@ -126,7 +126,7 @@
                                             </span>
                                             <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
                                                 <span class="sr-only">{{ $t('Remove user from funding source')}}</span>
-                                                <XIcon
+                                                <IconX
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
                                         </div>
@@ -204,9 +204,9 @@
                                                    v-model="expirationReminder.days"
                                             />
                                             <span class="xsLight">
-                                                Tag/e vorher erinnern
+                                                {{ $t('Remind day/s before')}}
                                             </span>
-                                            <TrashIcon class="w-5 h-5 cursor-pointer xsLight ml-2 hover:text-error"
+                                            <IconTrash class="w-5 h-5 cursor-pointer xsLight ml-2 hover:text-error"
                                                        @click="removeExpirationReminder(index)"
                                             />
                                         </div>
@@ -215,16 +215,9 @@
                                             {{ $t('If a reminder is to be created, enter the number of days or remove the reminder.')}}
                                         </span>
                                     </div>
-                                    <div class="flex flex-row items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"
-                                             class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer"
-                                             @click="addExpirationReminder()"
-                                        >
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        <span class="text-xs underline text-buttonBlue cursor-pointer"
-                                              @click="addExpirationReminder()"
-                                        >
+                                    <div class="flex flex-row items-center w-fit" @click="addExpirationReminder()">
+                                        <IconCirclePlus class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer"/>
+                                        <span class="text-xs underline text-buttonBlue cursor-pointer">
                                             {{ $t('Add another reminder')}}
                                         </span>
                                     </div>
@@ -264,7 +257,7 @@
                                             <span class="xsLight">
                                                 {{ $t('Percent triggers a countdown notification')}}
                                             </span>
-                                            <TrashIcon class="w-5 h-5 cursor-pointer xsLight ml-2 hover:text-error"
+                                            <IconTrash class="w-5 h-5 cursor-pointer xsLight ml-2 hover:text-error"
                                                        @click="removeThresholdReminder(index)"
                                             />
                                         </div>
@@ -273,16 +266,9 @@
                                             {{ $t('If a countdown is to be created, enter the percentage or remove the countdown.')}}
                                         </span>
                                     </div>
-                                    <div class="flex flex-row items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"
-                                             class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer"
-                                             @click="addThresholdReminder()"
-                                        >
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        <span class="text-xs underline text-buttonBlue cursor-pointer"
-                                              @click="addThresholdReminder()"
-                                        >
+                                    <div class="flex flex-row items-center w-fit" @click="addThresholdReminder()">
+                                        <IconCirclePlus class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer"/>
+                                        <span class="text-xs underline text-buttonBlue cursor-pointer">
                                                {{ $t('Add another reminder')}}
                                         </span>
                                     </div>
@@ -347,7 +333,7 @@
                                             </span>
                                             <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
                                                 <span class="sr-only">{{ $t('Remove user from money source')}}</span>
-                                                <XIcon
+                                                <IconX
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
                                         </div>
@@ -393,7 +379,7 @@
                                                 {{ subMoneySource.name }}
                                                 <button type="button"
                                                         @click="this.deleteSubMoneySourceFromGroup(index)">
-                                                    <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                                    <IconX class="ml-1 h-4 w-4 hover:text-error "/>
                                                 </button>
                                             </span>
                                         </span>
@@ -444,10 +430,11 @@ import Permissions from "@/mixins/Permissions.vue";
 import {Inertia} from "@inertiajs/inertia";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'EventComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         BaseButton,

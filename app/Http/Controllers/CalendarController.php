@@ -21,6 +21,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ *
+ */
 class CalendarController extends Controller
 {
     protected ?Carbon $startDate = null;
@@ -59,17 +62,27 @@ class CalendarController extends Controller
     {
         $today = $date_of_day->format('d.m.Y');
 
-        $events = Event::with(['shifts' => function ($query) use ($userId): void {
-            $query->whereHas('users', function ($query) use ($userId): void {
+        $events = Event::with(
+            ['shifts' => function ($query) use ($userId): void {
+                $query->whereHas(
+                    'users',
+                    function ($query) use ($userId): void {
+                        $query->where('user_id', $userId);
+                    }
+                );
+            }, 'shifts.shiftsQualifications']
+        )->whereHas(
+            'shifts.users',
+            function ($query) use ($userId): void {
                 $query->where('user_id', $userId);
-            });
-        }, 'shifts.shiftsQualifications'])->whereHas('shifts.users', function ($query) use ($userId): void {
-            $query->where('user_id', $userId);
-        })->get();
+            }
+        )->get();
 
-        $eventsToday = $events->filter(function ($event) use ($today) {
-            return in_array($today, $event->days_of_event);
-        })->all();
+        $eventsToday = $events->filter(
+            function ($event) use ($today) {
+                return in_array($today, $event->days_of_event);
+            }
+        )->all();
 
         return $eventsToday;
     }
@@ -82,14 +95,22 @@ class CalendarController extends Controller
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
-        $events = Event::with(['shifts' => function ($query) use ($freelancerId): void {
-            $query->whereHas('freelancer', function ($query) use ($freelancerId): void {
-                $query->where('freelancer_id', $freelancerId);
-            });
-        }])
-            ->whereHas('shifts.freelancer', function ($query) use ($freelancerId): void {
-                $query->where('freelancer_id', $freelancerId);
-            })
+        $events = Event::with(
+            ['shifts' => function ($query) use ($freelancerId): void {
+                $query->whereHas(
+                    'freelancer',
+                    function ($query) use ($freelancerId): void {
+                        $query->where('freelancer_id', $freelancerId);
+                    }
+                );
+            }]
+        )
+            ->whereHas(
+                'shifts.freelancer',
+                function ($query) use ($freelancerId): void {
+                    $query->where('freelancer_id', $freelancerId);
+                }
+            )
             ->get();
         foreach ($events as $event) {
             if (in_array($today, $event->days_of_event)) {
@@ -108,14 +129,22 @@ class CalendarController extends Controller
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
-        $events = Event::with(['shifts' => function ($query) use ($serviceProviderId): void {
-            $query->whereHas('serviceProvider', function ($query) use ($serviceProviderId): void {
-                $query->where('service_provider_id', $serviceProviderId);
-            });
-        }])
-            ->whereHas('shifts.serviceProvider', function ($query) use ($serviceProviderId): void {
-                $query->where('service_provider_id', $serviceProviderId);
-            })
+        $events = Event::with(
+            ['shifts' => function ($query) use ($serviceProviderId): void {
+                $query->whereHas(
+                    'serviceProvider',
+                    function ($query) use ($serviceProviderId): void {
+                        $query->where('service_provider_id', $serviceProviderId);
+                    }
+                );
+            }]
+        )
+            ->whereHas(
+                'shifts.serviceProvider',
+                function ($query) use ($serviceProviderId): void {
+                    $query->where('service_provider_id', $serviceProviderId);
+                }
+            )
             ->get();
         foreach ($events as $event) {
             if (in_array($today, $event->days_of_event)) {
@@ -570,26 +599,49 @@ class CalendarController extends Controller
             ->when($room, fn(EventBuilder $builder) => $builder->where('room_id', $room->id))
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
-                fn(EventBuilder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
-                    ->when($roomIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
-                    ->when($areaIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
-                    ->when($showAdjoiningRooms, fn(Builder $roomBuilder) => $roomBuilder->with('adjoining_rooms'))
-                    ->when($roomAttributeIds, fn(Builder $roomBuilder) => $roomBuilder
-                        ->whereHas('attributes', fn(Builder $roomAttributeBuilder) => $roomAttributeBuilder
-                            ->whereIn('room_attributes.id', $roomAttributeIds)))
-                    ->when($roomCategoryIds, fn(Builder $roomBuilder) => $roomBuilder
-                        ->whereHas('categories', fn(Builder $roomCategoryBuilder) => $roomCategoryBuilder
-                            ->whereIn('room_categories.id', $roomCategoryIds)))
-                    ->without(['admins']))
+                fn(EventBuilder $builder) => $builder->whereHas(
+                    'room',
+                    fn(Builder $roomBuilder) => $roomBuilder
+                        ->when($roomIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
+                        ->when($areaIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
+                        ->when($showAdjoiningRooms, fn(Builder $roomBuilder) => $roomBuilder->with('adjoining_rooms'))
+                        ->when(
+                            $roomAttributeIds,
+                            fn(Builder $roomBuilder) => $roomBuilder
+                                ->whereHas(
+                                    'attributes',
+                                    fn(Builder $roomAttributeBuilder) => $roomAttributeBuilder
+                                    ->whereIn('room_attributes.id', $roomAttributeIds)
+                                )
+                        )
+                        ->when(
+                            $roomCategoryIds,
+                            fn(Builder $roomBuilder) => $roomBuilder
+                                ->whereHas(
+                                    'categories',
+                                    fn(Builder $roomCategoryBuilder) => $roomCategoryBuilder
+                                    ->whereIn('room_categories.id', $roomCategoryIds)
+                                )
+                        )
+                        ->without(['admins'])
+                )
             )
-            ->unless(empty($eventTypeIds), function ($query) use ($eventTypeIds) {
-                return $query->where(function ($query) use ($eventTypeIds): void {
-                    $query->whereIn('event_type_id', $eventTypeIds)
-                        ->orWhereHas('subEvents', function ($query) use ($eventTypeIds): void {
-                            $query->whereIn('event_type_id', $eventTypeIds);
-                        });
-                });
-            })
+            ->unless(
+                empty($eventTypeIds),
+                function ($query) use ($eventTypeIds) {
+                    return $query->where(
+                        function ($query) use ($eventTypeIds): void {
+                            $query->whereIn('event_type_id', $eventTypeIds)
+                                ->orWhereHas(
+                                    'subEvents',
+                                    function ($query) use ($eventTypeIds): void {
+                                        $query->whereIn('event_type_id', $eventTypeIds);
+                                    }
+                                );
+                        }
+                    );
+                }
+            )
             ->unless(!$hasAudience, fn(EventBuilder $builder) => $builder->where('audience', true))
             ->unless(!$hasNoAudience, fn(EventBuilder $builder) => $builder->where('audience', false))
             ->unless(!$isLoud, fn(EventBuilder $builder) => $builder->where('is_loud', true))

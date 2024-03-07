@@ -26,9 +26,9 @@
                          class="flex w-full bg-white my-2 inputMain">
                         <button class="bg-buttonBlue flex"
                                 @click="changeChecklistStatus(checklist)">
-                            <IconChevronUp v-if="this.opened_checklists.includes(checklist.id)"
+                            <IconChevronUp stroke-width="1.5" v-if="this.opened_checklists.includes(checklist.id)"
                                            class="h-6 w-6 text-white my-auto"/>
-                            <IconChevronDown v-else class="h-6 w-6 text-white my-auto"/>
+                            <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-white my-auto"/>
                         </button>
                         <div :class="this.opened_checklists.includes(checklist.id) ? 'mt-4' : ''"
                              class="flex w-full ml-4 flex-wrap p-4">
@@ -55,7 +55,7 @@
                                         <div class="flex">
                                             <MenuButton
                                                 class="flex bg-tagBg p-0.5 rounded-full">
-                                                <IconDotsVertical
+                                                <IconDotsVertical stroke-width="1.5"
                                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                     aria-hidden="true"/>
                                             </MenuButton>
@@ -274,10 +274,10 @@
                          class="flex w-full bg-white my-2 inputMain">
                         <button class="bg-buttonBlue flex"
                                 @click="changeChecklistStatus(checklist)">
-                            <ChevronUpIcon v-if="this.opened_checklists.includes(checklist.id)"
+                            <IconChevronUp  stroke-width="1.5" v-if="this.opened_checklists.includes(checklist.id)"
                                            class="h-6 w-6 text-white my-auto"
                             />
-                            <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"/>
+                            <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-white my-auto"/>
                         </button>
                         <div class="flex w-full ml-4 flex-wrap p-4">
                             <div class="flex justify-between w-full">
@@ -297,7 +297,7 @@
                                         <div class="flex">
                                             <MenuButton
                                                 class="flex bg-tagBg p-0.5 rounded-full">
-                                                <DotsVerticalIcon
+                                                <IconDotsVertical stroke-width="1.5"
                                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                     aria-hidden="true"
                                                 />
@@ -316,7 +316,7 @@
                                                     <MenuItem v-slot="{ active }">
                                                         <a @click="openEditChecklistModal(checklist)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <PencilAltIcon
+                                                            <IconEdit  stroke-width="1.5"
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
                                                             {{ $t('Edit') }}
@@ -325,7 +325,7 @@
                                                     <MenuItem v-slot="{ active }">
                                                         <a @click="checkAllTasks(checklist.tasks)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <PencilAltIcon
+                                                            <IconListCheck stroke-width="1.5"
                                                                 class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
                                                             {{ $t('Mark all tasks as completed') }}
@@ -334,7 +334,7 @@
                                                     <MenuItem v-slot="{ active }">
                                                         <a @click="createTemplateFromChecklist(checklist)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <PencilAltIcon
+                                                            <IconFilePlus stroke-width="1.5"
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
                                                             {{ $t('Save as template') }}
@@ -344,7 +344,7 @@
                                                         <a href="#"
                                                            @click="duplicateChecklist(checklist)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <DuplicateIcon
+                                                            <IconCopy stroke-width="1.5"
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
                                                             {{ $t('Duplicate') }}
@@ -353,7 +353,7 @@
                                                     <MenuItem v-slot="{ active }">
                                                         <a @click="openDeleteChecklistModal(checklist)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <TrashIcon
+                                                            <IconTrash  stroke-width="1.5"
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
                                                             {{ $t('Delete') }}
@@ -432,7 +432,7 @@
                                                         <div class="flex">
                                                             <MenuButton
                                                                 class="flex bg-tagBg p-0.5 rounded-full">
-                                                                <DotsVerticalIcon
+                                                                <IconDotsVertical stroke-width="1.5"
                                                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                                     aria-hidden="true"/>
                                                             </MenuButton>
@@ -451,7 +451,7 @@
                                                                         <span
                                                                             @click="openEditTaskModal(element, true)"
                                                                             :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <PencilAltIcon
+                                                                            <IconEdit stroke-width="1.5"
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
                                                                             {{ $t('Edit') }}
@@ -460,7 +460,7 @@
                                                                     <MenuItem v-slot="{ active }">
                                                                         <a @click="deleteTask(element)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <TrashIcon
+                                                                            <IconTrash stroke-width="1.5"
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
                                                                             {{ $t('Delete') }}

@@ -17,11 +17,11 @@
                     <div class="flex items-center">
                         <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
                              class="cursor-pointer inset-y-0 mr-12">
-                            <SearchIcon class="h-5 w-5" aria-hidden="true"/>
+                            <IconSearch stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                         </div>
                         <div v-else class="flex items-center w-full w-64 mr-12">
                             <inputComponent v-model="template_query" :placeholder="$t('Search for projects')" />
-                            <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
+                            <IconX stroke-width="1.5" class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                         </div>
                     </div>
                 </div>
@@ -47,7 +47,7 @@
                                 <div class="flex">
                                     <MenuButton
                                         class="flex">
-                                        <DotsVerticalIcon
+                                        <IconDotsVertical stroke-width="1.5"
                                             class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
                                             aria-hidden="true"/>
                                     </MenuButton>
@@ -74,7 +74,7 @@
                                             <MenuItem v-slot="{ active }">
                                                 <a :href="getEditHref(template)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                    <PencilAltIcon
+                                                    <IconEdit  stroke-width="1.5"
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
                                                     {{ $t('edit')}}
@@ -83,7 +83,7 @@
                                             <MenuItem v-slot="{ active }">
                                                 <a href="#" @click="duplicateTemplate(template)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <DuplicateIcon
+                                                    <IconCopy  stroke-width="1.5"
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
                                                     {{$t('Duplicate')}}
@@ -92,7 +92,7 @@
                                             <MenuItem v-slot="{ active }">
                                                 <a href="#" @click="openDeleteTemplateModal(template)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <TrashIcon
+                                                    <IconTrash stroke-width="1.5"
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
                                                     {{ $t('Delete') }}
@@ -125,7 +125,7 @@
                                 <div class="flex">
                                     <MenuButton
                                         class="flex">
-                                        <DotsVerticalIcon
+                                        <IconDotsVertical stroke-width="1.5"
                                             class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
                                             aria-hidden="true"/>
                                     </MenuButton>
@@ -152,7 +152,7 @@
                                             <MenuItem v-slot="{ active }">
                                                 <a :href="getEditHref(template)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                    <PencilAltIcon
+                                                    <IconEdit stroke-width="1.5"
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
                                                     {{ $t('edit')}}
@@ -161,7 +161,7 @@
                                             <MenuItem v-slot="{ active }">
                                                 <a href="#" @click="duplicateTemplate(template)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <DuplicateIcon
+                                                    <IconCopy stroke-width="1.5"
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
                                                     {{$t('Duplicate')}}
@@ -170,7 +170,7 @@
                                             <MenuItem v-slot="{ active }">
                                                 <a href="#" @click="openDeleteTemplateModal(template)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <TrashIcon
+                                                    <IconTrash stroke-width="1.5"
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
                                                     {{ $t('Delete') }}
@@ -242,9 +242,10 @@ import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     name: "Checklist Management",
     props: ['checklist_templates'],
     components: {

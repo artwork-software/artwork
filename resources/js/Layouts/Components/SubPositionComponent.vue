@@ -49,7 +49,7 @@
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <a @click="duplicateSubpostion(subPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconClipboardCopy stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                                <IconCopy stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
                                                 {{ $t('Duplicate') }}
                                             </a>
                                         </MenuItem>

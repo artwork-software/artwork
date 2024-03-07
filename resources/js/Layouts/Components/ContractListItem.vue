@@ -32,7 +32,7 @@
             <div class="flex items-center -mt-1">
                 <MenuButton
                     class="flex bg-tagBg p-0.5 rounded-full">
-                    <DotsVerticalIcon
+                    <IconDotsVertical stroke-width="1.5"
                         class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                         aria-hidden="true"/>
                 </MenuButton>
@@ -49,7 +49,7 @@
                         <MenuItem v-slot="{ active }">
                             <a href="#" @click="$emit('openEditContractModal', contract)"
                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <DuplicateIcon
+                                <IconEdit stroke-width="1.5"
                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
                                 {{ $t('Edit')}}
@@ -59,7 +59,7 @@
                             v-slot="{ active }">
                             <a @click="$emit('openDeleteContractModal', contract)"
                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                <TrashIcon
+                                <IconTrash stroke-width="1.5"
                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                     aria-hidden="true"/>
                                 {{ $t('Delete') }}
@@ -79,15 +79,18 @@ import {
 import Permissions from "@/mixins/Permissions.vue";
 import {DotsVerticalIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {IconCopy} from "@tabler/icons-vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "ContractListItem",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     props: {
         contract: Object
     },
     emits: ['openDeleteContractModal', 'openEditContractModal'],
     components: {
+        IconCopy,
         Menu,
         MenuItem,
         MenuItems,

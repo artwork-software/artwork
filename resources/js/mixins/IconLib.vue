@@ -11,16 +11,13 @@ import {
     IconRepeat, IconUsersGroup, IconChevronsLeft, IconChevronsRight, IconUpload, IconDownload, IconCircleX,
     IconCircleCheckFilled, IconUserPlus, IconListDetails, IconCircleXFilled, IconBrandRedhat, IconBell,
     IconMessageDots, IconBook, IconBriefcase, IconCamera, IconClipboard, IconEye, IconMovie, IconUser,
-    IconExclamationCircle, IconSortDescending, IconSortAscending, IconArrowsSort, IconCheck
+    IconExclamationCircle, IconSortDescending, IconSortAscending, IconArrowsSort, IconCheck, IconPlus,
+    IconRecycle
 } from "@tabler/icons-vue";
 export default {
     components: {
-        IconAdjustmentsAlt,
-        IconCalendarMonth,
-        IconCalendarUser,
-        IconCurrencyEuro, IconFileText,
-        IconGeometry, IconLayoutDashboard,
-        IconListCheck,
+        IconAdjustmentsAlt, IconCalendarMonth, IconCalendarUser,
+        IconCurrencyEuro, IconFileText, IconGeometry, IconLayoutDashboard, IconListCheck,
         IconUsers, IconFileAnalytics, IconArrowsDiagonal, IconZoomOut,
         IconFilePlus, IconFileImport, IconTrash, IconRestore, IconDotsVertical,
         IconLockOpen, IconLock, IconClipboardCopy, IconCircleCheck, IconLockCog,
@@ -30,7 +27,8 @@ export default {
         IconRepeat, IconUsersGroup, IconChevronsLeft, IconChevronsRight, IconUpload, IconDownload, IconCircleX,
         IconCircleCheckFilled, IconUserPlus, IconListDetails, IconCircleXFilled, IconBrandRedhat, IconBell,
         IconMessageDots, IconBook, IconBriefcase, IconCamera, IconClipboard, IconEye, IconMovie, IconUser,
-        IconExclamationCircle, IconSortDescending, IconSortAscending, IconArrowsSort, IconCheck
+        IconExclamationCircle, IconSortDescending, IconSortAscending, IconArrowsSort, IconCheck, IconPlus,
+        IconRecycle
     }
 }
 </script>

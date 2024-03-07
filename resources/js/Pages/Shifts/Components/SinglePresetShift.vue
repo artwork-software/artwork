@@ -19,8 +19,8 @@
                     <div class="flex p-0.5 rounded-full">
                         <MenuButton
                             class="flex p-0.5 rounded-full">
-                            <DotsVerticalIcon
-                                class=" flex-shrink-0 h-4 w-4 my-auto"
+                            <IconDotsVertical
+                                stroke-width="1.5" class=" flex-shrink-0 h-4 w-4 my-auto"
                                 aria-hidden="true"/>
                         </MenuButton>
                     </div>
@@ -36,7 +36,7 @@
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="showEditShiftModal = true"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                        <DuplicateIcon
+                                        <IconEdit stroke-width="1.5"
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
                                         {{  $t('edit') }}
@@ -45,7 +45,7 @@
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="deleteShift(presetShift.id)"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <TrashIcon
+                                        <IconTrash  stroke-width="1.5"
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
                                         {{ $t('Delete') }}
@@ -94,9 +94,11 @@ import {Menu, MenuItems, MenuItem, MenuButton} from "@headlessui/vue";
 import AddEditShiftPresetModal from "@/Pages/Shifts/Components/AddEditShiftPresetModal.vue";
 import {Inertia} from "@inertiajs/inertia";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
     name: "SinglePresetShift",
+    mixins: [IconLib],
     data(){
         return {
             showEditShiftModal: false

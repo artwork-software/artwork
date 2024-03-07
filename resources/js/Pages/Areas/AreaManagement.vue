@@ -40,7 +40,7 @@
                                             <button
                                                 :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                                 @click="addRoomCategory" :disabled="!roomCategoryInput">
-                                                <CheckIcon class="h-5 w-5"></CheckIcon>
+                                                <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                                             </button>
                                         </div>
                                     </div>
@@ -52,7 +52,7 @@
                                             {{ category.name }}
                                             <button type="button" @click="this.showRoomCategoryDeleteModal(category)">
                                                 <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
-                                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                                             </button>
                                         </span>
                                     </div>
@@ -78,7 +78,7 @@
                                             <button
                                                 :class="[roomAttributeInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                                 @click="addRoomAttribute" :disabled="!roomAttributeInput">
-                                                <CheckIcon class="h-5 w-5"></CheckIcon>
+                                                <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                                             </button>
                                         </div>
 
@@ -91,7 +91,7 @@
                                             {{ attribute.name }}
                                             <button type="button" @click="this.showRoomAttributeDeleteModal(attribute)">
                                                 <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
-                                                <XIcon class="ml-1 h-4 w-4 hover:text-error"/>
+                                                <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error"/>
                                             </button>
                                         </span>
                                     </div>
@@ -118,10 +118,10 @@
                                 <div v-for="area in areas"
                                      class="flex w-full bg-white my-2 border border-gray-200">
                                     <button class="bg-buttonBlue flex" @click="changeAreaStatus(area)">
-                                        <ChevronUpIcon v-if="this.opened_areas.includes(area.id)"
-                                                       class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                                        <ChevronDownIcon v-else
-                                                         class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                                        <IconChevronUp stroke-width="1.5" v-if="this.opened_areas.includes(area.id)"
+                                                       class="h-6 w-6 text-white my-auto"></IconChevronUp>
+                                        <IconChevronDown stroke-width="1.5" v-else
+                                                         class="h-6 w-6 text-white my-auto"></IconChevronDown>
                                     </button>
                                     <div class="flex items-center w-full ml-4 flex-wrap p-4">
                                         <div class="flex justify-between w-full">
@@ -135,7 +135,7 @@
                                                     <div class="flex">
                                                         <MenuButton
                                                             class="flex bg-tagBg p-0.5 rounded-full">
-                                                            <DotsVerticalIcon
+                                                            <IconDotsVertical stroke-width="1.5"
                                                                 class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                                 aria-hidden="true"/>
                                                         </MenuButton>
@@ -148,12 +148,12 @@
                                                         leave-from-class="transform opacity-100 scale-100"
                                                         leave-to-class="transform opacity-0 scale-95">
                                                         <MenuItems
-                                                            class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                            class="origin-top-right absolute z-30 right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                             <div class="py-1">
                                                                 <MenuItem v-slot="{ active }">
                                                                     <a @click="openEditAreaModal(area)"
                                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                                        <PencilAltIcon
+                                                                        <IconEdit stroke-width="1.5"
                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                             aria-hidden="true"/>
                                                                         {{ $t('edit')}}
@@ -163,7 +163,7 @@
                                                                     <a href="#"
                                                                        @click="duplicateArea(area)"
                                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                        <DuplicateIcon
+                                                                        <IconCopy stroke-width="1.5"
                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                             aria-hidden="true"/>
                                                                         {{ $t('Duplicate')}}
@@ -172,7 +172,7 @@
                                                                 <MenuItem v-slot="{ active }">
                                                                     <a @click="openSoftDeleteAreaModal(area)"
                                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                        <TrashIcon
+                                                                        <IconTrash stroke-width="1.5"
                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                             aria-hidden="true"/>
                                                                         {{ $t('In the recycle bin')}}
@@ -181,7 +181,7 @@
                                                                 <MenuItem v-slot="{ active }">
                                                                     <a @click="openDeleteAllRoomsModal(area)"
                                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                        <PencilAltIcon
+                                                                        <IconRecycle stroke-width="1.5"
                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                             aria-hidden="true"/>
                                                                         {{ $t('Remove all rooms')}}
@@ -238,7 +238,7 @@
                                                                     <div class="flex">
                                                                         <MenuButton
                                                                             class="flex bg-tagBg ml-3 p-0.5 rounded-full">
-                                                                            <DotsVerticalIcon
+                                                                            <IconDotsVertical stroke-width="1.5"
                                                                                 class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                                                 aria-hidden="true"/>
                                                                         </MenuButton>
@@ -256,7 +256,7 @@
                                                                                 <MenuItem v-slot="{ active }">
                                                                                     <a @click="openEditRoomModal(element)"
                                                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                                                        <PencilAltIcon
+                                                                                        <IconEdit stroke-width="1.5"
                                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                             aria-hidden="true"/>
                                                                                         {{ $t('edit')}}
@@ -266,7 +266,7 @@
                                                                                     <a href="#"
                                                                                        @click="duplicateRoom(element)"
                                                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                        <DuplicateIcon
+                                                                                        <IconCopy stroke-width="1.5"
                                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                             aria-hidden="true"/>
                                                                                         {{ $t('Duplicate')}}
@@ -275,7 +275,7 @@
                                                                                 <MenuItem v-slot="{ active }">
                                                                                     <a @click="openSoftDeleteRoomModal(element)"
                                                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                        <TrashIcon
+                                                                                        <IconTrash stroke-width="1.5"
                                                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                             aria-hidden="true"/>
                                                                                         {{ $t('In the recycle bin')}}
@@ -297,10 +297,10 @@
                                                 <h2 v-on:click="switchVisibility(area.id)"
                                                     class="pb-2 flex xxsDarkBold cursor-pointer">
                                                     {{ $t('Temporary rooms')}}
-                                                    <ChevronUpIcon v-if="showTemporaryRooms.includes(area.id)"
-                                                                   class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                                                    <ChevronDownIcon v-else
-                                                                     class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                                                    <IconChevronUp stroke-width="1.5" v-if="showTemporaryRooms.includes(area.id)"
+                                                                   class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronUp>
+                                                    <IconChevronDown stroke-width="1.5" v-else
+                                                                     class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronDown>
                                                 </h2>
                                                 <draggable v-show="showTemporaryRooms.includes(area.id)"
                                                            ghost-class="opacity-50"
@@ -341,7 +341,7 @@
                                                                         <div class="flex">
                                                                             <MenuButton
                                                                                 class="flex bg-tagBg p-0.5 rounded-full">
-                                                                                <DotsVerticalIcon
+                                                                                <IconDotsVertical stroke-width="1.5"
                                                                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                                                     aria-hidden="true"/>
                                                                             </MenuButton>
@@ -359,7 +359,7 @@
                                                                                     <MenuItem v-slot="{ active }">
                                                                                         <a @click="openEditRoomModal(element)"
                                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                                                                            <PencilAltIcon
+                                                                                            <IconEdit stroke-width="1.5"
                                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                                 aria-hidden="true"/>
                                                                                             {{ $t('edit')}}
@@ -369,7 +369,7 @@
                                                                                         <a href="#"
                                                                                            @click="duplicateRoom(element)"
                                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                            <DuplicateIcon
+                                                                                            <IconCopy  stroke-width="1.5"
                                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                                 aria-hidden="true"/>
                                                                                             {{ $t('Duplicate')}}
@@ -378,7 +378,7 @@
                                                                                     <MenuItem v-slot="{ active }">
                                                                                         <a @click="openSoftDeleteRoomModal(element)"
                                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                            <TrashIcon
+                                                                                            <IconTrash stroke-width="1.5"
                                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                                 aria-hidden="true"/>
                                                                                             {{ $t('In the recycle bin')}}
@@ -1016,9 +1016,10 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vu
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         AddButtonBig,

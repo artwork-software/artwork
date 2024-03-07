@@ -27,6 +27,7 @@
         {{$t('Project period')}}: {{new Date(dateValueArray[0]).format("DD.MM.YYYY")}} - {{new Date(dateValueArray[1]).format("DD.MM.YYYY")}}
     </div>
     <div v-if="hasError" class="text-error mt-1 mx-2">{{ errorMessage }}</div>
+
 </template>
 
 <script>
@@ -38,7 +39,6 @@ import {ref} from "vue";
 import {Inertia} from "@inertiajs/inertia";
 import {CalendarIcon} from "@heroicons/vue/outline";
 import Permissions from "@/mixins/Permissions.vue";
-
 
 const formatter = ref({
     date: 'YYYY-MM-DD',
@@ -71,7 +71,27 @@ export default {
             formatter: formatter,
             showDateRangePicker: false,
             refreshPage: false,
-            customShortcuts: [
+            //customShortcuts: customShortcuts,
+            customShortcuts: null,
+            errorMessage: '',
+            hasError: false,
+
+        }
+    },
+    computed: {
+
+    },
+    watch: {
+        dateValuePicker: {
+            handler() {
+                this.showDateRangePicker = false;
+                this.updateTimes()
+            }
+        }
+    },
+    mounted() {
+        this.customShortcuts = () => {
+            return [
                 {
                     label: this.$t('Today'),
                     atClick: () => {
@@ -132,19 +152,7 @@ export default {
                         return [next90DaysStart, next90DaysEnd];
                     }
                 }
-            ],
-            errorMessage: '',
-            hasError: false,
-
-        }
-    },
-    watch: {
-        dateValuePicker: {
-            handler() {
-                this.showDateRangePicker = false;
-                this.updateTimes()
-            }
-        }
+            ]}
     },
     methods: {
         updateTimes() {
@@ -187,7 +195,7 @@ export default {
 
             }
         },
-    }
+    },
 }
 </script>
 

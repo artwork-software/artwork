@@ -20,6 +20,11 @@ readonly class BudgetManagementCostUnitService
         return $this->budgetManagementCostUnitRepository->getAll();
     }
 
+    public function getAllTrashed(): Collection
+    {
+        return $this->budgetManagementCostUnitRepository->getAllTrashed();
+    }
+
     /**
      * @throws Throwable
      */

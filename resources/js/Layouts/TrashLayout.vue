@@ -86,7 +86,7 @@ export default {
         }
     },
     created() {
-        this.selectedTrash = this.trashSites[this.$page.component]
+        this.selectedTrash = this.trashSites[this.$page.component];
     },
     computed: {
         trashSites() {
@@ -120,6 +120,26 @@ export default {
                     name: this.$t('Sage API data sets'),
                     href: route('sageNotAssignedData.trashed'),
                     available: this.$can('can view and delete sage100-api-data')
+                },
+                'Trash/BudgetManagementAccount': {
+                    name: this.$t('Accounts'),
+                    href: route('budget-settings.account-management.trash-accounts'),
+                    available: this.$canAny(
+                        [
+                            'can manage global project budgets',
+                            'can manage all project budgets without docs'
+                        ]
+                    ),
+                },
+                'Trash/BudgetManagementCostUnit': {
+                    name: this.$t('Cost Units'),
+                    href: route('budget-settings.account-management.trash-cost-units'),
+                    available: this.$canAny(
+                        [
+                            'can manage global project budgets',
+                            'can manage all project budgets without docs'
+                        ]
+                    ),
                 }
             }
         }

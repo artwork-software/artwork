@@ -14,10 +14,10 @@
             <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
         </div>
     </div>
-    <div v-for="sageNotAssignedData in this.filteredTrashedSageNotAssignedData"
+    <div v-for="trashedCostUnit in this.filteredTrashedCostUnits"
          class="flex w-full bg-white my-2 border border-gray-200">
-        <button class="bg-buttonBlue hover:bg-buttonHover flex" @click="sageNotAssignedData.hidden = !sageNotAssignedData.hidden">
-            <ChevronUpIcon v-if="sageNotAssignedData.hidden === true"
+        <button class="bg-buttonBlue hover:bg-buttonHover flex" @click="trashedCostUnit.hidden = !trashedCostUnit.hidden">
+            <ChevronUpIcon v-if="trashedCostUnit.hidden === true"
                            class="h-6 w-6 text-white my-auto"
             />
             <ChevronDownIcon v-else
@@ -28,7 +28,7 @@
             <div class="flex justify-between w-full">
                 <div class="my-auto">
                     <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
-                    {{ sageNotAssignedData.buchungstext }}
+                    {{ trashedCostUnit.cost_unit_number }}
                     </span>
                 </div>
                 <div class="flex items-center">
@@ -54,9 +54,9 @@
                                     <MenuItem v-slot="{ active }">
                                         <Link method="patch"
                                               :href="route(
-                                                  'sageNotAssignedData.restore',
+                                                  'budget-settings.account-management.trash-cost-units.restore',
                                                   {
-                                                      sageNotAssignedData: sageNotAssignedData.id
+                                                      budgetManagementCostUnit: trashedCostUnit.id
                                                   }
                                               )"
                                               :class="[active ? 'bg-primaryHover text-white' :
@@ -71,9 +71,9 @@
                                     <MenuItem v-slot="{ active }">
                                         <Link method="delete"
                                               :href="route(
-                                                  'sageNotAssignedData.forceDelete',
+                                                  'budget-settings.account-management.trash-cost-units.forceDelete',
                                                   {
-                                                      sageNotAssignedData: sageNotAssignedData.id
+                                                      budgetManagementCostUnit: trashedCostUnit.id
                                                   }
                                               )"
                                               :class="[active ? 'bg-primaryHover text-white' :
@@ -91,34 +91,8 @@
                     </Menu>
                 </div>
             </div>
-            <div class="w-full mt-6 mb-12" v-if="sageNotAssignedData.hidden">
-                <div class="grid grid-cols-2">
-                    <span class="xsLight">{{ $t('Creditor') }}</span>
-                    <span class="xsLight text-black">{{ sageNotAssignedData.kreditor }}</span>
-                    <span class="xsLight">{{ $t('Betrag') }}</span>
-                    <span class="xsLight text-black">{{ sageNotAssignedData.buchungsbetrag }} EUR</span>
-                    <span class="xsLight">{{ $t('Booking text') }}</span>
-                    <span class="xsLight text-black">{{ sageNotAssignedData.buchungstext }}</span>
-
-                    <span class="xsLight mt-4">{{ $t('Document number') }}</span>
-                    <span class="xsLight text-black mt-4">{{ sageNotAssignedData.belegnummer }}</span>
-                    <span class="xsLight">{{ $t('Document date') }}</span>
-                    <span class="xsLight text-black">
-                        {{ this.formatBookingDataDate(sageNotAssignedData.belegdatum) }}
-                    </span>
-
-                    <span class="xsLight mt-4">{{ $t('General ledger account') }}</span>
-                    <span class="xsLight text-black mt-4">{{ sageNotAssignedData.sa_kto }}</span>
-                    <span class="xsLight">{{ $t('Cost bearer') }}</span>
-                    <span class="xsLight text-black">{{ sageNotAssignedData.kst_traeger }}</span>
-                    <span class="xsLight">{{ $t('Cost center') }}</span>
-                    <span class="xsLight text-black">{{ sageNotAssignedData.kst_stelle }}</span>
-
-                    <span class="xsLight mt-4">{{ $t('Booking date') }}</span>
-                    <span class="xsLight text-black mt-4">
-                        {{ this.formatBookingDataDate(sageNotAssignedData.buchungsdatum) }}
-                    </span>
-                </div>
+            <div class="w-full mt-6 mb-12" v-if="trashedCostUnit.hidden">
+                {{ trashedCostUnit.title }}
             </div>
         </div>
     </div>
@@ -134,9 +108,9 @@ import { Link } from "@inertiajs/inertia-vue3";
 import Input from "@/Layouts/Components/InputComponent.vue";
 
 export default {
-    name: "SageNotAssignedDataTrashed",
+    name: "BudgetManagementCostUnitsTrashed",
     layout: [AppLayout, TrashLayout],
-    props: ['sageNotAssignedDataTrashed'],
+    props: ['trashedCostUnits'],
     components: {
         Input,
         XIcon,
@@ -159,13 +133,14 @@ export default {
         }
     },
     computed: {
-        filteredTrashedSageNotAssignedData() {
+        filteredTrashedCostUnits() {
             if (!this.searchText) {
-                return this.sageNotAssignedDataTrashed;
+                return this.trashedCostUnits;
             }
 
-            return this.sageNotAssignedDataTrashed.filter((sageNotAssignedData) => {
-                return sageNotAssignedData.buchungstext.includes(this.searchText);
+            return this.trashedCostUnits.filter((trashedCostUnit) => {
+                return trashedCostUnit.cost_unit_number.includes(this.searchText) ||
+                    trashedCostUnit.title.includes(this.searchText);
             });
         }
     },
@@ -174,12 +149,6 @@ export default {
             this.showSearchbar = false
             this.searchText = ''
         },
-        formatBookingDataDate(dateString) {
-            let parts = dateString.split('T');
-            parts = parts[0].split('-');
-
-            return parts[2] + '.' + parts[1] + '.' + parts[0];
-        }
     }
 }
 </script>

@@ -1514,5 +1514,7 @@
     "Should the cost center really be deleted?": "Should the cost center \"{0}\" really be deleted?",
     "The account number must contain at least one character.": "The account number must contain at least one character.",
     "The cost center number must contain at least one character.": "The cost center number must contain at least one character.",
-    "The description must contain at least one character.": "The description must contain at least one character."
+    "The description must contain at least one character.": "The description must contain at least one character.",
+    "Accounts": "Accounts",
+    "Cost Units": "Cost Units"
 }

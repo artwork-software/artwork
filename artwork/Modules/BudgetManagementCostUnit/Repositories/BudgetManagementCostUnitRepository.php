@@ -12,4 +12,9 @@ class BudgetManagementCostUnitRepository extends BaseRepository
     {
         return BudgetManagementCostUnit::all();
     }
+
+    public function getAllTrashed(): Collection
+    {
+        return BudgetManagementCostUnit::onlyTrashed()->get();
+    }
 }

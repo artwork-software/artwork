@@ -12,4 +12,9 @@ class BudgetManagementAccountRepository extends BaseRepository
     {
         return BudgetManagementAccount::all();
     }
+
+    public function getAllTrashed(): Collection
+    {
+        return BudgetManagementAccount::onlyTrashed()->get();
+    }
 }

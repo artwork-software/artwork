@@ -8,6 +8,8 @@ use Artwork\Modules\BudgetManagementAccount\Services\BudgetManagementAccountServ
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
+use Inertia\Response;
 use Throwable;
 
 class BudgetManagementAccountController extends Controller
@@ -16,6 +18,16 @@ class BudgetManagementAccountController extends Controller
         private readonly BudgetManagementAccountService $budgetManagementAccountService
     ) {
         $this->authorizeResource(BudgetManagementAccount::class, 'budgetManagementAccount');
+    }
+
+    public function indexTrash(): Response
+    {
+        return Inertia::render(
+            'Trash/BudgetManagementAccount',
+            [
+                'trashedAccounts' => $this->budgetManagementAccountService->getAllTrashed()
+            ]
+        );
     }
 
     public function store(StoreBudgetManagementAccountRequest $storeBudgetManagementAccountRequest): RedirectResponse

@@ -8,6 +8,8 @@ use Artwork\Modules\BudgetManagementCostUnit\Services\BudgetManagementCostUnitSe
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
+use Inertia\Response;
 use Throwable;
 
 class BudgetManagementCostUnitController extends Controller
@@ -16,6 +18,16 @@ class BudgetManagementCostUnitController extends Controller
         private readonly BudgetManagementCostUnitService $budgetManagementCostUnitService
     ) {
         $this->authorizeResource(BudgetManagementCostUnit::class, 'budgetManagementCostUnit');
+    }
+
+    public function indexTrash(): Response
+    {
+        return Inertia::render(
+            'Trash/BudgetManagementCostUnit',
+            [
+                'trashedCostUnits' => $this->budgetManagementCostUnitService->getAllTrashed()
+            ]
+        );
     }
 
     public function store(StoreBudgetManagementCostUnitRequest $storeBudgetManagementCostUnitRequest): RedirectResponse

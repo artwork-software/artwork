@@ -1514,5 +1514,7 @@
     "Should the cost center really be deleted?": "Soll die Kostenstelle \"{0}\" wirklich gelöscht werden?'",
     "The account number must contain at least one character.": "Die Kontonummer muss mindestens ein Zeichen enthalten.",
     "The cost center number must contain at least one character.": "Die Kostenstellen-Nummer muss mindestens ein Zeichen enthalten.",
-    "The description must contain at least one character.": "Die Beschreibung muss mindestens ein Zeichen enthalten."
+    "The description must contain at least one character.": "Die Beschreibung muss mindestens ein Zeichen enthalten.",
+    "Accounts": "Konten",
+    "Cost Units": "Kostenstellen"
 }

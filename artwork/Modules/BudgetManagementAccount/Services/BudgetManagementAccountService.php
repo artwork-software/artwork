@@ -20,6 +20,11 @@ readonly class BudgetManagementAccountService
         return $this->budgetManagementAccountRepository->getAll();
     }
 
+    public function getAllTrashed(): Collection
+    {
+        return $this->budgetManagementAccountRepository->getAllTrashed();
+    }
+
     /**
      * @throws Throwable
      */

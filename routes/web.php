@@ -796,6 +796,42 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'destroy'
             ]
         )->name('budget-settings.account-management.destroy-cost-unit');
+        Route::get(
+            '/account-management/accounts/trashed',
+            [
+                BudgetManagementAccountController::class, 'indexTrash'
+            ]
+        )->name('budget-settings.account-management.trash-accounts');
+        Route::patch(
+            '/account-management/accounts/trashed/{budgetManagementAccount}',
+            [
+                BudgetManagementAccountController::class, 'restore'
+            ]
+        )->withTrashed()->name('budget-settings.account-management.trash-accounts.restore');
+        Route::delete(
+            '/account-management/accounts/trashed/{budgetManagementAccount}',
+            [
+                BudgetManagementAccountController::class, 'forceDelete'
+            ]
+        )->withTrashed()->name('budget-settings.account-management.trash-accounts.forceDelete');
+        Route::get(
+            '/account-management/cost-units/trashed',
+            [
+                BudgetManagementCostUnitController::class, 'indexTrash'
+            ]
+        )->name('budget-settings.account-management.trash-cost-units');
+        Route::patch(
+            '/account-management/cost-units/trashed/{budgetManagementCostUnit}',
+            [
+                BudgetManagementCostUnitController::class, 'restore'
+            ]
+        )->withTrashed()->name('budget-settings.account-management.trash-cost-units.restore');
+        Route::delete(
+            '/account-management/cost-units/trashed/{budgetManagementCostUnit}',
+            [
+                BudgetManagementCostUnitController::class, 'forceDelete'
+            ]
+        )->withTrashed()->name('budget-settings.account-management.trash-cost-units.forceDelete');
 
         Route::get('/templates', [BudgetTemplateController::class, 'index'])
             ->name('budget-settings.templates')

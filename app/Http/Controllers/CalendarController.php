@@ -9,7 +9,6 @@ use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
-use App\Models\UserCalendarSettings;
 use App\Models\UserShiftCalendarFilter;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
@@ -34,7 +33,6 @@ class CalendarController extends Controller
 
     private ?UserShiftCalendarFilter $userShiftCalendarFilter;
 
-    private ?UserCalendarSettings $calendarSettings;
 
     public function __construct(
         private readonly FilterProvider $filterProvider,
@@ -44,7 +42,6 @@ class CalendarController extends Controller
         $this->user = Auth::user();
         $this->userCalendarFilter = $this->user?->calendar_filter;
         $this->userShiftCalendarFilter = $this->user?->shift_calendar_filter;
-        $this->calendarSettings = $this->user?->calendar_settings;
     }
 
     /**

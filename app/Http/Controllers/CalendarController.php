@@ -27,11 +27,11 @@ class CalendarController extends Controller
 
     protected ?Carbon $endDate = null;
 
-    private Authenticatable|User|null $user;
+    protected Authenticatable|User|null $user;
 
-    private ?UserCalendarFilter $userCalendarFilter;
+    protected ?UserCalendarFilter $userCalendarFilter;
 
-    private ?UserShiftCalendarFilter $userShiftCalendarFilter;
+    protected ?UserShiftCalendarFilter $userShiftCalendarFilter;
 
 
     public function __construct(

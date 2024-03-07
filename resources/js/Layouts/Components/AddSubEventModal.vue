@@ -16,7 +16,7 @@
                     {{ $t('Please note that the appointment must take place within the appointment group period.')}}
                 </p>
 
-                <XIcon @click="closeModal"
+                <IconX stroke-width="1.5" @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
 
@@ -35,7 +35,7 @@
                                         </span>
                                         <span
                                             class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                         </span>
                                     </div>
                                 </ListboxButton>
@@ -61,7 +61,7 @@
                                                 </div>
                                                 <span
                                                     :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
                                             </li>
@@ -92,7 +92,7 @@
                                 src="/Svgs/IconSvgs/icon_adjustments.svg"
                                 class="mr-2"
                                 alt="attributeIcon"/>{{ $t('Select appointment properties')}}</span>
-                                <ChevronDownIcon
+                                <IconChevronDown stroke-width="1.5"
                                     class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                     aria-hidden="true"
                                 />
@@ -254,10 +254,11 @@ import dayjs from "dayjs";
 import Permissions from "@/mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "AddSubEventModal",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     computed: {
         dayjs() {
             var utc = require('dayjs/plugin/utc')

@@ -2,7 +2,7 @@
     <jet-dialog-modal :show="true" @close="closeModal(false)">
         <template #content>
             <img alt="Terminkonflikt" src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal()" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+            <IconX stroke-width="1.5" @click="closeModal()" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--    Heading    -->
@@ -21,10 +21,10 @@
                     <div class="flex w-full border border-2 border-gray-300">
                         <button v-if="this.computedEventsWithoutRoom.length > 1" class="bg-buttonBlue w-6"
                                 @click="event.opened = !event.opened">
-                            <ChevronUpIcon v-if="event.opened"
-                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                            <ChevronDownIcon v-else
-                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                            <IconChevronUp  stroke-width="1.5" v-if="event.opened"
+                                           class="h-6 w-6 text-white my-auto"></IconChevronUp>
+                            <IconChevronDown stroke-width="1.5" v-else
+                                             class="h-6 w-6 text-white my-auto"></IconChevronDown>
                         </button>
                         <div class="mx-2 mt-2 w-full" v-if="(event.opened || this.computedEventsWithoutRoom.length === 1) && event.canEdit">
                             <div class="flex w-full justify-between">
@@ -81,7 +81,7 @@
                                 </span>
                                                 <span
                                                     class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                                             </div>
                                         </ListboxButton>
@@ -106,7 +106,7 @@
                                                         </div>
                                                         <span
                                                             :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
                                                     </li>
@@ -224,7 +224,7 @@
                                         <div v-else class="flex-grow xsLight text-left subpixel-antialiased">
                                             {{$t('Select room')}}*
                                         </div>
-                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </ListboxButton>
                                     <ListboxOptions
                                         class="w-[80%] bg-primary max-h-32 overflow-y-auto text-sm absolute z-20">
@@ -235,13 +235,12 @@
                                                        v-slot="{ active, selected }">
                                             <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
                                                 {{ room.name }}
-                                                <img
+                                                <IconAlertTriangle
                                                     v-if="event.roomCollisionArray[room.id] > 0"
-                                                    src="/Svgs/IconSvgs/icon_warning_white.svg"
                                                     class="h-4 w-4 mx-2" alt="conflictIcon"
                                                 />
                                             </div>
-                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                            <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                         </ListboxOption>
                                     </ListboxOptions>
                                 </Listbox>
@@ -269,7 +268,7 @@
                                         <div v-if="event.project?.id && event.canEdit" class="flex items-center my-auto">
                                             <button type="button"
                                                     @click="this.deleteProject(event)">
-                                                <XCircleIcon class="pl-2 h-6 w-6 hover:text-error text-primary"/>
+                                                <IconCircleX stroke-width="1.5" class="pl-2 h-6 w-6 hover:text-error text-primary"/>
                                             </button>
                                         </div>
                                     </div>
@@ -346,11 +345,10 @@
                                         <MenuButton
                                             class="h-12 border-2 border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
                                         >
-                                            <span class="float-left flex xsLight subpixel-antialiased"><img
-                                                src="/Svgs/IconSvgs/icon_adjustments.svg"
-                                                class="mr-2"
-                                                alt="attributeIcon"/>{{$t('Select appointment properties')}}</span>
-                                            <ChevronDownIcon
+                                            <span class="float-left flex xsLight subpixel-antialiased">
+                                                <IconAdjustmentsAlt stroke-width="1.5"
+                                                class="mr-2"/>{{$t('Select appointment properties')}}</span>
+                                            <IconChevronDown stroke-width="1.5"
                                                 class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                                 aria-hidden="true"
                                             />
@@ -372,7 +370,7 @@
                                                            :disabled="!event.canEdit"
                                                            type="checkbox"
                                                            class="checkBoxOnDark"/>
-                                                    <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
+                                                    <IconUsersGroup stroke-width="1.5" class="h-6 w-6 mx-2"
                                                          alt="audienceIcon"/>
 
                                                     <div
@@ -518,10 +516,11 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import Permissions from "@/mixins/Permissions.vue";
 import {Inertia} from "@inertiajs/inertia";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'EventsWithoutRoomComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         Switch,
         SwitchGroup,

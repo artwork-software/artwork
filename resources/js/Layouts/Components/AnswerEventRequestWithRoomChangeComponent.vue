@@ -68,7 +68,7 @@
                                 <div class="flex-grow text-left xsDark">
                                     {{ this.room?.name }}
                                 </div>
-                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </ListboxButton>
                             <ListboxOptions class="w-10/12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
                                 <ListboxOption v-for="roomOption in rooms"
@@ -79,13 +79,13 @@
                                     <div :class="[selected ? 'xsWhiteBold' : 'xsLight']">
                                         {{ roomOption.name }}
                                     </div>
-                                    <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                    <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                 </ListboxOption>
                             </ListboxOptions>
                         </Listbox>
                     </div>
                 </div>
-                <XIcon @click="closeModal(false)"
+                <IconX stroke-width="1.5" @click="closeModal(false)"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="flex justify-center mt-6">
@@ -108,10 +108,11 @@ import TagComponent from "@/Layouts/Components/TagComponent";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'AnswerEventRequestWithRoomChangeComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         JetDialogModal,

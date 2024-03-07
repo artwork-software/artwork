@@ -3,7 +3,7 @@
         <div class="flex items-center">
             <MenuButton v-if="!onlyIcon" class="w-52 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
                 <span class="float-left xsDark">Filter</span>
-                <ChevronDownIcon
+                <IconChevronDown stroke-width="1.5"
                     class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                     aria-hidden="true"
                 />

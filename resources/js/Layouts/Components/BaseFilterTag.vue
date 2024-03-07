@@ -9,7 +9,7 @@
             <button
                 @click="$emit('removeFilter', filter)"
                 type="button">
-                <IconX v-if="type !== 'calendar'" class="ml-1 h-4 w-4 hover:text-error "/>
+                <IconX stroke-width="1.5" v-if="type !== 'calendar'" class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
     </div>
 </template>

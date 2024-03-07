@@ -5,10 +5,10 @@
             <div>
                 <div>
                     <button class="ml-2 -mt-2 text-black" @click="previousTimeRange">
-                        <ChevronLeftIcon class="h-5 w-5 text-primary"/>
+                        <IconChevronLeft stroke-width="1.5" class="h-5 w-5 text-primary"/>
                     </button>
                     <button class="ml-2 -mt-2 text-black" @click="nextTimeRange">
-                        <ChevronRightIcon class="h-5 w-5 text-primary"/>
+                        <IconChevronRight stroke-width="1.5" class="h-5 w-5 text-primary"/>
                     </button>
                 </div>
             </div>
@@ -31,11 +31,12 @@ import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import ShiftPlanFilter from "@/Layouts/Components/ShiftPlanComponents/ShiftPlanFilter.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 
 export default {
     name: "UserShiftPlanFunctionBar",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         BaseFilterTag,
         ShiftPlanFilter,

@@ -2,7 +2,7 @@
     <jet-dialog-modal :show="true" @close="closeModal()">
         <template #content>
             <img alt="Details" src="/Svgs/Overlays/illu_budget_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-            <XIcon class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+            <IconX stroke-width="1.5" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"
                    @click="closeModal()"
             />
@@ -11,12 +11,7 @@
                     <h1 class="my-1 flex">
                         <div class="flex-grow flex items-center headline1">
                             Details
-                            <svg v-if="cell.column.is_locked" xmlns="http://www.w3.org/2000/svg" width="16"
-                                 height="20" class="mr-2 ml-4 flex items-center mt-0.5" viewBox="0 0 11.975 13.686">
-                                <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
-                                      d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
-                                      fill="#27233C"/>
-                            </svg>
+                            <IconLock stroke-width="1.5" class="mr-2 ml-4 flex items-center mt-0.5" v-if="cell.column.is_locked"/>
                         </div>
                     </h1>
                     <div class="mb-4">
@@ -73,14 +68,8 @@
                                                 <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">
                                                     {{ $t('Add below') }}
                                                 </div>
-                                                <div
-                                                    class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                         viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                                         class="w-6 h-6 object-cover">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                              d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                    </svg>
+                                                <div class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
+                                                    <IconCirclePlus stroke-width="1.5" class="w-6 h-6 object-cover"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -97,12 +86,7 @@
                                                 </div>
                                                 <div
                                                     class="shadow-[0px_0px_5px_0px_#f56565] rounded-full text-white bg-red-300 w-fit ">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                         viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                                         class="w-6 h-6 object-cover">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                              d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                    </svg>
+                                                    <IconCircleX stroke-width="1.5" class="w-6 h-6 object-cover"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -120,14 +104,8 @@
                                             <div class="uppercase text-indigo-500 text-xs font-semibold -ml-16">
                                                 {{ $t('Add below') }}
                                             </div>
-                                            <div
-                                                class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                     stroke-width="1.5" stroke="currentColor"
-                                                     class="w-6 h-6 object-cover">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                          d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                </svg>
+                                            <div class="shadow-[0px_0px_5px_0px_#7f9cf5] rounded-full text-white bg-indigo-500 w-fit ">
+                                                <IconCirclePlus stroke-width="1.5" class="w-6 h-6 object-cover"/>
                                             </div>
                                         </div>
                                     </div>
@@ -179,7 +157,7 @@
                                         type="button"
                                         @click="deleteCommentFromCell(comment)">
                                         <span class="sr-only">{{ $t('Remove comment from project') }}</span>
-                                        <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
+                                        <IconCircleX stroke-width="1.5" class="ml-2 h-7 w-7 hover:text-error"/>
                                     </button>
                                 </div>
                                 <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
@@ -213,7 +191,7 @@
                                                 <div class="flex-grow xsLight text-left subpixel-antialiased">
                                                     {{ linkedType.name }}
                                                 </div>
-                                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                                <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                             </ListboxButton>
                                             <ListboxOptions
                                                 class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
@@ -225,7 +203,7 @@
                                                     <div :class="[selected ? 'text-white' : '']">
                                                         {{ type.name }}
                                                     </div>
-                                                    <CheckIcon v-if="selected" class="h-5 w-5 text-success"
+                                                    <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success"
                                                                aria-hidden="true"/>
                                                 </ListboxOption>
                                             </ListboxOptions>
@@ -330,10 +308,11 @@ import ConfirmationModal from "@/Jetstream/ConfirmationModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'CellDetailComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         ConfirmDeleteModal,

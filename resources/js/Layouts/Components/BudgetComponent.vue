@@ -507,7 +507,7 @@
                 <div class="headline1 my-2">
                     {{ successHeading }}
                 </div>
-                <XIcon @click="closeSuccessModal"
+                <IconX stroke-width="1.5" @click="closeSuccessModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="successText">
@@ -517,7 +517,7 @@
                     <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover rounded-full"
                             @click="closeSuccessModal">
-                        <CheckIcon class="h-6 w-6 text-secondaryHover"/>
+                        <IconCheck stroke-width="1.5" class="h-6 w-6 text-secondaryHover"/>
                     </button>
                 </div>
             </div>
@@ -530,7 +530,7 @@
                 <div class="headline1 my-2">
                     {{ verifiedTexts.title }} <span class="xsDark">{{ verifiedTexts.positionTitle }}</span>
                 </div>
-                <XIcon @click="closeVerifiedModal"
+                <IconX stroke-width="1.5" @click="closeVerifiedModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="mb-3 xsLight" v-html="verifiedTexts.description"></div>
@@ -578,7 +578,7 @@
                                 </span>
                                 <button type="button" @click="deleteUserFromVerifiedUserArray">
                                     <span class="sr-only">{{ $t('Remove user from money source') }}</span>
-                                    <XIcon
+                                    <IconX stroke-width="1.5"
                                         class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                 </button>
                             </div>
@@ -605,7 +605,7 @@
                 <p>
                     {{ $t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?') }}
                 </p>
-                <XIcon @click="closeBudgetAccessModal"
+                <IconX stroke-width="1.5" @click="closeBudgetAccessModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="mt-6">

@@ -6,7 +6,7 @@
                 <div class="headline1 my-2">
                     {{ $t('Cancel booking')}}
                 </div>
-                <XIcon @click="closeDeclineRequestModal"
+                <IconX stroke-width="1.5" @click="closeDeclineRequestModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="flex flex-wrap w-full items-center">
@@ -24,7 +24,7 @@
                                          -
                                         </span>
                                         {{ requestToDecline?.eventName }}
-                                        <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
+                                        <IconAdjustmentsAlt stroke-width="1.5" v-if="requestToDecline.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience"
                                              class="h-5 w-5 ml-2 my-auto"/>
@@ -105,10 +105,11 @@ import dayjs from "dayjs";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "DeclineEventModal",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     computed: {
         dayjs() {
             return dayjs

@@ -3,7 +3,7 @@
         <template #content>
             <img alt="Finanzierungsquelle erstellen" src="/Svgs/Overlays/illu_money_source_create.svg"
                  class="-ml-6 -mt-8 mb-4"/>
-            <IconX @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+            <IconX stroke-width="1.5" @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
@@ -126,7 +126,7 @@
                                             </span>
                                             <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
                                                 <span class="sr-only">{{ $t('Remove user from funding source')}}</span>
-                                                <IconX
+                                                <IconX stroke-width="1.5"
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
                                         </div>
@@ -149,7 +149,7 @@
                                                 this.selectedMoneySourceGroup ? this.selectedMoneySourceGroup.name : $t('Search for a funding group')
                                             }}
                                         </div>
-                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </ListboxButton>
                                     <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
                                         <ListboxOption v-for="moneySourceGroup in this.moneySourceGroups"
@@ -160,7 +160,7 @@
                                             <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
                                                 {{ moneySourceGroup.name }}
                                             </div>
-                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                            <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                         </ListboxOption>
                                     </ListboxOptions>
                                 </Listbox>
@@ -206,7 +206,7 @@
                                             <span class="xsLight">
                                                 {{ $t('Remind day/s before')}}
                                             </span>
-                                            <IconTrash class="w-5 h-5 cursor-pointer xsLight ml-2 hover:text-error"
+                                            <IconTrash stroke-width="1.5" class="w-5 h-5 cursor-pointer xsLight ml-2 hover:text-error"
                                                        @click="removeExpirationReminder(index)"
                                             />
                                         </div>
@@ -257,7 +257,7 @@
                                             <span class="xsLight">
                                                 {{ $t('Percent triggers a countdown notification')}}
                                             </span>
-                                            <IconTrash class="w-5 h-5 cursor-pointer xsLight ml-2 hover:text-error"
+                                            <IconTrash stroke-width="1.5" class="w-5 h-5 cursor-pointer xsLight ml-2 hover:text-error"
                                                        @click="removeThresholdReminder(index)"
                                             />
                                         </div>
@@ -267,7 +267,7 @@
                                         </span>
                                     </div>
                                     <div class="flex flex-row items-center w-fit" @click="addThresholdReminder()">
-                                        <IconCirclePlus class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer"/>
+                                        <IconCirclePlus stroke-width="1.5" class="h-5 w-5 rounded-full bg-backgroundBlue mr-2 cursor-pointer"/>
                                         <span class="text-xs underline text-buttonBlue cursor-pointer">
                                                {{ $t('Add another reminder')}}
                                         </span>
@@ -333,7 +333,7 @@
                                             </span>
                                             <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
                                                 <span class="sr-only">{{ $t('Remove user from money source')}}</span>
-                                                <IconX
+                                                <IconX stroke-width="1.5"
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
                                         </div>
@@ -379,7 +379,7 @@
                                                 {{ subMoneySource.name }}
                                                 <button type="button"
                                                         @click="this.deleteSubMoneySourceFromGroup(index)">
-                                                    <IconX class="ml-1 h-4 w-4 hover:text-error "/>
+                                                    <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                                                 </button>
                                             </span>
                                         </span>

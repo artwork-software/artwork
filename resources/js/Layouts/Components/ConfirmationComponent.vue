@@ -6,7 +6,7 @@
                 <div class="font-black font-lexend text-primary text-3xl my-2">
                     {{ titel }}
                 </div>
-                <XIcon @click="closeModal(false)"
+                <IconX stroke-width="1.5" @click="closeModal(false)"
                     class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                     aria-hidden="true"/>
                 <div class="text-error subpixel-antialiased">
@@ -33,10 +33,11 @@ import {XIcon} from '@heroicons/vue/outline';
 import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'ConfirmationComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         JetDialogModal,

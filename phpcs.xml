@@ -11,9 +11,15 @@
 
     <!-- Excluded files/directories -->
     <exclude-pattern>./config/debugbar.php</exclude-pattern>
+    <exclude-pattern>./database/migrations/</exclude-pattern>
+    <exclude-pattern>storage/</exclude-pattern>
+    <exclude-pattern>vendor/</exclude-pattern>
+    <exclude-pattern>node_modules/</exclude-pattern>
 
     <!-- PSR standard -->
-    <rule ref="PSR12"/>
+    <rule ref="PSR12">
+        <exclude name="PSR12.Classes.OpeningBraceSpace" />
+    </rule>
 
     <!-- Laravel coding style -->
     <rule ref="Generic.Files.LineLength">
@@ -50,9 +56,5 @@
     <rule ref="Generic.PHP.NoSilencedErrors"/>
     <rule ref="MySource.PHP.EvalObjectFactory"/>
     <rule ref="PEAR.Classes.ClassDeclaration"/>
-    <rule ref="PSR2.Namespaces.NamespaceDeclaration"/>
     <rule ref="Squiz.PHP.Eval"/>
-    <rule ref="PEAR">
-        <exclude name="PEAR.Commenting.FileComment.Missing"/>
-    </rule>
 </ruleset>

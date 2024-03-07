@@ -53,7 +53,7 @@
                                         leave-from-class="transform opacity-100 scale-100"
                                         leave-to-class="transform opacity-0 scale-95">
                                 <MenuItems
-                                    class="cursor-pointer origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                    class="cursor-pointer z-30 origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                     <div class="py-1">
                                         <MenuItem @click="updateCraft(craft)"
                                             v-slot="{ active }">

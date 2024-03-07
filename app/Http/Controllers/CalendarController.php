@@ -27,7 +27,7 @@ class CalendarController extends Controller
 
     protected ?Carbon $endDate = null;
 
-    private ?Authenticatable $user;
+    private Authenticatable|User|null $user;
 
     private ?UserCalendarFilter $userCalendarFilter;
 

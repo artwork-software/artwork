@@ -494,22 +494,16 @@ class CalendarController extends Controller
             ];
         }
 
-        if (!empty($room)) {
-            $better = $this->roomService->collectEventsForRoom($room, $calendarPeriod, null, true);
+        if (!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
+            $startDate = Carbon::create($this->userCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($this->userCalendarFilter->end_date)->endOfDay();
         } else {
-            if (!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
-                $startDate = Carbon::create($this->userCalendarFilter->start_date)->startOfDay();
-                $endDate = Carbon::create($this->userCalendarFilter->end_date)->endOfDay();
-            } else {
-                $startDate = Carbon::now()->startOfDay();
-                $endDate = Carbon::now()->addWeeks()->endOfDay();
-            }
-
-            // Führe die Abfrage mit den vorbereiteten Beziehungen aus
-            $better = $this->filterRooms($startDate, $endDate)
-                ->get();
-            $better = $this->roomService->collectEventsForRooms($better, $calendarPeriod, null, true);
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
+
+        $better = $this->filterRooms($startDate, $endDate)->get();
+        $better = $this->roomService->collectEventsForRooms($better, $calendarPeriod, null, true);
 
         return [
             'days' => $periodArray,

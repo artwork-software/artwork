@@ -162,11 +162,17 @@ export default {
                     Inertia.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
                         start_date: startDate,
                         end_date: endDate,
+                    }, {
+                        preserveState: false,
+                        preserveScroll: true,
                     })
                 } else {
                     Inertia.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
                         start_date: startDate,
                         end_date: endDate,
+                    }, {
+                        preserveState: false,
+                        preserveScroll: true,
                     })
                 }
 

@@ -497,7 +497,10 @@ export default {
             Inertia.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
                 start_date: this.dateValue[0],
                 end_date: this.dateValue[1],
-            })
+            }, {
+                preserveScroll: true,
+                preserveState: false
+            });
         },
         openHistoryModal() {
             this.showHistoryModal = true;

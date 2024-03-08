@@ -31,7 +31,6 @@ test('users with the permission can create eventTypes', function() {
         'abbreviation' => 'lel',
         'project_mandatory' => false,
         'individual_name' => false,
-        'svg_name' => 'SVG'
     ]);
 
     $this->assertDatabaseHas('event_types', [

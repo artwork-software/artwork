@@ -2,9 +2,15 @@
 
 namespace Artwork\Modules\BudgetManagementCostUnit\Services;
 
+use Artwork\Modules\Budget\Models\MainPosition;
+use Artwork\Modules\Budget\Models\SubPosition;
+use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\StoreBudgetManagementCostUnitRequest;
 use Artwork\Modules\BudgetManagementCostUnit\Models\BudgetManagementCostUnit;
 use Artwork\Modules\BudgetManagementCostUnit\Repositories\BudgetManagementCostUnitRepository;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Services\ProjectService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Throwable;
@@ -12,7 +18,9 @@ use Throwable;
 readonly class BudgetManagementCostUnitService
 {
     public function __construct(
-        private BudgetManagementCostUnitRepository $budgetManagementCostUnitRepository
+        private BudgetManagementCostUnitRepository $budgetManagementCostUnitRepository,
+        private ProjectService $projectService,
+        private ColumnCellService $columnCellService
     ) {
     }
 
@@ -61,6 +69,40 @@ readonly class BudgetManagementCostUnitService
 
     public function forceDelete(BudgetManagementCostUnit $budgetManagementCostUnit): void
     {
+        //set all according column cells to 00000
+        /** @var Project $project */
+        foreach ($this->projectService->getAll() as $project) {
+            $secondColumnId = $project->table
+                ->columns()
+                ->orderBy('id')
+                ->get()
+                ->splice(1, 1)
+                ->first()
+                ->id;
+
+            $project->table->mainPositions->each(
+                function (MainPosition $mainPosition) use ($secondColumnId, $budgetManagementCostUnit): void {
+                    $mainPosition->subPositions->each(
+                        function (SubPosition $subPosition) use ($secondColumnId, $budgetManagementCostUnit): void {
+                            $subPosition->subPositionRows->each(
+                                function (SubPositionRow $subPositionRow) use (
+                                    $secondColumnId,
+                                    $budgetManagementCostUnit
+                                ): void {
+                                    $columnCell = $subPositionRow->cells
+                                        ->where('column_id', $secondColumnId)
+                                        ->first();
+
+                                    if ($columnCell->value === $budgetManagementCostUnit->cost_unit_number) {
+                                        $this->columnCellService->updateValue($columnCell, '00000');
+                                    }
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        }
         $this->budgetManagementCostUnitRepository->forceDelete($budgetManagementCostUnit);
     }
 }

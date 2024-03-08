@@ -31,4 +31,9 @@ class ProjectRepository extends BaseRepository
             ->with(['table', 'table.columns', 'table.mainPositions.subPositions.subPositionRows.cells'])
             ->get();
     }
+
+    public function getAll(): Collection
+    {
+        return Project::all();
+    }
 }

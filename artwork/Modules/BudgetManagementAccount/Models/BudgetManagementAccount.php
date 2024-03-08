@@ -6,6 +6,10 @@ use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property string $account_number
+ * @property string $title
+ */
 class BudgetManagementAccount extends Model
 {
     use SoftDeletes;

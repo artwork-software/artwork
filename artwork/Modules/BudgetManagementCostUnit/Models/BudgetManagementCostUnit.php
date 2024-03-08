@@ -6,6 +6,10 @@ use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property string $cost_unit_number
+ * @property string $title
+ */
 class BudgetManagementCostUnit extends Model
 {
     use SoftDeletes;

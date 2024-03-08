@@ -80,7 +80,7 @@
                         </Link>
                     </template>
                     <template #event="{ event, view}">
-                        <div class="text-left centered mt-3 cursor-pointer" :class="event.event_type?.svg_name">
+                        <div class="text-left centered mt-3 cursor-pointer" :style="{backgroundColor: event.event_type?.hex_code}">
                             <div class="flex w-full justify-between items-center">
                                 <div v-if="!project" class="flex eventHeader truncate mx-1">
                                     <div v-if="event.event_type.abbreviation" class="mr-1">
@@ -511,7 +511,7 @@ export default {
             //class is needed for design purposes
             this.events?.forEach((event) => {
                 event.split = event.roomId;
-                event.class = event.event_type.svg_name;
+                event.class = event.event_type.hex_code;
             })
             this.displayedEvents = this.events
             this.displayedRooms = this.rooms

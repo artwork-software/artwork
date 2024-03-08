@@ -22,7 +22,6 @@ class SubEventResource extends JsonResource
             'end' => $this->end_time,
             'audience' => $this->audience,
             'is_loud' => $this->is_loud,
-            'class' => $this->type->svg_name,
             'eventTypeName' => $this->type->name,
             'eventTypeId' => $this->type->id,
             'eventType' => $this->type,

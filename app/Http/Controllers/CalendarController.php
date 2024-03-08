@@ -9,7 +9,6 @@ use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use App\Models\User;
 use App\Models\UserCalendarFilter;
-use App\Models\UserCalendarSettings;
 use App\Models\UserShiftCalendarFilter;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
@@ -22,19 +21,21 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ *
+ */
 class CalendarController extends Controller
 {
     protected ?Carbon $startDate = null;
 
     protected ?Carbon $endDate = null;
 
-    private ?Authenticatable $user;
+    protected Authenticatable|User|null $user;
 
-    private ?UserCalendarFilter $userCalendarFilter;
+    protected ?UserCalendarFilter $userCalendarFilter;
 
-    private ?UserShiftCalendarFilter $userShiftCalendarFilter;
+    protected ?UserShiftCalendarFilter $userShiftCalendarFilter;
 
-    private ?UserCalendarSettings $calendarSettings;
 
     public function __construct(
         private readonly FilterProvider $filterProvider,
@@ -44,7 +45,6 @@ class CalendarController extends Controller
         $this->user = Auth::user();
         $this->userCalendarFilter = $this->user?->calendar_filter;
         $this->userShiftCalendarFilter = $this->user?->shift_calendar_filter;
-        $this->calendarSettings = $this->user?->calendar_settings;
     }
 
     /**
@@ -62,17 +62,27 @@ class CalendarController extends Controller
     {
         $today = $date_of_day->format('d.m.Y');
 
-        $events = Event::with(['shifts' => function ($query) use ($userId): void {
-            $query->whereHas('users', function ($query) use ($userId): void {
+        $events = Event::with(
+            ['shifts' => function ($query) use ($userId): void {
+                $query->whereHas(
+                    'users',
+                    function ($query) use ($userId): void {
+                        $query->where('user_id', $userId);
+                    }
+                );
+            }, 'shifts.shiftsQualifications']
+        )->whereHas(
+            'shifts.users',
+            function ($query) use ($userId): void {
                 $query->where('user_id', $userId);
-            });
-        }, 'shifts.shiftsQualifications'])->whereHas('shifts.users', function ($query) use ($userId): void {
-            $query->where('user_id', $userId);
-        })->get();
+            }
+        )->get();
 
-        $eventsToday = $events->filter(function ($event) use ($today) {
-            return in_array($today, $event->days_of_event);
-        })->all();
+        $eventsToday = $events->filter(
+            function ($event) use ($today) {
+                return in_array($today, $event->days_of_event);
+            }
+        )->all();
 
         return $eventsToday;
     }
@@ -85,14 +95,22 @@ class CalendarController extends Controller
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
-        $events = Event::with(['shifts' => function ($query) use ($freelancerId): void {
-            $query->whereHas('freelancer', function ($query) use ($freelancerId): void {
-                $query->where('freelancer_id', $freelancerId);
-            });
-        }])
-            ->whereHas('shifts.freelancer', function ($query) use ($freelancerId): void {
-                $query->where('freelancer_id', $freelancerId);
-            })
+        $events = Event::with(
+            ['shifts' => function ($query) use ($freelancerId): void {
+                $query->whereHas(
+                    'freelancer',
+                    function ($query) use ($freelancerId): void {
+                        $query->where('freelancer_id', $freelancerId);
+                    }
+                );
+            }]
+        )
+            ->whereHas(
+                'shifts.freelancer',
+                function ($query) use ($freelancerId): void {
+                    $query->where('freelancer_id', $freelancerId);
+                }
+            )
             ->get();
         foreach ($events as $event) {
             if (in_array($today, $event->days_of_event)) {
@@ -111,14 +129,22 @@ class CalendarController extends Controller
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
-        $events = Event::with(['shifts' => function ($query) use ($serviceProviderId): void {
-            $query->whereHas('serviceProvider', function ($query) use ($serviceProviderId): void {
-                $query->where('service_provider_id', $serviceProviderId);
-            });
-        }])
-            ->whereHas('shifts.serviceProvider', function ($query) use ($serviceProviderId): void {
-                $query->where('service_provider_id', $serviceProviderId);
-            })
+        $events = Event::with(
+            ['shifts' => function ($query) use ($serviceProviderId): void {
+                $query->whereHas(
+                    'serviceProvider',
+                    function ($query) use ($serviceProviderId): void {
+                        $query->where('service_provider_id', $serviceProviderId);
+                    }
+                );
+            }]
+        )
+            ->whereHas(
+                'shifts.serviceProvider',
+                function ($query) use ($serviceProviderId): void {
+                    $query->where('service_provider_id', $serviceProviderId);
+                }
+            )
             ->get();
         foreach ($events as $event) {
             if (in_array($today, $event->days_of_event)) {
@@ -214,33 +240,8 @@ class CalendarController extends Controller
                 $endDate = Carbon::now()->addWeeks()->endOfDay();
             }
 
-            // Vorbereitung der Beziehungen, die du laden möchtest
-            $relations = [
-                'events.shifts',
-                'events.event_type',
-                'events.comments',
-                'events.room',
-                'events.subEvents',
-                'events.series',
-                'events.subEvents.type',
-                'events.project',
-                'events.project.departments',
-                'events.project.users',
-                'events.project.managerUsers',
-                'events.creator',
-                'events' => function ($query) use ($project, $room): void {
-                    $this->filterEvents($query, null, null, $room, $project)->orderBy('start_time', 'ASC');
-                }
-            ];
-
-            // Überprüfe, ob work_shifts false ist und entferne 'events.shifts' aus dem Array
-            if (!$this->calendarSettings->work_shifts) {
-                unset($relations[array_search('events.shifts', $relations)]);
-            }
-
             // Führe die Abfrage mit den vorbereiteten Beziehungen aus
             $better = $this->filterRooms($startDate, $endDate)
-                ->with($relations)
                 ->get();
             $better = $this->roomService->collectEventsForRooms($better, $calendarPeriod, $project);
 
@@ -518,32 +519,23 @@ class CalendarController extends Controller
                 'is_monday' => $period->isMonday(),
             ];
         }
-        $roomsWithEvents = $this->filterRooms($this->startDate, $this->endDate, true)
-            ->with([
-                'events.event_type',
-                'events.comments',
-                'events.shifts',
-                'events.room',
-                'events.subEvents',
-                'events.series',
-                'events.subEvents.type',
-                'events.project',
-                'events.project.departments',
-                'events.project.users',
-                'events.project.managerUsers',
-                'events.creator',
-                'events' => function ($query): void {
-                    $this->filterEvents($query, null, null, null, null, true)->orderBy('start_time', 'ASC');
-                }])
-            ->get();
+
+        if (!is_null($this->userCalendarFilter->start_date) && !is_null($this->userCalendarFilter->end_date)) {
+            $startDate = Carbon::create($this->userCalendarFilter->start_date)->startOfDay();
+            $endDate = Carbon::create($this->userCalendarFilter->end_date)->endOfDay();
+        } else {
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
+
+        $better = $this->filterRooms($startDate, $endDate)->get();
+        $better = $this->roomService->collectEventsForRooms($better, $calendarPeriod, null, true);
 
         return [
             'days' => $periodArray,
             'dateValue' => [$this->startDate->format('Y-m-d'), $this->endDate->format('Y-m-d')],
-            // Selected Date is needed for change from individual Calendar to VueCal-Daily, so that vuecal knows which
-            // date to load
             'selectedDate' => $selectedDate,
-            'roomsWithEvents' => $this->roomService->collectEventsForRooms($roomsWithEvents, $calendarPeriod),
+            'roomsWithEvents' => $better,
             'filterOptions' => $this->getFilters(),
             'personalFilters' => (new FilterController())->index(),
             'user_filters' => Auth::user()->shift_calendar_filter()->first(),
@@ -601,29 +593,55 @@ class CalendarController extends Controller
         $roomAttributeIds = $calendarFilter->room_attributes ?? null;
         $roomCategoryIds = $calendarFilter->room_categories ?? null;
 
+
         return $query
             ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project->id))
             ->when($room, fn(EventBuilder $builder) => $builder->where('room_id', $room->id))
             ->unless(
                 empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds),
-                fn(EventBuilder $builder) => $builder->whereHas('room', fn(Builder $roomBuilder) => $roomBuilder
-                    ->when($roomIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
-                    ->when($areaIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
-                    ->when($showAdjoiningRooms, fn(Builder $roomBuilder) => $roomBuilder->with('adjoining_rooms'))
-                    ->when($roomAttributeIds, fn(Builder $roomBuilder) => $roomBuilder
-                        ->whereHas('attributes', fn(Builder $roomAttributeBuilder) => $roomAttributeBuilder
-                            ->whereIn('room_attributes.id', $roomAttributeIds)))
-                    ->when($roomCategoryIds, fn(Builder $roomBuilder) => $roomBuilder
-                        ->whereHas('categories', fn(Builder $roomCategoryBuilder) => $roomCategoryBuilder
-                            ->whereIn('room_categories.id', $roomCategoryIds)))
-                    ->without(['admins']))
+                fn(EventBuilder $builder) => $builder->whereHas(
+                    'room',
+                    fn(Builder $roomBuilder) => $roomBuilder
+                        ->when($roomIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
+                        ->when($areaIds, fn(Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
+                        ->when($showAdjoiningRooms, fn(Builder $roomBuilder) => $roomBuilder->with('adjoining_rooms'))
+                        ->when(
+                            $roomAttributeIds,
+                            fn(Builder $roomBuilder) => $roomBuilder
+                                ->whereHas(
+                                    'attributes',
+                                    fn(Builder $roomAttributeBuilder) => $roomAttributeBuilder
+                                    ->whereIn('room_attributes.id', $roomAttributeIds)
+                                )
+                        )
+                        ->when(
+                            $roomCategoryIds,
+                            fn(Builder $roomBuilder) => $roomBuilder
+                                ->whereHas(
+                                    'categories',
+                                    fn(Builder $roomCategoryBuilder) => $roomCategoryBuilder
+                                    ->whereIn('room_categories.id', $roomCategoryIds)
+                                )
+                        )
+                        ->without(['admins'])
+                )
             )
-            ->unless(empty($eventTypeIds), function ($builder) use ($eventTypeIds) {
-                return $builder->whereIn('event_type_id', array_map('intval', $eventTypeIds))
-                    ->orWhereHas('subEvents', function ($subEventBuilder) use ($eventTypeIds): void {
-                        $subEventBuilder->whereIn('event_type_id', array_map('intval', $eventTypeIds));
-                    });
-            })
+            ->unless(
+                empty($eventTypeIds),
+                function ($query) use ($eventTypeIds) {
+                    return $query->where(
+                        function ($query) use ($eventTypeIds): void {
+                            $query->whereIn('event_type_id', $eventTypeIds)
+                                ->orWhereHas(
+                                    'subEvents',
+                                    function ($query) use ($eventTypeIds): void {
+                                        $query->whereIn('event_type_id', $eventTypeIds);
+                                    }
+                                );
+                        }
+                    );
+                }
+            )
             ->unless(!$hasAudience, fn(EventBuilder $builder) => $builder->where('audience', true))
             ->unless(!$hasNoAudience, fn(EventBuilder $builder) => $builder->where('audience', false))
             ->unless(!$isLoud, fn(EventBuilder $builder) => $builder->where('is_loud', true))

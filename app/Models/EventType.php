@@ -28,7 +28,8 @@ class EventType extends Model
         'project_mandatory',
         'individual_name',
         'abbreviation',
-        'relevant_for_shift'
+        'relevant_for_shift',
+        'svg_name'
     ];
 
     protected $casts = [

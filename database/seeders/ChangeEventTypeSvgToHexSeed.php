@@ -33,6 +33,8 @@ class ChangeEventTypeSvgToHexSeed extends Seeder
         }
     }
 
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     private function getHexFromSvg(string $svg): string
     {
         $svgName = '';
@@ -85,6 +87,7 @@ class ChangeEventTypeSvgToHexSeed extends Seeder
         } elseif ($ellipse->length > 0) {
             return $this->getHexFromEllipse($ellipse);
         }
+        return '';
     }
 
     private function getHexFromCircle($circle): string

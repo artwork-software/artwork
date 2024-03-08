@@ -65,6 +65,7 @@ use Artwork\Modules\Budget\Services\SageAssignedDataCommentService;
 use Artwork\Modules\Budget\Services\SubPositionRowService;
 use Artwork\Modules\Budget\Services\SubPositionService;
 use Artwork\Modules\Budget\Services\TableService;
+use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
@@ -113,6 +114,7 @@ class ProjectController extends Controller
         private readonly ProjectService $projectService,
         private readonly BudgetService $budgetService,
         private readonly SageApiSettingsService $sageApiSettingsService,
+        private readonly BudgetColumnSettingService $budgetColumnSettingService
     ) {
         // init notification controller
         $this->notificationService = new NotificationService();
@@ -387,21 +389,21 @@ class ProjectController extends Controller
 
         $columns = $table->columns()->createMany([
             [
-                'name' => 'KTO',
+                'name' => $this->budgetColumnSettingService->getColumnNameByColumnPosition(0),
                 'subName' => '',
                 'type' => 'empty',
                 'linked_first_column' => null,
                 'linked_second_column' => null
             ],
             [
-                'name' => 'A',
+                'name' => $this->budgetColumnSettingService->getColumnNameByColumnPosition(1),
                 'subName' => '',
                 'type' => 'empty',
                 'linked_first_column' => null,
                 'linked_second_column' => null
             ],
             [
-                'name' => 'Position',
+                'name' => $this->budgetColumnSettingService->getColumnNameByColumnPosition(2),
                 'subName' => '',
                 'type' => 'empty',
                 'linked_first_column' => null,

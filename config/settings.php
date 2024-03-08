@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 
 return [
 

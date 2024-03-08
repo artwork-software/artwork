@@ -326,4 +326,9 @@ class ProjectService
     {
         $project->moneySources()->detach();
     }
+
+    public function getAll(): Collection
+    {
+        return $this->projectRepository->getAll();
+    }
 }

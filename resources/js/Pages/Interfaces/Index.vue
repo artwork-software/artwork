@@ -84,7 +84,7 @@
                    @closed="this.$page.props.flash.success = null;"
     />
     <error-component v-if="this.$page.props.flash.error"
-                     :title="$t('An error has occurred')"
+                     :titel="$t('An error has occurred')"
                      :description="this.$page.props.flash.error"
                      :confirm="$t('Close message')"
                      @closed="this.$page.props.flash.error = null;"

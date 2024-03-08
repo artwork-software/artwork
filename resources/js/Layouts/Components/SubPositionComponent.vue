@@ -69,34 +69,93 @@
                         <td v-for="(cell,index) in row.cells"
                             v-show="!(cell.column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
                             :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition), cell.column.is_locked ? 'bg-[#A7A6B120]' : '']">
-                            <div
-                                :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
-                                class="my-4 h-6 flex items-center"
-                                v-if="!cell.clicked">
-                                <div class=" flex items-center">
-                                    <div class="cursor-pointer" @click="handleCellClick(cell, 'comment')" v-if="cell.comments_count > 0">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-1">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-                                        </svg>
+                            <div v-if="(index === 0 || index === 1) && this.$page.props.budgetAccountManagementGlobal">
+                                <div
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
+                                    class="my-4 h-6 flex items-center"
+                                    v-if="!cell.clicked">
+                                    <div class=" flex items-center">
+                                        <div :class="cell.value === '' ? 'w-6 cursor-pointer h-6' : ''" @click="this.handleCellClick(cell)">
+                                            {{ cell.value }}
+                                        </div>
                                     </div>
-                                    <img @click="handleCellClick(cell, 'calculation')" v-if="cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
-                                    <img @click="handleCellClick(cell, 'moneysource')" v-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                                    <img @click="handleCellClick(cell, 'sageAssignedData')" v-if="cell.sage_assigned_data" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                                    <div :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : cell.column.type === 'sage' ? 'cursor-pointer' : ''" @click="handleCellClick(cell)">
-                                        {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
+                                </div>
+                                <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
+                                     class="my-4 h-6 flex items-center"
+                                     v-else
+                                >
+                                    <div class="flex flex-row items-center relative">
+                                        <input v-model="cell.searchValue"
+                                               :placeholder="cell.value"
+                                               :ref="`cell-${cell.id}`"
+                                               type="text"
+                                               class="w-full"
+                                               @keyup="this.handleBudgetManagementSearch(index, cell)"
+                                        />
+                                        <XIcon class="w-10 h-10 cursor-pointer"
+                                               @click="this.handleBudgetManagementSearchCancel(cell)"
+                                        />
+                                        <div v-if="cell.accountSearchResults" class="absolute z-20 top-10">
+                                            <div v-if="cell.accountSearchResults.length > 0"
+                                                 v-for="account in cell.accountSearchResults"
+                                                 class="flex flex-col"
+                                            >
+                                                <div class="p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white"
+                                                      @click="this.handleBudgetManagementSearchSelect(index, cell, account.account_number, mainPosition.is_verified, subPosition.is_verified)">
+                                                    <div>{{account.account_number}}</div>
+                                                </div>
+                                            </div>
+                                            <div v-else class="text-nowrap p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white">
+                                                {{ $t('No Accounts found') }}
+                                            </div>
+                                        </div>
+                                        <div v-if="cell.costUnitSearchResults" class="absolute z-20 top-10">
+                                            <div v-if="cell.costUnitSearchResults.length > 0"
+                                                 v-for="cost_unit in cell.costUnitSearchResults"
+                                                 class="flex flex-col"
+                                            >
+                                                <div class="p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white"
+                                                     @click="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, mainPosition.is_verified, subPosition.is_verified)">
+                                                    {{ cost_unit.cost_unit_number }}
+                                                </div>
+                                            </div>
+                                            <div v-else class="text-nowrap p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white">
+                                                {{ $t('No Cost Units found') }}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex items-center" :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'" v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
-                                <input :ref="`cell-${cell.id}`" :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'" class="my-2 xsDark  appearance-none z-10" type="text" :disabled="!this.$can('edit budget templates') && table.is_template" v-model="cell.value" @keypress="isNumber($event, index)" @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
-                                <IconCirclePlus stroke-width="1.5" v-if="index > 2" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
-                            </div>
-                            <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']" class="my-4 h-6 flex items-center justify-end" @click="cell.clicked = !cell.clicked && cell.column.is_locked" v-else>
-                                <img v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)" src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg" class="h-6 w-6 mr-1"/>
-                                <img v-if="cell.comments_count > 0 || cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
-                                <img v-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
-                                {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
-                                <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
+                            <div v-else>
+                                <div
+                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
+                                    class="my-4 h-6 flex items-center"
+                                    v-if="!cell.clicked">
+                                    <div class=" flex items-center">
+                                        <div class="cursor-pointer" @click="handleCellClick(cell, 'comment')" v-if="cell.comments_count > 0">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-1">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                                            </svg>
+                                        </div>
+                                        <img @click="handleCellClick(cell, 'calculation')" v-if="cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
+                                        <img @click="handleCellClick(cell, 'moneysource')" v-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
+                                        <img @click="handleCellClick(cell, 'sageAssignedData')" v-if="cell.sage_assigned_data" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
+                                        <div :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : cell.column.type === 'sage' ? 'cursor-pointer' : ''" @click="handleCellClick(cell)">
+                                            {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center" :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'" v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
+                                    <input :ref="`cell-${cell.id}`" :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'" class="my-2 xsDark  appearance-none z-10" type="text" :disabled="!this.$can('edit budget templates') && table.is_template" v-model="cell.value" @keypress="isNumber($event, index)" @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
+                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
+                                </div>
+                                <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']" class="my-4 h-6 flex items-center justify-end" @click="cell.clicked = !cell.clicked && cell.column.is_locked" v-else>
+                                    <img v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)" src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg" class="h-6 w-6 mr-1"/>
+                                    <img v-if="cell.comments_count > 0 || cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
+                                    <img v-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
+                                    {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
+                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
+                                </div>
                             </div>
                         </td>
                     </div>
@@ -300,7 +359,7 @@ export default {
                 value: null,
                 sub_position_row_id: null,
                 is_verified: false
-            })
+            }),
         }
     },
     mounted() {
@@ -586,8 +645,45 @@ export default {
                 preserveScroll: true,
                 preserveState: true
             })
+        },
+        handleBudgetManagementSearch(index, cell) {
+            if (index === 0) {
+                axios.get(
+                    route('budget-settings.account-management.search-accounts'),
+                    {
+                        params: {
+                            search: cell.searchValue
+                        }
+                    }
+                ).then((response) => cell.accountSearchResults = response.data);
+            } else {
+                axios.get(
+                    route('budget-settings.account-management.search-cost-units'),
+                    {
+                        params: {
+                            search: cell.searchValue
+                        }
+                    }
+                ).then(response => cell.costUnitSearchResults = response.data);
+            }
+        },
+        handleBudgetManagementSearchSelect(index, cell, value, mainPositionIsVerified, subPositionIsVerified) {
+            if (index === 0) {
+                cell.value = value;
+                cell.accountSearchResults = null;
+            } else {
+                cell.value = value;
+                cell.costUnitSearchResults = null;
+            }
+            cell.clicked = false;
+            this.updateCellValue(cell, mainPositionIsVerified, subPositionIsVerified);
+        },
+        handleBudgetManagementSearchCancel(cell) {
+            cell.searchValue = '';
+            cell.clicked = false;
+            cell.accountSearchResults = null;
+            cell.costUnitSearchResults = null;
         }
-
     }
 
 }

@@ -6,21 +6,19 @@ use App\Actions\Fortify\PasswordValidationRules;
 use App\Enums\NotificationConstEnum;
 use App\Enums\RoleNameEnum;
 use App\Http\Requests\UserCreateRequest;
-use App\Models\GeneralSettings;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
-use Illuminate\Auth\Access\AuthorizationException;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
-use ZxcvbnPhp\Zxcvbn;
-use Illuminate\Http\RedirectResponse;
 use Inertia\Response;
 use Inertia\ResponseFactory;
-use Illuminate\Routing\Redirector;
-use Illuminate\Contracts\Foundation\Application;
+use ZxcvbnPhp\Zxcvbn;
 
 class AppController extends Controller
 {

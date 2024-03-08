@@ -64,7 +64,7 @@
                                 <div class="z-50" v-for="item in managementNavigation" :key="item.name">
                                     <MenuItem v-if="item.has_permission" v-slot="{ active }">
                                         <Link :href="item.href"
-                                              :class="[isCurrent(item.route) ? 'text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full px-2 py-3 rounded-md flex flex-col items-center ']">
+                                              :class="[item.isCurrent ? 'text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full px-2 py-3 rounded-md flex flex-col items-center ']">
                                             {{ item.name }}
                                         </Link>
                                     </MenuItem>
@@ -254,57 +254,82 @@ export default {
         Switch,
         TrashIcon
     },
-
     computed: {
         managementNavigation() {
+            //default budget route is general
+            let desiredBudgetRoute = route('budget-settings.general');
+
+            //if user has permissions for budget templates but not for managing global project budgets the route is
+            //budget templates
+            if (
+                this.$can('view budget templates') &&
+                !this.$canAny([
+                    'can manage global project budgets',
+                    'can manage all project budgets without docs'
+                ])
+            ) {
+                desiredBudgetRoute = route('budget-settings.templates');
+            }
+
             return [
                 {
                     has_permission: this.$can('change tool settings'),
                     name: 'Tool',
                     href: route('tool.branding'),
-                    route: ['/tool/branding']
+                    isCurrent: route().current('tool.branding') ||
+                        route().current('tool.communication-and-legal') ||
+                        route().current('tool.interfaces')
                 },
                 {
                     has_permission: this.hasAdminRole(),
                     name: this.$t('Shift settings'),
                     href: route('shift.settings'),
-                    route: ['/settings/shift']
+                    isCurrent: route().current('shift.settings')
                 },
                 {
                     name: this.$t('Rooms'),
                     has_permission: this.$can('create, delete and update rooms') || this.hasAdminRole(),
                     href: route('areas.management'),
-                    route: ['/areas']
+                    isCurrent: route().current('areas.management')
                 },
                 {
                     name: this.$t('Projects'),
                     has_permission: this.$can('change project settings') || this.hasAdminRole(),
                     href: route('project.settings'),
-                    route: ['/settings/projects']
+                    isCurrent: route().current('project.settings')
                 },
                 {
                     name: this.$t('Events'),
                     has_permission: this.$can('change event settings') || this.hasAdminRole(),
                     href: route('event_types.management'),
-                    route: ['/event_types']
+                    isCurrent: route().current('event_types.management')
                 },
                 {
                     name: this.$t('Checklists'),
                     has_permission: this.$can('admin checklistTemplates') || this.hasAdminRole(),
                     href: route('checklist_templates.management'),
-                    route: ['/checklist_templates']
+                    isCurrent: route().current('checklist_templates.management')
                 },
                 {
                     name: this.$t('Sources of funding'),
                     has_permission: this.hasAdminRole(),
                     href: route('money_sources.settings'),
-                    route: ['/money_sources/settings']
+                    isCurrent: route().current('money_sources.settings')
                 },
                 {
-                    name: this.$t('Budget templates'),
-                    has_permission: this.hasAdminRole() || this.$can('view budget templates'),
-                    href: route('templates.view.index'),
-                    route: ['/templates/index']
+                    name: this.$t('Budget'),
+                    has_permission: this.$canAny(
+                        [
+                            'can manage global project budgets',
+                            'can manage all project budgets without docs',
+                            'view budget templates',
+                            'edit budget templates'
+                        ]
+                    ),
+                    href: desiredBudgetRoute,
+                    isCurrent: route().current('budget-settings.general') ||
+                        route().current('budget-settings.account-management') ||
+                        route().current('budget-settings.templates')
                 },
             ]
         },

@@ -3,6 +3,10 @@
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\AvailabilityController;
+use App\Http\Controllers\BudgetAccountManagementController;
+use App\Http\Controllers\BudgetGeneralController;
+use App\Http\Controllers\BudgetManagementAccountController;
+use App\Http\Controllers\BudgetManagementCostUnitController;
 use App\Http\Controllers\BudgetTemplateController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
@@ -24,6 +28,7 @@ use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\ExportPDFController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\FreelancerController;
+use App\Http\Controllers\GeneralSettingsController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
@@ -747,10 +752,112 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/project/{project}/budget/reset', [ProjectController::class, 'resetTable'])
         ->name('project.budget.reset.table');
 
-    // Templates
-    Route::get('/templates/index', [BudgetTemplateController::class, 'index'])
-        ->name('templates.view.index')
-        ->can('view budget templates');
+    // Budget Settings
+    Route::group(['prefix' => 'budget-settings'], function (): void {
+        Route::get('/general', [BudgetGeneralController::class, 'index'])
+            ->name('budget-settings.general');
+        Route::patch('/general/{budgetColumnSetting}', [BudgetGeneralController::class, 'update'])
+            ->name('budget-settings.general.update');
+
+        Route::get('/account-management', [BudgetAccountManagementController::class, 'index'])
+            ->name('budget-settings.account-management');
+        Route::patch(
+            '/account-management/updateGlobalSetting',
+            [
+                GeneralSettingsController::class,
+                'updateBudgetAccountManagementGlobal'
+            ]
+        )->name('budget-settings.account-management.updateBudgetAccountManagementGlobal');
+        Route::post(
+            '/account-management/account',
+            [
+                BudgetManagementAccountController::class,
+                'store'
+            ]
+        )->name('budget-settings.account-management.store-account');
+        Route::delete(
+            '/account-management/account/{budgetManagementAccount}',
+            [
+                BudgetManagementAccountController::class,
+                'destroy'
+            ]
+        )->name('budget-settings.account-management.destroy-account');
+        Route::post(
+            '/account-management/cost-unit',
+            [
+                BudgetManagementCostUnitController::class,
+                'store'
+            ]
+        )->name('budget-settings.account-management.store-cost-unit');
+        Route::delete(
+            '/account-management/cost-unit/{budgetManagementCostUnit}',
+            [
+                BudgetManagementCostUnitController::class,
+                'destroy'
+            ]
+        )->name('budget-settings.account-management.destroy-cost-unit');
+        Route::get(
+            '/account-management/accounts/trashed',
+            [
+                BudgetManagementAccountController::class,
+                'indexTrash'
+            ]
+        )->name('budget-settings.account-management.trash-accounts');
+        Route::patch(
+            '/account-management/accounts/trashed/{budgetManagementAccount}',
+            [
+                BudgetManagementAccountController::class,
+                'restore'
+            ]
+        )->withTrashed()->name('budget-settings.account-management.trash-accounts.restore');
+        Route::delete(
+            '/account-management/accounts/trashed/{budgetManagementAccount}',
+            [
+                BudgetManagementAccountController::class,
+                'forceDelete'
+            ]
+        )->withTrashed()->name('budget-settings.account-management.trash-accounts.forceDelete');
+        Route::get(
+            '/account-management/cost-units/trashed',
+            [
+                BudgetManagementCostUnitController::class,
+                'indexTrash'
+            ]
+        )->name('budget-settings.account-management.trash-cost-units');
+        Route::patch(
+            '/account-management/cost-units/trashed/{budgetManagementCostUnit}',
+            [
+                BudgetManagementCostUnitController::class,
+                'restore'
+            ]
+        )->withTrashed()->name('budget-settings.account-management.trash-cost-units.restore');
+        Route::delete(
+            '/account-management/cost-units/trashed/{budgetManagementCostUnit}',
+            [
+                BudgetManagementCostUnitController::class,
+                'forceDelete'
+            ]
+        )->withTrashed()->name('budget-settings.account-management.trash-cost-units.forceDelete');
+        Route::get(
+            '/account-management/accounts/search',
+            [
+                BudgetManagementAccountController::class,
+                'search'
+            ]
+        )->name('budget-settings.account-management.search-accounts');
+        Route::get(
+            '/account-management/cost-units/search',
+            [
+                BudgetManagementCostUnitController::class,
+                'search'
+            ]
+        )->name('budget-settings.account-management.search-cost-units');
+
+        Route::get('/templates', [BudgetTemplateController::class, 'index'])
+            ->name('budget-settings.templates')
+            ->can('view budget templates');
+    });
+
 
 
     Route::post('/project/{project}/copyright/update', [ProjectController::class, 'updateCopyright'])

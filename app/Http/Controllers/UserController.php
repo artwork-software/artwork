@@ -304,9 +304,11 @@ class UserController extends Controller
                     })
             );
         }
+
         if ($request->permissions) {
             $user->syncPermissions($request->permissions);
         }
+
         if ($request->roles) {
             $user->syncRoles($request->roles);
         }

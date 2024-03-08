@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\GeneralSettings;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,6 +37,6 @@ class ToolSettingsCommunicationAndLegalController extends Controller
 
         $generalSettings->save();
 
-        return Redirect::back()->with('success', __('flash-messages.communication_and_legal'));
+        return Redirect::back()->with('success', __('flash-messages.communication_and_legal.update'));
     }
 }

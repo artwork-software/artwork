@@ -3,9 +3,8 @@
 namespace Tests\Feature\AppController;
 
 use App\Enums\RoleNameEnum;
-use App\Models\GeneralSettings;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 

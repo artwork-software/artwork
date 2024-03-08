@@ -44,4 +44,34 @@ return [
             'update' => 'Qualification could not be updated, please try again.'
         ]
     ],
+    'budget-general-setting' => [
+        'success' => [
+            'update' => 'Setting was successfully saved.'
+        ],
+        'error' => [
+            'update' => 'Setting could not be saved, please try again.'
+        ]
+    ],
+    'budget-account-management' => [
+        'success' => [
+            'account' => [
+                'create' => 'Account successfully saved.',
+                'delete' => 'Account successfully deleted.'
+            ],
+            'cost-unit' => [
+                'create' => 'Cost unit successfully saved.',
+                'delete' => 'Cost unit successfully deleted.'
+            ]
+        ],
+        'error' => [
+            'account' => [
+                'create' => 'Account could not be saved, please try again.',
+                'delete' => 'Account could not be deleted, please try again.'
+            ],
+            'cost_unit' => [
+                'create' => 'Cost center could not be saved, please try again.',
+                'delete' => 'Cost center could not be deleted, please try again.'
+            ]
+        ]
+    ]
 ];

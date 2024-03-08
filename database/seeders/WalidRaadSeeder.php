@@ -8,8 +8,8 @@ use App\Models\MoneySource;
 use App\Models\SeriesEvents;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
-use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SubPositionRow;
+use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHeadline;
 use Artwork\Modules\Project\Models\ProjectStates;
@@ -21,6 +21,10 @@ use Illuminate\Support\Str;
 
 class WalidRaadSeeder extends Seeder
 {
+    public function __construct(private readonly BudgetColumnSettingService $budgetColumnSettingService)
+    {
+    }
+
     public function run(): void
     {
         /**
@@ -683,21 +687,21 @@ class WalidRaadSeeder extends Seeder
 
         $columns = $table->columns()->createMany([
             [
-                'name' => 'KTO',
+                'name' => $this->budgetColumnSettingService->getColumnNameByColumnPosition(0),
                 'subName' => '',
                 'type' => 'empty',
                 'linked_first_column' => null,
                 'linked_second_column' => null
             ],
             [
-                'name' => 'KST',
+                'name' => $this->budgetColumnSettingService->getColumnNameByColumnPosition(1),
                 'subName' => '',
                 'type' => 'empty',
                 'linked_first_column' => null,
                 'linked_second_column' => null
             ],
             [
-                'name' => 'Beschreibung',
+                'name' => $this->budgetColumnSettingService->getColumnNameByColumnPosition(2),
                 'subName' => '',
                 'type' => 'empty',
                 'linked_first_column' => null,

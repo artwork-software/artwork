@@ -2,11 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\PermissionNameEnum;
-use App\Enums\RoleNameEnum;
-use App\Models\GeneralSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
-use Illuminate\Contracts\Auth\Authenticatable;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +20,7 @@ class HandleInertiaRequests extends Middleware
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function share(Request $request): array
     {
+        /** @var GeneralSettings $generalSettings */
         $generalSettings = app(GeneralSettings::class);
         return array_merge(
             parent::share($request),
@@ -41,6 +39,7 @@ class HandleInertiaRequests extends Middleware
                 'privacyLink' => $generalSettings->privacy_link,
                 'emailFooter' => $generalSettings->email_footer,
                 'businessEmail' => $generalSettings->business_email,
+                'budgetAccountManagementGlobal' => $generalSettings->budget_account_management_global,
                 'show_hints' => Auth::guest() ? false : Auth::user()->toggle_hints,
                 'rolesArray' => Auth::guest() ? [] : json_encode(Auth::user()->allRoles, true),
                 'permissionsArray' => Auth::guest() ? [] : json_encode(Auth::user()->allPermissions, true),

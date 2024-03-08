@@ -49,4 +49,9 @@ class ColumnCellService
             $this->cellCalculationsService->update($cellCalculation, ['position' => $index]);
         });
     }
+
+    public function updateValue(ColumnCell $columnCell, mixed $value): void
+    {
+        $this->columnCellRepository->update($columnCell, ['value' => $value]);
+    }
 }

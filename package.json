@@ -40,6 +40,7 @@
         "flag-icons": "^7.1.0",
         "laravel-permission-to-vuejs": "^3.0.1",
         "mathjax": "^2.7.2",
+        "primevue": "^3.49.1",
         "vue-cal": "^4.8.0",
         "vue-i18n": "^9.9.1",
         "vue-mathjax-next": "^0.0.4",

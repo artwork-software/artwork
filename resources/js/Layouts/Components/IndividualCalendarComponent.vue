@@ -122,6 +122,10 @@
             :description="$t('Are you sure you want to put the selected appointments in the recycle bin? All sub-events will also be deleted.')"/>
 
     </div>
+
+    <pre>
+        {{calendarData}}
+    </pre>
 </template>
 
 <script>

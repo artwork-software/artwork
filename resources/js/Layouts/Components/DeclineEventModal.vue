@@ -15,8 +15,9 @@
                         <div class="flex items-center w-full mt-4 mb-3">
                             <div class="flex items-center w-full">
                                 <div class="flex w-1/2">
-                                    <EventTypeIconCollection :height="26" :width="26"
-                                                             :iconName="eventTypes[requestToDecline?.eventTypeId]?.svg_name"/>
+                                    <div>
+                                        <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : eventTypes[requestToDecline?.eventTypeId]?.hex_code }" />
+                                    </div>
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
                                         {{ requestToDecline?.eventTypeName }}

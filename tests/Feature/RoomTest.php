@@ -5,7 +5,7 @@ use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Support\Facades\Date;
 
-beforeEach(function () {
+beforeEach(function (): void {
 
     $this->auth_user = User::factory()->create();
 
@@ -14,10 +14,9 @@ beforeEach(function () {
     $this->room = Room::factory()->create();
 
     $this->actingAs($this->auth_user);
-
 });
 
-test('users with the permission can create rooms', function () {
+test('users with the permission can create rooms', function (): void {
 
     $this->post('/rooms', [
         'name' => 'TestRoom',
@@ -34,7 +33,7 @@ test('users with the permission can create rooms', function () {
     ]);
 });
 
-test('users with the permission can update rooms', function () {
+test('users with the permission can update rooms', function (): void {
 
     $this->patch("/rooms/{$this->room->id}", [
         'name' => 'TestRoom',
@@ -47,7 +46,7 @@ test('users with the permission can update rooms', function () {
     ]);
 });
 
-test('users with the permission can duplicate rooms', function () {
+test('users with the permission can duplicate rooms', function (): void {
 
     $old_room = Room::factory()->create([
         'name' => 'TestRoom',
@@ -61,11 +60,9 @@ test('users with the permission can duplicate rooms', function () {
     $this->assertDatabaseHas('rooms', [
         'name' => '(Kopie) TestRoom'
     ]);
-
-
 });
 
-test('users with the permission can delete rooms', function () {
+test('users with the permission can delete rooms', function (): void {
 
     $this->delete("/rooms/{$this->room->id}");
 
@@ -74,6 +71,3 @@ test('users with the permission can delete rooms', function () {
         'deleted_at' => Date::now()
     ]);
 });
-
-
-

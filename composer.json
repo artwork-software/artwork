@@ -42,7 +42,8 @@
         "symfony/event-dispatcher": "^v6.1.0",
         "symfony/http-client": "^v6.1.7",
         "symfony/mailgun-mailer": "^v6.1.0",
-        "tightenco/ziggy": "^v1.5.0"
+        "tightenco/ziggy": "^v1.5.0",
+        "ext-dom": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^v3.7.0",

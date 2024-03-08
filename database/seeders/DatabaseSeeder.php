@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             ServiceProviderSeeder::class,
             WalidRaadSeeder::class,
             PermissionPresetSeeder::class,
+            ChangeEventTypeSvgToHexSeed::class,
         ]);
     }
 }

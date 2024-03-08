@@ -2,7 +2,7 @@
     <div>
         <div>
             <div class="text-secondaryHover xsWhiteBold px-1 py-1 flex justify-between items-center"
-                 :class="eventType.svg_name">
+                 :style="{backgroundColor: event.event_type?.hex_code ?? event.event_type_color}">
                 <div class="w-40 truncate">
                     {{ eventType.abbreviation }}: {{ project?.name }}
                 </div>

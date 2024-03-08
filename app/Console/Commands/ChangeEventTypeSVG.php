@@ -7,24 +7,12 @@ use Illuminate\Console\Command;
 
 class ChangeEventTypeSVG extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
+
     protected $signature = 'app:change-event-type';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Change event type svg to hex';
 
-    /**
-     * Execute the console command.
-     */
-    public function handle()
+    public function handle(): void
     {
         $this->call(ChangeEventTypeSvgToHexSeed::class);
     }

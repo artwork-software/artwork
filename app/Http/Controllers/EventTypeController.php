@@ -34,7 +34,8 @@ class EventTypeController extends Controller
             'hex_code' => $request->hex_code,
             'project_mandatory' => $request->project_mandatory,
             'individual_name' => $request->individual_name,
-            'abbreviation' => $request->abbreviation
+            'abbreviation' => $request->abbreviation,
+            'svg_name' => $request->svg_name ?? 'undefined',
         ]);
 
         return Redirect::back();

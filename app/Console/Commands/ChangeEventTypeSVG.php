@@ -26,6 +26,6 @@ class ChangeEventTypeSVG extends Command
      */
     public function handle()
     {
-        $this->call(ChangeEventTypeSvgToHexSeed::class)
+        $this->call(ChangeEventTypeSvgToHexSeed::class);
     }
 }

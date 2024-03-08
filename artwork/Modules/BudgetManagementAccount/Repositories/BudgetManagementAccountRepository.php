@@ -17,4 +17,9 @@ class BudgetManagementAccountRepository extends BaseRepository
     {
         return BudgetManagementAccount::onlyTrashed()->get();
     }
+
+    public function getByAccountNumberOrTitle(string $search): Collection
+    {
+        return BudgetManagementAccount::byAccountNumberOrTitle($search)->get();
+    }
 }

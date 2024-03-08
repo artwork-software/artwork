@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Artwork\Modules\BudgetManagementAccount\Http\Requests\StoreBudgetManagementAccountRequest;
 use Artwork\Modules\BudgetManagementAccount\Models\BudgetManagementAccount;
 use Artwork\Modules\BudgetManagementAccount\Services\BudgetManagementAccountService;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Http\RedirectResponse;
@@ -80,5 +82,10 @@ class BudgetManagementAccountController extends Controller
         $this->budgetManagementAccountService->forceDelete($budgetManagementAccount);
 
         return Redirect::back();
+    }
+
+    public function search(Request $request): Collection
+    {
+        return $this->budgetManagementAccountService->searchByRequest($request);
     }
 }

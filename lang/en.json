@@ -1515,6 +1515,9 @@
     "The account number must contain at least one character.": "The account number must contain at least one character.",
     "The cost center number must contain at least one character.": "The cost center number must contain at least one character.",
     "The description must contain at least one character.": "The description must contain at least one character.",
+    "The description must not be longer than 255 characters.": "The description must not be longer than 255 characters.",
     "Accounts": "Accounts",
-    "Cost Units": "Cost Units"
+    "Cost Units": "Cost Units",
+    "No Accounts found": "No Accounts found",
+    "No Cost Units found": "No Cost Units found"
 }

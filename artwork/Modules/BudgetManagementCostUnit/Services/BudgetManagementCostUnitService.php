@@ -6,6 +6,7 @@ use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\StoreBudgetManagement
 use Artwork\Modules\BudgetManagementCostUnit\Models\BudgetManagementCostUnit;
 use Artwork\Modules\BudgetManagementCostUnit\Repositories\BudgetManagementCostUnitRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Throwable;
 
 readonly class BudgetManagementCostUnitService
@@ -23,6 +24,11 @@ readonly class BudgetManagementCostUnitService
     public function getAllTrashed(): Collection
     {
         return $this->budgetManagementCostUnitRepository->getAllTrashed();
+    }
+
+    public function searchByRequest(Request $request): Collection
+    {
+        return $this->budgetManagementCostUnitRepository->getByCostUnitNumberOrTitle($request->get('search'));
     }
 
     /**

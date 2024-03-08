@@ -17,4 +17,9 @@ class BudgetManagementCostUnitRepository extends BaseRepository
     {
         return BudgetManagementCostUnit::onlyTrashed()->get();
     }
+
+    public function getByCostUnitNumberOrTitle(string $search): Collection
+    {
+        return BudgetManagementCostUnit::byCostUnitNumberOrTitle($search)->get();
+    }
 }

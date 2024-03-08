@@ -322,6 +322,11 @@ export default defineComponent({
                 return;
             }
 
+            if (this.accountForm.title.length > 255) {
+                this.accountFormHelpText = this.$t('The description must not be longer than 255 characters.');
+                return;
+            }
+
             this.accountFormHelpText = '';
 
             this.accountForm.post(
@@ -342,6 +347,11 @@ export default defineComponent({
 
             if (this.costUnitForm.title === '') {
                 this.costUnitFormHelpText = this.$t('The description must contain at least one character.');
+                return;
+            }
+
+            if (this.costUnitForm.title.length > 255) {
+                this.costUnitFormHelpText = this.$t('The description must not be longer than 255 characters.');
                 return;
             }
 

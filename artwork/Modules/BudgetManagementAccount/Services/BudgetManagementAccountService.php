@@ -6,6 +6,7 @@ use Artwork\Modules\BudgetManagementAccount\Http\Requests\StoreBudgetManagementA
 use Artwork\Modules\BudgetManagementAccount\Models\BudgetManagementAccount;
 use Artwork\Modules\BudgetManagementAccount\Repositories\BudgetManagementAccountRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Throwable;
 
 readonly class BudgetManagementAccountService
@@ -23,6 +24,11 @@ readonly class BudgetManagementAccountService
     public function getAllTrashed(): Collection
     {
         return $this->budgetManagementAccountRepository->getAllTrashed();
+    }
+
+    public function searchByRequest(Request $request): Collection
+    {
+        return $this->budgetManagementAccountRepository->getByAccountNumberOrTitle($request->get('search'));
     }
 
     /**

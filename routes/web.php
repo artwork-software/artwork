@@ -799,39 +799,59 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::get(
             '/account-management/accounts/trashed',
             [
-                BudgetManagementAccountController::class, 'indexTrash'
+                BudgetManagementAccountController::class,
+                'indexTrash'
             ]
         )->name('budget-settings.account-management.trash-accounts');
         Route::patch(
             '/account-management/accounts/trashed/{budgetManagementAccount}',
             [
-                BudgetManagementAccountController::class, 'restore'
+                BudgetManagementAccountController::class,
+                'restore'
             ]
         )->withTrashed()->name('budget-settings.account-management.trash-accounts.restore');
         Route::delete(
             '/account-management/accounts/trashed/{budgetManagementAccount}',
             [
-                BudgetManagementAccountController::class, 'forceDelete'
+                BudgetManagementAccountController::class,
+                'forceDelete'
             ]
         )->withTrashed()->name('budget-settings.account-management.trash-accounts.forceDelete');
         Route::get(
             '/account-management/cost-units/trashed',
             [
-                BudgetManagementCostUnitController::class, 'indexTrash'
+                BudgetManagementCostUnitController::class,
+                'indexTrash'
             ]
         )->name('budget-settings.account-management.trash-cost-units');
         Route::patch(
             '/account-management/cost-units/trashed/{budgetManagementCostUnit}',
             [
-                BudgetManagementCostUnitController::class, 'restore'
+                BudgetManagementCostUnitController::class,
+                'restore'
             ]
         )->withTrashed()->name('budget-settings.account-management.trash-cost-units.restore');
         Route::delete(
             '/account-management/cost-units/trashed/{budgetManagementCostUnit}',
             [
-                BudgetManagementCostUnitController::class, 'forceDelete'
+                BudgetManagementCostUnitController::class,
+                'forceDelete'
             ]
         )->withTrashed()->name('budget-settings.account-management.trash-cost-units.forceDelete');
+        Route::get(
+            '/account-management/accounts/search',
+            [
+                BudgetManagementAccountController::class,
+                'search'
+            ]
+        )->name('budget-settings.account-management.search-accounts');
+        Route::get(
+            '/account-management/cost-units/search',
+            [
+                BudgetManagementCostUnitController::class,
+                'search'
+            ]
+        )->name('budget-settings.account-management.search-cost-units');
 
         Route::get('/templates', [BudgetTemplateController::class, 'index'])
             ->name('budget-settings.templates')

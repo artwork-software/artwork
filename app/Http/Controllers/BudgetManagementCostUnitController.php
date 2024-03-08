@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\StoreBudgetManagementCostUnitRequest;
 use Artwork\Modules\BudgetManagementCostUnit\Models\BudgetManagementCostUnit;
 use Artwork\Modules\BudgetManagementCostUnit\Services\BudgetManagementCostUnitService;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Http\RedirectResponse;
@@ -80,5 +82,10 @@ class BudgetManagementCostUnitController extends Controller
         $this->budgetManagementCostUnitService->forceDelete($budgetManagementCostUnit);
 
         return Redirect::back();
+    }
+
+    public function search(Request $request): Collection
+    {
+        return $this->budgetManagementCostUnitService->searchByRequest($request);
     }
 }

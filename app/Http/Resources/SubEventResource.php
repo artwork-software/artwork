@@ -27,6 +27,7 @@ class SubEventResource extends JsonResource
             'eventTypeId' => $this->type->id,
             'eventType' => $this->type,
             'eventTypeAbbreviation' => $this->type->abbreviation,
+            'eventTypeColor' => $this->type->hex_code,
             'allDay' => $this->allDay,
         ];
     }

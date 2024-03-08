@@ -367,7 +367,7 @@
     "Event Types": "Event Types",
     "New Event Type": "New Event Type",
     "Create new Event Types": "Create new Event Types",
-    "Define up to 10 event types that events can be assigned to later. You can also specify whether they need to be associated with projects or if they can have their own individual names.": "Define up to 10 event types that events can be assigned to later. You can also specify whether they need to be associated with projects or if they can have their own individual names.",
+    "Define event types to which events can be assigned later. You can also define whether they must be assigned to projects or whether they can have their own individual appointment name.": "Define event types to which events can be assigned later. You can also define whether they must be assigned to projects or whether they can have their own individual appointment name.",
     "Project assignment mandatory": "Project assignment mandatory",
     "Project assignment optional": "Project assignment optional",
     "individual event name mandatory": "individual event name mandatory",

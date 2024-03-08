@@ -24,7 +24,7 @@ class EventType extends Model
 
     protected $fillable = [
         'name',
-        'svg_name',
+        'hex_code',
         'project_mandatory',
         'individual_name',
         'abbreviation',

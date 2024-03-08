@@ -31,7 +31,7 @@ class EventTypeController extends Controller
     {
         $event_type = EventType::create([
             'name' => $request->name,
-            'svg_name' => $request->svg_name,
+            'hex_code' => $request->hex_code,
             'project_mandatory' => $request->project_mandatory,
             'individual_name' => $request->individual_name,
             'abbreviation' => $request->abbreviation
@@ -64,7 +64,7 @@ class EventTypeController extends Controller
     {
         $eventType->update($request->only(
             'name',
-            'svg_name',
+            'hex_code',
             'project_mandatory',
             'individual_name',
             'abbreviation'

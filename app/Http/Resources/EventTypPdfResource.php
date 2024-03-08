@@ -18,7 +18,8 @@ class EventTypPdfResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'abbreviation' => $this->abbreviation,
-            'svg_name' => $this->svg_name
+            'svg_name' => $this->svg_name,
+            'hex_code' => $this->hex_code,
         ];
     }
 }

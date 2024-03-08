@@ -8,8 +8,8 @@ import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import Permissions from './mixins/Permissions';
 import VueMathjax from 'vue-mathjax-next';
-// import VueI18n from 'vue-i18n'
 import * as VueI18n from 'vue-i18n'
+import PrimeVue from 'primevue/config';
 
 const svgColors = {
     eventType0:'#A7A6B1',
@@ -51,6 +51,7 @@ createInertiaApp({
         app.use(VueTailwindDatepicker);
         app.use(VueMathjax)
         app.use(i18n)
+        app.use(PrimeVue, { unstyled: true })
         app.mount(el);
         app.config.globalProperties.$updateLocale = function (newLocale) {
             this.$i18n.locale = newLocale; // Für VueI18n 9.x und Vue 3

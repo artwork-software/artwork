@@ -28,8 +28,9 @@
                                 <ListboxButton
                                     class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                     <div class="flex items-center my-auto">
-                                        <EventTypeIconCollection :height="20" :width="20"
-                                                                 :iconName="subEvent.selectedEventType?.svg_name"/>
+                                        <div>
+                                            <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : subEvent.selectedEventType?.hex_code }" />
+                                        </div>
                                         <span class="block truncate items-center ml-3 flex">
                                             <span>{{ subEvent.selectedEventType?.name }}</span>
                                         </span>
@@ -51,8 +52,9 @@
                                                        v-slot="{ active, selected }">
                                             <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                 <div class="flex">
-                                                    <EventTypeIconCollection :height="12" :width="12"
-                                                                             :iconName="eventType?.svg_name"/>
+                                                    <div>
+                                                        <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : eventType?.hex_code }" />
+                                                    </div>
                                                     <span
                                                         :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">{{
                                                             eventType.name

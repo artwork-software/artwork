@@ -1,7 +1,5 @@
 <template>
-    <div :class="[event.class, textStyle]"
-         :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoomFactor + 'px' }"
-         class="rounded-lg relative group">
+    <div :class="[textStyle]" :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoomFactor + 'px', backgroundColor: backgroundColorWithOpacity }" class="rounded-lg relative group">
         <div v-if="zoomFactor > 0.4"
              class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-indigo-500/50'">
@@ -45,7 +43,7 @@
         </div>
 
         <div class="px-1 py-1 ">
-            <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
+            <div :style="{textStyle, color: TextColorWithDarken}" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
                  class="flex justify-between ">
                 <div v-if="!project" class="flex items-center">
                     <div v-if="event.eventTypeAbbreviation" class="mr-1">
@@ -82,7 +80,7 @@
             </div>
             <div class="flex">
                 <!-- Time -->
-                <div class="flex" :style="textStyle"
+                <div class="flex" :style="{textStyle, color: TextColorWithDarken}"
                      :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
                     <div
                         v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
@@ -334,6 +332,7 @@
         @closed="showDeclineEventModal = false"
         v-if="showDeclineEventModal"
     />
+
 </template>
 
 <script>
@@ -379,6 +378,14 @@ export default {
     ],
     emits: ['openEditEventModal', 'checkEvent'],
     computed: {
+        backgroundColorWithOpacity(){
+            const color = this.event.event_type_color;
+            return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, 15%)`;
+        },
+        TextColorWithDarken(){
+            const color = this.event.event_type_color;
+            return `rgb(${parseInt(color.slice(-6, -4), 16) - 75}, ${parseInt(color.slice(-4, -2), 16) - 75}, ${parseInt(color.slice(-2), 16) - 75})`;
+        },
         textStyle() {
             const fontSize = `calc(${this.zoomFactor} * 0.75rem)`;
             const lineHeight = `calc(${this.zoomFactor} * 1rem)`;

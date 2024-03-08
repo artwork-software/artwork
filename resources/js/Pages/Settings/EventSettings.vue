@@ -17,15 +17,16 @@
                     </div>
                 </div>
                 <div class="xsLight mt-2">
-                    {{ $t('Define up to 10 event types that events can be assigned to later. You can also specify whether they need to be associated with projects or if they can have their own individual names.')}}
+                    {{ $t('Define event types to which events can be assigned later. You can also define whether they must be assigned to projects or whether they can have their own individual appointment name.')}}
                 </div>
             </div>
             <ul role="list" class="mt-4 mb-20 w-full">
                 <li v-for="(eventType,index) in event_types" :key="eventType.id"
                     class="flex justify-between">
                     <div class="flex my-4">
-                        <EventTypeIconCollection :height="64" :width="64"
-                                                 :iconName="eventType.svg_name"/>
+                        <div>
+                            <div class="block w-16 h-16 rounded-full" :style="{'backgroundColor' : eventType.hex_code }" />
+                        </div>
                         <div class="ml-5 my-auto w-full justify-start mr-6">
                             <div class="flex my-auto">
                                 <p class="mDark">{{ eventType.name }}</p>
@@ -115,39 +116,14 @@
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="xsLight">
-                        {{$t('You can create up to 10 different event types.')}}
+                        <!--{{$t('You can create up to 10 different event types.')}}-->
                     </div>
                     <div class="mt-4">
-                        <div class="flex">
-                            <Menu as="div" class=" relative">
-                                <div>
-                                    <MenuButton :class="[eventTypeForm.svg_name === '' ? 'border border-gray-400' : '']" class="items-center rounded-full focus:outline-none h-14 w-14">
-                                        <label v-if="eventTypeForm.svg_name === ''" class="text-gray-400 text-xs">{{$t('Color*')}}</label>
-                                        <ChevronDownIcon v-if="eventTypeForm.svg_name === ''"
-                                                         class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"></ChevronDownIcon>
-                                        <EventTypeIconCollection class="h-12 w-12" v-if="eventTypeForm.svg_name !== ''" :iconName=eventTypeForm.svg_name alt="TeamIcon" />
-                                    </MenuButton>
-                                </div>
-                                <transition enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
-                                    <MenuItems
-                                        class="z-40 origin-top-right h-32 overflow-y-auto w-20 absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                        <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
-                                            <div>
-                                                <div class="" @click="eventTypeForm.svg_name = item.iconName"
-                                                     :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group relative flex  items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <EventTypeIconCollection :height="64" :width="64"
-                                                                             :iconName="item.iconName"/>
-                                                </div>
-                                            </div>
-                                        </MenuItem>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
+                        <div class="flex items-center">
+                            <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none h-14 w-14">
+                                <input type="color" placeholder="Farbe" v-model="eventTypeForm.hex_code" class="rounded-full focus:outline-none h-14 w-14 object-cover" >
+                            </div>
+
                             <div class="relative my-auto w-full ml-8 mr-12">
                                 <input id="name" v-model="eventTypeForm.name" type="text"
                                        class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
@@ -201,7 +177,7 @@
                            aria-hidden="true"/>
                     <div class="mt-12">
                         <div class="flex">
-                            <Menu as="div" class=" relative">
+                            <Menu as="div" class=" relative hidden">
                                 <div>
                                     <MenuButton class="flex items-center rounded-full focus:outline-none">
                                         <ChevronDownIcon v-if="editEventTypeForm.svg_name === ''"
@@ -230,6 +206,9 @@
                                     </MenuItems>
                                 </transition>
                             </Menu>
+                            <div class="justify-content-center relative items-center flex cursor-pointer rounded-full focus:outline-none">
+                                <input type="color" v-model="editEventTypeForm.hex_code" class="rounded-full focus:outline-none h-14 w-14" >
+                            </div>
                             <div class="relative my-auto w-full ml-8 mr-12">
                                 <input id="editCategoryName" v-model="editEventTypeForm.name" type="text"
                                        class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
@@ -333,6 +312,7 @@ import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollectio
 import Permissions from "@/mixins/Permissions.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import ColorPicker from 'primevue/colorpicker';
 
 export default {
     mixins: [Permissions],
@@ -390,7 +370,8 @@ export default {
         DotsVerticalIcon,
         TrashIcon,
         PencilAltIcon,
-        XIcon
+        XIcon,
+        ColorPicker
     },
     props: ['event_types'],
     data() {
@@ -403,15 +384,15 @@ export default {
             takenEventTypeColors: [],
             eventTypeForm: this.$inertia.form({
                 _method: 'POST',
-                svg_name: '',
                 name: '',
                 project_mandatory: false,
                 individual_name: false,
-                abbreviation: ''
+                abbreviation: '',
+                hex_code: '#000000',
             }),
             editEventTypeForm: this.$inertia.form({
                 _method: 'PATCH',
-                svg_name: '',
+                hex_code: '',
                 name: '',
                 project_mandatory: false,
                 individual_name: false,
@@ -425,7 +406,7 @@ export default {
             this.addingEventType = true;
         },
         openEditEventTypeModal(eventType) {
-            this.editEventTypeForm.svg_name = eventType.svg_name;
+            this.editEventTypeForm.hex_code = eventType.hex_code;
             this.editEventTypeForm.name = eventType.name;
             this.editEventTypeForm.id = eventType.id;
             this.editEventTypeForm.project_mandatory = eventType.project_mandatory;
@@ -434,7 +415,7 @@ export default {
             this.editingEventType = true;
         },
         closeEditEventTypeModal() {
-            this.editEventTypeForm.svg_name = "";
+            this.editEventTypeForm.hex_code = "";
             this.editEventTypeForm.name = "";
             this.editEventTypeForm.id = null;
             this.editEventTypeForm.project_mandatory = false;
@@ -444,7 +425,7 @@ export default {
         closeAddEventTypeModal() {
             this.addingEventType = false;
             this.eventTypeForm.name = "";
-            this.eventTypeForm.svg_name = "";
+            this.eventTypeForm.hex_code = "";
             this.eventTypeForm.project_mandatory = false;
             this.eventTypeForm.individual_name = false;
             this.eventTypeForm.abbreviation = '';
@@ -482,3 +463,21 @@ export default {
     }
 }
 </script>
+
+<style>
+input[type=color] {
+    border-radius: 100%;
+    border: 1px solid transparent;
+}
+
+input[type=color]::-webkit-color-swatch {
+    border-radius: 100%;
+    border: 1px solid transparent;
+}
+
+input[type=color]::-webkit-color-swatch-wrapper {
+    border-radius: 100%;
+    border: 1px solid transparent;
+}
+
+</style>

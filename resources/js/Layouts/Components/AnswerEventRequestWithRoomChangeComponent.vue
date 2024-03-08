@@ -8,8 +8,9 @@
                 </div>
                 <!-- Type -->
                 <div class=" w-full flex truncate">
-                    <EventTypeIconCollection :height="40" :width="40"
-                                             :iconName="eventType?.svg_name"/>
+                    <div>
+                        <div class="block w-10 h-10 rounded-full" :style="{'backgroundColor' : eventType?.hex_code }" />
+                    </div>
                     <p class="ml-2 flex items-center text-lg font-lexend font-semibold">
                         {{ eventType?.name }}
                     </p>

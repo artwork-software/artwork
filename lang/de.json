@@ -366,7 +366,7 @@
     "Event Types" : "Termintypen",
     "New Event Type" : "Neuer Termintyp",
     "Create new Event Types": "Erstelle neue Termintypen",
-    "Define up to 10 event types that events can be assigned to later. You can also specify whether they need to be associated with projects or if they can have their own individual names.": "Lege bis zu 10 Termintypen fest, denen Termine später zugeordnet werden können. Du kannst außerdem definieren ob sie Projekten zugeordnet werden müssen oder ob sie einen eigenen individuellen Terminnamen bekommen können.",
+    "Define event types to which events can be assigned later. You can also define whether they must be assigned to projects or whether they can have their own individual appointment name.": "Lege Termintypen fest, denen Termine später zugeordnet werden können. Du kannst außerdem definieren ob sie Projekten zugeordnet werden müssen oder ob sie einen eigenen individuellen Terminnamen bekommen können.",
     "Project assignment mandatory": "Projektzuordnung verpflichtend",
     "Project assignment optional": "Projektzuordnung optional",
     "individual event name mandatory": "individueller Terminname verpflichtend",

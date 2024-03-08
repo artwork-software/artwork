@@ -15,12 +15,6 @@ class ProjectCalendarShowEventResource extends JsonResource
     // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
     public function toArray($request): array
     {
-        $classString = '';
-        if ($this->occupancy_option) {
-            $classString = $this->event_type->svg_name . ' ' . 'occupancy_option_' . $this->event_type->svg_name;
-        } else {
-            $classString = $this->event_type->svg_name;
-        }
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
@@ -41,7 +35,7 @@ class ProjectCalendarShowEventResource extends JsonResource
             'eventTypeId' => $this->event_type_id,
             'eventTypeName' => $this->event_type->name,
             'eventTypeAbbreviation' => $this->event_type->abbreviation,
-            'class' => $classString,
+            'event_type_color' => $this->event_type->hex_code,
             'areaId' => $this->room?->area_id,
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
             'created_by' => $this->creator,
@@ -65,6 +59,8 @@ class ProjectCalendarShowEventResource extends JsonResource
             'subEvents' => SubEventResource::collection($this->subEvents),
             //'comments' => $this->comments,
             //'shifts' => $this->shifts,
+
+            'eventTypeColorBackground' => $this->event_type->hex_code . '33',
         ];
     }
 }

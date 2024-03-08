@@ -59,8 +59,9 @@
 
                                 <div class="w-1/2">
                                     <div class="h-12 flex w-full truncate p-2" v-if="!event.canEdit">
-                                        <EventTypeIconCollection :height="20" :width="20"
-                                                                 :iconName="this.eventTypes.find(type => type.id === event.eventTypeId)?.svg_name"/>
+                                        <div>
+                                            <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : this.eventTypes.find(type => type.id === event.eventTypeId)?.hex_code }" />
+                                        </div>
                                         <p class="ml-2 headline2">
                                             {{ this.eventTypes.find(type => type.id === event.eventTypeId).name }}</p>
 
@@ -72,8 +73,9 @@
                                         <ListboxButton
                                             class="pl-3 border-2 border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                             <div class="flex items-center my-auto">
-                                                <EventTypeIconCollection :height="20" :width="20"
-                                                                         :iconName="this.eventTypes.find(type => type.id === event.eventTypeId)?.svg_name"/>
+                                                <div>
+                                                    <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : this.eventTypes.find(type => type.id === event.eventTypeId)?.hex_code }" />
+                                                </div>
                                                 <span class="block truncate items-center ml-3 flex">
                                             <span>{{
                                                     this.eventTypes.find(type => type.id === event.eventTypeId)?.name
@@ -97,8 +99,9 @@
                                                                v-slot="{ active, selected }">
                                                     <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                         <div class="flex">
-                                                            <EventTypeIconCollection :height="12" :width="12"
-                                                                                     :iconName="eventType?.svg_name"/>
+                                                            <div>
+                                                                <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : eventType?.hex_code }" />
+                                                            </div>
                                                             <span
                                                                 :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
                                                         {{ eventType.name }}
@@ -409,8 +412,9 @@
                         <!-- View if not opened Event -->
                         <div class="ml-2 w-11/12" v-else>
                             <div class=" w-full flex cursor-pointer truncate p-2">
-                                <EventTypeIconCollection :height="40" :width="40"
-                                                         :iconName="this.eventTypes.find(type => type.id === event.eventTypeId)?.svg_name"/>
+                                <div>
+                                    <div class="block w-10 h-10 rounded-full" :style="{'backgroundColor' : this.eventTypes.find(type => type.id === event.eventTypeId)?.hex_code }" />
+                                </div>
                                 <p class="ml-2 headline2 flex items-center">
                                     {{ this.eventTypes.find(type => type.id === event.eventTypeId)?.name }}
                                 </p>

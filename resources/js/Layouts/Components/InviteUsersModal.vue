@@ -3,7 +3,7 @@
         <template #content>
             <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
-                <XIcon @click="closeUserModal(false)"
+                <IconX stroke-width="1.5" @click="closeUserModal(false)"
                        class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
                        aria-hidden="true"/>
                 <div class="mt-8 headline1">
@@ -27,7 +27,7 @@
                             <button
                                 :class="[emailInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                 @click="addEmailToInvitationArray" :disabled="!emailInput">
-                                <CheckIcon class="h-5 w-5"></CheckIcon>
+                                <IconCheck stroke-width="1.5" class="h-5 w-5"></IconCheck>
                             </button>
                         </div>
                     </div>
@@ -39,7 +39,7 @@
                             {{ email }}
                     <button type="button" @click="deleteEmailFromInvitationArray(index)">
                     <span class="sr-only">{{ $t('Remove email from invitation')}}</span>
-                        <XCircleIcon
+                        <IconCircleX stroke-width="1.5"
                             class="ml-1 mt-1 h-5 w-5 hover:text-error "/>
                     </button>
                     </span>
@@ -102,9 +102,9 @@
                         <div v-on:click="showPresets = !showPresets">
                             <h2 class="flex headline6Light cursor-pointer mb-2">
                                 {{$t('Permission presets')}}
-                                <ChevronUpIcon v-if="showPresets"
-                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                                <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                                <IconChevronUp stroke-width="1.5" v-if="showPresets"
+                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronUp>
+                                <IconChevronDown stroke-width="1.5" v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronDown>
                             </h2>
                         </div>
                         <div class="mb-8 flex flex-col" v-if="showPresets">
@@ -122,9 +122,9 @@
                         <div v-on:click="showUserPermissions = !showUserPermissions">
                             <h2 class="flex headline6Light cursor-pointer mb-2">
                                 Nutzerrechte
-                                <ChevronUpIcon v-if="showUserPermissions"
-                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                                <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                                <IconChevronUp stroke-width="1.5" v-if="showUserPermissions"
+                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronUp>
+                                <IconChevronDown stroke-width="1.5" v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronDown>
                             </h2>
                         </div>
                         <div v-if="showUserPermissions && this.form.role !== 'admin'"
@@ -171,10 +171,11 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "InviteUsersModal",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         AddButtonSmall,

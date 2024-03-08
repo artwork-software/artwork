@@ -2,7 +2,7 @@
     <jet-dialog-modal :show="true" @close="closeModal()">
         <template #content>
             <img alt="Neue Spalte" src="/Svgs/Overlays/illu_budget_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+            <IconX stroke-width="1.5" @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
@@ -50,7 +50,7 @@
                                         </span>
                                         <span
                                             class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                         </span>
                                     </div>
                                 </ListboxButton>
@@ -71,7 +71,7 @@
                                                     </span>
                                                 </div>
                                                 <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                    <CheckIcon v-if="selected"
+                                                    <IconCheck stroke-width="1.5" v-if="selected"
                                                                class="h-5 w-5 flex text-success"
                                                                aria-hidden="true"
                                                     />
@@ -97,7 +97,7 @@
                                         </span>
                                         <span
                                             class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                                     </div>
                                 </ListboxButton>
@@ -118,7 +118,7 @@
                                                     </span>
                                                 </div>
                                                 <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected"
+                                                      <IconCheck stroke-width="1.5" v-if="selected"
                                                                  class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"
                                                       />
@@ -160,10 +160,11 @@ import {
 } from '@heroicons/vue/outline';
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'AddColumnComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         ListboxOptions,

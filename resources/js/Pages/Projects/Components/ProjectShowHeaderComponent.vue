@@ -38,7 +38,7 @@
                     <div class="flex items-center -mt-1">
                         <MenuButton
                             class="flex bg-tagBg p-0.5 rounded-full">
-                            <DotsVerticalIcon
+                            <IconDotsVertical stroke-width="1.5"
                                 class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                 aria-hidden="true"/>
                         </MenuButton>
@@ -57,7 +57,7 @@
                                     v-slot="{ active }">
                                     <a @click="openEditProjectModal"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                        <PencilAltIcon
+                                        <IconEdit stroke-width="1.5"
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
                                         {{ $t('Edit basic data') }}
@@ -66,7 +66,7 @@
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="duplicateProject(this.project)"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                        <DuplicateIcon
+                                        <IconCopy stroke-width="1.5"
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
                                         {{ $t('Duplicate') }}
@@ -77,7 +77,7 @@
                                     v-slot="{ active }">
                                     <a @click="openDeleteProjectModal(this.project)"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                        <TrashIcon
+                                        <IconTrash stroke-width="1.5"
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
                                         {{ $t('Put in the trash') }}
@@ -119,7 +119,7 @@
                 </span>
                 <button class="ml-4 subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
                         @click="openProjectHistoryModal()">
-                    <ChevronRightIcon
+                    <IconChevronRight
                         class="-mr-0.5 h-4 w-4  group-hover:text-white"
                         aria-hidden="true"/>
                     {{ $t('View history') }}
@@ -203,6 +203,7 @@ import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponen
 import {Inertia} from "@inertiajs/inertia";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {Link} from "@inertiajs/inertia-vue3";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     components: {
@@ -224,7 +225,7 @@ export default {
         MenuItems,
         Link
     },
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     props: [
         'project',
         'currentGroup',

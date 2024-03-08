@@ -9,7 +9,7 @@
                              v-if="this.hasAdminRole() || $canAny(['create, delete and update rooms']) || this.is_room_admin">
                             <MenuButton
                                 class="flex bg-tagBg p-0.5 rounded-full">
-                                <DotsVerticalIcon
+                                <IconDotsVertical stroke-width="1.5"
                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
@@ -34,7 +34,7 @@
                                     <MenuItem v-slot="{ active }">
                                         <a @click="openEditRoomModal(room)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
-                                            <PencilAltIcon
+                                            <IconEdit stroke-width="1.5"
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
                                             {{$t('edit')}}
@@ -43,7 +43,7 @@
                                     <MenuItem v-slot="{ active }">
                                         <a href="#" @click="duplicateRoom(room)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <DuplicateIcon
+                                            <IconCopy stroke-width="1.5"
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
                                             {{ $t('Duplicate')}}
@@ -52,7 +52,7 @@
                                     <MenuItem v-slot="{ active }">
                                         <a @click="openSoftDeleteRoomModal(room)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <TrashIcon
+                                            <IconTrash  stroke-width="1.5"
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
                                             {{$t('In the recycle bin')}}
@@ -572,10 +572,11 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 
 export default {
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     name: "Show",
     props: [
         'room',

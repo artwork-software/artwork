@@ -7,12 +7,7 @@
                     {{ eventType.abbreviation }}: {{ project?.name }}
                 </div>
                 <div v-if="areAllShiftsCommitted(event)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686" class="ml-1"
-                         viewBox="0 0 11.975 13.686">
-                        <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
-                              d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
-                              fill="#fcfcfb"/>
-                    </svg>
+                    <IconLock stroke-width="1.5" class="h-5 w-5 text-white"/>
                 </div>
             </div>
         </div>
@@ -43,9 +38,10 @@ import Permissions from "@/mixins/Permissions.vue";
 import {CheckIcon} from "@heroicons/vue/outline";
 import ShiftDropElement from "@/Layouts/Components/ShiftPlanComponents/ShiftDropElement.vue";
 import DropElement from "@/Pages/Projects/Components/DropElement.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         DropElement,
         ShiftDropElement,

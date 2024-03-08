@@ -13,7 +13,7 @@
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closed">
                                     <span class="sr-only">Close</span>
-                                    <XIcon class="h-6 w-6" aria-hidden="true" />
+                                    <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
                                 </button>
                             </div>
                             <div class="relative z-40">
@@ -40,10 +40,11 @@
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
 import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "ChangeAllSubmitModal",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         DialogPanel,
         Dialog,

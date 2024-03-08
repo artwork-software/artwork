@@ -6,7 +6,7 @@
                 <div class="headline1 my-2">
                     {{ $t('Contract upload')}}
                 </div>
-                <XIcon @click="closeModal"
+                <IconX stroke-width="1.5" @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-secondary text-sm my-6">
@@ -31,8 +31,8 @@
                 </div>
                 <div class="mb-2">
                     <div class="group flex" v-if="this.file">{{ this.file.name }}
-                        <XCircleIcon
-                            @click="this.file = null"
+                        <IconCircleX
+                            stroke-width="1.5" @click="this.file = null"
                             class="ml-2 group-hover:cursor-pointer my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                             aria-hidden="true"/>
                     </div>
@@ -81,7 +81,7 @@
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                                 </div>
                             </ListboxButton>
@@ -92,7 +92,7 @@
                                 </div>
                                 <span
                                     class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100"
@@ -113,7 +113,7 @@
                                             </div>
                                             <span
                                                 :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
                                         </li>
@@ -133,7 +133,7 @@
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                                 </div>
                             </ListboxButton>
@@ -144,7 +144,7 @@
                                 </div>
                                 <span
                                     class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100"
@@ -165,7 +165,7 @@
                                             </div>
                                             <span
                                                 :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
                                         </li>
@@ -189,7 +189,7 @@
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                                 </div>
                             </ListboxButton>
@@ -211,7 +211,7 @@
                                             </div>
                                             <span
                                                 :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
                                         </li>
@@ -305,7 +305,7 @@
                                             </span>
                                             <button type="button" @click="deleteUserFromContractUserArray(index)">
                                                 <span class="sr-only">{{ $t('Remove user from contract')}}</span>
-                                                <XIcon
+                                                <IconX stroke-width="1.5"
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
                                         </div>
@@ -319,9 +319,9 @@
                         <div class="xxsDarkBold flex items-center cursor-pointer"
                              @click="showExtraSettings = !showExtraSettings">
                             {{ $t('Add further details or task')}}
-                            <ChevronUpIcon v-if="showExtraSettings"
-                                           class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                            <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                            <IconChevronUp stroke-width="1.5" v-if="showExtraSettings"
+                                           class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronUp>
+                            <IconChevronDown stroke-width="1.5" v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronDown>
                         </div>
                         <div v-if="showExtraSettings">
                             <div class="items-center mb-2 mt-4">
@@ -342,7 +342,7 @@
                                 <button v-if="!creatingNewTask" type="button"
                                         @click="[creatingNewTask = !creatingNewTask]"
                                         class="flex py-3 px-8 items-center  border-2 mt-6 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
-                                    <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
+                                    <IconCirclePlus stroke-width="1.5" class="h-6 w-6 mr-2" aria-hidden="true"/>
                                     <p class="text-sm">{{ tasks.length === 0 ? $t('New task') : $t('Further task') }}</p>
                                 </button>
 
@@ -383,10 +383,11 @@ import Button from "@/Jetstream/Button.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import Input from "@/Jetstream/Input.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "ContractUploadModal",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     emits: ['closeModal'],
     props: ['show', 'projectId', 'extraSettings', 'budgetAccess', 'contractTypes', 'companyTypes', 'currencies'],
     /*props: {

@@ -12,7 +12,7 @@
         </div>
         <!-- Empty -->
         <div class="w-[175px] flex items-center justify-center border-2 border-dashed" @click="checkWhichModal">
-            <PlusCircleIcon class="h-4 w-4 rounded-full bg-backgroundBlue" />
+            <IconCirclePlus class="h-4 w-4 rounded-full bg-backgroundBlue" />
         </div>
     </div>
     <AddShiftModal v-if="showAddShiftModal"
@@ -39,6 +39,7 @@ import DropElement from "@/Pages/Projects/Components/DropElement.vue";
 import {XIcon} from "@heroicons/vue/solid";
 import SingleShift from "@/Pages/Projects/Components/SingleShift.vue";
 import ChooseShiftSeries from "@/Pages/Projects/Components/ChooseShiftSeries.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
     name: "TimeLineShiftsComponent",
@@ -70,6 +71,7 @@ export default defineComponent({
             }
         }
     },
+    mixins: [IconLib],
     emits: ['dropFeedback'],
     methods: {
         dropFeedback(event){

@@ -5,7 +5,7 @@
                 <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
                      @click="openEventsWithoutRoomComponent()"
                      v-if="filteredEvents?.length > 0">
-                    <ExclamationIcon class="h-6  mr-2"/>
+                    <IconAlertTriangle class="h-6  mr-2"/>
                     {{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
                 </div>
             </div>
@@ -56,7 +56,7 @@
                                 class="border-t-2 border-dashed"
                                 :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
                                 v-for="room in calendarData">
-                                <div class="py-0.5" v-for="event in room[day.day].events.data">
+                                <div class="py-0.5" v-for="event in room[day.full_day].events.data">
                                     <SingleCalendarEvent
                                         class="relative"
                                         :project="project ? project : false"
@@ -91,7 +91,6 @@
             />
 
         </div>
-
         <!-- Termine ohne Raum Modal -->
         <events-without-room-component
             v-if="showEventsWithoutRoomComponent"
@@ -139,11 +138,12 @@ import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 
 export default {
     name: "IndividualCalendarComponent",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         Link,
@@ -295,7 +295,7 @@ export default {
             const eventArray = [];
             this.days.forEach((day) => {
                 this.calendarData.forEach((room) => {
-                    room[day.day].events.data.forEach((event) => {
+                    room[day.full_day].events.data.forEach((event) => {
                         if (event.clicked) {
                             if (!eventArray.includes(event.id)) {
                                 eventArray.push(event.id)

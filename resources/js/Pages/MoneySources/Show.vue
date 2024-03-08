@@ -10,7 +10,7 @@
                         <div class="flex items-center -mt-1">
                             <MenuButton
                                 class="flex bg-tagBg p-0.5 rounded-full">
-                                <DotsVerticalIcon
+                                <IconDotsVertical stroke-width="1.5"
                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
@@ -37,7 +37,7 @@
                                         v-slot="{ active }">
                                         <a @click="openEditMoneySourceModal"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <PencilAltIcon
+                                            <IconEdit stroke-width="1.5"
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
                                             {{$t('Edit basic data')}}
@@ -46,7 +46,7 @@
                                     <MenuItem v-slot="{ active }">
                                         <a @click="duplicateMoneySource(this.moneySource) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <DuplicateIcon
+                                            <IconCopy stroke-width="1.5"
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
                                             {{ $t('Duplicate')}}
@@ -57,7 +57,7 @@
                                         v-slot="{ active }">
                                         <a @click="openDeleteSourceModal(this.moneySource)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <TrashIcon
+                                            <IconTrash stroke-width="1.5"
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
                                             {{ $t('Delete')}}
@@ -76,7 +76,7 @@
                     </div>
                     <button class="ml-4 mt-3 subpixel-antialiased flex items-center linkText cursor-pointer"
                             @click="openMoneySourceHistoryModal()">
-                        <ChevronRightIcon
+                        <IconChevronRight stroke-width="1.5"
                             class="-mr-0.5 h-4 w-4  group-hover:text-white"
                             aria-hidden="true"/>
                         {{ $t('View history')}}
@@ -154,7 +154,7 @@
                                         </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                     <IconChevronDown  stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                                 </div>
                             </ListboxButton>
@@ -175,7 +175,7 @@
                                             </div>
                                             <span
                                                 :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
                                         </li>
@@ -194,7 +194,7 @@
                                             </div>
                                             <span
                                                 :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
                                         </li>
@@ -295,9 +295,10 @@ import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistory
 import Permissions from "@/mixins/Permissions.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     name: "MoneySourceShow",
     props: ['moneySource', 'moneySourceGroups', 'moneySources', 'moneySourceCategories', 'projects', 'linkedProjects'],
     components: {

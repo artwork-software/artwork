@@ -13,7 +13,7 @@
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
                                     <span class="sr-only">Close</span>
-                                    <XIcon class="h-6 w-6" aria-hidden="true" />
+                                    <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
                                 </button>
                             </div>
                             <div class="relative z-40">
@@ -59,7 +59,7 @@
                                                     {{ $t('Select users')}}
                                                 </span>
                                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                                    <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                                    <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                                 </span>
                                             </ListboxButton>
 
@@ -87,7 +87,7 @@
                                                 </div>
                                                 <button type="button" @click="addOrRemoveFormUserList(user)">
                                                     <span class="sr-only">{{ $t('Remove user from team')}}</span>
-                                                    <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
+                                                    <IconCircleX stroke-width="1.5" class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
                                                 </button>
                                             </div>
                                         </div>
@@ -125,9 +125,11 @@ import Input from "@/Jetstream/Input.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
     name: "AddCraftsModal",
+    mixins: [IconLib],
     components: {
         FormButton,
         XCircleIcon,

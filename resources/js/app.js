@@ -30,6 +30,7 @@ const messages = {
 }
 
 const i18n = VueI18n.createI18n({
+    legacy: false, // you must specify 'legacy: false' option
     locale: document.documentElement.lang,
     fallbackLocale: 'en', // set fallback locale
     messages, // set locale messages
@@ -45,7 +46,7 @@ createInertiaApp({
     setup({ el, app: inertiaApp, props, plugin }) {
         const app = createApp({ render: () => h(inertiaApp, props) })
             .use(plugin)
-            .mixin({ methods: { route } })
+            .mixin({ methods: { route }})
         app.config.globalProperties.$svgColors = svgColors;
         app.use(VueTailwindDatepicker);
         app.use(VueMathjax)

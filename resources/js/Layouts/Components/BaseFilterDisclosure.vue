@@ -4,7 +4,7 @@
             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
         >
             <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ title }}</span>
-            <ChevronDownIcon
+            <IconChevronDown stroke-width="1.5"
                 :class="open ? 'rotate-180 transform' : ''"
                 class="h-4 w-4 mt-0.5 text-white"
             />
@@ -26,10 +26,11 @@ import {
     ChevronDownIcon,
 } from '@heroicons/vue/outline';
 import Permissions from "@/mixins/Permissions.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "BaseFilterDisclosure",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         Disclosure,
         DisclosurePanel,

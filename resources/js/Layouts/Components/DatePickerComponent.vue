@@ -1,7 +1,7 @@
 <template>
     <div v-if="!project">
         <div class="flex items-center">
-            <CalendarIcon class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
+            <IconCalendar class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
             <input v-model="dateValueArray[0]"
                    @change="this.updateTimes"
                    id="startDate"
@@ -27,6 +27,7 @@
         {{$t('Project period')}}: {{new Date(dateValueArray[0]).format("DD.MM.YYYY")}} - {{new Date(dateValueArray[1]).format("DD.MM.YYYY")}}
     </div>
     <div v-if="hasError" class="text-error mt-1 mx-2">{{ errorMessage }}</div>
+
 </template>
 
 <script>
@@ -38,7 +39,7 @@ import {ref} from "vue";
 import {Inertia} from "@inertiajs/inertia";
 import {CalendarIcon} from "@heroicons/vue/outline";
 import Permissions from "@/mixins/Permissions.vue";
-
+import IconLib from "@/mixins/IconLib.vue";
 
 const formatter = ref({
     date: 'YYYY-MM-DD',
@@ -47,7 +48,7 @@ const formatter = ref({
 
 
 export default {
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     name: "DatePickerComponent",
     components: {VueTailwindDatepicker, CalendarIcon},
     props: ['dateValueArray','project', 'is_shift_plan'],
@@ -58,7 +59,7 @@ export default {
                 shortcuts: {
                     today: this.$t('Today'),
                     yesterday: this.$t('Yesterday'),
-                    past: period => this.$t('Last {0} days' , [period]),
+                    past: period => this.$t('Last {0} days', [period]),
                     currentMonth: this.$t('Current month'),
                     pastMonth: this.$t('Past month')
                 },
@@ -71,7 +72,27 @@ export default {
             formatter: formatter,
             showDateRangePicker: false,
             refreshPage: false,
-            customShortcuts: [
+            //customShortcuts: customShortcuts,
+            customShortcuts: null,
+            errorMessage: '',
+            hasError: false,
+
+        }
+    },
+    computed: {
+
+    },
+    watch: {
+        dateValuePicker: {
+            handler() {
+                this.showDateRangePicker = false;
+                this.updateTimes()
+            }
+        }
+    },
+    mounted() {
+        this.customShortcuts = () => {
+            return [
                 {
                     label: this.$t('Today'),
                     atClick: () => {
@@ -132,19 +153,7 @@ export default {
                         return [next90DaysStart, next90DaysEnd];
                     }
                 }
-            ],
-            errorMessage: '',
-            hasError: false,
-
-        }
-    },
-    watch: {
-        dateValuePicker: {
-            handler() {
-                this.showDateRangePicker = false;
-                this.updateTimes()
-            }
-        }
+            ]}
     },
     methods: {
         updateTimes() {
@@ -162,11 +171,17 @@ export default {
                     Inertia.patch(route('update.user.shift.calendar.filter.dates', this.$page.props.user.id), {
                         start_date: startDate,
                         end_date: endDate,
+                    }, {
+                        preserveState: false,
+                        preserveScroll: true,
                     })
                 } else {
                     Inertia.patch(route('update.user.calendar.filter.dates', this.$page.props.user.id), {
                         start_date: startDate,
                         end_date: endDate,
+                    }, {
+                        preserveState: false,
+                        preserveScroll: true,
                     })
                 }
 
@@ -181,7 +196,7 @@ export default {
 
             }
         },
-    }
+    },
 }
 </script>
 

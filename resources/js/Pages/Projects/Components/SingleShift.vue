@@ -21,20 +21,14 @@
                     </svg>
                 </div>
                 <div v-if="shift.infringement || anyoneHasVacation" class="h-9 bg-red-500 flex items-center w-fit right-0 p-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12.21" height="12.2" viewBox="0 0 12.21 12.2">
-                        <g id="Gruppe_1639" data-name="Gruppe 1639" transform="translate(-523.895 -44.9)" opacity="0.9">
-                            <path id="Icon_metro-warning" data-name="Icon metro-warning"
-                                  d="M8.571,3.015,13.6,13.037H3.542L8.571,3.015Zm0-1.087a.867.867,0,0,0-.713.523L2.735,12.66c-.392.7-.059,1.268.742,1.268H13.664c.8,0,1.134-.571.742-1.268h0L9.284,2.451A.867.867,0,0,0,8.571,1.928Zm.75,9.75a.75.75,0,1,1-.75-.75A.75.75,0,0,1,9.321,11.678Zm-.75-1.5a.75.75,0,0,1-.75-.75V7.178a.75.75,0,1,1,1.5,0v2.25A.75.75,0,0,1,8.571,10.178Z"
-                                  transform="translate(521.429 43.072)" fill="#fcfcfb" stroke="#fcfcfb" stroke-width="0.2"/>
-                        </g>
-                    </svg>
+                    <IconExclamationCircle class="h-5 w-5" stroke-width="1.5" />
                 </div>
                 <div>
                     <Menu as="div" class="relative">
                         <div class="flex p-0.5 rounded-full">
                             <MenuButton
                                 class="flex p-0.5 rounded-full">
-                                <DotsVerticalIcon
+                                <IconDotsVertical
                                     class=" flex-shrink-0 h-4 w-4 my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
@@ -51,7 +45,7 @@
                                     <MenuItem v-slot="{ active }">
                                         <a href="#" @click="editShift"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <DuplicateIcon
+                                            <IconEdit
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
                                             {{ $t('Edit') }}
@@ -60,7 +54,7 @@
                                     <MenuItem v-slot="{ active }">
                                         <a href="#" @click="this.clearShiftUsers(shift)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <TrashIcon
+                                            <IconCircleX
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
                                             {{ $t('Clear') }}
@@ -69,7 +63,7 @@
                                     <MenuItem v-slot="{ active }">
                                         <a href="#" @click="deleteShift(shift.id)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <TrashIcon
+                                            <IconTrash
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
                                             {{ $t('Delete') }}
@@ -95,7 +89,7 @@
                         <span class="text-xs">{{ user.full_name }}</span>
                         <span v-if="user.pivot.shift_count > 1" class="text-xs"> 1/{{ user.pivot.shift_count }}</span>
                         <ShiftQualificationIconCollection
-                            class="w-5 h-5"
+                            class="w-5 h-5"  :classes="'w-4 h-4'"
                             :icon-name="this.getShiftQualificationById(user.pivot.shift_qualification_id).icon"/>
                     </div>
                     <div class="hidden group-hover:block"
@@ -104,7 +98,11 @@
                                 openDeleteUserModal(user.pivot.id, 0) :
                                 deleteUserFromShift(user.pivot.id, 0)
                          ">
-                        <SvgCollection svg-name="xMarkIcon"/>
+                        <span class="flex items-center justify-center">
+                            <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
+                                <IconX class="w-2 h-2 text-white" />
+                            </span>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -115,7 +113,7 @@
                         <span class="text-xs">{{ freelancer.name }}</span>
                         <span v-if="freelancer.pivot.shift_count > 1" class="text-xs"> 1/{{ freelancer.pivot.shift_count }}</span>
                         <ShiftQualificationIconCollection
-                            class="w-5 h-5"
+                            class="w-5 h-5"  :classes="'w-4 h-4'"
                             :icon-name="this.getShiftQualificationById(freelancer.pivot.shift_qualification_id).icon"/>
                     </div>
                     <div class="hidden group-hover:block"
@@ -124,7 +122,11 @@
                                 openDeleteUserModal(freelancer.pivot.id, 1) :
                                 deleteUserFromShift(freelancer.pivot.id, 1)
                          ">
-                        <SvgCollection svg-name="xMarkIcon"/>
+                        <span class="flex items-center justify-center">
+                            <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
+                                <IconX class="w-2 h-2 text-white" />
+                            </span>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -135,7 +137,7 @@
                         <span class="text-xs">{{ serviceProvider.name }}</span>
                         <span v-if="serviceProvider.pivot.shift_count > 1" class="text-xs">  1/{{ serviceProvider.pivot.shift_count }} </span>
                         <ShiftQualificationIconCollection
-                            class="w-5 h-5"
+                            class="w-5 h-5"  :classes="'w-4 h-4'"
                             :icon-name="this.getShiftQualificationById(serviceProvider.pivot.shift_qualification_id).icon"/>
                     </div>
                     <div class="hidden group-hover:block"
@@ -144,7 +146,11 @@
                                 openDeleteUserModal(serviceProvider.pivot.id, 2) :
                                 deleteUserFromShift(serviceProvider.pivot.id, 2)
                          ">
-                        <SvgCollection svg-name="xMarkIcon"/>
+                        <span class="flex items-center justify-center">
+                            <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
+                                <IconX class="w-2 h-2 text-white" />
+                            </span>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -200,6 +206,7 @@ import Helper from "@/mixins/Helper.vue";
 import ShiftsQualificationsDropElement from "@/Pages/Projects/Components/ShiftsQualificationsDropElement.vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import {Inertia} from "@inertiajs/inertia";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
     name: "SingleShift",
@@ -220,7 +227,7 @@ export default defineComponent({
         MenuItem,
         MenuItems
     },
-    mixins: [Helper],
+    mixins: [Helper, IconLib],
     props: [
         'shift',
         'crafts',

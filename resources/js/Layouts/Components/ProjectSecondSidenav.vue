@@ -3,7 +3,7 @@
         <div class="w-full pb-10 mb-5 border-b-2 border-gray-700">
             <div class="flex items-center justify-between">
                 <h2 class="mb-3 xWhiteBold">{{ $t('Project team') }}</h2>
-                <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+                <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                                @click="showTeamModal = true"
                                v-if="projectMembersWriteAccess()"
                 />
@@ -44,7 +44,7 @@
         <div class="w-full pb-10 mb-5 border-b-2 border-gray-700">
             <div class="flex items-center justify-between">
                 <h2 class="mb-3 xWhiteBold">{{ $t('Project properties') }}</h2>
-                <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+                <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                                @click="openProjectAttributeEditModal"
                                v-if="projectMembersWriteAccess()"
                 />
@@ -68,7 +68,7 @@
         </div>
         <div class="w-full flex items-center mb-4">
             <div class="xWhiteBold">{{ $t('Entry & registration') }}</div>
-            <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                            @click="openEntranceModal"
                            v-if="projectMembersWriteAccess()"
             />
@@ -131,9 +131,10 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     props: [
         'project',
         'projectMembers',

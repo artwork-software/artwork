@@ -3,7 +3,7 @@
         <template #content>
             <img alt="Finanzierungsquelle bearbeiten" src="/Svgs/Overlays/illu_money_source_create.svg"
                  class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+            <IconX stroke-width="1.5" @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
@@ -130,7 +130,7 @@
                                             </span>
                                             <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
                                                 <span class="sr-only">{{ $t('Remove user from funding source')}}</span>
-                                                <XIcon
+                                                <IconX stroke-width="1.5"
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
                                         </div>
@@ -153,7 +153,7 @@
                                                 this.selectedMoneySourceGroup ? this.selectedMoneySourceGroup.name : $t('Search for a funding group')
                                             }}
                                         </div>
-                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </ListboxButton>
                                     <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
                                         <ListboxOption v-for="moneySourceGroup in this.moneySourceGroups"
@@ -164,7 +164,7 @@
                                             <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
                                                 {{ moneySourceGroup.name }}
                                             </div>
-                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                            <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                         </ListboxOption>
                                     </ListboxOptions>
                                 </Listbox>
@@ -231,7 +231,7 @@
                                             </span>
                                             <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
                                                 <span class="sr-only">{{ $t('Remove user from funding source')}}</span>
-                                                <XIcon
+                                                <IconX stroke-width="1.5"
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
                                         </div>
@@ -274,7 +274,7 @@
                                                 {{ subMoneySource.name }}
                                                 <button type="button"
                                                         @click="this.deleteSubMoneySourceFromGroup(index)">
-                                                    <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                                    <IconX stroke-width="1.5" class="ml-1 h-4 w-4 hover:text-error "/>
                                                 </button>
                                             </span>
                                         </span>
@@ -325,10 +325,11 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'EventComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         NewUserToolTip,

@@ -8,7 +8,7 @@
                     {{ $t('Assign teams')}}
                 </div>
 
-                <XIcon @click="emitClose"
+                <IconX stroke-width="1.5" @click="emitClose"
                     class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                     aria-hidden="true"/>
 
@@ -51,7 +51,7 @@
                     </div>
                     <button type="button" @click="removeDepartment(department)">
                         <span class="sr-only">{{ $t('Remove team from checklist')}}</span>
-                        <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-primary rounded-full"/>
+                        <IconCircleX stroke-width="1.5" class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-primary rounded-full"/>
                     </button>
                 </div>
 
@@ -72,10 +72,11 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'ChecklistTeamComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         XIcon,

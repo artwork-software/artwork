@@ -6,18 +6,7 @@
                 <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
                     class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                     @click="openEditUsersModal">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
-                        <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">
-                            <path id="Pfad_1013" data-name="Pfad 1013"
-                                  d="M7.436,6H3.986A.986.986,0,0,0,3,6.986v6.9a.986.986,0,0,0,.986.986h6.9a.986.986,0,0,0,.986-.986v-3.45"
-                                  transform="translate(-3 -4.954)" fill="none" stroke="#fcfcfb" stroke-linecap="round"
-                                  stroke-linejoin="round" stroke-width="1"/>
-                            <path id="Pfad_1014" data-name="Pfad 1014"
-                                  d="M17.176,3.124A1.046,1.046,0,0,1,18.654,4.6L13.972,9.286,12,9.779l.493-1.972Z"
-                                  transform="translate(-9.043 -2.818)" fill="none" stroke="#fcfcfb"
-                                  stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-                        </g>
-                    </svg>
+                    <IconEdit stroke-width="1.5" class="text-white h-4 w-4" />
                 </div>
             </div>
             <div class="flex flex-wrap">
@@ -48,25 +37,14 @@
             <div class="text-secondary flex items-center justify-between text-md font-semibold my-2">
                 <div class="flex items-center">
                     {{ $t('Source categories')}}
-                    <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySourceCategories ? 'rotate-180' : '']"
+                    <IconChevronDown  stroke-width="1.5" class="w-4 h-4 ml-4" :class="[ showMoneySourceCategories ? 'rotate-180' : '']"
                                      @click="showMoneySourceCategories = !showMoneySourceCategories"/>
                 </div>
 
                 <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
                      class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                      @click="openMoneySourceCategoriesModal">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
-                        <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">
-                            <path id="Pfad_1013" data-name="Pfad 1013"
-                                  d="M7.436,6H3.986A.986.986,0,0,0,3,6.986v6.9a.986.986,0,0,0,.986.986h6.9a.986.986,0,0,0,.986-.986v-3.45"
-                                  transform="translate(-3 -4.954)" fill="none" stroke="#fcfcfb" stroke-linecap="round"
-                                  stroke-linejoin="round" stroke-width="1"/>
-                            <path id="Pfad_1014" data-name="Pfad 1014"
-                                  d="M17.176,3.124A1.046,1.046,0,0,1,18.654,4.6L13.972,9.286,12,9.779l.493-1.972Z"
-                                  transform="translate(-9.043 -2.818)" fill="none" stroke="#fcfcfb"
-                                  stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-                        </g>
-                    </svg>
+                    <IconEdit stroke-width="1.5" class="text-white h-4 w-4" />
                 </div>
             </div>
             <div v-if="showMoneySourceCategories && money_source.categories.length > 0" class="flex flex-row flex-wrap">
@@ -82,25 +60,14 @@
             <div class="text-secondary flex items-center justify-between text-md font-semibold my-2">
                 <div class="flex items-center">
                 {{ $t('Financed projects')}}
-                    <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showLinkedProjects ? 'rotate-180' : '']"
+                    <IconChevronDown stroke-width="1.5" class="w-4 h-4 ml-4" :class="[ showLinkedProjects ? 'rotate-180' : '']"
                                      @click="showLinkedProjects = !showLinkedProjects"/>
                 </div>
 
                 <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
                     class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                     @click="openLinkProjectsModal">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
-                        <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">
-                            <path id="Pfad_1013" data-name="Pfad 1013"
-                                  d="M7.436,6H3.986A.986.986,0,0,0,3,6.986v6.9a.986.986,0,0,0,.986.986h6.9a.986.986,0,0,0,.986-.986v-3.45"
-                                  transform="translate(-3 -4.954)" fill="none" stroke="#fcfcfb" stroke-linecap="round"
-                                  stroke-linejoin="round" stroke-width="1"/>
-                            <path id="Pfad_1014" data-name="Pfad 1014"
-                                  d="M17.176,3.124A1.046,1.046,0,0,1,18.654,4.6L13.972,9.286,12,9.779l.493-1.972Z"
-                                  transform="translate(-9.043 -2.818)" fill="none" stroke="#fcfcfb"
-                                  stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-                        </g>
-                    </svg>
+                    <IconEdit stroke-width="1.5" class="text-white h-4 w-4" />
                 </div>
             </div>
             <div v-if="showLinkedProjects" class="text-secondary text-md" v-for="linkedProject in linkedProjects">
@@ -113,18 +80,18 @@
             <div class="text-secondary text-md font-semibold">
                 {{$t('Documents')}}
             </div>
-            <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySourceFiles ? 'rotate-180' : '']"
+            <IconChevronDown stroke-width="1.5" class="w-4 h-4 ml-4" :class="[ showMoneySourceFiles ? 'rotate-180' : '']"
                              @click="showMoneySourceFiles = !showMoneySourceFiles"/>
-            <UploadIcon v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)" class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <IconUpload stroke-width="1.5" v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)" class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                         @click="openFileUploadModal"/>
         </div>
         <div v-if="showMoneySourceFiles">
             <div v-if="moneySourceFiles?.data.length > 0">
                 <div v-for="moneySourceFile in moneySourceFiles.data">
                     <div class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white" v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)">
-                        <DownloadIcon class="w-4 h-4 mr-2" @click="downloadMoneySourceFile(moneySourceFile)"/>
+                        <IconDownload stroke-width="1.5" class="w-4 h-4 mr-2" @click="downloadMoneySourceFile(moneySourceFile)"/>
                         <div @click="openFileEditModal(moneySourceFile)">{{ moneySourceFile.name }}</div>
-                        <XCircleIcon class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openFileDeleteModal(moneySourceFile)"/>
+                        <IconCircleX stroke-width="1.5" class="w-4 h-4 ml-auto bg-error rounded-full text-white" @click="openFileDeleteModal(moneySourceFile)"/>
                     </div>
                     <div v-else class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white">
                         {{ moneySourceFile.name }}
@@ -142,18 +109,7 @@
                 <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
                     class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                     @click="openAddMoneySourceTask">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
-                        <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">
-                            <path id="Pfad_1013" data-name="Pfad 1013"
-                                  d="M7.436,6H3.986A.986.986,0,0,0,3,6.986v6.9a.986.986,0,0,0,.986.986h6.9a.986.986,0,0,0,.986-.986v-3.45"
-                                  transform="translate(-3 -4.954)" fill="none" stroke="#fcfcfb" stroke-linecap="round"
-                                  stroke-linejoin="round" stroke-width="1"/>
-                            <path id="Pfad_1014" data-name="Pfad 1014"
-                                  d="M17.176,3.124A1.046,1.046,0,0,1,18.654,4.6L13.972,9.286,12,9.779l.493-1.972Z"
-                                  transform="translate(-9.043 -2.818)" fill="none" stroke="#fcfcfb"
-                                  stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-                        </g>
-                    </svg>
+                    <IconEdit stroke-width="1.5" class="text-white h-4 w-4" />
                 </div>
             </div>
             <ul>
@@ -241,9 +197,10 @@ import EditMoneySourceUsersModal from "@/Layouts/Components/EditMoneySourceUsers
 import Permissions from "@/mixins/Permissions.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import {Link} from "@inertiajs/inertia-vue3";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     name: "MoneySourceSidenav",
     props: [
         'users',

@@ -1,12 +1,12 @@
 <template>
     <BaseFilter onlyIcon="true">
         <div class="inline-flex border-none justify-end w-full">
-            <button class="flex" @click="resetCalendarFilter">
-                <XIcon class="w-3 mr-1 mt-0.5"/>
+            <button class="flex items-center" @click="resetCalendarFilter">
+                <IconX stroke-width="1.5" class="w-3 mr-1"/>
                 <label class="text-xs cursor-pointer">{{ $t('Reset') }}</label>
             </button>
-            <button class="flex ml-4" @click="saving = !saving">
-                <DocumentTextIcon class="w-3 mr-1 mt-0.5"/>
+            <button class="flex ml-4 items-center" @click="saving = !saving">
+                <IconFileText stroke-width="1.5" class="w-3 mr-1"/>
                 <label class="text-xs cursor-pointer">{{ $t('Save')}}</label>
             </button>
         </div>
@@ -19,7 +19,7 @@
                 >
                     <span
                         :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{$t('Saved filters')}}</span>
-                    <ChevronDownIcon
+                    <IconChevronDown stroke-width="1.5"
                         :class="open ? 'rotate-180 transform' : ''"
                         class="h-4 w-4 mt-0.5 text-white"
                     />
@@ -43,7 +43,7 @@
                         v-for="filter in localPersonalFilters">
                         <label @click="applyFilter(filter)"
                                class="cursor-pointer text-white">{{ filter.name }}</label>
-                        <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
+                        <IconX stroke-width="1.5" @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
                     </button>
                     <p v-if="localPersonalFilters.length === 0" class="text-secondary py-1">{{
                             $t('No filters saved yet')
@@ -59,7 +59,7 @@
                 >
                                     <span
                                         :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Rooms')}}</span>
-                    <ChevronDownIcon
+                    <IconChevronDown stroke-width="1.5"
                         :class="open ? 'rotate-180 transform' : ''"
                         class="h-4 w-4 mt-0.5 text-white"
                     />
@@ -155,7 +155,7 @@
                         >
                             <span
                                 :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Room categories')}}</span>
-                            <ChevronDownIcon
+                            <IconChevronDown stroke-width="1.5"
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
                             />
@@ -181,7 +181,7 @@
                         >
                                     <span
                                         :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Areas ') }}</span>
-                            <ChevronDownIcon
+                            <IconChevronDown stroke-width="1.5"
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
                             />
@@ -205,7 +205,7 @@
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                         >
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Room properties')}}</span>
-                            <ChevronDownIcon
+                            <IconChevronDown stroke-width="1.5"
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
                             />
@@ -232,7 +232,7 @@
                         >
                                     <span
                                         :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{$t('Rooms')}}</span>
-                            <ChevronDownIcon
+                            <IconChevronDown stroke-width="1.5"
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
                             />
@@ -262,7 +262,7 @@
                 >
                                 <span
                                     :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{$t('Events')}}</span>
-                    <ChevronDownIcon
+                    <IconChevronDown stroke-width="1.5"
                         :class="open ? 'rotate-180 transform' : ''"
                         class="h-4 w-4 mt-0.5 text-white"
                     />
@@ -274,7 +274,7 @@
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                         >
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Event type')}}</span>
-                            <ChevronDownIcon
+                            <IconChevronDown stroke-width="1.5"
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
                             />
@@ -296,7 +296,7 @@
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
                         >
                             <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">{{ $t('Event properties')}}</span>
-                            <ChevronDownIcon
+                            <IconChevronDown stroke-width="1.5"
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
                             />
@@ -337,10 +337,11 @@ import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {XIcon} from "@heroicons/vue/solid";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "IndividualCalendarFilterComponent",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         SwitchLabel,
         Switch,

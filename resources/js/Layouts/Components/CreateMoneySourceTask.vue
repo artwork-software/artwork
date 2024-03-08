@@ -3,7 +3,7 @@
         <template #content>
             <img alt="Neue Aufgabe" src="/Svgs/Overlays/illu_money_source_create.svg"
                  class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+            <IconX stroke-width="1.5" @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
@@ -80,10 +80,11 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'EventComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         Input,

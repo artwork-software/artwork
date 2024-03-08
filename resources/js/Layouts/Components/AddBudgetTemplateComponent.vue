@@ -2,7 +2,7 @@
     <jet-dialog-modal :show="true" @close="closeModal(false)">
         <template #content>
             <img alt="Vorlage speichern" src="/Svgs/Overlays/illu_budget_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal(false)" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+            <IconX stroke-width="1.5" @click="closeModal(false)" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
@@ -45,10 +45,11 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import Input from "@/Layouts/Components/InputComponent.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'AddBudgetTemplateComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         Input,

@@ -7,7 +7,7 @@
                 <div class="headline1 my-2">
                     {{ $t('Room request')}} {{ type === 'accept' ? $t('Confirm') : $t('Reject')}}
                 </div>
-                <XIcon @click="closeModal(false)"
+                <IconX stroke-width="1.5" @click="closeModal(false)"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="w-10/12" :class="type === 'accept' ? 'successText' : 'errorText'">
@@ -35,10 +35,11 @@ import {XIcon} from '@heroicons/vue/outline';
 import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'AnswerEventRequestComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         JetDialogModal,

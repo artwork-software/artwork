@@ -1,14 +1,10 @@
 <script>
-import {CheckCircleIcon, XIcon, XCircleIcon} from "@heroicons/vue/solid";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "SideNotification",
     emits: ['close'],
-    components: {
-        CheckCircleIcon,
-        XIcon,
-        XCircleIcon
-    },
+    mixins: [IconLib],
     data() {
         return {
             show: true,
@@ -32,7 +28,7 @@ export default {
                     <div class="p-4">
                         <div class="flex items-center">
                             <div class="flex-shrink-0">
-                                <XCircleIcon class="h-6 w-6 text-red-500" aria-hidden="true" v-if="type === 'error'" />
+                                <IconCircleX stroke-width="1.5" class="h-6 w-6 text-red-500" aria-hidden="true" v-if="type === 'error'" />
                             </div>
                             <div class="ml-3 w-0 flex-1 pt-0.5 text-sm">
                                {{ text }}
@@ -40,7 +36,7 @@ export default {
                             <div class="ml-4 flex flex-shrink-0">
                                 <button type="button" @click="close" class="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                                     <span class="sr-only">Close</span>
-                                    <XIcon class="h-5 w-5" aria-hidden="true" />
+                                    <IconX stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
                                 </button>
                             </div>
                         </div>

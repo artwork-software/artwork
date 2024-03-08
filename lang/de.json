@@ -1520,4 +1520,7 @@
     "Cost Units": "Kostenstellen",
     "No Accounts found": "Keine Konten gefunden",
     "No Cost Units found": "Keine Kostenstellen gefunden"
+    "All scheduled employees have been removed from shift": "Alle eingeplanten Mitarbeiter wurde von Schicht (\"{0}\" - \"{1}\") entfernt",
+    "Remind day/s before": "Tag/e vorher erinnern",
+    "Today": "Heute"
 }

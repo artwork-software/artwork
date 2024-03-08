@@ -90,6 +90,4 @@ class ColumnService
 
         $this->columnRepository->forceDelete($column);
     }
-
-
 }

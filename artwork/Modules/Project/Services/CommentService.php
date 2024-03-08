@@ -97,5 +97,4 @@ class CommentService
         //$this->historyService->createHistory($comment->project->id, 'Comment force deleted');
         $comment->forceDelete();
     }
-
 }

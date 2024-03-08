@@ -1493,5 +1493,6 @@
     "Employee was added to the shift as": "Employee \"{0}\" was added to the shift (\"{1}\" - \"{2}\") as \"{3}\"",
     "Employee was removed from shift": "Employee \"{0}\" was removed from shift (\"{1}\" - \"{2}\")",
     "All scheduled employees have been removed from shift": "All scheduled employees have been removed from shift (\"{0}\" - \"{1}\")",
-    "Remind day/s before": "Remind day/s before"
+    "Remind day/s before": "Remind day/s before",
+    "Today": "Today"
 }

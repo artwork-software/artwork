@@ -56,7 +56,7 @@
                                 class="border-t-2 border-dashed"
                                 :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
                                 v-for="room in calendarData">
-                                <div class="py-0.5" v-for="event in room[day.day].events.data">
+                                <div class="py-0.5" v-for="event in room[day.full_day].events.data">
                                     <SingleCalendarEvent
                                         class="relative"
                                         :project="project ? project : false"
@@ -91,7 +91,6 @@
             />
 
         </div>
-
         <!-- Termine ohne Raum Modal -->
         <events-without-room-component
             v-if="showEventsWithoutRoomComponent"
@@ -296,7 +295,7 @@ export default {
             const eventArray = [];
             this.days.forEach((day) => {
                 this.calendarData.forEach((room) => {
-                    room[day.day].events.data.forEach((event) => {
+                    room[day.full_day].events.data.forEach((event) => {
                         if (event.clicked) {
                             if (!eventArray.includes(event.id)) {
                                 eventArray.push(event.id)

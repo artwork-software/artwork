@@ -6,7 +6,7 @@
                 <div class="font-black font-lexend text-primary text-3xl my-6">
                     {{ $t('Manage release')}}
                 </div>
-                <XIcon @click="closeModal"
+                <IconX stroke-width="1.5" @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
                 <div class="xsLight">
@@ -54,7 +54,7 @@
                             </div>
                             <button type="button" @click="deleteUserFromMoneySourceUserArray(user)">
                                 <span class="sr-only">{{ $t('Remove user from team')}}</span>
-                                <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
+                                <IconCircleX stroke-width="1.5" class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
                             </button>
                         </div>
                         <div class="col-span-3 flex">
@@ -116,10 +116,11 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'AddBudgetTemplateComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         Dropdown,

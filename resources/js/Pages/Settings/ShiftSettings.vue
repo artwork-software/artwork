@@ -41,7 +41,7 @@
                             <div class="flex items-center -mt-1">
                                 <MenuButton
                                     class="flex bg-tagBg p-0.5 rounded-full">
-                                    <DotsVerticalIcon
+                                    <IconDotsVertical stroke-width="1.5"
                                         class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                         aria-hidden="true"/>
                                 </MenuButton>
@@ -53,13 +53,13 @@
                                         leave-from-class="transform opacity-100 scale-100"
                                         leave-to-class="transform opacity-0 scale-95">
                                 <MenuItems
-                                    class="cursor-pointer origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                    class="cursor-pointer z-30 origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                     <div class="py-1">
                                         <MenuItem @click="updateCraft(craft)"
                                             v-slot="{ active }">
                                             <a
                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <PencilAltIcon
+                                                <IconEdit stroke-width="1.5"
                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                     aria-hidden="true"/>
                                                 {{$t('Edit')}}
@@ -69,7 +69,7 @@
                                             v-slot="{ active }">
                                             <a
                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <TrashIcon
+                                                <IconTrash stroke-width="1.5"
                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                     aria-hidden="true"/>
                                                 {{$t('Delete')}}
@@ -93,7 +93,7 @@
                             <ListboxButton class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
                                 <span class="block truncate text-left pl-3">{{$t('Select Event Types')}}</span>
                                 <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                    <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    <IconChevronDown  stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                             </ListboxButton>
 
@@ -103,7 +103,7 @@
                                         <li @click="addRelevantEventType(type)" :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
                                             <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ type.name }}</span>
                                             <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                                                <IconCheck stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
                                             </span>
                                         </li>
                                     </ListboxOption>
@@ -139,7 +139,7 @@
                                     {{$t('(Considered for new shifts)')}}
                                 </span>
                             </span>
-                            <PencilAltIcon class="h-5 w-5" aria-hidden="true"/>
+                            <IconEdit stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                         </li>
                     </ul>
                 </div>
@@ -193,9 +193,11 @@ import ShiftQualificationModal from "@/Layouts/Components/ShiftQualificationModa
 import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
+    mixins: [IconLib],
     components: {
         AddButtonSmall,
         ErrorComponent,

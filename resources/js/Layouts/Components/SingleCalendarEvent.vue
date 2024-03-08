@@ -8,41 +8,28 @@
             <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit">
                 <a v-if="event.projectId && !project" type="button" :href="getEditHref(event.projectId)"
                    class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                    <img src="/Svgs/IconSvgs/icon_connected.svg" class="h-4 w-4"/>
+                    <IconLink stroke-width="1.5" class="h-4 w-4"/>
                 </a>
                 <button type="button" @click="openEditEventModal(event)"
                         class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
-                    </svg>
+                    <IconEdit class="h-4 w-4" stroke-width="1.5"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" @click="openAddSubEventModal"
                         v-show="event.eventTypeId === 1" type="button"
                         class="rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                    <IconCirclePlus stroke-width="1.5" stroke="currentColor" class="w-6 h-6"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" type="button"
                         @click="showDeclineEventModal = true"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+                    <IconX stroke-width="1.5"
+                           stroke="currentColor" class="w-4 h-4" />
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()"
                         @click="openConfirmModal(event.id, 'main')" type="button"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                         stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
-                    </svg>
+                    <IconTrash stroke-width="1.5"
+                               stroke="currentColor" class="w-4 h-4" />
                 </button>
             </div>
             <div v-else class="flex justify-center items-center h-full gap-2">
@@ -90,38 +77,7 @@
                 <!-- Icon -->
                 <div v-if="event.audience"
                      class="flex">
-                    <svg :class="event.class" xmlns="http://www.w3.org/2000/svg" :width="22 * zoomFactor"
-                         :height="11 * zoomFactor"
-                         viewBox="0 0 19.182 10.124">
-                        <g id="Gruppe_555" data-name="Gruppe 555" transform="translate(0.128 0.128)">
-                            <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(0.372 0.372)">
-                                <path id="Pfad_825" data-name="Pfad 825"
-                                      d="M39.116,8.027c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z"
-                                      transform="translate(-28.015 -4.977)" fill="none" stroke-miterlimit="10"
-                                      stroke-width="1"/>
-                                <path id="Pfad_826" data-name="Pfad 826"
-                                      d="M29.852,27.618a3.323,3.323,0,0,1-1.5-.525,2.717,2.717,0,0,0-1.891,2.492v.62a.634.634,0,0,0,.671.593h6.265a.636.636,0,0,0,.673-.593v-.62a2.717,2.717,0,0,0-1.891-2.492,3.336,3.336,0,0,1-1.488.523Z"
-                                      transform="translate(-21.17 -21.674)" fill="none" stroke-linecap="round"
-                                      stroke-miterlimit="10" stroke-width="1"/>
-                                <path id="Pfad_827" data-name="Pfad 827"
-                                      d="M64.568,3.008c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z"
-                                      transform="translate(-48.181 -1)" fill="none" stroke-miterlimit="10"
-                                      stroke-width="1"/>
-                                <path id="Pfad_828" data-name="Pfad 828"
-                                      d="M56.324,25.779h4.6a.636.636,0,0,0,.673-.593v-.62a2.716,2.716,0,0,0-1.891-2.492,3.336,3.336,0,0,1-1.488.523l-.836,0a3.322,3.322,0,0,1-1.5-.525,3.021,3.021,0,0,0-1.345.955"
-                                      transform="translate(-43.416 -17.697)" fill="none" stroke-linecap="round"
-                                      stroke-miterlimit="10" stroke-width="1"/>
-                                <path id="Pfad_829" data-name="Pfad 829"
-                                      d="M13.659,3.008c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z"
-                                      transform="translate(-7.846 -1)" fill="none" stroke-miterlimit="10"
-                                      stroke-width="1"/>
-                                <path id="Pfad_830" data-name="Pfad 830"
-                                      d="M8.137,23.127a3,3,0,0,0-1.419-1.053,3.337,3.337,0,0,1-1.487.523l-.836,0a3.323,3.323,0,0,1-1.5-.525A2.716,2.716,0,0,0,1,24.566v.62a.634.634,0,0,0,.671.593H6.189"
-                                      transform="translate(-1 -17.697)" fill="none" stroke-linecap="round"
-                                      stroke-miterlimit="10" stroke-width="1"/>
-                            </g>
-                        </g>
-                    </svg>
+                    <IconUsersGroup stroke-width="1.5" :width="22 * zoomFactor"  :height="11 * zoomFactor"/>
                 </div>
             </div>
             <div class="flex">
@@ -190,19 +146,7 @@
             <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventText' : '', 'font-semibold']"
                  v-if="$page.props.user.calendar_settings.repeating_events && event.is_series"
                  class="uppercase flex items-center">
-                <svg class="mx-1" xmlns="http://www.w3.org/2000/svg" width="8.664" height="10.838"
-                     viewBox="0 0 8.664 10.838">
-                    <g id="Icon_feather-repeat" data-name="Icon feather-repeat" transform="translate(-3.85 -0.581)">
-                        <path id="Pfad_1366" data-name="Pfad 1366" d="M25.5,1.5l1.829,1.829L25.5,5.158"
-                              transform="translate(-15.465 0)"/>
-                        <path id="Pfad_1367" data-name="Pfad 1367"
-                              d="M4.5,10.243V9.329A1.741,1.741,0,0,1,6.136,7.5h5.727" transform="translate(0 -4.436)"/>
-                        <path id="Pfad_1368" data-name="Pfad 1368" d="M6.329,26.158,4.5,24.329,6.329,22.5"
-                              transform="translate(0 -15.658)"/>
-                        <path id="Pfad_1369" data-name="Pfad 1369"
-                              d="M11.864,19.5v.914a1.741,1.741,0,0,1-1.636,1.829H4.5" transform="translate(0 -13.307)"/>
-                    </g>
-                </svg>
+                <IconRepeat class="mx-1 h-3 w-3" stroke-width="1.5" />
                 {{$t('Repeat event')}}
             </div>
             <!-- User-Icons -->
@@ -270,20 +214,13 @@
                     <div class="flex justify-center items-center h-full gap-2">
                         <button @click="editSubEvent(subEvent)" type="button"
                                 class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                 stroke="currentColor" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
-                            </svg>
+                            <IconEdit class="h-4 w-4" stroke-width="1.5"/>
                         </button>
                         <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()"
                                 @click="openConfirmModal(subEvent.id, 'sub')" type="button"
                                 class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                 stroke="currentColor" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
-                            </svg>
+                            <IconTrash stroke-width="1.5"
+                                       stroke="currentColor" class="w-4 h-4" />
                         </button>
                     </div>
                 </div>
@@ -306,38 +243,7 @@
                         <!-- Icons -->
                         <div v-if="subEvent.audience"
                              class="flex">
-                            <svg :class="subEvent.class" xmlns="http://www.w3.org/2000/svg" :width="22 * zoomFactor"
-                                 :height="11 * zoomFactor"
-                                 viewBox="0 0 19.182 10.124">
-                                <g id="Gruppe_555" data-name="Gruppe 555" transform="translate(0.128 0.128)">
-                                    <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(0.372 0.372)">
-                                        <path id="Pfad_825" data-name="Pfad 825"
-                                              d="M39.116,8.027c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z"
-                                              transform="translate(-28.015 -4.977)" fill="none" stroke-miterlimit="10"
-                                              stroke-width="1"/>
-                                        <path id="Pfad_826" data-name="Pfad 826"
-                                              d="M29.852,27.618a3.323,3.323,0,0,1-1.5-.525,2.717,2.717,0,0,0-1.891,2.492v.62a.634.634,0,0,0,.671.593h6.265a.636.636,0,0,0,.673-.593v-.62a2.717,2.717,0,0,0-1.891-2.492,3.336,3.336,0,0,1-1.488.523Z"
-                                              transform="translate(-21.17 -21.674)" fill="none" stroke-linecap="round"
-                                              stroke-miterlimit="10" stroke-width="1"/>
-                                        <path id="Pfad_827" data-name="Pfad 827"
-                                              d="M64.568,3.008c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z"
-                                              transform="translate(-48.181 -1)" fill="none" stroke-miterlimit="10"
-                                              stroke-width="1"/>
-                                        <path id="Pfad_828" data-name="Pfad 828"
-                                              d="M56.324,25.779h4.6a.636.636,0,0,0,.673-.593v-.62a2.716,2.716,0,0,0-1.891-2.492,3.336,3.336,0,0,1-1.488.523l-.836,0a3.322,3.322,0,0,1-1.5-.525,3.021,3.021,0,0,0-1.345.955"
-                                              transform="translate(-43.416 -17.697)" fill="none" stroke-linecap="round"
-                                              stroke-miterlimit="10" stroke-width="1"/>
-                                        <path id="Pfad_829" data-name="Pfad 829"
-                                              d="M13.659,3.008c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z"
-                                              transform="translate(-7.846 -1)" fill="none" stroke-miterlimit="10"
-                                              stroke-width="1"/>
-                                        <path id="Pfad_830" data-name="Pfad 830"
-                                              d="M8.137,23.127a3,3,0,0,0-1.419-1.053,3.337,3.337,0,0,1-1.487.523l-.836,0a3.323,3.323,0,0,1-1.5-.525A2.716,2.716,0,0,0,1,24.566v.62a.634.634,0,0,0,.671.593H6.189"
-                                              transform="translate(-1 -17.697)" fill="none" stroke-linecap="round"
-                                              stroke-miterlimit="10" stroke-width="1"/>
-                                    </g>
-                                </g>
-                            </svg>
+                            <IconUsersGroup stroke-width="1.5" :width="22 * zoomFactor"  :height="11 * zoomFactor"/>
                         </div>
                     </div>
                     <!-- Time -->
@@ -444,9 +350,10 @@ import {Link} from "@inertiajs/inertia-vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import VueMathjax from "vue-mathjax-next";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     name: "SingleCalendarEvent",
     components: {
         VueMathjax,

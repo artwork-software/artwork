@@ -33,28 +33,7 @@
                     </div>
                     <div>
                         <div ref="userWindowButton" @click="openUserWindow()">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24.162" height="17.536" viewBox="0 0 24.162 17.536">
-                                <g id="public" transform="translate(-6.127 0.378)">
-                                    <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(6.877 0.372)">
-                                        <path id="Pfad_825" data-name="Pfad 825"
-                                              d="M42.16,9.549c0,.076,0,.149-.006.224a3.531,3.531,0,0,1-7.044.06c-.009-.095-.013-.189-.013-.284a3.531,3.531,0,0,1,7.063,0Z"
-                                              transform="translate(-31.943 -4.187)" fill="none" stroke="#27233c"
-                                              stroke-miterlimit="10" stroke-width="1.5"/>
-                                        <path id="Pfad_826" data-name="Pfad 826"
-                                              d="M32.424,28.016a5.84,5.84,0,0,1-2.644-.923,4.775,4.775,0,0,0-3.323,4.38v1.09A1.114,1.114,0,0,0,27.636,33.6h11.01a1.118,1.118,0,0,0,1.183-1.042v-1.09a4.775,4.775,0,0,0-3.323-4.38,5.863,5.863,0,0,1-2.615.92Z"
-                                              transform="translate(-26.457 -17.569)" fill="none" stroke="#27233c"
-                                              stroke-linecap="round" stroke-miterlimit="10" stroke-width="1.5"/>
-                                        <path id="Pfad_827" data-name="Pfad 827"
-                                              d="M67.612,4.53c0,.076,0,.149-.006.224a3.531,3.531,0,0,1-7.044.06c-.009-.095-.013-.189-.013-.284a3.531,3.531,0,0,1,7.063,0Z"
-                                              transform="translate(-48.105 -1)" fill="none" stroke="#27233c"
-                                              stroke-miterlimit="10" stroke-width="1.5"/>
-                                        <path id="Pfad_828" data-name="Pfad 828"
-                                              d="M57.679,28.586h8.087a1.118,1.118,0,0,0,1.183-1.042v-1.09a4.774,4.774,0,0,0-3.323-4.379,5.863,5.863,0,0,1-2.615.92l-1.468,0a5.838,5.838,0,0,1-2.644-.923,5.309,5.309,0,0,0-2.364,1.678"
-                                              transform="translate(-44.286 -14.382)" fill="none" stroke="#27233c"
-                                              stroke-linecap="round" stroke-miterlimit="10" stroke-width="1.5"/>
-                                    </g>
-                                </g>
-                            </svg>
+                            <IconUsers class="h-6 w-6"/>
                         </div>
                     </div>
                 </div>
@@ -72,36 +51,16 @@
                         v-show="userWindow" ref="containerRef">
                         <div class="flex items-center justify-between">
                             <div class="flex gap-4 items-center" @click="openFilter = !openFilter">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="21.496" height="19.496"
-                                     viewBox="0 0 21.496 19.496">
-                                    <path id="Icon_feather-filter" data-name="Icon feather-filter"
-                                          d="M23,4.5H3l8,9.458V20.5l4,2V13.958Z" transform="translate(-2.25 -3.75)"
-                                          fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round"
-                                          stroke-width="1.5"/>
-                                </svg>
+                                <IconFilter class="text-white" />
                                 <span v-if="openFilter">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="9.177" height="6.003"
-                                         viewBox="0 0 9.177 6.003">
-                                        <g id="headline" transform="translate(66.076 -18.911) rotate(180)">
-                                              <path id="Pfad_1076" data-name="Pfad 1076" d="M0,0,3.882,3.882,7.763,0"
-                                                    transform="translate(65.369 -19.618) rotate(180)" fill="none"
-                                                    stroke="#fcfcfb" stroke-width="2"/>
-                                        </g>
-                                    </svg>
+                                   <IconChevronDown class="h-5 w-5 text-white"/>
                                 </span>
                                 <span v-else>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="9.177" height="6.003"
-                                         viewBox="0 0 9.177 6.003">
-                                        <g id="headline" transform="translate(-56.898 24.914)">
-                                            <path id="Pfad_1076" data-name="Pfad 1076" d="M0,0,3.882,3.882,7.763,0"
-                                                  transform="translate(65.369 -19.618) rotate(180)" fill="none"
-                                                  stroke="#fcfcfb" stroke-width="2"/>
-                                        </g>
-                                    </svg>
+                                    <IconChevronUp class="h-5 w-5 text-white"/>
                                 </span>
                             </div>
                             <div>
-                                <XIcon class="h-6 w-6 text-white" @click="userWindow = !userWindow"/>
+                                <IconX class="h-5 w-5 text-white" @click="userWindow = !userWindow"/>
                             </div>
                         </div>
                         <div class="" v-if="openFilter">
@@ -181,6 +140,7 @@ import Permissions from "@/mixins/Permissions.vue";
 import {usePage} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
 import SideNotification from "@/Layouts/Components/General/SideNotification.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
     name: "ShiftTab",
@@ -193,7 +153,7 @@ export default defineComponent({
         'currentUserCrafts',
         'shiftQualifications'
     ],
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         SideNotification,
         Input,

@@ -35,7 +35,7 @@
                     </div>
                 </div>
                 <div v-if="computedUsedWorkerCount === computedMaxWorkerCount">
-                    <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                    <IconCheck stroke-width="1.5" class="h-5 w-5 flex text-success" aria-hidden="true"/>
                 </div>
             </div>
         </div>
@@ -75,6 +75,7 @@ import Helper from "../../../mixins/Helper.vue";
 import ShiftQualificationIconCollection from "@/Layouts/Components/ShiftQualificationIconCollection.vue";
 import MultipleShiftQualificationSlotsAvailable from "@/Pages/Projects/Components/MultipleShiftQualificationSlotsAvailable.vue";
 import {Inertia} from "@inertiajs/inertia";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
     components: {
@@ -102,7 +103,7 @@ export default defineComponent({
         'shiftQualifications'
     ],
     emits: ['dropFeedback'],
-    mixins: [Helper],
+    mixins: [Helper, IconLib],
     data() {
         return {
             showChooseUserSeriesShiftModal: false,

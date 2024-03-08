@@ -6,7 +6,7 @@
                 <div class="headline1 my-2">
                     {{  $t('Delete contract') }}
                 </div>
-                <XIcon @click="closeModal"
+                <IconX stroke-width="1.5" @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="errorText">
@@ -31,10 +31,11 @@ import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import {XIcon} from "@heroicons/vue/outline";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "ContractDeleteModal",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         JetDialogModal,

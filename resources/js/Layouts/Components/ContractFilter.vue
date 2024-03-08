@@ -2,7 +2,7 @@
     <BaseFilter>
         <div class="inline-flex border-none justify-end w-full">
             <button class="flex" @click="resetContractFilter">
-                <XIcon class="w-3 mr-1 mt-0.5"/>
+                <IconX stroke-width="1.5" class="w-3 mr-1 mt-0.5"/>
                 <label class="text-xs">{{$t('Reset')}}</label>
             </button>
         </div>
@@ -46,9 +46,10 @@ import {
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure";
 import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList";
 import Permissions from "@/mixins/Permissions.vue";
+import IconLib from "@/mixins/IconLib.vue";
 export default {
     name: "ContractFilter",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {BaseFilterCheckboxList, BaseFilterDisclosure, BaseFilter, XIcon},
     methods: {
         resetContractFilter() {

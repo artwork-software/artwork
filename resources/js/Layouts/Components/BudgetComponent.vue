@@ -7,7 +7,7 @@
                     <div class="flex">
                         <MenuButton
                             class="flex bg-tagBg p-0.5 rounded-full">
-                            <DotsVerticalIcon
+                            <IconDotsVertical
                                 class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                 aria-hidden="true"/>
                         </MenuButton>
@@ -34,9 +34,7 @@
                                 <MenuItem v-if="table.is_template" v-slot="{ active }">
                                     <a @click="deleteBudgetTemplate()"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <TrashIcon
-                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                            aria-hidden="true"/>
+                                        <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                         {{ $t('Delete') }}
                                     </a>
                                 </MenuItem>
@@ -51,16 +49,12 @@
                     @click="downloadBudgetExport(project.id)"
                     type="button"
                     class="flex p-2 px-3 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton focus:outline-none bg-buttonBlue hover:bg-buttonHover">
-                <DocumentReportIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
+                <IconFileAnalytics stroke-width="2" class="h-4 w-4 mr-2"/>
                 <p class="text-sm">{{ $t('Excel-Export') }}</p>
             </button>
             <div v-if="!table.is_template">
-                <img v-if="!hideProjectHeader"
-                     alt="Fullscreen"
-                     src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"
-                     @click="$emit('changeProjectHeaderVisualisation',true)"
-                />
-                <ZoomOutIcon v-else
+                <IconArrowsDiagonal v-if="!hideProjectHeader" @click="$emit('changeProjectHeaderVisualisation',true)" class="h-6 w-6 mx-2 cursor-pointer"/>
+                <IconZoomOut v-else
                              @click="$emit('changeProjectHeaderVisualisation',false)"
                              class="h-7 w-7 mx-2 cursor-pointer"
                 />
@@ -159,7 +153,7 @@
                                 <div class="flex">
                                     <MenuButton
                                         class="flex bg-tagBg p-0.5 rounded-full">
-                                        <DotsVerticalIcon
+                                        <IconDotsVertical
                                             class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                             aria-hidden="true"/>
                                     </MenuButton>
@@ -195,45 +189,35 @@
                                             <MenuItem v-slot="{ active }" v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-if="column.is_locked">
                                                 <a @click="unlockColumn(column.id)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                                    </svg>
+                                                    <IconLockOpen stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                     {{ $t('Unlock') }}
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }">
                                                 <a v-show="index > 2" @click="deleteColumn(column.id)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <TrashIcon
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
+                                                    <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                     {{ $t('Delete') }}
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }">
                                                 <a v-show="index > 2" @click="duplicateColumn(column.id)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
-                                                    </svg>
+                                                    <IconCopy class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                     {{ $t('Duplicate') }}
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-show="index > 2" v-slot="{ active }" v-if="column.commented === 1">
                                                 <a @click="updateColumnCommented(column.id, false)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                                    </svg>
+                                                    <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
                                                     {{ $t('Include column') }}
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-show="index > 2" v-slot="{ active }" v-else>
                                                 <a @click="updateColumnCommented(column.id, true)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                                    </svg>
+                                                    <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
                                                     {{ $t('Exclude column') }}
                                                 </a>
                                             </MenuItem>
@@ -252,7 +236,7 @@
                         <button v-if="this.$can('edit budget templates') || !table.is_template"
                                 class="font-bold mr-2 ml-2 text-xl hover:bg-buttonHover p-1 mt-3 bg-secondary border-white border-2 hover:border-buttonBlue rounded-full items-center uppercase shadow-sm text-secondaryHover"
                                 @click="openAddColumnModal()">
-                            <PlusIcon class="h-4 w-4"/>
+                            <IconPlus stroke-width="1.5" class="h-4 w-4"/>
                         </button>
                         </div>
                     </th>
@@ -272,15 +256,15 @@
                         <div class="headline4  flex">
                             {{ $t('Expenses') }}
                             <button class="w-6" @click="costsOpened = !costsOpened">
-                                <ChevronUpIcon v-if="costsOpened" class="h-6 w-6 text-primary my-auto"/>
-                                <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto"/>
+                                <IconChevronUp stroke-width="1.5" v-if="costsOpened" class="h-6 w-6 text-primary my-auto"/>
+                                <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                             </button>
                         </div>
                         <Menu v-if="!table.is_template" as="div" class="">
                             <div class="flex">
                                 <MenuButton
                                     class="flex bg-tagBg p-0.5 rounded-full">
-                                    <DotsVerticalIcon
+                                    <IconDotsVertical stroke-width="1.5"
                                         class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                         aria-hidden="true"/>
                                 </MenuButton>
@@ -298,34 +282,28 @@
                                         <MenuItem v-slot="{ active }">
                                             <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateModal()"
                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <TrashIcon
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                    aria-hidden="true"/>
+                                                <IconFileImport class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                 {{ $t('Import template') }}
                                             </a>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateFromProjectModal()"
                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <TrashIcon
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                    aria-hidden="true"/>
+                                                <IconFileImport class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                 {{ $t('Import from project') }}
                                             </a>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <a v-show="!tableIsEmpty && !table.is_template && this.$can('edit budget templates')" @click="openAddBudgetTemplateModal()"
                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <TrashIcon
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                    aria-hidden="true"/>
+                                                <IconFilePlus class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                 {{ $t('Save as template') }}
                                             </a>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                             <a v-show="!tableIsEmpty && !table.is_template" @click="resetBudgetTable"
                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <TrashIcon
+                                                <IconRestore
                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                     aria-hidden="true"/>
                                                 {{ $t('Reset') }}
@@ -334,9 +312,7 @@
                                         <MenuItem v-slot="{ active }">
                                             <a v-show="table.is_template" @click="deleteBudgetTemplate()"
                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <TrashIcon
-                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                    aria-hidden="true"/>
+                                                <IconTrash class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"/>
                                                 {{ $t('Delete') }}
                                             </a>
                                         </MenuItem>
@@ -350,8 +326,8 @@
                              class="group w-[97%] bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                             <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                                 {{ $t('Main position') }}
-                                <PlusCircleIcon
-                                    class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                <IconCirclePlus
+                                    class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></IconCirclePlus>
                             </div>
                         </div>
                         <table class="w-[97%] mb-6">
@@ -390,7 +366,7 @@
                                         <span>{{ this.getSumOfTable(0, column.id)?.toLocaleString()}}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('COST', column)">
-                                            <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
+                                            <IconCirclePlus class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
                                         </div>
                                     </div>
                                 </td>
@@ -415,8 +391,8 @@
                         <div class="headline4 my-10 flex">
                             {{ $t('Expenses') }}
                             <button class="w-6" @click="costsOpened = !costsOpened">
-                                <ChevronUpIcon v-if="costsOpened" class="h-6 w-6 text-primary my-auto"/>
-                                <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto"/>
+                                <IconChevronUp stroke-width="1.5" v-if="costsOpened" class="h-6 w-6 text-primary my-auto"/>
+                                <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                             </button>
                         </div>
                     </div>
@@ -428,8 +404,8 @@
                         <div class="headline4 my-10 flex">
                             {{ $t('Revenue') }}
                             <button class="w-6" @click="earningsOpened = !earningsOpened">
-                                <ChevronUpIcon v-if="earningsOpened" class="h-6 w-6 text-primary my-auto"/>
-                                <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto"/>
+                                <IconChevronUp stroke-width="1.5" v-if="earningsOpened" class="h-6 w-6 text-primary my-auto"/>
+                                <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                             </button>
                         </div>
                         <table class="w-[97%] mb-6">
@@ -496,10 +472,10 @@
                             {{ $t('Revenue') }}
                             <button class="w-6"
                                     @click="earningsOpened = !earningsOpened">
-                                <ChevronUpIcon v-if="earningsOpened"
-                                               class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
-                                <ChevronDownIcon v-else
-                                                 class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                                <IconChevronUp stroke-width="1.5" v-if="earningsOpened"
+                                               class="h-6 w-6 text-primary my-auto"></IconChevronUp>
+                                <IconChevronDown stroke-width="1.5" v-else
+                                                 class="h-6 w-6 text-primary my-auto"></IconChevronDown>
                             </button>
                         </div>
                     </div>
@@ -531,7 +507,7 @@
                 <div class="headline1 my-2">
                     {{ successHeading }}
                 </div>
-                <XIcon @click="closeSuccessModal"
+                <IconX stroke-width="1.5" @click="closeSuccessModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="successText">
@@ -541,7 +517,7 @@
                     <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover rounded-full"
                             @click="closeSuccessModal">
-                        <CheckIcon class="h-6 w-6 text-secondaryHover"/>
+                        <IconCheck stroke-width="1.5" class="h-6 w-6 text-secondaryHover"/>
                     </button>
                 </div>
             </div>
@@ -554,7 +530,7 @@
                 <div class="headline1 my-2">
                     {{ verifiedTexts.title }} <span class="xsDark">{{ verifiedTexts.positionTitle }}</span>
                 </div>
-                <XIcon @click="closeVerifiedModal"
+                <IconX stroke-width="1.5" @click="closeVerifiedModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="mb-3 xsLight" v-html="verifiedTexts.description"></div>
@@ -602,7 +578,7 @@
                                 </span>
                                 <button type="button" @click="deleteUserFromVerifiedUserArray">
                                     <span class="sr-only">{{ $t('Remove user from money source') }}</span>
-                                    <XIcon
+                                    <IconX stroke-width="1.5"
                                         class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                 </button>
                             </div>
@@ -629,7 +605,7 @@
                 <p>
                     {{ $t('The user you have requested for verification does not yet have budget access to your project. With the verification request, you grant him/her this right. Are you sure you want to give her/him this right?') }}
                 </p>
-                <XIcon @click="closeBudgetAccessModal"
+                <IconX stroke-width="1.5" @click="closeBudgetAccessModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="mt-6">
@@ -747,10 +723,11 @@ import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SumDetailComponent from "@/Layouts/Components/SumDetailComponent.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import SageNotAssignedData from "@/Pages/Projects/Components/SageNotAssignedData.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'BudgetComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         SageNotAssignedData,
         ZoomInIcon, ZoomOutIcon,
@@ -788,7 +765,7 @@ export default {
         PlusIcon,
         RenameTableComponent,
         ErrorComponent,
-        DocumentReportIcon
+        DocumentReportIcon,
     },
     data() {
         return {

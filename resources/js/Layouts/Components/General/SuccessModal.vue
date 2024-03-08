@@ -12,7 +12,7 @@
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
                                     <span class="sr-only">{{ $t('Close') }}</span>
-                                    <XIcon class="h-6 w-6" aria-hidden="true" />
+                                    <IconX stroke-width="1.5" class="h-6 w-6" aria-hidden="true" />
                                 </button>
                             </div>
                             <div class="relative z-40 pl-4">
@@ -35,20 +35,20 @@
 
 <script>
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
-import {XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "SuccessModal",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         Dialog,
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon, DialogPanel
+        DialogPanel
     },
     data(){
         return {

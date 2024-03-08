@@ -5,7 +5,7 @@
         <div class="flex items-center">
             <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
             <span class="ml-2 text-xs">{{ $t('Unoccupied') }}</span>
-            <ShiftQualificationIconCollection class="ml-2 w-5 h-5" :icon-name="this.shiftQualification.icon"/>
+            <ShiftQualificationIconCollection :classes="'w-4 h-4'" class="ml-2 w-5 h-5" :icon-name="this.shiftQualification.icon"/>
         </div>
     </div>
     <ChooseUserSeriesShift

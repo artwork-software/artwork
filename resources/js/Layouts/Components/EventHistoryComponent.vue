@@ -6,7 +6,7 @@
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                     {{$t('Event process')}}
                 </div>
-                <XIcon @click="closeEventHistoryModal(false)"
+                <IconX stroke-width="1.5" @click="closeEventHistoryModal(false)"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="text-secondary subpixel-antialiased">
@@ -49,10 +49,11 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'RoomHistoryComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         UserPopoverTooltip,
         NewUserToolTip,

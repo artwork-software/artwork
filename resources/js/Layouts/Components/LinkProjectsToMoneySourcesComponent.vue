@@ -2,7 +2,7 @@
     <jet-dialog-modal :show="true" @close="closeModal()">
         <template #content>
             <img alt="Details" src="/Svgs/Overlays/illu_money_source_create.svg" class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+            <IconX stroke-width="1.5" @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
@@ -58,7 +58,7 @@
                                 </div>
                                 <button type="button" @click="deleteProjectFromArray(project)">
                                     <span class="sr-only">{{$t('Remove user from team')}}</span>
-                                    <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
+                                    <IconCircleX stroke-width="1.5" class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
                                 </button>
                             </div>
                             </span>
@@ -81,11 +81,12 @@ import {CheckIcon, ChevronDownIcon, PlusCircleIcon, XIcon} from '@heroicons/vue/
 import {XCircleIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 
 export default {
     name: 'LinkProjectsToMoneySourcesComponent',
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         FormButton,
         JetDialogModal,

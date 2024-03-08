@@ -5,10 +5,10 @@
             <div>
                 <div>
                     <button  class="ml-2 -mt-2 text-black" @click="previousTimeRange">
-                        <ChevronLeftIcon class="h-5 w-5 text-primary"/>
+                        <IconChevronLeft stroke-width="1.5" class="h-5 w-5 text-primary"/>
                     </button>
                     <button class="ml-2 -mt-2 text-black" @click="nextTimeRange">
-                        <ChevronRightIcon class="h-5 w-5 text-primary"/>
+                        <IconChevronRight stroke-width="1.5" class="h-5 w-5 text-primary"/>
                     </button>
                 </div>
             </div>
@@ -19,7 +19,7 @@
             <div class="ml-5 flex items-center" >
                 <button class="subpixel-antialiased flex items-center linkText cursor-pointer"
                         @click="openHistoryModal()">
-                    <ChevronRightIcon
+                    <IconChevronRight stroke-width="1.5"
                         class="-mr-0.5 h-4 w-4  group-hover:text-white"
                         aria-hidden="true"/>
                     {{ $t('View history')}}
@@ -30,8 +30,8 @@
 
         <div class="flex items-center">
             <div class="flex items-center">
-                <img v-if="!isFullscreen" @click="enterFullscreenMode"
-                     src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
+                <IconArrowsDiagonal stroke-width="1.5" v-if="!isFullscreen" @click="enterFullscreenMode"
+                      class="h-6 w-6 mx-2 cursor-pointer"/>
                 <!-- PAUL HIER DAS NEUE FILTER COMPONENT EINBAUEN -->
                 <ShiftPlanFilter
                     class="mt-1"
@@ -73,11 +73,12 @@ import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {Inertia} from "@inertiajs/inertia";
 import SecondaryButton from "@/Layouts/Components/General/Buttons/SecondaryButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 
 export default {
     name: "ShiftPlanFunctionBar",
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         SecondaryButton,
         ConfirmDeleteModal,

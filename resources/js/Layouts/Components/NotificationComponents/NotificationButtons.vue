@@ -2,12 +2,12 @@
     <div class="w-full flex items-center justify-start gap-3 mt-3">
         <div v-if="buttons?.includes('accept')">
             <button @click="$emit('openEventEditAccept', true)" type="button" class="rounded-full bg-indigo-600 p-2 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                <PencilAltIcon class="h-5 w-5" aria-hidden="true" />
+                <IconEdit stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
             </button>
         </div>
         <div v-if="buttons?.includes('decline')">
             <button @click="$emit('openDeclineModal', true)" type="button" class="rounded-full bg-red-600 p-2 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                <XIcon class="h-5 w-5" aria-hidden="true" />
+                <IconX stroke-width="1.5" class="h-5 w-5" aria-hidden="true" />
             </button>
         </div>
         <div v-if="buttons?.includes('change_shift')">
@@ -78,9 +78,11 @@
 import {PencilAltIcon} from "@heroicons/vue/outline";
 import {XIcon} from "@heroicons/vue/solid";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: "NotificationButtons",
+    mixins: [IconLib],
     props: ['buttons'],
     emits: [
         'openDeclineModal',

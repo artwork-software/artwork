@@ -3,7 +3,7 @@
         <template #content>
             <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
-                <XIcon @click="this.close(false)"
+                <IconX stroke-width="1.5" @click="this.close(false)"
                        class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
                        aria-hidden="true"/>
                 <div class="mt-8 flex flex-col">
@@ -60,9 +60,11 @@ import {defineComponent} from "vue";
 import {XIcon} from "@heroicons/vue/outline";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default defineComponent({
     name: 'ShiftsQualificationsAssignmentModal',
+    mixins: [IconLib],
     components: {
         UserPopoverTooltip,
         XIcon,

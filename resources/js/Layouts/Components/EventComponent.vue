@@ -5,7 +5,7 @@
                  class="-ml-6 -mt-8 mb-4"/>
             <img v-else alt="Termin bearbeiten" src="/Svgs/Overlays/illu_appointment_edit.svg"
                  class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal(false)"
+            <IconX stroke-width="1.5" @click="closeModal(false)"
                    class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
@@ -60,7 +60,7 @@
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                     <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                                 </div>
                             </ListboxButton>
@@ -85,7 +85,7 @@
                                             </div>
                                             <span
                                                 :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                      <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
                                         </li>
@@ -242,7 +242,7 @@
                                         <span class="block truncate">{{ selectedFrequency.name }}</span>
                                         <span
                                             class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                             <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                         </span>
                                     </ListboxButton>
 
@@ -261,7 +261,7 @@
 
                                                     <span v-if="selected"
                                                           :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
-                                                        <CheckIcon class="h-5 w-5" aria-hidden="true"/>
+                                                        <IconCheck stroke-width="1.5" class="h-5 w-5" aria-hidden="true"/>
                                                     </span>
                                                 </li>
                                             </ListboxOption>
@@ -296,7 +296,7 @@
                             <div class="flex-grow flex text-left xsDark">
                                 {{ selectedRoom?.name }}
                             </div>
-                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
                         <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption v-for="room in this.rooms"
@@ -306,13 +306,10 @@
                                            v-slot="{ active, selected }">
                                 <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
                                     {{ room.name }}
-                                    <img
-                                        v-if="this.roomCollisionArray[room.id] > 0"
-                                        src="/Svgs/IconSvgs/icon_warning_white.svg"
-                                        class="h-4 w-4 mx-2" alt="conflictIcon"
-                                    />
+                                    <IconAlertTriangle stroke-width="1.5" v-if="this.roomCollisionArray[room.id] > 0"
+                                                       class="h-4 w-4 mx-2" aria-hidden="true"/>
                                 </div>
-                                <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                             </ListboxOption>
                         </ListboxOptions>
                     </Listbox>
@@ -321,7 +318,7 @@
                             <div class="flex-grow xsLight text-left subpixel-antialiased">
                                 {{$t('Select room')}}*
                             </div>
-                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
                         <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute z-30">
                             <ListboxOption v-for="room in rooms"
@@ -337,7 +334,7 @@
                                         class="h-4 w-4 mx-2" alt="conflictIcon"
                                     />
                                 </div>
-                                <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                             </ListboxOption>
                         </ListboxOptions>
                     </Listbox>
@@ -370,7 +367,7 @@
                                          class="flex items-center my-auto">
                                         <button type="button"
                                                 @click="selectedProject = null">
-                                            <XCircleIcon class="pl-2 h-6 w-6 hover:text-error text-primary"/>
+                                            <IconCircleX stroke-width="1.5" class="pl-2 h-6 w-6 hover:text-error text-primary"/>
                                         </button>
                                     </div>
                                 </div>
@@ -496,7 +493,7 @@
                                         <div class="flex-grow flex text-left xsDark">
                                             {{ optionString }}
                                         </div>
-                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </ListboxButton>
                                     <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
                                         <ListboxOption v-for="option in options"
@@ -507,7 +504,7 @@
                                             <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
                                                 {{ option.name }}
                                             </div>
-                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                            <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                         </ListboxOption>
                                     </ListboxOptions>
                                 </Listbox>
@@ -539,11 +536,11 @@
                                     class="h-12 inputMain w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
                                 >
 
-                            <span class="float-left flex xsLight subpixel-antialiased"><img
-                                src="/Svgs/IconSvgs/icon_adjustments.svg"
+                            <span class="float-left flex xsLight subpixel-antialiased">
+                                <IconAdjustmentsAlt stroke-width="1.5"
                                 class="mr-2"
                                 alt="attributeIcon"/>{{$t('Select appointment properties')}}</span>
-                                    <ChevronDownIcon
+                                    <IconChevronDown stroke-width="1.5"
                                         class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                         aria-hidden="true"
                                     />
@@ -636,6 +633,8 @@
 
 
 <script>
+import IconLib from "@/mixins/IconLib.vue";
+
 const options = [
     {
         name: 'Option 1',
@@ -695,7 +694,7 @@ import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 export default {
     name: 'EventComponent',
     mixins: [
-        Permissions
+        Permissions, IconLib
     ],
     components: {
         FormButton,

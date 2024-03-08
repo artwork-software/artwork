@@ -1492,6 +1492,6 @@
     "Employee was removed from shift": "Mitarbeiter \"{0}\" wurde von Schicht (\"{1}\" - \"{2}\") entfernt",
     "Service provider was added to the shift as": "Dienstleister \"{0}\" wurde zur Schicht (\"{1}\" - \"{2}\") als \"{3}\" hinzugefügt",
     "All scheduled employees have been removed from shift": "Alle eingeplanten Mitarbeiter wurde von Schicht (\"{0}\" - \"{1}\") entfernt",
+    "Remind day/s before": "Tag/e vorher erinnern",
     "Today": "Heute"
-
 }

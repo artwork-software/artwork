@@ -55,7 +55,7 @@
                                         $currentRowCount
                                     );
                             @endphp
-                            @if($columnCell->column->type === "empty")
+                            @if($columnCell->column->type === "empty" || $columnCell->column->type === "sage")
                                 {{ $columnCell->value }}
                             @else
                                 {{
@@ -173,7 +173,7 @@
                                         $currentRowCount
                                     );
                             @endphp
-                            @if($columnCell->column->type === "empty")
+                            @if($columnCell->column->type === "empty" || $columnCell->column->type === "sage")
                                 {{ $columnCell->value }}
                             @else
                                 {{

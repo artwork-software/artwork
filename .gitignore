@@ -24,3 +24,4 @@ webpack.mix.js
 .composer
 phpstan.neon
 .DS_Store
+.phpunit.cache

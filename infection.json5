@@ -1,0 +1,36 @@
+{
+    "$schema": "https://raw.githubusercontent.com/infection/infection/0.27.0/resources/schema.json",
+    "source": {
+        "directories": [
+            "artwork"
+        ],
+    },
+    "timeout": 10,
+    "logs": {
+        "text": "infection.log",
+        "html": "infection.html",
+        "summary": "summary.log",
+        "json": "infection-log.json",
+        "perMutator": "per-mutator.md",
+        "github": true,
+        "summaryJson": "summary.json"
+    },
+    "tmpDir": ".phpunit.cache",
+    "mutators": {
+        "@arithmetic": true,
+        "@boolean": true,
+        "@conditional_boundary": true,
+        "@conditional_negotiation": true,
+        "@function_signature": true,
+        "@identical": true,
+        "@number": true,
+        "@operator": true,
+        "@regex": true,
+        "@removal": true,
+        "@return_value": true,
+        "@sort": true,
+        "@unwrap": true,
+        "@extensions": true,
+    },
+    "testFramework":"pest"
+}

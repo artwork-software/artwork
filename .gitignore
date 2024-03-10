@@ -30,3 +30,4 @@ per-mutator.md
 summary*
 !infection.phar
 !infection.phar.asc
+!infection.json5

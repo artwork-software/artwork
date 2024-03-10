@@ -25,3 +25,8 @@ webpack.mix.js
 phpstan.neon
 .DS_Store
 .phpunit.cache
+infection*
+per-mutator.md
+summary*
+!infection.phar
+!infection.phar.asc

@@ -3,35 +3,36 @@
     <div class="my-auto w-full">
         <div :class="this.fullSidenav ? 'sm:w-64' : 'sm:w-16'"
              class="sidebar fixed z-50 top-0 bottom-0 p-2 w-full bg-primary hidden sm:block">
-            <div class="w-full py-2 flex flex-col h-[100%] items-center">
-                <div class="flex items-center" :class="fullSidenav ? 'w-full ml-16' : ''">
-                    <div @mouseover="hoveredIcon = true" @mouseleave="hoveredIcon = false">
-                        <div v-if="!hoveredIcon" class="text-2xl font-bold text-secondaryHover">
-                            <img src="/Svgs/Logos/artwork_logo_small.svg"
-                                 :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" alt="artwork-logo"/>
-                        </div>
-                        <div v-else class="cursor-pointer" :class="fullSidenav ? 'rotate-180' : ''"
-                             @click="changeSidenavMode()">
-                            <img src="/Svgs/IconSvgs/icon_mainnav_arrows.svg" class=""
-                                 :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" aria-hidden="true"/>
-                        </div>
-                    </div>
-                    <div v-if="fullSidenav" class="ml-4">
-                        <img src="/Svgs/Logos/artwork_logo_white.svg"/>
-                    </div>
-                </div>
-
-                <!-- <img alt="small-logo" v-else :src="$page.props.small_logo" class="rounded-full h-16 w-16"/> -->
-                <div class="flex-1 w-full space-y-1 mt-8 overflow-y-auto managementMenu">
-                    <a v-for="item in navigation" :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center', item.has_permission ? 'block': 'hidden']">
-                        <div class="flex items-center">
-                            <component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
-                            <div class="ml-4 w-32" v-if="fullSidenav">
-                                {{ item.name }}
+            <div class="w-full py-2 flex flex-col h-[100%] items-center justify-between">
+                <div>
+                    <div class="flex items-center" :class="fullSidenav ? 'w-full' : ''">
+                        <div @mouseover="hoveredIcon = true" @mouseleave="hoveredIcon = false">
+                            <div v-if="!hoveredIcon" class="text-2xl font-bold text-secondaryHover">
+                                <img src="/Svgs/Logos/artwork_logo_small.svg"
+                                     :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" alt="artwork-logo"/>
+                            </div>
+                            <div v-else class="cursor-pointer" :class="fullSidenav ? 'rotate-180' : ''"
+                                 @click="changeSidenavMode()">
+                                <img src="/Svgs/IconSvgs/icon_mainnav_arrows.svg" class=""
+                                     :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" aria-hidden="true"/>
                             </div>
                         </div>
-                    </a>
-                    <Menu as="div" class="flex flex-col items-center" v-show="
+                        <div v-if="fullSidenav" class="ml-4">
+                            <img src="/Svgs/Logos/artwork_logo_white.svg"/>
+                        </div>
+                    </div>
+
+                    <!-- <img alt="small-logo" v-else :src="$page.props.small_logo" class="rounded-full h-16 w-16"/> -->
+                    <div class="flex-1 w-full space-y-1 mt-8 overflow-y-auto managementMenu">
+                        <a v-for="item in navigation" :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center', item.has_permission ? 'block': 'hidden']">
+                            <div class="flex items-center">
+                                <component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <div class="ml-4 w-32" v-if="fullSidenav">
+                                    {{ item.name }}
+                                </div>
+                            </div>
+                        </a>
+                        <Menu as="div" class="flex flex-col items-center" v-show="
                         $canAny([
                             'usermanagement',
                             'admin checklistTemplates',
@@ -53,6 +54,68 @@
                                     </div>
                                 </div>
                             </MenuButton>
+                            <transition enter-active-class="transition ease-out duration-100"
+                                        enter-from-class="transform opacity-0 scale-95"
+                                        enter-to-class="transform opacity-100 scale-100"
+                                        leave-active-class="transition ease-in duration-75"
+                                        leave-from-class="transform opacity-100 scale-100"
+                                        leave-to-class="transform opacity-0 scale-95">
+                                <MenuItems ref="menuItems" :class="fullSidenav ? 'ml-36 left-28' : 'ml-14'"
+                                           class="z-50 managementMenu max-h-40 overflow-y-auto opacity-100 absolute origin-top-left w-36 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
+                                    <div class="z-50" v-for="item in managementNavigation" :key="item.name">
+                                        <MenuItem v-if="item.has_permission" v-slot="{ active }">
+                                            <Link :href="item.href"
+                                                  :class="[item.isCurrent ? 'text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full px-2 py-3 rounded-md flex flex-col items-center ']">
+                                                {{ item.name }}
+                                            </Link>
+                                        </MenuItem>
+                                    </div>
+                                </MenuItems>
+                            </transition>
+                        </Menu>
+                        <a   :href="getTrashRoute()" v-if="hasAdminRole()" :class="[isCurrentTrashRoute() ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
+                            <div class="flex items-center">
+                                <component :is="IconTrash" :stroke-width="isCurrentTrashRoute() ? 2 : 1" :class="[isCurrentTrashRoute() ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <div class="ml-4 w-32" v-if="fullSidenav">
+                                    {{  $t('Recycle bin') }}
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex flex-col justify-end w-full">
+                    <a :href="route('notifications.index')" :class="[route().current('notifications.*') ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
+                        <div class="flex items-center">
+                            <component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                            <div class="ml-4 w-32" v-if="fullSidenav">
+                                {{ $t('Notifications') }}
+                            </div>
+                        </div>
+                    </a>
+                    <Menu as="div" class="flex flex-col items-center" v-show="
+                        $canAny([
+                            'usermanagement',
+                            'admin checklistTemplates',
+                            'teammanagement',
+                            'update departments',
+                            'change tool settings',
+                            'change project settings',
+                            'change event settings',
+                            'change system notification',
+                            'view budget templates',
+                            'create, delete and update rooms'
+                        ]) || hasAdminRole()
+                        ">
+                        <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.managementRoutes) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
+                            <div class="flex items-center" :class="fullSidenav ? '' : ''">
+                                <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.user.profile_photo_url" alt=""/>
+                                <div class="ml-4 w-32 text-left" v-if="fullSidenav">
+                                    Hallo
+                                    {{ $page.props.user.first_name }}
+                                </div>
+                            </div>
+                        </MenuButton>
                         <transition enter-active-class="transition ease-out duration-100"
                                     enter-from-class="transform opacity-0 scale-95"
                                     enter-to-class="transform opacity-100 scale-100"
@@ -60,13 +123,16 @@
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
                             <MenuItems ref="menuItems" :class="fullSidenav ? 'ml-36 left-28' : 'ml-14'"
-                                class="z-50 managementMenu max-h-40 overflow-y-auto opacity-100 absolute origin-top-left w-36 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
-                                <div class="z-50" v-for="item in managementNavigation" :key="item.name">
-                                    <MenuItem v-if="item.has_permission" v-slot="{ active }">
-                                        <Link :href="item.href"
-                                              :class="[item.isCurrent ? 'text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full px-2 py-3 rounded-md flex flex-col items-center ']">
-                                            {{ item.name }}
+                                       class="z-50 managementMenu max-h-40 overflow-y-auto opacity-100 absolute origin-top-left w-36 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
+                                <div class="z-50">
+                                    <MenuItem v-slot="{ active }">
+                                        <Link :href="route('user.edit.info', {user: this.$page.props.user.id})"
+                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            {{ $t('Your account')}}
                                         </Link>
+                                    </MenuItem>
+                                    <MenuItem v-slot="{ active }">
+                                        <a @click="logout" :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor cursor-pointer']">{{ $t('Log out')}}</a>
                                     </MenuItem>
                                 </div>
                             </MenuItems>
@@ -85,7 +151,7 @@
 
         <div class="pl-2 flex flex-col">
             <!--   Top Menu     -->
-            <div class="sticky top-0 z-40 flex-shrink-0 flex h-16">
+            <!--<div class="sticky top-0 z-40 flex-shrink-0 flex h-16">
                 <button type="button"
                         class="px-5 border-r border-primaryText text-primaryText focus:outline-none sm:hidden"
                         @click="openSideBarOnMobile">
@@ -164,7 +230,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>-->
             <div v-if="pushNotifications.length > 0" class="absolute top-16 right-5">
                 <div v-for="pushNotification in pushNotifications" :id="pushNotification.id"
                      class="my-2 z-50 flex relative w-full max-w-xs rounded-lg shadow bg-lightBackgroundGray"
@@ -187,7 +253,7 @@
             <!-- Notification -->
 
             <!--     Main       -->
-            <main class="main pl-5">
+            <main class="main pl-5 my-5">
                 <slot></slot>
             </main>
         </div>
@@ -208,14 +274,15 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {isAdmin} from "@/Helper/PermissionHelper";
 import Permissions from "@/mixins/Permissions.vue";
 import {
-    IconAdjustmentsAlt,
+    IconAdjustmentsAlt, IconBell,
     IconCalendarMonth,
     IconCalendarUser,
     IconCurrencyEuro, IconFileText,
     IconGeometry, IconLayoutDashboard,
-    IconListCheck,
+    IconListCheck, IconTrash,
     IconUsers
 } from "@tabler/icons-vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 const userNavigation = [
     {name: 'Your Profile', href: '#'},
@@ -235,7 +302,7 @@ const managementRoutes = [
 ]
 
 export default {
-    mixins: [Permissions],
+    mixins: [Permissions, IconLib],
     components: {
         SvgCollection,
         Dialog,
@@ -413,20 +480,23 @@ export default {
         }
     },
     methods: {
+        IconBell,
+        IconTrash,
         IconAdjustmentsAlt,
         usePage,
         getTrashRoute() {
-
             if (this.$page.url === '/areas') {
-
                 return route('areas.trashed')
-
             } else {
-
                 return route('projects.trashed')
-
             }
-
+        },
+        isCurrentTrashRoute() {
+            if (this.$page.url === '/areas') {
+                return route().current('areas.trashed')
+            } else {
+                return route().current('projects.trashed')
+            }
         },
         isCurrent(routes) {
             for (let url of routes) {

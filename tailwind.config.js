@@ -46,6 +46,27 @@ module.exports = {
                 linkOnDarkColor: '#BDB6F0',
                 "vtd-primary": colors.sky,
                 "vtd-secondary": colors.gray,
+                // Artwork colors
+                artwork: {
+                    messages: {
+                        success: '#25cd0e',
+                        waring: '#ecce00',
+                        error: '#ef4444',
+                        info: '#a7a6b1'
+                    },
+                    buttons: {
+                        create: '#3073ae',
+                        context: '#6f6f6f',
+                        hover: '#1c77d7',
+                        default: '#2a3d75'
+                    },
+                    project: {
+                        background: '#eee',
+                    },
+                    calendar: {
+
+                    }
+                },
             },
             fontSize: {
                 header: '30px'

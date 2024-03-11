@@ -28,13 +28,10 @@
                 <table class="w-full bg-white relative">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                     <div>
-                        <tr class="flex w-full bg-userBg stickyHeader">
+                        <tr class="flex w-full bg-userBg stickyHeader rounded-t-full">
                             <th :style="{minWidth: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}">
-
                             </th>
-                            <th v-for="room in rooms"
-                                :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth:zoomFactor * 212 + 'px'}"
-                                class="py-3  border-r-4 border-secondaryHover truncate">
+                            <th v-for="room in rooms" :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth:zoomFactor * 212 + 'px'}" class="py-3  border-r-4 border-secondaryHover truncate mx-2">
                                 <Link :style="textStyle" class="flex font-semibold items-center ml-4"
                                       :href="route('rooms.show',{room: room.id})">
                                     {{ room.name }}

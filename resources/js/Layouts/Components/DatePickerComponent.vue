@@ -1,6 +1,6 @@
 <template>
     <div v-if="!project">
-        <div class="flex items-center">
+        <div class="flex items-center gap-x-2">
             <IconCalendar class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
             <input v-model="dateValueArray[0]"
                    @change="this.updateTimes"
@@ -8,13 +8,13 @@
                    type="date"
                    :disabled="!!project"
                    placeholder="Start"
-                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg"/>
             <input v-model="dateValueArray[1]"
                    @change="this.updateTimes"
                    :disabled="!!project"
                    id="endDate"
                    type="date"
-                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow rounded-lg"/>
 
         </div>
         <vue-tailwind-datepicker class="absolute z-50" v-if="this.showDateRangePicker && dateValuePicker" no-input

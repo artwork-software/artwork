@@ -3,15 +3,15 @@
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
             <div v-if="!project">
-                <div v-if="dateValue && dateValue[0] === dateValue[1]">
-                    <button  class="ml-2 text-black previousDay" @click="previousDay">
+                <div v-if="dateValue && dateValue[0] === dateValue[1]" class="flex items-center">
+                    <button class="ml-2 text-black previousDay" @click="previousDay">
                         <IconChevronLeft  class="h-5 w-5 text-primary"/>
                     </button>
                     <button class="ml-2 text-black nextDay" @click="nextDay">
                         <IconChevronRight class="h-5 w-5 text-primary"/>
                     </button>
                 </div>
-                <div v-else>
+                <div v-else class="flex items-center">
                     <button  class="ml-2 text-black previousTimeRange" @click="previousTimeRange">
                         <IconChevronLeft class="h-5 w-5 text-primary"/>
                     </button>
@@ -20,40 +20,37 @@
                     </button>
                 </div>
             </div>
-            <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
-              <SwitchGroup v-if="!roomMode" as="div" class="flex items-center ml-2">
-                <Switch v-model="atAGlance" @click="changeAtAGlance()"
-                        class="group relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none">
-                    <span class="sr-only">Use setting</span>
-                    <span aria-hidden="true" :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'" class="pointer-events-none absolute h-full w-full rounded-md"/>
-                    <span aria-hidden="true"
-                          :class="[atAGlance ? 'bg-indigo-600' : 'bg-gray-200', 'pointer-events-none absolute mx-auto h-4 w-9 rounded-full transition-colors duration-200 ease-in-out']"/>
-                    <span aria-hidden="true"
-                          :class="[atAGlance ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full border border-gray-200 bg-white shadow ring-0 transition-transform duration-200 ease-in-out']"/>
-                </Switch>
-                <SwitchLabel as="span" class="ml-3 text-sm">
-                    <span class="font-medium text-gray-900">{{ $t('At a glance')}}</span>
-                </SwitchLabel>
-            </SwitchGroup>
-                <SwitchGroup v-if="!roomMode"  as="div" class="flex items-center ml-3">
-                    <Switch v-model="multiEdit" @click="changeMultiEdit(multiEdit)"
-                            class="group relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none">
-                        <span class="sr-only">Use setting</span>
-                        <span aria-hidden="true" :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'" class="pointer-events-none absolute h-full w-full rounded-md"/>
-                        <span aria-hidden="true"
-                              :class="[multiEdit ? 'bg-indigo-600' : 'bg-gray-200', 'pointer-events-none absolute mx-auto h-4 w-9 rounded-full transition-colors duration-200 ease-in-out']"/>
-                        <span aria-hidden="true"
-                              :class="[multiEdit ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full border border-gray-200 bg-white shadow ring-0 transition-transform duration-200 ease-in-out']"/>
-                    </Switch>
-                    <SwitchLabel as="span" class="ml-3 text-sm">
-                        <span class="font-medium text-gray-900">{{ $t('Multiedit')}}</span>
-                    </SwitchLabel>
-                </SwitchGroup>
-            </div>
+
 
         </div>
 
-        <div class="flex items-center">
+        <div class="flex items-center gap-x-2">
+            <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
+               <div class="flex items-center gap-x-2">
+                   <Switch @click="changeMultiEdit(multiEdit)" v-if="!roomMode" v-model="multiEdit" :class="[multiEdit ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                       <span class="sr-only">Use setting</span>
+                       <span :class="[multiEdit ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                          <span :class="[multiEdit ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                             <IconPencil stroke-width="1.5" class="w-5 h-5" />
+                          </span>
+                          <span :class="[multiEdit ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                              <IconPencil stroke-width="1.5" class="w-5 h-5" />
+                          </span>
+                    </span>
+                   </Switch>
+                   <Switch @click="changeAtAGlance()" v-if="!roomMode" v-model="atAGlance" :class="[atAGlance ? 'bg-artwork-buttons-hover' : 'bg-gray-200', 'relative inline-flex items-center h-6 w-14 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-none']">
+                       <span class="sr-only">Use setting</span>
+                       <span :class="[atAGlance ? 'translate-x-7' : 'translate-x-0', 'pointer-events-none relative inline-block h-8 w-8 border border-gray-300 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                          <span :class="[atAGlance ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                             <IconList stroke-width="1.5" class="w-5 h-5" />
+                          </span>
+                          <span :class="[atAGlance ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                              <IconList stroke-width="1.5" class="w-5 h-5" />
+                          </span>
+                    </span>
+                   </Switch>
+               </div>
+            </div>
             <div class="flex items-center">
                 <IconZoomIn @click="incrementZoomFactor" :disabled="zoomFactor <= 0.2" v-if="!atAGlance && isFullscreen"
                             class="h-6 w-6 mx-2 cursor-pointer"></IconZoomIn>
@@ -137,14 +134,16 @@
                     </transition>
                 </Menu>
             </div>
+
+            <div @click="showPDFConfigModal = true">
+                <IconFileAnalytics class="h-6 w-6 mx-2 cursor-pointer" />
+            </div>
+
             <AddButtonSmall
                 v-if="$can('request room occupancy')"
                 @click="openEventComponent()"
                 :text="$t('New occupancy')"
             />
-            <div @click="showPDFConfigModal = true">
-                <IconFileAnalytics class="h-6 w-6 mx-2 cursor-pointer" />
-            </div>
         </div>
 
 

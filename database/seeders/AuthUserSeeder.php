@@ -51,7 +51,7 @@ class AuthUserSeeder extends Seeder
             'position' => 'Administrator',
             'business' => 'Theater XY',
             'description' => null,
-            'toggle_hints' => true,
+            'toggle_hints' => false,
             'opened_checklists' => [],
             'opened_areas' => [],
             'profile_photo_path' => '/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
@@ -101,7 +101,7 @@ class AuthUserSeeder extends Seeder
             'position' => 'Technikerin',
             'business' => 'Museum XY',
             'description' => null,
-            'toggle_hints' => true,
+            'toggle_hints' => false,
             'opened_checklists' => [],
             'opened_areas' => [],
             'profile_photo_path' => '/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg'
@@ -144,7 +144,7 @@ class AuthUserSeeder extends Seeder
             'position' => 'Chefin',
             'business' => 'Veranstaltungshaus XY',
             'description' => null,
-            'toggle_hints' => true,
+            'toggle_hints' => false,
             'opened_checklists' => [],
             'opened_areas' => [],
             'profile_photo_path' => '/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg'

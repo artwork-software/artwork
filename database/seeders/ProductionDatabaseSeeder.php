@@ -23,7 +23,7 @@ class ProductionDatabaseSeeder extends Seeder
 
         DB::table('event_types')->insert([
             'name' => 'Blocker',
-            'svg_name' => 'eventType0',
+            'hex_code' => '#eee',
             'project_mandatory' => false,
             'individual_name' => true,
             'abbreviation' => 'BL'

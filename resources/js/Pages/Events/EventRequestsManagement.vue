@@ -19,8 +19,9 @@
                                         {{ eventRequest.room?.name }}:
                                     </div>
                                     <div class="flex items-center w-full">
-                                        <EventTypeIconCollection :height="26" :width="26"
-                                                                 :iconName="eventRequest.event_type.svg_name"/>
+                                        <div>
+                                            <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : eventRequest.event_type?.hex_code }" />
+                                        </div>
                                         <div
                                             class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900 mr-8">
                                             {{ eventRequest.event_type?.name }}
@@ -117,8 +118,9 @@
 
                             <div class="flex items-center w-full mt-4">
                                 <div class="flex items-center ml-12 w-full">
-                                    <EventTypeIconCollection :height="26" :width="26"
-                                                             :iconName="requestToApprove.event_type.svg_name"/>
+                                    <div>
+                                        <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : requestToApprove.event_type?.hex_code }" />
+                                    </div>
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
                                         {{ requestToApprove.event_type.name }}
@@ -214,8 +216,9 @@
 
                             <div class="flex items-center w-full mt-4">
                                 <div class="flex items-center ml-12 w-full">
-                                    <EventTypeIconCollection :height="26" :width="26"
-                                                             :iconName="requestToDecline.event_type.svg_name"/>
+                                    <div>
+                                        <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : requestToDecline.event_type?.hex_code }" />
+                                    </div>
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
                                         {{ requestToDecline.event_type?.name }}

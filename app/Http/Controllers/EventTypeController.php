@@ -35,7 +35,6 @@ class EventTypeController extends Controller
             'project_mandatory' => $request->project_mandatory,
             'individual_name' => $request->individual_name,
             'abbreviation' => $request->abbreviation,
-            'svg_name' => $request->svg_name ?? 'undefined',
         ]);
 
         return Redirect::back();

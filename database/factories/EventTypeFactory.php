@@ -23,7 +23,6 @@ class EventTypeFactory extends Factory
             'hex_code' => $this->faker->name,
             'project_mandatory' => $this->faker->boolean(0),
             'individual_name' => $this->faker->boolean(0),
-            'svg_name' => $this->faker->name,
         ];
     }
 }

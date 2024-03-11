@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Event;
+
 use App\Models\Freelancer;
 use App\Models\FreelancerVacation;
 use App\Models\Task;

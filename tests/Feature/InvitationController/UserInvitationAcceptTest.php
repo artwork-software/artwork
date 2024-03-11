@@ -16,7 +16,6 @@ use Tests\TestCase;
 class UserInvitationAcceptTest extends TestCase
 {
 
-
     public function testAbortsInvalidTokens()
     {
         Invitation::factory()->create(['email' => 'user@example.com']);

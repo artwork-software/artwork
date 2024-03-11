@@ -20,6 +20,7 @@ jobs:
     timeout-minutes: 15
     env:
       COMPOSER_NO_INTERACTION: 1
+      XDEBUG_MODE: coverage
 
     strategy:
       matrix:
@@ -27,8 +28,7 @@ jobs:
         laravel: [ ^10 ]
         dependency-version: [ prefer-stable ]
         exclude:
-          - laravel: ^10
-            php: 8.0
+          - php: 8.0
         operating-systems: [ubuntu-latest]
 
     name: PHP Version ${{ matrix.php }} - Laravel Version ${{ matrix.laravel }} - ${{ matrix.dependency-version }}
@@ -51,7 +51,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-versions }}
-          extensions: curl, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, zip
+          extensions: curl, fileinfo, gd, intl, mbstring, openssl, pdo, pdo_mysql, tokenizer, zip, xdebug
 
       - name: Composer Install
         run: composer install
@@ -74,4 +74,4 @@ jobs:
           php artisan db:seed --class=ProductionDatabaseSeeder --env=testing
 
       - name: Running Test
-        run: vendor/bin/pest --colors=always
+        run: vendor/bin/pest --colors=always --coverage --min=70

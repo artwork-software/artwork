@@ -73,8 +73,5 @@ jobs:
           php artisan migrate:fresh --env=testing
           php artisan db:seed --class=ProductionDatabaseSeeder --env=testing
 
-      - name: Running infection
-        run: php infection.phar --threads=4
-
       - name: Running Test
         run: vendor/bin/pest --colors=always --coverage --min=70

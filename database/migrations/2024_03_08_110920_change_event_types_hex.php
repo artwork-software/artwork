@@ -6,22 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('event_types', function (Blueprint $table) {
             $table->string('hex_code')->after('name')->nullable();
-
-            // change svg_name to nullable
             $table->string('svg_name')->nullable()->change();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('event_types', function (Blueprint $table) {

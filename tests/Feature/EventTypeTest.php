@@ -27,7 +27,6 @@ test('users with the permission can create eventTypes', function() {
 
     $this->post('/event_types', [
         'name' => 'TestEventType',
-        'svg_name' => 'SVG',
         'abbreviation' => 'lel',
         'project_mandatory' => false,
         'individual_name' => false,

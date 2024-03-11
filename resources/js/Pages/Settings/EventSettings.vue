@@ -182,8 +182,9 @@
                                     <MenuButton class="flex items-center rounded-full focus:outline-none">
                                         <ChevronDownIcon v-if="editEventTypeForm.svg_name === ''"
                                                          class="ml-1 flex-shrink-0 mt-1 h-16 w-16 flex my-auto items-center rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
-                                        <EventTypeIconCollection :height="64" :width="64" v-else
-                                                                 :iconName="editEventTypeForm.svg_name"/>
+                                        <div>
+                                            <div class="block w-16 h-16 rounded-full" :style="{'backgroundColor' : editEventTypeForm.hex_code }" />
+                                        </div>
                                     </MenuButton>
                                 </div>
                                 <transition enter-active-class="transition ease-out duration-100"
@@ -242,7 +243,7 @@
                         <div class="mt-8 w-full justify-center flex">
                             <FormButton
                                 @click="editEventType"
-                                :disabled="this.editEventTypeForm.name === '' || this.editEventTypeForm.svg_name === ''"
+                                :disabled="this.editEventTypeForm.name === ''"
                                 :text="$t('Save')"
                             />
                         </div>

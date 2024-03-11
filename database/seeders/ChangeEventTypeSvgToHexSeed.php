@@ -15,6 +15,8 @@ class ChangeEventTypeSvgToHexSeed extends Seeder
     public function run(): void
     {
         $this->changeSvgToHex();
+
+        DB::statement('ALTER TABLE event_types DROP COLUMN svg_name');
     }
 
 

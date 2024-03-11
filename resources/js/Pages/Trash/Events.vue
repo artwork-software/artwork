@@ -45,8 +45,9 @@
                         {{ event.start }} - {{ event.end }}
                     </p>
                     <div class="text-sm leading-6 font-lexend text-gray-500 mt-2 flex">
-                        <EventTypeIconCollection :height="12" :width="12"
-                                                 :iconName="event.event_type.svg_name"/>
+                        <div>
+                            <div class="block w-3 h-3 rounded-full" :style="{'backgroundColor' : event.event_type.hex_code }" />
+                        </div>
                         <p class="ml-1">{{ event.event_type.name }}</p>
                     </div>
                 </div>

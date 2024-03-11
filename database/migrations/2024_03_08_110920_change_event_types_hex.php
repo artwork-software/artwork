@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('event_types', function (Blueprint $table) {
             $table->string('hex_code')->after('name')->nullable();
+            $table->string('svg_name')->nullable()->change();
         });
     }
 

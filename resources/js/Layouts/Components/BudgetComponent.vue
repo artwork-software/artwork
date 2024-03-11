@@ -244,7 +244,7 @@
                 </thead>
             </table>
         </div>
-        <SageNotAssignedData v-if="!this.isBudgetTemplateManagement && this.$page.props.sageApiEnabled && this.$can('can view and delete sage100-api-data')"
+        <SageNotAssignedData v-if="!this.isBudgetTemplateManagement && this.$page.props.sageApiEnabled"
                              :sage-not-assigned="sageNotAssigned"
                              @remove-sage-not-assigned-data="this.showRemoveSageNotAssignedDataConfirmationModal"
         />

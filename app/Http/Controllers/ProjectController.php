@@ -27,6 +27,7 @@ use App\Http\Resources\ProjectResources\ProjectShiftResource;
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderDropResource;
 use App\Http\Resources\UserDropResource;
+use App\Http\Resources\UserResourceWithoutShifts;
 use App\Models\Category;
 use App\Models\ChecklistTemplate;
 use App\Models\CollectingSociety;
@@ -204,7 +205,7 @@ class ProjectController extends Controller
             'departments' => Auth::user()->can(PermissionNameEnum::TEAM_UPDATE->value) ?
                 Department::nameLike($query)->get() :
                 [],
-            'users' => User::nameOrLastNameLike($query)->get()
+            'users' => UserResourceWithoutShifts::collection(User::nameOrLastNameLike($query)->get())->resolve()
         ];
     }
 

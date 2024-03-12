@@ -72,7 +72,7 @@
                 </SwitchLabel>
             </SwitchGroup>
         </div>
-        <div class="w-full flex stickyHeader" >
+        <div class="w-full flex stickyHeader">
             <table class="w-full flex ml-6 py-5">
                 <thead>
                 <tr class="">
@@ -883,6 +883,17 @@ export default {
             )
             return projectMemberArray;
         },
+        sortedColumns() {
+            // Zuerst filtern wir die Spalten, die nicht vom Typ 'sage' sind
+            const nonSageColumns = this.table.columns.filter(column => column.type !== 'sage');
+            // Dann filtern wir die Spalten, die vom Typ 'sage' sind
+            const sageColumns = this.table.columns.filter(column => column.type === 'sage');
+            // Kombiniere die beiden Arrays, wobei die 'sage' Spalten am Ende stehen
+            return [...nonSageColumns, ...sageColumns];
+        }
+    },
+    created() {
+        this.sortColumns(); // Sortiere die Spalten, wenn die Komponente initialisiert wird
     },
     watch: {
         userExcludeCommentedBudgetItems: {
@@ -954,6 +965,13 @@ export default {
                     preserveState: true
                 }
             );
+        },
+        sortColumns() {
+            this.table.columns.sort((a, b) => {
+                if (a.type === 'sage') return 1; // Verschiebe 'sage' ans Ende
+                if (b.type === 'sage') return -1; // Behalte 'sage' am Ende
+                return 0; // Ändere die Reihenfolge von a und b nicht
+            });
         },
         duplicateColumn(columnId){
             Inertia.post(route('project.budget.column.duplicate', columnId), {}, {

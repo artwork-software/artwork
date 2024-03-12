@@ -1,5 +1,6 @@
 <template>
     <div class="flex items-center my-1.5 cursor-grab" draggable="true" @dragstart="onDragStart">
+
         <div class="w-28">
             {{ sageData.sa_kto }}
         </div>
@@ -14,6 +15,9 @@
         </div>
         <div class="w-40 text-right">
             {{ this.formatBookingDataDate(sageData.buchungsdatum) }}
+        </div>
+        <div v-if="type === 'global'" class="w-28 text-right">
+            {{ sageData.kst_traeger}}
         </div>
         <div class="w-5 ml-2">
             <TrashIcon class="w-5 h-5 cursor-pointer hover:text-red-600"
@@ -31,7 +35,7 @@ export default {
     components: {
         TrashIcon
     },
-    props: ['sageData'],
+    props: ['sageData','type'],
     emits: ['removeSageNotAssignedData'],
     methods: {
         currencyFormattedValue(value) {

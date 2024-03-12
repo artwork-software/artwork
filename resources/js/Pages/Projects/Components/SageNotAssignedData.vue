@@ -62,9 +62,12 @@
                         <div class="w-40 text-right">
                             {{ $t('Booking date') }}
                         </div>
+                        <div class="w-28 text-right">
+                            {{ $t('Cost bearer') }}
+                        </div>
                     </div>
                     <div v-for="(global) in sageNotAssigned.globalGroup">
-                        <SageDataDragElement :sageData="global"
+                        <SageDataDragElement :sageData="global" type="global"
                                              @remove-sage-not-assigned-data="this.removeSageNotAssignedData"
                         />
                     </div>

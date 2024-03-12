@@ -228,7 +228,7 @@ export default defineComponent({
 
             return this.accounts.filter((account) => {
                 return account.account_number.includes(this.accountSearchQuery) ||
-                    account.title.includes(this.accountSearchQuery);
+                    account.title.toLowerCase().includes(this.accountSearchQuery.toLowerCase());
             });
         },
         filteredCostUnits() {
@@ -238,7 +238,7 @@ export default defineComponent({
 
             return this.cost_units.filter((cost_unit) => {
                 return cost_unit.cost_unit_number.includes(this.costUnitSearchQuery) ||
-                    cost_unit.title.includes(this.costUnitSearchQuery);
+                    cost_unit.title.toLowerCase().includes(this.costUnitSearchQuery.toLowerCase());
             });
         }
     },

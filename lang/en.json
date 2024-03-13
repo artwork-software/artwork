@@ -1521,5 +1521,7 @@
     "No Accounts found": "No Accounts found",
     "No Cost Units found": "No Cost Units found",
     "Remind day/s before": "Remind day/s before",
-    "Today": "Today"
+    "Today": "Today",
+    "Previous": "Previous",
+    "Next": "Next"
 }

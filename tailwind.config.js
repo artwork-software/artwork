@@ -65,6 +65,16 @@ module.exports = {
                     },
                     calendar: {
 
+                    },
+                    icons: {
+                        default: {
+                            background: 'rgba(48,23,173,0.1)',
+                            color: '#3017AD'
+                        },
+                        darkGreen: {
+                            background: 'rgba(56,173,23,0.1)',
+                            color: '#21ad17'
+                        },
                     }
                 },
             },

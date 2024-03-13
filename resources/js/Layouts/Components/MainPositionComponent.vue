@@ -194,7 +194,8 @@ export default {
         'openErrorModal',
         'openSubPositionSumDetailModal',
         'openMainPositionSumDetailModal',
-        'openCellDetailModal'
+        'openCellDetailModal',
+        'openVerifiedModal'
     ],
     data(){
         return{

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\BudgetColumnSetting\Http\Requests\UpdateBudgetColumnSettingRequest;
 use Artwork\Modules\BudgetColumnSetting\Models\BudgetColumnSetting;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
+use Artwork\Modules\Sage100\Services\Sage100Service;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
@@ -13,8 +15,10 @@ use Inertia\Response;
 
 class BudgetGeneralController extends Controller
 {
-    public function __construct(private readonly BudgetColumnSettingService $budgetColumnSettingService)
-    {
+    public function __construct(
+        private readonly BudgetColumnSettingService $budgetColumnSettingService,
+        private readonly Sage100Service $sage100Service
+    ) {
         $this->authorizeResource(BudgetColumnSetting::class, 'budgetColumnSetting');
     }
 
@@ -44,5 +48,11 @@ class BudgetGeneralController extends Controller
         }
 
         return Redirect::back()->with('success', __('flash-messages.budget-general-setting.success.update'));
+    }
+
+
+    public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn): void
+    {
+        $this->sage100Service->moveSageDataRow($columnCell, $movedColumn);
     }
 }

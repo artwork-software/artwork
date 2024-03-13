@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Services\SageNotAssignedDataService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -60,6 +61,14 @@ class SageNotAssignedDataController extends Controller
 
         $this->sageNotAssignedDataService->forceDelete($sageNotAssignedData);
 
+        return Redirect::back();
+    }
+
+    public function moveSageData(
+        SageNotAssignedData $sageNotAssignedData,
+        ColumnCell $columnCell
+    ): RedirectResponse {
+        $this->sageNotAssignedDataService->moveSageData($sageNotAssignedData, $columnCell);
         return Redirect::back();
     }
 }

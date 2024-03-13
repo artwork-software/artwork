@@ -1521,5 +1521,7 @@
     "No Accounts found": "Keine Konten gefunden",
     "No Cost Units found": "Keine Kostenstellen gefunden",
     "Remind day/s before": "Tag/e vorher erinnern",
-    "Today": "Heute"
+    "Today": "Heute",
+    "Previous": "Vorherige",
+    "Next": "Nächste"
 }

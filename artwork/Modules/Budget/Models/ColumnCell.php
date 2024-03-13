@@ -69,9 +69,9 @@ class ColumnCell extends Model
         return $this->hasMany(CellCalculation::class, 'cell_id', 'id');
     }
 
-    public function sageAssignedData(): HasOne
+    public function sageAssignedData(): HasMany
     {
-        return $this->hasOne(
+        return $this->hasMany(
             SageAssignedData::class,
             'column_cell_id',
             'id'

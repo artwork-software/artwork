@@ -306,4 +306,32 @@ class Sage100Service
 
         return $sageColumn;
     }
+
+    public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn): void
+    {
+        // get all Cells on the same row as $columnCell
+        $columnCells = $columnCell->subPositionRow->cells()->get();
+
+        // get all Cells on the same row as $movedColumn
+        $movedColumnCells = $movedColumn->subPositionRow->cells()->get();
+
+        // check if the first two cells in $columnCells and $movedColumnCells have the same value
+        if (
+            $columnCells[0]->value === $movedColumnCells[0]->value &&
+            $columnCells[1]->value === $movedColumnCells[1]->value
+        ) {
+            // remove the value from $movedColumn->value and update the $columnCell->value with the new value
+            $currentCellValue = $movedColumn->value;
+            $movedColumn->update(['value' => 0]);
+            $columnCell->update(['value' => $columnCell->value + $currentCellValue]);
+
+            // attach the $movedColumn->sageAssignedData to $columnCell
+            $assignedData = $movedColumn->sageAssignedData;
+            foreach ($assignedData as $data) {
+                $data->update(['column_cell_id' => $columnCell->id]);
+            }
+
+            // now remove the complete row of $movedColumn form the table
+        }
+    }
 }

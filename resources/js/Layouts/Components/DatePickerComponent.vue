@@ -160,6 +160,12 @@ export default {
             const startDate = new Date(this.dateValueArray[0]);
             const endDate = new Date(this.dateValueArray[1]);
 
+            //check if startDate and Enddate is before the year 2000
+            if(startDate?.getFullYear() < 1800 || endDate?.getFullYear() < 1800){
+                this.errorMessage = this.$t('Please select a valid date.');
+                return;
+            }
+
             if (endDate < startDate) {
                 this.errorMessage = this.$t('The end date must be after the start date.');
                 this.hasError = true;

@@ -151,8 +151,8 @@
                                         </div>
                                         <IconChevronDown stroke-width="1.5" class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </ListboxButton>
-                                    <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                        <ListboxOption v-for="moneySourceGroup in this.moneySourceGroups"
+                                    <ListboxOptions class="w-[88%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                        <ListboxOption v-if="this.moneySourceGroups.length > 0" v-for="moneySourceGroup in this.moneySourceGroups"
                                                        class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
                                                        :key="moneySourceGroup.id"
                                                        :value="moneySourceGroup"
@@ -162,6 +162,9 @@
                                             </div>
                                             <IconCheck stroke-width="1.5" v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                                         </ListboxOption>
+                                        <div v-else class="text-secondary py-2 ml-2">
+                                            {{ $t('No funding source groups available')}}
+                                        </div>
                                     </ListboxOptions>
                                 </Listbox>
                             </div>

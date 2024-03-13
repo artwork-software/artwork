@@ -8,8 +8,6 @@ export default {
     emits: ['isDragged'],
     methods: {
         onDragStart(event) {
-            //this.$emit('isDragged', true);
-            //event.preventDefault();
             this.cell.type = 'rowMove';
             event.dataTransfer.setData('text/plain', JSON.stringify(this.cell));
         },

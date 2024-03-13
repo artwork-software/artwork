@@ -28,8 +28,6 @@ export default {
             event.preventDefault();
             const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
-            //console.log(data, this.cellId);
-
             if(data.type === 'globaleMove') {
                 Inertia.post(route('project.budget.move.sage', {
                     sageNotAssignedData: data.id,
@@ -49,7 +47,6 @@ export default {
             }
 
             if (data.type === 'rowMove'){
-                console.log(data);
                 if (data.sage_assigned_data.length > 1){
                     this.DataSelect = data;
                     this.showMultipleDataSelectModal = true;

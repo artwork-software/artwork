@@ -683,12 +683,9 @@ export default {
             return row.cells.some(cell => cell.column.type === 'sage' && cell.sage_assigned_data.length > 0);
         },
         async handleCellClick(cell, type = '', index = null, row = null) {
-
-
             if ((index === 0 || index === 1) && this.checkIfRowHasSageData(row)) {
                 return
             }
-
             if (type === 'comment') {
                 this.$emit('openCellDetailModal', cell, 'comment');
             } else if (type === 'moneysource') {

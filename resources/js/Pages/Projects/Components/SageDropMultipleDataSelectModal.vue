@@ -31,15 +31,19 @@ export default {
             return this.cellData.sage_assigned_data.some(data => data.checked);
         }
     },
+    unmounted() {
+        this.cellData.sage_assigned_data.forEach(data => data.checked = false)
+    },
+    mounted() {
+        this.cellData.sage_assigned_data.forEach(data => data.checked = false)
+    },
     methods: {
         closeModal(bool){
             this.$emit('close', bool)
         },
         moveRow(){
-
             // get all checked data form cellData.sage_assigned_data only the id
             let checkedData = this.cellData.sage_assigned_data.filter(data => data.checked).map(data => data.id);
-
             Inertia.post(route('project.budget.move.sage.row', {
                 columnCell: this.cell.id,
                 movedColumn: this.cellData.id

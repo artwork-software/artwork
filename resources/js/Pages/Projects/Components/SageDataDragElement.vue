@@ -15,10 +15,13 @@
         <div class="w-40 text-right">
             {{ this.formatBookingDataDate(sageData.buchungsdatum) }}
         </div>
+        <div v-if="type === 'global'" class="w-28 text-right">
+            {{ sageData.kst_traeger}}
+        </div>
         <div class=" ml-2 flex">
-            <IconTrash class="w-5 h-5 cursor-pointer hover:text-red-600"
-                       @click="this.$emit('removeSageNotAssignedData', sageData)"
-            />
+            <IconTrash class="w-5 h-5 cursor-pointer hover:text-red-600" @click="this.$emit('removeSageNotAssignedData', sageData)"/>
+        </div>
+        <div class="w-5 ml-2">
             <IconDragDrop class="w-5 h-5 cursor-grab ml-2" />
         </div>
     </div>
@@ -34,7 +37,7 @@ export default {
         TrashIcon
     },
     mixins: [IconLib],
-    props: ['sageData'],
+    props: ['sageData','type'],
     emits: ['removeSageNotAssignedData'],
     methods: {
         currencyFormattedValue(value) {

@@ -37,7 +37,7 @@
                 </div>
             </div>
         </div>
-        <div>
+        <div v-if="this.$can('can view and delete sage100-api-data')">
             <div class="flex items-center gap-x-1 cursor-pointer"
                  @click="this.globalGroupOpened = !this.globalGroupOpened">
                 <h4 class="font-bold">{{ $t('Global Sage data') }}</h4>
@@ -62,9 +62,12 @@
                         <div class="w-40 text-right">
                             {{ $t('Booking date') }}
                         </div>
+                        <div class="w-28 text-right">
+                            {{ $t('Cost bearer') }}
+                        </div>
                     </div>
                     <div v-for="(global) in sageNotAssigned.globalGroup">
-                        <SageDataDragElement :sageData="global"
+                        <SageDataDragElement :sageData="global" type="global"
                                              @remove-sage-not-assigned-data="this.removeSageNotAssignedData"
                         />
                     </div>
@@ -80,12 +83,14 @@
 <script>
 import {ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SageDataDragElement from "@/Pages/Projects/Components/SageDataDragElement.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "SageNotAssignedData",
     components: {SageDataDragElement, ChevronDownIcon, ChevronUpIcon},
     props: ['sageNotAssigned'],
     emits: ['removeSageNotAssignedData'],
+    mixins: [Permissions],
     data() {
         return {
             globalGroupOpened: false,

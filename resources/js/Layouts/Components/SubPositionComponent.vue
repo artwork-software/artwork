@@ -6,50 +6,78 @@
                     {{ subPosition.name }}
                 </div>
                 <button class="my-auto w-6 ml-3" @click="openCloseMainPosition">
-                    <IconChevronUp stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto" />
-                    <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto" />
+                    <IconChevronUp stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto"/>
+                    <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                 </button>
             </div>
             <div v-else class="flex w-full">
-                <input class="my-2 ml-1 xxsDark" type="text" v-model="subPosition.name" @focusout="updateSubPositionName(subPosition); subPosition.clicked = !subPosition.clicked">
+                <input class="my-2 ml-1 xxsDark" type="text" v-model="subPosition.name"
+                       @focusout="updateSubPositionName(subPosition); subPosition.clicked = !subPosition.clicked">
                 <button class="my-auto w-6 ml-3" @click="subPosition.closed = !subPosition.closed">
-                    <IconChevronUp stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto" />
-                    <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto" />
+                    <IconChevronUp stroke-width="1.5" v-if="!subPosition.closed" class="h-6 w-6 text-primary my-auto"/>
+                    <IconChevronDown stroke-width="1.5" v-else class="h-6 w-6 text-primary my-auto"/>
                 </button>
             </div>
             <div class="flex items-center justify-end">
                 <div class="flex flex-wrap w-8">
                     <div class="flex">
-                        <Menu as="div" class="my-auto relative" v-if="this.$can('edit budget templates') || !table.is_template">
+                        <Menu as="div" class="my-auto relative"
+                              v-if="this.$can('edit budget templates') || !table.is_template">
                             <div class="flex">
                                 <MenuButton class="flex bg-tagBg p-0.5 rounded-full">
-                                    <IconDotsVertical stroke-width="1.5" class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto" aria-hidden="true"/>
+                                    <IconDotsVertical stroke-width="1.5"
+                                                      class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                                      aria-hidden="true"/>
                                 </MenuButton>
                             </div>
-                            <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-                                <MenuItems class="z-50 origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                            <transition enter-active-class="transition ease-out duration-100"
+                                        enter-from-class="transform opacity-0 scale-95"
+                                        enter-to-class="transform opacity-100 scale-100"
+                                        leave-active-class="transition ease-in duration-75"
+                                        leave-from-class="transform opacity-100 scale-100"
+                                        leave-to-class="transform opacity-0 scale-95">
+                                <MenuItems
+                                    class="z-50 origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                     <div class="py-1">
-                                        <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
-                                            <span @click="fixSubPosition(subPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                        <MenuItem
+                                            v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
+                                            v-slot="{ active }"
+                                            v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
+                                            <span @click="fixSubPosition(subPosition.id)"
+                                                  :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconLock stroke-width="1.5"
+                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                          aria-hidden="true"/>
                                                 {{ $t('Commitment') }}
                                             </span>
                                         </MenuItem>
-                                        <MenuItem v-show="this.$can('can add and remove verified states') || this.hasAdminRole()" v-slot="{ active }" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
-                                            <span @click="unfixSubPosition(subPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                        <MenuItem
+                                            v-show="this.$can('can add and remove verified states') || this.hasAdminRole()"
+                                            v-slot="{ active }"
+                                            v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
+                                            <span @click="unfixSubPosition(subPosition.id)"
+                                                  :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconLockOpen stroke-width="1.5"
+                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                              aria-hidden="true"/>
                                                 {{ $t('Canceling a fixed term') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
-                                            <span @click="openDeleteSubPositionModal(subPosition)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconTrash stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                            <span @click="openDeleteSubPositionModal(subPosition)"
+                                                  :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconTrash stroke-width="1.5"
+                                                           class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                           aria-hidden="true"/>
                                                 {{ $t('Delete') }}
                                             </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
-                                            <a @click="duplicateSubpostion(subPosition.id)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <IconCopy stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                            <a @click="duplicateSubpostion(subPosition.id)"
+                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <IconCopy stroke-width="1.5"
+                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                          aria-hidden="true"/>
                                                 {{ $t('Duplicate') }}
                                             </a>
                                         </MenuItem>
@@ -63,8 +91,12 @@
         </div>
         <table class="w-full" v-if="!subPosition.closed">
             <tbody class="bg-secondaryHover w-full">
-            <div v-if="subPosition.sub_position_rows?.length > 0" v-for="(row,rowIndex) in subPosition.sub_position_rows">
-                <tr v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)" :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-buttonBlue ' : '']" @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null" class="bg-secondaryHover flex justify-between items-center border-2">
+            <div v-if="subPosition.sub_position_rows?.length > 0"
+                 v-for="(row,rowIndex) in subPosition.sub_position_rows">
+                <tr v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
+                    :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id && (this.$can('edit budget templates') || !table.is_template) ? 'border-buttonBlue ' : '']"
+                    @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
+                    class="bg-secondaryHover flex justify-between items-center border-2">
                     <div class="flex items-center">
                         <td v-for="(cell,index) in row.cells"
                             v-show="!(cell.column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
@@ -75,7 +107,8 @@
                                     class="my-4 h-6 flex items-center"
                                     v-if="!cell.clicked">
                                     <div class=" flex items-center">
-                                        <div :class="cell.value === '' ? 'w-6 cursor-pointer h-6' : ''" @click="this.handleCellClick(cell)">
+                                        <div :class="cell.value === '' ? 'w-6 cursor-pointer h-6' : ''"
+                                             @click="this.handleCellClick(cell)">
                                             {{ cell.value }}
 
                                         </div>
@@ -94,17 +127,27 @@
                                         <XIcon class="w-10 h-10 cursor-pointer"
                                                @click="this.handleBudgetManagementSearchCancel(cell)"
                                         />
-                                        <div v-if="cell.accountSearchResults" class="absolute z-20 top-10">
+                                        <div v-if="cell.accountSearchResults" class="absolute w-64 z-20 top-10">
                                             <div v-if="cell.accountSearchResults.length > 0"
                                                  v-for="account in cell.accountSearchResults"
                                                  class="flex flex-col"
                                             >
-                                                <div class="p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white"
-                                                      @click="this.handleBudgetManagementSearchSelect(index, cell, account.account_number, mainPosition.is_verified, subPosition.is_verified)">
-                                                    <div>{{account.account_number}}</div>
+                                                <div
+                                                    class="p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white"
+                                                    @click="this.handleBudgetManagementSearchSelect(index, cell, account.account_number, mainPosition.is_verified, subPosition.is_verified)">
+                                                    <div class="flex">
+                                                        <div class="w-1/2 text-left truncate">
+                                                            {{ account.account_number }}
+                                                        </div>
+                                                        <div class="w-1/2 text-right truncate">
+                                                            {{ account.title }}
+                                                        </div>
+                                                    </div>
+
                                                 </div>
                                             </div>
-                                            <div v-else class="text-nowrap p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white">
+                                            <div v-else
+                                                 class="text-nowrap p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white">
                                                 {{ $t('No Accounts found') }}
                                             </div>
                                         </div>
@@ -113,12 +156,21 @@
                                                  v-for="cost_unit in cell.costUnitSearchResults"
                                                  class="flex flex-col"
                                             >
-                                                <div class="p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white"
-                                                     @click="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, mainPosition.is_verified, subPosition.is_verified)">
+                                                <div
+                                                    class="p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white"
+                                                    @click="this.handleBudgetManagementSearchSelect(index, cell, cost_unit.cost_unit_number, mainPosition.is_verified, subPosition.is_verified)">
+                                                    <div class="flex">
+                                                        <div class="w-1/2 text-left truncate">
                                                     {{ cost_unit.cost_unit_number }}
+                                                        </div>
+                                                        <div class="w-1/2 text-right truncate">
+                                                            {{ cost_unit.title }}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div v-else class="text-nowrap p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white">
+                                            <div v-else
+                                                 class="text-nowrap p-3 cursor-pointer bg-primary hover:bg-buttonHover text-white">
                                                 {{ $t('No Cost Units found') }}
                                             </div>
                                         </div>
@@ -146,28 +198,47 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="flex items-center" :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'" v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
-                                    <input :ref="`cell-${cell.id}`" :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'" class="my-2 xsDark  appearance-none z-10" type="text" :disabled="!this.$can('edit budget templates') && table.is_template" v-model="cell.value" @keypress="isNumber($event, index)" @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
-                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
+                                <div class="flex items-center"
+                                     :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'"
+                                     v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
+                                    <input :ref="`cell-${cell.id}`"
+                                           :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
+                                           class="my-2 xsDark  appearance-none z-10" type="text"
+                                           :disabled="!this.$can('edit budget templates') && table.is_template"
+                                           v-model="cell.value" @keypress="isNumber($event, index)"
+                                           @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
+                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2"
+                                                    @click="openCellDetailModal(cell)"
+                                                    class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"/>
                                 </div>
-                                <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']" class="my-4 h-6 flex items-center justify-end" @click="cell.clicked = !cell.clicked && cell.column.is_locked" v-else>
-                                    <img v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)" src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg" class="h-6 w-6 mr-1"/>
-                                    <img v-if="cell.comments_count > 0 || cell.calculations_count > 0" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
-                                    <img v-if="cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
+                                <div
+                                    :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
+                                    class="my-4 h-6 flex items-center justify-end"
+                                    @click="cell.clicked = !cell.clicked && cell.column.is_locked" v-else>
+                                    <img
+                                        v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)"
+                                        src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg" class="h-6 w-6 mr-1"/>
+                                    <img v-if="cell.comments_count > 0 || cell.calculations_count > 0"
+                                         src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1"/>
+                                    <img v-if="cell.linked_money_source_id !== null"
+                                         src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1"/>
                                     {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
-                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked" @click="openCellDetailModal(cell)" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full" />
+                                    <IconCirclePlus stroke-width="1.5" v-if="index > 2 && cell.clicked"
+                                                    @click="openCellDetailModal(cell)"
+                                                    class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"/>
                                 </div>
                             </div>
                         </td>
                     </div>
                     <Menu as="div"
-                          :class="[hoveredRow === row.id ? '' : 'hidden', 'my-auto mr-0.5 relative']" v-if="this.$can('edit budget templates') || !table.is_template">
+                          :class="[hoveredRow === row.id ? '' : 'hidden', 'my-auto mr-0.5 relative']"
+                          v-if="this.$can('edit budget templates') || !table.is_template">
                         <div class="flex">
                             <MenuButton
                                 class="flex bg-tagBg p-0.5 rounded-full">
                                 <IconDotsVertical stroke-width="1.5"
-                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                    aria-hidden="true"/>
+                                                  class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                                  aria-hidden="true"/>
                             </MenuButton>
                         </div>
                         <transition
@@ -179,14 +250,16 @@
                             leave-to-class="transform opacity-0 scale-95">
                             <MenuItems
                                 class="z-20 origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <div class="py-1" >
+                                <div class="py-1">
                                     <MenuItem v-slot="{ active }"
                                               v-if="row.commented === false"
                                               @click="updateRowCommented(row.id, true)">
                                         <span
                                             @click=""
                                             :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconLock stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                            <IconLock stroke-width="1.5"
+                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                      aria-hidden="true"/>
                                             {{ $t('Exclude') }}
                                         </span>
                                     </MenuItem>
@@ -195,7 +268,9 @@
                                               @click="updateRowCommented(row.id, false)">
                                         <span
                                             :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconLockOpen stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                            <IconLockOpen stroke-width="1.5"
+                                                          class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                          aria-hidden="true"/>
                                             {{ $t('Include positions') }}
                                         </span>
                                     </MenuItem>
@@ -203,7 +278,9 @@
                                         <span
                                             @click="duplicateRow(row.id)"
                                             :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconCopy stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                            <IconCopy stroke-width="1.5"
+                                                      class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                      aria-hidden="true"/>
                                             {{ $t('Duplicate') }}
                                         </span>
                                     </MenuItem>
@@ -211,7 +288,9 @@
                                         <span
                                             @click="openDeleteRowModal(row)"
                                             :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <IconTrash  stroke-width="1.5" class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true"/>
+                                            <IconTrash stroke-width="1.5"
+                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                       aria-hidden="true"/>
                                             {{ $t('Delete') }}
                                         </span>
                                     </MenuItem>
@@ -220,36 +299,57 @@
                         </transition>
                     </Menu>
                 </tr>
-                <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id" :sub-position-id="subPosition.id"/>
-                <div @click="addRowToSubPosition(subPosition, row)" v-if="this.$can('edit budget templates') || !table.is_template" class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
+                <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id"
+                                     :sub-position-id="subPosition.id"/>
+                <div @click="addRowToSubPosition(subPosition, row)"
+                     v-if="this.$can('edit budget templates') || !table.is_template"
+                     class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
                     <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                         {{ $t('Row') }}
-                        <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
+                        <IconCirclePlus stroke-width="1.5"
+                                        class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full"/>
                     </div>
                 </div>
             </div>
-            <div v-else @click="addRowToSubPosition(subPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+            <div v-else @click="addRowToSubPosition(subPosition)"
+                 v-if="this.$can('edit budget templates') || !table.is_template"
+                 class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                 <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                     {{ $t('Row') }}
-                    <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full" />
+                    <IconCirclePlus stroke-width="1.5"
+                                    class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full"/>
                 </div>
             </div>
-            <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id" :sub-position-id="subPosition.id"/>
+            <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
+                                 :sub-position-id="subPosition.id"/>
             <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
                 <td class="w-28"></td>
                 <td class="w-28"></td>
                 <td class="w-72 my-2">SUM</td>
-                <td v-if="subPosition.sub_position_rows.length > 0" class="flex items-center w-48" v-for="column in columns.slice(3)" v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
-                    <div class="my-4 w-48 p-1" :class="subPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
+                <td v-if="subPosition.sub_position_rows.length > 0" class="flex items-center w-48"
+                    v-for="column in columns.slice(3)"
+                    v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
+                    <div class="my-4 w-48 p-1"
+                         :class="subPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
                         <div class="flex group relative justify-end items-center">
-                            <img @click="openSubPositionSumDetailModal(subPosition, column, 'comment')" v-if="subPosition.columnSums[column.id]?.hasComments && subPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                            <img @click="openSubPositionSumDetailModal(subPosition, column, 'comment')" v-else-if="subPosition.columnSums[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
-                            <img @click="openSubPositionSumDetailModal(subPosition, column, 'moneySource')" v-else-if="subPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
+                            <img @click="openSubPositionSumDetailModal(subPosition, column, 'comment')"
+                                 v-if="subPosition.columnSums[column.id]?.hasComments && subPosition.columnSums[column.id]?.hasMoneySource"
+                                 src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
+                                 class="h-6 w-6 mr-1 cursor-pointer"/>
+                            <img @click="openSubPositionSumDetailModal(subPosition, column, 'comment')"
+                                 v-else-if="subPosition.columnSums[column.id]?.hasComments"
+                                 src="/Svgs/IconSvgs/icon_linked_adjustments.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
+                            <img @click="openSubPositionSumDetailModal(subPosition, column, 'moneySource')"
+                                 v-else-if="subPosition.columnSums[column.id]?.hasMoneySource"
+                                 src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                             <span>
-                                {{subPosition.columnSums[column.id]?.sum.toLocaleString() }}
+                                {{ subPosition.columnSums[column.id]?.sum.toLocaleString() }}
                             </span>
-                            <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openSubPositionSumDetailModal(subPosition, column)" v-if="this.$can('edit budget templates') || !table.is_template">
-                                <IconCirclePlus stroke-width="1.5" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
+                            <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
+                                 @click="openSubPositionSumDetailModal(subPosition, column)"
+                                 v-if="this.$can('edit budget templates') || !table.is_template">
+                                <IconCirclePlus stroke-width="1.5"
+                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full "/>
                             </div>
                         </div>
                     </div>
@@ -257,10 +357,13 @@
             </tr>
             </tbody>
         </table>
-        <div @click="addSubPosition(mainPosition.id, subPosition)" v-if="this.$can('edit budget templates') || !table.is_template" class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+        <div @click="addSubPosition(mainPosition.id, subPosition)"
+             v-if="this.$can('edit budget templates') || !table.is_template"
+             class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
             <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                 {{ $t('Sub position') }}
-                <IconCirclePlus stroke-width="1.5" class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full" />
+                <IconCirclePlus stroke-width="1.5"
+                                class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"/>
             </div>
         </div>
     </th>
@@ -372,7 +475,7 @@ export default {
         this.checkIfSubPositionClosed()
     },
     updated() {
-        this.checkIfSubPositionClosed()
+        this.checkIfSubPositionClosed();
     },
     beforeUnmount() {
         // remove localeStorage key "closedSubPositions"
@@ -395,6 +498,20 @@ export default {
                 }
             );
         },
+        sortCells() {
+            // Iteriere über jedes Element in subPosition.sub_position_rows
+            this.subPosition.sub_position_rows.forEach(row => {
+                // Sortiere das cells Array des aktuellen Elements
+                row.cells.sort((a, b) => {
+                    // Wenn die column der aktuellen Zelle den Typ 'sage' hat, verschiebe sie ans Ende
+                    if (a.column.type === 'sage') return 1;
+                    // Wenn die column der zu vergleichenden Zelle den Typ 'sage' hat, behalte die aktuelle Zelle vor dieser
+                    if (b.column.type === 'sage') return -1;
+                    // Wenn keine der Zellen den Typ 'sage' hat, behalte die aktuelle Reihenfolge bei
+                    return 0;
+                });
+            });
+        },
         duplicateRow(rowId) {
             this.$inertia.post(
                 route(
@@ -409,22 +526,22 @@ export default {
                 }
             )
         },
-        checkIfSubPositionClosed(){
-            if(localStorage.getItem('closedSubPositions') !== null){
+        checkIfSubPositionClosed() {
+            if (localStorage.getItem('closedSubPositions') !== null) {
                 let closedSubPositions = JSON.parse(localStorage.getItem('closedSubPositions'))
                 // add fail over if closedMainPositions is not an array
-                if(!Array.isArray(closedSubPositions)){
+                if (!Array.isArray(closedSubPositions)) {
                     closedSubPositions = []
                 }
                 let index = closedSubPositions.findIndex((subPosition) => subPosition.id === this.subPosition.id)
-                if(index !== -1){
+                if (index !== -1) {
                     this.subPosition.closed = closedSubPositions[index].closed
                 }
             }
         },
-        openCloseMainPosition(){
+        openCloseMainPosition() {
             this.subPosition.closed = !this.subPosition.closed
-            if(localStorage.getItem('closedSubPositions') === null){
+            if (localStorage.getItem('closedSubPositions') === null) {
                 localStorage.setItem('closedSubPositions', JSON.stringify([{
                     id: this.subPosition.id,
                     closed: this.subPosition.closed
@@ -432,11 +549,11 @@ export default {
             } else {
                 let closedSubPositions = JSON.parse(localStorage.getItem('closedSubPositions'))
                 // add fail over if closedMainPositions is not an array
-                if(!Array.isArray(closedSubPositions)){
+                if (!Array.isArray(closedSubPositions)) {
                     closedSubPositions = []
                 }
                 let index = closedSubPositions.findIndex((subPosition) => subPosition.id === this.subPosition.id)
-                if(index === -1){
+                if (index === -1) {
                     closedSubPositions.push({
                         id: this.subPosition.id,
                         closed: this.subPosition.closed
@@ -507,7 +624,7 @@ export default {
                 preserveState: true
             })
         },
-        checkColumnsLocked(){
+        checkColumnsLocked() {
             return this.columns.some(column => column.is_locked === true);
         },
         openDeleteSubPositionModal(subPosition) {
@@ -534,7 +651,7 @@ export default {
             this.updateCellForm.column_id = cell.column.id;
             this.updateCellForm.value = cell.value;
             this.updateCellForm.sub_position_row_id = cell.sub_position_row_id;
-            this.updateCellForm.is_verified =  mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED';
+            this.updateCellForm.is_verified = mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED';
             //
             this.updateCellForm.patch(route('project.budget.cell.update'), {
                 preserveState: true,
@@ -552,11 +669,11 @@ export default {
         },
         openDeleteRowModal(row) {
             this.rowToDelete = row;
-            if(!this.checkColumnsLocked()){
+            if (!this.checkColumnsLocked()) {
                 this.confirmationTitle = this.$t('Delete row');
                 this.confirmationDescription = this.$t('Are you sure you want to delete this line? All links etc. will also be deleted.');
                 this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.rowToDelete, 'row')
-            }else{
+            } else {
                 this.confirmationTitle = this.$t('Delete line not possible');
                 this.confirmationDescription = this.$t('As long as a column is locked, you cannot delete a row.');
                 this.$emit('openErrorModal', this.confirmationTitle, this.confirmationDescription)
@@ -612,7 +729,7 @@ export default {
                     if (cell.column.color !== 'whiteColumn') {
                         cssString += ' xsDark '
                         cssString += cell.column.color;
-                        if(cell.column.is_locked) {
+                        if (cell.column.is_locked) {
                             cssString += ' lockedColumn '
                         }
                     } else {
@@ -623,7 +740,7 @@ export default {
                 if (cell.column.color !== 'whiteColumn') {
                     cssString += ' xsDark '
                     cssString += cell.column.color;
-                    if(cell.column.is_locked) {
+                    if (cell.column.is_locked) {
                         cssString += ' lockedColumn '
                     }
                 } else {
@@ -749,8 +866,9 @@ export default {
         -webkit-appearance: none;
         margin: 0;
     }
+
     input[type=number].appearance-none {
-        -moz-appearance:textfield;
+        -moz-appearance: textfield;
     }
 }
 

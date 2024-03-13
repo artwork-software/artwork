@@ -27,6 +27,7 @@ use App\Http\Resources\ProjectResources\ProjectShiftResource;
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\ServiceProviderDropResource;
 use App\Http\Resources\UserDropResource;
+use App\Http\Resources\UserResourceWithoutShifts;
 use App\Models\Category;
 use App\Models\ChecklistTemplate;
 use App\Models\CollectingSociety;
@@ -204,7 +205,7 @@ class ProjectController extends Controller
             'departments' => Auth::user()->can(PermissionNameEnum::TEAM_UPDATE->value) ?
                 Department::nameLike($query)->get() :
                 [],
-            'users' => User::nameOrLastNameLike($query)->get()
+            'users' => UserResourceWithoutShifts::collection(User::nameOrLastNameLike($query)->get())->resolve()
         ];
     }
 
@@ -2167,7 +2168,9 @@ class ProjectController extends Controller
             'budget' => [
                 'table' => $project->table()
                     ->with([
-                        'columns',
+                        'columns' => function ($query): void {
+                            $query->orderByRaw("CASE WHEN type = 'sage' THEN 1 ELSE 0 END");
+                        },
                         'mainPositions',
                         'mainPositions.verified',
                         'mainPositions.subPositions' => function ($query) {
@@ -2186,11 +2189,17 @@ class ProjectController extends Controller
                                     },
                                     'sageAssignedData.comments.user'
                                 ])
+                                // sage cells should be at the end
+                                ->join('columns', 'column_sub_position_row.column_id', '=', 'columns.id')
+                                ->orderByRaw("CASE WHEN columns.type = 'sage' THEN 1 ELSE 0 END,
+                                 column_sub_position_row.id ASC")
+                                ->select('column_sub_position_row.*')
                                 ->withCount('comments')
                                 ->withCount(['calculations' => function ($query) {
                                     // count if value is not 0
                                     return $query->where('value', '!=', 0);
                                 }]);
+
                         },
                         'mainPositions.subPositions.subPositionRows.cells.column',
                     ])

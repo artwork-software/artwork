@@ -3,7 +3,7 @@
         <template #content>
             <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
-                <XIcon @click="this.close"
+                <IconX @click="this.close"
                        class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
                        aria-hidden="true"/>
                 <div class="mt-8 headline1">
@@ -93,7 +93,7 @@
                                                 />
                                                 {{ comment.created_at }}
                                             </div>
-                                            <TrashIcon v-if="this.$page.props.user.id === comment.user.id"
+                                            <IconTrash v-if="this.$page.props.user.id === comment.user.id"
                                                        class="w-6 h-6 hover:text-red-600 cursor-pointer"
                                                        @click="this.removeComment(comment.id)"
                                             />

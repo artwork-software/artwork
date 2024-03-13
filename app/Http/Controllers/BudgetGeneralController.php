@@ -10,6 +10,7 @@ use Artwork\Modules\Sage100\Services\Sage100Service;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -51,8 +52,9 @@ class BudgetGeneralController extends Controller
     }
 
 
-    public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn): void
+    public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn, Request $request): void
     {
-        $this->sage100Service->moveSageDataRow($columnCell, $movedColumn);
+        //dd($request->all());
+        $this->sage100Service->moveSageDataRow($columnCell, $movedColumn, $request);
     }
 }

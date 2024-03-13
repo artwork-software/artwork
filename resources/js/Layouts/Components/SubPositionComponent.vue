@@ -108,7 +108,7 @@
                                     v-if="!cell.clicked">
                                     <div class=" flex items-center">
                                         <div :class="cell.value === '' ? 'w-6 cursor-pointer h-6' : ''"
-                                             @click="this.handleCellClick(cell)">
+                                             @click="this.handleCellClick(cell, '', index, row)">
                                             {{ cell.value }}
 
                                         </div>
@@ -183,15 +183,15 @@
                                     cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
                                     class="my-4 h-6 flex items-center" v-if="!cell.clicked">
                                     <div class=" flex items-center">
-                                        <div class="cursor-pointer" @click="handleCellClick(cell, 'comment')" v-if="cell.comments_count > 0">
+                                        <div class="cursor-pointer" @click="handleCellClick(cell, 'comment', index, row)" v-if="cell.comments_count > 0">
                                             <IconMessageDots class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
                                         </div>
-                                        <IconCalculator @click="handleCellClick(cell, 'calculation')" v-if="cell.calculations_count > 0" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        <IconLink @click="handleCellClick(cell, 'moneysource')" v-if="cell.linked_money_source_id !== null" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
-                                        <IconAdjustmentsAlt @click="handleCellClick(cell, 'sageAssignedData')" v-if="cell.sage_assigned_data.length >= 1" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md" :class="cell.sage_assigned_data.length === 1 ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color' : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'" stroke-width="1.5"/>
-                                        <div :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : cell.column.type === 'sage' ? 'cursor-pointer' : ''" @click="handleCellClick(cell)">
+                                        <IconCalculator @click="handleCellClick(cell, 'calculation', index, row)" v-if="cell.calculations_count > 0" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
+                                        <IconLink @click="handleCellClick(cell, 'moneysource', index, row)" v-if="cell.linked_money_source_id !== null" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
+                                        <IconAdjustmentsAlt @click="handleCellClick(cell, 'sageAssignedData', index, row)" v-if="cell.sage_assigned_data.length >= 1" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md" :class="cell.sage_assigned_data.length === 1 ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color' : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'" stroke-width="1.5"/>
+                                        <div :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : cell.column.type === 'sage' ? 'cursor-pointer' : ''" @click="handleCellClick(cell, '', index, row)">
                                             <div v-if="cell.column.type === 'sage'" class="flex items-center">
-                                                <SageDropCellElement :cell-id="cell.id" :value="index < 3 ? cell.value : Number(cell.value)?.toLocaleString()"/>
+                                                <SageDropCellElement :cell="cell" :value="index < 3 ? cell.value : Number(cell.value)?.toLocaleString()"/>
                                                 <SageDragCellElement :cell="cell" :value="index < 3 ? cell.value : Number(cell.value)?.toLocaleString()" class="hidden group-hover:block"/>
                                             </div>
                                             <span v-else>{{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}</span>
@@ -679,7 +679,16 @@ export default {
                 this.$emit('openErrorModal', this.confirmationTitle, this.confirmationDescription)
             }
         },
-        async handleCellClick(cell, type = '') {
+        checkIfRowHasSageData(row) {
+            return row.cells.some(cell => cell.column.type === 'sage' && cell.sage_assigned_data.length > 0);
+        },
+        async handleCellClick(cell, type = '', index = null, row = null) {
+
+
+            if ((index === 0 || index === 1) && this.checkIfRowHasSageData(row)) {
+                return
+            }
+
             if (type === 'comment') {
                 this.$emit('openCellDetailModal', cell, 'comment');
             } else if (type === 'moneysource') {

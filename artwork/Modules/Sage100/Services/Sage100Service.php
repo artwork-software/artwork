@@ -18,6 +18,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class Sage100Service
 {
@@ -81,7 +82,12 @@ class Sage100Service
                                     ->where('column_id', $sageColumn->id)
                                     ->where('sub_position_row_id', $foundKTO->sub_position_row_id)
                                     ->first();
-                                $sageColumnCell->update(['value' => $item['Buchungsbetrag']]);
+                                if (
+                                    $sageColumnCell->value === 0 || $sageColumnCell->value === null
+                                    || $sageColumnCell->value === '' || $sageColumnCell->value === '0'
+                                ) {
+                                    $sageColumnCell->update(['value' => $item['Buchungsbetrag']]);
+                                }
 
                                 $this->sageAssignedDataService->createOrUpdateFromSageApiData(
                                     $sageColumnCell->id,
@@ -112,7 +118,13 @@ class Sage100Service
                                 ->where('column_id', $sageColumn->id)
                                 ->where('sub_position_row_id', $foundKTO->sub_position_row_id)
                                 ->first();
-                            $sageColumnCell->update(['value' => $item['Buchungsbetrag']]);
+                            if (
+                                $sageColumnCell->value === 0 || $sageColumnCell->value === null
+                                || $sageColumnCell->value === '' || $sageColumnCell->value === '0'
+                            ) {
+                                $sageColumnCell->update(['value' => $item['Buchungsbetrag']]);
+                            }
+                            //$sageColumnCell->update(['value' => $item['Buchungsbetrag']]);
 
                             $this->sageAssignedDataService->createOrUpdateFromSageApiData(
                                 $sageColumnCell->id,
@@ -307,7 +319,7 @@ class Sage100Service
         return $sageColumn;
     }
 
-    public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn): void
+    public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn, Request $request): void
     {
         // get all Cells on the same row as $columnCell
         $columnCells = $columnCell->subPositionRow->cells()->get();
@@ -320,18 +332,52 @@ class Sage100Service
             $columnCells[0]->value === $movedColumnCells[0]->value &&
             $columnCells[1]->value === $movedColumnCells[1]->value
         ) {
-            // remove the value from $movedColumn->value and update the $columnCell->value with the new value
-            $currentCellValue = $movedColumn->value;
-            $movedColumn->update(['value' => 0]);
-            $columnCell->update(['value' => $columnCell->value + $currentCellValue]);
-
             // attach the $movedColumn->sageAssignedData to $columnCell
             $assignedData = $movedColumn->sageAssignedData;
             foreach ($assignedData as $data) {
-                $data->update(['column_cell_id' => $columnCell->id]);
+                if ($request->multiple === true) {
+                    // only move the data if the request is for multiple rows
+                    if (in_array($data->id, $request->selectedData)) {
+                        $data->update(['column_cell_id' => $columnCell->id]);
+
+                        // update the value of the $columnCell with the value of the $data->buchungsbetrag
+                        $this->addValueToColumnCell($columnCell, $data->buchungsbetrag);
+                        // subtract the value of the $data->buchungsbetrag from the $movedColumn
+                        $this->subtractValueFromColumnCell($movedColumn, $data->buchungsbetrag);
+                    }
+                } else {
+                    $data->update(['column_cell_id' => $columnCell->id]);
+
+                    // update the value of the $columnCell with the value of the $data->buchungsbetrag
+                    $this->addValueToColumnCell($columnCell, $data->buchungsbetrag);
+                    // subtract the value of the $data->buchungsbetrag from the $movedColumn
+                    $this->subtractValueFromColumnCell($movedColumn, $data->buchungsbetrag);
+                }
             }
 
-            // now remove the complete row of $movedColumn form the table
+            // if all cells in $movedColumnCells has the value "0" than delete the $movedColumn
+            // and all cells in the same row and delete the row itself
+            $this->deleteMovedColumnCells($movedColumn);
+        }
+    }
+
+    private function subtractValueFromColumnCell(ColumnCell $columnCell, float $value): void
+    {
+        $columnCell->update(['value' => $columnCell->value - $value]);
+    }
+
+    private function addValueToColumnCell(ColumnCell $columnCell, float $value): void
+    {
+        $columnCell->update(['value' => $columnCell->value + $value]);
+    }
+
+    private function deleteMovedColumnCells(ColumnCell $movedColumn): void
+    {
+        $movedColumnCells = $movedColumn->subPositionRow->cells()->get();
+        if ($movedColumnCells->slice(3)->every(fn (ColumnCell $cell) => $cell->value === "0")) {
+            $movedColumnCells->each(fn (ColumnCell $cell) => $cell->delete());
+            $movedColumn->delete();
+            $movedColumn->subPositionRow->delete();
         }
     }
 }

@@ -19,30 +19,26 @@ enum NotificationGroupEnum: string
     public function title(): string
     {
         return match ($this) {
-            self::EVENTS => "Raumbelegungen & Termine",
-            self::BUDGET => "Projektbudgets & Finanzierungsquellen",
-            self::ROOMS => "Räume & Raumbelegungsanfragen",
-            self::TASKS => "Aufgaben & Checklisten",
-            self::PROJECTS => "Projekte & Teams",
-            self::SHIFTS => "Schichtplanung",
+            self::EVENTS => "Room assignments & events",
+            self::BUDGET => "Project Budgets & Funding Sources",
+            self::ROOMS => "Rooms & Room Booking Requests",
+            self::TASKS => "Tasks & Checklists",
+            self::PROJECTS => "Projects & Teams",
+            self::SHIFTS => "Shift Planning",
         };
     }
 
+    // @codingStandardsIgnoreStart
     public function description(): string
     {
         return match ($this) {
-            self::EVENTS => "Erfahre ob deine Raumanfragen bestätigt oder abgelehnt wurden, es Änderungen an deinen" .
-                " Terminen gibt und mehr.",
-            self::BUDGET => "Erfahre welchen Stand deine Budgetkalkulation hat, welche Dokumente für dich freigegeben" .
-                " wurden, ob deine Finanzierungsquelle ins Minus gerutscht ist und mehr.",
-            self::ROOMS => "Erfahre ob es neue Belegungsanfragen für die von dir verwalteten Räume gibt. Lass’ dich" .
-                " außerdem an die Bearbeitung dringender Anfragen erinnern und mehr.",
-            self::TASKS => "Erfahre ob es neue Aufgaben für dich und dein Team gibt. Lass dich außerdem an die" .
-                " Erledigung dringender Aufgaben erinnern und mehr",
-            self::PROJECTS => "Erfahre ob es Änderungen an deinen Projekten gibt, du zu einem neuen Projekt oder Team" .
-                " hinzugefügt wurdest und mehr.",
-            self::SHIFTS => "Erfahre ob Schichten geändert wurden, es Konflikte in der Schichtplanung gab," .
-                " Mitarbeiter*innen ersetzt werden müssen und mehr.",
+            self::EVENTS => "Find out if your room requests have been confirmed or declined, if there are changes to your appointments, and more.",
+            self::BUDGET => "Learn the status of your budget calculations, which documents have been released for you, if your funding source has gone into deficit, and more.",
+            self::ROOMS => "Find out if there are new booking requests for the rooms you manage. Also, get reminders to process urgent requests, and more.",
+            self::TASKS => "Find out if there are new tasks for you and your team. Also, receive reminders to complete urgent tasks, and more.",
+            self::PROJECTS => "Find out if there are changes to your projects, if you have been added to a new project or team, and more.",
+            self::SHIFTS => "Find out if shifts have been changed, if there were conflicts in shift scheduling, if employees need to be replaced, and more.",
         };
     }
+    // @codingStandardsIgnoreEnd
 }

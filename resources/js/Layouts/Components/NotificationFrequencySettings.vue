@@ -20,8 +20,8 @@
                 </Switch>
 
                 <div class="ml-3 ">
-                    <h3 class="headline3 ">{{ groupTypes[groupType].title }}</h3>
-                    <p class="xsLight mt-3">{{ groupTypes[groupType].description }}</p>
+                    <h3 class="headline3 ">{{ $t(groupTypes[groupType].title) }}</h3>
+                    <p class="xsLight mt-3">{{ $t(groupTypes[groupType].description) }}</p>
                 </div>
             </div>
             <div v-if="!groupDisabled(settings)">
@@ -36,8 +36,8 @@
                         </Switch>
 
                         <div class="ml-3 flex-grow">
-                            <h3 class="headline3">{{ type.title }}</h3>
-                            <p class="xsLight mt-3">{{ type.description }}</p>
+                            <h3 class="headline3">{{ $t(type.title) }}</h3>
+                            <p class="xsLight mt-3">{{ $t(type.description) }}</p>
                         </div>
 
                         <Listbox as="div" class="flex relative">
@@ -45,7 +45,7 @@
                                 class="border w-36 p-2 border-gray-300 bg-white relative cursor-pointer focus:outline-none sm:text-sm">
                                 <div class="flex items-center my-auto justify-between">
                                         <span class="truncate font-bold">
-                                            {{ type.frequency_title }}
+                                            {{ $t(type.frequency_title) }}
                                         </span>
                                     <ChevronDownIcon
                                         class="h-4 w-4 text-primary float-right"
@@ -68,7 +68,7 @@
                                         >
                                             <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
                                                     <span :class="[frequency.value === type.frequency ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                         {{frequency.title}}
+                                                         {{$t(frequency.title)}}
                                                     </span>
                                                 <span :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                             <CheckIcon v-if="frequency.value === type.frequency" class="h-5 w-5 flex text-success" aria-hidden="true"/>

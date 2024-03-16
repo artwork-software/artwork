@@ -180,6 +180,7 @@ return [
         App\Providers\JetstreamServiceProvider::class,
         App\Providers\Sage100ServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
+        Artwork\Modules\Setup\SetupServiceProvider::class
     ],
 
     /*

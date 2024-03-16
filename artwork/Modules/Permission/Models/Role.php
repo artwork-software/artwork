@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Permission\Models;
 
-use Artwork\Core\Database\Models\InteractsWithDatabase;
+use Artwork\Core\Database\Models\CanSubstituteBaseModel;
 use Carbon\Carbon;
 use Spatie\Permission\Models\Role as SpatieRole;
 
@@ -14,7 +14,7 @@ use Spatie\Permission\Models\Role as SpatieRole;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  */
-class Role extends SpatieRole implements InteractsWithDatabase
+class Role extends SpatieRole implements CanSubstituteBaseModel
 {
 
 }

@@ -2,7 +2,7 @@
 
 namespace Artwork\Modules\Permission\Repositories;
 
-use Artwork\Core\Database\Models\InteractsWithDatabase;
+use Artwork\Core\Database\Models\CanSubstituteBaseModel;
 use Artwork\Core\Database\Models\Model;
 use Artwork\Core\Database\Models\Pivot;
 use Artwork\Core\Database\Repository\BaseRepository;

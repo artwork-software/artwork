@@ -3,7 +3,7 @@
 namespace Artwork\Core\Database\Models;
 
 // Exists to let models from third party interact with services/repositories
-interface InteractsWithDatabase
+interface CanSubstituteBaseModel
 {
     public function delete();
     public function forceDelete();

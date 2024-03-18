@@ -6,6 +6,7 @@ use DOMDocument;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ChangeEventTypeSvgToHexSeed extends Seeder
 {
@@ -16,7 +17,12 @@ class ChangeEventTypeSvgToHexSeed extends Seeder
     {
         $this->changeSvgToHex();
 
-        DB::statement('ALTER TABLE event_types DROP COLUMN svg_name');
+        // Überprüfen, ob die Spalte existiert, bevor sie gelöscht wird
+        if (Schema::hasColumn('event_types', 'svg_name')) {
+            Schema::table('event_types', function ($table): void {
+                $table->dropColumn('svg_name');
+            });
+        }
     }
 
 

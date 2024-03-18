@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Response;
 use Inertia\ResponseFactory;
-use Spatie\Permission\Models\Permission;
+use Artwork\Modules\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class InvitationController extends Controller

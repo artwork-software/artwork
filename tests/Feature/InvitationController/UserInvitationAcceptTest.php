@@ -9,7 +9,7 @@ use App\Models\User;
 use Artwork\Modules\Department\Models\Department;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
+use Artwork\Modules\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 

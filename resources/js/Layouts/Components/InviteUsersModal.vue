@@ -121,7 +121,7 @@
                     <div v-if="!this.form.roles.includes('artwork admin')">
                         <div v-on:click="showUserPermissions = !showUserPermissions">
                             <h2 class="flex headline6Light cursor-pointer mb-2">
-                                Nutzerrechte
+                                {{$t('User permissions')}}
                                 <IconChevronUp stroke-width="1.5" v-if="showUserPermissions"
                                                class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronUp>
                                 <IconChevronDown stroke-width="1.5" v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></IconChevronDown>
@@ -132,7 +132,7 @@
                             <div v-for="(group, groupName) in this.computedGroupedPermissions"
                                  v-show="group.shown"
                             >
-                                <h3 class="headline6Light mb-2 mt-6">{{ groupName }}</h3>
+                                <h3 class="headline6Light mb-2 mt-6">{{ $t(groupName) }}</h3>
                                 <div class="relative w-full flex items-center"
                                      v-for="(permission, index) in group.permissions"
                                      :key=index

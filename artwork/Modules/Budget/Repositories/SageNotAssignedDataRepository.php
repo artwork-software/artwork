@@ -12,4 +12,9 @@ class SageNotAssignedDataRepository extends BaseRepository
     {
         return SageNotAssignedData::onlyTrashed()->get();
     }
+
+    public function findBySageId(int $sageId): SageNotAssignedData|null
+    {
+        return SageNotAssignedData::where('sage_id', $sageId)->first();
+    }
 }

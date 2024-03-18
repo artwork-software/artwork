@@ -7,6 +7,7 @@ use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Repositories\SageNotAssignedDataRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Redirect;
 
 class SageNotAssignedDataService
 {
@@ -62,6 +63,11 @@ class SageNotAssignedDataService
         ]);
     }
 
+    public function findBySageId(int $sageId): SageNotAssignedData|null
+    {
+        return $this->sageNotAssignedDataRepository->findBySageId($sageId);
+    }
+
     public function delete(SageNotAssignedData $sageNotAssignedData): void
     {
         $this->sageNotAssignedDataRepository->delete($sageNotAssignedData);
@@ -82,7 +88,7 @@ class SageNotAssignedDataService
         return $this->sageNotAssignedDataRepository->restore($sageNotAssignedData);
     }
 
-    public function moveSageData(SageNotAssignedData $sageNotAssignedData, ColumnCell $columnCell): void
+    public function moveSageData(SageNotAssignedData $sageNotAssignedData, ColumnCell $columnCell)
     {
         // get all cells on the same row
         $columnCells = $columnCell->subPositionRow->cells()->get();
@@ -126,6 +132,11 @@ class SageNotAssignedDataService
                 floatval($sageNotAssignedData->buchungsbetrag)]);
 
             $this->forceDelete($sageNotAssignedData);
+        } else {
+            return Redirect::back()->with(
+                'error',
+                __('flash-messages.budget-drag-and-drop.error.drop')
+            );
         }
     }
 }

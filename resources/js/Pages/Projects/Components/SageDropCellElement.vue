@@ -71,7 +71,7 @@ export default {
     <div  @dragover="onDragOver" @drop="onDrop" @dragleave.prevent="onDragLeave">
         {{ value}}
     </div>
-    <SageDropMultipleDataSelectModal v-if="showMultipleDataSelectModal" @close="showMultipleDataSelectModal = false" :cell-data="DataSelect" :cell="cell"/>
+    <SageDropMultipleDataSelectModal v-if="showMultipleDataSelectModal" @close="showMultipleDataSelectModal = false" :cell-data="DataSelect" :cell="cell" type="dropOnValue"/>
 </template>
 
 <style scoped>

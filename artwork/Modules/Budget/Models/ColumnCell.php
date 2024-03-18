@@ -49,6 +49,10 @@ class ColumnCell extends Model
         'commented' => 'boolean'
     ];
 
+    protected $appends = [
+        'sage_value'
+    ];
+
     public function subPositionRow(): BelongsTo
     {
         return $this->belongsTo(
@@ -76,5 +80,13 @@ class ColumnCell extends Model
             'column_cell_id',
             'id'
         );
+    }
+
+    public function getSageValueAttribute(): ?string
+    {
+        if ($this->sageAssignedData->isNotEmpty()) {
+            return $this->sageAssignedData->sum('buchungsbetrag');
+        }
+        return null;
     }
 }

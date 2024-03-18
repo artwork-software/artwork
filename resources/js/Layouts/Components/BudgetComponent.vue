@@ -363,7 +363,8 @@
                                         <img @click="openBudgetSumDetailModal('COST', column, 'moneySource')" v-else-if="table.costSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <span>{{ this.getSumOfTable(0, column.id)?.toLocaleString()}}</span>
+                                        <span v-if="column.type !== 'sage'">{{ this.getSumOfTable(0, column.id)?.toLocaleString()}}</span>
+                                        <span v-else>{{ this.calculateSageColumnWithCellSageDataValue(0).toLocaleString() }}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('COST', column)">
                                             <IconCirclePlus class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
@@ -379,7 +380,12 @@
                                     v-for="column in table.columns.slice(3)"
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
-                                        {{ table.commentedCostSums[column.id]?.toLocaleString() }}
+                                        <span v-if="column.type !== 'sage'">
+                                            {{ table.commentedCostSums[column.id]?.toLocaleString() }}
+                                        </span>
+                                        <span v-else>
+                                                {{ this.calculateSageColumnWithCellSageDataCommented(0).toLocaleString() }}
+                                        </span>
                                     </div>
                                 </td>
                             </tr>
@@ -442,7 +448,8 @@
                                         <img @click="openBudgetSumDetailModal('EARNING', column, 'moneySource')" v-else-if="table.earningSumDetails[column.id]?.hasMoneySource"
                                              src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                              class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <span>{{ this.getSumOfTable(1, column.id)?.toLocaleString() }}</span>
+                                        <span v-if="column.type !== 'sage'">{{ this.getSumOfTable(1, column.id)?.toLocaleString() }}</span>
+                                        <span v-else>{{ this.calculateSageColumnWithCellSageDataValue(1).toLocaleString() }}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('EARNING', column)">
                                             <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
@@ -459,7 +466,12 @@
                                     v-for="column in table.columns.slice(3)"
                                     v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
                                     <div class="w-48 my-2 p-1">
-                                        {{ table.commentedEarningSums[column.id]?.toLocaleString() }}
+                                         <span v-if="column.type !== 'sage'">
+                                            {{ table.commentedEarningSums[column.id]?.toLocaleString() }}
+                                         </span>
+                                        <span v-else>
+                                            {{ calculateSageColumnWithCellSageDataCommented(1).toLocaleString() }}
+                                        </span>
                                     </div>
                                 </td>
                             </tr>
@@ -491,9 +503,13 @@
                     <td class="flex items-center w-48"
                         v-for="column in table.columns.slice(3)"
                         v-show="!(column.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)">
-                        <div class="w-48 my-2 p-1"
-                             :class="this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : ''">
-                            {{ (this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id)).toLocaleString() }}
+                        <div class="w-48 my-2 p-1" :class="[this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : '', this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0) < 0 ? 'text-red-500' : '']">
+                            <span v-if="column.type !== 'sage'">
+                                {{ (this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id)).toLocaleString() }}
+                            </span>
+                            <span v-else>
+                                {{ (this.calculateSageColumnWithCellSageDataValue(1) - this.calculateSageColumnWithCellSageDataValue(0)).toLocaleString() }}
+                            </span>
                         </div>
                     </td>
                 </tr>
@@ -678,6 +694,15 @@
                             @closed="this.showSageNotAssignedDataConfirmationModalHandler"
                             :description="$t('Do you really want to put the data set in the trash?', [this.sageNotAssignedDataToDelete.buchungstext])"
                             :titel="$t('Move to the trash')"
+
+
+    />
+
+    <error-component v-if="this.$page.props.flash.error"
+                     :titel="$t('An error has occurred')"
+                     :description="this.$page.props.flash.error"
+                     :confirm="$t('Close message')"
+                     @closed="this.$page.props.flash.error = null;"
     />
 </template>
 
@@ -857,6 +882,7 @@ export default {
     ],
     emits: ['changeProjectHeaderVisualisation'],
     computed: {
+
         tablesToShow: function () {
             let costTableArray = [];
             let earningTableArray = [];
@@ -1020,6 +1046,64 @@ export default {
                 return sum;
             }
 
+        },
+        calculateSageColumnWithCellSageDataCommented(tableType){
+            if (tableType === 0) {
+                // calculate the sum of all buchungsbetrag in the sage_assigned_data array for the cost table (main_position.type === 'BUDGET_TYPE_COST')
+                return this.table.main_positions.filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_COST').reduce((accumulator, mainPosition) => {
+                    return accumulator + mainPosition.sub_positions.reduce((accumulator, subPosition) => {
+                        return accumulator + subPosition.sub_position_rows.reduce((accumulator, subPositionRow) => {
+                            return accumulator + subPositionRow.cells.filter(cell => cell.column.type === 'sage' && cell.commented || cell.column.commented).reduce((accumulator, cell) => {
+                                return accumulator + cell.sage_assigned_data.reduce((accumulator, sageAssignedData) => {
+                                    return accumulator + sageAssignedData.buchungsbetrag;
+                                }, 0);
+                            }, 0);
+                        }, 0);
+                    }, 0);
+                }, 0);
+            } else {
+                // calculate the sum of all buchungsbetrag in the sage_assigned_data array for the earning table (main_position.type === 'BUDGET_TYPE_EARNING')
+                return this.table.main_positions.filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_EARNING').reduce((accumulator, mainPosition) => {
+                    return accumulator + mainPosition.sub_positions.reduce((accumulator, subPosition) => {
+                        return accumulator + subPosition.sub_position_rows.reduce((accumulator, subPositionRow) => {
+                            return accumulator + subPositionRow.cells.filter(cell => cell.column.type === 'sage' && cell.commented || cell.column.commented).reduce((accumulator, cell) => {
+                                return accumulator + cell.sage_assigned_data.reduce((accumulator, sageAssignedData) => {
+                                    return accumulator + sageAssignedData.buchungsbetrag;
+                                }, 0);
+                            }, 0);
+                        }, 0);
+                    }, 0);
+                }, 0);
+            }
+        },
+        calculateSageColumnWithCellSageDataValue(tableType) {
+            if (tableType === 0) {
+                // calculate the sum of all buchungsbetrag in the sage_assigned_data array for the cost table (main_position.type === 'BUDGET_TYPE_COST')
+                return this.table.main_positions.filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_COST').reduce((accumulator, mainPosition) => {
+                    return accumulator + mainPosition.sub_positions.reduce((accumulator, subPosition) => {
+                        return accumulator + subPosition.sub_position_rows.reduce((accumulator, subPositionRow) => {
+                            return accumulator + subPositionRow.cells.filter(cell => cell.column.type === 'sage' && !cell.commented && !cell.column.commented).reduce((accumulator, cell) => {
+                                return accumulator + cell.sage_assigned_data.reduce((accumulator, sageAssignedData) => {
+                                    return accumulator + sageAssignedData.buchungsbetrag;
+                                }, 0);
+                            }, 0);
+                        }, 0);
+                    }, 0);
+                }, 0);
+            } else {
+                // calculate the sum of all buchungsbetrag in the sage_assigned_data array for the earning table (main_position.type === 'BUDGET_TYPE_EARNING')
+                return this.table.main_positions.filter(mainPosition => mainPosition.type === 'BUDGET_TYPE_EARNING').reduce((accumulator, mainPosition) => {
+                    return accumulator + mainPosition.sub_positions.reduce((accumulator, subPosition) => {
+                        return accumulator + subPosition.sub_position_rows.reduce((accumulator, subPositionRow) => {
+                            return accumulator + subPositionRow.cells.filter(cell => cell.column.type === 'sage' && !cell.commented && !cell.column.commented).reduce((accumulator, cell) => {
+                                return accumulator + cell.sage_assigned_data.reduce((accumulator, sageAssignedData) => {
+                                    return accumulator + sageAssignedData.buchungsbetrag;
+                                }, 0);
+                            }, 0);
+                        }, 0);
+                    }, 0);
+                }, 0);
+            }
         },
         addUserToVerifiedUserArray(user) {
             this.submitVerifiedModalData.user = user.id;

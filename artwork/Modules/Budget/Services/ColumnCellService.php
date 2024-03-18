@@ -30,12 +30,11 @@ class ColumnCellService
         });
 
         if (!$columnCell->subPositionRow->subPosition->mainPosition->table->is_template) {
-            if (($sageAssignedData = $columnCell->sageAssignedData) instanceof SageAssignedData) {
+            foreach ($columnCell->sageAssignedData as $sageAssignedData) {
                 $this->sageNotAssignedDataService->createFromSageAssignedData(
                     $sageAssignedData,
                     $columnCell->subPositionRow->subPosition->mainPosition->table->project_id
                 );
-
                 $this->sageAssignedDataService->forceDelete($sageAssignedData);
             }
         }

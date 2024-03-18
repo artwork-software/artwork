@@ -126,7 +126,8 @@
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-if="mainPosition.columnSums[column.id]?.hasComments && mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_and_adjustments_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'comment')" v-else-if="mainPosition.columnSums[column.id]?.hasComments" src="/Svgs/IconSvgs/icon_linked_adjustments_white.svg" class="h-5 w-5 mr-1 cursor-pointer"/>
                         <img @click="openMainPositionSumDetailModal(mainPosition, column, 'moneySource')" v-else-if="mainPosition.columnSums[column.id]?.hasMoneySource" src="/Svgs/IconSvgs/icon_linked_money_source_white.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                        <span>{{mainPosition.columnSums[column.id]?.sum.toLocaleString() }}</span>
+                        <span v-if="column.type !== 'sage'">{{mainPosition.columnSums[column.id]?.sum.toLocaleString() }}</span>
+                        <span v-else>{{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}</span>
                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openMainPositionSumDetailModal(mainPosition, column)">
                             <IconCirclePlus stroke-width="1.5" class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
                         </div>
@@ -248,6 +249,29 @@ export default {
     beforeUnmount() {
         // remove localeStorage key "closedMainPositions"
         localStorage.removeItem('closedMainPositions')
+    },
+    computed: {
+        calculateSageColumnWithCellSageDataValue() {
+            // Returniert die Summe aller buchungsbetrag in den sage_assigned_data Arrays.
+            return this.mainPosition?.sub_positions?.reduce((acc, subPosition) => {
+                return acc + subPosition.sub_position_rows?.reduce((acc, row) => {
+                    return acc + row.cells?.reduce((acc, cell) => {
+                        // Prüft, ob die Zelle die definierten Bedingungen erfüllt.
+                        if (cell.column.type === 'sage' && !cell.commented && !cell.column.commented) {
+                            // Addiert den buchungsbetrag, wenn alle Bedingungen erfüllt sind.
+                            return acc + Number(cell.sage_assigned_data?.reduce((acc, data) => {
+                                // Stellt sicher, dass buchungsbetrag eine Zahl ist und fügt sie hinzu.
+                                const buchungsbetrag = Number(data.buchungsbetrag);
+                                // Überprüft, ob buchungsbetrag eine gültige Zahl ist, sonst wird 0 verwendet.
+                                return acc + (isNaN(buchungsbetrag) ? 0 : buchungsbetrag);
+                            }, 0) ?? 0);
+                        }
+                        return acc;
+                    }, 0) ?? 0;
+                }, 0) ?? 0;
+            }, 0) ?? 0;
+        }
+
     },
     methods: {
         checkIfMainPositionClosed(){

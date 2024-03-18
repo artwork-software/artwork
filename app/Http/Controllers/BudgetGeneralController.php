@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\Budget\Models\ColumnCell;
+use Artwork\Modules\Budget\Models\SageAssignedData;
+use Artwork\Modules\Budget\Models\SageNotAssignedData;
+use Artwork\Modules\Budget\Models\SubPosition;
+use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\BudgetColumnSetting\Http\Requests\UpdateBudgetColumnSettingRequest;
 use Artwork\Modules\BudgetColumnSetting\Models\BudgetColumnSetting;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
@@ -54,7 +58,33 @@ class BudgetGeneralController extends Controller
 
     public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn, Request $request): void
     {
-        //dd($request->all());
         $this->sage100Service->moveSageDataRow($columnCell, $movedColumn, $request);
+    }
+
+    public function moveSageDataRowToNewRow(
+        Request $request,
+        Table $table_id,
+        SubPosition $sub_position_id,
+        int $positionBefore,
+        ColumnCell $columnCell
+    ): void {
+        if ($request->multiple === false) {
+            $this->sage100Service->moveSingleSageDataRowToNewRow(
+                $request,
+                $table_id,
+                $sub_position_id,
+                $positionBefore,
+                $columnCell
+            );
+        } else {
+            $this->sage100Service->moveMultipleSageDataRowToNewRow(
+                $request,
+                $table_id,
+                $sub_position_id,
+                $positionBefore,
+                $columnCell
+            );
+        }
+        //$this->sage100Service->moveSageDataRowToNewRow($request);
     }
 }

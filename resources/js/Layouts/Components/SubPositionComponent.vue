@@ -91,6 +91,8 @@
         </div>
         <table class="w-full" v-if="!subPosition.closed">
             <tbody class="bg-secondaryHover w-full">
+            <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
+                                 :sub-position-id="subPosition.id"/>
             <div v-if="subPosition.sub_position_rows?.length > 0"
                  v-for="(row,rowIndex) in subPosition.sub_position_rows">
                 <tr v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
@@ -191,8 +193,8 @@
                                         <IconAdjustmentsAlt @click="handleCellClick(cell, 'sageAssignedData', index, row)" v-if="cell.sage_assigned_data.length >= 1" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md" :class="cell.sage_assigned_data.length === 1 ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color' : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'" stroke-width="1.5"/>
                                         <div :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : cell.column.type === 'sage' ? 'cursor-pointer' : ''" @click="handleCellClick(cell, '', index, row)">
                                             <div v-if="cell.column.type === 'sage'" class="flex items-center">
-                                                <SageDropCellElement :cell="cell" :value="index < 3 ? cell.value : Number(cell.value)?.toLocaleString()"/>
-                                                <SageDragCellElement :cell="cell" :value="index < 3 ? cell.value : Number(cell.value)?.toLocaleString()" class="hidden group-hover:block"/>
+                                                <SageDropCellElement :cell="cell" :value="index < 3 ? cell.sage_value : Number(cell.sage_value)?.toLocaleString()"/>
+                                                <SageDragCellElement :cell="cell" :value="index < 3 ? cell.sage_value : Number(cell.sage_value)?.toLocaleString()" class="hidden group-hover:block"/>
                                             </div>
                                             <span v-else>{{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}</span>
                                         </div>
@@ -299,8 +301,7 @@
                         </transition>
                     </Menu>
                 </tr>
-                <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id"
-                                     :sub-position-id="subPosition.id"/>
+                <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id" :sub-position-id="subPosition.id"/>
                 <div @click="addRowToSubPosition(subPosition, row)"
                      v-if="this.$can('edit budget templates') || !table.is_template"
                      class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
@@ -342,8 +343,11 @@
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'moneySource')"
                                  v-else-if="subPosition.columnSums[column.id]?.hasMoneySource"
                                  src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                            <span>
+                            <span v-if="column.type !== 'sage'">
                                 {{ subPosition.columnSums[column.id]?.sum.toLocaleString() }}
+                            </span>
+                            <span v-else>
+                                {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
                             </span>
                             <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                  @click="openSubPositionSumDetailModal(subPosition, column)"
@@ -469,6 +473,28 @@ export default {
                 is_verified: false
             }),
         }
+    },
+    computed: {
+        calculateSageColumnWithCellSageDataValue() {
+            // Stellen Sie sicher, dass sub_position_rows existiert und ein Array ist.
+            return this.subPosition?.sub_position_rows?.reduce((acc, row) => {
+                // Überprüfen Sie, ob cells existiert und ein Array ist.
+                return acc + row.cells?.reduce((acc, cell) => {
+                    // Überprüfen Sie, ob die Zelle die spezifizierten Bedingungen erfüllt.
+                    if (cell.column.type === 'sage' && !cell.commented && !cell.column.commented) {
+                        // Addieren Sie den buchungsbetrag, wenn alle Bedingungen erfüllt sind.
+                        return acc + Number(cell.sage_assigned_data?.reduce((acc, data) => {
+                            // Konvertieren Sie buchungsbetrag sicher in eine Zahl und addieren Sie sie.
+                            const buchungsbetrag = Number(data.buchungsbetrag);
+                            // Überprüfen Sie, ob buchungsbetrag eine gültige Zahl ist, sonst verwenden Sie 0.
+                            return acc + (isNaN(buchungsbetrag) ? 0 : buchungsbetrag);
+                        }, 0) ?? 0);
+                    }
+                    return acc;
+                }, 0) ?? 0;
+            }, 0) ?? 0;
+        }
+
     },
     mounted() {
         // check if main Position in localStorage in "closedSubPositions"

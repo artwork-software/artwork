@@ -21,7 +21,7 @@ export default {
             open: true,
         }
     },
-    props: ['cellData', 'cell'],
+    props: ['cellData', 'cell', 'type'],
     emits: ['close'],
     computed: {
         checkIfAllSelected(){
@@ -44,19 +44,42 @@ export default {
         moveRow(){
             // get all checked data form cellData.sage_assigned_data only the id
             let checkedData = this.cellData.sage_assigned_data.filter(data => data.checked).map(data => data.id);
-            Inertia.post(route('project.budget.move.sage.row', {
-                columnCell: this.cell.id,
-                movedColumn: this.cellData.id
-            }), {
-                multiple: true,
-                selectedData: checkedData
-            }, {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.closeModal(false);
-                },
-            });
+            if(this.type === 'dropOnValue') {
+                Inertia.post(route('project.budget.move.sage.row', {
+                    columnCell: this.cell.id,
+                    movedColumn: this.cellData.id
+                }), {
+                    multiple: true,
+                    selectedData: checkedData
+                }, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        this.closeModal(false);
+                    },
+                });
+            }
+
+            if(this.type === 'dropOnRow') {
+                Inertia.post(this.route('project.budget.move.sage.to.row', {
+                    table_id: this.cellData.table_id,
+                    sub_position_id: this.cellData.sub_position_id,
+                    positionBefore: this.cellData.positionBefore,
+                    columnCell: this.cellData.id
+                }), {
+                    multiple: true,
+                    selectedData: checkedData
+                }, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        this.closeModal(false);
+                    },
+                });
+            }
+
+            console.log(checkedData);
+            console.log(this.type)
         },
         currencyFormattedValue(value) {
             return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
@@ -101,8 +124,6 @@ export default {
                                 <p class="subpixel-antialiased">
                                     Welche Daten sollen verschoben werden?
                                 </p>
-
-
                                 <div>
                                     <div class="flex flex-row font-bold my-3">
                                         <div class="relative flex items-start w-4 mr-3">

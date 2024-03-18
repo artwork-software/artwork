@@ -18,7 +18,10 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redirect;
 
 class Sage100Service
 {
@@ -46,10 +49,28 @@ class Sage100Service
         $addedData = [];
 
         foreach (($data = $this->getData($count)) as $item) {
-            //if sageAssignedData is existing the dataset will not be imported again
-            if ($this->sageAssignedDataService->findBySageId($item['ID']) instanceof SageAssignedData) {
-                continue;
+            $sageAssignedData = $this->sageAssignedDataService->findBySageId($item['ID']);
+
+            if ($sageAssignedData instanceof SageAssignedData) {
+                if ($sageAssignedData?->sage_id === 2292 && $sageAssignedData->sage_id === '2292') {
+                    Log::log('info', 'sageAssignedData: ' . $sageAssignedData);
+                }
+                $sageAssignedData->update([
+                    'buchungsdatum' => Carbon::parse($item['Buchungsdatum']),
+                    'buchungsbetrag' => $item['Buchungsbetrag'],
+                    'belegnummer' => $item['Belegnummer'],
+                ]);
             }
+
+            $sageNotAssignedData = $this->sageNotAssignedDataService->findBySageId($item['ID']);
+            if ($sageNotAssignedData instanceof SageNotAssignedData) {
+                $sageNotAssignedData->update([
+                    'buchungsdatum' => Carbon::parse($item['Buchungsdatum']),
+                    'buchungsbetrag' => $item['Buchungsbetrag'],
+                    'belegnummer' => $item['Belegnummer'],
+                ]);
+            }
+
             $projects = $this->projectService->getProjectsByCostCenter($item['KstTraeger']);
             /** @var Project $project */
             foreach ($projects as $project) {
@@ -82,12 +103,6 @@ class Sage100Service
                                     ->where('column_id', $sageColumn->id)
                                     ->where('sub_position_row_id', $foundKTO->sub_position_row_id)
                                     ->first();
-                                if (
-                                    $sageColumnCell->value === 0 || $sageColumnCell->value === null
-                                    || $sageColumnCell->value === '' || $sageColumnCell->value === '0'
-                                ) {
-                                    $sageColumnCell->update(['value' => $item['Buchungsbetrag']]);
-                                }
 
                                 $this->sageAssignedDataService->createOrUpdateFromSageApiData(
                                     $sageColumnCell->id,
@@ -118,13 +133,6 @@ class Sage100Service
                                 ->where('column_id', $sageColumn->id)
                                 ->where('sub_position_row_id', $foundKTO->sub_position_row_id)
                                 ->first();
-                            if (
-                                $sageColumnCell->value === 0 || $sageColumnCell->value === null
-                                || $sageColumnCell->value === '' || $sageColumnCell->value === '0'
-                            ) {
-                                $sageColumnCell->update(['value' => $item['Buchungsbetrag']]);
-                            }
-                            //$sageColumnCell->update(['value' => $item['Buchungsbetrag']]);
 
                             $this->sageAssignedDataService->createOrUpdateFromSageApiData(
                                 $sageColumnCell->id,
@@ -250,7 +258,7 @@ class Sage100Service
         $sageColumnCell = ColumnCell::create([
             'column_id' => $sageColumn->id,
             'sub_position_row_id' => $subPositionRow->id,
-            'value' => $sageNotAssignedData->buchungsbetrag,
+            'value' => 0,
             'commented' => $subPositionRow->commented,
             'linked_money_source_id' => null,
             'linked_type' => null,
@@ -319,65 +327,211 @@ class Sage100Service
         return $sageColumn;
     }
 
-    public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn, Request $request): void
+    public function moveSageDataRow(ColumnCell $columnCell, ColumnCell $movedColumn, Request $request): RedirectResponse
     {
-        // get all Cells on the same row as $columnCell
         $columnCells = $columnCell->subPositionRow->cells()->get();
-
-        // get all Cells on the same row as $movedColumn
         $movedColumnCells = $movedColumn->subPositionRow->cells()->get();
-
-        // check if the first two cells in $columnCells and $movedColumnCells have the same value
         if (
             $columnCells[0]->value === $movedColumnCells[0]->value &&
             $columnCells[1]->value === $movedColumnCells[1]->value
         ) {
-            // attach the $movedColumn->sageAssignedData to $columnCell
             $assignedData = $movedColumn->sageAssignedData;
             foreach ($assignedData as $data) {
                 if ($request->multiple === true) {
-                    // only move the data if the request is for multiple rows
                     if (in_array($data->id, $request->selectedData)) {
                         $data->update(['column_cell_id' => $columnCell->id]);
-
-                        // update the value of the $columnCell with the value of the $data->buchungsbetrag
-                        $this->addValueToColumnCell($columnCell, $data->buchungsbetrag);
-                        // subtract the value of the $data->buchungsbetrag from the $movedColumn
-                        $this->subtractValueFromColumnCell($movedColumn, $data->buchungsbetrag);
                     }
                 } else {
                     $data->update(['column_cell_id' => $columnCell->id]);
-
-                    // update the value of the $columnCell with the value of the $data->buchungsbetrag
-                    $this->addValueToColumnCell($columnCell, $data->buchungsbetrag);
-                    // subtract the value of the $data->buchungsbetrag from the $movedColumn
-                    $this->subtractValueFromColumnCell($movedColumn, $data->buchungsbetrag);
                 }
             }
-
-            // if all cells in $movedColumnCells has the value "0" than delete the $movedColumn
-            // and all cells in the same row and delete the row itself
             $this->deleteMovedColumnCells($movedColumn);
+        } else {
+            return Redirect::back()->with(
+                'error',
+                __('flash-messages.budget-drag-and-drop.error.drop')
+            );
         }
-    }
-
-    private function subtractValueFromColumnCell(ColumnCell $columnCell, float $value): void
-    {
-        $columnCell->update(['value' => $columnCell->value - $value]);
-    }
-
-    private function addValueToColumnCell(ColumnCell $columnCell, float $value): void
-    {
-        $columnCell->update(['value' => $columnCell->value + $value]);
+        return Redirect::back();
     }
 
     private function deleteMovedColumnCells(ColumnCell $movedColumn): void
     {
         $movedColumnCells = $movedColumn->subPositionRow->cells()->get();
-        if ($movedColumnCells->slice(3)->every(fn (ColumnCell $cell) => $cell->value === "0")) {
-            $movedColumnCells->each(fn (ColumnCell $cell) => $cell->delete());
-            $movedColumn->delete();
+        $sageAssignedData = $movedColumn->sageAssignedData()->get();
+        if ($sageAssignedData->isEmpty()) {
+            $movedColumnCells->each(function ($cell) use ($movedColumn): void {
+                $cell->delete();
+            });
             $movedColumn->subPositionRow->delete();
         }
+    }
+
+    public function moveSingleSageDataRowToNewRow(
+        Request $request,
+        Table $table,
+        SubPosition $subPosition,
+        int $positionBefore,
+        ColumnCell $columnCell
+    ): void {
+        if ($request->multiple === false) {
+            $project = $table->project;
+            $columns = $table->columns()->whereNot('type', 'sage')->get();
+
+            /** @var Column|null $sageColumn */
+            $sageColumn = $table->columns->where('type', 'sage')->first();
+            if (!$sageColumn instanceof Column) {
+                $sageColumn = $this->createSageColumnForTable($project->table);
+            }
+
+            SubPositionRow::query()
+                ->where('sub_position_id', $subPosition->id)
+                ->where('position', '>', $positionBefore)
+                ->increment('position');
+
+            $subPositionRow = $subPosition->subPositionRows()->create([
+                'commented' => false,
+                'position' => $positionBefore + 1
+            ]);
+
+            $columns->each(function ($column, $index) use ($subPositionRow, $columnCell): void {
+                $sageAssignedData = $columnCell->sageAssignedData->first();
+                switch ($index) {
+                    case 0:
+                        $subPositionRow->cells()->create([
+                            'column_id' => $column->id,
+                            'sub_position_row_id' => $subPositionRow->id,
+                            'value' => $sageAssignedData->sa_kto,
+                            'verified_value' => null,
+                            'linked_money_source_id' => null,
+                        ]);
+                        break;
+                    case 1:
+                        $subPositionRow->cells()->create([
+                            'column_id' => $column->id,
+                            'sub_position_row_id' => $subPositionRow->id,
+                            'value' => $sageAssignedData->kst_stelle,
+                            'verified_value' => null,
+                            'linked_money_source_id' => null,
+                        ]);
+                        break;
+                    case 2:
+                        $subPositionRow->cells()->create([
+                            'column_id' => $column->id,
+                            'sub_position_row_id' => $subPositionRow->id,
+                            'value' => $sageAssignedData->buchungstext,
+                            'verified_value' => null,
+                            'linked_money_source_id' => null,
+                        ]);
+                        break;
+                    default:
+                        $subPositionRow->cells()->create([
+                            'column_id' => $column->id,
+                            'sub_position_row_id' => $subPositionRow->id,
+                            'value' => 0,
+                            'verified_value' => null,
+                            'linked_money_source_id' => null,
+                        ]);
+                }
+            });
+            $sageAssignedData = $columnCell->sageAssignedData->first();
+            $sageColumnCell = ColumnCell::create([
+                'column_id' => $sageColumn->id,
+                'sub_position_row_id' => $subPositionRow->id,
+                'value' => 0,
+                'commented' => $subPositionRow->commented,
+                'linked_money_source_id' => null,
+                'linked_type' => null,
+                'verified_value' => null,
+            ]);
+
+            $updated = $sageAssignedData->update(['column_cell_id' => $sageColumnCell->id]);
+            if ($updated) {
+                $this->deleteMovedColumnCells($columnCell);
+            }
+        }
+    }
+
+
+    public function moveMultipleSageDataRowToNewRow(
+        Request $request,
+        Table $table,
+        SubPosition $subPosition,
+        int $positionBefore,
+        ColumnCell $columnCell
+    ): void {
+        $project = $table->project;
+        $columns = $table->columns()->whereNot('type', 'sage')->get();
+
+        /** @var Column|null $sageColumn */
+        $sageColumn = $table->columns->where('type', 'sage')->first();
+        if (!$sageColumn instanceof Column) {
+            $sageColumn = $this->createSageColumnForTable($project->table);
+        }
+
+        SubPositionRow::query()
+            ->where('sub_position_id', $subPosition->id)
+            ->where('position', '>', $positionBefore)
+            ->increment('position');
+
+        $subPositionRow = $subPosition->subPositionRows()->create([
+            'commented' => false,
+            'position' => $positionBefore + 1
+        ]);
+
+        $columns->each(function ($column, $index) use ($subPositionRow, $columnCell, $request): void {
+            $sageAssignedDataFirst = $columnCell->sageAssignedData->whereIn('id', $request->selectedData)->first();
+            switch ($index) {
+                case 0:
+                    $subPositionRow->cells()->create([
+                        'column_id' => $column->id,
+                        'sub_position_row_id' => $subPositionRow->id,
+                        'value' => $sageAssignedDataFirst->sa_kto,
+                        'verified_value' => null,
+                        'linked_money_source_id' => null,
+                    ]);
+                    break;
+                case 1:
+                    $subPositionRow->cells()->create([
+                        'column_id' => $column->id,
+                        'sub_position_row_id' => $subPositionRow->id,
+                        'value' => $sageAssignedDataFirst->kst_stelle,
+                        'verified_value' => null,
+                        'linked_money_source_id' => null,
+                    ]);
+                    break;
+                case 2:
+                    $subPositionRow->cells()->create([
+                        'column_id' => $column->id,
+                        'sub_position_row_id' => $subPositionRow->id,
+                        'value' => $sageAssignedDataFirst->buchungstext,
+                        'verified_value' => null,
+                        'linked_money_source_id' => null,
+                    ]);
+                    break;
+                default:
+                    $subPositionRow->cells()->create([
+                        'column_id' => $column->id,
+                        'sub_position_row_id' => $subPositionRow->id,
+                        'value' => 0,
+                        'verified_value' => null,
+                        'linked_money_source_id' => null,
+                    ]);
+            }
+        });
+        $sageColumnCell = ColumnCell::create([
+            'column_id' => $sageColumn->id,
+            'sub_position_row_id' => $subPositionRow->id,
+            'value' => 0,
+            'commented' => $subPositionRow->commented,
+            'linked_money_source_id' => null,
+            'linked_type' => null,
+            'verified_value' => null,
+        ]);
+
+        foreach ($columnCell->sageAssignedData->whereIn('id', $request->selectedData) as $sageAssignedData) {
+            $sageAssignedData->update(['column_cell_id' => $sageColumnCell->id]);
+        }
+        $this->deleteMovedColumnCells($columnCell);
     }
 }

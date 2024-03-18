@@ -91,6 +91,8 @@
         </div>
         <table class="w-full" v-if="!subPosition.closed">
             <tbody class="bg-secondaryHover w-full">
+            <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="null" :tableId="table.id"
+                                 :sub-position-id="subPosition.id"/>
             <div v-if="subPosition.sub_position_rows?.length > 0"
                  v-for="(row,rowIndex) in subPosition.sub_position_rows">
                 <tr v-show="!(row.commented && this.$page.props.user.commented_budget_items_setting?.exclude === 1)"
@@ -108,16 +110,14 @@
                                     v-if="!cell.clicked">
                                     <div class=" flex items-center">
                                         <div :class="cell.value === '' ? 'w-6 cursor-pointer h-6' : ''"
-                                             @click="this.handleCellClick(cell)">
+                                             @click="this.handleCellClick(cell, '', index, row)">
                                             {{ cell.value }}
+
                                         </div>
                                     </div>
                                 </div>
-                                <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
-                                    class="my-4 h-6 flex items-center"
-                                    v-else
-                                >
+                                <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
+                                     class="my-4 h-6 flex items-center" v-else>
                                     <div class="flex flex-row items-center relative">
                                         <input v-model="cell.searchValue"
                                                :placeholder="cell.value"
@@ -179,37 +179,24 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <div v-else>
-                                <div
-                                    :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
-                                    class="my-4 h-6 flex items-center"
-                                    v-if="!cell.clicked">
+                            <div v-else class="group">
+                                <div :class="[row.commented || cell.commented || cell.column.commented ? 'xsLight' : '',
+                                    index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end',
+                                    cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
+                                    class="my-4 h-6 flex items-center" v-if="!cell.clicked">
                                     <div class=" flex items-center">
-                                        <div class="cursor-pointer" @click="handleCellClick(cell, 'comment')"
-                                             v-if="cell.comments_count > 0">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                 stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-1">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                      d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/>
-                                            </svg>
+                                        <div class="cursor-pointer" @click="handleCellClick(cell, 'comment', index, row)" v-if="cell.comments_count > 0">
+                                            <IconMessageDots class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
                                         </div>
-                                        <img @click="handleCellClick(cell, 'calculation')"
-                                             v-if="cell.calculations_count > 0"
-                                             src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
-                                             class="h-5 w-5 mr-1 cursor-pointer"/>
-                                        <img @click="handleCellClick(cell, 'moneysource')"
-                                             v-if="cell.linked_money_source_id !== null"
-                                             src="/Svgs/IconSvgs/icon_linked_money_source.svg"
-                                             class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <img @click="handleCellClick(cell, 'sageAssignedData')"
-                                             v-if="cell.sage_assigned_data"
-                                             src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
-                                             class="h-6 w-6 mr-1 cursor-pointer"/>
-                                        <div
-                                            :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : cell.column.type === 'sage' ? 'cursor-pointer' : ''"
-                                            @click="handleCellClick(cell)">
-                                            {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
+                                        <IconCalculator @click="handleCellClick(cell, 'calculation', index, row)" v-if="cell.calculations_count > 0" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
+                                        <IconLink @click="handleCellClick(cell, 'moneysource', index, row)" v-if="cell.linked_money_source_id !== null" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color"/>
+                                        <IconAdjustmentsAlt @click="handleCellClick(cell, 'sageAssignedData', index, row)" v-if="cell.sage_assigned_data.length >= 1" class="h-5 w-5 mr-1 cursor-pointer border-2 rounded-md" :class="cell.sage_assigned_data.length === 1 ? 'bg-artwork-icons-default-background text-artwork-icons-default-color border-artwork-icons-default-color' : 'bg-artwork-icons-darkGreen-background text-artwork-icons-darkGreen-color border-artwork-icons-darkGreen-color'" stroke-width="1.5"/>
+                                        <div :class="index < 3 && cell.value === '' ? 'w-6 cursor-pointer h-6' : cell.column.type === 'sage' ? 'cursor-pointer' : ''" @click="handleCellClick(cell, '', index, row)">
+                                            <div v-if="cell.column.type === 'sage'" class="flex items-center">
+                                                <SageDropCellElement :cell="cell" :value="index < 3 ? cell.sage_value : Number(cell.sage_value)?.toLocaleString()"/>
+                                                <SageDragCellElement :cell="cell" :value="index < 3 ? cell.sage_value : Number(cell.sage_value)?.toLocaleString()" class="hidden group-hover:block"/>
+                                            </div>
+                                            <span v-else>{{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -314,8 +301,7 @@
                         </transition>
                     </Menu>
                 </tr>
-                <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id"
-                                     :sub-position-id="subPosition.id"/>
+                <SageDataDropElement v-if="$page.props.sageApiEnabled" :row="row" :tableId="table.id" :sub-position-id="subPosition.id"/>
                 <div @click="addRowToSubPosition(subPosition, row)"
                      v-if="this.$can('edit budget templates') || !table.is_template"
                      class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-1 border-silverGray hover:border-t-2 hover:border-buttonBlue">
@@ -357,8 +343,11 @@
                             <img @click="openSubPositionSumDetailModal(subPosition, column, 'moneySource')"
                                  v-else-if="subPosition.columnSums[column.id]?.hasMoneySource"
                                  src="/Svgs/IconSvgs/icon_linked_money_source.svg" class="h-6 w-6 mr-1 cursor-pointer"/>
-                            <span>
+                            <span v-if="column.type !== 'sage'">
                                 {{ subPosition.columnSums[column.id]?.sum.toLocaleString() }}
+                            </span>
+                            <span v-else>
+                                {{ calculateSageColumnWithCellSageDataValue.toLocaleString() }}
                             </span>
                             <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                  @click="openSubPositionSumDetailModal(subPosition, column)"
@@ -400,11 +389,15 @@ import {nextTick} from "vue";
 import Permissions from "@/mixins/Permissions.vue";
 import SageDataDropElement from "@/Pages/Projects/Components/SageDataDropElement.vue";
 import IconLib from "@/mixins/IconLib.vue";
+import SageDropCellElement from "@/Pages/Projects/Components/SageDropCellElement.vue";
+import SageDragCellElement from "@/Pages/Projects/Components/SageDragCellElement.vue";
 
 export default {
     mixins: [Permissions, IconLib],
     name: "SubPositionComponent",
     components: {
+        SageDragCellElement,
+        SageDropCellElement,
         SageDataDropElement,
         PlusCircleIcon,
         ChevronUpIcon,
@@ -480,6 +473,28 @@ export default {
                 is_verified: false
             }),
         }
+    },
+    computed: {
+        calculateSageColumnWithCellSageDataValue() {
+            // Stellen Sie sicher, dass sub_position_rows existiert und ein Array ist.
+            return this.subPosition?.sub_position_rows?.reduce((acc, row) => {
+                // Überprüfen Sie, ob cells existiert und ein Array ist.
+                return acc + row.cells?.reduce((acc, cell) => {
+                    // Überprüfen Sie, ob die Zelle die spezifizierten Bedingungen erfüllt.
+                    if (cell.column.type === 'sage' && !cell.commented && !cell.column.commented) {
+                        // Addieren Sie den buchungsbetrag, wenn alle Bedingungen erfüllt sind.
+                        return acc + Number(cell.sage_assigned_data?.reduce((acc, data) => {
+                            // Konvertieren Sie buchungsbetrag sicher in eine Zahl und addieren Sie sie.
+                            const buchungsbetrag = Number(data.buchungsbetrag);
+                            // Überprüfen Sie, ob buchungsbetrag eine gültige Zahl ist, sonst verwenden Sie 0.
+                            return acc + (isNaN(buchungsbetrag) ? 0 : buchungsbetrag);
+                        }, 0) ?? 0);
+                    }
+                    return acc;
+                }, 0) ?? 0;
+            }, 0) ?? 0;
+        }
+
     },
     mounted() {
         // check if main Position in localStorage in "closedSubPositions"
@@ -690,7 +705,13 @@ export default {
                 this.$emit('openErrorModal', this.confirmationTitle, this.confirmationDescription)
             }
         },
-        async handleCellClick(cell, type = '') {
+        checkIfRowHasSageData(row) {
+            return row.cells.some(cell => cell.column.type === 'sage' && cell.sage_assigned_data.length > 0);
+        },
+        async handleCellClick(cell, type = '', index = null, row = null) {
+            if ((index === 0 || index === 1) && this.checkIfRowHasSageData(row)) {
+                return
+            }
             if (type === 'comment') {
                 this.$emit('openCellDetailModal', cell, 'comment');
             } else if (type === 'moneysource') {

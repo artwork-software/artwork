@@ -628,6 +628,30 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::post('/drop/sage', [ProjectController::class, 'dropSageData'])
                 ->name('project.budget.drop.sage');
 
+            // move sage data on cell
+            Route::post(
+                '/move/sage/{sageNotAssignedData}/{columnCell}',
+                [SageNotAssignedDataController::class, 'moveSageData']
+            )->name('project.budget.move.sage');
+
+            // project.budget.move.sage.row
+            Route::post(
+                '/move/sage/row/{columnCell}/{movedColumn}',
+                [BudgetGeneralController::class, 'moveSageDataRow']
+            )->name('project.budget.move.sage.row');
+
+            // project.budget.move.sage.row
+            /*
+             * table_id: this.tableId,
+                        sub_position_id: this.subPositionId,
+                        positionBefore: this.row ? this.row.position : -1,
+                        sage_data_id: data.id,
+             */
+            Route::post(
+                '/move/sage/row/to/row/{table_id}/{sub_position_id}/{positionBefore}/{columnCell}',
+                [BudgetGeneralController::class, 'moveSageDataRowToNewRow']
+            )->name('project.budget.move.sage.to.row');
+
             Route::post('/cell/{columnCell}/comment/add', [CellCommentsController::class, 'store'])
                 ->name('project.budget.cell.comment.store');
             Route::post('/row/{row}/comment/add', [RowCommentController::class, 'store'])

@@ -2199,7 +2199,6 @@ class ProjectController extends Controller
                                     // count if value is not 0
                                     return $query->where('value', '!=', 0);
                                 }]);
-
                         },
                         'mainPositions.subPositions.subPositionRows.cells.column',
                     ])

@@ -73,5 +73,19 @@ return [
                 'delete' => 'Kostenstelle konnte nicht gelöscht werden, bitte erneut versuchen.'
             ]
         ]
-    ]
+    ],
+    'budget-drag-and-drop' => [
+        'success' => [
+            'drop' => 'Budget erfolgreich verschoben.',
+            'restore' => 'Budget erfolgreich wiederhergestellt.',
+            'delete' => 'Budget erfolgreich gelöscht.',
+            'force-delete' => 'Budget erfolgreich endgültig gelöscht.'
+        ],
+        'error' => [
+            'update' => 'Budget konnte nicht aktualisiert werden, bitte versuche es erneut.',
+            'drop' => 'Budget konnte nicht verschoben werden, bitte versuche es erneut. Wert aus Spalte 1 oder Spalte 2 stimmen nicht überein.',
+            'restore' => 'Budget konnte nicht wiederhergestellt werden, bitte versuche es erneut.',
+            'delete' => 'Budget konnte nicht gelöscht werden, bitte versuche es erneut.',
+        ]
+    ],
 ];

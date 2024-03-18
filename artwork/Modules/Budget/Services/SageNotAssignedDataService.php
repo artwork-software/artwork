@@ -2,10 +2,12 @@
 
 namespace Artwork\Modules\Budget\Services;
 
+use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Repositories\SageNotAssignedDataRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Redirect;
 
 class SageNotAssignedDataService
 {
@@ -61,6 +63,11 @@ class SageNotAssignedDataService
         ]);
     }
 
+    public function findBySageId(int $sageId): SageNotAssignedData|null
+    {
+        return $this->sageNotAssignedDataRepository->findBySageId($sageId);
+    }
+
     public function delete(SageNotAssignedData $sageNotAssignedData): void
     {
         $this->sageNotAssignedDataRepository->delete($sageNotAssignedData);
@@ -79,5 +86,57 @@ class SageNotAssignedDataService
     public function restore(SageNotAssignedData $sageNotAssignedData): bool
     {
         return $this->sageNotAssignedDataRepository->restore($sageNotAssignedData);
+    }
+
+    public function moveSageData(SageNotAssignedData $sageNotAssignedData, ColumnCell $columnCell)
+    {
+        // get all cells on the same row
+        $columnCells = $columnCell->subPositionRow->cells()->get();
+
+        // check if any cell in $columnCells has a value with the same
+        // $sageNotAssignedData->sa_kto as $columnCell->value in the first three columns
+
+        $cellWithSameSaKto = $columnCells->first(
+            fn (ColumnCell $cell) => $cell->value === $sageNotAssignedData->sa_kto
+        );
+
+        // check if any cell in $columnCells has a value with the same
+        // $sageNotAssignedData->kst_stelle as $columnCell->value
+        $cellWithSameKstStelle = $columnCells->first(
+            fn (ColumnCell $cell) => $cell->value === $sageNotAssignedData->kst_stelle
+        );
+
+        // now we can check if $cellWithSameSaKto and $cellWithSameKstStelle are not null
+        // and if they are not null we can check if they are not the same cell
+        if ($cellWithSameSaKto && $cellWithSameKstStelle) {
+            // create a new SageAssignedData with the values from $sageNotAssignedData
+            // and the values from $cellWithSameSaKto and $cellWithSameKstStelle
+
+            // now bind the $sageAssignedData to $columnCell
+            $columnCell->sageAssignedData()->create([
+                'sage_id' => $sageNotAssignedData->sage_id,
+                'tan' => $sageNotAssignedData->tan,
+                'kreditor' => $sageNotAssignedData->kreditor,
+                'buchungstext' => $sageNotAssignedData->buchungstext,
+                'buchungsbetrag' => $sageNotAssignedData->buchungsbetrag,
+                'belegnummer' => $sageNotAssignedData->belegnummer,
+                'belegdatum' => $sageNotAssignedData->belegdatum,
+                'sa_kto' => $sageNotAssignedData->sa_kto,
+                'kst_traeger' => $sageNotAssignedData->kst_traeger,
+                'kst_stelle' => $sageNotAssignedData->kst_stelle,
+                'buchungsdatum' => $sageNotAssignedData->buchungsdatum,
+            ]);
+
+            $currentCellValue = $columnCell->value;
+            $columnCell->update(['value' => floatval($currentCellValue) +
+                floatval($sageNotAssignedData->buchungsbetrag)]);
+
+            $this->forceDelete($sageNotAssignedData);
+        } else {
+            return Redirect::back()->with(
+                'error',
+                __('flash-messages.budget-drag-and-drop.error.drop')
+            );
+        }
     }
 }

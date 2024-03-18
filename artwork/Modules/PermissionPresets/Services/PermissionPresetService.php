@@ -8,7 +8,7 @@ use Artwork\Modules\PermissionPresets\Http\Requests\UpdatePermissionPresetReques
 use Artwork\Modules\PermissionPresets\Models\PermissionPreset;
 use Artwork\Modules\PermissionPresets\Repositories\PermissionPresetRepository;
 use Illuminate\Database\Eloquent\Collection;
-use Spatie\Permission\Models\Permission;
+use Artwork\Modules\Permission\Models\Permission;
 use Throwable;
 
 class PermissionPresetService

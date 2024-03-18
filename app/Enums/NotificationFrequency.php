@@ -12,10 +12,10 @@ enum NotificationFrequency: string
     public function title(): string
     {
         return match ($this) {
-            self::IMMEDIATELY => "Sofort",
-            self::DAILY => "Täglich",
-            self::WEEKLY_TWICE => "2x Wöchentlich",
-            self::WEEKLY_ONCE => "1x Wöchentlich",
+            self::IMMEDIATELY => "Immediately",
+            self::DAILY => "Daily",
+            self::WEEKLY_TWICE => "Twice a week",
+            self::WEEKLY_ONCE => "Once a week",
         };
     }
 }

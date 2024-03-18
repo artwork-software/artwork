@@ -36,7 +36,7 @@ use Inertia\Response;
 use Inertia\ResponseFactory;
 use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Fortify;
-use Spatie\Permission\Models\Permission;
+use Artwork\Modules\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller

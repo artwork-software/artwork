@@ -20,8 +20,8 @@
                 </Switch>
 
                 <div class="ml-3 ">
-                    <h3 class="headline3 ">{{ groupTypes[groupType].title }}</h3>
-                    <p class="xsLight mt-3">{{ groupTypes[groupType].description }}</p>
+                    <h3 class="headline3 ">{{ $t(groupTypes[groupType].title) }}</h3>
+                    <p class="xsLight mt-3">{{ $t(groupTypes[groupType].description) }}</p>
                 </div>
             </div>
             <div v-if="!groupDisabled(settings)">
@@ -36,8 +36,8 @@
                         </Switch>
 
                         <div class="ml-3 flex-grow">
-                            <h3 class="headline3">{{ type.title }}</h3>
-                            <p class="xsLight mt-3">{{ type.description }}</p>
+                            <h3 class="headline3">{{ $t(type.title) }}</h3>
+                            <p class="xsLight mt-3">{{ $t(type.description) }}</p>
                         </div>
 
 

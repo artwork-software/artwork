@@ -29,7 +29,7 @@
                         <div class="ml-3 text-sm">
                             <label for="roles"
                                    :class="[userForm.roles.indexOf(role.name) > -1 ? 'xsDark' : 'xsLight']">{{
-                                    role.name_de
+                                    $t(role.translation_key)
                                 }}</label>
                         </div>
                     </div>
@@ -39,14 +39,8 @@
                                                    aria-hidden="true"/>
                         </div>
                         <div :id="role.name" role="tooltip"
-                             v-if="role.name_de === 'Adminrechte'"
                              class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
-                            {{ $t('Administrators have read and write access to the entire system No further settings are required')}}
-                            <div class="tooltip-arrow" data-popper-arrow></div>
-                        </div>
-                        <div :id="role.name" role="tooltip" v-else
-                             class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
-                            Hier fehlt noch Info Text
+                            {{ $t(role.tooltipText)}}
                             <div class="tooltip-arrow" data-popper-arrow></div>
                         </div>
                     </div>
@@ -62,7 +56,7 @@
                     <div
                         class="uppercase my-3 text-xs columnSubName flex items-center cursor-pointer"
                         @click="group.show = typeof group.show === 'undefined' ? false : !group.show">
-                        {{ groupName }}
+                        {{ $t(groupName) }}
                         <div class="flex items-center ml-2">
                             <SvgCollection svg-name="arrowUp"
                                            v-if="typeof group.show === 'undefined' ? true : group.show"
@@ -86,7 +80,7 @@
 
                             <div class="ml-3 text-sm">
                                 <label for="permissions"
-                                       :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'xsDark' : 'xsLight']">{{ permission.name_de }}</label>
+                                       :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'xsDark' : 'xsLight']">{{ $t(permission.translation_key) }}</label>
                             </div>
                         </div>
                         <div class="justify-end">
@@ -96,7 +90,7 @@
                             </div>
                             <div :id="permission.name" role="tooltip"
                                  class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
-                                {{ permission.tooltipText }}
+                                {{ $t(permission.tooltipKey) }}
                                 <div class="tooltip-arrow" data-popper-arrow></div>
                             </div>
                         </div>

@@ -8,7 +8,7 @@
                     </div>
                     <div :id="'tooltip' + id" role="tooltip" class="w-60 hidden z-30 -ml-60 -mt-12 absolute transition duration-150 ease-in-out left-0 ml-8 shadow-lg p-4 rounded text-secondary bg-primary">
                         <div role="tooltip" class="z-30 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md">
-                            {{tooltipText}}
+                            {{$t(tooltipText)}}
                             <div class="tooltip-arrow" data-popper-arrow></div>
                         </div>
                     </div>

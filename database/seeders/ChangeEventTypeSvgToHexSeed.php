@@ -24,7 +24,9 @@ class ChangeEventTypeSvgToHexSeed extends Seeder
     {
         $eventTypes = DB::table('event_types')->get();
         foreach ($eventTypes as $eventType) {
-            $hex = $this->getHexFromSvg($eventType?->svg_name);
+            // Überprüfen, ob svg_name vorhanden ist, andernfalls einen leeren String verwenden
+            $svgName = property_exists($eventType, 'svg_name') ? $eventType->svg_name : '';
+            $hex = $this->getHexFromSvg($svgName);
             DB::table('event_types')
                 ->where('id', $eventType->id)
                 ->update(['hex_code' => $hex]);
@@ -35,7 +37,8 @@ class ChangeEventTypeSvgToHexSeed extends Seeder
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     private function getHexFromSvg(string $svg): string
     {
-        if ($svg === null) {
+        // Wenn $svg leer ist, frühzeitig zurückkehren
+        if (empty($svg)) {
             return '';
         }
         $svgName = '';

@@ -105,6 +105,9 @@ Route::get('/reset-password', [UserController::class, 'resetPassword'])->name('r
 
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
+
+
+
     // TOOL SETTING ROUTE
     Route::group(['prefix' => 'tool'], function (): void {
         Route::get('/branding', [ToolSettingsBrandingController::class, 'index'])
@@ -387,6 +390,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/areas/{id}/force', [AreaController::class, 'forceDelete'])->name('areas.force');
     Route::patch('/areas/{id}/restore', [AreaController::class, 'restore'])->name('areas.restore');
 
+    Route::get('/rooms/move', [RoomController::class, 'getMoveRooms'])->name('rooms.move');
+    Route::post('/rooms/order/new', [RoomController::class, 'updateOrderNew'])->name('rooms.order.new');
+
     //Rooms
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
     Route::get('/trashedRooms', [RoomController::class, 'getTrashed'])->name('rooms.trashed');
@@ -394,10 +400,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::post('/rooms/{room}/duplicate', [RoomController::class, 'duplicate'])->name('rooms.duplicate');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])
         ->name('rooms.show')->middleware(CanViewRoom::class);
-    ;
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
     Route::put('/rooms/order', [RoomController::class, 'updateOrder']);
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
+
+
 
     //Trash
     Route::delete('/rooms/{id}/force', [RoomController::class, 'forceDelete'])->name('rooms.force');

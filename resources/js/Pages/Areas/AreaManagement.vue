@@ -1,6 +1,7 @@
 <template>
     <app-layout>
         <div class="">
+
             <div class="max-w-screen-2xl mb-40 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
@@ -10,8 +11,8 @@
                                 <div class="xsLight flex mt-4 w-full">
                                     {{ $t('Create areas and rooms and assign side rooms to individual rooms. Also define global properties for rooms.')}}
                                 </div>
-
-                                <h2 class="mt-10 headline2 w-full">{{ $t('Room properties')}}</h2>
+                                <Tabs />
+                                <h2 class="headline2 w-full">{{ $t('Room properties')}}</h2>
                                 <div class="xsLight flex mt-4 w-full">
                                     {{ $t('Define room categories and properties. These can then be filtered in the calendars.')}}
                                 </div>
@@ -1017,10 +1018,12 @@ import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/mixins/IconLib.vue";
+import Tabs from "@/Pages/Areas/Components/Tabs.vue";
 
 export default defineComponent({
     mixins: [Permissions, IconLib],
     components: {
+        Tabs,
         FormButton,
         AddButtonBig,
         SuccessModal,

@@ -155,7 +155,7 @@ class RoomService
                         }
                     )->orWhereDoesntHave('adjoining_rooms');
                 }
-            );
+            )->orderBy('position');
     }
 
     public function createByRequest(Request $request): Room

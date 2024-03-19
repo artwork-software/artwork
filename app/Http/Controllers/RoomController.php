@@ -25,6 +25,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 
@@ -156,6 +157,22 @@ class RoomController extends Controller
             'selectedDate' => $showCalendar['selectedDate'],
             'user_filters' => $showCalendar['user_filters'],
         ]);
+    }
+
+    public function getMoveRooms(): Response|ResponseFactory
+    {
+        return inertia('Rooms/RoomReorderManagement', [
+            'rooms' => Room::orderBy('position')->get()
+        ]);
+    }
+
+    public function updateOrderNew(Request $request): RedirectResponse
+    {
+        foreach ($request->rooms as $room) {
+            Room::findOrFail($room['id'])->update(['position' => $room['position']]);
+        }
+
+        return Redirect::back();
     }
 
     public function update(Request $request, Room $room): RedirectResponse

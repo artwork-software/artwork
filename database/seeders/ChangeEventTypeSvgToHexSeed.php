@@ -6,6 +6,7 @@ use DOMDocument;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ChangeEventTypeSvgToHexSeed extends Seeder
 {
@@ -16,7 +17,12 @@ class ChangeEventTypeSvgToHexSeed extends Seeder
     {
         $this->changeSvgToHex();
 
-        DB::statement('ALTER TABLE event_types DROP COLUMN svg_name');
+        // Überprüfen, ob die Spalte existiert, bevor sie gelöscht wird
+        if (Schema::hasColumn('event_types', 'svg_name')) {
+            Schema::table('event_types', function ($table): void {
+                $table->dropColumn('svg_name');
+            });
+        }
     }
 
 
@@ -24,7 +30,9 @@ class ChangeEventTypeSvgToHexSeed extends Seeder
     {
         $eventTypes = DB::table('event_types')->get();
         foreach ($eventTypes as $eventType) {
-            $hex = $this->getHexFromSvg($eventType->svg_name);
+            // Überprüfen, ob svg_name vorhanden ist, andernfalls einen leeren String verwenden
+            $svgName = property_exists($eventType, 'svg_name') ? $eventType->svg_name : '';
+            $hex = $this->getHexFromSvg($svgName);
             DB::table('event_types')
                 ->where('id', $eventType->id)
                 ->update(['hex_code' => $hex]);
@@ -35,6 +43,10 @@ class ChangeEventTypeSvgToHexSeed extends Seeder
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     private function getHexFromSvg(string $svg): string
     {
+        // Wenn $svg leer ist, frühzeitig zurückkehren
+        if (empty($svg)) {
+            return '';
+        }
         $svgName = '';
         switch ($svg) {
             case 'eventType0':

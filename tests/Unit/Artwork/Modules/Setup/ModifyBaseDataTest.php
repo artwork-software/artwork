@@ -235,6 +235,64 @@ class ModifyBaseDataTest extends TestCase
                     count(app()->get(RoleAndPermissionDataProvider::class)->getRoles())
                 );
             },
+
+            yield 'unknown column does not crash' => [
+                new class extends BaseDataProvider {
+                    public function getPermissions(): array
+                    {
+                        $permissions = parent::getPermissions();
+                        $permissions[] = [
+                            'name' => 'testPermission',
+                            'name_de' => "testPermissionDe",
+                            'group' => 'Lel',
+                            'tooltipText' => 'MyToolTip',
+                            'THIS_DOES_NOT_EXIST' => 'do not crash'
+                        ];
+                        $permissions[0] = [
+                            'name' => $permissions[0]['name'],
+                            'name_de' => "testPermissionDe",
+                            'group' => 'Lel',
+                            'tooltipText' => 'MyToolTip',
+                           'NOT_EXISTENT' => 'do not crash'
+                        ];
+
+                        return $permissions;
+                    }
+                    public function getOriginalPermissions(): array
+                    {
+                        return parent::getPermissions();
+                    }
+                },
+                function (): void {
+                    $this->assertDatabaseCount(
+                        'permissions',
+                        count(app()->get(RoleAndPermissionDataProvider::class)->getPermissions())
+                    );
+                    $this->assertDatabaseCount(
+                        'roles',
+                        count(app()->get(RoleAndPermissionDataProvider::class)->getRoles())
+                    );
+                },
+                function (): void {
+                    /** @var RoleAndPermissionDataProvider $provider */
+                    $provider = app()->get(RoleAndPermissionDataProvider::class);
+                    $this->assertDatabaseHas('permissions', [
+                        'name' => $provider->getOriginalPermissions()[0]['name'],
+                        'name_de' => "testPermissionDe",
+                        'group' => 'Lel',
+                        'tooltipText' => 'MyToolTip',
+                    ]);
+                    $this->assertDatabaseCount(
+                        'permissions',
+                        count(app()->get(RoleAndPermissionDataProvider::class)->getPermissions())
+                    );
+                    $this->assertDatabaseCount(
+                        'roles',
+                        count(app()->get(RoleAndPermissionDataProvider::class)->getRoles())
+                    );
+                },
+
+            ]
         ];
     }
 

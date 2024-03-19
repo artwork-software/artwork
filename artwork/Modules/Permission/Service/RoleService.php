@@ -5,6 +5,7 @@ namespace Artwork\Modules\Permission\Service;
 use Artwork\Modules\Permission\Models\Role;
 use Artwork\Modules\Permission\Repositories\RoleRepository;
 use Artwork\Modules\Permission\Models\Permission;
+use Illuminate\Support\Facades\DB;
 
 class RoleService
 {
@@ -40,5 +41,10 @@ class RoleService
     public function findByName(string $name): Role|null
     {
         return $this->roleRepository->getByName($name);
+    }
+
+    public function getTableFields(): array
+    {
+        return DB::select('DESCRIBE `roles`');
     }
 }

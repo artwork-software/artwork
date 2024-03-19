@@ -300,4 +300,14 @@ class BaseDataProvider implements RoleAndPermissionDataProvider
             ],
         ];
     }
+
+    public function getExcludedPermissionColumns(): array
+    {
+        return ['id', 'guard_name', 'created_at', 'updated_at'];
+    }
+
+    public function getExcludedRoleColumns(): array
+    {
+        return ['id', 'guard_name', 'created_at', 'updated_at'];
+    }
 }

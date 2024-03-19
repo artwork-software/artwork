@@ -4,6 +4,7 @@ namespace Artwork\Modules\Permission\Service;
 
 use Artwork\Modules\Permission\Repositories\PermissionRepository;
 use Artwork\Modules\Permission\Models\Permission;
+use Illuminate\Support\Facades\DB;
 
 class PermissionService
 {
@@ -43,5 +44,10 @@ class PermissionService
     public function findByName(string $name): Permission|null
     {
         return $this->permissionRepository->getByName($name);
+    }
+
+    public function getTableFields(): array
+    {
+        return DB::select('DESCRIBE `permissions`');
     }
 }

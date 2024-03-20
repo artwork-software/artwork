@@ -1651,5 +1651,13 @@
     "Documents & Budget": "Dokumente & Budget",
     "System settings": "Systemeinstellungen",
     "Employee settings": "Mitarbeiter-Einstellungen",
-    "Sort rooms": "Räume Sortieren"
+    "Sort rooms": "Räume Sortieren",
+    "Day Services": "Tagesdienste",
+    "New Day Service": "Neuer Tagesdienst",
+    "Day Service create": "Tagesdienst erstellen",
+    "Day Service edit": "Tagesdienst bearbeiten",
+    "You can create a new day service here.": "Hier kannst du einen neuen Tagesdienst erstellen.",
+    "Here you can edit the day service \"{0}\".": "Hier kannst du den Tagesdienst \"{0}\" bearbeiten.",
+    "Name of the day service": "Name des Tagesdienstes",
+    "Color": "Farbe"
 }

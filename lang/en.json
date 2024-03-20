@@ -1651,5 +1651,12 @@
     "Documents & Budget": "Documents & Budget",
     "System settings": "System settings",
     "Employee settings": "Employee settings",
-    "Sort rooms": "Sort rooms"
+    "Sort rooms": "Sort rooms",
+    "Day Services": "Day Services",
+    "New Day Service": "New Day Service",
+    "Day Service create": "Day Service create",
+    "Day Service edit": "Day Service edit",
+    "You can create a new day service here.": "You can create a new day service here.",
+    "Here you can edit the day service \"{0}\".": "Here you can edit the day service \"{0}\".",
+    "Name of the day service": "Name of the day service"
 }

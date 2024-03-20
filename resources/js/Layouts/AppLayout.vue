@@ -26,7 +26,7 @@
                     <div class="flex-1 w-full space-y-1 mt-8 overflow-y-auto managementMenu">
                         <a v-for="item in navigation" :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center', item.has_permission ? 'block': 'hidden']">
                             <div class="flex items-center">
-                                <component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                <Component :is="item.icon" :stroke-width="isCurrent(item.route) ? 2 : 1" :class="[isCurrent(item.route) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                 <div class="ml-4 w-32" v-if="fullSidenav">
                                     {{ item.name }}
                                 </div>
@@ -48,7 +48,7 @@
                         ">
                             <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.managementRoutes) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
                                 <div class="flex items-center" :class="fullSidenav ? '' : ''">
-                                    <component :is="IconAdjustmentsAlt" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :class="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                                    <Component :is="IconAdjustmentsAlt" :stroke-width="isCurrent(this.managementRoutes) ? 2 : 1" :class="[isCurrent(this.managementRoutes) ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                                     <div class="ml-4 w-32 text-left" v-if="fullSidenav">
                                         System
                                     </div>
@@ -87,7 +87,7 @@
                 <div class="flex flex-col justify-end w-full">
                     <a :href="route('notifications.index')" :class="[route().current('notifications.*') ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
                         <div class="flex items-center">
-                            <component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
+                            <Component :is="IconBell" :stroke-width="route().current('notifications.*') ? 2 : 1" :class="[route().current('notifications.*') ? 'text-white' : 'text-white group-hover:text-white', 'h-7 w-7 shrink-0']" aria-hidden="true"/>
                             <div class="ml-4 w-32" v-if="fullSidenav">
                                 {{ $t('Notifications') }}
                             </div>
@@ -150,87 +150,6 @@
         </div>
 
         <div class="pl-2 flex flex-col">
-            <!--   Top Menu     -->
-            <!--<div class="sticky top-0 z-40 flex-shrink-0 flex h-16">
-                <button type="button"
-                        class="px-5 border-r border-primaryText text-primaryText focus:outline-none sm:hidden"
-                        @click="openSideBarOnMobile">
-                    <span class="sr-only">Open sidebar</span>
-                    <MenuAlt2Icon class="h-6 w-6" aria-hidden="true"/>
-                </button>
-                <div class="px-4 pl-16 ml-3 flex w-full bg-white">
-                    <div class="flex justify-start items-center">
-                        <Switch @click="toggle_hints()"
-                                :class="[$page.props.show_hints ?
-                                        'bg-success' :
-                                        'bg-gray-300',
-                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
-                                    <span aria-hidden="true"
-                                          :class="[$page.props.show_hints ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
-                        </Switch>
-                        <span v-if="$page.props.show_hints" class="ml-2 flex w-40">
-                                    <SvgCollection svgName="arrowLeft" class="mr-1"/>
-                                    <span class="hind">{{ $t('Show help')}}</span>
-                                </span>
-                    </div>
-                    <div class="flex justify-end w-full">
-                        <div class="ml-4 flex items-center md:ml-6">
-                            <div class="flex items-center mr-4">
-
-                                <Link v-if="hasAdminRole()"
-                                      class="inset-y-0 mr-1"
-                                      :href="getTrashRoute()">
-                                    <TrashIcon class="h-5 w-5" aria-hidden="true"/>
-                                </Link>
-                                <Link :href="route('notifications.index')" type="button"
-                                      class="p-1 rounded-full text-black hover:text-primaryText focus:outline-none">
-                                    <span class="sr-only">View notifications</span>
-                                    <BellIcon class="h-6 w-6" aria-hidden="true"/>
-                                </Link>
-                            </div>
-
-                            <Menu as="div" class="ml-3 relative">
-                                <div>
-                                    <MenuButton @click="showUserMenu = !showUserMenu"
-                                                class="flex items-center rounded-full focus:outline-none">
-                                        <span class="sr-only">Open user menu</span>
-                                        <p class="xsDark flex mr-4 pl-2">Hallo
-                                            {{ $page.props.user.first_name }}
-                                            <ChevronUpIcon v-if="showUserMenu"
-                                                           class="ml-1 flex-shrink-0 mt-0.5 h-4 w-4"></ChevronUpIcon>
-                                            <ChevronDownIcon v-else
-                                                             class="ml-1 flex-shrink-0 mt-0.5  h-4 w-4"></ChevronDownIcon>
-                                        </p>
-                                        <img class="h-10 w-10 rounded-full object-cover"
-                                             :src="$page.props.user.profile_photo_url"
-                                             alt=""/>
-                                    </MenuButton>
-                                </div>
-                                <transition enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
-                                    <MenuItems
-                                        class="origin-top-right absolute right-0 mt-2 w-48 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                        <MenuItem v-slot="{ active }">
-                                            <Link :href="route('user.edit.info', {user: this.$page.props.user.id})"
-                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                {{ $t('Your account')}}
-                                            </Link>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
-                                            <a @click="logout"
-                                               :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor cursor-pointer']">{{ $t('Log out')}}</a>
-                                        </MenuItem>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
-                        </div>
-                    </div>
-                </div>
-            </div>-->
             <div v-if="pushNotifications.length > 0" class="absolute top-16 right-5">
                 <div v-for="pushNotification in pushNotifications" :id="pushNotification.id"
                      class="my-2 z-50 flex relative w-full max-w-xs rounded-lg shadow bg-lightBackgroundGray"
@@ -250,18 +169,12 @@
                     </button>
                 </div>
             </div>
-            <!-- Notification -->
 
-            <!--     Main       -->
             <main class="main pl-5 my-5">
                 <slot></slot>
             </main>
         </div>
     </div>
-
-    <component>
-
-    </component>
 </template>
 
 <script>

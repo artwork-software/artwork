@@ -8,6 +8,8 @@
                 </div>
             </div>
 
+            <TabComponent :tabs="tabs" />
+
 
             <div class="mt-10">
                 <h3 class="headline2 mb-2">{{$t('Crafts')}}</h3>
@@ -194,11 +196,13 @@ import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import IconLib from "@/mixins/IconLib.vue";
+import TabComponent from "@/Components/Tabs/TabComponent.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     mixins: [IconLib],
     components: {
+        TabComponent,
         AddButtonSmall,
         ErrorComponent,
         SuccessModal,
@@ -233,7 +237,21 @@ export default defineComponent({
             craftToDelete: null,
             showShiftQualificationModal: false,
             shiftQualificationModalMode: null,
-            shiftQualificationModalShiftQualification: null
+            shiftQualificationModalShiftQualification: null,
+            tabs: [
+                {
+                    name: this.$t('Shift Settings'),
+                    href: route('shift.settings'),
+                    current: route().current('shift.settings'),
+                    show: true
+                },
+                {
+                    name: this.$t('Day Services'),
+                    href: route('day-service.index'),
+                    current: route().current('day-service.index'),
+                    show: true
+                },
+            ]
         }
     },
     computed: {

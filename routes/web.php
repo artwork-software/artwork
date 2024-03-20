@@ -1157,4 +1157,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->middleware('role:artwork admin');
 
     Route::resource('shift-qualifications', ShiftQualificationController::class)->only(['store', 'update']);
+
+    Route::group(['prefix' => 'day-service'], function (): void {
+        Route::get('index', [\App\Http\Controllers\DayServiceController::class, 'index'])->name('day-service.index');
+        Route::post('store', [\App\Http\Controllers\DayServiceController::class, 'store'])->name('day-service.store');
+        Route::patch('update/{dayService}', [\App\Http\Controllers\DayServiceController::class, 'update'])
+            ->name('day-service.update');
+    });
 });

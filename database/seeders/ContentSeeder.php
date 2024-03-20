@@ -198,7 +198,8 @@ class ContentSeeder extends Seeder
             'area_id' => 1,
             'user_id' => 1,
             'order' => 1,
-            'everyone_can_book' => false
+            'everyone_can_book' => false,
+            'created_at' => now(),
         ]);
 
         DB::table('rooms')->insert([
@@ -210,7 +211,8 @@ class ContentSeeder extends Seeder
             'area_id' => 1,
             'user_id' => 1,
             'order' => 1,
-            'everyone_can_book' => false
+            'everyone_can_book' => false,
+            'created_at' => now(),
         ]);
 
         DB::table('rooms')->insert([
@@ -222,7 +224,8 @@ class ContentSeeder extends Seeder
             'area_id' => 2,
             'user_id' => 1,
             'order' => 1,
-            'everyone_can_book' => false
+            'everyone_can_book' => false,
+            'created_at' => now(),
         ]);
     }
 

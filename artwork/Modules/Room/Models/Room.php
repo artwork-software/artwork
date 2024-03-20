@@ -59,7 +59,8 @@ class Room extends Model
         'user_id',
         'order',
         'everyone_can_book',
-        'position'
+        'position',
+        'created_at'
     ];
 
     protected $with = [

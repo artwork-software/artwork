@@ -30,7 +30,7 @@
                             </div>
                             <div v-if="eventsOfDay?.length > 0" class=" max-h-64 overflow-scroll">
                                 <div v-for="event of eventsOfDay" :key="event.id" class="py-1 w-full">
-                                    <div :class="event.event_type.svg_name"  class="py-1 px-2 rounded">
+                                    <div :style="{backgroundColor: backgroundColorWithOpacity(event), color: TextColorWithDarken(event)}"  class="py-1 px-2 rounded">
                                         <a :href="getHref(event.project)" class="font-semibold" :class="event.project? 'underline cursor-pointer' : ''" >
                                             {{ event.event_type?.abbreviation }}: {{ event.project?.name }}
                                         </a>
@@ -295,6 +295,14 @@ export default defineComponent({
             });
     },
     methods: {
+        backgroundColorWithOpacity(event){
+            const color = event.event_type.hex_code;
+            return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, 15%)`;
+        },
+        TextColorWithDarken(event){
+            const color = event.event_type.hex_code;
+            return `rgb(${parseInt(color.slice(-6, -4), 16) - 75}, ${parseInt(color.slice(-4, -2), 16) - 75}, ${parseInt(color.slice(-2), 16) - 75})`;
+        },
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
             this.doneTaskForm.patch(route('tasks.update', {task: task.id}));

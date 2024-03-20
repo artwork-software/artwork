@@ -1,16 +1,29 @@
 <template>
     <app-layout>
         <div class="">
-            <div class="max-w-screen mb-40 flex flex-row ml-14 mr-14">
+            <div class="max-w-screen my-10 flex flex-row ml-14 mr-14">
                 <div class="flex flex-1 flex-wrap">
-                    <div>
-                        <p class="items-center flex mr-2 headline1 mb-11">
-                            {{ $t('Projects') }}
-                        </p>
-                    </div>
-                    <div class="w-full flex items-center justify-between">
+                    <div class="w-full flex items-center justify-end">
                         <div class="w-full flex items-center">
-                            <BaseFilter only-icon="true" :left="true">
+                            <p class="items-center flex mr-2 headline1">
+                                {{ $t('Projects') }}
+                            </p>
+                        </div>
+                        <div class="flex relative items-center gap-x-3.5" v-if="$can('create and edit own project') || $role('artwork admin')">
+                            <div class="flex items-center">
+                                <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+                                     class="cursor-pointer inset-y-0">
+                                    <IconSearch class="h-7 w-7 text-artwork-buttons-context" aria-hidden="true"/>
+                                </div>
+                                <div v-else class="flex items-center w-60">
+                                    <div>
+                                        <input type="text" :placeholder="$t('Search for projects')" v-model="project_search" class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                    </div>
+                                    <IconX class="ml-2 cursor-pointer h-7 w-7 text-artwork-buttons-context" @click="closeSearchbar()"/>
+                                </div>
+                            </div>
+
+                            <BaseFilter only-icon="true" :left="false">
                                 <div class="w-full">
                                     <div class="flex justify-end mb-3">
                                             <span class="xxsLight cursor-pointer text-right w-full" @click="removeFilter">
@@ -66,33 +79,13 @@
                                     </div>
                                 </div>
                             </BaseFilter>
-                            <div class="flex items-center ml-4">
-                                <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
-                                     class="cursor-pointer inset-y-0 mr-3">
-                                    <IconSearch class="h-6 w-6" aria-hidden="true"/>
-                                </div>
-                                <div v-else class="flex items-center w-64 mr-2">
-                                    <div>
-                                        <input type="text"
-                                               :placeholder="$t('Search for projects')"
-                                               v-model="project_search"
-                                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                    </div>
-                                    <IconX stroke-width="1.5"   class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
-                                </div>
-                            </div>
-                            <BaseButton
-                                :text="$t('Excel-Export')"
-                                @click="openProjectExportBudgetsByBudgetDeadlineModal">
-                                <IconFileAnalytics stroke-width="1.5" class="h-4 w-4 mr-2" aria-hidden="true"/>
-                            </BaseButton>
-                        </div>
-                        <div class="flex relative" v-if="$can('create and edit own project') || $role('artwork admin')">
+                            <IconFileExport class="h-7 w-7 cursor-pointer text-artwork-buttons-context" aria-hidden="true"
+                                            @click="openProjectExportBudgetsByBudgetDeadlineModal"/>
                             <div v-if="this.$page.props.show_hints" class="flex mt-1 absolute w-40 right-20">
                                 <span class="hind ml-1 my-auto">{{ $t('Create new projects') }}</span>
                                 <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
                             </div>
-                            <AddButtonSmall @click="openCreateProjectModal" :text="$t('New')"/>
+                            <PlusButton @click="openCreateProjectModal" />
                         </div>
                     </div>
                     <div id="selectedFilter" class="mt-3">
@@ -128,7 +121,7 @@
                             </span>
                         </span>
                     </div>
-                    <div class="my-10 w-full">
+                    <div class="my-3 w-full">
                         <div class="grid grid-cols-1 sm:grid-cols-8 lg:grid-cols-10 grid-rows-1 gap-4 w-full py-4 bg-artwork-project-background rounded-xl px-3 my-2" v-for="(project,index) in sortedProjects" :key="project.id">
                             <div class="col-span-7 flex items-center">
                                 <div class="grid grid-cols-10 gap-x-3">
@@ -452,9 +445,11 @@ import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import IconLib from "@/mixins/IconLib.vue";
+import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 
 export default defineComponent({
     components: {
+        PlusButton,
         AddButtonSmall,
         BaseButton,
         SuccessModal,

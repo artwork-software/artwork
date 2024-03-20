@@ -1,14 +1,5 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-lg mt-12 flex flex-row ml-14 mr-40">
-            <div class="flex flex-1 flex-wrap">
-                <div class="w-full flex justify-between">
-                    <div class="flex flex-wrap">
-                        <h2 class="headline1">{{ $t('Room occupancy')}}</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div>
             <div v-if="calendarType && calendarType === 'daily'">
                 <div class="mr-4">

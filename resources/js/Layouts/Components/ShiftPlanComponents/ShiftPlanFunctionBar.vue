@@ -2,13 +2,13 @@
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :dateValueArray="dateValue" :is_shift_plan="true"></date-picker-component>
-            <div>
-                <div>
-                    <button  class="ml-2 -mt-2 text-black" @click="previousTimeRange">
-                        <IconChevronLeft stroke-width="1.5" class="h-5 w-5 text-primary"/>
+            <div class="flex items-center">
+                <div class="flex items-center">
+                    <button  class="ml-2 text-black" @click="previousTimeRange">
+                        <IconChevronLeft stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
                     </button>
-                    <button class="ml-2 -mt-2 text-black" @click="nextTimeRange">
-                        <IconChevronRight stroke-width="1.5" class="h-5 w-5 text-primary"/>
+                    <button class="ml-2  text-black" @click="nextTimeRange">
+                        <IconChevronRight stroke-width="1.5" class="h-5 w-5 text-artwork-buttons-context"/>
                     </button>
                 </div>
             </div>
@@ -29,12 +29,11 @@
         </div>
 
         <div class="flex items-center">
-            <div class="flex items-center">
+            <div class="flex items-center gap-x-3">
                 <IconArrowsDiagonal stroke-width="1.5" v-if="!isFullscreen" @click="enterFullscreenMode"
-                      class="h-6 w-6 mx-2 cursor-pointer"/>
+                      class="h-7 w-7 text-artwork-buttons-context cursor-pointer"/>
                 <!-- PAUL HIER DAS NEUE FILTER COMPONENT EINBAUEN -->
                 <ShiftPlanFilter
-                    class="mt-1"
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :user_filters="user_filters"

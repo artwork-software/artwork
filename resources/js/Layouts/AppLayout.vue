@@ -170,7 +170,7 @@
                 </div>
             </div>
 
-            <main class="main pl-5 my-5">
+            <main class="main my-5 mx-5">
                 <slot></slot>
             </main>
         </div>

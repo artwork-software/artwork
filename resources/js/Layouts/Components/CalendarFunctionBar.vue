@@ -1,5 +1,5 @@
 <template>
-    <div class="w-[98%] flex justify-between items-center mt-4 mb-2" :class="atAGlance || dateValue[0] === dateValue[1]? 'ml-14' : ''">
+    <div class="w-[98%] sticky pt-4 pb-1 top-0 z-40 bg-secondaryHover flex justify-between items-center mt-4 mb-3" :class="atAGlance || dateValue[0] === dateValue[1]? 'ml-14' : ''">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
             <div v-if="!project">
@@ -51,12 +51,12 @@
                    </Switch>
                </div>
             </div>
-            <div class="flex items-center">
+            <div class="flex items-center gap-x-4">
                 <IconZoomIn @click="incrementZoomFactor" :disabled="zoomFactor <= 0.2" v-if="!atAGlance && isFullscreen"
-                            class="h-6 w-6 mx-2 cursor-pointer"></IconZoomIn>
+                            class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomIn>
                 <IconZoomOut @click="decrementZoomFactor" :disabled="zoomFactor >= 1.4"
-                             v-if="!atAGlance && isFullscreen" class="h-6 w-6 mx-2 cursor-pointer"></IconZoomOut>
-                <IconArrowsDiagonal  class="h-6 w-6 mx-2 cursor-pointer" @click="enterFullscreenMode" v-if="!atAGlance && !isFullscreen"/>
+                             v-if="!atAGlance && isFullscreen" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomOut>
+                <IconArrowsDiagonal  class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="enterFullscreenMode" v-if="!atAGlance && !isFullscreen"/>
                 <IndividualCalendarFilterComponent
                     class=""
                     :filter-options="filterOptions"
@@ -73,7 +73,7 @@
                         <MenuButton>
                             <span class="items-center flex">
                                 <button type="button" class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
-                                    <IconSettings class="h-6 w-6 mx-2"/>
+                                    <IconSettings class="h-7 w-7 text-artwork-buttons-context"/>
                                 </button>
                                 <span v-if="$page.props.user.calendar_settings.project_status || $page.props.user.calendar_settings.options || $page.props.user.calendar_settings.project_management || $page.props.user.calendar_settings.repeating_events || $page.props.user.calendar_settings.work_shifts"
                                       class="rounded-full border-2 border-error w-2 h-2 bg-error absolute ml-6 ring-white ring-1">
@@ -136,13 +136,15 @@
             </div>
 
             <div @click="showPDFConfigModal = true">
-                <IconFileAnalytics class="h-6 w-6 mx-2 cursor-pointer" />
+                <IconFileExport class="h-7 w-7 text-artwork-buttons-context cursor-pointer" />
             </div>
 
+            <PlusButton v-if="$can('request room occupancy')" @click="openEventComponent()" />
             <AddButtonSmall
                 v-if="$can('request room occupancy')"
                 @click="openEventComponent()"
                 :text="$t('New occupancy')"
+                class="hidden"
             />
         </div>
 
@@ -177,12 +179,14 @@ import {Inertia} from "@inertiajs/inertia";
 import PdfConfigModal from "@/Layouts/Components/PdfConfigModal.vue";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import IconLib from "@/mixins/IconLib.vue";
+import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
 
 
 export default {
     name: "CalendarFunctionBar",
     mixins: [Permissions, IconLib],
     components: {
+        PlusButton,
         AddButtonSmall,
         PdfConfigModal,
         BaseFilter,

@@ -14,7 +14,7 @@ import {
     IconExclamationCircle, IconSortDescending, IconSortAscending, IconArrowsSort, IconCheck, IconPlus,
     IconRecycle, IconAlertTriangle, IconList, IconPencil, IconCalculator, IconDragDrop,
     IconAbacus, IconKey, IconSpeakerphone, IconTrolley, IconBuildingWarehouse, IconForklift, IconTruckDelivery, IconHotelService, IconServer, IconDevices2, IconDeviceSpeaker, IconDeviceAudioTape, IconLiveView,
-    IconMicroscope, IconGavel, IconHelp, IconInfoCircle
+    IconMicroscope, IconGavel, IconHelp, IconInfoCircle, IconFileExport
 } from "@tabler/icons-vue";
 export default {
     components: {
@@ -33,7 +33,7 @@ export default {
         IconRecycle, IconAlertTriangle, IconList, IconPencil, IconCalculator, IconDragDrop,
         IconAbacus, IconKey, IconSpeakerphone, IconTrolley, IconBuildingWarehouse, IconForklift, IconTruckDelivery,
         IconHotelService, IconServer, IconDevices2, IconDeviceSpeaker, IconDeviceAudioTape, IconLiveView,
-        IconMicroscope, IconGavel, IconHelp, IconInfoCircle
+        IconMicroscope, IconGavel, IconHelp, IconInfoCircle, IconFileExport
     }
 }
 </script>

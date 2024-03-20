@@ -4,12 +4,12 @@
             <MenuButton v-if="!onlyIcon" class="w-52 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white">
                 <span class="float-left xsDark">Filter</span>
                 <IconChevronDown stroke-width="1.5"
-                    class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
+                    class="ml-2 -mr-1 h-5 w-5 text-artwork-buttons-context float-right"
                     aria-hidden="true"
                 />
             </MenuButton>
             <MenuButton v-else>
-                <IconFilter class="h-6 w-6 mx-2" />
+                <IconFilter class="h-7 w-7 text-artwork-buttons-context" />
             </MenuButton>
         </div>
         <transition

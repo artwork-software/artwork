@@ -27,7 +27,7 @@
                 <!-- Calendar -->
                 <table class="w-full bg-white relative">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
-                    <div>
+                    <div class="bg-secondaryHover">
                         <tr class="flex w-full bg-userBg stickyHeader rounded-t-full">
                             <th :style="{minWidth: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}">
                             </th>
@@ -100,7 +100,7 @@
         />
 
         <div v-show="multiEdit"
-             class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
+             class="fixed z-30 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
             <FormButton :text="$t('Move events')"
                        @click="openMultiEditModal"/>
             <FormButton @click="openDeleteSelectedEventsModal = true"
@@ -424,7 +424,7 @@ export default {
     position: -webkit-sticky;
     display: block;
     top: 60px;
-    z-index: 21;
+    z-index: 30;
     background-color: #EDEDEC;
 }
 

@@ -30,7 +30,7 @@
                 <table class="w-full bg-white relative">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                     <div class="bg-secondaryHover">
-                        <tr class="flex w-full bg-userBg stickyHeader" :class="{'rounded-t-full': !isPageScrolled}">
+                        <tr class="flex w-full bg-userBg stickyHeader mb-4" :class="{'rounded-t-full': !isPageScrolled}">
                             <th :style="{minWidth: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}">
                             </th>
                             <th v-for="room in rooms" :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth:zoomFactor * 212 + 'px'}" class="py-3  border-r-4 border-secondaryHover truncate mx-2">

@@ -354,7 +354,7 @@ export default {
             return filteredArray.map(elem => elem.id)
         },
         handleScroll() {
-            this.isPageScrolled = window.scrollY > 140;
+            this.isPageScrolled = window.scrollY > 192;
         },
     },
     mounted(){

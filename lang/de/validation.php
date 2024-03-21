@@ -88,5 +88,6 @@ return [
         'user'                     => 'Benutzer',
         'username'                 => 'Benutzername',
         'year'                     => 'Jahr',
+        'user_emails.*'              => '',
     ],
 ];

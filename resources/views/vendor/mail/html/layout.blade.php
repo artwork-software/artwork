@@ -1,6 +1,8 @@
 <!doctype html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-
+@php
+    $settings = app(\Artwork\Modules\GeneralSettings\Models\GeneralSettings::class);
+@endphp
 <head>
     <title>
     </title>
@@ -232,7 +234,7 @@
                                             line-height:1.5;
                                             text-align:left;
                                             color:#A7A6B1;">
-                                        {{ app(\App\Models\GeneralSettings::class)->email_footer }}
+                                        {{ $settings->email_footer }}
                                     </div>
                                 </td>
                             </tr>
@@ -243,10 +245,10 @@
             </tr>
                 <tr>
                     <td align="left" style="font-size:0px;padding:25px 50px;word-break:break-word;">
-                        <a href="{{app(\App\Models\GeneralSettings::class)->impressum_link}}" style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1;">
+                        <a href="{{$settings->impressum_link}}" style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1;">
                             Impressum
                         </a>
-                        <a href="{{app(\App\Models\GeneralSettings::class)->privacy_link}}" style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1; margin-left: 3em">
+                        <a href="{{ $settings->privacy_link}}" style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1; margin-left: 3em">
                             Datenschutz
                         </a>
                     </td>

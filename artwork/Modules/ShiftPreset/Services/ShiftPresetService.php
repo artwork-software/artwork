@@ -75,7 +75,7 @@ class ShiftPresetService
             }
         }
 
-        foreach ($event->timeline as $timeline) {
+        foreach ($event->timelines as $timeline) {
             $this->shiftPresetTimelineService->createFromExistingTimeline($shiftPreset->id, $timeline);
         }
     }

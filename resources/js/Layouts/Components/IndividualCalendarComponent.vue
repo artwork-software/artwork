@@ -9,6 +9,8 @@
                     {{ filteredEvents?.length === 1 ? $t('{0} Event without room!', [filteredEvents?.length]) : $t('{0} Events without room!', [filteredEvents?.length]) }}
                 </div>
             </div>
+
+
             <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal"
                                  @increment-zoom-factor="incrementZoomFactor"
                                  @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor"
@@ -28,7 +30,7 @@
                 <table class="w-full bg-white relative">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                     <div class="bg-secondaryHover">
-                        <tr class="flex w-full bg-userBg stickyHeader rounded-t-full">
+                        <tr class="flex w-full bg-userBg stickyHeader" :class="{'rounded-t-full': !isPageScrolled}">
                             <th :style="{minWidth: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}">
                             </th>
                             <th v-for="room in rooms" :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth:zoomFactor * 212 + 'px'}" class="py-3  border-r-4 border-secondaryHover truncate mx-2">
@@ -168,6 +170,7 @@ export default {
             showMultiEditModal: false,
             openDeleteSelectedEventsModal: false,
             checkedEvents: [],
+            isPageScrolled: false,
         }
     },
     props: [
@@ -187,6 +190,8 @@ export default {
     emits: ['changeAtAGlance'],
     mounted() {
         window.addEventListener('resize', this.listenToFullscreen);
+        this.handleScroll();
+        window.addEventListener('scroll', this.handleScroll);
     },
     computed: {
         textStyle() {
@@ -214,6 +219,9 @@ export default {
             });
         }
     },
+    beforeDestroy() {
+        window.removeEventListener('scroll', this.handleScroll);
+    },
     methods: {
         updateCheckedEvents(event) {
             if(!this.checkedEvents.includes(event.id))
@@ -226,6 +234,9 @@ export default {
         },
         changeAtAGlance(atAGlance) {
             this.$emit('changeAtAGlance', atAGlance)
+        },
+        handleScroll() {
+            this.isPageScrolled = window.scrollY > 70;
         },
         openEditEventModal(event = null) {
 
@@ -423,7 +434,7 @@ export default {
     align-self: flex-start;
     position: -webkit-sticky;
     display: block;
-    top: 60px;
+    top: 56px;
     z-index: 30;
     background-color: #EDEDEC;
 }

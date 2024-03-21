@@ -1,5 +1,5 @@
 <template>
-    <div class="w-[98%] sticky pt-4 pb-1 top-0 z-40 bg-secondaryHover flex justify-between items-center mt-4 mb-3" :class="atAGlance || dateValue[0] === dateValue[1]? 'ml-14' : ''">
+    <div id="bar" class="w-[95%] p-2 top-0 left-16 z-40 bg-secondaryHover flex justify-between items-center" :class="[atAGlance || dateValue[0] === dateValue[1]? 'ml-14' : '',project ? isPageScrolled ? 'fixed' : 'sticky':'fixed']">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
             <div v-if="!project">
@@ -236,6 +236,7 @@ export default {
             }),
             externUpdate: false,
             showPDFConfigModal: false,
+            isPageScrolled: false,
         }
     },
     methods: {
@@ -352,6 +353,16 @@ export default {
 
             return filteredArray.map(elem => elem.id)
         },
+        handleScroll() {
+            this.isPageScrolled = window.scrollY > 140;
+        },
+    },
+    mounted(){
+        this.handleScroll();
+        window.addEventListener('scroll', this.handleScroll);
+    },
+    beforeDestroy() {
+        window.removeEventListener('scroll', this.handleScroll);
     },
     computed: {
         activeFilters: function () {

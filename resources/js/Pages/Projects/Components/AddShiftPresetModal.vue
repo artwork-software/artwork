@@ -35,7 +35,7 @@
                                         <ListboxButton class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                             <div class="flex items-center my-auto">
                                                 <div>
-                                                    <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : selectedEventType.event_type?.hex_code }" />
+                                                    <div class="block w-5 h-5 rounded-full" :style="{'backgroundColor' : selectedEventType?.hex_code }" />
                                                 </div>
                                                 <span class="block truncate items-center ml-3 flex">
                                                     <span>{{ selectedEventType?.name }}</span>

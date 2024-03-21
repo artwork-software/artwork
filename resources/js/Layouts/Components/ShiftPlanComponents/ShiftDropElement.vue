@@ -12,7 +12,7 @@
              @dragover="onDragOver"
              @drop="onDrop"
         >
-            <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft">
+            <div v-if="multiEditMode && userForMultiEdit && checkIfUserIsInCraft && computedUsedWorkerCount !== computedMaxWorkerCount">
                 <input v-model="shift.isCheckedForMultiEdit"
                        id="comments"
                        aria-describedby="comments-description"
@@ -45,7 +45,7 @@
                     class="flex xsLight items-center">
                     {{computedShiftsQualificationWithWorkerCount.workerCount}}/{{computedShiftsQualificationWithWorkerCount.maxWorkerCount}}
                     <ShiftQualificationIconCollection
-                        class="h-4 w-4 text-black mx-1"
+                        class="text-black mx-1" :classes="['h-4', 'w-4', 'text-black', 'mx-0.5']"
                         :icon-name="this.getShiftQualificationById(computedShiftsQualificationWithWorkerCount.shift_qualification_id).icon"
                     />
                 </div>

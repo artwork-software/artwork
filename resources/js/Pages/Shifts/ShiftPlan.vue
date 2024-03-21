@@ -558,6 +558,19 @@ export default {
                 }
             });
 
+            // Check if the same layer is in the checkedShiftsForMultiEdit twice, if so delete it until it is only in the checkedShiftsForMultiEdit once
+            let shiftIds = this.checkedShiftsForMultiEdit.map(shift => shift.id);
+            let shiftIdsUnique = [...new Set(shiftIds)];
+            shiftIdsUnique.forEach((shiftId) => {
+                let shiftCount = shiftIds.filter(id => id === shiftId).length;
+                if (shiftCount > 1) {
+                    for (let i = 0; i < shiftCount - 1; i++) {
+                        let index = this.checkedShiftsForMultiEdit.findIndex(shift => shift.id === shiftId);
+                        this.checkedShiftsForMultiEdit.splice(index, 1);
+                    }
+                }
+            });
+
             //check if user has any shift qualifications
             if (this.userForMultiEdit.shift_qualifications.length > 0) {
                 //iterate checked shifts
@@ -650,6 +663,7 @@ export default {
                 this.resetMultiEditMode();
                 return;
             }
+
 
             Inertia.post(route('shift.multi.edit.save'), {
                 userType: this.userForMultiEdit.type,
@@ -782,15 +796,19 @@ export default {
 
                 this.shiftPlan.forEach((room) => {
                     this.days.forEach((day) => {
-                        room[day.day].events.data.forEach((event) => {
+                        room[day.full_day].events.data.forEach((event) => {
                             event.shifts.forEach((shift) => {
                                 if (shift.isCheckedForMultiEdit) {
                                     this.checkedShiftsForMultiEdit.push(shift);
                                 }
+                                // if shift.id already exists in checkedShiftsForMultiEdit, checked it
+                                if (this.checkedShiftsForMultiEdit.find((checkedShift) => checkedShift.id === shift.id)) {
+                                    shift.isCheckedForMultiEdit = true;
+                                }
                             })
                         })
                     })
-                })
+                });
             },
             deep: true
         },

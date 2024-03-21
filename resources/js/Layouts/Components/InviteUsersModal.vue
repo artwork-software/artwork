@@ -7,10 +7,10 @@
                        class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10"
                        aria-hidden="true"/>
                 <div class="mt-8 headline1">
-                    {{ $t('Invite users')}}
+                    {{ $t('Invite users') }}
                 </div>
                 <div class="xsLight my-3">
-                    {{ $t('You can invite several users with the same user permissions and team memberships at once.')}}
+                    {{ $t('You can invite several users with the same user permissions and team memberships at once.') }}
                 </div>
                 <div class="mt-6">
                     <div class="flex mt-8">
@@ -71,7 +71,7 @@
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
                             <DisclosurePanel
-                                class="origin-top-right absolute overflow-y-auto max-h-48 w-72 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                class="origin-top-right absolute z-30 overflow-y-auto max-h-48 w-72 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                 <div v-if="departments.length === 0">
                                     <span class="text-secondary p-1 ml-4 flex flex-nowrap">{{$t('No teams available for assignment')}}</span>
                                 </div>
@@ -94,7 +94,18 @@
                         <h3 class="mt-6 mb-8 headline2">{{ $t('Define user permissions')}}</h3>
                         <div class="mb-8">
                             <div v-for="role in roles">
-                                <Checkbox @click="changeRole(role)" :item="role"></Checkbox>
+                                <div class="relative flex w-full">
+                                    <div class="flex h-6 items-center">
+                                        <input v-model="role.checked" @change="changeRole(role)" :name="role.translation_key" :id="role.translation_key" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-buttons-hover focus:ring-0" />
+                                    </div>
+                                    <div class="ml-3 w-full text-sm flex items-center justify-between">
+                                        <label :for="role.translation_key" class="font-medium text-gray-900 w-5/6">
+                                            {{ $t(role.translation_key)}}
+                                        </label>
+
+                                        <ToolTipDefault :tooltip-text="$t(role.tooltipKey)" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -110,7 +121,16 @@
                         <div class="mb-8 flex flex-col" v-if="showPresets">
                             <div v-if="permission_presets.length > 0"
                                  v-for="preset in permission_presets">
-                                <Checkbox @change="usePreset(preset)" :item="preset"></Checkbox>
+                                <div class="relative flex w-full">
+                                    <div class="flex h-6 items-center">
+                                        <input v-model="preset.checked" @change="usePreset(preset)" :id="preset.name" :name="preset.name" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-buttons-hover focus:ring-0" />
+                                    </div>
+                                    <div class="ml-3 w-full text-sm flex items-center justify-between">
+                                        <label :for="preset.name" class="font-medium text-gray-900 w-5/6">
+                                            {{ preset.name }}
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                             <div v-else
                                  class="xsLight">
@@ -132,15 +152,20 @@
                             <div v-for="(group, groupName) in this.computedGroupedPermissions"
                                  v-show="group.shown"
                             >
-                                <h3 class="headline6Light mb-2 mt-6">{{ $t(groupName) }}</h3>
-                                <div class="relative w-full flex items-center"
-                                     v-for="(permission, index) in group.permissions"
-                                     :key=index
-                                >
-                                    <Checkbox @change="changePermission(permission)"
-                                              class="w-full h-auto"
-                                              :item="permission"
-                                    />
+                                <h3 class="headline6Light mb-2 mt-6">{{ groupName }}</h3>
+                                <div class="relative w-full flex items-center mb-2" v-for="(permission, index) in group.permissions" :key=index>
+                                    <div class="relative flex w-full">
+                                        <div class="flex h-6 items-center">
+                                            <input v-model="permission.checked" @change="changePermission(permission)" :id="permission.translation_key" :name="permission.translation_key" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-buttons-hover focus:ring-0" />
+                                        </div>
+                                        <div class="ml-3 w-full text-sm flex items-center justify-between">
+                                            <label :for="permission.translation_key" class="font-medium text-gray-900 w-5/6">
+                                                {{ $t(permission.translation_key)}}
+                                            </label>
+
+                                            <ToolTipDefault :tooltip-text="$t(permission.tooltipKey)" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -172,11 +197,13 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import AddButtonSmall from "@/Layouts/Components/General/Buttons/AddButtonSmall.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import IconLib from "@/mixins/IconLib.vue";
+import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 
 export default {
     name: "InviteUsersModal",
     mixins: [Permissions, IconLib],
     components: {
+        ToolTipDefault,
         FormButton,
         AddButtonSmall,
         JetDialogModal,
@@ -247,6 +274,7 @@ export default {
                         return;
                     }
 
+                    permission.checked = false;
                     //other permissions are pushed anytime
                     groupedPermissions[group].permissions.push(permission);
                 });
@@ -382,15 +410,7 @@ export default {
             this.roles.forEach((role) => {
                 role.checked = false;
             })
-            this.all_permissions.Projekte.forEach((permission) => {
-                permission.checked = false;
-            })
-            this.all_permissions.Raumbelegungen.forEach((permission) => {
-                permission.checked = false;
-            })
-            this.all_permissions.Systemeinstellungen.forEach((permission) => {
-                permission.checked = false;
-            })
+
             this.usedPermissionPresets = [];
             this.permission_presets.forEach((permission) => {
                 permission.checked = false;

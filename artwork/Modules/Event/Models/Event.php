@@ -110,7 +110,8 @@ class Event extends Model
     protected $appends = [
         'days_of_event',
         'start_time_without_day',
-        'end_time_without_day'
+        'end_time_without_day',
+        'event_date_without_time'
     ];
 
     public function comments(): HasMany
@@ -188,6 +189,14 @@ class Event extends Model
     public function getEndTimeWithoutDayAttribute(): string
     {
         return Carbon::parse($this->end_time)->format('H:i');
+    }
+
+    public function getEventDateWithoutTimeAttribute(): array
+    {
+        return [
+            'start' => Carbon::parse($this->start_time)->format('d.m.Y'),
+            'end' => Carbon::parse($this->end_time)->format('d.m.Y')
+        ];
     }
 
     public function serializeDate(DateTimeInterface $date): string

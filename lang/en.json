@@ -1658,5 +1658,11 @@
     "Day Service edit": "Day Service edit",
     "You can create a new day service here.": "You can create a new day service here.",
     "Here you can edit the day service \"{0}\".": "Here you can edit the day service \"{0}\".",
-    "Name of the day service": "Name of the day service"
+    "Name of the day service": "Name of the day service",
+    "The shift starts before the event starts!": "The shift starts before the event starts!",
+    "The shift ends after the event ends!": "The shift ends after the event ends!",
+    "The shift starts after the event ends!": "The shift starts after the event ends!",
+    "The shift ends before the event starts!": "The shift ends before the event starts!",
+    "The shift ends before it starts!": "The shift ends before it starts!",
+    "The shift starts after it ends!": "The shift starts after it ends!"
 }

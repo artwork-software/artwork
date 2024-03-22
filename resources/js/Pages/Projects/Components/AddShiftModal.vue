@@ -33,6 +33,7 @@
                                                    @change="checkInfringement"
                                             />
                                              <span class="text-xs text-red-500" v-show="helpTexts.start.length > 0">{{ helpTexts.start }}</span>
+                                             <span class="text-xs text-orange-500" v-show="helpTexts.warnings.start.length > 0">{{ helpTexts.warnings.start }}</span>
                                         </div>
                                         <div>
                                             <input type="text" onfocus="(this.type='time')"
@@ -44,6 +45,7 @@
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                             <span class="text-xs text-red-500" v-show="helpTexts.end.length > 0">{{ helpTexts.end }}</span>
                                             <span class="text-xs text-red-500" v-show="helpTexts.time.length > 0">{{ helpTexts.time }}</span>
+                                            <span class="text-xs text-orange-500" v-show="helpTexts.warnings.end.length > 0">{{ helpTexts.warnings.end }}</span>
                                         </div>
                                         <div>
                                             <input type="number"
@@ -197,6 +199,10 @@ export default defineComponent({
                 time: '',
                 employeeText:'',
                 masterText:'',
+                warnings: {
+                    start: '',
+                    end: '',
+                }
             },
             showChangeAllModal: false,
         }
@@ -207,6 +213,29 @@ export default defineComponent({
             this.$emit('closed', bool);
         },
         checkInfringement() {
+
+            // if the this.shiftForm.start is before the event start (this.event.start_time_without_day) or the this.shiftForm.end is after the event end (this.event.end_time_without_day) show a warning
+            if (this.shiftForm.start < this.event.start_time_without_day) {
+                this.helpTexts.warnings.start = this.$t('The shift starts before the event starts!');
+            } else if (this.shiftForm.start > this.event.end_time_without_day) {
+                this.helpTexts.warnings.start = this.$t('The shift starts after the event ends!');
+            } else if (this.shiftForm.start > this.shiftForm.end) {
+                this.helpTexts.warnings.start = this.$t('The shift starts after it ends!');
+            } else {
+                this.helpTexts.warnings.start = '';
+            }
+
+            if (this.shiftForm.end > this.event.end_time_without_day){
+                this.helpTexts.warnings.end = this.$t('The shift ends after the event ends!');
+            } else if (this.shiftForm.end < this.event.start_time_without_day){
+                this.helpTexts.warnings.end = this.$t('The shift ends before the event starts!');
+            } else if (this.shiftForm.start < this.shiftForm.end) {
+                this.helpTexts.warnings.start = this.$t('The shift ends before it starts!');
+            } else {
+                this.helpTexts.warnings.end = '';
+            }
+
+
             if(this.shiftForm.start && this.shiftForm.end){
                 // Get the time strings from the input fields
                 let startTime = this.shiftForm.start?.split(':');

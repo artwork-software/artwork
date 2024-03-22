@@ -1659,5 +1659,11 @@
     "You can create a new day service here.": "Hier kannst du einen neuen Tagesdienst erstellen.",
     "Here you can edit the day service \"{0}\".": "Hier kannst du den Tagesdienst \"{0}\" bearbeiten.",
     "Name of the day service": "Name des Tagesdienstes",
-    "Color": "Farbe"
+    "Color": "Farbe",
+    "The shift starts before the event starts!": "Die Schicht beginnt vor dem Event!",
+    "The shift ends after the event ends!": "Die Schicht endet nach dem Event!",
+    "The shift starts after the event ends!": "Die Schicht beginnt nach dem Event!",
+    "The shift ends before the event starts!": "Die Schicht endet vor dem Event!",
+    "The shift ends before it starts!": "Die Schicht endet bevor sie beginnt!",
+    "The shift starts after it ends!": "Die Schicht beginnt nachdem sie endet!"
 }

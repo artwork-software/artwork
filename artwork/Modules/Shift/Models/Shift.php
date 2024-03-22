@@ -151,8 +151,15 @@ class Shift extends Model
 
     public function getBreakFormattedAttribute(): string
     {
-        $hours = intdiv($this->break_minutes, 60) . ':' . ($this->break_minutes % 60);
-        return Carbon::parse($hours)->format('H:i');
+        $totalMinutes = $this->break_minutes; // 150000 oder ein anderer Wert
+        $hours = intdiv($totalMinutes, 60);
+        $minutes = $totalMinutes % 60;
+
+        // Führende Nullen für Stunden und Minuten hinzufügen, falls nötig
+        $formattedHours = str_pad($hours, 2, '0', STR_PAD_LEFT);
+        $formattedMinutes = str_pad($minutes, 2, '0', STR_PAD_LEFT);
+
+        return $formattedHours . ':' . $formattedMinutes;
     }
 
     public function getInfringementAttribute(): bool

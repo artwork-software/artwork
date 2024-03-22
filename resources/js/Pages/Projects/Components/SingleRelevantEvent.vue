@@ -4,7 +4,12 @@
         <div class="w-full h-12 flex items-center justify-between px-4 text-white text-sm"
              :style="{backgroundColor: event.event_type.hex_code}">
             <div class="flex items-center">
-                {{ event.event?.start_time }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
+                <span v-if="!event.event.allDay">
+                    {{ event.event?.start_time }} - {{ event.event?.end_time }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
+                </span>
+                <span v-else>
+                    {{ event.event?.event_date_without_time.start }} - {{ event.event?.event_date_without_time.end }} {{ $t('All day') }} | {{ event.event_type.abbreviation }} | {{ event.room?.name }}
+                </span>
                 <span v-if="event.event.is_series" class="ml-3">
                     <IconRepeat class="h-4 w-4" />
                 </span>

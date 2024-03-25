@@ -96,7 +96,13 @@
                             <div v-for="role in roles">
                                 <div class="relative flex w-full">
                                     <div class="flex h-6 items-center">
-                                        <input v-model="role.checked" @change="changeRole(role)" :name="role.translation_key" :id="role.translation_key" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-buttons-hover focus:ring-0" />
+                                        <input v-model="role.checked"
+                                               @change="changeRole(role)"
+                                               :name="role.translation_key"
+                                               :id="role.translation_key"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"
+                                        />
                                     </div>
                                     <div class="ml-3 w-full text-sm flex items-center justify-between">
                                         <label :for="role.translation_key" class="font-medium text-gray-900 w-5/6">
@@ -121,9 +127,15 @@
                         <div class="mb-8 flex flex-col" v-if="showPresets">
                             <div v-if="permission_presets.length > 0"
                                  v-for="preset in permission_presets">
-                                <div class="relative flex w-full">
+                                <div class="relative flex w-full mb-2">
                                     <div class="flex h-6 items-center">
-                                        <input v-model="preset.checked" @change="usePreset(preset)" :id="preset.name" :name="preset.name" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-buttons-hover focus:ring-0" />
+                                        <input v-model="preset.checked"
+                                               @change="usePreset(preset)"
+                                               :id="preset.name"
+                                               :name="preset.name"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"
+                                        />
                                     </div>
                                     <div class="ml-3 w-full text-sm flex items-center justify-between">
                                         <label :for="preset.name" class="font-medium text-gray-900 w-5/6">
@@ -156,7 +168,13 @@
                                 <div class="relative w-full flex items-center mb-2" v-for="(permission, index) in group.permissions" :key=index>
                                     <div class="relative flex w-full">
                                         <div class="flex h-6 items-center">
-                                            <input v-model="permission.checked" @change="changePermission(permission)" :id="permission.translation_key" :name="permission.translation_key" type="checkbox" class="h-4 w-4 border-gray-300 text-artwork-buttons-hover focus:ring-0" />
+                                            <input v-model="permission.checked"
+                                                   @change="changePermission(permission)"
+                                                   :id="permission.translation_key"
+                                                   :name="permission.translation_key"
+                                                   type="checkbox"
+                                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"
+                                            />
                                         </div>
                                         <div class="ml-3 w-full text-sm flex items-center justify-between">
                                             <label :for="permission.translation_key" class="font-medium text-gray-900 w-5/6">
@@ -173,6 +191,7 @@
                 </div>
                 <div class="w-full items-center text-center">
                     <FormButton
+                        class="mt-5"
                         @click="addUser"
                         :disabled="form.processing || (form.user_emails.length === 0)"
                         :text="$t('Invite')"
@@ -342,15 +361,12 @@ export default {
             }
         },
         changeRole(role) {
-            if (!role.checked) {
+            if (role.checked) {
                 this.form.roles.push(role.name);
-                role.checked = true;
-            } else {
-                if (this.form.roles.includes(role.name)) {
-                    this.form.roles = this.form.roles.filter(permissionName => permissionName !== role.name);
-                    role.checked = false;
-                }
+                return;
             }
+
+            this.form.roles = this.form.roles.filter(permissionName => permissionName !== role.name);
         },
         changePermission(permission) {
             if (permission.checked) {

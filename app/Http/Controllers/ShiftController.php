@@ -46,6 +46,8 @@ class ShiftController extends Controller
         ShiftsQualificationsService $shiftsQualificationsService
     ): void {
         $shift = $event->shifts()->create($request->only([
+            'start_date',
+            'end_date',
             'start',
             'end',
             'break_minutes',
@@ -80,6 +82,8 @@ class ShiftController extends Controller
             foreach ($seriesEvents as $seriesEvent) {
                 if ($seriesEvent->id != $event->id) {
                     $newShift = $seriesEvent->shifts()->create($request->only([
+                        'start_date',
+                        'end_date',
                         'start',
                         'end',
                         'break_minutes',
@@ -174,6 +178,8 @@ class ShiftController extends Controller
             );
         }
         $shift->update($request->only([
+            'start_date',
+            'end_date',
             'start',
             'end',
             'break_minutes',
@@ -273,6 +279,8 @@ class ShiftController extends Controller
         }
 
         $shift->update($request->only([
+            'start_date',
+            'end_date',
             'start',
             'end',
             'break_minutes',

@@ -11,6 +11,7 @@ use Artwork\Core\Database\Models\Model;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,8 @@ use Illuminate\Support\Collection;
 /**
  * @property int $id
  * @property int $event_id
+ * @property string $start_date
+ * @property string $end_date
  * @property string $start
  * @property string $end
  * @property int $break_minutes
@@ -53,6 +56,8 @@ class Shift extends Model
 
     protected $fillable = [
         'event_id',
+        'start_date',
+        'end_date',
         'start',
         'end',
         'break_minutes',
@@ -68,7 +73,9 @@ class Shift extends Model
     protected $casts = [
         'start' => TimeWithoutSeconds::class,
         'end' => TimeWithoutSeconds::class,
-        'is_committed' => 'boolean'
+        'is_committed' => 'boolean',
+        'start_date' => 'datetime:d. M Y',
+        'end_date' => 'datetime:d. M Y',
     ];
 
     protected $with = [
@@ -81,7 +88,9 @@ class Shift extends Model
 
     protected $appends = [
         'break_formatted',
-        'infringement'
+        'infringement',
+        'formatted_dates',
+        'days_of_shift'
     ];
 
     public function committedBy(): BelongsTo
@@ -137,6 +146,28 @@ class Shift extends Model
             ->belongsToMany(ServiceProvider::class, 'shifts_service_providers')
             ->using(ShiftServiceProvider::class)
             ->withPivot(['id', 'shift_qualification_id', 'shift_count']);
+    }
+
+    public function getFormattedDatesAttribute(): array
+    {
+        return [
+            'start' => Carbon::parse($this->start_date)->format('d.m.Y'),
+            'end' => Carbon::parse($this->end_date)->format('d.m.Y')
+        ];
+    }
+
+    public function getDaysOfShiftAttribute(){
+        if (!$this->start_date || !$this->end_date) {
+            return [];
+        }
+        $days_period = CarbonPeriod::create($this->start_date, $this->end_date);
+        $days = [];
+
+        foreach ($days_period as $day) {
+            $days[] = $day->format('d.m.Y');
+        }
+
+        return $days;
     }
 
     public function shiftsQualifications(): HasMany

@@ -88,6 +88,41 @@ class CalendarController extends Controller
     }
 
     /**
+     * @param $date_of_day
+     * @param $userId
+     * @return array<int, Event>
+     */
+    private function getShiftsPerDay($date_of_day, $userId = null): array
+    {
+        $today = $date_of_day->format('d.m.Y');
+
+        $events = Event::with(
+            ['shifts' => function ($query) use ($userId): void {
+                $query->whereHas(
+                    'users',
+                    function ($query) use ($userId): void {
+                        $query->where('user_id', $userId);
+                    }
+                );
+            }, 'shifts.shiftsQualifications']
+        )->whereHas(
+            'shifts.users',
+            function ($query) use ($userId): void {
+                $query->where('user_id', $userId);
+            }
+        )->get();
+
+        $eventsToday = $events->filter(
+            function ($event) use ($today) {
+                return in_array($today, $event->days_of_shifts);
+            }
+        )->all();
+
+        return $eventsToday;
+    }
+
+
+    /**
      * @return array<int, Event>
      */
     private function getEventsPerDayForFreelancer($date_of_day, $freelancerId = null): array
@@ -291,7 +326,7 @@ class CalendarController extends Controller
         $totalPlannedWorkingHours = 0;
 
         foreach ($calendarPeriod as $date) {
-            $events = $this->getEventsPerDay($date, $user->id);
+            $events = $this->getShiftsPerDay($date, $user->id);
 
             // Calculate planned working hours for this day
             $plannedWorkingHours = 0;

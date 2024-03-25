@@ -1664,5 +1664,8 @@
     "The shift starts after the event ends!": "The shift starts after the event ends!",
     "The shift ends before the event starts!": "The shift ends before the event starts!",
     "The shift ends before it starts!": "The shift ends before it starts!",
-    "The shift starts after it ends!": "The shift starts after it ends!"
+    "The shift starts after it ends!": "The shift starts after it ends!",
+    "Shift start date": "Shift start date",
+    "Shift end date": "Shift end date",
+    "The shift end time cannot be before the shift start time.": "The shift end time cannot be before the shift start time."
 }

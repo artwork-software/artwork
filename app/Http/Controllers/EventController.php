@@ -1196,7 +1196,25 @@ class EventController extends Controller
                         'end_time' => $endDay . ' ' . $endTime,
                     ]);
                 }
+                // date shifts with date
+
             }
+        }
+
+        $shifts = Shift::where('event_id', $event->id)->get();
+        foreach ($shifts as $shift) {
+            $startDay = Carbon::create($shift->start_date)
+                ->addDays($diffStartDays)
+                ->format('Y-m-d');
+            $endDay = Carbon::create($shift->end_date)
+                ->addDays($diffEndDays)
+                ->format('Y-m-d');
+
+
+            $shift->update([
+                'start_date' => $startDay,
+                'end_date' => $endDay,
+            ]);
         }
 
         return new CalendarEventResource($event);
@@ -1907,21 +1925,57 @@ class EventController extends Controller
                         if ($request->type === 2) {
                             $event->start_time = $startDate->addDays($request->value);
                             $event->end_time = $endDate->addDays($request->value);
+                            // update Event Shifts start_data and end_date
+                            $shifts = Shift::where('event_id', $event->id)->get();
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->start_date);
+                                $shiftEnd = Carbon::parse($shift->end_date);
+                                $shift->start_date = $shiftStart->addDays($request->value);
+                                $shift->end_date = $shiftEnd->addDays($request->value);
+                                $shift->save();
+                            }
                         }
                         // Wochen
                         if ($request->type === 3) {
                             $event->start_time = $startDate->addWeeks($request->value);
                             $event->end_time = $endDate->addWeeks($request->value);
+                            // update Event Shifts start_data and end_date
+                            $shifts = Shift::where('event_id', $event->id)->get();
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->start_date);
+                                $shiftEnd = Carbon::parse($shift->end_date);
+                                $shift->start_date = $shiftStart->addWeeks($request->value);
+                                $shift->end_date = $shiftEnd->addWeeks($request->value);
+                                $shift->save();
+                            }
                         }
                         // Monate
                         if ($request->type === 4) {
                             $event->start_time = $startDate->addMonths($request->value);
                             $event->end_time = $endDate->addMonths($request->value);
+                            // update Event Shifts start_data and end_date
+                            $shifts = Shift::where('event_id', $event->id)->get();
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->start_date);
+                                $shiftEnd = Carbon::parse($shift->end_date);
+                                $shift->start_date = $shiftStart->addMonths($request->value);
+                                $shift->end_date = $shiftEnd->addMonths($request->value);
+                                $shift->save();
+                            }
                         }
                         // Jahre
                         if ($request->type === 5) {
                             $event->start_time = $startDate->addYears($request->value);
                             $event->end_time = $endDate->addYears($request->value);
+                            // update Event Shifts start_data and end_date
+                            $shifts = Shift::where('event_id', $event->id)->get();
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->start_date);
+                                $shiftEnd = Carbon::parse($shift->end_date);
+                                $shift->start_date = $shiftStart->addYears($request->value);
+                                $shift->end_date = $shiftEnd->addYears($request->value);
+                                $shift->save();
+                            }
                         }
                     }
 
@@ -1931,26 +1985,59 @@ class EventController extends Controller
                         if ($request->type === 1) {
                             $event->start_time = $startDate->subHours($request->value);
                             $event->end_time = $endDate->subHours($request->value);
+
                         }
                         // Tage
                         if ($request->type === 2) {
                             $event->start_time = $startDate->subDays($request->value);
                             $event->end_time = $endDate->subDays($request->value);
+                            $shifts = Shift::where('event_id', $event->id)->get();
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->start_date);
+                                $shiftEnd = Carbon::parse($shift->end_date);
+                                $shift->start_date = $shiftStart->subDays($request->value);
+                                $shift->end_date = $shiftEnd->subDays($request->value);
+                                $shift->save();
+                            }
                         }
                         // Wochen
                         if ($request->type === 3) {
                             $event->start_time = $startDate->subWeeks($request->value);
                             $event->end_time = $endDate->subWeeks($request->value);
+                            $shifts = Shift::where('event_id', $event->id)->get();
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->start_date);
+                                $shiftEnd = Carbon::parse($shift->end_date);
+                                $shift->start_date = $shiftStart->subWeeks($request->value);
+                                $shift->end_date = $shiftEnd->subWeeks($request->value);
+                                $shift->save();
+                            }
                         }
                         // Monate
                         if ($request->type === 4) {
                             $event->start_time = $startDate->subMonths($request->value);
                             $event->end_time = $endDate->subMonths($request->value);
+                            $shifts = Shift::where('event_id', $event->id)->get();
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->start_date);
+                                $shiftEnd = Carbon::parse($shift->end_date);
+                                $shift->start_date = $shiftStart->subMonths($request->value);
+                                $shift->end_date = $shiftEnd->subMonths($request->value);
+                                $shift->save();
+                            }
                         }
                         // Jahre
                         if ($request->type === 5) {
                             $event->start_time = $startDate->subYears($request->value);
                             $event->end_time = $endDate->subYears($request->value);
+                            $shifts = Shift::where('event_id', $event->id)->get();
+                            foreach ($shifts as $shift) {
+                                $shiftStart = Carbon::parse($shift->start_date);
+                                $shiftEnd = Carbon::parse($shift->end_date);
+                                $shift->start_date = $shiftStart->subYears($request->value);
+                                $shift->end_date = $shiftEnd->subYears($request->value);
+                                $shift->save();
+                            }
                         }
                     }
                 }

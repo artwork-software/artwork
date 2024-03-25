@@ -55,19 +55,19 @@
                                        v-model="this.permissionPresetForm.permissions"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+
                                 <p :class="[this.permissionPresetForm.permissions.includes(permission.id) ? 'xsDark' : 'xsLight']"
-                                   class="ml-4 my-auto text-sm" v-if="!permission.name_de">{{ permission.name }}</p>
-                                <p :class="[this.permissionPresetForm.permissions.includes(permission.id) ? 'xsDark' : 'xsLight']"
-                                   class="ml-4 my-auto text-sm" v-else>{{permission.name_de}}</p>
+                                   class="ml-4 my-auto text-sm">{{ $t(permission.translation_key) }}</p>
                             </div>
                             <div v-if="permission.showIcon !== false">
-                                <TextToolTip :id="permission.id" :height="6" :width="6" :tooltip-text="permission.tooltipText" />
+                                <TextToolTip :id="permission.id" :height="6" :width="6" :tooltip-text="permission.tooltipKey" />
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="w-full items-center text-center">
-                    <FormButton @click="save"
+                    <FormButton class="mt-5"
+                                @click="save"
                                :disabled="this.permissionPresetForm.permissions.length === 0 || this.permissionPresetForm.name === ''"
                                :text="this.mode === 'create' ? $t('Create') : $t('Save')"
                     />

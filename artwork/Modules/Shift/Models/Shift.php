@@ -152,7 +152,9 @@ class Shift extends Model
     {
         return [
             'start' => Carbon::parse($this->start_date)->format('d.m.Y'),
-            'end' => Carbon::parse($this->end_date)->format('d.m.Y')
+            'end' => Carbon::parse($this->end_date)->format('d.m.Y'),
+            'frontend_start' => Carbon::parse($this->start_date)->format('Y-m-d'),
+            'frontend_end' => Carbon::parse($this->end_date)->format('Y-m-d')
         ];
     }
 

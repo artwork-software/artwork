@@ -25,7 +25,7 @@
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                                         <div>
-                                            <input :type="shift?.start_date ? 'date' : 'text'" onfocus="(this.type='date')"
+                                            <input :type="shift?.start_date ? 'date' : 'text'" onfocus="(this.type='date')" dataformatas="dd-mm-yyyy"
                                                    :placeholder="$t('Shift start date')"
                                                    v-model="shiftForm.start_date"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
@@ -198,8 +198,8 @@ export default defineComponent({
             open: true,
             shiftForm: useForm({
                 id: this.shift ? this.shift.id : null,
-                start_date: this.shift ? this.shift?.start_date : null,
-                end_date: this.shift ? this.shift?.end_date : null,
+                start_date: this.shift ? this.shift?.formatted_dates.frontend_start : null,
+                end_date: this.shift ? this.shift?.formatted_dates.frontend_end : null,
                 start: this.shift ? this.shift.start : null,
                 end: this.shift ? this.shift.end : null,
                 break_minutes: this.shift ? this.shift.break_minutes : null,

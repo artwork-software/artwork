@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PermissionNameEnum;
+use App\Enums\RoleNameEnum;
 use App\Events\UserUpdated;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\EventTypeResource;
@@ -29,6 +30,7 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
@@ -287,7 +289,7 @@ class UserController extends Controller
         ];
     }
 
-    public function update(Request $request, User $user): RedirectResponse
+    public function updateUserDetails(Request $request, User $user): RedirectResponse
     {
         if ($user->id !== Auth::user()->id && !Auth::user()->can(PermissionNameEnum::TEAM_UPDATE->value)) {
             abort(\Illuminate\Http\Response::HTTP_FORBIDDEN);
@@ -305,15 +307,37 @@ class UserController extends Controller
             );
         }
 
-        if ($request->permissions) {
-            $user->syncPermissions($request->permissions);
-        }
-
-        if ($request->roles) {
-            $user->syncRoles($request->roles);
-        }
-
         Session::put('locale', $user->language);
+
+        return Redirect::back();
+    }
+
+    public function updateUserPermissionsAndRoles(Request $request, User $user): RedirectResponse
+    {
+        //only add permissions which are also existing to the array which gets synced with user
+        $availablePermissions = PermissionNameEnum::cases();
+        $permissionsToGrant = [];
+        foreach ($request->permissions as $permissionToGrant) {
+            foreach ($availablePermissions as $availablePermission) {
+                if ($availablePermission->value === $permissionToGrant) {
+                    $permissionsToGrant[] = $permissionToGrant;
+                }
+            }
+        }
+
+        //only add roles which are also existing to the array which gets synced with user
+        $availableRoles = RoleNameEnum::cases();
+        $rolesToGrant = [];
+        foreach ($request->roles as $roleToGrant) {
+            foreach ($availableRoles as $availableRole) {
+                if ($availableRole->value === $roleToGrant) {
+                    $rolesToGrant[] = $roleToGrant;
+                }
+            }
+        }
+
+        $user->syncPermissions($permissionsToGrant);
+        $user->syncRoles($rolesToGrant);
 
         return Redirect::back();
     }

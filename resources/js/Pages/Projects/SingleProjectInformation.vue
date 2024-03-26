@@ -13,7 +13,9 @@
                                     :rooms-with-audience="roomsWithAudience"
                                     :group-projects="groupProjects"
                                     :access_budget="access_budget"
-                                    open-tab="info">
+                                    open-tab="info"
+                                    :project-tabs="tabs"
+        >
             <InfoTab :projectWriteIds="projectWriteIds"
                      :projectManagerIds="projectManagerIds"
                      :project="project"
@@ -34,6 +36,8 @@
                 :genres="genres"
                 :project-manager-ids="projectManagerIds"
             />
+
+            <Component :is=""/>
         </BaseSidenav>
     </app-layout>
 </template>
@@ -81,7 +85,8 @@ export default {
         'projectManagerIds',
         'projectWriteIds',
         'projectDeleteIds',
-        'access_budget'
+        'access_budget',
+        'tabs'
     ],
     data() {
         return {

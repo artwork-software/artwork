@@ -238,6 +238,7 @@ class Project extends Model
         return $this->belongsTo(ProjectStates::class, 'project_id', 'id', 'state');
     }
 
+
     /**
      * @return array<string, mixed>
      */

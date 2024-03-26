@@ -13,7 +13,9 @@
                                 :rooms-with-audience="roomsWithAudience"
                                 :group-projects="groupProjects"
                                 :access_budget="access_budget"
-                                open-tab="checklist">
+                                open-tab="checklist"
+                                :project-tabs="tabs"
+    >
         <ChecklistTab :projectWriteIds="projectWriteIds"
                       :projectManagerIds="projectManagerIds"
                       :project="project"
@@ -88,7 +90,8 @@ export default {
         'projectManagerIds',
         'projectWriteIds',
         'projectDeleteIds',
-        'access_budget'
+        'access_budget',
+        'tabs'
     ],
     data() {
         return {

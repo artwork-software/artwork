@@ -73,6 +73,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
@@ -1666,6 +1667,71 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($project->id);
     }
 
+    public function projectTabTest(Project $project, ProjectTab $projectTab): Response|ResponseFactory
+    {
+        $project->load([
+            'categories',
+            'departments.users.departments',
+            'genres',
+            'managerUsers',
+            'writeUsers',
+            'project_files',
+            'costCenter',
+            'sectors',
+            'users.departments',
+            'state',
+            'delete_permission_users'
+        ]);
+        $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
+        $headerObject->project = new ProjectInfoResource($project);
+        $headerObject->firstEventInProject = $project
+            ->events()
+            ->orderBy('start_time', 'ASC')
+            ->limit(1)
+            ->first();
+        $headerObject->lastEventInProject = $project->events()
+            ->orderBy('end_time', 'DESC')
+            ->limit(1)
+            ->first();
+        $headerObject->roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
+        $headerObject->projectManagerIds = $project->managerUsers()->pluck('user_id');
+        $headerObject->projectWriteIds = $project->writeUsers()->pluck('user_id');
+        $headerObject->projectDeleteIds = $project->delete_permission_users()->pluck('user_id');
+        $headerObject->eventTypes = EventTypeResource::collection(EventType::all())->resolve();
+        $headerObject->states = ProjectStates::all();
+        $headerObject->projectGroups = $project->groups()->get();
+        $headerObject->groupProjects = Project::where('is_group', 1)->get();
+        $headerObject->categories = Category::all();
+        $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
+        $headerObject->projectCategories = $project->categories;
+        $headerObject->genres = Genre::all();
+        $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
+        $headerObject->projectGenres = $project->genres;
+        $headerObject->sectors = Sector::all();
+        $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
+        $headerObject->projectSectors = $project->sectors;
+        $headerObject->projectState = $project->state;
+        $headerObject->access_budget = $project->access_budget;
+        $headerObject->tabs = ProjectTab::orderBy('order')->get();
+        $headerObject->currentTabId = $projectTab->id;
+
+        $projectTab->load(['components' => function ($query): void {
+            // order by component order
+            $query->orderBy('order');
+        }, 'components.projectValue' => function ($query) use ($projectTab, $project): void {
+            $query->where('project_id', $project->id)->where('project_tab_id', $projectTab->id);
+        }]);
+
+        $dataObject = new stdClass();
+        $dataObject->currentTab = $projectTab;
+
+
+        return inertia('Projects/TabTest/TabContent', [
+            'dataObject' => $dataObject,
+            'headerObject' => $headerObject,
+        ]);
+    }
+
     public function projectInfoTab(Project $project)
     {
         $project->load([
@@ -1733,6 +1799,9 @@ class ProjectController extends Controller
             'projectSectors' => $project->sectors,
             'projectState' => $project->state,
             'access_budget' => $project->access_budget,
+            'tabs' => ProjectTab::with(['components.projectValues' => function ($query) use ($project): void {
+                $query->where('project_id', $project->id);
+            }])->orderBy('order')->get(),
         ]);
     }
     public function projectCalendarTab(Project $project, CalendarController $calendar): Response|ResponseFactory
@@ -1840,6 +1909,7 @@ class ProjectController extends Controller
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'user_filters' => $showCalendar['user_filters'],
             'access_budget' => $project->access_budget,
+            'tabs' => ProjectTab::orderBy('order')->get(),
         ]);
     }
 
@@ -1894,6 +1964,7 @@ class ProjectController extends Controller
             'currentGroup' => $groupOutput,
             'checklist_templates' => ChecklistTemplateIndexResource::collection(ChecklistTemplate::all())->resolve(),
             'access_budget' => $project->access_budget,
+            'tabs' => ProjectTab::orderBy('order')->get(),
         ]);
     }
 
@@ -2041,7 +2112,8 @@ class ProjectController extends Controller
             'currentUserCrafts' => Auth::user()
                 ->crafts
                 ->merge(Craft::query()->where('assignable_by_all', '=', true)->get()),
-            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending()
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
+            'tabs' => ProjectTab::orderBy('order')->get(),
         ]);
     }
 
@@ -2233,7 +2305,8 @@ class ProjectController extends Controller
             ],
             'recentlyCreatedSageAssignedDataComment' => $this->determineRecentlyCreatedSageAssignedDataComment(
                 $sageAssignedDataCommentService
-            )
+            ),
+            'tabs' => ProjectTab::orderBy('order')->get(),
         ]);
     }
 
@@ -2312,6 +2385,7 @@ class ProjectController extends Controller
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'states' => ProjectStates::all(),
             'access_budget' => $project->access_budget,
+            'tabs' => ProjectTab::orderBy('order')->get(),
         ]);
     }
 

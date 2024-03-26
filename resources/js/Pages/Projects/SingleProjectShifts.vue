@@ -13,7 +13,9 @@
                                     :rooms-with-audience="roomsWithAudience"
                                     :group-projects="groupProjects"
                                     :access_budget="access_budget"
-                                    open-tab="shift">
+                                    open-tab="shift"
+                                    :project-tabs="tabs"
+        >
             <ShiftTab :projectWriteIds="projectWriteIds"
                       :projectManagerIds="projectManagerIds"
                       :eventsWithRelevant="eventsWithRelevant"
@@ -77,7 +79,8 @@ export default {
         'projectDeleteIds',
         'access_budget',
         'currentUserCrafts',
-        'shiftQualifications'
+        'shiftQualifications',
+        'tabs'
     ],
     data() {
         return {

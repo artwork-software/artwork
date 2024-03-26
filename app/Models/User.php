@@ -390,10 +390,17 @@ class User extends Authenticatable implements Vacationer, Available
         //dd($startDate, $endDate);
 
         // get shifts where shift->start_date and shift->end_date is between $startDate and $endDate
-        $shiftsInDateRange = $this->shifts()
-            ->whereBetween('event_start_day', [$startDate, $endDate])
-            ->get();
 
+        $shiftsInDateRange = $this->shifts()
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                    ->orWhereBetween('end_date', [$startDate, $endDate]);
+            })
+            ->orWhere(function ($query) use ($startDate, $endDate) {
+                $query->where('start_date', '<', $startDate)
+                    ->where('end_date', '>', $endDate);
+            })
+            ->get();
 
         $plannedWorkingHours = 0;
 

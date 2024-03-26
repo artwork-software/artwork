@@ -25,16 +25,12 @@ class UserPolicy
     }
     public function update(User $user): bool
     {
-        return $user->can(PermissionNameEnum::USER_UPDATE->value) ||
-            $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) ||
-            Auth::user()->id === $user->id;
+        return Auth::user()->id === $user->id;
     }
 
     public function delete(User $user, User $model): bool
     {
-        return $user->can(PermissionNameEnum::USER_UPDATE->value) ||
-            $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) ||
-            $user->id == $model->id;
+        return $user->id == $model->id;
     }
 
     public function updateWorkProfile(User $user): bool

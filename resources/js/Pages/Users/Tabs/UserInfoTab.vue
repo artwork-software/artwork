@@ -282,8 +282,6 @@ import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } f
 import SecondaryButton from "@/Jetstream/SecondaryButton.vue";
 import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 
-
-
 export default {
     components: {
         BaseButton,
@@ -301,7 +299,12 @@ export default {
         MenuButton,
         MenuItem,
         MenuItems,
-        Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions,ChevronDownIcon
+        Listbox,
+        ListboxButton,
+        ListboxLabel,
+        ListboxOption,
+        ListboxOptions,
+        ChevronDownIcon
     },
     mixins: [Permissions],
     props: [
@@ -326,7 +329,6 @@ export default {
             updateProfilePictureFeedback: "",
             photoPreview: null,
             showChangePictureModal: false,
-
             userForm: useForm({
                 first_name: this.user_to_edit.first_name,
                 last_name: this.user_to_edit.last_name,
@@ -392,10 +394,13 @@ export default {
                 return; // Exit the function without making the API call
             }
             this.userForm.patch(
-                route('user.update', {user: this.user_to_edit.id}), {
-                preserveScroll: true, preserveState: false,
-                onSuccess: () => this.openSuccessModal()
-            });
+                route('user.update', {user: this.user_to_edit.id}),
+                {
+                    preserveScroll: true,
+                    preserveState: false,
+                    onSuccess: () => this.openSuccessModal()
+                }
+            );
             this.nameError = false;
             this.hasNameError = false;
         },

@@ -17,7 +17,6 @@ const PROJECT_BUDGET_SEE_DOCS_CONTRACTS = 'can see, edit and delete project cont
 
 // ROOM
 const EVENT_REQUEST = 'request room occupancy';
-const ROOM_REQUEST_READING_DETAILS = 'read details room request';
 const ROOM_REQUEST_CONFIRM = 'confirm prioritize edit room requests';
 const ROOM_UPDATE = 'create, delete and update rooms';
 
@@ -28,7 +27,6 @@ const CONTRACT_SEE_DOWNLOAD = 'can see and download contract modules';
 const MONEY_SOURCE_EDIT_DELETE = 'can edit and delete money sources';
 
 // System
-const USER_UPDATE = 'usermanagement';
 const CHECKLIST_SETTINGS_ADMIN = 'admin checklistTemplates';
 const TEAM_UPDATE = 'teammanagement';
 const DEPARTMENT_UPDATE = 'update departments';
@@ -43,7 +41,6 @@ const SYSTEM_NOTIFICATION = 'change system notification';
 //const PROJECT_DELETE = 'delete projects';
 const EVENT_TYPE_SETTINGS_ADMIN = 'admin eventTypeSettings';
 const PROJECT_ADMIN = 'admin projects';
-const CHECKLIST_UPDATE = 'update checklists';
 
 const CHECKLIST_VIEW = 'view checklists';
 const PROJECT_SETTINGS_ADMIN = 'admin projectSettings';

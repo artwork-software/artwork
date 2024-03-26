@@ -78,6 +78,12 @@
         </div>
         <div class="mt-1 h-[calc(100%-2.7rem)] bg-gray-200 p-1">
             <p class="text-xs mb-1">
+                <span v-if="shift.start_date && shift.end_date && shift.start_date !== shift.end_date">
+                    {{ shift.formatted_dates.start }} - {{ shift.formatted_dates.end }}
+                </span>
+                <span v-if="shift.start_date && shift.end_date && shift.start_date === shift.end_date">
+                    {{ shift.formatted_dates.start }}
+                </span>
                 {{ shift.start }} - {{ shift.end }}
                 <span v-if="shift.break_minutes">| {{ shift.break_formatted }}</span>
             </p>

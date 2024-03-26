@@ -40,8 +40,8 @@
 
                                     </div>
                                 </div>
-                                <div v-for="shift in user.element.shifts[day.full_day]">
-                                    <div class="flex items-center justify-between group mb-2" :id="'shift-' + shift.id">
+                                <div v-for="shift in user.element.shifts">
+                                    <div v-if="shift.days_of_shift?.includes(day.full_day)" class="flex items-center justify-between group mb-2" :id="'shift-' + shift.id">
                                         <div>
                                             <div class="flex text-sm">
                                                 {{ shift.craft?.abbreviation }} {{ shift.start }} - {{ shift.end }} | {{ shift.event.room?.name }} | {{ shift.event.event_type?.abbreviation }}: {{ findProjectById(shift.event.project_id)?.name }}

@@ -108,7 +108,7 @@ export default {
     emits: ['enterFullscreenMode','previousTimeRange','nextTimeRange', 'openHistoryModal'],
     data() {
         return {
-            activeFilters: [],
+            //activeFilters: [],
             showConfirmCommitModal: false,
         }
     },

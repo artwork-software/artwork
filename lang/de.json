@@ -1665,5 +1665,6 @@
     "The shift starts after the event ends!": "Die Schicht beginnt nach dem Event!",
     "The shift ends before the event starts!": "Die Schicht endet vor dem Event!",
     "The shift ends before it starts!": "Die Schicht endet bevor sie beginnt!",
-    "The shift starts after it ends!": "Die Schicht beginnt nachdem sie endet!"
+    "The shift starts after it ends!": "Die Schicht beginnt nachdem sie endet!",
+    "Edit Key Visual": "Key Visual bearbeiten"
 }

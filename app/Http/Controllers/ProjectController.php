@@ -3066,7 +3066,7 @@ class ProjectController extends Controller
 
             if ($img->width() < 1080) {
                 throw ValidationException::withMessages([
-                    'keyVisual' => __('notification.key_visual.width')
+                    'keyVisual' => __('notification.project.key_visual.width')
                 ]);
             }
 
@@ -3076,7 +3076,7 @@ class ProjectController extends Controller
             $basename = Str::random(20) . $original_name;
 
             $project->key_visual_path = $basename;
-            $img->save(Storage::path('public/keyVisual') . '/header_' . $basename, 100, $file->clientExtension());
+            $img->save(Storage::path('public/keyVisual/') . $basename, 100, $file->clientExtension());
             Storage::putFileAs('public/keyVisual', $file, $basename);
         }
         $project->save();

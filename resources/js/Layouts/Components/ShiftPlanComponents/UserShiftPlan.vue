@@ -36,6 +36,7 @@
                                                   :showRoom="true"
                                                   :show-duration-info="true"
                                                   :shift-qualifications="this.shiftQualifications"
+                                                  :day-string="day"
                             />
                         </div>
                     </div>

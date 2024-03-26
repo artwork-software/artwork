@@ -14,6 +14,11 @@
                                       :user_filters="user_filters"
                 />
             </div>
+
+            <pre>
+
+            </pre>
+
             <div class="z-40" :style="{ '--dynamic-height': windowHeight + 'px' }">
                 <div ref="shiftPlan" id="shiftPlan" class="bg-white flex-grow" :class="[isFullscreen ? 'overflow-y-auto' : '', showUserOverview ? ' max-h-[var(--dynamic-height)] overflow-y-scroll' : '',' max-h-[var(--dynamic-height)] overflow-y-scroll overflow-x-scroll']">
                     <Table>
@@ -52,6 +57,7 @@
                                                 :event="event"
                                                 :shift-qualifications="shiftQualifications"
                                                 @dropFeedback="showDropFeedback"
+                                                :day-string="day"
                                             >
                                             </SingleShiftPlanEvent>
                                         </div>
@@ -164,8 +170,10 @@
                                         <div :class="highlightMode ? idToHighlight ? idToHighlight === user.element.id && user.type === this.typeToHighlight ? '' : 'opacity-30' : 'opacity-30' : ''"
                                             class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"
                                             @click="openShowUserShiftModal(user, day)">
-                                            <span v-for="shift in user.element?.shifts[day.full_day]" v-if="!user.vacations?.includes(day.without_format)">
-                                                {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                            <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
+                                                <span v-if="shift.days_of_shift?.includes(day.full_day)">
+                                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                                </span>
                                             </span>
                                             <span v-else class="h-full flex justify-center items-center">
                                                 {{ $t('not available')}}
@@ -209,9 +217,10 @@
                                     </th>
                                     <td v-for="day in days">
                                         <div class="w-[12.375rem] h-12 p-2 bg-gray-50/10 text-white text-xs rounded-lg shiftCell cursor-pointer"  @click="openShowUserShiftModal(user, day)">
-                                            <span v-if="!user.vacations?.includes(day.without_format)"
-                                                  v-for="shift in user.element?.shifts[day.full_day]">
-                                                {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                            <span v-for="shift in user.element?.shifts" v-if="!user.vacations?.includes(day.without_format)">
+                                                <span v-if="shift.days_of_shift?.includes(day.full_day)">
+                                                    {{ shift.start }} - {{ shift.end }} {{ shift.event.room?.name }},
+                                                </span>
                                             </span>
                                             <span v-else class="h-full flex justify-center items-center">
                                                 {{ $t('not available')}}
@@ -373,7 +382,9 @@ export default {
                 removeFromShift: []
             },
             showShiftsQualificationsAssignmentModal: false,
-            showShiftsQualificationsAssignmentModalShifts: []
+            showShiftsQualificationsAssignmentModalShifts: [],
+            shiftsAreChecked: [],
+            shiftsToRemoveCheckState: [],
         }
     },
     mounted() {
@@ -772,6 +783,29 @@ export default {
             if (this.userOverviewHeight < 100) {
                 this.userOverviewHeight = 100;
             }
+        },
+        setShiftsCheckState(shiftId, state) {
+            // Durchläuft den shiftPlan und aktualisiert den isCheckedForMultiEdit Status
+            this.shiftPlan.forEach(room => {
+                this.days.forEach(day => {
+                    room[day.full_day].events.data.forEach(event => {
+                        event.shifts.forEach(shift => {
+                            if (shift.id === shiftId) {
+                                shift.isCheckedForMultiEdit = state;
+                                if(!state){
+                                   // remove shift form checkedShiftsForMultiEdit
+                                    const index = this.checkedShiftsForMultiEdit.findIndex(shift => shift.id === shiftId);
+                                    if (index !== -1) {
+                                        this.checkedShiftsForMultiEdit.splice(index, 1);
+                                    }
+                                } else {
+                                    this.checkedShiftsForMultiEdit.push(shift);
+                                }
+                            }
+                        });
+                    });
+                });
+            });
         }
     },
     beforeUnmount() {
@@ -791,35 +825,32 @@ export default {
             deep: true
         },
         shiftPlan: {
-            handler() {
-                this.checkedShiftsForMultiEdit = [];
+            handler(newShiftPlan) {
+                // Erstelle eine Kopie von shiftsAreChecked, um zu bestimmen, welche entfernt wurden
+                let currentCheckedIds = [...this.shiftsAreChecked];
 
-                this.shiftPlan.forEach((room) => {
-                    this.days.forEach((day) => {
-                        room[day.full_day].events.data.forEach((event) => {
-                            event.shifts.forEach((shift) => {
+                console.log('hier')
+                // Durchlaufe den neuen shiftPlan, um Änderungen zu identifizieren
+                newShiftPlan.forEach(room => {
+                    this.days.forEach(day => {
+                        room[day.full_day].events.data.forEach(event => {
+                            event.shifts.forEach(shift => {
+                                const index = currentCheckedIds.indexOf(shift.id);
                                 if (shift.isCheckedForMultiEdit) {
-                                    this.checkedShiftsForMultiEdit.push(shift);
+                                    // Füge hinzu, wenn nicht vorhanden
+                                    if (index === -1) {
+                                        this.shiftsAreChecked.push(shift.id);
+                                        this.setShiftsCheckState(shift.id, true);
+                                    }
+                                } else if (index !== -1) {
+                                    // Entferne die ID und setze alle Schichten mit dieser ID auf false
+                                    this.shiftsAreChecked.splice(index, 1);
+                                    this.setShiftsCheckState(shift.id, false);
                                 }
-                                // if shift.id already exists in checkedShiftsForMultiEdit, checked it
-                                if (this.checkedShiftsForMultiEdit.find((checkedShift) => checkedShift.id === shift.id)) {
-                                    shift.isCheckedForMultiEdit = true;
-                                }
-                            })
-                        })
-                    })
+                            });
+                        });
+                    });
                 });
-            },
-            deep: true
-        },
-        multiEditMode: {
-            handler() {
-                if (!this.multiEditMode) {
-                    this.userForMultiEdit = null;
-                    this.dropUsers.forEach((user) => {
-                        user.element.checkedForMultiEdit = false;
-                    })
-                }
             },
             deep: true
         }

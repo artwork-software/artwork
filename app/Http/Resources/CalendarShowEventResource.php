@@ -46,6 +46,8 @@ class CalendarShowEventResource extends JsonResource
             'subEvents' => SubEventResource::collection($this->subEvents),
             // Hexcode for the background color of the event type with 20% opacity
             'eventTypeColorBackground' => $this->event_type->hex_code . '33',
+            'days_of_event' => $this->days_of_event,
+            'days_of_shifts' => $this->days_of_shifts,
         ];
     }
 }

@@ -25,6 +25,28 @@
                                 <div class="mt-10">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                                         <div>
+                                            <input :type="shift?.start_date ? 'date' : 'text'" onfocus="(this.type='date')" dataformatas="dd-mm-yyyy"
+                                                   :placeholder="$t('Shift start date')"
+                                                   v-model="shiftForm.start_date"
+                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                   required
+                                                   @change="checkInfringement"
+                                            />
+                                            <span class="text-xs text-red-500" v-show="helpTexts.date_start.length > 0">{{ helpTexts.date_start }} <br></span>
+                                            <span class="text-xs text-orange-500" v-show="helpTexts.warnings.date_start.length > 0">{{ helpTexts.warnings.date_start }}</span>
+                                        </div>
+                                        <div>
+                                            <input :type="shift?.end_date ? 'date' : 'text'" onfocus="(this.type='date')"
+                                                   :placeholder="$t('Shift end date')"
+                                                   v-model="shiftForm.end_date"
+                                                   maxlength="3"
+                                                   required
+                                                   @change="checkInfringement"
+                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                            <span class="text-xs text-red-500" v-show="helpTexts.date_end.length > 0">{{ helpTexts.date_end }} <br></span>
+                                            <span class="text-xs text-orange-500" v-show="helpTexts.warnings.date_end.length > 0">{{ helpTexts.warnings.date_end }}</span>
+                                        </div>
+                                        <div>
                                             <input type="text" onfocus="(this.type='time')"
                                                    :placeholder="$t('Shift start')"
                                                    v-model="shiftForm.start"
@@ -32,7 +54,7 @@
                                                    required
                                                    @change="checkInfringement"
                                             />
-                                             <span class="text-xs text-red-500" v-show="helpTexts.start.length > 0">{{ helpTexts.start }}</span>
+                                             <span class="text-xs text-red-500" v-show="helpTexts.start.length > 0">{{ helpTexts.start }} <br></span>
                                              <span class="text-xs text-orange-500" v-show="helpTexts.warnings.start.length > 0">{{ helpTexts.warnings.start }}</span>
                                         </div>
                                         <div>
@@ -43,8 +65,8 @@
                                                    required
                                                    @change="checkInfringement"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                            <span class="text-xs text-red-500" v-show="helpTexts.end.length > 0">{{ helpTexts.end }}</span>
-                                            <span class="text-xs text-red-500" v-show="helpTexts.time.length > 0">{{ helpTexts.time }}</span>
+                                            <span class="text-xs text-red-500" v-show="helpTexts.end.length > 0">{{ helpTexts.end }} <br></span>
+                                            <span class="text-xs text-red-500" v-show="helpTexts.time.length > 0">{{ helpTexts.time }} <br></span>
                                             <span class="text-xs text-orange-500" v-show="helpTexts.warnings.end.length > 0">{{ helpTexts.warnings.end }}</span>
                                         </div>
                                         <div>
@@ -176,6 +198,8 @@ export default defineComponent({
             open: true,
             shiftForm: useForm({
                 id: this.shift ? this.shift.id : null,
+                start_date: this.shift ? this.shift?.formatted_dates.frontend_start : null,
+                end_date: this.shift ? this.shift?.formatted_dates.frontend_end : null,
                 start: this.shift ? this.shift.start : null,
                 end: this.shift ? this.shift.end : null,
                 break_minutes: this.shift ? this.shift.break_minutes : null,
@@ -199,7 +223,11 @@ export default defineComponent({
                 time: '',
                 employeeText:'',
                 masterText:'',
+                date_start: '',
+                date_end: '',
                 warnings: {
+                    date_start: '',
+                    date_end: '',
                     start: '',
                     end: '',
                 }
@@ -213,53 +241,55 @@ export default defineComponent({
             this.$emit('closed', bool);
         },
         checkInfringement() {
+            // Initialisiere die Warnungen
+            this.helpTexts.warnings.start = '';
+            this.helpTexts.warnings.end = '';
+            this.helpTexts.time = '';
+            this.helpTexts.breakText = '';
 
-            // if the this.shiftForm.start is before the event start (this.event.start_time_without_day) or the this.shiftForm.end is after the event end (this.event.end_time_without_day) show a warning
-            if (this.shiftForm.start < this.event.start_time_without_day) {
+            // Erstelle DateTime Objekte für besseren Vergleich
+            const eventStartDateTime = new Date(this.event.start_time);
+            const eventEndDateTime = new Date(this.event.end_time);
+            const shiftStartDateTime = new Date(this.shiftForm.start_date + 'T' + this.shiftForm.start);
+            const shiftEndDateTime = new Date(this.shiftForm.end_date + 'T' + this.shiftForm.end);
+
+            // Überprüfe, ob die Schicht vor oder nach dem Event beginnt oder endet
+            if (shiftStartDateTime < eventStartDateTime) {
                 this.helpTexts.warnings.start = this.$t('The shift starts before the event starts!');
-            } else if (this.shiftForm.start > this.event.end_time_without_day) {
-                this.helpTexts.warnings.start = this.$t('The shift starts after the event ends!');
-            } else if (this.shiftForm.start > this.shiftForm.end) {
-                this.helpTexts.warnings.start = this.$t('The shift starts after it ends!');
-            } else {
-                this.helpTexts.warnings.start = '';
             }
 
-            if (this.shiftForm.end > this.event.end_time_without_day){
+            if (shiftEndDateTime > eventEndDateTime) {
                 this.helpTexts.warnings.end = this.$t('The shift ends after the event ends!');
-            } else if (this.shiftForm.end < this.event.start_time_without_day){
-                this.helpTexts.warnings.end = this.$t('The shift ends before the event starts!');
-            } else if (this.shiftForm.start < this.shiftForm.end) {
-                this.helpTexts.warnings.start = this.$t('The shift ends before it starts!');
-            } else {
-                this.helpTexts.warnings.end = '';
             }
 
+            if (shiftStartDateTime > shiftEndDateTime) {
+                this.helpTexts.warnings.start = this.$t('The shift ends before it starts!');
+            }
 
-            if(this.shiftForm.start && this.shiftForm.end){
-                // Get the time strings from the input fields
-                let startTime = this.shiftForm.start?.split(':');
-                let endTime = this.shiftForm.end?.split(':');
+            // Überprüfe, ob die Schicht nach dem Event beginnt
+            if (shiftStartDateTime > eventEndDateTime) {
+                this.helpTexts.warnings.start = this.$t('The shift starts after the event ends!');
+            }
 
-                // Parse hours and minutes
-                let startHours = parseInt(startTime[0], 10);
-                let startMinutes = parseInt(startTime[1], 10);
-                let endHours = parseInt(endTime[0], 10);
-                let endMinutes = parseInt(endTime[1], 10);
+            // Überprüfe, ob die Schicht endet, bevor das Event beginnt
+            if (shiftEndDateTime < eventStartDateTime) {
+                this.helpTexts.warnings.end = this.$t('The shift ends before the event starts!');
+            }
 
-                // Calculate time difference in minutes
-                let diffMinutes = (endHours - startHours) * 60 + (endMinutes - startMinutes);
+            // Überprüfe ob die Endzeit vor der Startzeit liegt
+            if (shiftStartDateTime > shiftEndDateTime) {
+                this.helpTexts.time = this.$t('The end time must be after the start time.');
+            }
 
-                if (diffMinutes > 600) { // 10 hours = 600 minutes
-                    this.helpTexts.time = this.$t('The shift is over 10 hours long!');
-                } else {
-                    this.helpTexts.time = '';
-                }
-                if (diffMinutes > 360 && this.shiftForm.break_minutes < 30) { // 6 hours = 360 minutes
-                    this.helpTexts.breakText = this.$t('The break is shorter than required by law!');
-                }else{
-                    this.helpTexts.breakText = '';
-                }
+            // Überprüfungen für Schichtlänge und Pausen
+            let diffMinutes = (shiftEndDateTime - shiftStartDateTime) / 60000; // Umrechnung von Millisekunden in Minuten
+
+            if (diffMinutes > 600) { // 10 Stunden = 600 Minuten
+                this.helpTexts.time = this.$t('The shift is over 10 hours long!');
+            }
+
+            if (diffMinutes > 360 && this.shiftForm.break_minutes < 30) { // 6 Stunden = 360 Minuten
+                this.helpTexts.breakText = this.$t('The break is shorter than required by law!');
             }
         },
         appendComputedShiftQualificationsToShiftForm() {
@@ -288,7 +318,7 @@ export default defineComponent({
                 (shiftsQualification) => shiftsQualification.shift_qualification_id === computedShiftQualification.id
             ) !== 'undefined'
         },
-        saveShift() {
+        /*saveShift() {
             if (this.event.is_series) {
                 if (!this.buffer?.onlyThisDay) {
                     this.shiftForm.changeAll = true;
@@ -386,7 +416,99 @@ export default defineComponent({
                     }
                 );
             }
+        }*/
+        saveShift() {
+            if (this.event.is_series) {
+                if (!this.buffer?.onlyThisDay) {
+                    this.shiftForm.changeAll = true;
+                    this.shiftForm.seriesId = this.event.series_id;
+                    this.shiftForm.changes_start = this.buffer?.start;
+                    this.shiftForm.changes_end = this.buffer?.end;
+                }
+            }
+
+            this.shiftForm.craft_id = this.selectedCraft?.id;
+
+            const eventStartDateTime = new Date(this.event.start_time);
+            const eventEndDateTime = new Date(this.event.end_time);
+            // Konvertiere die Datums- und Zeitstrings in Date-Objekte für den Vergleich
+            const shiftStartDate = new Date(this.shiftForm.start_date + 'T' + this.shiftForm.start);
+            const shiftEndDate = new Date(this.shiftForm.end_date + 'T' + this.shiftForm.end);
+            const eventStartDate = new Date(this.event.start_time);
+            const eventEndDate = new Date(this.event.end_time);
+
+            // Überprüfungen unter Einbeziehung der Datumsangaben
+            if (shiftStartDate >= shiftEndDate) {
+                // Überprüfung hinzugefügt, um sicherzustellen, dass die Schichtendzeit nicht vor der Schichtstartzeit liegt
+                this.helpTexts.time = this.$t('The shift end time cannot be before the shift start time.');
+                return;
+            }
+
+            if (this.shiftForm.start === null || this.shiftForm.start_date === null) {
+                this.helpTexts.start = this.$t('Please enter a start time and date.');
+                return;
+            } else {
+                this.helpTexts.start = '';
+            }
+
+            if (this.shiftForm.end === null || this.shiftForm.end_date === null) {
+                this.helpTexts.end = this.$t('Please enter an end time and date.');
+                return;
+            } else {
+                this.helpTexts.end = '';
+            }
+
+            if (this.selectedCraft === null) {
+                this.helpTexts.craftText = this.$t('Please select a trade.');
+                return;
+            } else {
+                this.helpTexts.craftText = '';
+            }
+
+            if (this.shiftForm.break_minutes === null) {
+                this.helpTexts.breakText = this.$t('Please enter a break time.');
+                return;
+            } else {
+                this.helpTexts.breakText = '';
+            }
+
+            if (shiftStartDate >= shiftEndDate) {
+                this.helpTexts.time = this.$t('The end time and date must be after the start time and date.');
+                return;
+            }
+
+            this.shiftForm.craft_id = this.selectedCraft.id;
+
+            this.shiftForm.number_employees = this.shiftForm.number_employees || 0;
+            this.shiftForm.number_masters = this.shiftForm.number_masters || 0;
+
+            this.appendComputedShiftQualificationsToShiftForm();
+
+            let onSuccess = () => {
+                this.shiftForm.reset();
+                this.closeModal(true);
+            };
+
+            // Logik zum Speichern oder Aktualisieren der Schicht
+            if (this.shiftForm.id) {
+                this.shiftForm.patch(
+                    route('event.shift.update', this.shift.id), {
+                        preserveScroll: true,
+                        preserveState: true,
+                        onSuccess: onSuccess
+                    }
+                );
+            } else {
+                this.shiftForm.post(
+                    route('event.shift.store', this.event.id), {
+                        preserveScroll: true,
+                        preserveState: true,
+                        onSuccess: onSuccess
+                    }
+                );
+            }
         }
+
     },
     computed: {
         computedShiftQualifications() {

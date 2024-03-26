@@ -115,10 +115,7 @@ class ServiceProvider extends Model
             ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
             ->with(['event.room'])
             ->get()
-            ->makeHidden(['allUsers'])
-            ->groupBy(function ($shift) {
-                return $shift->event->days_of_event;
-            });
+            ->makeHidden(['allUsers']);
     }
 
     public function getTypeAttribute(): string
@@ -142,11 +139,15 @@ class ServiceProvider extends Model
         $plannedWorkingHours = 0;
 
         foreach ($shiftsInDateRange as $shift) {
-            $shiftStart = Carbon::parse($shift->start); // Parse the start time
-            $shiftEnd = Carbon::parse($shift->end);     // Parse the end time
+            $shiftStart = $shift->start_date->format('Y-m-d') . ' ' . $shift->start; // Parse the start time
+            $shiftEnd =  $shift->end_date->format('Y-m-d') . ' ' . $shift->end;    // Parse the end time
             $breakMinutes = $shift->break_minutes;
 
-            $shiftDuration = ($shiftEnd->diffInMinutes($shiftStart) - $breakMinutes) / 60;
+            $shiftStart = Carbon::parse($shiftStart);
+            $shiftEnd = Carbon::parse($shiftEnd);
+
+
+            $shiftDuration = ($shiftEnd->diffInRealMinutes($shiftStart) - $breakMinutes) / 60;
             $plannedWorkingHours += $shiftDuration;
         }
 

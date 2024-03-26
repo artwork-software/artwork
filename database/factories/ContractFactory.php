@@ -22,7 +22,7 @@ class ContractFactory extends Factory
             'contract_partner' => 'Agentur XYZ',
             'amount' => 20000,
             'project_id' => 1,
-            'description' => $this->faker->paragraph,
+            'description' => $this->faker->text(255),
             'ksk_liable' => false,
             'resident_abroad' => false,
         ];

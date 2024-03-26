@@ -225,9 +225,15 @@ export default {
     },
     methods: {
         editUser() {
-            this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
-            this.showSuccessModal = true;
-            setTimeout(() => this.closeSuccessModal(), 2000)
+            this.userForm.patch(
+                route('user.update.permissions-and-roles', {user: this.user_to_edit.id}),
+                {
+                    onFinish: () => {
+                        this.showSuccessModal = true;
+                        setTimeout(() => this.closeSuccessModal(), 2000)
+                    }
+                }
+            );
         },
         closeSuccessModal() {
             this.showSuccessModal = false;

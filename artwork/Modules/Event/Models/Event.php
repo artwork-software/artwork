@@ -57,6 +57,9 @@ use Illuminate\Support\Collection;
  * @property \Illuminate\Database\Eloquent\Collection<Shift> $shifts
  * @property \Illuminate\Database\Eloquent\Collection<Timeline> $timelines
  * @property \Illuminate\Database\Eloquent\Collection<EventComment> $comments
+ * @property SeriesEvents|null $series
+ * @property-read array<string> $days_of_event
+ * @property-read array<string> $days_of_shifts
  */
 class Event extends Model
 {
@@ -111,7 +114,8 @@ class Event extends Model
         'days_of_event',
         'start_time_without_day',
         'end_time_without_day',
-        'event_date_without_time'
+        'event_date_without_time',
+        'days_of_shifts'
     ];
 
     public function comments(): HasMany
@@ -214,6 +218,26 @@ class Event extends Model
 
         foreach ($days_period as $day) {
             $days[] = $day->format('d.m.Y');
+        }
+
+        return $days;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function getDaysOfShiftsAttribute(): array
+    {
+        $days = [];
+
+        foreach ($this->shifts as $shift) {
+            if ($shift->start_date === null || $shift->end_date === null) {
+                continue;
+            }
+            $days_period = CarbonPeriod::create($shift->start_date, $shift->end_date);
+            foreach ($days_period as $day) {
+                $days[] = $day->format('d.m.Y');
+            }
         }
 
         return $days;

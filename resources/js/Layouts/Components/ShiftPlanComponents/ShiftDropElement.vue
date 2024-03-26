@@ -211,7 +211,7 @@ export default defineComponent({
                     false;
             },
             deep: true
-        }
+        },
     },
     methods: {
         onDragOver(event) {

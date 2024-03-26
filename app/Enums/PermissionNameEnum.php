@@ -12,13 +12,11 @@ enum PermissionNameEnum : string
     case PROJECT_BUDGET_VERIFIED_ADD_REMOVE = 'can add and remove verified states';
     case PROJECT_BUDGET_SEE_DOCS_CONTRACTS = 'can see, edit and delete project contracts and docs';
     case EVENT_REQUEST = 'request room occupancy';
-    case ROOM_REQUEST_READING_DETAILS = 'read details room request';
     case ROOM_UPDATE = 'create, delete and update rooms';
     case CONTRACT_EDIT_UPLOAD = 'view edit upload contracts';
     case MONEY_SOURCE_EDIT_VIEW_ADD = 'view edit add money_sources';
     case CONTRACT_SEE_DOWNLOAD = 'can see and download contract modules';
     case MONEY_SOURCE_EDIT_DELETE = 'can edit and delete money sources';
-    case USER_UPDATE = 'usermanagement';
     case CHECKLIST_SETTINGS_ADMIN = 'admin checklistTemplates';
     case TEAM_UPDATE = 'teammanagement';
     case SETTINGS_UPDATE = 'change tool settings';
@@ -27,7 +25,6 @@ enum PermissionNameEnum : string
     case SYSTEM_NOTIFICATION = 'change system notification';
     case VIEW_BUDGET_TEMPLATES = 'view budget templates';
     case UPDATE_BUDGET_TEMPLATES = 'edit budget templates';
-    case CHECKLIST_UPDATE = 'update checklists';
     case MA_MANAGER = 'can manage workers';
     case SHIFT_PLANNER = 'can plan shifts';
     case GLOBAL_PROJECT_BUDGET_ADMIN = 'can manage global project budgets';

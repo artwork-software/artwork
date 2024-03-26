@@ -26,6 +26,7 @@
                                   :event="event"
                                   :shift-qualifications="shiftQualifications"
                                   @drop-feedback="getDropFeedback"
+                                  v-if="checkIfShiftInDayString(shift)"
                 />
             </div>
         </div>
@@ -58,7 +59,8 @@ export default defineComponent({
         'highlightedType',
         'multiEditMode',
         'userForMultiEdit',
-        'shiftQualifications'
+        'shiftQualifications',
+        'dayString'
     ],
     methods: {
         getDropFeedback(event) {
@@ -66,6 +68,9 @@ export default defineComponent({
         },
         areAllShiftsCommitted(event) {
             return event.shifts.every(shift => shift.is_committed);
+        },
+        checkIfShiftInDayString(shift) {
+            return shift.days_of_shift?.includes(this.dayString['full_day']);
         }
     },
     emits: ['dropFeedback'],

@@ -170,10 +170,7 @@ class User extends Authenticatable implements Vacationer, Available
             ->without(['craft', 'users', 'event.project.shiftRelevantEventTypes'])
             ->with(['event.room'])
             ->get()
-            ->makeHidden(['allUsers'])
-            ->groupBy(function ($shift) {
-                return $shift->event->days_of_event;
-            });
+            ->makeHidden(['allUsers']);
     }
 
     public function getFullNameAttribute(): string
@@ -390,21 +387,35 @@ class User extends Authenticatable implements Vacationer, Available
 
     public function plannedWorkingHours($startDate, $endDate): float|int
     {
+        //dd($startDate, $endDate);
+
+        // get shifts where shift->start_date and shift->end_date is between $startDate and $endDate
+
         $shiftsInDateRange = $this->shifts()
-            ->whereBetween('event_start_day', [$startDate, $endDate])
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                    ->orWhereBetween('end_date', [$startDate, $endDate]);
+            })
+            ->orWhere(function ($query) use ($startDate, $endDate) {
+                $query->where('start_date', '<', $startDate)
+                    ->where('end_date', '>', $endDate);
+            })
             ->get();
 
         $plannedWorkingHours = 0;
 
         foreach ($shiftsInDateRange as $shift) {
-            $shiftStart = Carbon::parse($shift->start); // Parse the start time
-            $shiftEnd = Carbon::parse($shift->end);     // Parse the end time
+            $shiftStart = $shift->start_date->format('Y-m-d') . ' ' . $shift->start; // Parse the start time
+            $shiftEnd =  $shift->end_date->format('Y-m-d') . ' ' . $shift->end;    // Parse the end time
             $breakMinutes = $shift->break_minutes;
+
+            $shiftStart = Carbon::parse($shiftStart);
+            $shiftEnd = Carbon::parse($shiftEnd);
+
 
             $shiftDuration = ($shiftEnd->diffInRealMinutes($shiftStart) - $breakMinutes) / 60;
             $plannedWorkingHours += $shiftDuration;
         }
-
         return $plannedWorkingHours;
     }
 

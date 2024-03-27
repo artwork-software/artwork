@@ -63,17 +63,6 @@
                                         {{ $t('Edit basic data') }}
                                     </a>
                                 </MenuItem>
-                                <MenuItem
-                                    v-if="$can('write projects') || $role('artwork admin') || $can('admin projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || project.isMemberOfADepartment"
-                                    v-slot="{ active }">
-                                    <a @click="this.openEditKeyVisualModal"
-                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                        <IconUpload stroke-width="1.5"
-                                                  class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                  aria-hidden="true"/>
-                                        {{ $t('Edit Key Visual') }}
-                                    </a>
-                                </MenuItem>
                                 <MenuItem v-slot="{ active }">
                                     <a href="#" @click="duplicateProject(this.project)"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
@@ -199,10 +188,6 @@
             </div>
         </template>
     </jet-dialog-modal>
-    <EditKeyVisualModal :show="this.showEditKeyVisualModal"
-                        :project="this.project"
-                        @closed="this.closeEditKeyVisualModal"
-    />
 </template>
 
 <script>
@@ -220,11 +205,9 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import IconLib from "@/mixins/IconLib.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
-import EditKeyVisualModal from "@/Pages/Projects/Components/EditKeyVisualModal.vue";
 
 export default {
     components: {
-        EditKeyVisualModal,
         JetInputError,
         UserPopoverTooltip,
         ProjectHistoryComponent,
@@ -266,8 +249,7 @@ export default {
             showProjectHistory: false,
             editingProject: false,
             deletingProject: false,
-            projectToDelete: null,
-            showEditKeyVisualModal: false
+            projectToDelete: null
         }
     },
     computed: {
@@ -327,12 +309,6 @@ export default {
         },
         closeEditProjectModal() {
             this.editingProject = false;
-        },
-        openEditKeyVisualModal() {
-            this.showEditKeyVisualModal = true;
-        },
-        closeEditKeyVisualModal() {
-            this.showEditKeyVisualModal = false;
         },
         duplicateProject(project) {
             this.$inertia.post(`/projects/${project.id}/duplicate`);

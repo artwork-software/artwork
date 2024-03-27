@@ -186,10 +186,13 @@ import Permissions from "@/mixins/Permissions.vue";
 import Input from "@/Jetstream/Input.vue";
 import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
-import {IconDownload, IconEdit, IconX} from "@tabler/icons-vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
-    mixins: [Permissions],
+    mixins: [
+        Permissions,
+        IconLib
+    ],
     name: "ProjectDataEditModal",
     props: {
         show: Boolean,
@@ -199,7 +202,6 @@ export default {
         states: Array
     },
     components: {
-        IconX, IconDownload, IconEdit,
         FormButton,
         Input,
         ListboxOption,

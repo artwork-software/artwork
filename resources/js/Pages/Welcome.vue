@@ -179,8 +179,10 @@
 <script>
     import { defineComponent } from 'vue'
     import { Head, Link } from '@inertiajs/inertia-vue3';
+    import Permissions from "@/mixins/Permissions.vue";
 
     export default defineComponent({
+        mixins: [Permissions],
         components: {
             Head,
             Link,

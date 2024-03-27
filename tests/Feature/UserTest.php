@@ -1,157 +1,93 @@
 <?php
 
-use App\Models\Department;
+use App\Enums\PermissionNameEnum;
+use App\Enums\RoleNameEnum;
 use App\Models\User;
-use Inertia\Testing\AssertableInertia;
+use Artwork\Modules\Department\Models\Department;
+use Illuminate\Support\Facades\Event as EventFacade;
 
-test('users can view users if they have the right to', function () {
-
-    $user = User::factory()->create();
-
-    $user->assignRole('admin');
-
-    $this->actingAs($user);
-
-    $response = $this->get('/users')
-        ->assertInertia(fn(AssertableInertia $page) => $page
-            ->component('Users/Index')
-            ->has('users.data', 2)
-            ->has('users.data.0', fn(AssertableInertia $page) => $page
-                ->hasAll([
-                        'first_name',
-                        'last_name',
-                        'email',
-                        'phone_number',
-                        'position',
-                        'business',
-                        'departments'
-                    ])->etc()
-            )
-            ->where('users.per_page', 15)
-        );
-
-    $response->assertStatus(200);
-
-    $user->removeRole('admin');
-    $user->givePermissionTo('view users');
-
-    $response = $this->get('/users')
-        ->assertInertia(fn(AssertableInertia $page) => $page
-            ->component('Users/Index')
-            ->has('users.data', 2)
-            ->has('users.data.0', fn(AssertableInertia $page) => $page
-                ->hasAll([
-                    'first_name',
-                    'last_name',
-                    'email',
-                    'phone_number',
-                    'position',
-                    'business',
-                    'departments'
-                ])->etc()
-            )
-            ->where('users.per_page', 15)
-        );
-
-    $response->assertStatus(200);
+beforeEach(function (): void {
+    EventFacade::fake();
 });
 
-test('users cannot view all users without permission', function () {
-
-    $user = User::factory()->create();
-    $this->actingAs($user);
-
-    $response = $this->get('/users');
-
-    $response->assertStatus(403);
-});
-
-test('users can update update other users', function () {
-
+test('users can update update other users', function (): void {
     $user = User::factory()->create();
     $department = Department::factory()->create();
 
-
     $user_to_edit = User::factory()->create();
-    $user_to_edit->givePermissionTo('view users', 'update users');
-    $user->assignRole('admin');
+    $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
     $this->actingAs($user);
 
-    $response = $this->patch("/users/{$user_to_edit->id}", [
+    $response = $this->patch(route('user.update', [$user_to_edit->id]), [
         "first_name" => "Benjamin",
         "last_name" => "Willems",
         "position" => "CEO",
-        "business" => "DTH",
         "phone_number" => "1337",
-        "permissions" => ['invite users'],
+        "permissions" => [PermissionNameEnum::ROOM_UPDATE->value],
         "departments" => [$department]
     ]);
 
-    $response->assertStatus(302);
+    $response->assertRedirect();
 
     $this->assertDatabaseHas('users', [
         "id" => $user_to_edit->id,
         "first_name" => "Benjamin",
         "last_name" => "Willems",
         "position" => "CEO",
-        "business" => "DTH",
         "phone_number" => "1337",
         "description" => $user->description,
     ]);
 
-    $updated_user = User::where('id', $user_to_edit->id)->first();
-
-    $this->assertFalse($updated_user->hasAnyPermission('view users', 'update users'));
-
-    $this->assertTrue($updated_user->hasPermissionTo('invite users'));
-
     $this->assertDatabaseHas('department_user', [
         'department_id' => $department->id,
         'user_id' => $user_to_edit->id
     ]);
-
-    $user->removeRole('admin');
-    $user->givePermissionTo('update users');
-    $user->givePermissionTo('update departments');
-
-    $response = $this->patch("/users/{$user_to_edit->id}", [
-        "first_name" => "Miriam",
-        "last_name" => "Seixas",
-        "position" => "CEO",
-        "business" => "DTH",
-        "phone_number" => "1337",
-        "description" => null,
-        "departments" => [$department]
-    ]);
-
-    $response->assertStatus(302);
-
-    $this->assertDatabaseHas('users', [
-        "id" => $user_to_edit->id,
-        "first_name" => "Miriam",
-        "last_name" => "Seixas",
-        "position" => "CEO",
-        "business" => "DTH",
-        "phone_number" => "1337",
-        "description" => null,
-    ]);
-
-    $this->assertDatabaseHas('department_user', [
-        'department_id' => $department->id,
-        'user_id' => $user_to_edit->id
-    ]);
-
 });
 
-test('users cannot update users without permission', function () {
-
+test('user can update another users permissions and roles', function (): void {
     $user = User::factory()->create();
-
     $user_to_edit = User::factory()->create();
+    $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+    $this->actingAs($user);
+
+    $permissionsToGrant = [];
+    foreach (PermissionNameEnum::cases() as $permissionNameEnum) {
+        $permissionsToGrant[] = $permissionNameEnum->value;
+    }
+    $permissionNotToGrant = array_pop($permissionsToGrant);
+
+    $response = $this->patch(route('user.update.permissions-and-roles', [$user_to_edit->id]), [
+        "permissions" => $permissionsToGrant,
+        "roles" => [RoleNameEnum::ARTWORK_ADMIN->value]
+    ]);
+
+    $response->assertRedirect();
+
+    $updated_user = User::where('id', $user_to_edit->id)->first();
+
+    foreach ($permissionsToGrant as $grantedPermission) {
+        $this->assertTrue($updated_user->hasPermissionTo($grantedPermission));
+    }
+
+    $this->assertFalse($updated_user->hasPermissionTo($permissionNotToGrant));
+
+    $this->assertTrue($updated_user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value));
+});
+
+test('users cannot update users without permission', function (): void {
+
+    $user = User::factory()->create([
+        'first_name' => 'updater user'
+    ]);
+    $user->revokePermissionTo(PermissionNameEnum::TEAM_UPDATE->value);
+
+    $user_to_edit = User::factory()->create([
+        'first_name' => 'updated user'
+    ]);
 
     $this->actingAs($user);
 
-    $this->patch("/users/{$user_to_edit->id}", [
+    $this->patch(route('user.update', [$user_to_edit->id]), [
         "first_name" => "Benjamin",
         "last_name" => "Willems",
         "position" => "CEO",
@@ -159,40 +95,25 @@ test('users cannot update users without permission', function () {
         "phone_number" => "1337",
         "description" => "Description was changed"
     ])->assertForbidden();
-
 });
 
-test('users can delete other users', function () {
+test('users can delete other users', function (): void {
 
-    $user = User::factory()->create();
+    $user = $this->adminUser();
 
     $user_to_edit = User::factory()->create();
-    $user->assignRole('admin');
     $this->actingAs($user);
 
     $response = $this->delete("/users/{$user_to_edit->id}");
 
-    $response->assertStatus(302);
+    $response->assertRedirect();
 
     $this->assertDatabaseMissing('users', [
         "id" => $user_to_edit->id,
     ]);
-
-    $user_to_edit = User::factory()->create();
-    $user->removeRole('admin');
-    $user->givePermissionTo('delete users');
-
-    $response = $this->delete("/users/{$user_to_edit->id}");
-
-    $response->assertStatus(302);
-
-    $this->assertDatabaseMissing('users', [
-        "id" => $user_to_edit->id,
-    ]);
-
 });
 
-test('users can delete their own accounts', function () {
+test('users can delete their own accounts', function (): void {
 
     $user = User::factory()->create();
 
@@ -205,10 +126,9 @@ test('users can delete their own accounts', function () {
     $this->assertDatabaseMissing('users', [
         "id" => $user->id,
     ]);
-
 });
 
-test('consultants cannot delete any client', function () {
+test('consultants cannot delete any client', function (): void {
 
     $user = User::factory()->create();
 

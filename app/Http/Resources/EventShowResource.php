@@ -5,25 +5,20 @@ namespace App\Http\Resources;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @mixin \App\Models\Event
- */
 class EventShowResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
-            'name' => $this->name,
+            'name' => $this->eventName,
             'description' => $this->description,
             'start_time' => Carbon::parse($this->start_time)->format('d.m.Y, H:i'),
             'startDate' => Carbon::parse($this->start_time)->format('Y-m-d'),
@@ -41,7 +36,7 @@ class EventShowResource extends JsonResource
             'event_type' => $this->event_type,
             'room' => $this->room,
             'project' => $this->project,
-            'created_at' => $this->created_at->format('d.m.Y, H:i'),
+            'created_at' => $this->created_at?->format('d.m.Y, H:i'),
             'created_by' => $this->creator,
         ];
     }

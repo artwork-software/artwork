@@ -2,45 +2,45 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ChecklistUpdateRequest;
-use App\Http\Resources\ChecklistShowResource;
-use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
-use App\Models\Project;
-use App\Models\ProjectHistory;
 use App\Models\Task;
+use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
+use App\Http\Resources\ChecklistShowResource;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Support\Services\HistoryService;
-use Illuminate\Http\JsonResponse;
+use App\Support\Services\NewHistoryService;
+use Artwork\Modules\Checklist\Services\ChecklistService;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectHistory;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Response;
+use Inertia\ResponseFactory;
 
 class ChecklistController extends Controller
 {
+    protected ?NewHistoryService $history = null;
 
-    public function __construct()
+    public function __construct(protected readonly ChecklistService $checklistService)
     {
         $this->authorizeResource(Checklist::class);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function create()
+    public function create(): ResponseFactory
     {
         return inertia('Checklists/Create');
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
+     * @throws AuthorizationException
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        $this->authorize('createProperties', $request->project_id);
+        $this->authorize('createProperties', Project::find($request->project_id));
+
         //Check whether checklist should be created on basis of a template
         if ($request->template_id) {
             $this->createFromTemplate($request);
@@ -48,23 +48,25 @@ class ChecklistController extends Controller
             $this->createWithoutTemplate($request);
         }
 
+        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
+        $this->history->createHistory(
+            $request->project_id,
+            'Checklist added',
+            [$request->name]
+        );
+
         ProjectHistory::create([
             "user_id" => Auth::id(),
             "project_id" => $request->project_id,
             "description" => "Checkliste $request->name angelegt"
         ]);
 
-        return Redirect::back()->with('success', 'Checklist created.');
+        return Redirect::back();
     }
 
-    /**
-     * Creates a checklist on basis of a ChecklistTemplate
-     * @param  Request  $request
-     */
-    protected function createFromTemplate(Request $request)
+    protected function createFromTemplate(Request $request): void
     {
         $template = ChecklistTemplate::where('id', $request->template_id)->first();
-        $project = Project::where('id', $request->project_id)->first();
 
         $checklist = Checklist::create([
             'name' => $template->name,
@@ -82,30 +84,15 @@ class ChecklistController extends Controller
             ]);
         }
 
-        if (Auth::user()->can('update departments')) {
-            foreach ($template->departments as $department) {
-                if (! $project->departments->contains($department)) {
-                    $project->departments()->attach($department);
-                }
-            }
-
-            $checklist->departments()->sync(
-                collect($template->departments)
-                    ->map(function ($department) {
-                        return $department['id'];
-                    })
-            );
-        } else {
-            return response()->json(['error' => 'Not authorized to assign departments to a checklist.'], 403);
-        }
+        $checklist->users()->sync(
+            collect($template->users)
+                ->map(function ($user) {
+                    return $user['id'];
+                })
+        );
     }
 
-    /**
-     * Default creation of a checklist without a template
-     * @param  Request  $request
-     * @return \Illuminate\Http\JsonResponse|void
-     */
-    protected function createWithoutTemplate(Request $request)
+    protected function createWithoutTemplate(Request $request): void
     {
         $checklist = Checklist::create([
             'name' => $request->name,
@@ -123,89 +110,57 @@ class ChecklistController extends Controller
                 'order' => Task::max('order') + 1,
             ]);
         }
-
-        if (Auth::user()->can('update departments')) {
-            $checklist->departments()->sync(
-                collect($request->assigned_department_ids)
-                    ->map(function ($department_id) {
-                        return $department_id;
-                    })
-            );
-        } else {
-            return response()->json(['error' => 'Not authorized to assign departments to a checklist.'], 403);
-        }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Checklist  $checklist
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function show(Checklist $checklist)
+    public function show(Checklist $checklist): Response|ResponseFactory
     {
         return inertia('Checklists/Show', [
             'checklist' => new ChecklistShowResource($checklist),
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Checklist  $checklist
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function edit(Checklist $checklist)
+    public function edit(Checklist $checklist): Response|ResponseFactory
     {
         return inertia('Checklists/Edit', [
             'checklist' => new ChecklistShowResource($checklist),
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Checklist  $checklist
-     */
-    public function update(ChecklistUpdateRequest $request, Checklist $checklist, HistoryService $historyService)
+    public function update(ChecklistUpdateRequest $request, Checklist $checklist): RedirectResponse
     {
-        $checklist->fill($request->data());
-        $historyService->checklistUpdated($checklist);
-        $checklist->save();
+        $this->checklistService->updateByRequest($checklist, $request);
 
-        if ($request->get('tasks')) {
-            $checklist->tasks()->delete();
-            $checklist->tasks()->createMany($request->tasks);
+        if ($request->missing('assigned_user_ids')) {
+            return Redirect::back();
         }
 
-        if ($request->missing('assigned_department_ids')) {
-            return new JsonResponse(['success' => 'Checklist updated']);
-        }
+        $this->checklistService->assignUsersById($checklist, $request->assigned_user_ids);
 
-        $departmentIds = collect($request->get('assigned_department_ids'));
-        if ($departmentIds->isNotEmpty()) {
-            $syncedDepartmentIds = $checklist->project->departments()->pluck('departments.id');
-            $checklist->project->departments()
-                ->syncWithoutDetaching($departmentIds->whereNotIn('id', $syncedDepartmentIds));
-        }
+        $this->history = new NewHistoryService(Project::class);
+        $this->history->createHistory(
+            $checklist->project_id,
+            'Checklist modified',
+            [$checklist->name]
+        );
 
-        $checklist->departments()->sync($departmentIds);
-
-        return new JsonResponse(['success' => 'Checklist updated']);
+        return Redirect::back();
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Checklist  $checklist
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(Checklist $checklist, HistoryService $historyService)
+    public function destroy(Checklist $checklist, HistoryService $historyService): RedirectResponse
     {
-        $checklist->delete();
+        $this->history = new NewHistoryService(Project::class);
+        $this->history->createHistory(
+            $checklist->project_id,
+            'Checklist removed',
+            [$checklist->name]
+        );
+        $checklist->forceDelete();
         $historyService->checklistUpdated($checklist);
 
-        return Redirect::back()->with('success', 'Checklist deleted');
+        return Redirect::back();
+    }
+
+    public function forceDelete(): void
+    {
     }
 }

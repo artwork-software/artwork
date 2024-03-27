@@ -2,58 +2,50 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\NotificationConstEnum;
 use App\Events\UserUpdated;
 use App\Http\Requests\AcceptInvitationRequest;
 use App\Http\Requests\StoreInvitationRequest;
 use App\Mail\InvitationCreated;
-use App\Models\Department;
 use App\Models\Invitation;
 use App\Models\User;
+use Artwork\Modules\Department\Models\Department;
 use Carbon\Carbon;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
-use Spatie\Permission\Models\Permission;
+use Inertia\Response;
+use Inertia\ResponseFactory;
+use Artwork\Modules\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class InvitationController extends Controller
 {
-
-    protected StatefulGuard $guard;
-
-    public function __construct(StatefulGuard $guard)
+    public function __construct()
     {
-        $this->guard = $guard;
         $this->authorizeResource(Invitation::class);
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function index()
+    public function index(): Response|ResponseFactory
     {
-
         request()->validate([
             'direction' => ['in:asc,desc', 'string'],
-            'field' => ['in:name,created_at','string']
+            'field' => ['in:name,created_at', 'string']
         ]);
 
         //This is necessary to enable sorting
         $query = Invitation::query();
 
-        if(request()->has(['field', 'direction'])) {
+        if (request()->has(['field', 'direction'])) {
             $query->orderBy(Str::of('invitations.')->append(request('field')), request('direction'));
         }
 
         return inertia('Users/Invitations', [
-            'invitations' => $query->paginate(10)->through(fn($invitation) => [
+            'invitations' => $query->paginate(10)->through(fn ($invitation) => [
                 'id' => $invitation->id,
                 'name' => $invitation->name,
                 'email' => $invitation->email,
@@ -62,23 +54,19 @@ class InvitationController extends Controller
         ]);
     }
 
-    public function invite() {
+    public function invite(): Response|ResponseFactory
+    {
         return inertia('Users/Invite', [
             'available_roles' => Role::all()->pluck('name'),
             'available_permissions' => Permission::all()->pluck('name'),
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param StoreInvitationRequest $request
-     * @return RedirectResponse
-     */
-    public function store(StoreInvitationRequest $request)
+    public function store(StoreInvitationRequest $request): RedirectResponse
     {
         $admin_user = Auth::user();
         $permissions = $request->permissions;
+        $roles = $request->roles;
 
         foreach ($request->user_emails as $email) {
             $token = createToken();
@@ -86,8 +74,8 @@ class InvitationController extends Controller
             $invitation = Invitation::create([
                 'email' => $email,
                 'token' => $token['hash'],
-                'permissions' => json_encode($permissions),
-                'role' => $request->role
+                'permissions' => $permissions,
+                'roles' => $roles
             ]);
 
             $invitation->departments()->sync(
@@ -103,16 +91,10 @@ class InvitationController extends Controller
             Mail::to($email)->send(new InvitationCreated($invitation, $admin_user, $token['plain']));
         }
 
-        return Redirect::route('users')->with('success', 'Invitation created.');
+        return Redirect::route('users');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Invitation  $invitation
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function edit(Invitation $invitation)
+    public function edit(Invitation $invitation): Response|ResponseFactory
     {
         return inertia('Users/InvitationEdit', [
             'invitation' => [
@@ -122,14 +104,7 @@ class InvitationController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Invitation  $invitation
-     * @return RedirectResponse
-     */
-    public function update(Request $request, Invitation $invitation)
+    public function update(Request $request, Invitation $invitation): RedirectResponse
     {
         $oldEmail = $invitation->email;
         $newMail = $request->input('email');
@@ -142,70 +117,57 @@ class InvitationController extends Controller
             $invitation->update(['token' => $token['hash']]);
         }
 
-        return Redirect::route('user.invitations')->with('success', 'Invitation updated.');
+        return Redirect::route('user.invitations');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Invitation  $invitation
-     * @return RedirectResponse
-     */
-    public function destroy(Invitation $invitation)
+    public function destroy(Invitation $invitation): RedirectResponse
     {
         $invitation->delete();
-        return Redirect::back()->with('success', 'Invitation deleted');
+
+        return Redirect::back();
     }
 
-    public function accept(Request $request) {
+    public function accept(Request $request): Response|ResponseFactory
+    {
         return inertia('Users/Accept', [
             'token' => $request->query('token'),
             'email' => $request->query('email'),
         ]);
     }
 
-    public function handle_accept(AcceptInvitationRequest $request) {
+    public function createUser(AcceptInvitationRequest $request, StatefulGuard $guard): RedirectResponse
+    {
+        /** @var Invitation $invitation */
+        $invitation = Invitation::query()
+            ->where('email', $request->email)
+            ->with('departments')
+            ->firstOrFail();
 
-        $invitation = Invitation::where('email', $request->email)->first();
+        /** @var User $user */
+        $user = User::create($request->userData());
 
-        if (Hash::check($request->token, $invitation->token)) {
-
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $invitation->email,
-                'phone_number' => $request->phone_number,
-                'password' => Hash::make($request->password),
-                'position' => $request->position,
-                'business' => $request->business,
-                'description' => $request->description,
-                'opened_checklists' => [],
-                'opened_areas' => []
+        foreach (NotificationConstEnum::cases() as $notificationType) {
+            $user->notificationSettings()->create([
+                'group_type' => $notificationType->groupType(),
+                'type' => $notificationType->value,
+                'title' => $notificationType->title(),
+                'description' => $notificationType->description()
             ]);
-
-            $departments = $invitation->departments;
-
-            foreach($departments as $department) {
-                $department->users()->attach($user->id);
-            }
-
-            if($invitation->role) {
-                $user->assignRole($invitation->role);
-            }
-
-            $invitation->delete();
-
-            $this->guard->login($user);
-
-            $user->assignRole($invitation->role);
-            $user->givePermissionTo(json_decode($invitation->permissions));
-
-            broadcast(new UserUpdated())->toOthers();
-
-            return Redirect::to('/')->with('success', 'Herzlich Willkommen.');
-
-        } else {
-            abort(403);
         }
+
+        $user->departments()->sync($invitation->departments->pluck('id'));
+
+        $user->assignRole(...$invitation->roles);
+        $user->givePermissionTo(...$invitation->permissions);
+        $user->calendar_settings()->create();
+        $user->calendar_filter()->create();
+        $user->shift_calendar_filter()->create();
+        $invitation->delete();
+
+        $guard->login($user);
+
+        broadcast(new UserUpdated())->toOthers();
+
+        return Redirect::route('dashboard');
     }
 }

@@ -2,32 +2,34 @@
 
 namespace App\Http\Resources;
 
-use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Auth;
 
 /**
- * @mixin \App\Models\Room
+ * @mixin \Room
  */
 class RoomCalendarResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
-        $requestedDay = Carbon::parse($request->query('wanted_day'));
+        $events = $this->events()->get();
 
-        /** @var \Illuminate\Database\Eloquent\Collection $events */
-        $events = $this->events()
-            ->visibleForUser(Auth::user())
-            ->occursAt($requestedDay)
-            ->get();
+        $historyArray = [];
+        $historyComplete = $this->historyChanges()->all();
+
+        foreach ($historyComplete as $history) {
+            $historyArray[] = [
+                'changes' => json_decode($history->changes),
+                'created_at' => $history->created_at->diffInHours() < 24
+                    ? $history->created_at->diffForHumans()
+                    : $history->created_at->format('d.m.Y, H:i'),
+            ];
+        }
 
         return [
             'resource' => class_basename($this),
@@ -35,6 +37,7 @@ class RoomCalendarResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'temporary' => $this->temporary,
+            'room_history' => $historyArray,
             'created_by' => $this->creator,
             'created_at' => $this->created_at?->format('d.m.Y'),
             'start_date' => $this->start_date?->format('d.m.Y'),
@@ -44,7 +47,11 @@ class RoomCalendarResource extends JsonResource
             'room_files' => $this->room_files,
             'area_id' => $this->area_id,
             'everyone_can_book' => $this->everyone_can_book,
-            'room_admins' => UserWithoutApartmentIndexResource::collection($this->room_admins)->resolve(),
+            'room_admins' => UserWithoutApartmentIndexResource::collection($this->users()->wherePivot('is_admin', true)
+                ->get())->resolve(),
+            'requestable_by' => UserWithoutApartmentIndexResource::collection(
+                $this->users()->wherePivot('can_request', true)->get()
+            )->resolve(),
             'event_requests' => EventShowResource::collection($events->where('occupancy_option', true))->resolve(),
             'area' => $this->area,
         ];

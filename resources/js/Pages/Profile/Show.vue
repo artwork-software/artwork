@@ -6,44 +6,43 @@
                     <form @submit.prevent="updateProfileInformation">
                         <div>
                             <div>
-                                <h2 class="font-bold font-lexend text-2xl my-2">Dein Konto</h2>
+                                <h2 class="headline1 my-2">{{ $t('My account') }}</h2>
                                 <div class="col-span-6 sm:col-span-4">
                                     <!-- Profile Photo File Input -->
                                     <input type="file" class="hidden"
-                                           ref="photo"
-                                           @change="updatePhotoPreview">
-
+                                        ref="photo"
+                                        @change="updatePhotoPreview">
                                     <div class="mt-1 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-
                                         <div class="sm:col-span-3 flex items-end">
 
                                             <div @click="openChangePictureModal" class="mt-2">
                                                 <img :src="user.profile_photo_url" :alt="user.first_name"
-                                                     class="rounded-full h-20 w-20 object-cover cursor-pointer">
+                                                    class="rounded-full h-20 w-20 object-cover cursor-pointer">
                                             </div>
 
                                             <div class="mt-1 ml-5 flex-grow relative">
                                                 <input id="first_name" v-model="userForm.first_name" type="text"
-                                                       class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                                       placeholder="placeholder"/>
+                                                    class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                                    placeholder="placeholder"/>
                                                 <label for="first_name"
-                                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                                    class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{$t('First name')}}</label>
                                             </div>
                                         </div>
 
                                         <div class="sm:col-span-3 flex items-end">
                                             <div class="relative mt-1 w-full">
                                                 <input id="last_name" v-model="userForm.last_name" type="text"
-                                                       class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0
+                                                    class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0
                                                    border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                                       placeholder="placeholder"/>
+                                                    placeholder="placeholder"/>
                                                 <label for="last_name"
-                                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
-                                                   focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Nachname</label>
+                                                    class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
+                                                   focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Last name')}}</label>
                                             </div>
                                         </div>
 
                                     </div>
+                                    <div v-if="hasNameError" class="text-error mt-1">{{ nameError }}</div>
 
                                 </div>
 
@@ -52,40 +51,41 @@
                                 <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
-                                            <input type="text" v-model="userForm.business" placeholder="Unternehmen"
-                                                   class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border-gray-300 "/>
+                                            <div class="text-darkGray font-semibold px-3 py-2 border-2 w-full border-gray-300">
+                                                {{ $page.props.businessName }}
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
-                                            <input type="text" v-model="userForm.position" placeholder="Position"
-                                                   class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border-gray-300"/>
+                                            <input type="text" v-model="userForm.position" :placeholder="$t('Position')"
+                                                class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border-gray-300"/>
                                         </div>
                                     </div>
 
                                     <div class="sm:col-span-3">
                                         <div class="mt-1 relative">
-                                            <input type="email" v-model="userForm.email" placeholder="E-Mail-Adresse"
-                                                   :class="[email_validation_classes,'text-primary border-2 w-full font-semibold focus:outline-none focus:ring-0 focus:border-secondary focus:border-1']"/>
+                                            <input type="email" v-model="userForm.email" :placeholder="$t('E-mail address')"
+                                                :class="[email_validation_classes,'text-primary border-2 w-full font-semibold focus:outline-none focus:ring-0 focus:border-secondary focus:border-1']"/>
 
                                             <div v-if="!email_validation.email"
-                                                 class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                                 <CheckIcon class="h-5 w-5 text-success" aria-hidden="true"/>
                                             </div>
                                             <div v-if="email_validation.email && email_validation.email.length > 0"
-                                                 class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                                 <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
                                             </div>
                                         </div>
                                         <jet-input-error :message="email_validation.email && email_validation.email[0]"
-                                                         class="mt-2"/>
+                                            class="mt-2"/>
                                     </div>
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.phone_number"
-                                                   placeholder="Telefonnummer"
-                                                   class="text-primary border-2 w-full focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 font-semibold border-gray-300 "/>
+                                                :placeholder="$t('Phone number')"
+                                                class="text-primary border-2 w-full focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 font-semibold border-gray-300 "/>
                                         </div>
                                     </div>
 
@@ -93,7 +93,7 @@
                                     <div class="sm:col-span-6">
                                         <div class="mt-1">
                                             <textarea
-                                                placeholder="Was sollten die anderen ArtWork.tool-User über dich wissen?"
+                                                :placeholder="$t('What should the other artwork users know about you?')"
                                                 v-model="userForm.description" rows="3"
                                                 class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border border-gray-300 "/>
                                         </div>
@@ -101,11 +101,12 @@
                                     <div class="sm:col-span-6">
                                         <div class="sm:col-span-6 ml-3 flex inline-flex">
                                             <span v-if="userForm.departments.length === 0"
-                                                  class="text-secondary subpixel-antialiased my-auto -ml-3">In keinem Team </span>
+                                                class="text-secondary my-auto -ml-3">{{ $t('Not in any team')}}</span>
                                             <span v-else class="flex mt-3 -ml-4"
-                                                  v-for="(team,index) in userForm.departments">
-                                            <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white"
-                                                                :iconName="team.svg_name"/>
+                                                v-for="(team,index) in userForm.departments">
+                                            <TeamIconCollection :data-tooltip-target="team.name" class="h-14 w-14 rounded-full ring-2 ring-white"
+                                                :iconName="team.svg_name"/>
+                                                <TeamTooltip :team="team"/>
                                             </span>
                                         </div>
                                     </div>
@@ -115,13 +116,9 @@
 
                         <div class="pt-5">
                             <div class="mt-2 items-center">
-                                <AddButton v-if="!showSuccess" type="submit"
-                                        class="mt-8 inline-flex items-center px-10 py-3 border focus:outline-none
-                                         border-transparent text-base font-bold text-lg tracking-wider shadow-sm text-secondaryHover"
-                                           text="Profiländerungen speichern" mode="modal"
-                                 />
+                                <FormButton v-if="!showSuccess" @click="updateProfileInformation()" :text="$t('Save profile changes')" />
                                 <button v-else type="submit"
-                                        class=" sm:col-span-3 items-center py-1.5 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                    class="items-center py-1 mt-5 rounded-full px-28 border bg-success"
                                 >
                                     <CheckIcon class="h-10 w-9 inline-block text-secondaryHover"/>
                                 </button>
@@ -130,61 +127,57 @@
                     </form>
                 </div>
                 <div v-if="$page.props.jetstream.canUpdatePassword">
-                    <h2 class="font-bold font-lexend text-xl my-2 mt-12">Dein Passwort</h2>
+                    <h2 class="font-bold font-lexend text-xl my-2 mt-12">{{ $t('Your password')}}</h2>
 
-                    <div class="mt-4 grid grid-cols-2 gap-y-4 gap-x-4 sm:grid-cols-6">
-
-                        <div class="sm:col-span-3">
-                            <div class="mt-1">
-                                <div class="mt-1 relative rounded-md ">
-                                    <input
-                                        v-model="passwordForm.current_password"
-                                        ref="current_password"
-                                        id="password" name="password" type="password" autocomplete="new-password"
-                                        required
-                                        placeholder="Aktuelles Passwort"
-                                        :class="[passwordForm.hasErrors && passwordForm.errors.current_password
+                    <div class="mt-4 flex flex-col md:flex-row">
+                        <div class="w-full md:w-1/2">
+                            <div class="mt-1 relative rounded-md ">
+                                <input
+                                    v-model="passwordForm.current_password"
+                                    ref="current_password"
+                                    id="password" name="password" type="password" autocomplete="new-password"
+                                    required
+                                    :placeholder="$t('Current password')"
+                                    :class="[passwordForm.hasErrors && passwordForm.errors.current_password
                                             ? 'border-error'
                                             : passwordForm.current_password.length > 0 && passwordForm.hasErrors
                                             ? 'border-success' : '',
-                                    'placeholder-secondary subpixel-antialiased border-gray-200 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full']"/>
-                                    <div v-if="passwordForm.hasErrors && passwordForm.errors.current_password"
-                                         class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                        <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
-                                    </div>
-                                    <div
-                                        v-if="!passwordForm.errors.current_password
+                                    'placeholder-secondary border-gray-200 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full']"/>
+                                <div v-if="passwordForm.hasErrors && passwordForm.errors.current_password"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
+                                </div>
+                                <div
+                                    v-if="!passwordForm.errors.current_password
                                         && passwordForm.current_password.length > 0
                                         && passwordForm.hasErrors"
-                                        class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                        <CheckIcon class="h-5 w-5 text-success" aria-hidden="true"/>
-                                    </div>
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <CheckIcon class="h-5 w-5 text-success" aria-hidden="true"/>
                                 </div>
                             </div>
                             <jet-input-error :message="passwordForm.errors.current_password" class="mt-2"/>
                         </div>
                     </div>
 
-                    <div class="mt-4 grid grid-cols-2 gap-y-4 gap-x-4 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
+                    <div class="mt-4 flex flex-col md:flex-row">
+                        <div class="w-full md:w-1/2">
                             <div class="mt-1 relative rounded-md ">
                                 <input
                                     v-model="passwordForm.password"
                                     ref="password"
-                                    id="password_confirmation1" name="password" type="password"
-                                    autocomplete="new-password" required placeholder="Neues Passwort"
+                                    id="password" name="password" type="password"
+                                    autocomplete="new-password" required :placeholder="$t('New Password')"
                                     :class="[passwordForm.hasErrors ? 'border-error' : 'border-gray-200',
-                                    'placeholder-secondary subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full']"/>
+                                    'placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full']"/>
                                 <div v-if="passwordForm.hasErrors"
-                                     class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                     <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
                                 </div>
                             </div>
                             <jet-input-error :message="passwordForm.errors.password" class="mt-2"/>
                         </div>
-                        <div v-if="passwordForm.password.length>0" class="sm:col-span-3 flex items-center">
-
-                            <span class="text-xs text-secondary">Schwach</span>
+                        <div class="w-full md:w-1/2 flex items-center p-3">
+                            <span class="text-xs text-secondary">{{$t('Weak')}}</span>
 
                             <div class="mx-6 mt-1 w-full bg-gray-200 h-1 dark:bg-gray-700">
                                 <div :class="[pw_feedback < 1
@@ -195,61 +188,28 @@
                                 'h-1']" :style="{width: `${(pw_feedback + 1) / 5 * 100}%`}"></div>
                             </div>
 
-                            <span class="text-xs">Stark</span>
+                            <span class="text-xs">{{$t('Strong')}}</span>
                         </div>
                     </div>
 
-                    <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <div class="mt-1">
-                                <div class="mt-1 relative rounded-md">
+                    <div class="mt-4">
+                        <div class="flex items-center text-secondary w-full">
+                            <SvgCollection svgName="arrowTopLeft"/>
 
-                                    <input
-                                        v-model="passwordForm.password_confirmation"
-                                        id="password_confirmation2" name="password" type="password"
-                                        autocomplete="new-password" required placeholder="Neues Passwort wiederholen"
-                                        :class="[passwordForm.hasErrors ? 'border-error' : 'border-gray-200',
-                                    'placeholder-secondary subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full']"
-                                    />
-                                    <div v-if="passwordForm.hasErrors"
-                                         class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                        <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
-                                    </div>
-                                </div>
+                            <div class="hind w-full ml-3">
+                                {{ $t('The password must be at least 10 characters long, contain at least 1 digit, upper and lower case letters and special characters.')}}
                             </div>
-                            <jet-input-error :message="passwordForm.errors.password_confirmation" class="mt-2"/>
                         </div>
-
-                        <div class="sm:col-span-3 relative">
-
-                            <div v-if="$page.props.can.show_hints" class="absolute -mt-4 flex items-center">
-                                <div>
-                                    <SvgCollection svgName="arrowTopLeft"/>
-                                </div>
-
-                                <span class="leading-tight font-nanum text-secondary ml-1 my-auto">Das Passwort muss mind. 10 Zeichen lang sein,
-                                    mind. 1 Ziffer und Groß- und Kleinbuchstaben und Sonderzeichen beinhalten.</span>
-                            </div>
-
-                        </div>
-
 
                         <jet-action-message :on="passwordForm.recentlySuccessful" class="mr-3">
-                            Saved.
+                            {{ $t('Saved.')}}
                         </jet-action-message>
                     </div>
-                    <div class="mt-4">
-                        <AddButton @click="updatePassword"
-                                class="px-10 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
-                            font-bold text-lg shadow-sm text-secondaryHover" text="Passwort ändern" mode="modal"
-                         />
-                    </div>
-
-
+                    <BaseButton @click="updatePassword" :text="$t('Change password')" />
                 </div>
             </div>
             <div class="flex ml-20 mt-12">
-                <span @click="openDeleteUserModal()" class="text-secondary subpixel-antialiased cursor-pointer">Konto endgültig löschen</span>
+                <span v-if="$role('artwork admin')" @click="openDeleteUserModal()" class="xsLight cursor-pointer">{{$t('Delete account permanently')}}</span>
             </div>
         </div>
         <!-- Change Profile Picture Modal -->
@@ -258,35 +218,30 @@
             <template #content>
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
-                        Profilbild ändern
+                        {{ $t('Change profile picture') }}
                     </div>
-                    <span class="text-secondary subpixel-antialiased my-auto">Wähle hier dein Profilbild aus. Es sollte die Größe von 1024 KB nicht überschreiten. </span>
+                    <span class="text-secondary my-auto">{{ $t('Select your profile picture here. It should not exceed the size of 1024 KB.')}} </span>
                     <XIcon @click="closeChangePictureModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
+                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                        aria-hidden="true"/>
                     <!-- New Profile Photo Preview -->
-                    <h2 class="" v-show="photoPreview">Vorschau neues Profilbild:</h2>
+                    <h2 class="" v-show="photoPreview">{{$t('Preview new profile picture:')}}</h2>
                     <div class="flex">
                         <div class="mt-1 flex items-center">
                             <div class="mt-2" v-show="photoPreview">
                             <span class="block rounded-full w-20 h-20 bg-cover bg-no-repeat bg-center"
-                                  :style="'background-image: url(\'' + photoPreview + '\');'">
+                                :style="'background-image: url(\'' + photoPreview + '\');'">
                             </span>
                             </div>
                         </div>
                         <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
-                            <button
-                                class="my-auto inline-flex items-center px-3 py-3 text-base border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-sm uppercase shadow-sm text-secondaryHover"
-                                type="button"
-                                @click.prevent="selectNewPhoto">
-                                Datei auswählen
-                            </button>
-                            <button type="button"
-                                    class=" ml-3 my-auto inline-flex items-center px-3 py-3 text-base border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-sm uppercase shadow-sm text-secondaryHover"
-                                    @click.prevent="deletePhoto"
-                                    v-if="user.profile_photo_path">
-                                Aktuelles Profilbild löschen
-                            </button>
+                            <FormButton
+                                :text="$t('Select file')"
+                                @click.prevent="selectNewPhoto"/>
+                            <FormButton
+                                @click.prevent="deletePhoto"
+                                :text="$t('Delete current profile picture')"
+                                v-if="user.profile_photo_path" />
                         </div>
                     </div>
 
@@ -294,11 +249,9 @@
 
                     <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
                     <div class="mt-6">
-                        <button
-                            class="inline-flex items-center px-8 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-lg uppercase shadow-sm text-secondaryHover"
-                            @click="validateTypeAndChange">
-                            Neues Profilbild speichern
-                        </button>
+                        <FormButton
+                            :text="$t('Save new profile picture')"
+                            @click="validateTypeAndChange" />
                     </div>
                 </div>
 
@@ -311,29 +264,28 @@
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
-                        Konto endgültig löschen
+                        {{ $t('Delete account permanently')}}
                     </div>
                     <XIcon @click="closeDeleteUserModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
+                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                        aria-hidden="true"/>
                     <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du dein ArtWork-Konto endgültig löschen möchtest? Sämtliche Einstellungen
-                        gehen verloren.
+                        {{ $t('Are you sure you want to permanently delete your artwork account? All settings will be lost.')}}
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteUser">
-                            Konto Löschen
+                            @click="deleteUser">
+                            {{$t('Delete account')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteUserModal()"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                class="text-secondary xsLight cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
-
             </template>
+
 
         </jet-dialog-modal>
     </app-layout>
@@ -361,11 +313,16 @@ import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import {Inertia} from "@inertiajs/inertia";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
-import AddButton from "@/Layouts/Components/AddButton";
+import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
+import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 
 export default defineComponent({
     components: {
-        AddButton,
+        BaseButton,
+        FormButton,
+        TeamTooltip,
         JetActionMessage,
         JetButton,
         JetFormSection,
@@ -386,6 +343,7 @@ export default defineComponent({
         TeamIconCollection,
         SvgCollection
     },
+    mixins: [Permissions],
     props: ['user', 'all_departments', 'user_departments'],
     data() {
         return {
@@ -404,7 +362,6 @@ export default defineComponent({
             passwordForm: this.$inertia.form({
                 current_password: '',
                 password: '',
-                password_confirmation: '',
             }),
             updateProfilePictureFeedback: "",
             photoPreview: null,
@@ -414,7 +371,9 @@ export default defineComponent({
             pw_feedback: 0,
             email_validation: {
                 email: true
-            }
+            },
+            nameError: '',
+            hasNameError: false,
         }
     },
     computed: {
@@ -439,25 +398,8 @@ export default defineComponent({
             },
             deep: true
         },
-        'userForm.email': {
-            handler() {
-                if (this.userForm.email.length > 0) {
-                    this.validate_email()
-                }
-            },
-            deep: true
-        },
     },
     methods: {
-        validate_email() {
-            axios.get('/email', {
-                params: {
-                    email: this.userForm.email
-                }
-            }).then(response => {
-                this.email_validation = response.data
-            })
-        },
         password_feedback() {
             axios.get('/password_feedback', {
                 params: {
@@ -478,6 +420,11 @@ export default defineComponent({
             this.closeDeleteUserModal()
         },
         updateProfileInformation() {
+            if (!this.userForm.first_name || !this.userForm.last_name) {
+                this.nameError = this.$t('First name and surname are required');
+                this.hasNameError = true;
+                return; // Exit the function without making the API call
+            }
             if (this.$refs.photo) {
                 this.userForm.photo = this.$refs.photo.files[0]
             }
@@ -513,7 +460,7 @@ export default defineComponent({
             if (forbiddenTypes.includes(this.$refs.photo.files[0].type)
                 || this.$refs.photo.files[0].type.match('video.*')
                 || this.$refs.photo.files[0].type === "") {
-                this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+                this.updateProfilePictureFeedback = this.$t('Only .png and .jpeg files are supported')
             } else {
                 this.changeProfilePicture()
             }
@@ -538,11 +485,10 @@ export default defineComponent({
             const reader = new FileReader();
 
             reader.onload = (e) => {
-                if(e.target.result.includes("data:image/png") || e.target.result.includes("data:image/jpeg")) {
+                if (e.target.result.includes("data:image/png") || e.target.result.includes("data:image/jpeg")) {
                     this.photoPreview = e.target.result;
-                }
-                else {
-                    this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+                } else {
+                    this.updateProfilePictureFeedback = this.$t('Only .png and .jpeg files are supported')
                 }
             };
 
@@ -578,7 +524,7 @@ export default defineComponent({
                 },
                 onError: () => {
                     if (this.passwordForm.errors.password) {
-                        this.passwordForm.reset('password', 'password_confirmation')
+                        this.passwordForm.reset('password')
                         this.$refs.password.focus()
                     }
 

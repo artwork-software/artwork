@@ -2,89 +2,55 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RoomAttribute;
+use App\Models\RoomRoomAttributeMapping;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Artwork\Modules\Room\Models\RoomAttribute;
 
 class RoomAttributeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(): void
     {
-        //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function create(): void
     {
-        //
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    public function store(Request $request): void
     {
-        RoomAttribute::create([
-            'name' => $request->get('name')
-        ]);
+        RoomAttribute::create(['name' => $request->get('name')]);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\RoomAttribute  $roomAttribute
-     * @return \Illuminate\Http\Response
-     */
-    public function show(RoomAttribute $roomAttribute)
+
+    public function show(): void
     {
-        //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\RoomAttribute  $roomAttribute
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(RoomAttribute $roomAttribute)
+
+    public function edit(): void
     {
-        //
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\RoomAttribute  $roomAttribute
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, RoomAttribute $roomAttribute)
+
+    public function update(): void
     {
-        //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\RoomAttribute  $roomAttribute
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(RoomAttribute $roomAttribute)
+
+    public function destroy(RoomAttribute $roomAttribute): RedirectResponse
     {
+        foreach (
+            RoomRoomAttributeMapping::query()
+                ->where('room_attribute_id', '=', $roomAttribute->id)
+                ->get() as $roomRoomAttributeMapping
+        ) {
+            $roomRoomAttributeMapping->delete();
+        }
+
         $roomAttribute->delete();
 
-        return Redirect::route('areas.management')->with('success', 'Roomattribute deleted');
+        return Redirect::back();
     }
 }

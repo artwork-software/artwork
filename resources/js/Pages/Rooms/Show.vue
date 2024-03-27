@@ -1,23 +1,24 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-xl my-12 ml-14 mr-10">
+        <div class="max-w-screen-xl my-12 ml-14">
             <div class="flex-wrap">
                 <div class="flex">
-                    <h2 class="font-bold font-lexend text-3xl">{{ room.name }}</h2>
-                    <Menu as="div" class="my-auto relative">
+                    <h2 class="headline1">{{ room.name }}</h2>
+                    <Menu as="div" class="my-auto relative ml-2">
                         <div class="flex"
-                             v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
+                             v-if="this.hasAdminRole() || $canAny(['create, delete and update rooms']) || this.is_room_admin">
                             <MenuButton
-                                class="flex ml-6">
-                                <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                  aria-hidden="true"/>
+                                class="flex bg-tagBg p-0.5 rounded-full">
+                                <IconDotsVertical stroke-width="1.5"
+                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                    aria-hidden="true"/>
                             </MenuButton>
-                            <div v-if="$page.props.can.show_hints" class="absolute flex w-48 ml-12">
+                            <div v-if="this.$page.props.show_hints" class="absolute flex w-48 ml-12">
                                 <div>
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 </div>
                                 <div class="flex">
-                                    <span class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite den Raum</span>
+                                    <span class="ml-2 hind mt-1">{{$t('Edit the room')}}</span>
                                 </div>
                             </div>
                         </div>
@@ -32,29 +33,29 @@
                                 <div class="py-1">
                                     <MenuItem v-slot="{ active }">
                                         <a @click="openEditRoomModal(room)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <PencilAltIcon
+                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased capitalize']">
+                                            <IconEdit stroke-width="1.5"
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Bearbeiten
+                                            {{$t('edit')}}
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
                                         <a href="#" @click="duplicateRoom(room)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <DuplicateIcon
+                                            <IconCopy stroke-width="1.5"
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Duplizieren
+                                            {{ $t('Duplicate')}}
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
                                         <a @click="openSoftDeleteRoomModal(room)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <TrashIcon
+                                            <IconTrash  stroke-width="1.5"
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            In den Papierkorb
+                                            {{$t('In the recycle bin')}}
                                         </a>
                                     </MenuItem>
                                 </div>
@@ -62,260 +63,57 @@
                         </transition>
                     </Menu>
                 </div>
-                <div v-if="room.temporary === 1" class="font-lexend my-4 font-semibold">
+                <div v-if="room.room_history[0]"
+                     class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
+                    <div>
+                        {{$t('last modified')}}:
+                    </div>
+                    <UserPopoverTooltip :user="room.room_history[0].changes[0].changed_by"
+                                        :id="room.room_history[0].changes[0].changed_by?.id"
+                                        height="4" width="4" class="ml-2"/>
+                    <span class="ml-2 subpixel-antialiased">
+                        {{ room.room_history[0].created_at }}
+                    </span>
+                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
+                            @click="openRoomHistoryModal()">
+                        <ChevronRightIcon
+                            class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
+                            aria-hidden="true"/>
+                        {{$t('View history')}}
+                    </button>
+                </div>
+                <div v-if="room.temporary === true" class="font-lexend my-4 font-semibold">
                     {{ room.start_date }} - {{ room.end_date }}
                 </div>
-                <div class="grid grid-cols-7 mt-6">
+                <div class="w-[95%] grid grid-cols-7 mt-6">
                     <div class="col-span-5 mr-14">
-                        <span class="text-secondary subpixel-antialiased">
+                        <span class="xsLight">
                             {{ room.area.name }}
                         </span>
-                        <p class="text-secondary subpixel-antialiased mt-4">
-                            Kann von jedem gebucht werden: <label v-if="room.everyone_can_book">Ja</label>
-                            <label v-else>Nein</label>
+                        <p class="xsLight mt-4">
+                            {{$t('Can be booked by anyone ')}}: <label v-if="room.everyone_can_book">{{$t('Yes')}}</label>
+                            <label v-else>{{ $t('No') }}</label>
                         </p>
-                        <span class="flex mt-6 text-secondary text-sm subpixel-antialiased">
+                        <span class="flex mt-6 xsLight subpixel-antialiased">
                             {{ room.description }}
                         </span>
-                        <div class="flex w-full mt-6 items-center mb-4">
-                            <h3 class="text-xl leading-6 font-medium font-lexend text-primary"> Dokumente </h3>
-                        </div>
-                        <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
-                            <input
-                                @change="uploadChosenDocuments"
-                                class="hidden"
-                                ref="room_files"
-                                id="file"
-                                type="file"
-                                multiple
-                            />
-                            <div @click="selectNewFiles" @dragover.prevent
-                                 @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-2/3 flex justify-center items-center
-                        border-secondary border-dotted border-2 h-40 bg-stone-100 p-2 cursor-pointer">
-                                <p class="text-secondary text-center">Ziehe Dokumente hier her
-                                    <br>oder klicke ins Feld
-                                </p>
-                            </div>
-                            <jet-input-error :message="uploadDocumentFeedback"/>
-                        </div>
-                        <div class="space-y-1">
-                            <div v-for="room_file in room.room_files"
-                                 class="cursor-pointer group flex items-center">
-                                <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
-                                <p :data-tooltip-target="room_file.name" @click="downloadFile(room_file)"
-                                   class="ml-2 truncate hover:font-bold">
-                                    {{
-                                        room_file.name
-                                    }}</p>
-                                <XCircleIcon
-                                    v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin"
-                                    @click="removeFile(room_file)"
-                                    class="ml-2 hidden group-hover:block h-5 w-5 text-error flex-shrink-0"
-                                    aria-hidden="true"/>
-                                <div>
-                                    <div :id="room_file.name" role="tooltip"
-                                         class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
-                                        <div class="flex flex-wrap">
-                                            Um die Datei herunterzuladen, klicke auf den Dateinamen
-                                        </div>
-                                        <div class="tooltip-arrow" data-popper-arrow></div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-span-2">
-                        <span class="font-medium font-lexend text-xl w-full">Raumadmin</span>
-                        <button @click="openChangeRoomAdminsModal()"
-                                v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
-                            <PencilAltIcon class="mt-2 ml-6 h-6 w-6 p-1 rounded-full bg-buttonBlue text-white"/>
-                        </button>
-                        <div class="mt-4" v-if="roomForm.room_admins.length === 0">
-                            <span class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Raumadmins festgelegt</span>
-                        </div>
-                        <div v-else class="mt-4 -mr-3" v-for="user in room.room_admins">
-                            <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
-                                 :src="user.profile_photo_url"
-                                 alt=""/>
-                            <UserTooltip :user="user"/>
-                        </div>
-                        <div class="mt-10">
-                            <span class="font-medium font-lexend text-xl w-full">Eigenschaften</span>
-                            <Menu as="span" class="relative">
-                                <MenuButton @click="attributesOpened = true" v-if="this.$page.props.is_admin || this.$page.props.can.change_attributes || this.is_room_admin">
-                                    <PencilAltIcon class="mt-2 ml-6 h-6 w-6 p-1 rounded-full bg-buttonBlue text-white"/>
-                                </MenuButton>
-
-                                <transition
-                                    enter-active-class="transition duration-50 ease-out"
-                                    enter-from-class="transform scale-100 opacity-100"
-                                    enter-to-class="transform scale-100 opacity-100"
-                                    leave-active-class="transition duration-75 ease-in"
-                                    leave-from-class="transform scale-100 opacity-100"
-                                    leave-to-class="transform scale-95 opacity-0"
-                                >
-                                    <MenuItems
-                                        v-show="attributesOpened"
-                                        static
-                                        class="absolute right-0 mt-2 w-80 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                        <div class="inline-flex border-none w-1/5">
-
-                                        </div>
-                                        <div class="inline-flex border-none justify-end w-4/5">
-                                            <button @click="saveRoomAttributes" class="flex ml-4">
-                                                <DocumentTextIcon class="w-3 mr-1 mt-0.5"/>
-                                                <div class="text-xs">Speichern</div>
-                                            </button>
-                                        </div>
-                                        <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
-                                            <!-- Room Categories Section -->
-                                            <Disclosure v-slot="{ open }">
-                                                <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                >
-                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
-                                                    <ChevronDownIcon
-                                                        :class="open ? 'rotate-180 transform' : ''"
-                                                        class="h-4 w-4 mt-0.5 text-white"
-                                                    />
-                                                </DisclosureButton>
-
-                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                                    <div v-if="available_categories.length > 0"
-                                                         v-for="category in available_categories"
-                                                         :key="category.id"
-                                                         class="flex w-full mb-2">
-                                                        <input type="checkbox"
-                                                               v-model="roomForm.room_categories"
-                                                               :value="category.id"
-                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                        <p :class="[roomForm.room_categories.includes(category.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                            {{ category.name }}
-                                                        </p>
-                                                    </div>
-                                                    <div v-else class="text-secondary">Noch keine Raumkategorien angelegt</div>
-                                                </DisclosurePanel>
-                                            </Disclosure>
-                                            <hr class="border-gray-500 mt-2 mb-2">
-                                            <Disclosure v-slot="{ open }">
-                                                <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                >
-                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Nebenräume</span>
-                                                    <ChevronDownIcon
-                                                        :class="open ? 'rotate-180 transform' : ''"
-                                                        class="h-4 w-4 mt-0.5 text-white"
-                                                    />
-                                                </DisclosureButton>
-
-                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                                    <div v-if="available_rooms.length > 0"
-                                                         v-for="room in available_rooms"
-                                                         :key="room.id"
-                                                         class="flex w-full mb-2">
-                                                        <input type="checkbox"
-                                                               v-model="roomForm.adjoining_rooms"
-                                                               :value="room.id"
-                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                        <p :class="[roomForm.adjoining_rooms.includes(room.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                            {{ room.name }}
-                                                        </p>
-                                                    </div>
-                                                    <div v-else class="text-secondary">Noch keine Räume angelegt</div>
-                                                </DisclosurePanel>
-                                            </Disclosure>
-
-                                            <hr class="border-gray-500 mt-2 mb-2">
-                                            <!-- Room Attributes Section -->
-                                            <Disclosure v-slot="{ open }">
-                                                <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                >
-                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumeigenschaften</span>
-                                                    <ChevronDownIcon
-                                                        :class="open ? 'rotate-180 transform' : ''"
-                                                        class="h-4 w-4 mt-0.5 text-white"
-                                                    />
-                                                </DisclosureButton>
-
-                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                                    <div v-if="available_attributes.length > 0"
-                                                         v-for="attribute in available_attributes"
-                                                         :key="attribute.id"
-                                                         class="flex w-full mb-2">
-                                                        <input type="checkbox"
-                                                               v-model="roomForm.room_attributes"
-                                                               :value="attribute.id"
-                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                        <p :class="[roomForm.room_attributes.includes(attribute.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                            {{ attribute.name }}
-                                                        </p>
-                                                    </div>
-                                                    <div v-else class="text-secondary">Noch keine Raumeigenschaften angelegt</div>
-                                                </DisclosurePanel>
-                                            </Disclosure>
-                                        </div>
-                                    </MenuItems>
-                                </transition>
-
-                            </Menu>
-                            <div>
-                                <div class="mt-2 flex flex-wrap">
-                                    <span v-for="(category, index) in roomCategories"
-                                          class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        {{ category.name }}
-                                        <button @click="removeCategoryFromRoom(index)" type="button">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-                                    <span v-for="(attribute, index) in roomAttributes"
-                                          class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        {{ attribute.name }}
-                                        <button @click="removeAttributeFromRoom(index)" type="button">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-
-                                    <span v-for="(room, index) in adjoiningRooms"
-                                          class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        Nebenraum von {{ room.name }}
-                                        <button @click="removeAdjoiningRoomFromRoom(index)" type="button">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-
-                                </div>
-
-                            </div>
-                        </div>
                     </div>
                 </div>
 
+                <!-- EventRequest should not be shown due to actual design
                 <div class="flex flex-wrap">
-                    <span class="font-bold mt-12 font-lexend text-2xl w-full" v-if="room.event_requests.length !== 0">
+                    <span class="mt-12 headline2 w-full"
+                          v-if="requestsToShow?.length !== 0 && ($role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin)">
                     Offene Belegungsanfragen
                     </span>
-                    <div v-for="eventRequest in room.event_requests" class="flex flex-wrap w-full items-center">
+                    <div v-for="eventRequest in requestsToShow" class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
                             <div class="flex items-center w-full mt-8">
                                 <div class="flex items-center w-full">
                                     <EventTypeIconCollection :height="26" :width="26"
                                                              :iconName="eventRequest.event_type.svg_name"/>
                                     <div
-                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                        class="mx-6 ml-2 flex leading-6 sDark">
                                         {{ eventRequest.event_type.name }}
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience"
                                              class="h-5 w-5 ml-2 my-auto"/>
@@ -323,14 +121,14 @@
                                              class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
-                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                    <div class="flex w-full xsDark whitespace-nowrap ml-3"
                                          v-if="eventRequest.start_time.split(',')[0] === eventRequest.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }}, {{
                                             eventRequest.start_time.split(',')[0]
                                         }},{{ eventRequest.start_time.split(',')[1] }}
                                         - {{ eventRequest.end_time.split(',')[1] }}
                                     </div>
-                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                    <div class="flex xsDark w-full whitespace-nowrap ml-3" v-else>
                                         {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }},
                                         {{ eventRequest.start_time }} -
                                         {{ getGermanWeekdayAbbreviation(eventRequest.end_time_weekday) }},
@@ -346,15 +144,16 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="flex items-center w-full ml-24 ">
+                            <div class="flex items-center w-full ml-8">
                                 <div v-if="eventRequest.project" class="w-64">
-                                    <div class="text-secondary text-sm flex items-center">
+                                    <div class="xsLight flex items-center">
                                         Zugeordnet zu
-                                        <Link :href="route('projects.show',{project: eventRequest.project.id})"
-                                              class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                        <Link
+                                            :href="route('projects.show',{project: eventRequest.project.id, openTab:'calendar'})"
+                                            class="xsDark ml-2">
                                             {{ eventRequest.project.name }}
                                         </Link>
-                                    </div>
+                                    </div> -->
                                     <!--
                                                                         <div v-for="projectLeader in eventRequest.project.project_managers">
                                                                             <img :data-tooltip-target="projectLeader.id"
@@ -364,25 +163,26 @@
                                                                             <UserTooltip :user="projectLeader"/>
                                                                         </div>
                                     -->
+                <!--
                                 </div>
-                                <div class="text-secondary text-sm w-64" v-else>
+                                <div class="xsLight w-64" v-else>
                                     Keinem Projekt zugeordnet
                                 </div>
 
-                                <div class="flex text-sm text-secondary items-center">
-                                    angefragt:<img :data-tooltip-target="eventRequest.created_by.id"
-                                                   :src="eventRequest.created_by.profile_photo_url"
-                                                   :alt="eventRequest.created_by.name"
+                                <div class="flex xsLight items-center" v-if="eventRequest.created_by">
+                                    angefragt:<img :data-tooltip-target="eventRequest.created_by?.id"
+                                                   :src="eventRequest.created_by?.profile_photo_url"
+                                                   :alt="eventRequest.created_by?.name"
                                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                     <UserTooltip :user="eventRequest.created_by"/>
-                                    <span class="ml-2"> {{ eventRequest.created_at }}</span>
+                                    <span class="ml-2 xsLight"> {{ eventRequest.created_at }}</span>
                                 </div>
                                 <div>
 
                                 </div>
                             </div>
 
-                            <div class="flex ml-40 mt-2 text-sm text-secondary items-center w-full"
+                            <div class="flex ml-8 mt-2 xsLight items-center w-full"
                                  v-if="eventRequest.description">
                                 {{ eventRequest.description }}
                             </div>
@@ -390,97 +190,35 @@
 
                         </div>
                     </div>
+                </div> -->
+            </div>
+        </div>
+
+        <div class="my-12 ml-14" v-if="$role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin">
+            <div class="flex mt-6 items-center mb-2 ml-14">
+                <h3 class="headline2"> {{$t('Room assignment')}} </h3>
+            </div>
+            <div>
+                <div v-if="calendarType && calendarType === 'daily'">
+                    <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
+                        <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue"
+                                           :eventTypes=this.event_types initial-view="day" :user_filters="user_filters"/>
+                    </div>
+                </div>
+                <div v-else>
+                    <SingleRoomCalendarComponent  :personal-filters="personalFilters" :filter-options="filterOptions" :eventsWithoutRoom="eventsWithoutRoom" :dateValue="dateValue" :eventTypes=this.event_types
+                                                 :calendarData="calendar" :days="days" :rooms="rooms" :user_filters="user_filters" />
                 </div>
             </div>
         </div>
 
-        <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
-            <div class="flex w-full mt-6 items-center mb-2 ml-20">
-                <h3 class="text-xl leading-6 font-medium font-lexend text-primary"> Raumbelegung </h3>
-            </div>
-            <CalendarComponent :eventTypes="this.event_types" :room="room"/>
-        </div>
-
-        <!-- Change RoomAdmins Modal -->
-        <jet-dialog-modal :show="showChangeRoomAdminsModal" @close="closeChangeRoomAdminsModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_room_admin_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-3">
-                    <div class="font-bold font-lexend text-primary text-2xl my-2">
-                        Raumadmin bearbeiten
-                    </div>
-                    <XIcon @click="closeChangeRoomAdminsModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-secondary tracking-tight leading-6 sub">
-                        Tippe den Namen der Nutzer*innen ein, welche den Raum bearbeiten und direkt belegen dürfen.
-                    </div>
-                    <div class="mt-6 relative">
-                        <div class="my-auto w-full">
-                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                   placeholder="placeholder"/>
-                            <label for="userSearch"
-                                   class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
-                        </div>
-
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
-                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                         text-base ring-1 ring-black ring-opacity-5
-                                         overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
-                                    <div v-for="(user, index) in user_search_results" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="addUserToRoomAdminsArray(user)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ user.first_name }} {{ user.last_name }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </transition>
-                    </div>
-                    <div class="mt-4">
-                        <div class="flex">
-                        </div>
-                        <span v-for="(user,index) in roomForm.room_admins"
-                              class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
-                            <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
-                                <span class="flex ml-4">
-                                {{ user.first_name }} {{ user.last_name }}
-                                    </span>
-                            </div>
-                            <button type="button" @click="deleteUserFromRoomAdminArray(user)">
-                                <span class="sr-only">User als Raumadmin entfernen</span>
-                                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
-                            </button>
-                        </span>
-                    </div>
-                    <button @click="editRoomAdmins"
-                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                    >Speichern
-                    </button>
-
-                </div>
-
-            </template>
-
-        </jet-dialog-modal>
         <!-- Raum Bearbeiten-->
         <jet-dialog-modal :show="showEditRoomModal" @close="closeEditRoomModal">
             <template #content>
                 <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
-                    <div class="font-bold font-lexend text-primary text-3xl my-2">
-                        Raum bearbeiten
+                    <div class="headline1 my-2">
+                        {{$t('Edit room')}}
                     </div>
                     <XIcon @click="closeEditRoomModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
@@ -491,36 +229,37 @@
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                    placeholder="placeholder"/>
                             <label for="roomNameEdit"
-                                   class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Raumname
+                                   class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
+                                {{$t('Room name')}}
                             </label>
                             <jet-input-error :message="editRoomForm.error" class="mt-2"/>
                         </div>
                         <div class="mt-8 mr-4">
                                             <textarea
-                                                placeholder="Kurzbeschreibung"
+                                                :placeholder="$t('Short description')"
                                                 v-model="editRoomForm.description" rows="4"
-                                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
+                                                class="shadow-sm placeholder-secondary resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
                         </div>
                         <div class="flex items-center my-6">
                             <input v-model="editRoomForm.temporary"
                                    type="checkbox"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[editRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
-                               class="ml-4 my-auto text-sm">Temporärer Raum</p>
-                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2 mt-4"/>
+                               class="ml-4 my-auto text-sm">{{$t('Temporary room')}}</p>
+                            <div v-if="this.$page.props.show_hints" class="flex mt-1">
+                                <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                                 <span
-                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
+                                    class="ml-1 my-auto hind">{{$t('Set up a temporary room - e.g. if part of a room is partitioned off. This is only displayed in the calendar during this period.')}}</span>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-x-3" v-if="editRoomForm.temporary">
                             <input
                                 v-model="editRoomForm.start_date_dt_local" id="startDateEdit"
-                                placeholder="Zu erledigen bis?" type="date"
+                                :placeholder="$t('To be completed by?')" type="date"
                                 class="border-gray-300 col-span-1 placeholder-secondary mr-2 w-full"/>
                             <input
                                 v-model="editRoomForm.end_date_dt_local" id="endDateEdit"
-                                placeholder="Zu erledigen bis?" type="date"
+                                :placeholder="$t('To be completed by?')" type="date"
                                 class="border-gray-300 col-span-1 placeholder-secondary w-full"/>
                         </div>
 
@@ -529,103 +268,54 @@
                                    type="checkbox"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[editRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
-                               class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
-                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2 mt-4"/>
+                               class="ml-4 my-auto text-sm">{{ $t('Can be booked by anyone')}}</p>
+                            <div v-if="this.$page.props.show_hints" class="flex mt-1">
+                                <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                                 <span
-                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>
+                                    class="ml-1 my-auto hind">{{ $t('Decides whether this room can be booked by everyone or only by the room admins.')}}</span>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2">
-                            <button :class="[editRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                    class="mt-4 col-span-1 mr-1.5 flex items-center px-24 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                    @click="editRoom"
-                                    :disabled="editRoomForm.name.length === 0">
-                                Speichern
-                            </button>
+                        <div class="flex justify-center pt-8">
+                            <FormButton
+                                :disabled="editRoomForm.name.length === 0"
+                                @click="editRoom"
+                            />
                         </div>
 
-                    </div>
-                </div>
-            </template>
-        </jet-dialog-modal>
-        <!-- Delete Room Modal -->
-        <jet-dialog-modal :show="showSoftDeleteRoomModal" @close="closeSoftDeleteRoomModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
-                        Raum in den Papierkorb
-                    </div>
-                    <XIcon @click="closeSoftDeleteRoomModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du den Raum {{ roomToSoftDelete.name }} in den Papierkorb legen möchtest?
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="softDeleteRoom()">
-                            Entfernen
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeSoftDeleteRoomModal()"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
-                        </div>
                     </div>
                 </div>
             </template>
         </jet-dialog-modal>
         <!-- Success Modal -->
-        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
-                        {{ successHeading }}
-                    </div>
-                    <XIcon @click="closeSuccessModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
-                        {{ successDescription }}
-                    </div>
-                    <div class="mt-6">
-                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="closeSuccessModal">
-                            <CheckIcon class="h-6 w-6 text-secondaryHover"/>
-                        </button>
-                    </div>
-                </div>
-
-            </template>
-        </jet-dialog-modal>
+        <SuccessModal
+            :title="successHeading"
+            :description="successDescription"
+            :show="showSuccessModal"
+            @closed="closeSuccessModal"
+        />
         <!-- Approve Request Modal -->
         <jet-dialog-modal :show="showApproveRequestModal" @close="closeApproveRequestModal">
             <template #content>
                 <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
-                        Raumbelegung zusagen
+                    <div class="headline1 my-2">
+                        {{ $t('Confirm room occupancy')}}
                     </div>
                     <XIcon @click="closeApproveRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
-                        Bist du sicher, dass du die Raumbelegung zusagen möchtest?
+                    <div class="successText">
+                        {{$t('Bist du sicher, dass du die Raumbelegung zusagen möchtest?')}}
                     </div>
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
 
                             <div class="flex items-center w-full mt-4">
                                 <div class="flex items-center ml-12 w-full">
-                                    <EventTypeIconCollection :height="26" :width="26"
-                                                             :iconName="requestToApprove.event_type.svg_name"/>
+                                    <div>
+                                        <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : requestToApprove.eventType?.hex_code }" />
+                                    </div>
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
                                         {{ requestToApprove.event_type.name }}
@@ -637,14 +327,14 @@
                                              class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
-                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                    <div class="flex w-full xsLight whitespace-nowrap ml-3"
                                          v-if="requestToApprove.start_time.split(',')[0] === requestToApprove.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }}, {{
                                             requestToApprove.start_time.split(',')[0]
                                         }},{{ requestToApprove.start_time.split(',')[1] }}
                                         - {{ requestToApprove.end_time.split(',')[1] }}
                                     </div>
-                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                    <div class="flex w-full xsLight whitespace-nowrap ml-3" v-else>
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }},
                                         {{ requestToApprove.start_time }} -
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.end_time_weekday) }},
@@ -654,9 +344,9 @@
                             </div>
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToApprove.project" class="w-80">
-                                    <div class="ml-16 text-secondary text-sm flex items-center">
-                                        Zugeordnet zu
-                                        <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                    <div class="ml-16  xsLight flex items-center">
+                                        {{$t('assigned to')}}
+                                        <div class="xsDark ml-2">
                                             {{ requestToApprove.project.name }}
                                         </div>
                                     </div>
@@ -670,22 +360,20 @@
                                     </div>
                                     -->
                                 </div>
-                                <div class="text-secondary text-sm ml-10" v-else>
-                                    Keinem Projekt zugeordnet
+                                <div class="xsLight ml-10" v-else>
+                                    {{$t('Not assigned to a project')}}
                                 </div>
-                                <div class="flex text-sm text-secondary items-center">
-                                    angefragt:<img :data-tooltip-target="requestToApprove.created_by.id"
-                                                   :src="requestToApprove.created_by.profile_photo_url"
-                                                   :alt="requestToApprove.created_by.name"
-                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip :user="requestToApprove.created_by"/>
-                                    <span class="ml-2"> {{ requestToApprove.created_at }}</span>
+                                <div class="flex xsLight items-center">
+                                    {{$t('requested')}}:
+                                    <UserPopoverTooltip :height="7" :width="7" v-if="requestToApprove.created_by"
+                                                    :user="requestToApprove.created_by" :id="1"/>
+                                    <span class="ml-2 xsLight"> {{ requestToApprove.created_at }}</span>
                                 </div>
                                 <div>
 
                                 </div>
                             </div>
-                            <div class="flex ml-12 mt-2 text-sm text-secondary items-center w-full"
+                            <div class="flex ml-12 mt-2 xsLight items-center w-full"
                                  v-if="requestToApprove.description">
                                 {{ requestToApprove.description }}
                             </div>
@@ -695,11 +383,11 @@
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="approveRequest">
-                            Zusagen
+                            {{$t('Commitments')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeApproveRequestModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -710,22 +398,23 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
-                        Raumbelegung absagen
+                    <div class="headline1 my-2">
+                        {{ $t('Cancel room reservation')}}
                     </div>
                     <XIcon @click="closeDeclineRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du die Raumbelegung absagen möchtest?
+                    <div class="errorText">
+                        {{$t('Are you sure you want to cancel the room reservation?')}}
                     </div>
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
 
                             <div class="flex items-center w-full mt-4">
                                 <div class="flex items-center ml-12 w-full">
-                                    <EventTypeIconCollection :height="26" :width="26"
-                                                             :iconName="requestToDecline.event_type.svg_name"/>
+                                    <div>
+                                        <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : requestToDecline.eventType?.hex_code }" />
+                                    </div>
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
                                         {{ requestToDecline.event_type.name }}
@@ -737,14 +426,14 @@
                                              class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
-                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                    <div class="flex w-full xsLight whitespace-nowrap ml-3"
                                          v-if="requestToDecline.start_time.split(',')[0] === requestToDecline.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }}, {{
                                             requestToDecline.start_time.split(',')[0]
                                         }},{{ requestToDecline.start_time.split(',')[1] }}
                                         - {{ requestToDecline.end_time.split(',')[1] }}
                                     </div>
-                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                    <div class="flex w-full xsLight whitespace-nowrap ml-3" v-else>
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }},
                                         {{ requestToDecline.start_time }} -
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.end_time_weekday) }},
@@ -754,9 +443,9 @@
                             </div>
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToDecline.project" class="w-80">
-                                    <div class="ml-16 text-secondary text-sm flex items-center">
-                                        Zugeordnet zu
-                                        <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                    <div class="ml-16 xsLight flex items-center">
+                                        {{$t('assigned to')}}
+                                        <div class="xsDark ml-2">
                                             {{ requestToDecline.project.name }}
                                         </div>
                                     </div>
@@ -770,42 +459,65 @@
                                     </div>
                                     -->
                                 </div>
-                                <div class="text-secondary text-sm ml-10" v-else>
-                                    Keinem Projekt zugeordnet
+                                <div class="xsLight ml-10" v-else>
+                                    {{$t('Not assigned to a project')}}
                                 </div>
-                                <div class="flex text-sm text-secondary items-center">
-                                    angefragt:<img :data-tooltip-target="requestToDecline.created_by.id"
-                                                   :src="requestToDecline.created_by.profile_photo_url"
-                                                   :alt="requestToDecline.created_by.name"
-                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip :user="requestToDecline.created_by"/>
-                                    <span class="ml-2"> {{ requestToDecline.created_at }}</span>
+                                <div class="flex xsLight items-center">
+                                    {{$t('requested')}}:
+                                    <UserPopoverTooltip :height="7" :width="7" v-if="requestToDecline.created_by"
+                                                    :user="requestToDecline.created_by" :id="1"/>
+                                    <span class="ml-2 xsLight"> {{ requestToDecline.created_at }}</span>
                                 </div>
                                 <div>
 
                                 </div>
                             </div>
-                            <div class="flex ml-12 mt-2 text-sm text-secondary items-center w-full"
+                            <div class="flex ml-12 mt-2 xsLight items-center w-full"
                                  v-if="requestToDecline.description">
                                 {{ requestToDecline.description }}
                             </div>
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="declineRequest">
-                            Absagen
-                        </button>
+                        <FormButton
+                            @click="declineRequest"
+                            :text="$t('Cancellations')"
+                            class="inline-flex items-center"
+                        />
                         <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
             </template>
         </jet-dialog-modal>
     </app-layout>
+
+    <BaseSidenav :show="showSidenav" @toggle="this.showSidenav =! this.showSidenav">
+        <RoomSidenav
+            :room="room"
+            :categories="roomCategories.data"
+            :available-categories="available_categories"
+            :attributes="roomAttributes.data"
+            :available-attributes="available_attributes"
+            :adjoiningRooms="adjoiningRooms.data"
+            :available-adjoining-rooms="available_rooms"
+        />
+    </BaseSidenav>
+
+    <!-- Room History Modal-->
+    <room-history-component
+        v-if="showRoomHistory"
+        :room_history="room.room_history"
+        @closed="closeRoomHistoryModal"
+    />
+    <!-- Delete Room Modal -->
+    <ConfirmationComponent v-if="showSoftDeleteRoomModal"
+                           :confirm="$t('Delete room')"
+                           :titel="$t('Room in the recycle bin')"
+                           :description="roomDeleteDescriptionText"
+                           @closed="afterSoftDeleteRoomConfirm"/>
 </template>
 
 <script>
@@ -833,7 +545,14 @@ import {
     PlusIcon,
     MinusIcon
 } from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
+import {
+    CheckIcon,
+    ChevronDownIcon,
+    DotsVerticalIcon,
+    PlusSmIcon,
+    XCircleIcon,
+    ChevronRightIcon
+} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
 import JetDialogModal from "@/Jetstream/DialogModal";
@@ -844,17 +563,26 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
+import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
+import RoomSidenav from "@/Layouts/Components/RoomSidenav.vue";
+import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
+import SingleRoomCalendarComponent from "@/Layouts/Components/SingleRoomCalendarComponent.vue";
+import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
-const attributeFilters = [
-    {name: 'Nur Anfragen', id: 1},
-    {name: 'Nur laute Termine', id: 2},
-    {name: 'Nur Termine mit Publikum', id: 3}
-]
 
 export default {
+    mixins: [Permissions, IconLib],
     name: "Show",
     props: [
         'room',
+        'rooms',
         'event_types',
         'projects',
         'is_room_admin',
@@ -866,9 +594,26 @@ export default {
         'roomAttributes',
         'available_rooms',
         'adjoiningRoomIds',
-        'adjoiningRooms'
+        'adjoiningRooms',
+        'calendarType',
+        'selectedDate',
+        'dateValue',
+        'calendar',
+        'days',
+        'eventsWithoutRoom',
+        'filterOptions',
+        'personalFilters',
+        'user_filters'
     ],
     components: {
+        FormButton,
+        SuccessModal,
+        ConfirmationComponent,
+        UserPopoverTooltip,
+        IndividualCalendarComponent,
+        RoomSidenav,
+        BaseSidenav,
+        NewUserToolTip,
         PlusIcon,
         MinusIcon,
         Disclosure,
@@ -903,6 +648,9 @@ export default {
         ListboxOption,
         ListboxOptions,
         CalendarComponent,
+        ChevronRightIcon,
+        RoomHistoryComponent,
+        SingleRoomCalendarComponent
     },
     computed: {
         eventTypeFilters: function () {
@@ -912,11 +660,26 @@ export default {
             })
             return filters;
         },
+        requestsToShow: function () {
+            let requestsToShow;
+            if (this.hasAdminRole() || this.is_room_admin || this.$canAny(['create, delete and update rooms'])) {
+                requestsToShow = this.room.event_requests
+            }
+            return requestsToShow
+        },
+        roomDeleteDescriptionText() {
+            return this.$t('Are you sure you want to put the room {0} in the trash?', [this.roomToSoftDelete.name]);
+        },
+    },
+    mounted() {
+        setTimeout(() => {
+            this.showSidenav = false;
+        }, 1000)
     },
     data() {
         return {
+            showSidenav: true,
             attributesOpened: false,
-            showChangeRoomAdminsModal: false,
             showSuccess: false,
             user_query: "",
             user_search_results: [],
@@ -929,6 +692,7 @@ export default {
             requestToApprove: null,
             showApproveRequestModal: false,
             showDeclineRequestModal: false,
+            showRoomHistory: false,
             successHeading: "",
             successDescription: "",
             roomForm: this.$inertia.form({
@@ -943,6 +707,10 @@ export default {
                 name: '',
                 description: '',
                 temporary: false,
+                room_admins: this.room.room_admins,
+                room_categories: this.roomCategoryIds,
+                room_attributes: this.roomAttributeIds,
+                adjoining_rooms: this.adjoiningRoomIds,
                 start_date: null,
                 start_date_dt_local: null,
                 end_date: null,
@@ -999,6 +767,13 @@ export default {
                     return 'Sa';
                 case 'Sunday':
                     return 'So';
+            }
+        },
+        afterSoftDeleteRoomConfirm(confirmed) {
+            if (confirmed) {
+                this.softDeleteRoom()
+            } else {
+                this.closeSoftDeleteRoomModal()
             }
         },
 
@@ -1075,9 +850,15 @@ export default {
             for (let file of files) {
 
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
-                    this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
+                    this.uploadDocumentFeedback = this.$t('Videos, .exe and .dmg files are not supported')
                 } else {
-                    this.uploadDocumentToRoom(file)
+                    const fileSize = file.size;
+                    if (fileSize > 2097152) {
+                        this.uploadDocumentFeedback = this.$t('Files larger than 2MB cannot be uploaded.')
+                    } else {
+                        this.uploadDocumentToRoom(file)
+                    }
+
                 }
             }
         },
@@ -1104,9 +885,6 @@ export default {
         closeChangeRoomAdminsModal() {
             this.showChangeRoomAdminsModal = false;
         },
-        deleteUserFromRoomAdminArray(user) {
-            this.roomForm.room_admins.splice(this.roomForm.room_admins.indexOf(user), 1);
-        },
         closeSuccessModal() {
             this.showSuccessModal = false;
             this.successHeading = "";
@@ -1127,10 +905,6 @@ export default {
         removeAdjoiningRoomFromRoom(index) {
             this.roomForm.adjoining_rooms.splice(index, 1)
             this.roomForm.patch(route('rooms.update', {room: this.room.id}));
-        },
-        editRoomAdmins() {
-            this.roomForm.patch(route('rooms.update', {room: this.room.id}));
-            this.closeChangeRoomAdminsModal();
         },
         addUserToRoomAdminsArray(user) {
             for (let adminUser of this.roomForm.room_admins) {
@@ -1155,7 +929,7 @@ export default {
             this.editRoomForm.end_date = room.end_date;
             this.editRoomForm.start_date_dt_local = room.start_date_dt_local;
             this.editRoomForm.end_date_dt_local = room.end_date_dt_local;
-            if (room.temporary === 1) {
+            if (room.temporary === true) {
                 this.editRoomForm.temporary = true;
             }
             this.showEditRoomModal = true;
@@ -1181,8 +955,8 @@ export default {
         softDeleteRoom() {
             this.$inertia.delete(`/rooms/${this.roomToSoftDelete.id}`);
             this.closeSoftDeleteRoomModal();
-            this.successHeading = "Raum im Papierkorb"
-            this.successDescription = "Der Raum wurde erfolgreich in den Papierkorb gelegt."
+            this.successHeading = this.$t('Room in the recycle bin')
+            this.successDescription = this.$t('The room has been successfully moved to the trash.')
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000);
         },
@@ -1191,7 +965,13 @@ export default {
             this.editRoomForm.end_date = this.editRoomForm.end_date_dt_local;
             this.editRoomForm.patch(route('rooms.update', {room: this.editRoomForm.id}));
             this.closeEditRoomModal();
-        }
+        },
+        openRoomHistoryModal() {
+            this.showRoomHistory = true;
+        },
+        closeRoomHistoryModal() {
+            this.showRoomHistory = false;
+        },
     },
     watch: {
         user_query: {
@@ -1207,11 +987,6 @@ export default {
             deep: true
         }
     },
-    setup() {
-        return {
-            attributeFilters,
-        }
-    }
 }
 </script>
 

@@ -3,41 +3,38 @@
 namespace App\Mail;
 
 use App\Models\Invitation;
+use App\Models\User;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
 class InvitationCreated extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable;
+    use SerializesModels;
 
-    public $invitation;
-    public $user;
-    public $token;
-    /**
-     * Create a new message instance.
-     *
-     * @return void
-     */
-    public function __construct(Invitation $invitation, Authenticatable $user, $token)
+    public function __construct(public Invitation $invitation, public Authenticatable $user, public string $token)
     {
-        $this->invitation = $invitation;
-        $this->user = $user;
-        $this->token = $token;
     }
 
-    /**
-     * Build the message.
-     *
-     * @return $this
-     */
-    public function build()
+    public function build(): InvitationCreated
     {
-        return $this->from("einladung@test.de", $this->user->first_name)
+        $settings = app(GeneralSettings::class);
+        return $this
+            ->from(
+                $settings->business_email !== '' ? $settings->business_email : 'noreply@artwork.de',
+                'Artwork'
+            )
             ->replyTo($this->user->email)
-            ->subject("Einladung für Artwork.tools")
-            ->markdown('emails.invitations');
+            ->subject("Einladung für das artwork")
+            ->markdown(
+                'emails.invitations',
+                [
+                    'token' => $this->token,
+                    'super_user_email' => User::query()->find(1)?->email
+                ]
+            );
     }
 }

@@ -5,26 +5,24 @@
             <img alt="" src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-2xl my-2">
-                    Teams zuweisen
+                    {{ $t('Assign teams')}}
                 </div>
 
-                <XIcon @click="emitClose"
+                <IconX stroke-width="1.5" @click="emitClose"
                     class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                     aria-hidden="true"/>
 
                 <div class="text-secondary tracking-tight leading-6 sub">
-                    Tippe den Namen des Teams ein, dem du die Checkliste zuweisen möchtest.
+                    {{ $t('Enter the name of the team to which you want to assign the checklist.')}}
                 </div>
-
                 <div class="mt-10">
                     <!--   Search for Departments    -->
                     <div class="my-auto w-full">
-                        <label for="departmentSearch" class="text-secondary">Name</label>
-                        <input id="departmentSearch"
+                        <input id="departmentSearch" placeholder="Name"
                             v-model="departmentQuery"
                             type="text"
                             autocomplete="off"
-                            class="pl-0 h-12 w-full focus:border-b-primary border-b-2 border-gray-300 text-primary"/>
+                            class="pl-2 h-12 w-10/12 focus:border-b-primary border-b-2 border-gray-300 text-primary focus:outline-none focus:ring-0 placeholder-secondary border-0"/>
                     </div>
 
                     <!--    Department Search Results    -->
@@ -38,7 +36,7 @@
                         <div v-if="departmentQuery && (searchedDepartments.length === 0)"
                             key="no-item"
                             class="p-4 font-bold text-white">
-                            Keine Ergebnisse gefunden
+                            {{ $t('No results found')}}
                         </div>
                     </div>
                 </div>
@@ -47,22 +45,21 @@
                 <div v-for="(department,index) in selectedDepartments"
                     class="mt-4 font-bold text-primary flex"
                     :key="index">
-                    <div>
+                    <div class="flex items-center">
                         <TeamIconCollection :iconName="department.svg_name" class="rounded-full h-11 w-11 object-cover"/>
-                        <div class="pl-4 pt-1">{{ department.name }}</div>
+                        <div class="pl-3 pt-1">{{ department.name }}</div>
                     </div>
                     <button type="button" @click="removeDepartment(department)">
-                        <span class="sr-only">Team aus Checkliste entfernen</span>
-                        <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-primary rounded-full"/>
+                        <span class="sr-only">{{ $t('Remove team from checklist')}}</span>
+                        <IconCircleX stroke-width="1.5" class="ml-2 mt-1 h-5 w-5 hover:text-error text-white bg-primary rounded-full"/>
                     </button>
                 </div>
 
-                <button @click="submitDepartments"
-                    class="mt-8 px-12 py-3 bg-primary hover:bg-primaryHover font-bold text-lg uppercase text-white">
-                    Zuweisen
-                </button>
+                <FormButton @click="submitDepartments"
+                           :text="$t('Assign')"
+                />
 
-                <p v-if="error" class="text-red-800 text-xs">{{ error }}</p>
+                <!-- <p v-if="error" class="text-red-800 text-xs">{{ error }}</p> -->
             </div>
         </template>
     </jet-dialog-modal>
@@ -73,11 +70,15 @@
 import {XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
+import Permissions from "@/mixins/Permissions.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
+import IconLib from "@/mixins/IconLib.vue";
 
 export default {
     name: 'ChecklistTeamComponent',
-
+    mixins: [Permissions, IconLib],
     components: {
+        FormButton,
         XIcon,
         XCircleIcon,
         TeamIconCollection,
@@ -107,7 +108,7 @@ export default {
         },
 
         removeDepartment(department) {
-            this.selectedDepartments = this.selectedDepartments.filter((selected) => selected.id === department.id);
+            this.selectedDepartments.splice(this.selectedDepartments.indexOf(department),1);
         },
 
         async submitDepartments() {
@@ -116,7 +117,8 @@ export default {
                     assigned_department_ids: this.selectedDepartments.map((department) => department.id)
                 })
                 .then(response => this.emitClose())
-                .catch(error => this.error = error.response.data.errors);
+                // .catch(error => this.error = error.response.data.errors);
+                .catch(error => this.emitClose());
         },
 
         emitClose() {
@@ -130,8 +132,10 @@ export default {
                 if (!this.departmentQuery) {
                     return
                 }
-                axios.get('/departments/search', {params: {query: this.departmentQuery}})
-                    .then(response => this.searchedDepartments = response.data)
+                axios.get('/departments/search', {params: {query: this.departmentQuery}
+                }).then(response => {
+                    this.searchedDepartments = response.data
+                })
             },
         },
         departments: {

@@ -1,4 +1,5 @@
 const defaultTheme = require('tailwindcss/defaultTheme');
+const colors = require("tailwindcss/colors")
 
 module.exports = {
     mode: 'jit',
@@ -8,7 +9,9 @@ module.exports = {
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
         './resources/js/**/*.vue',
-        "./node_modules/flowbite/**/*.js"
+        "./index.html",
+        "./src/**/*.{vue,js,ts,jsx,tsx}",
+        "./node_modules/vue-tailwind-datepicker/**/*.js"
     ],
 
     theme: {
@@ -29,8 +32,51 @@ module.exports = {
                 buttonBlue:'#3017AD',
                 buttonHover:'#2D1FDE',
                 tagBg: 'rgba(48,23,173,0.1)',
+                tagBgGray: '#5E5C66',
                 tag: 'rgba(48,23,173,0.3)',
-                tagText: '#3017AD'
+                tagText: '#3017AD',
+                backgroundBlue: '#3017AD34',
+                lightBackgroundGray: '#F4F4F3',
+                checkBoxBg: '#474459',
+                silverGray:'#CECDD8',
+                userBg: '#EDEDEC',
+                colorOfAction: '#E8E4f5',
+                menuButtonBlue: '#3017AD',
+                shiftText: '#82818A',
+                linkOnDarkColor: '#BDB6F0',
+                "vtd-primary": colors.sky,
+                "vtd-secondary": colors.gray,
+                // Artwork colors
+                artwork: {
+                    messages: {
+                        success: '#25cd0e',
+                        waring: '#ecce00',
+                        error: '#ef4444',
+                        info: '#a7a6b1'
+                    },
+                    buttons: {
+                        create: '#3073ae',
+                        context: '#6f6f6f',
+                        hover: '#1c77d7',
+                        default: '#2a3d75'
+                    },
+                    project: {
+                        background: '#eee',
+                    },
+                    calendar: {
+
+                    },
+                    icons: {
+                        default: {
+                            background: 'rgba(48,23,173,0.1)',
+                            color: '#3017AD'
+                        },
+                        darkGreen: {
+                            background: 'rgba(56,173,23,0.1)',
+                            color: '#21ad17'
+                        },
+                    }
+                },
             },
             fontSize: {
                 header: '30px'
@@ -44,16 +90,19 @@ module.exports = {
               header: '900'
             },
             boxShadow: {
-                'buttonBlue': '0 35px 60px -15px #2D1FDE'
+                'buttonBlue': '0 35px 60px -15px #2D1FDE',
+                'cardShadow': '0px 4px 25px #27233c47',
             },
             flex: {
                 'tags': '1 1 30%'
-            }
+            },
+            zIndex: {
+                '100': '100',
+            },
         },
     },
     plugins: [
         require('@tailwindcss/forms'),
-        require('@tailwindcss/typography'),
-        require('flowbite/plugin')
+        require('@tailwindcss/typography')
     ],
 };

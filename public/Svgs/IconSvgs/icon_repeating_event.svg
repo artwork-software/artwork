@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="8.664" height="10.838" viewBox="0 0 8.664 10.838">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #50908e;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.3px;
+      }
+    </style>
+  </defs>
+  <g id="Icon_feather-repeat" data-name="Icon feather-repeat" transform="translate(-3.85 -0.581)">
+    <path id="Pfad_1366" data-name="Pfad 1366" class="cls-1" d="M25.5,1.5l1.829,1.829L25.5,5.158" transform="translate(-15.465 0)"/>
+    <path id="Pfad_1367" data-name="Pfad 1367" class="cls-1" d="M4.5,10.243V9.329A1.741,1.741,0,0,1,6.136,7.5h5.727" transform="translate(0 -4.436)"/>
+    <path id="Pfad_1368" data-name="Pfad 1368" class="cls-1" d="M6.329,26.158,4.5,24.329,6.329,22.5" transform="translate(0 -15.658)"/>
+    <path id="Pfad_1369" data-name="Pfad 1369" class="cls-1" d="M11.864,19.5v.914a1.741,1.741,0,0,1-1.636,1.829H4.5" transform="translate(0 -13.307)"/>
+  </g>
+</svg>

@@ -10,6 +10,28 @@
                   d="M12.974,5.782c-.855-1.718-2.834-2.737-4.606-3.239a10.281,10.281,0,0,0-5.25-.082l.93-1.254A.808.808,0,0,0,3.76.109.821.821,0,0,0,2.663.4L.128,3.813A.807.807,0,0,0,.82,5.021a3.8,3.8,0,0,1,1.773.395,4.723,4.723,0,0,1,.462.269,1.939,1.939,0,0,1,.3.22,4.507,4.507,0,0,1,.356.34c.056.06.109.123.163.184l.047.057c.026.035.052.071.077.107a.824.824,0,0,0,1.1.288.809.809,0,0,0,.288-1.1A5.628,5.628,0,0,0,3.411,4.044a8.658,8.658,0,0,1,4.4.012,5.75,5.75,0,0,1,3.775,2.537c.46.925,1.845.113,1.386-.81" transform="translate(0 0)" fill="#a7a6b1"/>
         </g>
     </svg>
+    <svg v-if="svgName === 'arrowUpRight'" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="14.675" height="13.475" viewBox="0 0 14.675 13.475">
+        <defs>
+            <clipPath id="clip-path">
+                <rect id="Rechteck_472" data-name="Rechteck 472" width="13.1" height="7" transform="translate(0.034 6.431) rotate(-37.005)"/>
+            </clipPath>
+        </defs>
+        <g id="arrow_up_right" transform="translate(-0.034 1.454)">
+            <g id="Gruppe_1066" data-name="Gruppe 1066">
+                <g id="Gruppe_174" clip-path="url(#clip-path)">
+                    <path id="Pfad_161" d="M.8,7.3a7.263,7.263,0,0,0,5.6-.2A10.428,10.428,0,0,0,10.8,4l-.1,1.5a.948.948,0,0,0,.9.8.8.8,0,0,0,.7-.9l-.1-4.3a.8.8,0,0,0-.9-.7c-.1,0-.3,0-.3.1a3.25,3.25,0,0,1-1.7.7.551.551,0,0,1-.5.2c-.1,0-.2.1-.4,0-.2,0-.3-.1-.5-.1H7.5a.841.841,0,0,0-1.1.4.841.841,0,0,0,.4,1.1A5.86,5.86,0,0,0,9.4,3,9.187,9.187,0,0,1,5.9,5.6a5.451,5.451,0,0,1-4.5.2C.6,5.4-.1,6.9.8,7.3" fill="#a7a6b1"/>
+                </g>
+            </g>
+        </g>
+    </svg>
+
+
+    <svg v-else-if="svgName === 'arrowUp'" xmlns="http://www.w3.org/2000/svg" width="6.662" height="4.392" viewBox="0 0 6.662 4.392">
+        <path id="Pfad_212" data-name="Pfad 212" d="M526,959.5l2.8,2.8,2.8-2.8" transform="translate(532.132 963.361) rotate(180)" fill="none" stroke="#a7a6b1" stroke-width="1.5"/>
+    </svg>
+    <svg v-else-if="svgName === 'arrowDown'" class="rotate-180" xmlns="http://www.w3.org/2000/svg" width="6.662" height="4.392" viewBox="0 0 6.662 4.392">
+        <path id="Pfad_212" data-name="Pfad 212" d="M526,959.5l2.8,2.8,2.8-2.8" transform="translate(532.132 963.361) rotate(180)" fill="none" stroke="#a7a6b1" stroke-width="1.5"/>
+    </svg>
     <svg v-else-if="svgName === 'bgCircles'" id="Gruppe_197" data-name="Gruppe 197" xmlns="http://www.w3.org/2000/svg" width="110.26" height="194.684" viewBox="0 0 110.26 194.684">
         <g id="Gruppe_229" data-name="Gruppe 229">
             <path id="Pfad_193" data-name="Pfad 193" d="M97.342,193.684A96.342,96.342,0,0,1,97.342,1h12.9" fill="none" stroke="#ededec" stroke-width="2"/>
@@ -17,6 +39,7 @@
             <path id="Pfad_195" data-name="Pfad 195" d="M97.342,135.788a38.446,38.446,0,1,1,0-76.892h12.487" fill="none" stroke="#ededec" stroke-width="2"/>
         </g>
     </svg>
+
     <svg v-else-if="svgName === 'arrowRight'" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="27.74" height="9.172" viewBox="0 0 27.74 9.172">
         <defs>
             <clipPath id="clip-path">
@@ -198,14 +221,39 @@
 </g>
 </svg>
 
+
+    <svg v-if="svgName === 'ArrowDownTray'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+    </svg>
+
+    <svg v-if="svgName === 'iconRepeat'" xmlns="http://www.w3.org/2000/svg" width="8.664" height="10.839" viewBox="0 0 8.664 10.839">
+        <g id="Icon_feather-repeat" data-name="Icon feather-repeat" transform="translate(-3.85 -0.581)">
+            <path id="Pfad_1366" data-name="Pfad 1366" d="M25.5,1.5l1.829,1.829L25.5,5.158" transform="translate(-15.465 0)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3"/>
+            <path id="Pfad_1367" data-name="Pfad 1367" d="M4.5,10.243V9.329A1.741,1.741,0,0,1,6.136,7.5h5.727" transform="translate(0 -4.436)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3"/>
+            <path id="Pfad_1368" data-name="Pfad 1368" d="M6.329,26.158,4.5,24.329,6.329,22.5" transform="translate(0 -15.658)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3"/>
+            <path id="Pfad_1369" data-name="Pfad 1369" d="M11.864,19.5v.914a1.741,1.741,0,0,1-1.636,1.829H4.5" transform="translate(0 -13.307)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3"/>
+        </g>
+    </svg>
+
+
+    <span v-if="svgName === 'xMarkIcon'" class="flex items-center justify-center">
+        <span class="rounded-full bg-red-400 p-0.5 h-4 w-4 flex items-center justify-center border border-white shadow-[0px_0px_5px_0px_#fc8181]">
+            <XIcon class="w-2 h-2 text-white" />
+        </span>
+    </span>
+
+
 </template>
 
 <script>
 
+
+import {XIcon} from "@heroicons/vue/solid";
+
 export default {
     name: "SvgCollection",
     components: {
-
+        XIcon
     },
     props:['svgName'],
 }

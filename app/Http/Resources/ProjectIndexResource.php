@@ -7,21 +7,29 @@ use Illuminate\Http\Resources\MissingValue;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * @mixin \App\Models\Project
+ * @mixin \Artwork\Modules\Project\Models\Project
  */
 class ProjectIndexResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
-        $projectHistory = $this->project_histories->sortByDesc('created_at');
+        $historyArray = [];
+        $historyComplete = $this->historyChanges()->all();
+
+        foreach ($historyComplete as $history) {
+            $historyArray[] = [
+                'changes' => json_decode($history->changes),
+                'created_at' => $history->created_at->diffInHours() < 24
+                    ? $history->created_at->diffForHumans()
+                    : $history->created_at->format('d.m.Y, H:i'),
+            ];
+        }
 
         return [
             'resource' => class_basename($this),
@@ -29,13 +37,13 @@ class ProjectIndexResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'number_of_participants' => $this->number_of_participants,
-            'cost_center' => $this->cost_center,
+            'cost_center' => $this->costCenter,
             'sector' => $this->sector,
             'category' => $this->category,
             'genre' => $this->genre,
             'curr_user_is_related' => $this->users->contains(Auth::id()),
             'users' => UserIndexResource::collection($this->users)->resolve(),
-            'project_history' => ProjectHistoryResource::collection($projectHistory)->resolve(),
+            'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
             'events' => $this->deleted_at ? new MissingValue() : $this->events,
         ];

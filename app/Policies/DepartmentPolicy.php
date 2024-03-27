@@ -2,92 +2,53 @@
 
 namespace App\Policies;
 
-use App\Models\Department;
+use App\Enums\PermissionNameEnum;
 use App\Models\User;
+use Artwork\Modules\Department\Models\Department;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class DepartmentPolicy
 {
     use HandlesAuthorization;
 
-    /**
-     * Determine whether the user can view any models.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function viewAny(User $user)
+
+    public function viewAny(User $user): bool
     {
-        return $user->can('view departments');
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value) ||
+            $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value);
     }
 
-    /**
-     * Determine whether the user can view the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function view(User $user, Department $department)
+
+    public function view(User $user): bool
     {
-        return $user->can('view departments');
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value) ||
+            $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value);
     }
 
-    /**
-     * Determine whether the user can create models.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function create(User $user)
+    public function create(User $user): bool
     {
-        return $user->can('create departments');
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value);
     }
 
-    /**
-     * Determine whether the user can update the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function update(User $user, Department $department)
+
+    public function update(User $user): bool
     {
-        return $user->can('update departments');
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function delete(User $user, Department $department)
+    public function delete(User $user): bool
     {
-        return $user->can('delete departments');
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value);
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function restore(User $user, Department $department)
+
+    public function restore(): void
     {
         //
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     *
-     * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function forceDelete(User $user, Department $department)
+    public function forceDelete(): void
     {
         //
     }

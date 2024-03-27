@@ -2,38 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\DepartmentUpdated;
 use App\Http\Requests\SearchRequest;
-use App\Http\Requests\StoreDepartmentRequest;
-use App\Http\Resources\DepartmentIndexResource;
-use App\Http\Resources\DepartmentShowResource;
-use App\Http\Resources\UserIndexResource;
-use App\Models\Department;
-use App\Models\User;
+use Artwork\Modules\Department\Http\Requests\StoreDepartmentRequest;
+use Artwork\Modules\Department\Http\Requests\UpdateDepartmentRequest;
+use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Department\Services\DepartmentService;
+use Artwork\Modules\User\Services\UserService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 
 class DepartmentController extends Controller
 {
-
-    public function __construct()
-    {
+    /**
+     * @param DepartmentService $departmentService
+     * @param UserService $userService
+     */
+    public function __construct(
+        private readonly DepartmentService $departmentService,
+        private readonly UserService $userService,
+    ) {
         $this->authorizeResource(Department::class);
-    }
-
-    public function search(SearchRequest $request)
-    {
-        $this->authorize('viewAny', Department::class);
-
-        return Department::search($request->input('query'))->get()->map(fn ($department) => [
-            'id' => $department->id,
-            'name' => $department->name,
-            'svg_name' => $department->svg_name,
-            'users' => UserIndexResource::collection($department->users)->resolve()
-        ]);
     }
 
     /**
@@ -41,115 +32,99 @@ class DepartmentController extends Controller
      *
      * @return Response|ResponseFactory
      */
-    public function index()
+    public function index(): Response|ResponseFactory
     {
-        return inertia('Departments/DepartmentManagement', [
-            'departments' => DepartmentIndexResource::collection(Department::all())->resolve(),
-            'users' => User::all()
-        ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return Response|ResponseFactory
-     */
-    public function create()
-    {
-        return inertia('Departments/Create');
+        return inertia(
+            'Departments/DepartmentManagement',
+            [
+                'departments' => $this->departmentService->getDepartmentIndexResource(),
+                'users' => $this->userService->getAllUsers()
+            ]
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  StoreDepartmentRequest  $request
+     * @param StoreDepartmentRequest $storeDepartmentRequest
      * @return RedirectResponse
      */
-    public function store(StoreDepartmentRequest $request)
+    public function store(StoreDepartmentRequest $storeDepartmentRequest): RedirectResponse
     {
-        $department = Department::create([
-            'name' => $request->name,
-            'svg_name' => $request->svg_name
-        ]);
-
-        $department->users()->sync(
-            collect($request->assigned_users)
-                ->map(function ($user) {
-                    $this->authorize('update', User::find($user['id']));
-
-                    return $user['id'];
-                })
-        );
-
-        broadcast(new DepartmentUpdated())->toOthers();
-
-        return Redirect::route('departments')->with('success', 'Department created.');
+        $this->departmentService->createByRequest($storeDepartmentRequest);
+        return Redirect::route('departments');
     }
 
     /**
      * Show the specified resource.
      *
-     * @param  Department  $department
+     * @param Department $department
      * @return Response|ResponseFactory
      */
-    public function show(Department $department)
+    public function show(Department $department): Response|ResponseFactory
     {
-        return inertia('Departments/Show', [
-            'department' => new DepartmentShowResource($department)
-        ]);
+        return inertia(
+            'Departments/Show',
+            [
+                'department' => $this->departmentService->createDepartmentShowResource($department)
+            ]
+        );
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  Department  $department
+     * @param Department $department
      * @return Response|ResponseFactory
      */
-    public function edit(Department $department)
+    public function edit(Department $department): Response|ResponseFactory
     {
-        return inertia('Departments/Edit', [
-            'department' => new DepartmentShowResource($department),
-            'users' => User::all(),
-        ]);
+        return inertia(
+            'Departments/Edit',
+            [
+                'department' => $this->departmentService->createDepartmentShowResource($department),
+                'users' => $this->userService->getAllUsers(),
+            ]
+        );
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  Request  $request
-     * @param  Department  $department
+     * @param UpdateDepartmentRequest $updateDepartmentRequest
+     * @param Department $department
      * @return RedirectResponse
      */
-    public function update(Request $request, Department $department)
+    public function update(UpdateDepartmentRequest $updateDepartmentRequest, Department $department): RedirectResponse
     {
-        $department->update($request->only('name', 'svg_name'));
+        $this->departmentService->updateByRequest($updateDepartmentRequest, $department);
+        return Redirect::route('departments', $department->id);
+    }
 
-        $department->users()->sync(
-            collect($request->users)
-                ->map(function ($user) {
-                    $this->authorize('update', User::find($user['id']));
-
-                    return $user['id'];
-                })
-        );
-
-        broadcast(new DepartmentUpdated())->toOthers();
-
-        return Redirect::route('departments.show', $department->id)->with('success', 'Department updated');
+    public function removeAllMembers(Department $department)
+    {
+        $this->departmentService->removeAllMembers($department);
+        return Redirect::route('departments', $department->id);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  Department  $department
+     * @param Department $department
      * @return RedirectResponse
      */
-    public function destroy(Department $department)
+    public function destroy(Department $department): RedirectResponse
     {
-        $department->delete();
+        $this->departmentService->deleteDepartment($department);
+        return Redirect::route('departments');
+    }
 
-        broadcast(new DepartmentUpdated())->toOthers();
-
-        return Redirect::route('departments')->with('success', 'Department deleted');
+    /**
+     * @param SearchRequest $request
+     * @return Collection
+     */
+    public function search(SearchRequest $request): Collection
+    {
+        return $this->departmentService->searchDepartments($request->get('query'));
     }
 }

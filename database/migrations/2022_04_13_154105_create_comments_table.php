@@ -11,12 +11,15 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('comments', function (Blueprint $table) {
+        Schema::create('comments', function (Blueprint $table): void {
             $table->id();
             $table->string('text');
-            $table->unsignedBigInteger('project_id');
+            $table->unsignedBigInteger('project_id')->nullable();
+            $table->unsignedBigInteger('project_file_id')->nullable();
+            $table->unsignedBigInteger('money_source_file_id')->nullable();
+            $table->unsignedBigInteger('contract_id')->nullable();
             $table->unsignedBigInteger('user_id');
             $table->timestamps();
         });
@@ -27,7 +30,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('comments');
     }

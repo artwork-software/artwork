@@ -3,34 +3,36 @@
 namespace App\Policies;
 
 use App\Enums\PermissionNameEnum;
-use App\Models\Event;
 use App\Models\User;
+use Artwork\Modules\Event\Models\Event;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class EventPolicy
 {
     use HandlesAuthorization;
 
-    public function create(User $user)
+    public function create(User $user): bool
     {
-        return $user->canAny([PermissionNameEnum::PROJECT_UPDATE, PermissionNameEnum::PROJECT_ADMIN]);
+        return $user->can([PermissionNameEnum::EVENT_REQUEST->value]);
     }
 
-    public function update(User $user, Event $event)
+    public function update(User $user, Event $event): bool
     {
-        if ($user->canAny([PermissionNameEnum::PROJECT_UPDATE, PermissionNameEnum::PROJECT_ADMIN])) {
-            return true;
-        }
-
-        return $event->room?->room_admins->where('id', $user->id)->isNotEmpty() ?? false;
+        return $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value) ||
+            $event->room?->users()
+                ->wherePivot('is_admin', true)
+                ->where('user_id', $user->id)
+                ->get() ||
+            $event->creator?->id === $user->id;
     }
 
-    public function delete(User $user, Event $event)
+    public function delete(User $user, Event $event): bool
     {
-        if ($user->canAny([PermissionNameEnum::PROJECT_UPDATE, PermissionNameEnum::PROJECT_ADMIN])) {
-            return true;
-        }
-
-        return $event->room?->room_admins->where('id', $user->id)->isNotEmpty() ?? false;
+        return $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value) ||
+            $event->room?->users()
+                ->wherePivot('is_admin', true)
+                ->where('user_id', $user->id)
+                ->get() ||
+            $event->creator?->id === $user->id;
     }
 }

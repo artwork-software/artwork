@@ -1,26 +1,26 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-xl my-12 ml-14 mr-10">
+        <div class="max-w-screen-xl ml-14 mr-10">
             <div class="flex-wrap">
                 <div class="flex flex-wrap">
-                    <h2 class="font-bold font-lexend text-3xl w-full">Meine Aufgaben</h2>
+                    <h2 class="headline1 w-full">{{$t('My tasks')}}</h2>
                     <Listbox as="div" class="sm:col-span-3 mb-8" @click="changeTasksToDisplay" v-model="selectedFilter">
                         <div class="relative">
-                            <ListboxButton class="w-56 flex justify-between font-semibold py-2">
+                            <ListboxButton class="w-56 flex justify-between sDark py-2">
                                 <div> {{ selectedFilter.name }}</div>
                                 <div>
                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
                                 </div>
                             </ListboxButton>
 
-                            <ListboxOptions class="bg-primary shadow-lg max-h-32 rounded-md focus:outline-none">
+                            <ListboxOptions class="absolute w-56 bg-primary shadow-lg max-h-32 rounded-md focus:outline-none">
                                 <ListboxOption as="template" class="p-2 text-sm"
                                     v-for="filter in filters"
                                     :key="filter.name"
                                     :value="filter"
                                     v-slot="{ active, selected }">
                                     <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
-                                        <div :class="[selected ? 'font-bold text-white' : '', 'truncate']">
+                                        <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
                                             {{ filter.name }}
                                         </div>
                                         <div v-if="selected">
@@ -34,51 +34,11 @@
 
                     <!--     Task Index   -->
                     <div class="w-full">
-                        <div v-for="task in tasksToDisplay" :key="task.id">
-
-                            <div class="flex w-full flex-wrap md:flex-nowrap align-baseline">
-                                <div class="flex w-full flex-grow">
-                                    <input @change="updateTaskStatus(task)"
-                                        v-model="task.done"
-                                        type="checkbox"
-                                        class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-gray-300"/>
-                                    <div class="ml-4 my-auto text-lg font-bold"
-                                        :class="task.done ? 'text-secondary line-through' : 'text-primary'">
-                                        {{ task.name }}
-                                    </div>
-                                    <div v-if="!task.done && task.deadline"
-                                        class="ml-2 my-auto text-sm "
-                                        :class="task.isDeadlineInFuture ? 'text-error ' : ''">
-                                        bis {{ task.humanDeadline }}
-                                    </div>
-                                </div>
-
-                                <div class="my-auto flex mr-3"
-                                    v-for="department in task.departments">
-                                    <TeamIconCollection
-                                        :iconName="department.svg_name"
-                                        :alt="department.name"
-                                        class="ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
-                                </div>
-                                <div v-show="! task.isPrivate"
-                                    class="my-auto">
-                                    <img class="h-9 w-9 rounded-full"
-                                        :src="$page.props.user.profile_photo_url"
-                                        alt=""/>
-                                </div>
-                            </div>
-
-                            <Link :href="route('projects.show',{project: task.projectId})"
-                                class="text-sm my-1 flex ml-10">
-                                {{ task.projectName }}
-                                <ChevronRightIcon class="h-5 w-5 my-auto mx-3 text-secondary " aria-hidden="true"/>
-                                {{ task.checklistName }}
-                            </Link>
-
-                            <div class="ml-10 my-3 text-secondary">
-                                {{ task.description }}
-                            </div>
-
+                        <div v-for="task in tasksToDisplay" :key="task.id"  :id="task.id">
+                            <SingleTask :task="task" />
+                        </div>
+                        <div v-for="task in money_source_task" :key="task.id" :id="task.id">
+                            <SingleMoneySourceTask :task="task" />
                         </div>
                     </div>
                 </div>
@@ -89,23 +49,24 @@
 
 <script>
 
-const filters = [
-    {name: 'Nach Checklisten'},
-    {name: 'Nach Deadline'},
-    {name: 'Erledigte Aufgaben'}
-]
+import Permissions from "@/mixins/Permissions.vue";
+
 
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {CheckIcon, ChevronDownIcon, ChevronRightIcon} from "@heroicons/vue/solid";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
+import SingleMoneySourceTask from "@/Pages/Tasks/Components/SingleMoneySourceTask.vue";
+import SingleTask from "@/Pages/Tasks/Components/SingleTask.vue";
 
 export default {
+    mixins: [Permissions],
     name: "OwnTasksManagement",
-    props: ['tasks'],
-    computed: {},
+    props: ['tasks', 'money_source_task'],
     components: {
+        SingleTask,
+        SingleMoneySourceTask,
         AppLayout,
         ChevronRightIcon,
         TeamIconCollection,
@@ -117,17 +78,22 @@ export default {
         ListboxOptions,
         ChevronDownIcon
     },
+    mounted() {
+        if(this.$page.props.urlParameters.taskId){
+           const task = document.getElementById(this.$page.props.urlParameters.taskId);
+           task.scrollIntoView();
+        }
+    },
     methods: {
         changeTasksToDisplay() {
             switch (this.selectedFilter.name) {
-                case 'Nach Deadline':
+                case this.$t('By deadline'):
                     this.tasksToDisplay = this.tasks.data.filter(task => !task.done);
-                    console.log(this.tasksToDisplay)
                     this.tasksToDisplay = this.tasksToDisplay.sort(function (a, b) {
                         return a.deadline > b.deadline
                     });
                     break;
-                case 'Erledigte Aufgaben':
+                case this.$t('Completed tasks'):
                     this.tasksToDisplay = this.tasks.data.filter(task => task.done);
                     break;
                 default:
@@ -140,22 +106,26 @@ export default {
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
             this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
+        },
+        updateMoneySourceTaskStatus(task){
+            this.$inertia.patch(route('money_source.tasks.update', {moneySourceTask: task.id}))
         }
     },
     data() {
         return {
-            selectedFilter: filters[0],
+            selectedFilter: {name: this.$t('According to checklists')},
             tasksToDisplay: this.tasks.data.filter(task => !task.done),
             doneTaskForm: useForm({
                 done: false
             }),
+            highlight: null,
+            filters : [
+                {name: this.$t('According to checklists')},
+                {name: this.$t('By deadline')},
+                {name: this.$t('Completed tasks')}
+            ]
         }
     },
-    setup() {
-        return {
-            filters
-        }
-    }
 }
 </script>
 

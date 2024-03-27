@@ -3,187 +3,159 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Fortify\PasswordValidationRules;
-use App\Models\GeneralSettings;
+use App\Enums\NotificationConstEnum;
+use App\Enums\RoleNameEnum;
+use App\Http\Requests\UserCreateRequest;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Contracts\Auth\StatefulGuard;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
+use Inertia\Response;
+use Inertia\ResponseFactory;
 use ZxcvbnPhp\Zxcvbn;
-
 
 class AppController extends Controller
 {
     use PasswordValidationRules;
 
-    protected StatefulGuard $guard;
-
-    public function __construct(StatefulGuard $guard)
+    public function getPasswordScore(Request $request): int
     {
-        $this->guard = $guard;
+        return (new Zxcvbn())->passwordStrength($request->input('password'))['score'];
     }
 
-    public function get_password_feedback(): int
+    //@todo: fix phpcs error - refactor function name to toggleHints
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function toggle_hints(): RedirectResponse
     {
-        if(strlen(request('password'))) {
-            $zxcvbn = new Zxcvbn();
-            return $zxcvbn->passwordStrength(request('password'))['score'];
-        } else {
-            return 0;
-        }
-    }
-
-    /**
-     */
-    public function validate_email(Request $request): \Illuminate\Http\JsonResponse
-    {
-        if(Auth::user()) {
-            $user_id = Auth::user()->id;
-        } else {
-            $user_id = null;
-        }
-
-        $validator = Validator::make($request->all(), [
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user_id)],
-        ]);
-
-        return response()->json($validator->errors());
-    }
-
-    public function toggle_hints(): \Illuminate\Http\RedirectResponse
-    {
-
         $user = Auth::user();
 
         $user->update([
-           'toggle_hints' => !$user->toggle_hints
+            'toggle_hints' => !$user->toggle_hints
         ]);
 
-        return Redirect::back()->with('success', 'Hilfe umgeschaltet');
+        return Redirect::back();
     }
 
-    public function index(GeneralSettings $settings): \Illuminate\Http\RedirectResponse
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsProjectStatus
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function toggle_calendar_settings_project_status(): RedirectResponse
     {
+        $user = Auth::user();
 
-        //setup process finished
-        if($settings->setup_finished) {
-            return Redirect::route('login');
-        } else {
-            return Redirect::route('setup');
-        }
+        $calendarSettings = $user->calendar_settings()->first();
 
+        $user->calendar_settings()->update([
+            'project_status' => !$calendarSettings->project_status
+        ]);
+
+        return Redirect::back();
     }
 
-    public function setup_company(GeneralSettings $settings): \Illuminate\Http\RedirectResponse|\Inertia\Response|\Inertia\ResponseFactory
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsOptions
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function toggle_calendar_settings_options(): RedirectResponse
     {
+        $user = Auth::user();
 
+        $calendarSettings = $user->calendar_settings()->first();
+
+        $user->calendar_settings()->update([
+            'options' => !$calendarSettings->options
+        ]);
+
+        return Redirect::back();
+    }
+
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsProjectManagement
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function toggle_calendar_settings_project_management(): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $calendarSettings = $user->calendar_settings()->first();
+
+        $user->calendar_settings()->update([
+            'project_management' => !$calendarSettings->project_management
+        ]);
+
+        return Redirect::back();
+    }
+
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsRepeatingEvents
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function toggle_calendar_settings_repeating_events(): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $calendarSettings = $user->calendar_settings()->first();
+
+        $user->calendar_settings()->update([
+            'repeating_events' => !$calendarSettings->repeating_events
+        ]);
+
+        return Redirect::back();
+    }
+
+    //@todo: fix phpcs error - refactor function name to toggleCalendarSettingsWorkShifts
+    //phpcs:ignore PSR1.Methods.CamelCapsMethodName.NotCamelCaps
+    public function toggle_calendar_settings_work_shifts(): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $calendarSettings = $user->calendar_settings()->first();
+
+        $user->calendar_settings()->update([
+            'work_shifts' => !$calendarSettings->work_shifts
+        ]);
+
+        return Redirect::back();
+    }
+
+    public function index(GeneralSettings $settings): RedirectResponse
+    {
         //setup process finished
-        if($settings->setup_finished) {
-            return Redirect::route('login');
-        } else {
-            return inertia('Auth/Register');
-        }
-
+        return $settings->setup_finished ? Redirect::route('login') : Redirect::route('setup');
     }
 
-    public function update_tool(Request $request, GeneralSettings $settings) {
-
-        if(!Auth::user()->hasRole('admin') && !Auth::user()->can("change tool settings")) {
-            abort(403);
-        }
-
-        $smallLogo = $request->file('smallLogo');
-        $bigLogo = $request->file('bigLogo');
-        $banner = $request->file('banner');
-
-        if($smallLogo) {
-            $settings->small_logo_path = $smallLogo->storePublicly('logo', ['disk' => 'public']);
-        }
-
-        if($bigLogo) {
-            $settings->big_logo_path = $bigLogo->storePublicly('logo', ['disk' => 'public']);
-        }
-
-        if($banner) {
-            $settings->banner_path = $banner->storePublicly('banner', ['disk' => 'public']);
-        }
-
-        $settings->save();
-
-        return Redirect::back()->with('success', 'Fotos hinzugefügt');
-
+    public function showSetupPage(GeneralSettings $settings): RedirectResponse|Response|ResponseFactory
+    {
+        //setup process finished
+        return $settings->setup_finished ? Redirect::route('login') : inertia('Auth/Register');
     }
 
-    public function update_EmailSettings(Request $request, GeneralSettings $settings) {
+    public function createAdmin(
+        UserCreateRequest $request,
+        GeneralSettings $settings,
+        StatefulGuard $guard
+    ): Redirector|Application|RedirectResponse {
+        /** @var User $user */
+        $user = User::create($request->userData());
 
-        if(!Auth::user()->hasRole('admin')) {
-            abort(403);
+        foreach (NotificationConstEnum::cases() as $notificationType) {
+            $user->notificationSettings()->create([
+                'group_type' => $notificationType->groupType(),
+                'type' => $notificationType->value,
+                'title' => $notificationType->title(),
+                'description' => $notificationType->description()
+            ]);
         }
 
-        if($request->impressumLink != $settings-> impressum_link){
-            $settings->impressum_link = $request->impressumLink;
-        }
-
-        if($request->privacyLink != $settings-> privacy_link){
-            $settings->privacy_link = $request->privacyLink;
-        }
-
-        if($request->emailFooter != $settings-> email_footer){
-            $settings->email_footer = $request->emailFooter;
-        }
-
-        $settings->save();
-
-        return Redirect::back()->with('success', 'Email Einstellungen angepasst');
-
-    }
-
-    public function create_admin(Request $request, GeneralSettings $settings) {
-
-        $logo = $request->file('logo');
-        $banner = $request->file('banner');
-
-        if($logo) {
-            $settings->logo_path = $logo->storePublicly('logo', ['disk' => 'public']);
-        }
-
-        if($banner) {
-            $settings->banner_path = $logo->storePublicly('banner', ['disk' => 'public']);
-        }
-
-        $request->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone_number' => ['string', 'max:15'],
-            'password' => $this->passwordRules(),
-            'position' => ['required', 'string', 'max:255'],
-            'business' => ['required', 'string', 'max:255'],
-            'description' => ['string', 'max:5000'],
-        ]);
-
-        $user = User::create([
-            'first_name' => $request['first_name'],
-            'last_name' => $request['last_name'],
-            'email' => $request['email'],
-            'phone_number' => $request['phone_number'],
-            'password' => Hash::make($request['password']),
-            'position' => $request['position'],
-            'business' => $request['business'],
-            'description' => $request['description'],
-        ]);
-
-        $this->guard->login($user);
-
-        $user->assignRole('admin');
+        $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+        $user->calendar_settings()->create();
+        $user->calendar_filter()->create();
+        $user->shift_calendar_filter()->create();
+        $guard->login($user);
 
         $settings->setup_finished = true;
         $settings->company_name = $request['business'];
         $settings->save();
+
         return redirect(RouteServiceProvider::HOME);
     }
-  }
+}

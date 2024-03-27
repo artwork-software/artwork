@@ -2,212 +2,180 @@
     <app-layout>
         <div class="max-w-screen-lg my-8 ml-14 mr-40">
             <div class="">
-                <h2 class="text-3xl font-black font-lexend my-2">Projekteinstellungen</h2>
-                <div class="text-secondary tracking-tight leading-6 sub">
-                    Definiere globale Einstellungen für Projekte.
+                <h2 class="headline1 my-6">{{$t('Project Settings')}}</h2>
+                <div class="xsLight">
+                    {{$t('Define global settings for projects.')}}
                 </div>
             </div>
-            <div class="flex flex-wrap">
-                <!-- Genres -->
-                <div class="mt-16 max-w-2xl">
-                    <h2 class="font-bold font-lexend text-xl my-2">Genres</h2>
-                    <div class="text-secondary tracking-tight leading-6 sub">
-                        Lege Genres fest, denen Projekte später zugeordnet werden können.
-                    </div>
-                </div>
-                <div class="mt-8 flex w-full flex-wrap">
-                    <div class="relative flex max-w-lg w-full">
-                        <input id="genre" v-model="genreInput" type="text" @keyup.enter="addGenre"
-                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                               placeholder="placeholder"/>
-                        <label for="genre"
-                               class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Genre
-                            eingeben</label>
-                        <div class="m-2 -ml-8 -mt-1">
-                            <button
-                                :class="[genreInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
-                                @click="addGenre" :disabled="!genreInput">
-                                <CheckIcon class="h-5 w-5"></CheckIcon>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap w-full max-w-xl">
-                        <span v-for="genre in genres"
-                              class=" mt-4 mr-4 rounded-full font-bold text-primary">
-                            <div class="flex">
-                                <span class="">
-                                {{ genre.name }}
-                                    </span>
-                                <button type="button" @click="openDeleteGenreModal(genre)">
-                                <span class="sr-only">Genre entfernen</span>
-                                <XCircleIcon class="ml-2 my-auto h-5 w-5 hover:text-error "/>
-                            </button>
-                            </div>
+            <div class="flex flex-wrap pb-8">
 
-                        </span>
-                    </div>
-                </div>
-                <!-- Kategorien -->
-                <div class="mt-16 max-w-2xl">
-                    <h2 class="font-bold font-lexend text-xl my-2">Kategorien</h2>
-                    <div class="text-secondary tracking-tight leading-6 sub">
-                        Lege Kategorien fest, denen Projekte später zugeordnet werden können.
-                    </div>
-                </div>
-                <div class="mt-8 flex w-full flex-wrap">
-                    <div class="relative flex max-w-lg w-full">
-                        <input id="category" v-model="categoryInput" type="text" @keyup.enter="addCategory"
-                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                               placeholder="placeholder"/>
-                        <label for="category"
-                               class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Kategorie
-                            eingeben</label>
-                        <div class="m-2 -ml-8 -mt-1">
-                            <button
-                                :class="[categoryInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
-                                @click="addCategory" :disabled="!categoryInput">
-                                <CheckIcon class="h-5 w-5"></CheckIcon>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap w-full max-w-xl">
-                        <span v-for="category in categories"
-                              class=" mt-4 mr-4 rounded-full font-bold text-primary">
-                            <div class="flex">
-                                <span class="">
-                                {{ category.name }}
-                                    </span>
-                                <button type="button" @click="openDeleteCategoryModal(category)">
-                                <span class="sr-only">Bereich entfernen</span>
-                                <XCircleIcon class="ml-2 my-auto h-5 w-5 hover:text-error "/>
-                            </button>
-                            </div>
+                <ProjectSettingsItem
+                    :title="$t('Genres')"
+                    :description="$t('Define genres that projects can be assigned to later.')"
+                    :input-label="$t('Enter Genre')"
+                    :items="genres"
+                    @add="addGenre"
+                    @openDeleteModal="openDeleteGenreModal"
+                />
 
-                        </span>
-                    </div>
-                </div>
-                <!-- Bereiche -->
-                <div class="mt-16 max-w-2xl">
-                    <h2 class="font-bold font-lexend text-xl my-2">Bereiche</h2>
-                    <div class="text-secondary tracking-tight leading-6 sub">
-                        Lege Bereiche fest, denen Projekte später zugeordnet werden können.
-                    </div>
-                </div>
-                <div class="mt-8 flex w-full flex-wrap">
-                    <div class="relative flex max-w-lg w-full">
-                        <input id="sector" v-model="sectorInput" type="text" @keyup.enter="addSector"
-                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                               placeholder="placeholder"/>
-                        <label for="sector"
-                               class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Bereich
-                            eingeben</label>
-                        <div class="m-2 -ml-8 -mt-1">
-                            <button
-                                :class="[sectorInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
-                                @click="addSector" :disabled="!sectorInput">
-                                <CheckIcon class="h-5 w-5"></CheckIcon>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap w-full max-w-xl">
-                        <span v-for="sector in sectors"
-                              class=" mt-4 mr-4 rounded-full font-bold text-primary">
-                            <div class="flex">
-                                <span class="">
-                                {{ sector.name }}
-                                    </span>
-                                <button type="button" @click="openDeleteSectorModal(sector)">
-                                <span class="sr-only">Bereich entfernen</span>
-                                <XCircleIcon class="ml-2 my-auto h-5 w-5 hover:text-error "/>
-                            </button>
-                            </div>
+                <ProjectSettingsItem
+                    :title="$t('Categories')"
+                    :description="$t('Define categories that projects can be assigned to later.')"
+                    :input-label="$t('Enter Category')"
+                    :items="categories"
+                    @add="addCategory"
+                    @openDeleteModal="openDeleteCategoryModal"
+                />
 
-                        </span>
-                    </div>
-                </div>
+                <ProjectSettingsItem
+                    :title="$t('Sectors')"
+                    :description="$t('Define sectors that projects can be assigned to later.')"
+                    :input-label="$t('Enter Sector')"
+                    :items="sectors"
+                    @add="addSector"
+                    @openDeleteModal="openDeleteSectorModal"
+                />
+
+                <ProjectSettingState
+                    :title="$t('Project Status')"
+                    :description="$t('Define project statuses to indicate the progress of a project. Users can then adjust their notifications based on these statuses.')"
+                    :input-label="$t('Enter Status')"
+                    :items="states"
+                    @add="addState"
+                    @openDeleteModal="openDeleteStateModal"
+                />
+
+                <ProjectSettingsItem
+                    :title="$t('Contract Types')"
+                    :description="$t('Define contract types that can be assigned to contracts later.')"
+                    :input-label="$t('Enter Contract Type')"
+                    :items="contractTypes"
+                    @add="addContractType"
+                    @openDeleteModal="openDeleteContractTypeModal"
+                />
+
+                <ProjectSettingsItem
+                    :title="$t('Company Types')"
+                    :description="$t('Define company types that can be assigned to companies later.')"
+                    input-label="Unternehmensform eingeben"
+                    :items="companyTypes"
+                    @add="addCompanyType"
+                    @openDeleteModal="openDeleteCompanyTypeModal"
+                />
+
+                <ProjectSettingsItem
+                    :title="$t('Collecting Societies')"
+                    :description="$t('Define collecting societies that can be assigned to projects later.')"
+                    :input-label="$t('Enter Collecting Society')"
+                    :items="collectingSocieties"
+                    @add="addCollectingSociety"
+                    @openDeleteModal="openDeleteCollectingSocietyModal"
+                />
+
+                <ProjectSettingsItem
+                    :title="$t('Currencies')"
+                    :description="$t('Define currencies that can be assigned to contracts later.')"
+                    :input-label="$t('Enter Currency')"
+                    :items="currencies"
+                    @add="addCurrency"
+                    @openDeleteModal="openDeleteCurrencyModal"
+                />
+
+                <ProjectSettingsItem
+                    :title="$t('Project Headlines')"
+                    :description="$t('Define project headlines that can be assigned to projects later.')"
+                    :input-label="$t('Enter Project Headline')"
+                    :items="project_headlines"
+                    item-style="list"
+                    @add="addProjectHeadline"
+                    @open-edit-modal="openEditProjectHeadlineModal"
+                    @openDeleteModal="openDeleteProjectHeadlineModal"
+                />
+
             </div>
         </div>
-        <!-- Bereich löschen Modal -->
-        <jet-dialog-modal :show="deletingSector" @close="closeDeleteSectorModal">
-            <template #content>
-                <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
-                        Bereich löschen
-                    </div>
-                    <XIcon @click="closeDeleteSectorModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du den Bereich {{ sectorToDelete.name }} aus dem System löschen willst?
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteSector">
-                            Löschen
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeDeleteSectorModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </jet-dialog-modal>
-        <!-- Genre löschen Modal -->
-        <jet-dialog-modal :show="deletingGenre" @close="closeDeleteGenreModal">
-            <template #content>
-                <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
-                        Genre löschen
-                    </div>
-                    <XIcon @click="closeDeleteGenreModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du das Genre {{ genreToDelete.name }} aus dem System löschen willst?
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteGenre">
-                            Löschen
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeDeleteGenreModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </jet-dialog-modal>
-        <!-- Kategorie löschen Modal -->
-        <jet-dialog-modal :show="deletingCategory" @close="closeDeleteCategoryModal">
-            <template #content>
-                <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
-                        Kategorie löschen
-                    </div>
-                    <XIcon @click="closeDeleteCategoryModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du die Kategorie {{ categoryToDelete.name }} aus dem System löschen willst?
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteCategory">
-                            Löschen
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeDeleteCategoryModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </jet-dialog-modal>
+
+        <ProjectSettingsDeleteModal
+            :show="deletingGenre"
+            :title="$t('Delete Genre')"
+            :description="$t(`Are you sure you want to delete the genre {genre} from the system?`,{ genre: genreToDelete?.name})"
+            @delete="deleteGenre"
+            @closeModal="closeDeleteGenreModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingState"
+            :title="$t('Delete Status')"
+            :description="$t('Are you sure you want to delete the status {status} from the system?',{ status: stateToDelete?.name})"
+            @delete="deleteState"
+            @closeModal="closeDeleteStateModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingCategory"
+            :title="$t('Delete Category')"
+            :description="$t('Are you sure you want to delete the category {category} from the system?',{ category: categoryToDelete?.name})"
+            @delete="deleteCategory"
+            @closeModal="closeDeleteCategoryModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingSector"
+            :title="$t('Delete Sector')"
+            :description="$t('Are you sure you want to delete the sector {sector} from the system?',{ sector: sectorToDelete?.name})"
+            @delete="deleteSector"
+            @closeModal="closeDeleteSectorModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingContractType"
+            :title="$t('Delete Contract Type')"
+            :description="$t('Are you sure you want to delete the contract type {contractType} from the system?',{ contractType: contractTypeToDelete?.name})"
+            @delete="deleteContractType"
+            @closeModal="closeDeleteContractTypeModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingCompanyType"
+            :title="$t('Delete Company Type')"
+            :description="$t('Are you sure you want to delete the company type {companyType} from the system?',{ companyType: companyTypeToDelete?.name})"
+            @delete="deleteCompanyType"
+            @closeModal="closeDeleteCompanyTypeModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingCollectingSociety"
+            :title="$t('Delete collecting society')"
+            :description="$t('Are you sure you want to delete the collecting society {collectingSociety} from the system?',{ collectingSociety: collectingSocietyToDelete?.name})"
+            @delete="deleteCollectingSociety"
+            @closeModal="closeDeleteCollectingSocietyModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingCurrency"
+            :title="$t('Delete Currency')"
+            :description="$t('Are you sure you want to delete the currency {currency} from the system?',{ currency: currencyToDelete?.name})"
+            @delete="deleteCurrency"
+            @closeModal="closeDeleteCurrencyModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingProjectHeadline"
+            :title="$t('Delete Project Headline')"
+            :description="$t('Are you sure you want to delete the project headline {headline} from the system?',{ headline: projectHeadlineToDelete?.name})"
+            @delete="deleteProjectHeadline"
+            @closeModal="closeDeleteProjectHeadlineModal"
+        />
+
+        <ProjectSettingsEditModal
+            :show="editingProjectHeadline"
+            :title="$t('Edit Project Headline')"
+            :editedItem="projectHeadlineToEdit"
+            :description="$t('Edit the selected project headline.')"
+            @update="updateProjectHeadline"
+            @closeModal="closeEditProjectHeadlineModal"
+        />
+
     </app-layout>
 </template>
 
@@ -219,9 +187,19 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection";
+import ProjectSettingsItem from "@/Layouts/Components/ProjectSettingsItem.vue";
+import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDeleteModal.vue";
+import ProjectSettingsEditModal from "@/Layouts/Components/ProjectSettingsEditModal.vue";
+import ProjectSettingState from "@/Layouts/Components/ProjectSettingState.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     components: {
+        ProjectSettingsEditModal,
+        ProjectSettingState,
+        ProjectSettingsDeleteModal,
+        ProjectSettingsItem,
         AppLayout,
         XCircleIcon,
         PlusSmIcon,
@@ -239,28 +217,40 @@ export default {
         PencilAltIcon,
         XIcon
     },
-    props: ['genres', 'categories', 'sectors'],
+    props: ['genres', 'categories', 'sectors', 'contractTypes', 'companyTypes', 'collectingSocieties','currencies', 'project_headlines', 'states'],
     data() {
         return {
-            genreInput: '',
-            sectorInput: '',
-            categoryInput: '',
-            addingCategory: false,
-            editingCategory: false,
-            deletingSector: false,
-            deletingCategory: false,
+            genreToDelete: null,
             deletingGenre: false,
             categoryToDelete: null,
-            genreToDelete: null,
+            deletingCategory: false,
             sectorToDelete: null,
+            deletingSector: false,
+            deletingContractType: false,
+            contractTypeToDelete: null,
+            deletingCompanyType: false,
+            companyTypeToDelete: null,
+            deletingCollectingSociety: false,
+            collectingSocietyToDelete: null,
+            deletingCurrency: false,
+            currencyToDelete: null,
+            deletingProjectHeadline: false,
+            projectHeadlineToDelete: null,
+            projectHeadlineToEdit: null,
+            editingProjectHeadline: false,
+            deletingState: false,
+            stateToDelete: null
         }
     },
     methods: {
-        addCategory() {
-            if(this.categoryInput !== ''){
-                this.$inertia.post(route('categories.store'), {name: this.categoryInput});
-                this.categoryInput = "";
+        addGenre(genreInput) {
+            if (genreInput !== '') {
+                this.$inertia.post(route('genres.store'), {name: genreInput}, { preserveScroll: true});
             }
+        },
+        deleteGenre() {
+            this.$inertia.delete(`/genres/${this.genreToDelete.id}`, { preserveScroll: true});
+            this.closeDeleteGenreModal();
         },
         openDeleteGenreModal(genre) {
             this.genreToDelete = genre;
@@ -270,33 +260,15 @@ export default {
             this.deletingGenre = false;
             this.genreToDelete = null;
         },
-        deleteGenre() {
-            this.$inertia.delete(`/genres/${this.genreToDelete.id}`);
-            this.closeDeleteGenreModal();
-        },
-        addGenre() {
-            if(this.genreInput !== ''){
-            this.$inertia.post(route('genres.store'), {name: this.genreInput});
-            this.genreInput = '';
+
+        addCategory(categoryInput) {
+            if (categoryInput !== '') {
+                this.$inertia.post(route('categories.store'), {name: categoryInput}, { preserveScroll: true});
             }
         },
-        openDeleteSectorModal(sector) {
-            this.sectorToDelete = sector;
-            this.deletingSector = true;
-        },
-        closeDeleteSectorModal() {
-            this.deletingSector = false;
-            this.sectorToDelete = null;
-        },
-        deleteSector() {
-            this.$inertia.delete(`/sectors/${this.sectorToDelete.id}`);
-            this.closeDeleteSectorModal();
-        },
-        addSector() {
-            if(this.sectorInput !== ''){
-            this.$inertia.post(route('sectors.store'), {name: this.sectorInput});
-            this.sectorInput = '';
-            }
+        deleteCategory() {
+            this.$inertia.delete(`../categories/${this.categoryToDelete.id}`, { preserveScroll: true});
+            this.closeDeleteCategoryModal();
         },
         openDeleteCategoryModal(category) {
             this.categoryToDelete = category;
@@ -306,9 +278,143 @@ export default {
             this.deletingCategory = false;
             this.categoryToDelete = null;
         },
-        deleteCategory() {
-            this.$inertia.delete(`../categories/${this.categoryToDelete.id}`);
-            this.closeDeleteCategoryModal();
+
+        addSector(sectorInput) {
+            if (sectorInput !== '') {
+                this.$inertia.post(route('sectors.store'), {name: sectorInput}, { preserveScroll: true});
+            }
+        },
+        deleteSector() {
+            this.$inertia.delete(`/sectors/${this.sectorToDelete.id}`, { preserveScroll: true});
+            this.closeDeleteSectorModal();
+        },
+        openDeleteSectorModal(sector) {
+            this.sectorToDelete = sector;
+            this.deletingSector = true;
+        },
+        closeDeleteSectorModal() {
+            this.deletingSector = false;
+            this.sectorToDelete = null;
+        },
+
+        addContractType(contractTypeInput) {
+            if (contractTypeInput !== '') {
+                this.$inertia.post(route('contract_types.store'), {name: contractTypeInput}, { preserveScroll: true});
+            }
+        },
+        deleteContractType() {
+            this.$inertia.delete(`/contract_types/${this.contractTypeToDelete.id}`, { preserveScroll: true});
+            this.closeDeleteContractTypeModal();
+        },
+        openDeleteContractTypeModal(contractType) {
+            this.contractTypeToDelete = contractType;
+            this.deletingContractType = true
+        },
+        closeDeleteContractTypeModal() {
+            this.deletingContractType = false
+            this.contractTypeToDelete = null
+        },
+
+        addCompanyType(companyTypeInput) {
+            if (companyTypeInput !== '') {
+                this.$inertia.post(route('company_types.store'), {name: companyTypeInput}, { preserveScroll: true});
+            }
+        },
+        deleteCompanyType() {
+            this.$inertia.delete(`/company_types/${this.companyTypeToDelete.id}`, { preserveScroll: true});
+            this.closeDeleteCompanyTypeModal();
+        },
+        openDeleteCompanyTypeModal(companyType) {
+            this.companyTypeToDelete = companyType;
+            this.deletingCompanyType = true
+        },
+        closeDeleteCompanyTypeModal() {
+            this.deletingCompanyType = false
+            this.companyTypeToDelete = null
+        },
+
+        addCollectingSociety(collectingSocietyInput) {
+            if (collectingSocietyInput !== '') {
+                this.$inertia.post(route('collecting_societies.store'), {name: collectingSocietyInput}, { preserveScroll: true});
+            }
+        },
+        deleteCollectingSociety() {
+            this.$inertia.delete(`/collecting_societies/${this.collectingSocietyToDelete.id}`, { preserveScroll: true});
+            this.closeDeleteCollectingSocietyModal();
+        },
+        openDeleteCollectingSocietyModal(collectingSociety) {
+            this.collectingSocietyToDelete = collectingSociety;
+            this.deletingCollectingSociety = true
+        },
+        closeDeleteCollectingSocietyModal() {
+            this.deletingCollectingSociety = false
+            this.collectingSocietyToDelete = null
+        },
+        addCurrency(currencyInput){
+          if(currencyInput !== ''){
+              this.$inertia.post(route('currencies.store'), {name: currencyInput}, { preserveScroll: true});
+          }
+        },
+        openDeleteCurrencyModal(currency){
+            this.currencyToDelete = currency;
+            this.deletingCurrency = true;
+        },
+        closeDeleteCurrencyModal(){
+          this.deletingCurrency = false;
+          this.currencyToDelete = null;
+        },
+        deleteCurrency() {
+            this.$inertia.delete(`/currencies/${this.currencyToDelete.id}`, { preserveScroll: true});
+            this.closeDeleteCurrencyModal();
+        },
+        addProjectHeadline(headlineInput) {
+            if(headlineInput !== ''){
+                this.$inertia.post(route('project_headlines.store'), {name: headlineInput}, { preserveScroll: true});
+            }
+        },
+        updateProjectHeadline(headlineInput) {
+            if(headlineInput !== ''){
+                this.$inertia.patch(route('project_headlines.update', this.projectHeadlineToEdit.id), {name: headlineInput}, { preserveScroll: true});
+            }
+            this.closeEditProjectHeadlineModal()
+        },
+        openDeleteProjectHeadlineModal(headline) {
+            this.projectHeadlineToDelete = headline;
+            this.deletingProjectHeadline = true;
+        },
+        closeDeleteProjectHeadlineModal() {
+            this.deletingProjectHeadline = false;
+            this.projectHeadlineToDelete = null;
+        },
+        openEditProjectHeadlineModal(headline) {
+            this.projectHeadlineToEdit = headline;
+            this.editingProjectHeadline = true;
+        },
+        closeEditProjectHeadlineModal() {
+            this.editingProjectHeadline = false;
+            this.projectHeadlineToEdit = null;
+        },
+        deleteProjectHeadline() {
+            this.$inertia.delete(`/project_headlines/${this.projectHeadlineToDelete.id}`, { preserveScroll: true});
+            this.closeDeleteProjectHeadlineModal();
+        },
+        addState(stateInput, stateColor){
+            this.$inertia.post(route('state.store'), {
+                name: stateInput,
+                color: stateColor
+            }, { preserveScroll: true})
+        },
+        openDeleteStateModal(state){
+            this.stateToDelete = state;
+            this.deletingState = true
+        },
+        deleteState(){
+            this.$inertia.delete(route('state.delete', this.stateToDelete.id), { preserveScroll: true})
+            this.closeDeleteStateModal()
+        },
+        closeDeleteStateModal(){
+            this.stateToDelete = null;
+            this.deletingState = false
         }
     },
     setup() {

@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\EventType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\EventType>
+ * @extends Factory<EventType>
  */
 class EventTypeFactory extends Factory
 {
@@ -14,13 +15,14 @@ class EventTypeFactory extends Factory
      *
      * @return array<string, mixed>
      */
-    public function definition()
+    public function definition(): array
     {
         return [
             'name' => $this->faker->name,
-            'svg_name' => $this->faker->name,
+            'abbreviation' => $this->faker->title(),
+            'hex_code' => $this->faker->name,
             'project_mandatory' => $this->faker->boolean(0),
-            'individual_name' => $this->faker->boolean(0)
+            'individual_name' => $this->faker->boolean(0),
         ];
     }
 }

@@ -3,11 +3,10 @@
         <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
                 <div class="flex">
-                    <h2 class="font-black text-primary mb-4 font-lexend text-3xl">Checklistenvorlage</h2>
+                    <h2 class="font-black text-primary mb-4 font-lexend text-3xl">{{ $t('Checklist template')}}</h2>
                 </div>
                 <div class="text-secondary subpixel-antialiased max-w-screen-sm">
-                    Hier kannst du deine Checklistenvorlage anlegen und bearbeiten - sie kann anschließend in jedem
-                    Projekt genutzt werden.
+                    {{$t('You can create and edit your checklist template here - it can then be used in any project.')}}
                 </div>
                 <div class="flex mt-14">
                     <div class="relative w-full max-w-2xl">
@@ -15,20 +14,25 @@
                                class="peer pl-0 h-12 w-full text-xl font-bold focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="teamName"
-                               class="absolute left-0 text-gray-600 text-sm -top-2.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                            der Checklistenvorlage</label>
+                               class="absolute left-0 text-gray-600 text-sm -top-2.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">
+                            {{ $t('Name of the checklist template')}}
+                        </label>
+                        <span v-if="showEmptyTaskNameError" class="errorText">{{ $t('You must enter a name.')}}</span>
                     </div>
                 </div>
                 <div class="flex items-center mt-6 mr-8">
-                    <div v-if="templateForm.departments.length === 0">
+                    <div v-if="templateForm.users.length === 0">
                         <span
-                            class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Teams hinzugefügt</span>
+                            class="text-secondary subpixel-antialiased cursor-pointer">{{ $t('No users added yet')}}</span>
                     </div>
-                    <div v-else class="mt-3 -mr-3" v-for="team in templateForm.departments">
-                        <TeamIconCollection class="h-9 w-9 rounded-full ring-white ring-2" :iconName="team.svg_name"/>
+                    <div v-else class="-mr-3 my-auto" v-for="(user, index) in templateForm.users">
+                        <img class="h-10 w-10 mr-2 object-cover rounded-full border-2 border-white"
+                             :class="index !== 0 ? '-ml-2' : ''"
+                             :src="user.profile_photo_url"
+                             alt=""/>
                     </div>
-                    <div @click="openChangeTeamsModal"
-                         class="text-secondary flex items-center px-2 py-2 text-sm subpixel-antialiased cursor-pointer">
+                    <div @click="openChangeUsersModal"
+                         class="text-secondary ml-4 flex items-center px-2 py-2 text-sm subpixel-antialiased cursor-pointer">
                         <PencilAltIcon
                             class="h-5 w-5 text-primaryText group-hover:text-white"
                             aria-hidden="true"/>
@@ -36,70 +40,69 @@
                 </div>
                 <div class="flex">
                     <div class="flex w-full mt-12">
-                        <div class="ml-0.5">
-                            <button @click="openAddTaskModal()" type="button"
-                                    class="flex my-auto items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                            </button>
+                        <div>
+                            <AddButtonBig @click="openAddTaskModal()" :text="$t('New task')"/>
                         </div>
-                        <div v-if="$page.props.can.show_hints" class="flex">
+                        <div v-if="this.$page.props.show_hints" class="flex">
                             <SvgCollection svgName="arrowLeft" class="ml-2"/>
                             <span
-                                class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
+                                class="hind text-secondary tracking-tight ml-1 my-auto text-xl">{{ $t('Create new tasks')}}</span>
                         </div>
                     </div>
                 </div>
-                <div class="mt-10 mb-6">
+                <div class="mt-10">
                     <draggable ghost-class="opacity-50" tag="transition-group" item-key="draggableID"
                                v-model="templateForm.task_templates" @start="dragging=true" @end="dragging=false">
                         <template #item="{element}" :key="element.id">
-                            <div class="flex">
-                            <div class="flex mt-6 flex-wrap"
-                                 :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                <div class="flex w-full group">
-                                    <input v-model="element.done"
-                                           type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                    <p class="ml-4 my-auto font-black"
-                                       :class="element.done ? 'text-secondary' : 'text-primary'">
-                                        {{ element.name }}</p>
-                                    <button type="button" @click="deleteTaskFromTemplate(element)">
-                                        <span class="sr-only">Task aus Checklistenvorlage entfernen</span>
-                                        <XCircleIcon class="ml-4 mt-1 h-5 w-5 hover:text-error group-hover:block hidden "/>
-                                    </button>
+                            <div class="flex mb-5">
+                                <div class="flex flex-wrap"
+                                     :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
+                                    <div class="flex flex-col w-full group">
+                                        <div class="flex flex-row items-center">
+                                            <div class="group-hover:flex hidden">
+                                                <DotsVerticalIcon
+                                                    class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
+                                                <DotsVerticalIcon
+                                                    class="h-5 w-5 text-secondary"></DotsVerticalIcon>
+                                            </div>
+                                            <input v-model="element.done"
+                                                   type="checkbox"
+                                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                            <p class="ml-4 my-auto font-black"
+                                               :class="element.done ? 'text-secondary' : 'text-primary'">
+                                                {{ element.name }}</p>
+                                            <button type="button" @click="deleteTaskFromTemplate(element)">
+                                                <span class="sr-only">{{ $t('Remove task from checklist template')}}</span>
+                                                <XCircleIcon class="ml-2 h-5 w-5 hover:text-error group-hover:block hidden "/>
+                                            </button>
+                                        </div>
+                                        <div class="ml-10 text-secondary text-sm">
+                                            {{ element.description }}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="ml-10 text-secondary text-sm">
-                                    {{ element.description }}
-                                </div>
-
-                            </div>
-
                             </div>
                         </template>
                     </draggable>
                 </div>
-                <div class="pt-12">
-                    <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-8">
-                        <button v-if="!showSuccess" @click="editChecklistTemplate"
-                                class="sm:col-span-3 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                        >Speichern
-                        </button>
-                        <button v-else type="submit"
-                                class=" sm:col-span-3 items-center py-1.5 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                        >
-                            <CheckIcon class="h-10 w-9 inline-block text-secondaryHover"/>
-                        </button>
-                    </div>
+                <div class="mt-10">
+                    <FormButton v-if="!showSuccess"
+                               @click="editChecklistTemplate"
+                               :text="$t('Save')" />
+                    <button v-else
+                            class="px-24 rounded-full items-center py-2.5 border bg-success focus:outline-none border-transparent"
+                    >
+                        <CheckIcon class="h-7 w-7 inline-block text-secondaryHover"/>
+                    </button>
                 </div>
             </div>
-
         </div>
         <!-- Add Task Modal-->
         <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">
             <template #content>
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        Neue Aufgabe
+                        {{$t('New task')}}
                     </div>
                     <XIcon @click="closeAddTaskModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
@@ -111,22 +114,18 @@
                                        class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
                                        placeholder="placeholder"/>
                                 <label for="task_name"
-                                       class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Aufgabe</label>
+                                       class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{$t('Task')}}</label>
                             </div>
                         </div>
                         <div class="mt-8 mr-4">
                                             <textarea
-                                                placeholder="Kommentar"
+                                                :placeholder="$t('Comment')"
                                                 v-model="newTaskDescription" rows="3"
                                                 class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
                         </div>
-                        <button
-                            :class="[this.newTaskName === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                            @click="addTaskToTemplate"
-                            :disabled="this.newTaskName === ''">
-                            Hinzufügen
-                        </button>
+                        <FormButton @click="addTaskToTemplate"
+                                   :disabled="this.newTaskName === ''"
+                                   :text="$t('Add')"/>
                     </div>
 
                 </div>
@@ -134,42 +133,45 @@
             </template>
         </jet-dialog-modal>
         <!-- Change Teams Modal -->
-        <jet-dialog-modal :show="showChangeTeamsModal" @close="closeChangeTeamsModal">
+        <jet-dialog-modal :show="showChangeUsersModal" @close="closeChangeUsersModal">
             <template #content>
                 <img src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
-                        Checklistenvorlage zuweisen
+                        {{$t('Assign checklist template')}}
                     </div>
-                    <XIcon @click="closeChangeTeamsModal"
+                    <XIcon @click="closeChangeUsersModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
                     <div class="text-secondary tracking-tight leading-6 sub">
-                        Tippe den Namen des Teams dem du die Checklistenvorlage zuweisen möchtest.
+                        {{$t('Type the name of the user to whom you want to assign the checklist template.')}}
                     </div>
                     <div class="mt-6 relative">
                         <div class="my-auto w-full">
-                            <input id="userSearch" v-model="team_query" type="text" autocomplete="off"
+                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                    placeholder="placeholder"/>
                             <label for="userSearch"
-                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Name')}}</label>
                         </div>
 
                         <transition leave-active-class="transition ease-in duration-100"
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
-                            <div v-if="team_search_results.length > 0 && team_query.length > 0"
+                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
                                  class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
                                 <div class="border-gray-200">
-                                    <div v-for="(team, index) in team_search_results" :key="index"
+                                    <div v-for="(user, index) in user_search_results" :key="index"
                                          class="flex items-center cursor-pointer">
                                         <div class="flex-1 text-sm py-4">
-                                            <p @click="addTeamToTeamsArray(team)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ team.name }}
+                                            <p @click="addUser(user)"
+                                               class="flex items-center font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                <img class="h-5 w-5 mr-2 object-cover rounded-full"
+                                                     :src="user.profile_photo_url"
+                                                     alt=""/>
+                                                {{ user.first_name }} {{ user.last_name }}
                                             </p>
                                         </div>
                                     </div>
@@ -180,29 +182,25 @@
                     <div class="mt-4">
                         <div class="flex">
                         </div>
-                        <span v-for="(team,index) in templateForm.departments"
+                        <span v-for="(user,index) in templateForm.users"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
-                            <div class="flex items-center">
-                                <TeamIconCollection :iconName="team.svg_name"
-                                                    class="rounded-full h-11 w-11 object-cover"/>
-                                <span class="flex ml-4">
-                                {{ team.name }}
-                                    </span>
+                             <div class="flex items-center">
+                                <img class="h-5 w-5 mr-2 object-cover rounded-full"
+                                     :src="user.profile_photo_url"
+                                     alt=""/>
+                                {{ user.first_name }} {{ user.last_name }}
                             </div>
-                            <button type="button" @click="deleteTeamFromTemplate(team)">
-                                <span class="sr-only">Team aus Checklistenvorlage entfernen</span>
+                            <button type="button" @click="deleteUser(user)">
+                                <span class="sr-only">{{ $t('Remove user from checklist template')}}</span>
                                 <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
                             </button>
                         </span>
                     </div>
-                    <button @click="closeChangeTeamsModal"
-                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                    >Zuweisen
-                    </button>
+                    <FormButton
+                        @click="closeChangeUsersModal"
+                        :text="$t('Assign')"/>
                 </div>
-
             </template>
-
         </jet-dialog-modal>
     </app-layout>
 </template>
@@ -221,11 +219,17 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import draggable from "vuedraggable";
 import {Inertia} from "@inertiajs/inertia";
 import {useForm} from "@inertiajs/inertia-vue3";
+import Permissions from "@/mixins/Permissions.vue";
+import AddButtonBig from "@/Layouts/Components/General/Buttons/AddButtonBig.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
+    mixins: [Permissions],
     name: "Template Edit",
     props: ['checklist_template'],
     components: {
+        FormButton,
+        AddButtonBig,
         TeamIconCollection,
         AppLayout,
         Menu,
@@ -245,49 +249,47 @@ export default {
         CheckIcon,
         ChevronDownIcon,
         PlusSmIcon,
-        draggable
+        draggable,
     },
     data() {
         return {
             deletingTeam: false,
             showSuccess: false,
             deletingAllMembers: false,
-            team_query: "",
+            user_query: "",
             addingTask: false,
             dragging: false,
-            showChangeTeamsModal: false,
-            team_search_results: [],
-            templateForm: this.$inertia.form({
-                _method: 'PATCH',
+            showChangeUsersModal: false,
+            user_search_results: [],
+            templateForm: useForm({
                 name: this.checklist_template.name,
-                //user who created the template
                 user_id: this.$page.props.user.id,
-                task_templates: this.checklist_template.tasks,
-                departments: this.checklist_template.departments
+                task_templates: this.checklist_template.task_templates? this.checklist_template.task_templates : [],
+                users: this.checklist_template.users? this.checklist_template.users : [],
             }),
             newTaskName:"",
             newTaskDescription:"",
             taskForm: useForm({
                 name: "",
                 description: "",
-            })
+            }),
+            showEmptyTaskNameError: false
         }
     },
     methods: {
-        openChangeTeamsModal(){
-            this.showChangeTeamsModal = true;
+        openChangeUsersModal(){
+            this.showChangeUsersModal = true;
         },
-        closeChangeTeamsModal(){
-            this.showChangeTeamsModal = false;
+        closeChangeUsersModal(){
+            this.showChangeUsersModal = false;
         },
         openAddTaskModal(){
             this.addingTask = true;
         },
         closeAddTaskModal(){
             this.addingTask = false;
-        },
-        deleteTeamFromTemplate(team) {
-            this.templateForm.departments.splice(this.templateForm.departments.indexOf(team), 1);
+            this.newTaskName = "";
+            this.newTaskDescription = "";
         },
         showSuccessButton() {
             this.showSuccess = true;
@@ -296,26 +298,41 @@ export default {
             }, 1000)
         },
         editChecklistTemplate() {
-            console.log(this.templateForm.task_templates);
-            this.templateForm.patch(route('checklist_templates.update',{checklist_template: this.checklist_template.id}));
+            if (this.templateForm.name === '') {
+                this.showEmptyTaskNameError = true;
+                return;
+            }
+
+            this.showEmptyTaskNameError = false;
+
+            this.templateForm.patch(
+                route(
+                    'checklist_templates.update',
+                    {
+                        checklist_template: this.checklist_template.id
+                    }
+                )
+            );
             this.showSuccessButton();
         },
-        addTeamToTeamsArray(team) {
-            for (let assignedTeam of this.templateForm.departments) {
+        addUser(user) {
+            for (let assignedUser of this.templateForm.users) {
                 //if team is already assigned do nothing
-                if (team.id === assignedTeam.id) {
-                    this.team_query = ""
+                if (user.id === assignedUser.id) {
+                    this.user_query = ""
                     return;
                 }
             }
-            this.templateForm.departments.push(team);
-            this.team_query = "";
-            this.team_search_results = []
+            this.templateForm.users.push(user);
+            this.user_query = "";
+            this.user_search_results = []
+        },
+        deleteUser(user) {
+            this.templateForm.users.splice(this.templateForm.users.indexOf(user), 1);
         },
         addTaskToTemplate(){
             this.templateForm.task_templates.push({name:this.newTaskName,description:this.newTaskDescription});
-            this.newTaskName = "";
-            this.newTaskDescription = "";
+
             this.closeAddTaskModal();
         },
         deleteTaskFromTemplate(taskToDelete){
@@ -323,21 +340,18 @@ export default {
         }
     },
     watch: {
-        team_query: {
+        user_query: {
             handler() {
-                if (this.team_query.length > 0) {
-                    axios.get('/departments/search', {
-                        params: {query: this.team_query}
+                if (this.user_query.length > 0) {
+                    axios.get('/users/search', {
+                        params: {query: this.user_query}
                     }).then(response => {
-                        this.team_search_results = response.data
+                        this.user_search_results = response.data
                     })
                 }
             },
             deep: true
         }
-    },
-    setup() {
-        return {}
     }
 }
 </script>

@@ -11,13 +11,20 @@ class DatabaseSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
         $this->call([
             RolesAndPermissionsSeeder::class,
             SettingsSeeder::class,
             ContentSeeder::class,
+            CraftSeed::class,
+            ShiftQualificationSeeder::class,
             AuthUserSeeder::class,
+            FreelancerSeeder::class,
+            ServiceProviderSeeder::class,
+            WalidRaadSeeder::class,
+            PermissionPresetSeeder::class,
+            ChangeEventTypeSvgToHexSeed::class,
         ]);
     }
 }

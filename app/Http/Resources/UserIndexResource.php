@@ -2,22 +2,18 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\PermissionNameEnum;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @mixin \App\Models\User
- */
 class UserIndexResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         return [
             'resource' => class_basename($this),
@@ -30,6 +26,11 @@ class UserIndexResource extends JsonResource
             'position' => $this->position,
             'business' => $this->business,
             'phone_number' => $this->phone_number,
+            'project_management' => $this->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
+            'shifts' => $this->getShiftsAttribute(),
+            'display_name' => $this->getDisplayNameAttribute(),
+            'type' => $this->getTypeAttribute(),
+            'assigned_craft_ids' => $this->getAssignedCraftIdsAttribute(),
         ];
     }
 }

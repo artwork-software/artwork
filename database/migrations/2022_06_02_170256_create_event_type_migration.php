@@ -11,14 +11,16 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('event_types', function (Blueprint $table) {
+        Schema::create('event_types', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
             $table->string('svg_name');
             $table->boolean('project_mandatory');
             $table->boolean('individual_name');
+            $table->string('abbreviation');
+            $table->boolean('relevant_for_shift')->default(false);
             $table->timestamps();
         });
     }
@@ -28,7 +30,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('event_type_migration');
     }

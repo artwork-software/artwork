@@ -1,90 +1,85 @@
 <template>
     <app-layout>
-        <div class="py-4">
-            <div class="max-w-screen-lg mb-40 my-12 flex flex-row ml-14 mr-40">
+        <div class="">
+            <div class="max-w-screen-lg mb-40 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap">
-                            <h2 class="text-3xl font-black font-lexend flex w-full">Belegungsanfragen</h2>
-                            <div class="text-secondary subpixel-antialiased flex mt-4">
-                                Hier siehst du alle Raumbelegungsanfragen auf einen Blick und kannst sie verwalten.
+                            <h2 class="headline1 flex w-full">{{ $t('Occupancy requests')}}</h2>
+                            <div class="text-secondary subpixel-antialiased flex mt-2">
+                                {{ $t('Here you can see all room occupancy requests at a glance and manage them.')}}
                             </div>
                         </div>
                     </div>
                     <div class="flex flex-wrap">
                         <div v-for="eventRequest in event_requests" class="flex flex-wrap w-full items-center">
                             <div class="flex w-full items-center flex-wrap">
-
                                 <div class="flex items-center w-full mt-4">
-                                    <div class=" w-1/4 text-lg flex leading-6 font-bold font-lexend text-gray-900">
-                                        {{ eventRequest.room.name }}:
+                                    <div class=" w-1/4 flex mDark">
+                                        {{ eventRequest.room?.name }}:
                                     </div>
                                     <div class="flex items-center w-full">
-                                        <EventTypeIconCollection :height="26" :width="26"
-                                                                 :iconName="eventRequest.event_type.svg_name"/>
+                                        <div>
+                                            <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : eventRequest.event_type?.hex_code }" />
+                                        </div>
                                         <div
                                             class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900 mr-8">
-                                            {{ eventRequest.event_type.name }}
+                                            {{ eventRequest.event_type?.name }}
                                             <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience"
                                                  class="h-5 w-5 ml-2 my-auto"/>
                                             <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="eventRequest.is_loud"
                                                  class="h-5 w-5 ml-2  my-auto"/>
                                         </div>
 
-                                        <div class="flex w-full whitespace-nowrap ml-4"
+                                        <div class="flex w-full xsDark whitespace-nowrap ml-4"
                                              v-if="eventRequest.start_time.split(',')[0] === eventRequest.end_time.split(',')[0]">
                                             {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }}, {{
                                                 eventRequest.start_time.split(',')[0]
                                             }},{{ eventRequest.start_time.split(',')[1] }}
                                             - {{ eventRequest.end_time.split(',')[1] }}
                                         </div>
-                                        <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                        <div class="flex w-full xsDark whitespace-nowrap ml-3" v-else>
                                             {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }},
                                             {{ eventRequest.start_time }} -
                                             {{ getGermanWeekdayAbbreviation(eventRequest.end_time_weekday) }},
                                             {{ eventRequest.end_time }}
                                         </div>
-                                        <button @click="openApproveRequestModal(eventRequest)" type="button"
-                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none hover:bg-success">
+                                        <div class="flex w-full xsDark whitespace-nowrap ml-4">
+                                            {{eventRequest.name}}
+                                        </div>
+                                        <button v-if="this.hasAdminRole()" @click="openApproveRequestModal(eventRequest)" type="button"
+                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none hover:bg-success">
                                             <CheckIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                         </button>
-                                        <button @click="openDeclineRequestModal(eventRequest)" type="button"
-                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none hover:bg-error">
+                                        <button v-if="this.hasAdminRole()" @click="openDeclineRequestModal(eventRequest)" type="button"
+                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none hover:bg-error">
                                             <XIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                         </button>
                                     </div>
                                 </div>
                                 <div class="flex items-center w-full ml-44 justify-between">
                                     <div v-if="eventRequest.project" class="w-80">
-                                        <div class="ml-16 text-secondary text-sm flex items-center">
-                                            Zugeordnet zu
+                                        <div class="ml-16 xsLight flex items-center">
+                                            {{ $t('assigned to')}}
                                             <Link
-                                                :href="route('projects.show',{project: eventRequest.project.id})"
+                                                :href="route('projects.show.calendar',{project: eventRequest.project.id})"
                                                 class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
-                                                {{ eventRequest.project.name }}
+                                                {{ eventRequest.project?.name }}
                                             </Link>
                                         </div>
 
                                         <div v-for="projectLeader in eventRequest.project.project_managers">
-                                            <img :data-tooltip-target="projectLeader.id"
-                                                 :src="projectLeader.profile_photo_url"
-                                                 :alt="projectLeader.name"
-                                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                            <UserTooltip :user="projectLeader"/>
+                                            <UserPopoverTooltip :user="projectLeader" :id="projectLeader.id" height="7" width="7"/>
                                         </div>
 
                                     </div>
-                                    <div class="text-secondary text-sm w-64 ml-16" v-else>
-                                        Keinem Projekt zugeordnet
+                                    <div class="xsLight w-64 ml-16" v-else>
+                                        {{$t('Not assigned to a project')}}
                                     </div>
-                                    <div class="flex text-sm text-secondary items-center">
-                                        angefragt:<img v-if="eventRequest.created_by.profile_photo_url"
-                                                       :data-tooltip-target="eventRequest.created_by.id"
-                                                       :src="eventRequest.created_by.profile_photo_url"
-                                                       :alt="eventRequest.created_by.name"
-                                                       class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                        <UserTooltip :user="eventRequest.created_by"/>
-                                        <span class="ml-2"> {{ eventRequest.created_at }}</span>
+                                    <div class="flex xsLight items-center">
+                                        {{ $t('requested')}}:
+                                        <UserPopoverTooltip :user="eventRequest.created_by" :id="eventRequest.created_by.id" height="7" width="7" class="ml-2"/>
+                                        <span class="ml-2 xsLight"> {{ eventRequest.created_at }}</span>
                                     </div>
 
                                     <div>
@@ -92,7 +87,7 @@
                                     </div>
                                 </div>
 
-                                <div class="flex ml-60 mt-2 text-sm text-secondary items-center w-full"
+                                <div class="flex ml-60 mt-2 xsLight items-center w-full"
                                      v-if="eventRequest.description">
                                     {{ eventRequest.description }}
                                 </div>
@@ -109,22 +104,23 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
-                        Raumbelegung zusagen
+                    <div class="headline1 my-2">
+                        {{ $t('Confirm room occupancy')}}
                     </div>
                     <XIcon @click="closeApproveRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
-                        Bist du sicher, dass du die Raumbelegung zusagen möchtest?
+                    <div class="successText">
+                        {{ $t('Are you sure you want to accept the room allocation?')}}
                     </div>
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
 
                             <div class="flex items-center w-full mt-4">
                                 <div class="flex items-center ml-12 w-full">
-                                    <EventTypeIconCollection :height="26" :width="26"
-                                                             :iconName="requestToApprove.event_type.svg_name"/>
+                                    <div>
+                                        <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : requestToApprove.event_type?.hex_code }" />
+                                    </div>
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
                                         {{ requestToApprove.event_type.name }}
@@ -136,14 +132,14 @@
                                              class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
-                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                    <div class="flex w-full xsDark whitespace-nowrap ml-3"
                                          v-if="requestToApprove.start_time.split(',')[0] === requestToApprove.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }}, {{
                                             requestToApprove.start_time.split(',')[0]
                                         }},{{ requestToApprove.start_time.split(',')[1] }}
                                         - {{ requestToApprove.end_time.split(',')[1] }}
                                     </div>
-                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                    <div class="flex w-full xsDark whitespace-nowrap ml-3" v-else>
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }},
                                         {{ requestToApprove.start_time }} -
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.end_time_weekday) }},
@@ -153,8 +149,8 @@
                             </div>
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToApprove.project" class="w-80">
-                                    <div class="ml-16 text-secondary text-sm flex items-center">
-                                        Zugeordnet zu
+                                    <div class="ml-16 xsLight flex items-center">
+                                        {{$t('assigned to')}}
                                         <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                             {{ requestToApprove.project.name }}
                                         </div>
@@ -169,22 +165,19 @@
                                     </div>
                                     -->
                                 </div>
-                                <div class="text-secondary text-sm ml-10" v-else>
-                                    Keinem Projekt zugeordnet
+                                <div class="xsLight ml-10" v-else>
+                                    {{ $t('Not assigned to a project')}}
                                 </div>
-                                <div class="flex text-sm text-secondary items-center">
-                                    angefragt:<img :data-tooltip-target="requestToApprove.created_by.id"
-                                                   :src="requestToApprove.created_by.profile_photo_url"
-                                                   :alt="requestToApprove.created_by.name"
-                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip :user="requestToApprove.created_by"/>
-                                    <span class="ml-2"> {{ requestToApprove.created_at }}</span>
+                                <div class="flex xsLight items-center">
+                                    {{ $t('requested')}}:
+                                    <UserPopoverTooltip :user="requestToApprove.created_by" :id="requestToApprove.created_by.id" height="7" width="7" class="ml-2"/>
+                                    <span class="ml-2 xsLight"> {{ requestToApprove.created_at }}</span>
                                 </div>
                                 <div>
 
                                 </div>
                             </div>
-                            <div class="flex ml-12 mt-2 text-sm text-secondary items-center w-full"
+                            <div class="flex ml-12 mt-2 xsLight items-center w-full"
                                  v-if="requestToApprove.description">
                                 {{ requestToApprove.description }}
                             </div>
@@ -194,11 +187,11 @@
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="approveRequest">
-                            Zusagen
+                            {{$t('Commitments')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeApproveRequestModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -209,25 +202,26 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
-                        Raumbelegung absagen
+                    <div class="headline1 my-2">
+                        {{$t('Cancel room reservation')}}
                     </div>
                     <XIcon @click="closeDeclineRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du die Raumbelegung absagen möchtest?
+                    <div class="errorText">
+                        {{$t('Are you sure you want to cancel the room reservation?')}}
                     </div>
                     <div class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
 
                             <div class="flex items-center w-full mt-4">
                                 <div class="flex items-center ml-12 w-full">
-                                    <EventTypeIconCollection :height="26" :width="26"
-                                                             :iconName="requestToDecline.event_type.svg_name"/>
+                                    <div>
+                                        <div class="block w-6 h-6 rounded-full" :style="{'backgroundColor' : requestToDecline.event_type?.hex_code }" />
+                                    </div>
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
-                                        {{ requestToDecline.event_type.name }}
+                                        {{ requestToDecline.event_type?.name }}
                                         <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience"
@@ -236,14 +230,14 @@
                                              class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
-                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                    <div class="flex w-full xsDark whitespace-nowrap ml-3"
                                          v-if="requestToDecline.start_time.split(',')[0] === requestToDecline.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }}, {{
                                             requestToDecline.start_time.split(',')[0]
                                         }},{{ requestToDecline.start_time.split(',')[1] }}
                                         - {{ requestToDecline.end_time.split(',')[1] }}
                                     </div>
-                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                    <div class="flex w-full xsDark whitespace-nowrap ml-3" v-else>
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }},
                                         {{ requestToDecline.start_time }} -
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.end_time_weekday) }},
@@ -253,10 +247,10 @@
                             </div>
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToDecline.project" class="w-80">
-                                    <div class="ml-16 text-secondary text-sm flex items-center">
-                                        Zugeordnet zu
+                                    <div class="ml-16 xsLight flex items-center">
+                                        {{$t('assigned to')}}
                                         <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
-                                            {{ requestToDecline.project.name }}
+                                            {{ requestToDecline.project?.name }}
                                         </div>
                                     </div>
                                     <!--
@@ -269,36 +263,33 @@
                                     </div>
                                     -->
                                 </div>
-                                <div class="text-secondary text-sm ml-10" v-else>
-                                    Keinem Projekt zugeordnet
+                                <div class="xsLight ml-10" v-else>
+                                    {{ $t('Not assigned to a project')}}
                                 </div>
-                                <div class="flex text-sm text-secondary items-center">
-                                    angefragt:<img :data-tooltip-target="requestToDecline.created_by.id"
-                                                   :src="requestToDecline.created_by.profile_photo_url"
-                                                   :alt="requestToDecline.created_by.name"
-                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip :user="requestToDecline.created_by"/>
+                                <div class="flex xsLight items-center">
+                                    {{$t('requested')}}:
+                                    <UserPopoverTooltip :user="requestToDecline.created_by" :id="requestToDecline.created_by.id" height="7" width="7" class="ml-2"/>
                                     <span class="ml-2"> {{ requestToDecline.created_at }}</span>
                                 </div>
                                 <div>
 
                                 </div>
                             </div>
-                            <div class="flex ml-12 mt-2 text-sm text-secondary items-center w-full"
+                            <div class="flex ml-12 mt-2 xsLight items-center w-full"
                                  v-if="requestToDecline.description">
                                 {{ requestToDecline.description }}
                             </div>
                         </div>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="declineRequest">
-                            Absagen
-                        </button>
+                        <FormButton
+                            @click="declineRequest"
+                            :text="$t('Cancellations')"
+                            class="inline-flex items-center"
+                            />
                         <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -334,15 +325,21 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import Checkbox from "@/Layouts/Components/Checkbox";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm, usePage} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
+        FormButton,
+        UserPopoverTooltip,
         ListboxLabel,
         SvgCollection,
         Button,
@@ -376,6 +373,7 @@ export default defineComponent({
     },
     props: ['event_requests'],
     methods: {
+        usePage,
         getGermanWeekdayAbbreviation(englishWeekday) {
             switch (englishWeekday) {
                 case 'Monday':
@@ -411,37 +409,13 @@ export default defineComponent({
             this.requestToDecline = null;
         },
         approveRequest() {
-            this.approveRequestForm.name = this.requestToApprove.name;
-            this.approveRequestForm.start_time = this.requestToApprove.start_time_dt_local;
-            this.approveRequestForm.end_time = this.requestToApprove.end_time_dt_local;
-            this.approveRequestForm.description = this.requestToApprove.description;
-            this.approveRequestForm.occupancy_option = false;
-            this.approveRequestForm.is_loud = this.requestToApprove.is_loud;
-            this.approveRequestForm.audience = this.requestToApprove.audience;
-            if (this.requestToApprove.room) {
-                this.approveRequestForm.room_id = this.requestToApprove.room.id;
-            }
-            if (this.requestToApprove.project) {
-                this.approveRequestForm.project_id = this.requestToApprove.project.id;
-            }
-            this.approveRequestForm.event_type_id = this.requestToApprove.event_type.id;
-            this.approveRequestForm.patch(route('events.update', {event: this.requestToApprove.id}));
+            this.answerRequestForm.accepted = true;
+            this.answerRequestForm.put(route('events.accept', {event: this.requestToApprove.id}));
             this.closeApproveRequestModal();
         },
         declineRequest() {
-            this.approveRequestForm.name = this.requestToDecline.name;
-            this.approveRequestForm.start_time = this.requestToDecline.start_time_dt_local;
-            this.approveRequestForm.end_time = this.requestToDecline.end_time_dt_local;
-            this.approveRequestForm.description = this.requestToDecline.description;
-            this.approveRequestForm.occupancy_option = false;
-            this.approveRequestForm.is_loud = this.requestToDecline.is_loud;
-            this.approveRequestForm.audience = this.requestToDecline.audience;
-            this.approveRequestForm.room_id = null;
-            if (this.requestToDecline.project) {
-                this.approveRequestForm.project_id = this.requestToDecline.project.id;
-            }
-            this.approveRequestForm.event_type_id = this.requestToDecline.event_type.id;
-            this.approveRequestForm.patch(route('events.update', {event: this.requestToDecline.id}));
+            this.answerRequestForm.accepted = false;
+            this.answerRequestForm.put(route('events.accept', {event: this.requestToDecline.id}));
             this.closeDeclineRequestModal();
         }
     },
@@ -451,31 +425,8 @@ export default defineComponent({
             requestToApprove: null,
             showDeclineRequestModal: false,
             requestToDecline: null,
-            approveRequestForm: useForm({
-                name: '',
-                start_time: null,
-                end_time: null,
-                description: '',
-                occupancy_option: false,
-                is_loud: false,
-                audience: false,
-                room_id: null,
-                project_id: null,
-                event_type_id: null,
-                user_id: this.$page.props.user.id,
-            }),
-            declineRequestForm: useForm({
-                name: '',
-                start_time: null,
-                end_time: null,
-                description: '',
-                occupancy_option: false,
-                is_loud: false,
-                audience: false,
-                room_id: null,
-                project_id: null,
-                event_type_id: null,
-                user_id: this.$page.props.user.id,
+            answerRequestForm: useForm({
+                accepted: false,
             }),
         }
     },

@@ -2,24 +2,19 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Department;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @mixin \App\Models\Checklist
- */
 class ChecklistShowResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         return [
             'resource' => class_basename($this),
@@ -32,10 +27,11 @@ class ChecklistShowResource extends JsonResource
                 'deadline' => $task->deadline,
                 'done' => $task->done,
             ]),
-            'departments' => $this->departments->map(fn (Department $department) => [
-                'id' => $department->id,
-                'name' => $department->first_name,
-                'svg_name' => $department->svg_name,
+            'users' => $this->users->map(fn (User $user) => [
+                'id' => $user->id,
+                'profile_photo_url' => $user->profile_photo_url,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
             ])
         ];
     }

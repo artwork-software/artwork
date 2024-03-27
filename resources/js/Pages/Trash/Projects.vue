@@ -1,12 +1,32 @@
 <template>
-    <div v-if="trashed_projects.length > 0" v-for="(project,index) in trashed_projects" :key="project.id"
+    <div class="flex w-full justify-between">
+        <div>
+
+        </div>
+        <div class="flex justify-end items-center ml-8 -mt-14">
+            <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+                 class="cursor-pointer inset-y-0 mr-3">
+                <SearchIcon class="h-5 w-5" aria-hidden="true"/>
+            </div>
+            <div v-else class="flex items-center w-64 mr-2">
+                <div>
+                    <input type="text"
+                           :placeholder="$t('Search')"
+                           v-model="searchText"
+                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                </div>
+                <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
+            </div>
+        </div>
+    </div>
+    <div v-if="filteredTrashedProjects.length > 0" v-for="(project,index) in filteredTrashedProjects" :key="project.id"
          class="mt-5 border-b-2 border-gray-200 w-full">
-        <div
-            class="py-5 flex justify-between">
+        <div class="py-5 flex justify-between">
             <div class="flex">
                 <div class="w-full mr-6">
                     <div class="flex my-auto">
                         <p class="text-2xl subpixel-antialiased text-gray-900">{{ project.name }}</p>
+                        {{ project.access_budget }}
                     </div>
                 </div>
             </div>
@@ -53,10 +73,7 @@
             <div class="flex">
                 <div class="flex mr-8">
                     <div class="my-auto -mr-3" v-for="user in project.users.slice(0,3)">
-                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full ring-2 ring-white"
-                             :src="user.profile_photo_url"
-                             alt=""/>
-                        <UserTooltip :user="user" />
+                        <UserPopoverTooltip :user="user" :id="user.id" height="9" width="9"/>
                     </div>
                     <div v-if="project.users.length >= 4" class="my-auto">
                         <Menu as="div" class="relative">
@@ -94,9 +111,10 @@
                 <Menu as="div" class="my-auto relative">
                     <div class="flex">
                         <MenuButton
-                            class="flex">
-                            <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                              aria-hidden="true"/>
+                            class="flex bg-tagBg p-0.5 rounded-full">
+                            <DotsVerticalIcon
+                                class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                aria-hidden="true"/>
                         </MenuButton>
                     </div>
                     <transition enter-active-class="transition ease-out duration-100"
@@ -117,7 +135,7 @@
                                         <RefreshIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
-                                        Wiederherstellen
+                                        {{  $t('Restore') }}
                                     </Link>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
@@ -129,7 +147,7 @@
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
-                                        Endgültig löschen
+                                        {{ $t('Delete permanently')}}
                                     </Link>
                                 </MenuItem>
                             </div>
@@ -140,61 +158,37 @@
             </div>
 
         </div>
-        <div class="mb-2 text-secondary flex items-center">
-                    <span class="subpixel-antialiased">
-                    zuletzt geändert:
+        <div class="mb-4 subpixel-antialiased text-secondary text-xs flex items-center"
+             v-if="project.project_history.length">
+            <div>
+                {{ $t('last modified') }}:
+            </div>
+            <UserPopoverTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
+                                :user="project.project_history[0].changes[0].changed_by"
+                                :id="project.project_history[0].changes[0].changed_by.id"
+                                height="4"
+                                width="4" class="ml-2"/>
+            <span class="ml-2 subpixel-antialiased">
+                        {{ project.project_history[0]?.created_at }}
                     </span>
-            <div class="flex items-center" v-if="project.project_history.length !== 0">
-                <img :data-tooltip-target="project.project_history[0].user.id"
-                    :src="project.project_history[0].user.profile_photo_url"
-                    :alt="project.project_history[0].user.name"
-                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                <UserTooltip :user="project.project_history[0].user" />
-                <span class="ml-2 subpixel-antialiased">
-                                    {{ project.project_history[0].created_at }}
-                                </span>
-                <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
-                        @click="openProjectHistoryModal(project.project_history)">
-                    <ChevronRightIcon
-                        class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
-                        aria-hidden="true"/>
-                    Verlauf ansehen
-                </button>
-            </div>
-            <div v-else class="ml-2 text-secondary subpixel-antialiased">
-                Noch kein Verlauf verfügbar
-            </div>
-
+            <button class="ml-4 subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
+                    @click="openProjectHistoryModal(project)">
+                <ChevronRightIcon
+                    class="-mr-0.5 h-4 w-4  group-hover:text-white"
+                    aria-hidden="true"/>
+                {{ $t('View history') }}
+            </button>
         </div>
-        <jet-dialog-modal :show="showProjectHistory" @close="closeProjectHistoryModal">
-            <template #content>
-                <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        Projektverlauf
-                    </div>
-                    <XIcon @click="closeProjectHistoryModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-secondary subpixel-antialiased">
-                        Hier kannst du nachvollziehen, was von wem wann geändert wurde.
-                    </div>
-                    <div class="flex w-full flex-wrap mt-4">
-                        <div class="flex w-full my-1" v-for="historyItem in projectHistoryToDisplay">
-                            <span class="text-secondary my-auto text-sm subpixel-antialiased">
-                        {{ historyItem.created_at }}:
-                    </span>
-                            <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url" :alt="historyItem.user.name"
-                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                            <UserTooltip :user="historyItem.user" />
-                            <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
-                                {{ historyItem.description }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-            </template>
-        </jet-dialog-modal>
+        <!-- Project History Modal -->
+        <!-- TODO: EINFÜGEN WENN PROJECT HISTORY VON GELÖSCHTEN PROJEKTEN ÜBERARBEITET -->
+        <project-history-component
+            @closed="closeProjectHistoryModal"
+            v-if="showProjectHistory"
+            :project_history="projectHistoryToDisplay"
+            :access_budget="projectBudgetAccess"
+        ></project-history-component>
+
 
     </div>
 
@@ -204,34 +198,66 @@
 import AppLayout from "@/Layouts/AppLayout";
 import TrashLayout from "@/Layouts/TrashLayout";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import { MenuButton,Menu, MenuItems, MenuItem } from "@headlessui/vue";
-import { ChevronDownIcon, DotsVerticalIcon, ChevronRightIcon, XIcon, RefreshIcon } from "@heroicons/vue/solid";
-import { TrashIcon} from "@heroicons/vue/outline";
+import {MenuButton, Menu, MenuItems, MenuItem} from "@headlessui/vue";
+import {
+    ChevronDownIcon,
+    DotsVerticalIcon,
+    ChevronRightIcon,
+    XIcon,
+    RefreshIcon,
+    SearchIcon
+} from "@heroicons/vue/solid";
+import {TrashIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {Link} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
+import Input from "@/Layouts/Components/InputComponent.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+
 export default {
     props: ['trashed_projects'],
     name: "Projects",
     layout: [AppLayout, TrashLayout],
     data() {
-      return {
-          showProjectHistory: false,
-          projectHistoryToDisplay: []
-      }
+        return {
+            showProjectHistory: false,
+            projectHistoryToDisplay: [],
+            projectBudgetAccess: {},
+            showSearchbar: false,
+            searchText: '',
+        }
+    },
+    computed: {
+        filteredTrashedProjects() {
+            if (this.searchText === '') {
+                return this.trashed_projects;
+            }
+            return this.trashed_projects.filter(project => {
+                return project.name.toLowerCase().includes(this.searchText.toLowerCase())
+            })
+        }
     },
     methods: {
-        openProjectHistoryModal(projectHistory) {
-            this.projectHistoryToDisplay = projectHistory;
+        openProjectHistoryModal(project) {
+            this.projectHistoryToDisplay = project.project_history;
+            this.projectBudgetAccess = project.access_budget;
             this.showProjectHistory = true;
         },
         closeProjectHistoryModal() {
             this.showProjectHistory = false;
             this.projectHistoryToDisplay = [];
+        },
+        closeSearchbar() {
+            this.showSearchbar = false
+            this.searchText = ''
         }
     },
     components: {
+        UserPopoverTooltip,
+        Input, SearchIcon,
+        ProjectHistoryComponent,
         TrashIcon,
         TeamIconCollection,
         MenuButton,

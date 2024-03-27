@@ -10,7 +10,7 @@
                         <img src="/Svgs/Logos/artwork_logo_big.svg"/>
                     </div>
                     <div class="flex items-center mb-12">
-                    <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">Login</h2>
+                    <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">{{$t('Login')}}</h2>
                         <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
                     </div>
                 </div>
@@ -20,14 +20,14 @@
                         <form class="space-y-6" @submit.prevent="submit">
                             <div class="relative w-full mr-4">
                                 <input id="email" v-model="form.email" type="text" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
-                                <label for="email" class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail*</label>
+                                <label for="email" class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{$t('Email')}}*</label>
                             </div>
 
                             <div class="relative w-full mr-4">
                                 <input id="password" v-model="form.password" type="password" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
-                                <label for="password" class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Passwort*</label>
+                                <label for="password" class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">{{ $t('Password')}}*</label>
                             </div>
-
+                            <jet-input-error :message="errors.email" class="mt-2"/>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
                                     <Checkbox class="justify-between text-sm" :item=rememberCheckbox />
@@ -35,17 +35,14 @@
                                 <div class="text-sm">
                                     <Link v-if="canResetPassword" :href="route('password.request')"
                                           class="text-xs text-secondary subpixel-antialiased hover:font-semibold hover:text-primary">
-                                        Passwort vergessen
+                                        {{$t('Forgot your password?')}}
                                     </Link>
                                 </div>
                             </div>
 
+
                             <div>
-                                <button type="submit"
-                                        :class="[this.form.email === '' || this.form.password === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                        class=" inline-flex items-center px-40 py-3 border border-transparent text-sm font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                                        :disabled="this.form.email === '' || this.form.password === ''">Login
-                                </button>
+                                <BaseButton :text="$t('Login')" :disabled="this.form.email === '' || this.form.password === ''" horizontal-padding="px-44" vertical-padding="py-4" type="submit" />
                             </div>
                         </form>
 
@@ -53,24 +50,21 @@
                 </div>
                 <div class=" absolute bottom-0 mb-20 text-secondary subpixel-antialiased text-sm tracking-wide">
                     <a v-if="this.$page.props.impressumLink !== ''" target="_blank" :href="this.$page.props.impressumLink">
-                        Impressum
+                        {{$t('Imprint')}}
                     </a>
-                    <!-- TODO: Wohin bei Default ? -->
                     <a target="_blank" v-else :href="this.$page.props.impressumLink">
-                        Impressum
+                        {{$t('Imprint')}}
                     </a>
                     |
                     <a target="_blank" v-if="this.$page.props.privacyLink !== ''" :href="this.$page.props.privacyLink">
-                        Datenschutz
+                        {{$t('Privacy Policy')}}
                     </a>
-                    <!-- TODO: Wohin bei Default ? -->
                     <a target="_blank" v-else :href="this.$page.props.privacyLink">
-                        Datenschutz
+                        {{$t('Privacy Policy')}}
                     </a>
                     |
-                    <!-- TODO: Hier noch Link zu Über uns Page -->
-                    <a href="">
-                        Über das Tool
+                    <a target="_blank" href="https://artwork.software/">
+                        {{$t('About the tool')}}
                     </a>
                 </div>
             </div>
@@ -95,36 +89,46 @@ import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 import {Head, Link} from '@inertiajs/inertia-vue3';
 import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
+import JetInputError from "@/Jetstream/InputError.vue";
+import Permissions from "@/mixins/Permissions.vue";
+import BaseButton from "@/Layouts/Components/General/Buttons/BaseButton.vue";
 
-
-const rememberCheckbox = {name: 'Angemeldet bleiben', checked: false, showIcon: false}
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
+        BaseButton,
         SvgCollection,
         Head,
         JetAuthenticationCard,
         JetAuthenticationCardLogo,
         JetButton,
         JetInput,
+        JetInputError,
         JetCheckbox,
         JetLabel,
         JetValidationErrors,
         Link,
-        Checkbox
+        Checkbox,
     },
     props: {
         canResetPassword: Boolean,
         status: String
     },
-
+    computed: {
+        errors() {
+            return this.$page.props.errors;
+        }
+    },
     data() {
         return {
             form: this.$inertia.form({
                 email: '',
                 password: '',
-                remember: false
-            })
+                remember: false,
+                error:'',
+            }),
+            rememberCheckbox: {name: this.$t('Remember me'), checked: false, showIcon: false}
         }
     },
 
@@ -140,10 +144,5 @@ export default defineComponent({
                 })
         }
     },
-    setup() {
-        return {
-            rememberCheckbox
-        }
-    }
 })
 </script>

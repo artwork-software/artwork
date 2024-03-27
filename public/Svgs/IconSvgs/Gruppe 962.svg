@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="13" height="13" viewBox="0 0 13 13">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="Rechteck_458" data-name="Rechteck 458" width="5.138" height="3.634" fill="#fcfcfb"/>
+    </clipPath>
+  </defs>
+  <g id="Gruppe_962" data-name="Gruppe 962" transform="translate(-418 -311)">
+    <g id="Ellipse_147" data-name="Ellipse 147" transform="translate(418 311)" fill="#27233c" stroke="#fcfcfb" stroke-width="1">
+      <circle cx="6.5" cy="6.5" r="6.5" stroke="none"/>
+      <circle cx="6.5" cy="6.5" r="6" fill="none"/>
+    </g>
+    <g id="Gruppe_962-2" data-name="Gruppe 962" transform="translate(423 314.945)" clip-path="url(#clip-path)">
+      <path id="Pfad_1344" data-name="Pfad 1344" d="M5.1,1.418a.534.534,0,0,0-.7-.286L1.775,2.23,1.029.337a.533.533,0,1,0-.992.39L1.183,3.633,4.811,2.115a.533.533,0,0,0,.286-.7" transform="translate(0 0)" fill="#fcfcfb"/>
+    </g>
+  </g>
+</svg>

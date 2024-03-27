@@ -2,42 +2,36 @@
 
 namespace App\Http\Resources;
 
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/**
- * @mixin \App\Models\Task
- */
 class TaskShowResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-
             'done' => (bool) $this->done_at,
-            'humanDeadline' => $this->deadline
+            'humanDeadline' => Carbon::parse($this->deadline)
                 ?->setTimezone($request->get('timezone', config('calendar.default_timezone')))
-                ->format('d.d.Y'),
-            'deadline' => $this->deadline->timestamp,
-            'isDeadlineInFuture' => $this->deadline?->isFuture(),
-
-            'isPrivate' => (bool) $this->checklist->user_id,
-            'projectId' => $this->checklist->project->id,
-            'projectName' => $this->checklist->project->name,
-            'departments' => DepartmentIconResource::collection($this->checklist->departments),
-            'checklistName' => $this->checklist->name,
-            'checklistId' => $this->checklist->id,
+                ->format('d.m.Y'),
+            'deadline' => $this->deadline,
+            'isDeadlineInFuture' => Carbon::parse($this->deadline)?->isFuture(),
+            'isPrivate' => (bool) $this->checklist?->user_id,
+            'projectId' => $this->checklist?->project->id,
+            'projectName' => $this->checklist?->project->name,
+            'users' => $this->checklist ? UserIconResource::collection($this->checklist->users) : null,
+            'checklistName' => $this->checklist?->name,
+            'checklistId' => $this->checklist?->id,
         ];
     }
 }

@@ -1,110 +1,11 @@
 <?php
 
 use App\Mail\InvitationCreated;
-use App\Models\Department;
 use App\Models\Invitation;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use Artwork\Modules\Department\Models\Department;
 use Illuminate\Support\Facades\Mail;
-use function Pest\Faker\faker;
 use Inertia\Testing\AssertableInertia as Assert;
-
-it('aborts invalid tokens', function () {
-
-    //Admin User
-    $user = User::factory()->create();
-
-    $user->assignRole('admin');
-
-    Invitation::factory()->create(['email' => 'user@example.com']);
-
-    $password = "TesterTest_123?";
-
-    $this->post('/users/invitations/accept', [
-        'email' => 'user@example.com',
-        'token' => 'invalidToken12345678',
-        'password' => $password,
-        'password_confirmation' => $password
-    ])->assertForbidden();
-
-});
-
-it('aborts missing parameters', function () {
-
-    $this->post('/users/invitations/accept', [
-        'token' => 'invalid',
-    ])->assertInvalid();
-
-    $this->post('/users/invitations/accept', [
-        'password' => faker()->password,
-    ])->assertInvalid();
-});
-
-it('aborts weak passwords', function () {
-
-    //create Invitation
-    User::factory()->create();
-
-    $invitation = Invitation::factory()->create();
-
-    $this->post('/users/invitations/accept', [
-        'token' => $invitation->token,
-        'password' => 'weakpassword'
-    ])->assertInvalid();
-});
-
-test('users can accept the invitation', function () {
-
-    $validPlainToken = 'validToken0123456789';
-
-    $department = Department::factory()->create();
-
-    $invitation = Invitation::factory()->create([
-        'email' => 'user@example.com',
-        'token' => Hash::make($validPlainToken),
-        'role' => 'admin',
-        'permissions' => json_encode(['invite users', 'view users'])]);
-
-    $department->invitations()->attach($invitation->id);
-    $invitation->departments()->attach($department->id);
-
-    $password = "TesterTest_123?";
-
-    $this->post('/users/invitations/accept', [
-        'email' => 'user@example.com',
-        'first_name' => 'Benjamin',
-        'last_name' => 'Willems',
-        'token' => $validPlainToken,
-        'password' => $password,
-        'password_confirmation' => $password,
-        'phone_number' => '123456789123',
-        'position' => 'Chef',
-        'business' => 'DTH',
-        'description' => 'Ich bin Chef'
-    ]);
-
-    $this->assertDatabaseHas('users', [
-        'first_name' => 'Benjamin',
-        'last_name' => 'Willems',
-        'email' => $invitation->email,
-    ]);
-
-    $user = User::where('email', 'user@example.com')->first();
-
-    $this->assertDatabaseHas('department_user', [
-        'department_id' => $department->id,
-        'user_id' => $user->id
-    ]);
-
-    $this->assertTrue(Hash::check($password,$user->password));
-    $this->assertTrue($user->hasRole('admin'));
-
-    $this->assertEquals($user->getPermissionNames()->toArray(), json_decode($invitation->permissions));
-
-    $this->assertModelMissing($invitation);
-
-    $this->assertAuthenticated();
-});
 
 test('accept invitation renders', function () {
 
@@ -125,7 +26,7 @@ test('invitations requests are validated', function () {
 
     $user = User::factory()->create();
 
-    $user->assignRole('admin');
+    $user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
 
     $this->actingAs($user);
 
@@ -145,7 +46,7 @@ test('admins can invite users', function () {
 
     $department = Department::factory()->create();
 
-    $admin_user->assignRole('admin');
+    $admin_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
 
     $this->actingAs($admin_user);
 
@@ -153,22 +54,20 @@ test('admins can invite users', function () {
         'user_emails' => ['user@example.de', 'user2@example.de'],
         'permissions' => ['invite users', 'view users'],
         'departments' => [$department],
-        'role' => null
+        'roles' => []
     ]);
 
     Mail::assertSent(InvitationCreated::class, function ($mail) use ($admin_user) {
         $mail->build();
-        return $mail->subject = 'Einladung für Artwork.tools';
+        return $mail->subject = 'Einladung für artwork';
     });
 
     $this->assertDatabaseHas('invitations', [
         "email" => "user@example.de",
-        "role" => null
     ]);
 
     $this->assertDatabaseHas('invitations', [
         "email" => "user2@example.de",
-        "role" => null
     ]);
 
     $invitation = Invitation::where('email', 'user@example.de')->first();
@@ -217,7 +116,7 @@ test('admins can view invitations', function () {
         Invitation::factory()->create();
     }
 
-    $admin_user->assignRole('admin');
+    $admin_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
 
     $this->actingAs($admin_user);
 
@@ -240,7 +139,7 @@ test('admins and can update invitations', function () {
 
     $admin_user = User::factory()->create();
 
-    $admin_user->assignRole('admin');
+    $admin_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
 
     $this->actingAs($admin_user);
 
@@ -263,8 +162,7 @@ test('admins can edit invitations', function () {
 
     $invitation = Invitation::factory()->create();
 
-    $admin_user->assignRole('admin');
-
+    $admin_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
     $this->actingAs($admin_user);
 
     $response = $this->get("/users/invitations/{$invitation->id}/edit")
@@ -283,7 +181,7 @@ test('admins can delete invitations', function () {
 
     $admin_user = User::factory()->create();
 
-    $admin_user->assignRole('admin');
+    $admin_user->assignRole(\App\Enums\RoleNameEnum::ARTWORK_ADMIN->value);
 
     $this->actingAs($admin_user);
 

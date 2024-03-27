@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="18" height="18" viewBox="0 0 18 18">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="Rechteck_458" data-name="Rechteck 458" width="4.083" height="2.888" fill="#fcfcfb"/>
+    </clipPath>
+  </defs>
+  <g id="Gruppe_1822" data-name="Gruppe 1822" transform="translate(-0.226 0.249)">
+    <path id="Icon_awesome-lock" data-name="Icon awesome-lock" d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z" transform="translate(3 0.467)" fill="#fcfcfb"/>
+    <g id="Gruppe_962" data-name="Gruppe 962" transform="translate(8.987 8.359)">
+      <g id="Ellipse_147" data-name="Ellipse 147" fill="#27233c" stroke="#fcfcfb" stroke-width="1">
+        <circle cx="4.5" cy="4.5" r="4.5" stroke="none"/>
+        <circle cx="4.5" cy="4.5" r="4" fill="none"/>
+      </g>
+      <g id="Gruppe_962-2" data-name="Gruppe 962" transform="translate(3.32 2.465)" clip-path="url(#clip-path)">
+        <path id="Pfad_1344" data-name="Pfad 1344" d="M4.051,1.126A.424.424,0,0,0,3.5.9l-2.086.873L.818.268A.423.423,0,1,0,.03.578L.94,2.887,3.823,1.681a.424.424,0,0,0,.227-.554" transform="translate(0 0)" fill="#fcfcfb"/>
+      </g>
+    </g>
+    <rect id="Rechteck_700" data-name="Rechteck 700" width="18" height="18" transform="translate(0.226 -0.249)" fill="none"/>
+  </g>
+</svg>

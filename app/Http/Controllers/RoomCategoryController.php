@@ -2,89 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\RoomCategory;
+use App\Models\RoomRoomCategoryMapping;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Artwork\Modules\Room\Models\RoomCategory;
 
 class RoomCategoryController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function store(Request $request): void
     {
-        //
+        RoomCategory::create(['name' => $request->get('name')]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
+    public function destroy(RoomCategory $roomCategory): RedirectResponse
     {
-        //
-    }
+        foreach (
+            RoomRoomCategoryMapping::query()
+                ->where('room_category_id', '=', $roomCategory->id)
+                ->get() as $roomRoomCategoryMapping
+        ) {
+            $roomRoomCategoryMapping->delete();
+        }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        RoomCategory::create([
-            'name' => $request->get('name')
-        ]);
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\RoomCategory  $roomCategory
-     * @return \Illuminate\Http\Response
-     */
-    public function show(RoomCategory $roomCategory)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\RoomCategory  $roomCategory
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(RoomCategory $roomCategory)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\RoomCategory  $roomCategory
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, RoomCategory $roomCategory)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\RoomCategory  $roomCategory
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy(RoomCategory $roomCategory)
-    {
         $roomCategory->delete();
-        return Redirect::route('areas.management')->with('success', 'Roomcategory deleted');
 
+        return Redirect::back();
     }
 }

@@ -1,10 +1,15 @@
 require('./bootstrap');
+require('../css/global.css');
 
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/inertia-vue3';
 import { InertiaProgress } from '@inertiajs/progress';
-import 'flowbite';
+import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
+import Permissions from './mixins/Permissions';
+import VueMathjax from 'vue-mathjax-next';
+import * as VueI18n from 'vue-i18n'
+import PrimeVue from 'primevue/config';
 
 const svgColors = {
     eventType0:'#A7A6B1',
@@ -19,7 +24,21 @@ const svgColors = {
     eventType9:'#4D908E',
     eventType10:'#21485C'
 }
+const messages = {
+    en: require('../../lang/en.json'),
+    de: require('../../lang/de.json')
+}
+
+const i18n = VueI18n.createI18n({
+    legacy: false, // you must specify 'legacy: false' option
+    locale: document.documentElement.lang,
+    fallbackLocale: 'en', // set fallback locale
+    messages, // set locale messages
+})
+
 const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Laravel';
+
+
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -27,11 +46,20 @@ createInertiaApp({
     setup({ el, app: inertiaApp, props, plugin }) {
         const app = createApp({ render: () => h(inertiaApp, props) })
             .use(plugin)
-            .mixin({ methods: { route } })
-
+            .mixin({ methods: { route }})
         app.config.globalProperties.$svgColors = svgColors;
+        app.use(VueTailwindDatepicker);
+        app.use(VueMathjax)
+        app.use(i18n)
+        app.use(PrimeVue, { unstyled: true })
         app.mount(el);
+        app.config.globalProperties.$updateLocale = function (newLocale) {
+            this.$i18n.locale = newLocale; // Für VueI18n 9.x und Vue 3
+            document.documentElement.lang = newLocale;
+        };
     },
 });
 
-InertiaProgress.init({ color: '#4B5563' });
+
+InertiaProgress.init({ color: '#3017AD', showSpinner: true, includeCSS: true });
+

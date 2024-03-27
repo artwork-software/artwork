@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="36" height="36" viewBox="0 0 36 36">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fcfcfb;
+      }
+
+      .cls-2 {
+        fill: #a7a6b1;
+        opacity: 0;
+      }
+
+      .cls-3 {
+        clip-path: url(#clip-path);
+      }
+
+      .cls-4, .cls-5 {
+        fill: none;
+        stroke: #fcfcfb;
+        stroke-miterlimit: 10;
+        stroke-width: 1.2px;
+      }
+
+      .cls-5 {
+        stroke-linecap: round;
+      }
+    </style>
+    <clipPath id="clip-path">
+      <rect id="Rechteck_354" data-name="Rechteck 354" class="cls-1" width="23.689" height="19.89"/>
+    </clipPath>
+  </defs>
+  <g id="Gruppe_1671" data-name="Gruppe 1671" transform="translate(0 0.382)">
+    <rect id="Rechteck_403" data-name="Rechteck 403" class="cls-2" width="36" height="36" rx="8" transform="translate(0 -0.382)"/>
+    <g id="haupt" transform="translate(6.137 7.727)">
+      <g id="Gruppe_505" data-name="Gruppe 505" transform="translate(0 0)">
+        <g id="Gruppe_498" data-name="Gruppe 498" class="cls-3" transform="translate(0 0)">
+          <path id="Pfad_903" data-name="Pfad 903" class="cls-1" d="M22.938,1.519H17.87V.751a.751.751,0,0,0-1.5,0v.768H12.6V.751a.751.751,0,0,0-1.5,0v.768H6.831V.751a.751.751,0,0,0-1.5,0v.768H.751A.75.75,0,0,0,0,2.27V19.139a.75.75,0,0,0,.751.751H22.938a.75.75,0,0,0,.751-.751V2.27a.75.75,0,0,0-.751-.751M5.329,3.021V3.79a.751.751,0,1,0,1.5,0V3.021h4.263V3.79a.751.751,0,1,0,1.5,0V3.021h3.772V3.79a.751.751,0,1,0,1.5,0V3.021h4.317V6.315H1.5V3.021ZM1.5,7.817H22.187V18.388H1.5Z" transform="translate(0 0)"/>
+        </g>
+      </g>
+    </g>
+    <g id="public" transform="translate(6.424 15.511)">
+      <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(0.372 0.372)">
+        <path id="Pfad_825" data-name="Pfad 825" class="cls-4" d="M40.041,8.49c0,.053,0,.1,0,.157a2.472,2.472,0,0,1-4.931.042c-.007-.066-.009-.133-.009-.2a2.472,2.472,0,0,1,4.944,0Z" transform="translate(-26.385 -4.737)"/>
+        <path id="Pfad_826" data-name="Pfad 826" class="cls-5" d="M30.634,27.739a4.088,4.088,0,0,1-1.851-.646,3.342,3.342,0,0,0-2.326,3.066v.763a.78.78,0,0,0,.826.73H34.99a.782.782,0,0,0,.828-.73v-.763a3.343,3.343,0,0,0-2.326-3.066,4.1,4.1,0,0,1-1.83.644Z" transform="translate(-19.952 -20.867)"/>
+      </g>
+    </g>
+  </g>
+</svg>

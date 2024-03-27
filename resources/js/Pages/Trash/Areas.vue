@@ -1,7 +1,27 @@
 <template>
-    <div v-for="area in trashed_areas"
+    <div class="flex w-full justify-between">
+        <div>
+
+        </div>
+    <div class="flex justify-end items-center ml-8 -mt-14">
+        <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+             class="cursor-pointer inset-y-0 mr-3">
+            <SearchIcon class="h-5 w-5" aria-hidden="true"/>
+        </div>
+        <div v-else class="flex items-center w-64 mr-2">
+            <div>
+                <input type="text"
+                       :placeholder="$t('Search')"
+                       v-model="searchText"
+                       class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+            </div>
+            <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
+        </div>
+    </div>
+    </div>
+    <div v-for="area in filteredTrashedAreas"
          class="flex w-full bg-white my-2 border border-gray-200">
-        <button class="bg-black flex" @click="area.hidden = !area.hidden">
+        <button class="bg-buttonBlue hover:bg-buttonHover flex" @click="area.hidden = !area.hidden">
             <ChevronUpIcon v-if="area.hidden !== true"
                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
             <ChevronDownIcon v-else
@@ -18,9 +38,9 @@
                     <Menu as="div" class="my-auto relative">
                         <div class="flex">
                             <MenuButton
-                                class="flex ml-6">
+                                class="flex bg-tagBg p-0.5 rounded-full">
                                 <DotsVerticalIcon
-                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                     aria-hidden="true"/>
                             </MenuButton>
                         </div>
@@ -43,7 +63,7 @@
                                             <RefreshIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Wiederherstellen
+                                            {{  $t('Restore') }}
                                         </Link>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -55,7 +75,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Endgültig löschen
+                                            {{ $t('Delete permanently')}}
                                         </Link>
                                     </MenuItem>
                                 </div>
@@ -74,7 +94,7 @@
                                         {{ room.name }}
                                     </div>
                                     <div class="ml-6 flex items-center text-secondary text-sm my-auto">
-                                        angelegt am {{ room.created_at }} von
+                                        {{ $t('created on')}} {{ room.created_at }} von
                                         <img :src="room.created_by.profile_photo_url"
                                              :alt="room.created_by.first_name"
                                              class="rounded-full ml-2 h-6 w-6 object-cover cursor-pointer">
@@ -88,8 +108,7 @@
 
                 <h2 v-on:click="switchVisibility(area.id)"
                     class="text-sm mt-10 pb-2 flex font-bold text-primary cursor-pointer">
-                    Temporäre
-                    Räume
+                    {{ $t('Temporary rooms')}}
                     <ChevronUpIcon v-if="showTemporaryRooms.includes(area.id)"
                                    class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
                     <ChevronDownIcon v-else
@@ -108,7 +127,7 @@
 
                                     <div
                                         class="ml-6 flex items-center text-secondary text-sm my-auto">
-                                        angelegt am {{ room.created_at }} von
+                                        {{ $t('created on { created_at } by', { created_at: room.created_at })}}
                                         <img
                                             :src="room.created_by.profile_photo_url"
                                             :alt="room.created_by.first_name"
@@ -127,16 +146,18 @@
 <script>
 import AppLayout from "@/Layouts/AppLayout";
 import TrashLayout from "@/Layouts/TrashLayout";
-import { ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, RefreshIcon } from "@heroicons/vue/solid";
-import { TrashIcon } from "@heroicons/vue/outline";
+import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, RefreshIcon, SearchIcon} from "@heroicons/vue/solid";
+import {TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {Menu, MenuButton,MenuItems,MenuItem } from "@headlessui/vue";
 import { Link } from "@inertiajs/inertia-vue3";
+import Input from "@/Layouts/Components/InputComponent.vue";
 
 export default {
     name: "Projects",
     layout: [AppLayout, TrashLayout],
     props: ['trashed_areas'],
     components: {
+        Input, XIcon, SearchIcon,
         ChevronDownIcon,
         ChevronUpIcon,
         Menu, MenuButton, DotsVerticalIcon,
@@ -145,7 +166,19 @@ export default {
     data() {
       return {
           showTemporaryRooms: [],
+          showSearchbar: false,
+          searchText: '',
       }
+    },
+    computed: {
+        filteredTrashedAreas() {
+            if (!this.searchText) {
+                return this.trashed_areas;
+            }
+            return this.trashed_areas.filter(area => {
+                return area.name.toLowerCase().includes(this.searchText.toLowerCase());
+            });
+        }
     },
     methods: {
         switchVisibility(areaId) {
@@ -155,6 +188,10 @@ export default {
                 this.showTemporaryRooms.push(areaId);
             }
         },
+        closeSearchbar() {
+            this.showSearchbar = false
+            this.searchText = ''
+        }
     }
 }
 </script>

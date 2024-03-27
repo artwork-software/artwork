@@ -2,10 +2,10 @@
 
 namespace App\Support\Services;
 
-use App\Models\Checklist;
-use App\Models\Project;
-use App\Models\ProjectHistory;
+use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\Task;
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectHistory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -38,7 +38,7 @@ class HistoryService
         $config = config('history.' . Str::lower(class_basename($model)));
 
         // is nothing is configured, don't keep the history
-        if (! $config) {
+        if (!$config) {
             return null;
         }
 
@@ -57,6 +57,11 @@ class HistoryService
         }
 
         // foreach property provided in the config
+        return $this->handleConfigProperties($config, $model, $project, $swap);
+    }
+
+    private function handleConfigProperties(array $config, Model $model, Project $project, array $swap = []): Collection
+    {
         return collect($config['properties'] ?? [])
             ->map(function (array $config, string $attribute) use ($project, $swap, $model) {
                 // check if the property was changed
@@ -89,5 +94,4 @@ class HistoryService
     {
         return $this->modelUpdated($checklist, $checklist->project, ['name' => $checklist->name]);
     }
-
 }

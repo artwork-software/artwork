@@ -2,72 +2,73 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Area;
-use App\Models\EventType;
-use App\Models\Project;
-use App\Models\Room;
-use App\Models\RoomAttribute;
-use App\Models\RoomCategory;
+use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
+use App\Models\Filter;
+use Artwork\Modules\Room\Models\Room;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-/**
- * @mixin \App\Models\Event
- */
 class CalendarEventCollectionResource extends ResourceCollection
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
+        /** @var CalendarEventCollectionResourceModel $resource */
+        $resource = $this->resource;
+
         return [
             'resource' => class_basename($this),
-            'events' => CalendarEventResource::collection($this->collection),
-
-            'types' => EventType::all()->map(fn (EventType $type) => [
-                'id' => $type->id,
-                'label' => $type->name,
-                'img' => $type->svg_name,
+            'events' => ProjectCalendarShowEventResource::collection($resource->events),
+            'calendarFilters' => $resource->filter->map(fn(Filter $filter) => [
+                'id' => $filter->id,
+                'name' => $filter->name,
+                'isLoud' => $filter->isLoud,
+                'isNotLoud' => $filter->isNotLoud,
+                'hasAudience' => $filter->hasAudience,
+                'hasNoAudience' => $filter->hasNoAudience,
+                'adjoiningNoAudience' => $filter->adjoiningNoAudience,
+                'adjoiningNotLoud' => $filter->adjoiningNotLoud,
+                'allDayFree' => $filter->allDayFree,
+                'showAdjoiningRooms' => $filter->showAdjoiningRooms,
+                'rooms' => $filter->rooms->map(fn(Room $room) => [
+                    'id' => $room->id,
+                    'everyone_can_book' => $room->everyone_can_book,
+                    'label' => $room->name,
+                    'room_admins' => $room->users()->wherePivot('is_admin', true)->get(),
+                ]),
+                'areas' => $filter->areas,
+                'roomCategories' => $filter->room_categories,
+                'roomAttributes' => $filter->room_attributes,
+                'eventTypes' => $filter->event_types,
             ]),
-
-            'projects' => Project::all()->map(fn (Project $project) => [
-                'id' => $project->id,
-                'label' => $project->name,
-                'project_admins' => $project->adminUsers
-
-            ]),
-
-            'rooms' => Room::all()->map(fn (Room $room) => [
+            'types' => $resource->eventTypes,
+            'projects' => $resource->projects,
+            'rooms' => Room::with('adjoining_rooms', 'main_rooms')->get()->map(fn(Room $room) => [
                 'id' => $room->id,
+                'name' => $room->name,
+                'area' => $room->area,
+                'room_admins' => $room->users()->wherePivot('is_admin', true)->get(),
+                'everyone_can_book' => $room->everyone_can_book,
                 'label' => $room->name,
-                'room_admins' => $room->room_admins,
-                'everyone_can_book' => $room->everyone_can_book
+                'adjoining_rooms' => $room->adjoining_rooms->map(fn(Room $adjoining_room) => [
+                    'id' => $adjoining_room->id,
+                    'label' => $adjoining_room->name
+                ]),
+                'main_rooms' => $room->main_rooms->map(fn(Room $main_room) => [
+                    'id' => $main_room->id,
+                    'label' => $main_room->name
+                ]),
+                'categories' => $room->categories,
+                'attributes' => $room->attributes
             ]),
-
-            'room_categories' => RoomCategory::all()->map(fn (RoomCategory $roomCategory) => [
-                'id' => $roomCategory->id,
-                'name' => $roomCategory->name,
-            ]),
-
-            'room_attributes' => RoomAttribute::all()->map(fn (RoomAttribute $roomAttribute) => [
-                'id' => $roomAttribute->id,
-                'name' => $roomAttribute->name,
-            ]),
-
-            'event_types' => EventType::all()->map(fn (EventType $eventType) => [
-                'id' => $eventType->id,
-                'name' => $eventType->name,
-            ]),
-
-            'areas' => Area::all()->map(fn (Area $area) => [
-                'id' => $area->id,
-                'label' => $area->name,
-            ]),
+            'roomCategories' => $resource->roomCategories,
+            'roomAttributes' =>  $resource->roomAttributes,
+            'eventTypes' => $resource->eventTypes,
+            'areas' => $resource->areas,
         ];
     }
 }

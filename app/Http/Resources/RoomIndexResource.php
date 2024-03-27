@@ -2,24 +2,22 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Event;
+use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Room
+ * @mixin \Room
  */
 class RoomIndexResource extends JsonResource
 {
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     * @return array<string, mixed>
      */
-    public function toArray($request)
+    // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundInExtendedClass
+    public function toArray($request): array
     {
         $startTime = Carbon::parse($request->get('start_time'));
         $endTime = Carbon::parse($request->get('start_time'));
@@ -42,7 +40,11 @@ class RoomIndexResource extends JsonResource
             'start_date_dt_local' => Carbon::parse($this->start_date)->toDateString(),
             'end_date' => Carbon::parse($this->end_date)->format('d.m.Y'),
             'end_date_dt_local' => Carbon::parse($this->end_date)->toDateString(),
-            'room_admins' => UserIconResource::collection($this->room_admins)->resolve(),
+            'room_admins' => UserIconResource::collection($this->users()->wherePivot('is_admin', true)->get())
+                ->resolve(),
+            'room_categories' => $this->categories()->get(),
+            'room_attributes' => $this->attributes,
+            'adjoining_rooms' => $this->adjoining_rooms()->get()
         ];
     }
 }

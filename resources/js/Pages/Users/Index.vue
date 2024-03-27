@@ -1,16 +1,52 @@
 <template>
-    <app-layout>
-        <div class="py-4">
-            <div class="max-w-screen-lg my-12 flex flex-row ml-12 mr-40">
+    <UserHeader>
+        <div class="">
+            <div class="max-w-screen-xl my-12 flex flex-row">
                 <div class="flex flex-1 flex-wrap justify-between">
                     <div class="flex">
-                        <div class="w-full flex my-auto">
-                            <h2 class="text-3xl font-black font-lexend">Alle Nutzer*innen</h2>
-                            <AddButton data-modal-toggle="invite-user" id="invite-users" text="Nutzer einladen"
-                                       mode="page"/>
-                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                <span class="font-nanum tracking-tight text-lg text-secondary ml-1 my-auto">Lade neue Nutzer*innen ein</span>
+                        <div class="w-full flex my-auto items-center">
+                            <Listbox as="div" class="flex" v-model="selectedFilter">
+                                <ListboxButton
+                                    class="bg-white w-full relative cursor-pointer focus:outline-none">
+                                    <div class="flex items-center my-auto">
+                                        <h2 class="headline1">
+                                            {{ selectedFilter.name }}</h2>
+                                        <span
+                                            class="inset-y-0 flex items-center pr-2 pointer-events-none">
+                                            <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
+                                         </span>
+                                    </div>
+                                </ListboxButton>
+                                <transition leave-active-class="transition ease-in duration-100"
+                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                    <ListboxOptions
+                                        class="absolute w-80 z-10 mt-12 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
+                                        <ListboxOption as="template" class="max-h-8"
+                                                       v-for="filter in displayFilters"
+                                                       :key="filter.name"
+                                                       :value="filter"
+                                                       v-slot="{ active, selected }">
+                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
+                                                        {{ filter.name }}
+                                                    </span>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </Listbox>
+                            <div class="flex" v-if="this.$can('can manage workers') || this.hasAdminRole()">
+                                <button @click="openSelectAddUsersModal = true" type="button"
+                                        class="rounded-full bg-buttonBlue p-1 mr-1 text-white shadow-sm hover:bg-buttonHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600">
+                                    <PlusIcon class="h-4 w-4" aria-hidden="true"/>
+                                </button>
+                                <div v-if="this.$page.props.show_hints" class="flex mt-1">
+                                    <div  class="mt-1 ml-2">
+                                        <SvgCollection svgName="arrowLeft"/>
+                                    </div>
+                                    <span class="hind ml-1 my-auto">{{ $t('Invite new users')}}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -19,39 +55,41 @@
                              class="cursor-pointer inset-y-0 mr-3">
                             <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                         </div>
-                        <div v-else class="flex items-center w-full w-64 mr-2">
+                        <div v-else class="flex items-center w-64 mr-2">
                             <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full "
-                                   placeholder="Suche nach Nutzer*innen"/>
+                                   placeholder="Suche nach User*innen"
+                                   class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                         </div>
                     </div>
                     <ul role="list" class="mt-6 w-full">
-                        <li v-if="user_query.length < 1" v-for="(user,index) in users" :key="user.email"
-                            class="py-6 flex justify-between">
+                        <li v-if="user_search_results.length < 1" v-for="(user,index) in userObjectsToShow"
+                            :key="user.email" class="py-6 flex justify-between">
                             <div class="flex">
-                                <img class="h-14 w-14 rounded-full flex-shrink-0 flex justify-start"
-                                     :src="user.profile_photo_url"
+                                <img class="h-14 w-14 rounded-full object-cover flex-shrink-0 flex justify-start"
+                                     :src="user.profile_photo_url ?? user.profile_image"
                                      alt=""/>
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
-                                        <Link :href="getEditHref(user)"
-                                              class="text-lg mr-3 font-semibold subpixel-antialiased text-primary">
-                                            {{ user.last_name }}, {{ user.first_name }}
+                                        <Link :href="checkLink(user) "
+                                              class="mr-3 sDark">
+                                            {{ user.display_name ?? user.provider_name }}
+                                            <span v-if="user.position || user.business">, </span>
                                         </Link>
-                                        <p class="ml-1 text-sm font-medium text-primary my-auto"> {{ user.business }},
-                                            {{ user.position }}</p>
+                                        <p class="ml-1 xxsDarkBold my-auto">
+                                            <span v-if="user.business">{{ user.business }}, </span>
+                                            <span v-if="user.position">{{ user.position }}</span></p>
                                     </div>
                                 </div>
                             </div>
                             <div class="flex">
-                                <div class="flex mr-8 items-center">
-                                    <div class="-mr-3" v-for="department in user.departments.slice(0,2)">
+                                <div class="flex mr-8 items-center" v-if="selectedFilter.type === 'users'">
+                                    <div class="-mr-3" v-for="department in user.departments?.slice(0,2)">
                                         <TeamIconCollection :data-tooltip-target="department.id"
                                                             class="h-10 w-10 rounded-full ring-2 ring-white"
                                                             :iconName="department.svg_name"/>
                                         <div :id="department.id" role="tooltip"
-                                             class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                             class="inline-block absolute invisible py-2 px-3 bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
                                             {{ department.name }}
                                             <div class="tooltip-arrow" data-popper-arrow></div>
                                         </div>
@@ -71,7 +109,7 @@
                                                         leave-from-class="transform opacity-100 scale-100"
                                                         leave-to-class="transform opacity-0 scale-95">
                                                 <MenuItems
-                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                     <MenuItem v-for="department in user.departments"
                                                               v-slot="{ active }">
                                                         <Link href="#"
@@ -88,23 +126,23 @@
                                         </Menu>
                                     </div>
                                 </div>
-                                <Menu as="div" class="my-auto relative">
+                                <Menu as="div" class="my-auto relative" v-if="hasAdminRole()">
                                     <div>
                                         <div class="flex">
                                             <MenuButton
-                                                class="flex">
+                                                class="flex bg-tagBg p-0.5 rounded-full">
                                                 <DotsVerticalIcon
-                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                     aria-hidden="true"/>
                                             </MenuButton>
-                                            <div v-if="$page.props.can.show_hints && index === 0"
-                                                 class="absolute flex w-40 ml-6">
-                                                <div>
-                                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
+                                            <div v-if="this.$page.props.show_hints && index === 0"
+                                                 class="absolute flex w-40 ml-9">
+                                                <div class="mt-1 ml-1">
+                                                    <SvgCollection svgName="arrowLeft"/>
                                                 </div>
                                                 <div class="flex">
                                                     <span
-                                                        class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite einen Nutzer</span>
+                                                        class="hind ml-1">{{ $t('Edit a user')}}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -116,24 +154,32 @@
                                                 leave-from-class="transform opacity-100 scale-100"
                                                 leave-to-class="transform opacity-0 scale-95">
                                         <MenuItems
-                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
+                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none z-10">
                                             <div class="py-1">
-                                                <MenuItem v-slot="{ active }">
-                                                    <a :href="getEditHref(user)"
+                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
+                                                    <a :href="checkLink(user)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <PencilAltIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        Profil bearbeiten
+                                                        {{ $t('Edit Profile')}}
                                                     </a>
                                                 </MenuItem>
-                                                <MenuItem v-slot="{ active }">
+                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a @click="openDeleteUserModal(user)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        Nutzer*in löschen
+                                                        <span v-if="user.type === 'user'">
+                                                            {{ $t('Delete user')}}
+                                                        </span>
+                                                        <span v-else-if="user.type === 'freelancer'">
+                                                            {{ $t('Delete freelancer')}}
+                                                        </span>
+                                                        <span v-else-if="user.type === 'service_provider'">
+                                                            {{ $t('Delete service provider')}}
+                                                        </span>
                                                     </a>
                                                 </MenuItem>
                                             </div>
@@ -145,16 +191,16 @@
                         <li v-else v-for="(user,index) in user_search_results" :key="user.email"
                             class="py-6 flex justify-between">
                             <div class="flex">
-                                <img class="h-14 w-14 rounded-full flex-shrink-0 flex justify-start"
+                                <img class="h-14 w-14 rounded-full object-cover flex-shrink-0 flex justify-start"
                                      :src="user.profile_photo_url"
                                      alt=""/>
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
-                                        <Link :href="getEditHref(user)"
-                                              class="text-lg mr-3 font-semibold subpixel-antialiased text-primary">
-                                            {{ user.last_name }}, {{ user.first_name }}
+                                        <Link :href="getEditHref(user)" v-if="hasAdminRole()"
+                                              class="mr-3 sDark">
+                                            {{ user.name }}
                                         </Link>
-                                        <p class="ml-1 text-sm font-medium text-primary my-auto"> {{ user.business }},
+                                        <p class="ml-1 xxsDarkBold my-auto"> {{ user.business }},
                                             {{ user.position }}</p>
                                     </div>
                                 </div>
@@ -166,7 +212,7 @@
                                                             class="h-10 w-10 rounded-full ring-2 ring-white"
                                                             :iconName="department.svg_name"/>
                                         <div :id="department.id" role="tooltip"
-                                             class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                             class="inline-block absolute invisible py-2 px-3 bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
                                             {{ department.name }}
                                             <div class="tooltip-arrow" data-popper-arrow></div>
                                         </div>
@@ -186,7 +232,7 @@
                                                         leave-from-class="transform opacity-100 scale-100"
                                                         leave-to-class="transform opacity-0 scale-95">
                                                 <MenuItems
-                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                     <MenuItem v-for="department in user.departments"
                                                               v-slot="{ active }">
                                                         <Link href="#"
@@ -203,23 +249,23 @@
                                         </Menu>
                                     </div>
                                 </div>
-                                <Menu as="div" class="my-auto relative">
+                                <Menu as="div" class="my-auto relative" v-if="hasAdminRole()">
                                     <div>
                                         <div class="flex">
                                             <MenuButton
-                                                class="flex">
+                                                class="flex bg-tagBg p-0.5 rounded-full">
                                                 <DotsVerticalIcon
-                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                     aria-hidden="true"/>
                                             </MenuButton>
-                                            <div v-if="$page.props.can.show_hints && index === 0"
+                                            <div v-if="this.$page.props.show_hints && index === 0"
                                                  class="absolute flex w-40 ml-6">
-                                                <div>
-                                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
+                                                <div class="mt-1 ml-1">
+                                                    <SvgCollection svgName="arrowLeft"/>
                                                 </div>
                                                 <div class="flex">
                                                     <span
-                                                        class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite einen Nutzer</span>
+                                                        class="hind ml-2 text-secondary tracking-tight text-lg">{{ $t('Edit a user')}}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -231,24 +277,24 @@
                                                 leave-from-class="transform opacity-100 scale-100"
                                                 leave-to-class="transform opacity-0 scale-95">
                                         <MenuItems
-                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
+                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none z-10">
                                             <div class="py-1">
-                                                <MenuItem v-slot="{ active }">
+                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a :href="getEditHref(user)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <PencilAltIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        Profil bearbeiten
+                                                        {{ $t('Edit Profile')}}
                                                     </a>
                                                 </MenuItem>
-                                                <MenuItem v-slot="{ active }">
+                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a @click="openDeleteUserModal(user)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        Nutzer*in löschen
+                                                        {{ $t('Delete user')}}
                                                     </a>
                                                 </MenuItem>
                                             </div>
@@ -261,206 +307,38 @@
                 </div>
             </div>
         </div>
-        <!-- Nutzer*innen einladen Modal -->
-        <flowbite-modal style="margin-top: 1rem" modal_id="invite-user" aria-hidden="true" @close="closeAddUserModal">
-
-            <div class="mx-3">
-                <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-9 mt-48"/>
-                <XIcon @click="closeAddUserModal"
-                       class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 -mt-12 mr-10"
-                       aria-hidden="true"/>
-                <div class="mt-4 text-2xl font-black">
-                    Nutzer*innen einladen
-                </div>
-                <div class="text-secondary tracking-tight leading-6 sub">
-                    Du kannst mehrere Nutzer*innen mit den gleichen Nutzerrechten und Teamzugehörigkeiten auf einmal
-                    einladen.
-                </div>
-                <div class="mt-4">
-                    <div class="flex mt-8">
-                        <div class="relative w-72 mr-4">
-                            <input v-on:keyup.enter=addEmailToInvitationArray id="email" v-model="emailInput"
-                                   type="text"
-                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                   placeholder="placeholder"/>
-                            <label for="email"
-                                   class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail*</label>
-                        </div>
-                        <jet-input-error :message="form.error" class="mt-2"/>
-
-                        <div class="flex m-2">
-                            <button
-                                :class="[emailInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
-                                @click="addEmailToInvitationArray" :disabled="!emailInput">
-                                <CheckIcon class="h-5 w-5"></CheckIcon>
-                            </button>
-                        </div>
-
-                    </div>
-                    <span v-for="(email,index) in form.user_emails"
-                          class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
-                            {{ email }}
-                    <button type="button" @click="deleteEmailFromInvitationArray(index)">
-                    <span class="sr-only">Email aus Einladung entfernen</span>
-                        <XCircleIcon
-                            class="ml-1 mt-1 h-5 w-5 hover:text-error "/>
-                    </button>
-                    </span>
-                    <ul>
-                        <li class="text-error text-sm subpixel-antialiased" v-for="(error,key) in errors" :key="key">
-                            {{ error }}
-                        </li>
-                    </ul>
-                    <span v-if="form.departments.length === 0" class="flex inline-flex mt-16 pt-1 -mr-3">
-
-                        </span>
-                    <span class="flex inline-flex mt-4 -mr-3" v-for="team in form.departments">
-                                <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white"
-                                                    :iconName="team.svg_name"/>
-                        </span>
-                    <Disclosure as="div">
-                        <div class="flex mt-4 mb-10">
-                            <DisclosureButton>
-                                <AddButton text="Zu Teams zuweisen" mode="page"/>
-                            </DisclosureButton>
-                            <div v-if="$page.props.can.show_hints && form.departments.length === 0" class="flex mt-2">
-                                <SvgCollection svgName="arrowLeft" class="mt-2 ml-2"/>
-                                <span class="font-nanum tracking-tight text-lg text-secondary ml-1 my-auto">Teile die Nutzer*innen direkt deinen Teams zu</span>
-                            </div>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <DisclosurePanel
-                                class="origin-top-right absolute overflow-y-auto max-h-48 w-72 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                <div v-if="departments.length === 0">
-                                    <span class="text-secondary p-1 ml-4 flex flex-nowrap">Keine Teams zum Zuweisen vorhanden</span>
-                                </div>
-                                <div v-for="team in departments">
-                                        <span class="flex "
-                                              :class="[team.checked ? 'text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-md subpixel-antialiased']">
-                                            <input :key="team.name" v-model="team.checked" type="checkbox"
-                                                   @change="teamChecked(team)"
-                                                   class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
-                                            <TeamIconCollection class="h-9 w-9 rounded-full" :iconName="team.svg_name"/>
-                                            <span class="ml-2">
-                                            {{ team.name }}
-                                            </span>
-                                        </span>
-                                </div>
-                            </DisclosurePanel>
-                        </transition>
-                    </Disclosure>
-                    <div class="pb-5 my-2 border-gray-200 sm:pb-0">
-                        <h3 class="text-xl mt-6 mb-8 leading-6 font-bold font-lexend text-gray-900">Nutzerrechte
-                            definieren*</h3>
-
-                        <div class="mb-8">
-                            <div v-for="role in roleCheckboxes">
-                                <Checkbox @click="changeRole(role)" :item="role"></Checkbox>
-                            </div>
-                            <!--
-                            <RadioGroup v-model="selected">
-                                <div class="bg-white rounded-md -space-y-px">
-                                    <RadioGroupOption as="template" :selected="role.name ==='Keine Rollenrechte'" class="flex" v-for="role in roleCheckboxes" :key="role.name" :value="role" v-slot="{ checked, active }">
-                                        <div class="flex mt-4 flex-row cursor-pointer focus:outline-none">
-                                            <div class="flex items-center text-sm">
-                                                    <span :class="[checked ? 'bg-success' : 'bg-white border-2 border-gray-300', 'ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success  flex items-center justify-center']" aria-hidden="true">
-                                                        <CheckIcon v-if="checked" class="w-6 h-6 text-white" />
-                                                    </span>
-                                                <RadioGroupLabel as="span" :class="[selected.roleName === role.roleName ? 'font-bold' : '', 'text-primary ml-3']">{{ role.name }}</RadioGroupLabel>
-                                            </div>
-                                            <div class="flex flex-1 justify-end">
-
-                                                <div :data-tooltip-target="role.roleName">
-                                                    <InformationCircleIcon  class="h-7 w-7 flex text-gray-400"
-                                                                           aria-hidden="true"/>
-                                                </div>
-
-
-                                                <div :id="role.roleName" role="tooltip"
-                                                     class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-bold text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
-                                                    {{role.tooltipText}}
-                                                    <div class="tooltip-arrow" data-popper-arrow></div>
-                                                </div>
-
-                                            </div>
-                                        </div>
-
-                                    </RadioGroupOption>
-                                </div>
-                            </RadioGroup>
-                            -->
-                        </div>
-
-                    </div>
-                    <div v-if="this.form.role !== 'admin'">
-                        <div v-on:click="showUserPermissions = !showUserPermissions">
-                            <h2 class="text-sm flex text-gray-400 font-semibold cursor-pointer mb-2">
-                                Nutzerrechte
-                                <ChevronUpIcon v-if="showUserPermissions"
-                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                                <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
-                            </h2>
-                        </div>
-                        <div v-if="showUserPermissions && this.form.role !== 'admin'"
-                             class="flex flex-col max-h-96 overflow-y-auto">
-
-                            <div v-for="(permissions, group) in all_permissions">
-
-                                <h3 class="text-secondary uppercase text-xs mb-2 mt-6">{{ group }}</h3>
-
-                                <div class="relative w-full flex items-center"
-                                     v-for="(permission, index) in permissions" :key=index>
-                                    <Checkbox @click="changePermission(permission)" class="w-full"
-                                              :item="permission"></Checkbox>
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="w-full items-center text-center">
-                    <AddButton :class="[form.processing || (form.user_emails.length === 0 && emailInput.length < 3) ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                               class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                               @click="addUser"
-                               :disabled=" form.processing || (form.user_emails.length === 0 && emailInput.length < 3)"
-                               text="Einladen" mode="modal"/>
-                </div>
-            </div>
-        </flowbite-modal>
         <!-- Nutzer*in löschen Modal -->
         <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
-                        Nutzer*in löschen
+                    <div class="headline1 my-2">
+                        <span v-if="userToDelete.type === 'user'">
+                            {{ $t('Delete user')}}
+                        </span>
+                        <span v-else-if="userToDelete.type === 'freelancer'">
+                            {{ $t('Delete freelancer')}}
+                        </span>
+                        <span v-else-if="userToDelete.type === 'service_provider'">
+                            {{ $t('Delete service provider')}}
+                        </span>
                     </div>
                     <XIcon @click="closeDeleteUserModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du {{ userToDelete.last_name + "," }} {{ userToDelete.first_name }} aus dem
-                        System löschen möchtest?
+                    <div class="errorText">
+                        <span v-if="userToDelete.type === 'user' || userToDelete.type === 'freelancer'">
+                            {{ $t('Are you sure you want to delete {last_name}, {first_name} from the system?', { last_name: userToDelete.last_name, first_name: userToDelete.first_name}) }}
+                        </span>
+                        <span v-else-if="userToDelete.type === 'service_provider'">
+                            {{ $t('Are you sure you want to delete { serviceProvider } from the system?', { serviceProvider: userToDelete.provider_name }) }}
+                        </span>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteUser">
-                            Löschen
-                        </button>
+                        <FormButton :text="$t('Delete')" @click="deleteUser" />
                         <div class="flex my-auto">
                             <span @click="closeDeleteUserModal()"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{ $t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -469,30 +347,27 @@
 
         </jet-dialog-modal>
         <!-- Success Modal -->
-        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
-            <template #content>
-                <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
-                        Nutzer*innen eingeladen
-                    </div>
-                    <XIcon @click="closeSuccessModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
-                        Die Nutzer*innen haben eine Einladungs-E-Mail erhalten.
-                    </div>
-                    <div class="mt-6">
-                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="closeSuccessModal">
-                            <CheckIcon class="h-6 w-6 text-secondaryHover"/>
-                        </button>
-                    </div>
-                </div>
+        <SuccessModal
+            :open="showSuccessModal"
+            @closed="closeSuccessModal"
+            :title="$t('Users invited')"
+            :description="$t('The users have received an invitation email.')"
+            button="Okay"
+            />
+    </UserHeader>
 
-            </template>
-        </jet-dialog-modal>
-    </app-layout>
+    <!-- Nutzer*innen einladen Modal -->
+    <invite-users-modal
+        :show="this.addingUser"
+        :closeModal="closeAddUserModal"
+        :all_permissions="all_permissions"
+        :departments="departments"
+        :roles="roles"
+        :permission_presets="permission_presets"
+    />
+
+    <AddUsersModal v-if="openSelectAddUsersModal" @closeModal="openSelectAddUsersModal = false"
+                   @openUserModal="addingUser = true"/>
 </template>
 
 <script>
@@ -500,21 +375,8 @@
 
 import {Inertia} from "@inertiajs/inertia";
 
-const roleCheckboxes = [
-    {name: 'Standarduser', roleName: "user", tooltipText: "Hier fehlt noch info text", showIcon: true, checked: false},
-    {
-        name: 'Adminrechte',
-        roleName: "admin",
-        tooltipText: "Administratoren haben im gesamten System Lese- und Schreibrechte - weitere Einstellungen entfallen",
-        showIcon: true,
-        checked: false
-    },
-
-]
 
 import {defineComponent} from 'vue'
-import {ref} from 'vue'
-import AddButton from "@/Layouts/Components/AddButton";
 import {
     Disclosure,
     DisclosureButton,
@@ -526,11 +388,11 @@ import {
     RadioGroup,
     RadioGroupDescription,
     RadioGroupLabel,
-    RadioGroupOption
+    RadioGroupOption,
+    Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions
 } from "@headlessui/vue";
-import AppLayout from '@/Layouts/AppLayout.vue'
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
-import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon, CheckIcon} from '@heroicons/vue/solid'
+import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon, CheckIcon, PlusIcon} from '@heroicons/vue/solid'
 import {SearchIcon} from "@heroicons/vue/outline";
 import JetButton from '@/Jetstream/Button.vue'
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
@@ -538,18 +400,27 @@ import JetInput from '@/Jetstream/Input.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
 import {InformationCircleIcon, XIcon} from "@heroicons/vue/outline";
-import {useForm} from "@inertiajs/inertia-vue3";
 import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import FlowbiteModal from "@/Flowbite/FlowbiteModal";
+import InputComponent from "@/Layouts/Components/InputComponent";
+import InviteUsersModal from "@/Layouts/Components/InviteUsersModal.vue";
+import Permissions from "@/mixins/Permissions.vue";
+import UserHeader from "@/Pages/Users/UserHeader.vue";
+import AddUsersModal from "@/Pages/Users/Components/AddUsersModal.vue";
+import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
-        AddButton,
+        FormButton,
+        SuccessModal,
+        AddUsersModal,
         FlowbiteModal,
-        AppLayout,
+        UserHeader,
         DotsVerticalIcon,
         PlusSmIcon,
         SearchIcon,
@@ -581,33 +452,83 @@ export default defineComponent({
         RadioGroupLabel,
         RadioGroupOption,
         Link,
+        InputComponent,
+        InviteUsersModal,
+        Listbox,
+        ListboxButton,
+        ListboxLabel,
+        ListboxOption,
+        ListboxOptions,
+        PlusIcon
     },
-    props: ['users', 'departments', 'all_permissions'],
+    props: [
+        'users',
+        'departments',
+        'all_permissions',
+        'roles',
+        'freelancers',
+        'serviceProviders',
+        'permission_presets'
+    ],
     data() {
         return {
             showUserPermissions: true,
             addingUser: false,
             deletingUser: false,
             showSuccessModal: false,
-            userToDelete: {},
-            emailInput: "",
+            userToDelete: null,
             showSearchbar: false,
             user_query: "",
             user_search_results: [],
-            form: useForm({
-                user_emails: [],
-                permissions: [],
-                departments: [],
-                role: '',
-            }),
+            displayFilters: [
+                {
+                    'name': this.$t('All users'),
+                    'type': 'users'
+                },
+                {
+                    'name': this.$t('All freelancers'),
+                    'type': 'freelancer'
+                },
+                {
+                    'name': this.$t('All service providers'),
+                    'type': 'service_provider'
+                },
+                {
+                    'name': this.$t('All available users'),
+                    'type': 'all'
+                }
+            ],
+            selectedFilter: {'name': this.$t('All users'), 'type': 'users'},
+            openSelectAddUsersModal: false
         }
     },
     computed: {
-        errors() {
-            return this.$page.props.errors;
-        }
+        userObjectsToShow: function () {
+            if (this.selectedFilter.type === 'users') {
+                return this.users
+            } else if (this.selectedFilter.type === 'freelancer') {
+                return this.freelancers;
+            } else if (this.selectedFilter.type === 'service_provider') {
+                return this.serviceProviders;
+            } else if (this.selectedFilter.type === 'all') {
+                return this.users.concat(this.freelancers, this.serviceProviders)
+            }
+        },
     },
     methods: {
+        checkLink(user) {
+            if (user.type === 'freelancer') {
+                return route('freelancer.show', {freelancer: user.id});
+            }
+            if (user.type === 'service_provider') {
+                return route('service_provider.show', {serviceProvider: user.id});
+            }
+            if (user.user === 'user') {
+                return route('user.edit.shiftplan', {user: user.id});
+            }
+
+            return route('user.edit.shiftplan', {user: user.id});
+        },
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;
             this.user_query = ''
@@ -624,127 +545,41 @@ export default defineComponent({
             this.deletingUser = true;
         },
         closeDeleteUserModal() {
-            this.userToDelete = {};
+            this.userToDelete = null;
             this.deletingUser = false;
         },
         deleteUser() {
-            Inertia.delete(`/users/${this.userToDelete.id}`);
-            this.closeDeleteUserModal()
-        },
-        openAddUserModal() {
-            this.addingUser = true
-        },
-        changeRole(role) {
-            if (!role.checked) {
-                this.form.role = role.roleName;
-                this.uncheckRolesAndPermissions();
-                role.checked = true;
-                if (role.roleName === "user") {
-                    this.all_permissions.Projekte.forEach(permission => {
-                        if (permission.name === 'view projects') {
-                            permission.checked = true;
-                        }
-                    })
-                    this.all_permissions.Raumbelegungen.forEach(permission => {
-                        if (permission.name === 'request room occupancy' || permission.name === 'view occupancy requests') {
-                            permission.checked = true;
-                        }
-                    })
-                }
-            } else {
-                if (this.form.role === role.roleName) {
-                    this.form.role = '';
-                    role.checked = false;
-                    if (role.roleName === "user") {
-                        this.all_permissions.Projekte.forEach(permission => {
-                            if (permission.name === 'view projects') {
-                                permission.checked = false;
-                            }
-                        })
-                        this.all_permissions.Raumbelegungen.forEach(permission => {
-                            if (permission.name === 'request room occupancy' || permission.name === 'view occupancy requests') {
-                                permission.checked = false;
-                            }
-                        })
+            let desiredRoute = null;
+
+            switch (this.userToDelete.type) {
+                case 'user':
+                    desiredRoute = route('user.destroy', {user: this.userToDelete.id});
+                    break;
+                case 'freelancer':
+                    desiredRoute = route('freelancer.destroy', {freelancer: this.userToDelete.id});
+                    break;
+                case 'service_provider':
+                    desiredRoute = route('service_provider.destroy', {serviceProvider: this.userToDelete.id});
+                    break;
+            }
+
+            if (desiredRoute) {
+                Inertia.delete(
+                    desiredRoute,
+                    {
+                        onSuccess: () => this.closeDeleteUserModal()
                     }
-                }
-            }
-
-        },
-        changePermission(permission) {
-            if (!permission.checked) {
-                this.form.permissions.push(permission.name);
-                permission.checked = true;
-            } else {
-                if (this.form.permissions.includes(permission.name)) {
-                    this.form.permissions = this.form.permissions.filter(permissionName => permissionName !== permission.name);
-                    permission.checked = false;
-                }
-            }
-
-        },
-        uncheckRolesAndPermissions() {
-            this.roleCheckboxes.forEach((role) => {
-                role.checked = false;
-            })
-            this.all_permissions.Projekte.forEach((permission) => {
-                permission.checked = false;
-            })
-            this.all_permissions.Raumbelegungen.forEach((permission) => {
-                permission.checked = false;
-            })
-            this.all_permissions.Systemeinstellungen.forEach((permission) => {
-                permission.checked = false;
-            })
-        },
-        teamChecked(team) {
-            if (team.checked) {
-                this.form.departments.push(team);
-            } else {
-                const spliceIndex = this.form.departments.findIndex(teamToSplice => {
-                    return team.id === teamToSplice.id
-                })
-                this.form.departments.splice(spliceIndex, 1);
+                );
             }
         },
-        addEmailToInvitationArray() {
-            if (this.emailInput.indexOf(' ') === -1) {
-                this.form.user_emails.push(this.emailInput);
-            }
-            this.emailInput = "";
-        },
-        deleteEmailFromInvitationArray(index) {
-            this.form.user_emails.splice(index, 1);
-        },
-        addUser() {
-            if (this.emailInput.length >= 3) {
-                this.form.user_emails.push(this.emailInput);
-                this.emailInput = '';
-            }
-            this.form.post(route('invitations.store'), {
-                onSuccess: () => {
-                    document.getElementById('invite-users').click();
-                    this.closeAddUserModal();
-                    this.openSuccessModal();
-                }
-            });
-        },
-        closeAddUserModal() {
+        closeAddUserModal(bool) {
             this.addingUser = false;
-            document.getElementById('invite-users').click()
-            this.emailInput = "";
-            this.form.user_emails = [];
-            this.form.permissions = [];
-            this.form.departments = [];
-            this.form.role = '';
-            this.departments.forEach((team) => {
-                team.checked = false;
-            })
-            this.uncheckRolesAndPermissions();
-
+            if (bool) {
+                this.openSuccessModal();
+            }
         },
         getEditHref(user) {
-            return route('user.edit', {user: user.id});
+            return route('user.edit.shiftplan', {user: user.id});
         }
     },
     watch: {
@@ -755,17 +590,16 @@ export default defineComponent({
                         params: {query: this.user_query}
                     }).then(response => {
                         this.user_search_results = response.data
+                        this.user_search_results.forEach((user) => {
+                            user.name = user.first_name + ' ' + user.last_name;
+                        })
                     })
+                } else {
+                    this.user_search_results = [];
                 }
             },
             deep: true
         }
     },
-    setup() {
-
-        return {
-            roleCheckboxes
-        }
-    }
 })
 </script>

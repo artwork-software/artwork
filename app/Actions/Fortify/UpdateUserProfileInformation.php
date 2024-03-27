@@ -9,16 +9,8 @@ use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
 
 class UpdateUserProfileInformation implements UpdatesUserProfileInformation
 {
-    /**
-     * Validate and update the given user's profile information.
-     *
-     * @param  mixed  $user
-     * @param  array  $input
-     * @return void
-     */
-    public function update($user, array $input)
+    public function update(mixed $user, array $input): void
     {
-
         Validator::make($input, [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
@@ -34,30 +26,22 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             $user->updateProfilePhoto($input['photo']);
         }
 
-        if ($input['email'] !== $user->email &&
-            $user instanceof MustVerifyEmail) {
+        if ($input['email'] !== $user->email && $user instanceof MustVerifyEmail) {
             $this->updateVerifiedUser($user, $input);
         } else {
             $user->forceFill([
                 'first_name' => $input['first_name'],
                 'last_name' => $input['last_name'],
                 'email' => $input['email'],
-                'phone_number' => $input['phone_number'],
-                'position' => $input['position'],
-                'business' => $input['business'],
-                'description' => $input['description'],
+                'phone_number' => $input['phone_number'] ?? null,
+                'position' => $input['position'] ?? null,
+                'business' => $input['business'] ?? null,
+                'description' => $input['description'] ?? null,
             ])->save();
         }
     }
 
-    /**
-     * Update the given verified user's profile information.
-     *
-     * @param  mixed  $user
-     * @param  array  $input
-     * @return void
-     */
-    protected function updateVerifiedUser($user, array $input)
+    protected function updateVerifiedUser(mixed $user, array $input): void
     {
         $user->forceFill([
             'first_name' => $input['first_name'],

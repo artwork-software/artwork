@@ -11,9 +11,9 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('department_invitation', function (Blueprint $table) {
+        Schema::create('department_invitation', function (Blueprint $table): void {
             $table->id();
             $table->integer('invitation_id');
             $table->integer('department_id');
@@ -26,7 +26,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('department_invitation');
     }

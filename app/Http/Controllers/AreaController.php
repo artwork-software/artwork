@@ -4,19 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\RoomIndexResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
-use App\Models\Area;
-use App\Models\RoomAttribute;
-use App\Models\RoomCategory;
 use App\Models\User;
+use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Area\Services\AreaService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Artwork\Modules\Room\Models\RoomAttribute;
+use Artwork\Modules\Room\Models\RoomCategory;
+use Inertia\Inertia;
 
 class AreaController extends Controller
 {
-
-    public function __construct()
+    public function __construct(private readonly AreaService $areaService)
     {
         $this->authorizeResource(Area::class);
     }
@@ -26,7 +28,7 @@ class AreaController extends Controller
      *
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
-    public function index()
+    public function index(): \Inertia\Response|\Inertia\ResponseFactory
     {
         return inertia('Areas/AreaManagement', [
             'areas' => Area::all()->map(fn ($area) => [
@@ -46,40 +48,25 @@ class AreaController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        Area::create([
-            'name' => $request->name
-        ]);
-
-        return Redirect::route('areas.management')->with('success', 'Area created.');
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Area  $area
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Area $area)
-    {
-        //not needed
+        $this->areaService->createByRequest($request);
+        return Redirect::route('areas.management');
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Area  $area
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  \Area  $area
+     * @return RedirectResponse
      */
-    public function update(Request $request, Area $area)
+    public function update(Request $request, Area $area): RedirectResponse
     {
-        $area->update($request->only('name'));
-
-        return Redirect::route('areas.management')->with('success', 'Area updated');
+        $this->areaService->updateByRequest($area, $request);
+        return Redirect::route('areas.management');
     }
 
     /**
@@ -87,53 +74,37 @@ class AreaController extends Controller
      */
     public function duplicate(Area $area)
     {
-        $new_area = Area::create([
-            'name' => '(Kopie) ' . $area->name
-        ]);
-
-        foreach ($area->rooms as $room) {
-            $new_room = $room->replicate();
-            $new_room->name = '(Kopie) ' . $room->name;
-            $new_room->created_at = Carbon::now();
-            $new_area->rooms()->save($new_room);
-            $new_area->save();
-        }
-
-        return Redirect::route('areas.management')->with('success', 'Area created.');
+        $this->areaService->duplicateByAreaModel($area);
+        return Redirect::route('areas.management');
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Area  $area
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  \Area  $area
+     * @return RedirectResponse
      */
-    public function destroy(Area $area)
+    public function destroy(Area $area): RedirectResponse
     {
-        $area->delete();
-
-        return Redirect::route('areas.management')->with('success', 'Area moved to trash');
+        $this->areaService->delete($area);
+        return Redirect::route('areas.management');
     }
 
     public function forceDelete(int $id)
     {
         $area = Area::onlyTrashed()->findOrFail($id);
-
         $area->forceDelete();
-
-        return Redirect::route('areas.trashed')->with('success', 'Room restored');
+        return Redirect::route('areas.trashed');
     }
 
     public function restore(int $id)
     {
         $area = Area::onlyTrashed()->findOrFail($id);
-
         $area->restore();
         foreach ($area->rooms() as $room) {
             $room->restore();
         }
-
-        return Redirect::route('areas.trashed')->with('success', 'Room restored');
+        return Redirect::route('areas.trashed');
     }
 
     public function getTrashed()

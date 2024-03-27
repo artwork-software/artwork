@@ -40,7 +40,6 @@ return [
             ],
         ]
     ],
-
     'task' => [
         'created' => 'Aufgabe {name} zur Checkliste {checklistName} hinzugefügt',
         'destroyed' => 'Aufgabe {name} aus der Checkliste {checklistName} entfernt',
@@ -64,7 +63,6 @@ return [
             ],
         ]
     ],
-
     'checklist' => [
         'destroyed' => 'Checkliste {name} gelöscht',
         'properties' => [
@@ -73,6 +71,4 @@ return [
             ],
         ],
     ],
-
 ];
-

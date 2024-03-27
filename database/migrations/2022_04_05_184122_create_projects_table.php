@@ -11,17 +11,21 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('projects', function (Blueprint $table) {
+        Schema::create('projects', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
             $table->longText('description')->nullable();
+            $table->longText('shift_description')->nullable();
             $table->string('number_of_participants')->nullable();
-            $table->string('cost_center')->nullable();
-            $table->unsignedBigInteger('sector_id')->nullable();
-            $table->unsignedBigInteger('category_id')->nullable();
-            $table->unsignedBigInteger('genre_id')->nullable();
+            $table->string('key_visual_path')->nullable();
+            $table->string('num_of_guests')->nullable()->default(null);
+            $table->string('entry_fee')->nullable()->default(null);
+            $table->boolean('registration_required')->nullable()->default(false);
+            $table->string('register_by')->nullable()->default(null);
+            $table->string('registration_deadline')->nullable()->default(null);
+            $table->boolean('closed_society')->nullable()->default(false);
             $table->timestamps();
             $table->softDeletes();
         });
@@ -32,8 +36,12 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
+        Schema::table('projects', function (Blueprint $table): void {
+            $table->dropForeign(['cost_center_id']);
+            $table->dropColumn('cost_center_id');
+        });
         Schema::dropIfExists('projects');
     }
 };

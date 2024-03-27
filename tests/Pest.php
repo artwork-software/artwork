@@ -14,9 +14,8 @@ use Tests\TestCase;
 |
 */
 
-uses(TestCase::class, RefreshDatabase::class)->beforeEach(function () {
-    $this->artisan('db:seed');
-})->in('Feature');
+uses(TestCase::class, \Illuminate\Foundation\Testing\DatabaseTransactions::class)->beforeEach(function () {
+})->in('Feature', 'Unit');
 
 /*
 |--------------------------------------------------------------------------

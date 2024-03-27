@@ -3,7 +3,7 @@
         <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
                 <div class="flex">
-                    <h2 class="font-bold font-lexend text-3xl">Teamprofil</h2>
+                    <h2 class="headline1">{{ $t('Team profile')}}</h2>
                 </div>
                 <div class="flex mt-12">
                     <Menu as="div" class=" relative">
@@ -41,27 +41,25 @@
                 </div>
                 <div class="flex items-center mt-16 mr-8">
                     <div class="mt-3" v-if="teamForm.users.length === 0">
-                        <span class="text-secondary subpixel-antialiased">Noch keine Team-Mitglieder hinzugefügt</span>
+                        <span class="xsLight">{{ $t('No team members added yet')}}</span>
                     </div>
-                    <div v-else class="mt-3 -mr-3" v-for="user in teamForm.users">
-                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
-                             :src="user.profile_photo_url"
-                             alt=""/>
-                        <UserTooltip :user="user"/>
+                    <div v-else class="mt-3" v-for="(user, index) in teamForm.users">
+                        <UserPopoverTooltip :id="user.id" :user="user" :height="9" :width="9" :class="index !== 0 ? '-ml-3' : ''"/>
                     </div>
-                    <Menu as="div" class="my-auto relative">
-                        <div class="flex mt-3">
+                    <Menu as="div" class="my-auto relative ml-4">
+                        <div class="flex">
                             <MenuButton
-                                class="flex ml-6">
-                                <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                  aria-hidden="true"/>
+                                class="flex bg-tagBg p-0.5 rounded-full">
+                                <DotsVerticalIcon
+                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                    aria-hidden="true"/>
                             </MenuButton>
-                            <div v-if="$page.props.can.show_hints" class="absolute flex w-48 ml-12">
+                            <div v-if="this.$page.props.show_hints" class="absolute flex w-48 ml-8">
                                 <div>
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 </div>
                                 <div class="flex">
-                                    <span class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Stelle dein Team zusammen</span>
+                                    <span class="ml-2 hind mt-2">{{ $t('Assemble your team')}}</span>
                                 </div>
                             </div>
                         </div>
@@ -80,7 +78,7 @@
                                             <PencilAltIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Team bearbeiten
+                                            {{ $t('Edit team')}}
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -89,7 +87,7 @@
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
-                                            Alle Teammitglieder entfernen
+                                            {{ $t('Remove all team members')}}
                                         </a>
                                     </MenuItem>
                                 </div>
@@ -99,18 +97,20 @@
                 </div>
                 <div class="pt-12">
                     <div class="mt-4 items-center">
-                        <AddButton v-if="!showSuccess" @click="editTeam"
-                                   class="border bg-primary px-5 hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                                   text="Änderungen speichern" mode="modal"/>
-                        <button v-else type="submit"
-                                class="col-span-3 items-center py-1 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                        <FormButton
+                            v-if="!showSuccess"
+                            @click="editTeam"
+                            :text="$t('Save changes')"
+                            />
+                        <button v-else
+                                class="px-20 rounded-full items-center py-1 border bg-success focus:outline-none border-transparent"
                         >
-                            <CheckIcon class="h-10 w-9 inline-block text-secondaryHover"/>
+                            <CheckIcon class="h-7 w-7 inline-block text-secondaryHover"/>
                         </button>
                     </div>
                 </div>
                 <div class="flex mt-12">
-                    <span @click="openDeleteTeamModal()" class="text-secondary subpixel-antialiased cursor-pointer">Team endgültig löschen</span>
+                    <span @click="openDeleteTeamModal()" class="xsLight cursor-pointer">{{ $t('Delete team permanently')}}</span>
                 </div>
             </div>
 
@@ -120,24 +120,24 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
-                        Team löschen
+                    <div class="headline1 my-2">
+                        {{ $t('Delete Team')}}
                     </div>
                     <XIcon @click="closeDeleteTeamModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du {{ department.name }} aus dem System löschen möchtest?
+                    <div class="errorText">
+                        {{ $t('Are you sure you want to delete the team { teamName } from the system?', { teamName: department.name })}}
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="deleteTeam">
-                            Löschen
+                            {{ $t('Delete')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteTeamModal()"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -150,24 +150,24 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
-                        Alle Teammitglieder entfernen
+                    <div class="headline1 my-2">
+                        {{$t('Delete all team members')}}
                     </div>
                     <XIcon @click="closeDeleteAllTeamMembersModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du alle Teammitglieder aus dem Team {{ department.name }} entfernen willst?
+                    <div class="errorText">
+                        {{ $t('Are you sure you want to remove all members of the team { teamName }?', { teamName: department.name })}}
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="deleteAllTeamMembers">
-                            Alle entfernen
+                            {{ $t('Delete all team members')}}
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteAllTeamMembersModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">{{$t('No, not really')}}</span>
                         </div>
                     </div>
                 </div>
@@ -180,14 +180,14 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_team_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
-                    <div class="font-bold font-lexend text-primary text-2xl my-2">
-                        Teammitglieder bearbeiten
+                    <div class="headline1 my-2">
+                        {{ $t('Edit team members')}}
                     </div>
                     <XIcon @click="closeChangeTeamMembersModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-secondary tracking-tight leading-6 sub">
-                        Tippe den Namen der Nutzer*innen ein, die du zum Team hinzufügen möchtest.
+                    <div class="xsLight">
+                        {{ $t('Enter the name of the user you want to add to the team.')}}
                     </div>
                     <div class="mt-6 relative">
                         <div class="my-auto w-full">
@@ -225,10 +225,10 @@
                         <span v-for="(user,index) in department.users"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full"
+                                <img class="flex h-11 w-11 rounded-full object-cover"
                                      :src="user.profile_photo_url"
                                      alt=""/>
-                                <span class="flex ml-4">
+                                <span class="flex ml-4 sDark">
                                 {{ user.first_name }} {{ user.last_name }}
                                     </span>
                             </div>
@@ -239,9 +239,11 @@
                         </span>
                     </div>
                     <div class="w-full items-center text-center">
-                        <AddButton @click="editTeam"
-                                   class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                                   text="Speichern" mode="modal"/>
+                        <FormButton
+                            @click="editTeam"
+                            :text="$t('Save')"
+                            class="inline-flex items-center mt-8"
+                        />
                     </div>
 
                 </div>
@@ -254,7 +256,6 @@
 
 <script>
 
-import AddButton from "@/Layouts/Components/AddButton";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -299,12 +300,17 @@ import JetInputError from "@/Jetstream/InputError";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Inertia} from "@inertiajs/inertia";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
+import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 
 export default {
+    mixins: [Permissions],
     name: "Show",
     props: ['department'],
     components: {
-        AddButton,
+        FormButton,
+        UserPopoverTooltip,
         TeamIconCollection,
         AppLayout,
         Menu,

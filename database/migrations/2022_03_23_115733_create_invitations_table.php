@@ -11,14 +11,14 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('invitations', function (Blueprint $table) {
+        Schema::create('invitations', function (Blueprint $table): void {
             $table->id();
             $table->string('email')->unique();
             $table->string('token');
             $table->json('permissions');
-            $table->string('role')->nullable();
+            $table->json('roles')->nullable();
             $table->timestamps();
         });
     }
@@ -28,7 +28,7 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('invitations');
     }

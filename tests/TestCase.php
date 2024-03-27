@@ -4,13 +4,14 @@ namespace Tests;
 
 use App\Enums\RoleNameEnum;
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Spatie\Permission\Models\Role;
 
 abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication;
-
+    use DatabaseTransactions;
 
     /**
      * @return \App\Models\User
@@ -18,8 +19,8 @@ abstract class TestCase extends BaseTestCase
     public function adminUser(User $user = null): User
     {
         $user = $user ?? User::factory()->create();
-        Role::firstOrCreate(['name' => RoleNameEnum::ADMIN]);
-        $user->assignRole(RoleNameEnum::ADMIN);
+        Role::firstOrCreate(['name' => RoleNameEnum::ARTWORK_ADMIN->value]);
+        $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
 
         return $user;
     }

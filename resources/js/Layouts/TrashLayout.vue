@@ -1,14 +1,15 @@
 <template>
     <div class="max-w-screen-xl">
         <div class="flex-wrap max-w-5xl">
-            <div class="flex flex-wrap mx-10">
-                <h2 class="font-black text-primary font-lexend text-3xl w-full">Papierkorb</h2>
-                <p class="text-secondary tracking-tight leading-6 subpixel-antialiased mt-5">Du kannst Objekte aus deinem Papierkorb wieder herstellen oder endgültig
-                    löschen. Nach 30 Tagen werden Objekte automatisch endgültig gelöscht.</p>
+            <div class="flex flex-wrap mx-10 ml-14">
+                <h2 class="font-black text-primary font-lexend text-3xl w-full">{{  $t('Recycle bin') }}</h2>
+                <p class="text-secondary tracking-tight leading-6 subpixel-antialiased mt-5">{{
+                         $t('You can restore objects from your recycle bin or delete them permanently. Items are automatically deleted permanently after 30 days.')
+                    }}</p>
                 <div class="flex flex-wrap w-full">
 
                     <div class="w-full mt-5 flex my-auto justify-between">
-                        <Listbox as="div" class="sm:col-span-3 mb-8" v-model="selectedTrash">
+                        <Listbox as="div" class="sm:col-span-3 mb-4" v-model="selectedTrash">
                             <div class="relative">
                                 <ListboxButton class="flex cursor-pointer bg-white relative pr-14 font-semibold py-2 mt-4 text-left
                                 focus:outline-none focus:ring-0 focus:ring-primary
@@ -25,10 +26,11 @@
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions
-                                        class="absolute w-40 z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1
+                                        class="absolute w-40 z-10 mt-1 w-full bg-primary shadow-lg rounded-md text-base ring-1
                                         ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="page in trashSites"
+                                                       v-show="page.available"
                                                        :key="page.name"
                                                        :value="page"
                                                        v-slot="{ active, selected }">
@@ -50,15 +52,9 @@
                                 </transition>
                             </div>
                         </Listbox>
-
-                        <div class="flex items-center">
-                            <div class="inset-y-0 mr-3 pointer-events-none">
-                                <SearchIcon class="h-5 w-5" aria-hidden="true"/>
-                            </div>
-                        </div>
                     </div>
 
-                    <slot/>
+                    <slot />
                 </div>
             </div>
         </div>
@@ -69,44 +65,87 @@
 import {Listbox, ListboxButton, ListboxOptions, ListboxOption} from "@headlessui/vue";
 import {SearchIcon, ChevronDownIcon, CheckIcon} from "@heroicons/vue/solid";
 import {Inertia} from "@inertiajs/inertia";
+import Permissions from "@/mixins/Permissions.vue";
+import {XIcon} from "@heroicons/vue/outline";
+import Input from "@/Layouts/Components/InputComponent.vue";
 
 export default {
     name: "TrashLayout",
+    mixins: [Permissions],
     data() {
         return {
-            selectedTrash: null
+            selectedTrash: null,
         }
     },
     watch: {
-      selectedTrash: {
+        selectedTrash: {
           handler() {
               Inertia.get(this.selectedTrash.href)
           },
           deep: true
-      }
+        }
     },
     created() {
-      this.selectedTrash = this.trashSites[this.$page.component]
+        this.selectedTrash = this.trashSites[this.$page.component];
     },
     computed: {
         trashSites() {
             return {
                 'Trash/Projects': {
-                    name: 'Projekte',
-                    href: route('projects.trashed')
+                    name: this.$t('Projects'),
+                    href: route('projects.trashed'),
+                    available: true
                 },
                 'Trash/Areas': {
-                    name: 'Areale',
-                    href: route('areas.trashed')
+                    name: this.$t('Areas'),
+                    href: route('areas.trashed'),
+                    available: true
                 },
                 'Trash/Rooms': {
-                    name: 'Räume',
-                    href: route('rooms.trashed')
+                    name: this.$t('Rooms'),
+                    href: route('rooms.trashed'),
+                    available: true
+                },
+                'Trash/Events': {
+                    name: this.$t('Events'),
+                    href: route('events.trashed'),
+                    available: true
+                },
+                'Trash/ProjectSettings': {
+                    name: this.$t('Project Settings'),
+                    href: route('projects.settings.trashed'),
+                    available: true
+                },
+                'Trash/SageNotAssignedData': {
+                    name: this.$t('Sage API data sets'),
+                    href: route('sageNotAssignedData.trashed'),
+                    available: this.$can('can view and delete sage100-api-data')
+                },
+                'Trash/BudgetManagementAccount': {
+                    name: this.$t('Accounts'),
+                    href: route('budget-settings.account-management.trash-accounts'),
+                    available: this.$canAny(
+                        [
+                            'can manage global project budgets',
+                            'can manage all project budgets without docs'
+                        ]
+                    ),
+                },
+                'Trash/BudgetManagementCostUnit': {
+                    name: this.$t('Cost Units'),
+                    href: route('budget-settings.account-management.trash-cost-units'),
+                    available: this.$canAny(
+                        [
+                            'can manage global project budgets',
+                            'can manage all project budgets without docs'
+                        ]
+                    ),
                 }
             }
         }
     },
     components: {
+        Input, XIcon,
         Listbox,
         SearchIcon,
         ListboxButton,

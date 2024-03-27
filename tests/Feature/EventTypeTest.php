@@ -6,7 +6,8 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
 
-    $this->auth_user = User::factory()->create();
+    $this->auth_user = $this->adminUser();
+    $this->actingAs($this->auth_user);
 
     $this->event_type = EventType::factory()->create();
 
@@ -24,15 +25,12 @@ test('users with the permission can view all EventTypes', function() {
 
 test('users with the permission can create eventTypes', function() {
 
-    //$this->auth_user->givePermissionTo('manage event_types');
-
-    $this->actingAs($this->auth_user);
-
     $this->post('/event_types', [
         'name' => 'TestEventType',
-        'svg_name' => 'SVG',
+        'abbreviation' => 'lel',
         'project_mandatory' => false,
-        'individual_name' => false
+        'individual_name' => false,
+        'hex_code' => '#000000'
     ]);
 
     $this->assertDatabaseHas('event_types', [
@@ -41,10 +39,6 @@ test('users with the permission can create eventTypes', function() {
 });
 
 test('users with the permission can update eventTypes', function() {
-
-    //$this->auth_user->givePermissionTo('manage event_types');
-
-    $this->actingAs($this->auth_user);
 
     $this->patch("/event_types/{$this->event_type->id}", [
         'name' => 'TestEventType'
@@ -56,10 +50,6 @@ test('users with the permission can update eventTypes', function() {
 });
 
 test('users with the permission can delete eventTypes', function() {
-
-    //$this->auth_user->givePermissionTo('manage event_types');
-
-    $this->actingAs($this->auth_user);
 
     $this->delete("/event_types/{$this->event_type->id}");
 

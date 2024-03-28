@@ -13,6 +13,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
+use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -438,7 +439,7 @@ class RoomService
 
     //@todo: fix phpcs error - complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    /*public function collectEventsForRoom(
+    public function collectEventsForRoom(
         Room $room,
         CarbonPeriod $calendarPeriod,
         ?Project $project = null,
@@ -524,9 +525,11 @@ class RoomService
             ];
         }
         return collect($eventsForRoom);
-    }*/
+    }
 
-    public function collectEventsForRoom(
+    //@todo: fix phpcs error - complexity too high
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    public function collectEventsForRoomShift(
         Room $room,
         CarbonPeriod $calendarPeriod,
         ?Project $project = null,
@@ -599,14 +602,22 @@ class RoomService
             ->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
                 foreach ($event->shifts as $shift) {
                     // Berechne den Zeitraum für jede Schicht innerhalb der gewünschten Periode
+                    $start = $shift->start_date;
+                    $end = $shift->end_date;
+                    
+
+                    if (empty($start) || $start === null) {
+                        $start = Carbon::parse($shift->event_start_day);
+                    }
+                    if (empty($end) || $end === null) {
+                        $end = Carbon::parse($shift->event_end_day);
+                    }
 
                     //dd($shift->toArray());
-                    $shiftStart = $shift->start_date->isBefore($calendarPeriod->start) ?
-                        $calendarPeriod->start :
-                        $shift->start_date;
-                    $shiftEnd = $shift->end_date->isAfter($calendarPeriod->end) ?
-                        $calendarPeriod->end :
-                        $shift->end_date;
+                    $shiftStart = $start->isBefore($calendarPeriod->start) ?
+                        $calendarPeriod->start : $start;
+                    $shiftEnd = $end->isAfter($calendarPeriod->end) ?
+                        $calendarPeriod->end : $end;
                     $shiftPeriod = CarbonPeriod::create($shiftStart->startOfDay(), $shiftEnd->endOfDay());
 
                     foreach ($shiftPeriod as $date) {
@@ -639,6 +650,20 @@ class RoomService
 
         foreach ($roomsWithEvents as $room) {
             $roomEvents->add($this->collectEventsForRoom($room, $calendarPeriod, $project, $shiftPlan));
+        }
+        return $roomEvents;
+    }
+
+    public function collectEventsForRoomsShift(
+        array|Collection $roomsWithEvents,
+        CarbonPeriod $calendarPeriod,
+        ?Project $project = null,
+                         $shiftPlan = false
+    ): Collection {
+        $roomEvents = collect();
+
+        foreach ($roomsWithEvents as $room) {
+            $roomEvents->add($this->collectEventsForRoomShift($room, $calendarPeriod, $project, $shiftPlan));
         }
         return $roomEvents;
     }

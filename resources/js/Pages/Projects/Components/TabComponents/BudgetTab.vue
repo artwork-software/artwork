@@ -1,5 +1,6 @@
 <template>
     <div :class="hideProjectHeader ? 'px-5' : 'mt-6 px-5  bg-lightBackgroundGray'">
+        <ProjectBudgetDeadlineComponent :project="this.project"/>
         <div class="flex bg-lightBackgroundGray w-[95%]">
             <BudgetComponent :sage-not-assigned="sageNotAssigned"
                              :hide-project-header="hideProjectHeader"
@@ -25,9 +26,11 @@ import {DocumentTextIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
+import ProjectBudgetDeadlineComponent from "@/Pages/Projects/Components/ProjectBudgetDeadlineComponent.vue";
 
 export default{
     components: {
+        ProjectBudgetDeadlineComponent,
         BudgetComponent,
         PencilAltIcon,
         XCircleIcon,

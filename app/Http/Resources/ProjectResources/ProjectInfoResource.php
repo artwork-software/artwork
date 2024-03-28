@@ -60,6 +60,7 @@ class ProjectInfoResource extends JsonResource
             'num_of_guests' => $this->num_of_guests,
             'project_managers' => $this->managerUsers,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
+            'is_group' => $this->is_group
         ];
     }
 }

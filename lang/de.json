@@ -1668,5 +1668,7 @@
     "The shift starts after it ends!": "Die Schicht beginnt nachdem sie endet!",
     "Shift start date": "Schichtbeginn",
     "Shift end date": "Schichtende",
-    "The shift end time cannot be before the shift start time.": "Die Schichtendzeit kann nicht vor der Schichtstartzeit liegen."
+    "The shift end time cannot be before the shift start time.": "Die Schichtendzeit kann nicht vor der Schichtstartzeit liegen.",
+    "Edit Key Visual": "Key Visual bearbeiten",
+    "No budget deadline specified": "Kein Budget-Stichtag angegeben"
 }

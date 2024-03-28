@@ -1,6 +1,6 @@
 <template>
-    <div class="mt-6  bg-lightBackgroundGray">
-        <div class=" mt-6 max-w-screen-2xl bg-lightBackgroundGray">
+    <div class="mt-6 bg-lightBackgroundGray">
+        <div class="mt-6 max-w-screen-2xl bg-lightBackgroundGray">
             <div v-if="calendarType && calendarType === 'daily'">
                 Daily
                 <CalendarComponent
@@ -53,8 +53,6 @@
 </template>
 
 <script>
-
-
 import JetInputError from "@/Jetstream/InputError.vue";
 import {DocumentTextIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
@@ -62,14 +60,18 @@ import {XCircleIcon} from "@heroicons/vue/solid";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
-import {Inertia} from "@inertiajs/inertia";
 
 export default {
     components: {
         IndividualCalendarComponent,
         CalendarComponent,
         IndividualCalendarAtGlanceComponent,
-        PencilAltIcon, XCircleIcon, DocumentTextIcon, SvgCollection, XIcon, JetInputError
+        PencilAltIcon,
+        XCircleIcon,
+        DocumentTextIcon,
+        SvgCollection,
+        XIcon,
+        JetInputError
     },
     emits: ['change-at-a-glance'],
     props: [
@@ -91,9 +93,6 @@ export default {
         'projectManagerIds',
         'user_filters'
     ],
-    data() {
-
-    },
     methods: {
         changeAtAGlance() {
             this.$emit('change-at-a-glance');
@@ -101,7 +100,3 @@ export default {
     }
 }
 </script>
-
-<style scoped>
-
-</style>

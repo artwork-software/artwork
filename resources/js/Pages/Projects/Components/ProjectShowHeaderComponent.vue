@@ -3,13 +3,7 @@
         <div class="flex flex-col">
             <!-- if in group -->
             <div v-if="currentGroup" class="bg-secondaryHover -mb-6 z-20 w-fit pr-6 pb-0.5">
-                <div class="flex items-center">
-                        <span v-if="!project.is_group">
-                            <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
-                        </span>
-                    {{ $t('Belongs to') }} <a :href="'/projects/' + currentGroup.id" class="text-buttonBlue ml-1">
-                    {{ currentGroup?.name }}</a>
-                </div>
+                <ProjectGroupComponent :project="this.project" :current-group="this.currentGroup" />
             </div>
             <div v-if="openTab === 'info'">
                 <div class="flex z-10" v-if="this.project.key_visual_path !== null">
@@ -24,14 +18,8 @@
             </div>
             <div class="flex justify-between items-center mt-4">
                 <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl items-center">
-                        <span v-if="project.is_group">
-                            <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
-                        </span>
-                    {{ project?.name }}
-                    <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex"
-                          :class="project?.state?.color">
-                            {{ project?.state?.name }}
-                        </span>
+                    <ProjectTitleComponent :project="this.project"/>
+                    <ProjectStateComponent :project="this.project"/>
                 </h2>
                 <Menu as="div" class="my-auto mt-3 relative"
                       v-if="$can('write projects') || $role('artwork admin') || projectManagerIds.includes(this.$page.props.user.id) || projectWriteIds.includes(this.$page.props.user.id)">
@@ -205,9 +193,16 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import IconLib from "@/mixins/IconLib.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
+import EditKeyVisualModal from "@/Pages/Projects/Components/EditKeyVisualModal.vue";
+import ProjectTitleComponent from "@/Pages/Projects/Components/ProjectTitleComponent.vue";
+import ProjectStateComponent from "@/Pages/Projects/Components/ProjectStateComponent.vue";
+import ProjectGroupComponent from "@/Pages/Projects/Components/ProjectGroupComponent.vue";
 
 export default {
     components: {
+        ProjectGroupComponent,
+        ProjectStateComponent,
+        EditKeyVisualModal,
         JetInputError,
         UserPopoverTooltip,
         ProjectHistoryComponent,
@@ -225,7 +220,8 @@ export default {
         MenuButton,
         MenuItem,
         MenuItems,
-        Link
+        Link,
+        ProjectTitleComponent
     },
     mixins: [Permissions, IconLib],
     props: [

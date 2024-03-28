@@ -1,5 +1,7 @@
 <template>
-    <div :class="[textStyle]" :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoomFactor + 'px', backgroundColor: backgroundColorWithOpacity }" class="rounded-lg relative group">
+    <div
+        :style="{ width: width + 'px', minHeight: totalHeight - heightSubtraction(event) * zoomFactor + 'px', backgroundColor: backgroundColorWithOpacity, fontsize: fontSize, lineHeight: lineHeight }"
+        class="rounded-lg relative group">
         <div v-if="zoomFactor > 0.4"
              class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-indigo-500/50'">
@@ -21,13 +23,13 @@
                         @click="showDeclineEventModal = true"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <IconX stroke-width="1.5"
-                           stroke="currentColor" class="w-4 h-4" />
+                           stroke="currentColor" class="w-4 h-4"/>
                 </button>
                 <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()"
                         @click="openConfirmModal(event.id, 'main')" type="button"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <IconTrash stroke-width="1.5"
-                               stroke="currentColor" class="w-4 h-4" />
+                               stroke="currentColor" class="w-4 h-4"/>
                 </button>
             </div>
             <div v-else class="flex justify-center items-center h-full gap-2">
@@ -41,9 +43,9 @@
                 </div>
             </div>
         </div>
-
         <div class="px-1 py-1 ">
-            <div :style="{textStyle, color: TextColorWithDarken}" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
+            <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: TextColorWithDarken}"
+                 :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
                  class="flex justify-between ">
                 <div v-if="!project" class="flex items-center">
                     <div v-if="event.eventTypeAbbreviation" class="mr-1">
@@ -75,18 +77,18 @@
                 <!-- Icon -->
                 <div v-if="event.audience"
                      class="flex">
-                    <IconUsersGroup stroke-width="1.5" :width="22 * zoomFactor"  :height="11 * zoomFactor"/>
+                    <IconUsersGroup stroke-width="1.5" :width="22 * zoomFactor" :height="11 * zoomFactor"/>
                 </div>
             </div>
             <div class="flex">
                 <!-- Time -->
-                <div class="flex" :style="{textStyle, color: TextColorWithDarken}"
+                <div class="flex" :style="{lineHeight: lineHeight,fontSize: fontSize, color: TextColorWithDarken}"
                      :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
                     <div
                         v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
                         class="items-center">
                         <div v-if="event.allDay">
-                            {{$t('Full day')}}
+                            {{ $t('Full day') }}
                         </div>
                         <div v-else>
                             {{
@@ -96,11 +98,12 @@
                     </div>
                     <div class="flex w-full" v-else>
                         <div v-if="event.allDay">
-                            <div v-if="atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()">
-                                {{ $t('Full day')}}, {{ new Date(event.start).format("DD.MM.") }}
+                            <div
+                                v-if="atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()">
+                                {{ $t('Full day') }}, {{ new Date(event.start).format("DD.MM.") }}
                             </div>
                             <div v-else>
-                                {{ $t('Full day')}}, {{ new Date(event.start).format("DD.MM.") }} - {{
+                                {{ $t('Full day') }}, {{ new Date(event.start).format("DD.MM.") }} - {{
                                     new Date(event.end).format("DD.MM.")
                                 }}
                             </div>
@@ -108,7 +111,9 @@
                         <div v-else class="items-center">
                             <div v-if="new Date(event.start).toDateString() !== new Date(event.end).toDateString()">
                             <span class="text-error">
-                                {{ new Date(event.start).toDateString() !== new Date(event.end).toDateString() ? '!' : '' }}
+                                {{
+                                    new Date(event.start).toDateString() !== new Date(event.end).toDateString() ? '!' : ''
+                                }}
                             </span>
                                 {{
                                     new Date(event.start).format("DD.MM. HH:mm") + ' - ' + new Date(event.end).format("DD.MM. HH:mm")
@@ -116,7 +121,7 @@
                             </div>
                             <div v-else>
                                 <div v-if="atAGlance">
-                                    {{new Date(event.start).format("DD.MM. HH:mm") + ' - ' + new Date(event.end).format("HH:mm")}}
+                                    {{ new Date(event.start).format("DD.MM. HH:mm") + ' - ' + new Date(event.end).format("HH:mm") }}
                                 </div>
                                 <div v-else>
                                     {{
@@ -131,7 +136,8 @@
                 <div v-if="event.option_string && $page.props.user.calendar_settings.options" class="flex items-center">
                     <div
                         v-if="!atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
-                        class="flex eventTime font-medium subpixel-antialiased" :style="textStyle">
+                        class="flex eventTime font-medium subpixel-antialiased"
+                        :style="{lineHeight: lineHeight,fontSize: fontSize}">
                         , {{ event.option_string }}
                     </div>
                     <div class="flex eventTime font-medium subpixel-antialiased ml-0.5" v-else>
@@ -141,11 +147,12 @@
 
             </div>
             <!-- repeating Event -->
-            <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventText' : '', 'font-semibold']"
+            <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
+                 :class="[zoomFactor === 1 ? 'eventText' : '', 'font-semibold']"
                  v-if="$page.props.user.calendar_settings.repeating_events && event.is_series"
                  class="uppercase flex items-center">
-                <IconRepeat class="mx-1 h-3 w-3" stroke-width="1.5" />
-                {{$t('Repeat event')}}
+                <IconRepeat class="mx-1 h-3 w-3" stroke-width="1.5"/>
+                {{ $t('Repeat event') }}
             </div>
             <!-- User-Icons -->
             <div class="-ml-3 mb-0.5 w-full" v-if="$page.props.user.calendar_settings.project_management">
@@ -218,14 +225,15 @@
                                 @click="openConfirmModal(subEvent.id, 'sub')" type="button"
                                 class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                             <IconTrash stroke-width="1.5"
-                                       stroke="currentColor" class="w-4 h-4" />
+                                       stroke="currentColor" class="w-4 h-4"/>
                         </button>
                     </div>
                 </div>
                 <div :class="[subEvent.class]"
                      :style="{ width: width + 'px', height: (totalHeight - heightSubtraction(subEvent)) * zoomFactor + 'px' }"
                      class="px-1 py-0.5 rounded-lg overflow-y-auto">
-                    <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
+                    <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
+                         :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
                          class="flex justify-between">
                         <div class="flex" v-if="subEvent.title?.length > 0">
                             <div v-if="subEvent.eventTypeAbbreviation" class="mr-1">
@@ -241,18 +249,18 @@
                         <!-- Icons -->
                         <div v-if="subEvent.audience"
                              class="flex">
-                            <IconUsersGroup stroke-width="1.5" :width="22 * zoomFactor"  :height="11 * zoomFactor"/>
+                            <IconUsersGroup stroke-width="1.5" :width="22 * zoomFactor" :height="11 * zoomFactor"/>
                         </div>
                     </div>
                     <!-- Time -->
-                    <div :style="textStyle"
+                    <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
                          :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']"
                          class="flex">
                         <div
                             v-if="new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString() && !project && !atAGlance"
                             class="items-center">
                             <div v-if="subEvent.allDay">
-                                {{$t('Full day')}}
+                                {{ $t('Full day') }}
                             </div>
                             <div v-else>
                                 {{
@@ -262,14 +270,17 @@
                         </div>
                         <div class="flex w-full" v-else>
                             <div v-if="subEvent.allDay">
-                                <div v-if="atAGlance && new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString()">
-                                    {{$t('Full day')}}, {{ new Date(subEvent.start).format("DD.MM.") }}
+                                <div
+                                    v-if="atAGlance && new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString()">
+                                    {{ $t('Full day') }}, {{ new Date(subEvent.start).format("DD.MM.") }}
                                 </div>
                                 <div v-else>
                                     <span class="text-error">
-                        {{ new Date(subEvent.start).toDateString() !== new Date(subEvent.end).toDateString() ? '!' : '' }}
+                        {{
+                                            new Date(subEvent.start).toDateString() !== new Date(subEvent.end).toDateString() ? '!' : ''
+                                        }}
                             </span>
-                                    {{$t('Full day')}}, {{ new Date(subEvent.start).format("DD.MM.") }} - {{
+                                    {{ $t('Full day') }}, {{ new Date(subEvent.start).format("DD.MM.") }} - {{
                                         new Date(subEvent.end).format("DD.MM.")
                                     }}
                                 </div>
@@ -277,7 +288,9 @@
                             </div>
                             <div v-else class="items-center">
                             <span class="text-error">
-                        {{ new Date(subEvent.start).toDateString() !== new Date(subEvent.end).toDateString() ? '!' : '' }}
+                        {{
+                                    new Date(subEvent.start).toDateString() !== new Date(subEvent.end).toDateString() ? '!' : ''
+                                }}
                             </span>
                                 {{
                                     new Date(subEvent.start).format("DD.MM. HH:mm")
@@ -289,7 +302,8 @@
                          class="flex items-center">
                         <div
                             v-if="!atAGlance && new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString()"
-                            class="flex eventTime font-medium subpixel-antialiased" :style="textStyle">
+                            class="flex eventTime font-medium subpixel-antialiased"
+                            :style="{lineHeight: lineHeight,fontSize: fontSize}">
                             , {{ subEvent.option_string }}
                         </div>
                         <div class="flex eventTime font-medium subpixel-antialiased ml-0.5" v-else>
@@ -378,21 +392,21 @@ export default {
     ],
     emits: ['openEditEventModal', 'checkEvent'],
     computed: {
-        backgroundColorWithOpacity(){
+        backgroundColorWithOpacity() {
             const color = this.event.event_type_color;
             return `rgb(${parseInt(color.slice(-6, -4), 16)}, ${parseInt(color.slice(-4, -2), 16)}, ${parseInt(color.slice(-2), 16)}, 15%)`;
         },
-        TextColorWithDarken(){
+        TextColorWithDarken() {
             const color = this.event.event_type_color;
             return `rgb(${parseInt(color.slice(-6, -4), 16) - 75}, ${parseInt(color.slice(-4, -2), 16) - 75}, ${parseInt(color.slice(-2), 16) - 75})`;
         },
-        textStyle() {
-            const fontSize = `calc(${this.zoomFactor} * 0.75rem)`;
-            const lineHeight = `calc(${this.zoomFactor} * 1rem)`;
-            return {
-                fontSize,
-                lineHeight,
-            };
+        fontSize() {
+            return `${this.zoomFactor * 0.75}rem`;
+
+        },
+        lineHeight() {
+            return `${this.zoomFactor * 1}rem`;
+
         },
         totalHeight() {
             let height = 42;

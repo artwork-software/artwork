@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full flex flex-wrap">
+    <div class="w-full flex flex-wrap mt-3">
         <CalendarFunctionBar
             :project="project"
             @open-event-component="openEditEventModal"

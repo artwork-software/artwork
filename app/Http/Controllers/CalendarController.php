@@ -564,7 +564,7 @@ class CalendarController extends Controller
         }
 
         $better = $this->filterRooms($startDate, $endDate)->get();
-        $better = $this->roomService->collectEventsForRooms($better, $calendarPeriod, null, true);
+        $better = $this->roomService->collectEventsForRoomsShift($better, $calendarPeriod, null, true);
 
         return [
             'days' => $periodArray,

@@ -1,6 +1,6 @@
 <template>
-    <div class="bg-backgroundGray mt-6 pb-6 ">
-        <div class=" ml-14 pt-3 pr-14 ">
+    <div class="bg-backgroundGray mt-6 pb-6">
+        <div class="ml-14 pt-3 pr-14 ">
             <div class="flex justify-between items-center mt-4 stickyHeader p-4">
                 <div class="flex items-center gap-6">
                     <div class="flex w-full justify-between">

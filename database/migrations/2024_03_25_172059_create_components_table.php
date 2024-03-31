@@ -11,13 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // \App\Enums\TabComponentEnums::toArray()
-        // get all the values from the enum and pass it to the enum method
-        // this will return an array of all the values in the enum
-        // this array will be used as the values for the type column
-
-
-
         Schema::create('components', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -38,7 +31,7 @@ return new class extends Migration
                 \App\Enums\TabComponentEnums::PROJECT_INFOS->value,
             ])->default(\App\Enums\TabComponentEnums::TEXT_FIELD->value);
             $table->string('preview')->nullable();
-            $table->json('defaults')->nullable();
+            $table->json('data')->nullable();
             $table->timestamps();
         });
     }

@@ -14,9 +14,8 @@ return new class extends Migration
         Schema::create('project_component_values', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
-            $table->foreignId('component_in_tab_id')->constrained('component_in_tabs')->cascadeOnDelete();
-            $table->foreignId('project_tab_id')->constrained('project_tabs')->cascadeOnDelete();
-            $table->string('value');
+            $table->foreignId('component_id')->constrained('components')->cascadeOnDelete();
+            $table->json('data');
             $table->timestamps();
         });
     }

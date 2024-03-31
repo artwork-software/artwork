@@ -14,7 +14,6 @@
                                     :group-projects="groupProjects"
                                     :access_budget="access_budget"
                                     open-tab="shift"
-                                    :project-tabs="tabs"
         >
             <ShiftTab :projectWriteIds="projectWriteIds"
                       :projectManagerIds="projectManagerIds"
@@ -80,7 +79,6 @@ export default {
         'access_budget',
         'currentUserCrafts',
         'shiftQualifications',
-        'tabs'
     ],
     data() {
         return {

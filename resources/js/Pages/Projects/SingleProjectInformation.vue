@@ -14,7 +14,6 @@
                                     :group-projects="groupProjects"
                                     :access_budget="access_budget"
                                     open-tab="info"
-                                    :project-tabs="tabs"
         >
             <InfoTab :projectWriteIds="projectWriteIds"
                      :projectManagerIds="projectManagerIds"
@@ -86,7 +85,6 @@ export default {
         'projectWriteIds',
         'projectDeleteIds',
         'access_budget',
-        'tabs'
     ],
     data() {
         return {

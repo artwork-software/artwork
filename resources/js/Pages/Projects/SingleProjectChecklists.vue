@@ -14,7 +14,6 @@
                                 :group-projects="groupProjects"
                                 :access_budget="access_budget"
                                 open-tab="checklist"
-                                :project-tabs="tabs"
     >
         <ChecklistTab :projectWriteIds="projectWriteIds"
                       :projectManagerIds="projectManagerIds"
@@ -91,7 +90,6 @@ export default {
         'projectWriteIds',
         'projectDeleteIds',
         'access_budget',
-        'tabs'
     ],
     data() {
         return {

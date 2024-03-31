@@ -14,7 +14,6 @@
                                 :group-projects="groupProjects"
                                 :access_budget="access_budget"
                                 open-tab="comment"
-                                :project-tabs="tabs"
     >
         <CommentTab :projectWriteIds="projectWriteIds"
                     :projectManagerIds="projectManagerIds"
@@ -89,7 +88,6 @@ export default {
         'projectManagerIds',
         'projectDeleteIds',
         'access_budget',
-        'tabs'
     ],
     data() {
         return {

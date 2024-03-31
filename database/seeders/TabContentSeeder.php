@@ -15,10 +15,10 @@ class TabContentSeeder extends Seeder
      */
     public function run(): void
     {
-        $faker = \Faker\Factory::create();
+        $faker = \Faker\Factory::create('de_DE');
         foreach (range(1, 10) as $index) {
             ProjectTab::create([
-                'name' => $faker->word(),
+                'name' => $faker->realText(30),
                 'order' => $index,
             ]);
         }

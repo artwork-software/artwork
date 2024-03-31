@@ -15,7 +15,6 @@
                                     :group-projects="groupProjects"
                                     :access_budget="access_budget"
                                     open-tab="budget"
-                                    :project-tabs="tabs"
         >
             <BudgetTab @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation"
                        :hideProjectHeader="hideProjectHeader"
@@ -92,7 +91,6 @@ export default defineComponent({
         'companyTypes',
         'collectingSocieties',
         'sageNotAssigned',
-        'tabs'
     ],
     data() {
         return {

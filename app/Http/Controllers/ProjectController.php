@@ -1682,6 +1682,19 @@ class ProjectController extends Controller
             'state',
             'delete_permission_users'
         ]);
+        if (!$project->is_group) {
+            $group = DB::table('project_groups')
+                ->select('*')
+                ->where('project_id', '=', $project->id)
+                ->first();
+            if (!empty($group)) {
+                $groupOutput = Project::find($group->group_id);
+            } else {
+                $groupOutput = '';
+            }
+        } else {
+            $groupOutput = '';
+        }
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
         $headerObject->project = new ProjectInfoResource($project);
         $headerObject->firstEventInProject = $project
@@ -1714,6 +1727,7 @@ class ProjectController extends Controller
         $headerObject->access_budget = $project->access_budget;
         $headerObject->tabs = ProjectTab::orderBy('order')->get();
         $headerObject->currentTabId = $projectTab->id;
+        $headerObject->currentGruop = $groupOutput;
 
         $projectTab->load(['components' => function ($query): void {
             // order by component order
@@ -1798,10 +1812,7 @@ class ProjectController extends Controller
             'projectSectorIds' => $project->sectors()->pluck('sector_id'),
             'projectSectors' => $project->sectors,
             'projectState' => $project->state,
-            'access_budget' => $project->access_budget,
-            'tabs' => ProjectTab::with(['components.projectValues' => function ($query) use ($project): void {
-                $query->where('project_id', $project->id);
-            }])->orderBy('order')->get(),
+            'access_budget' => $project->access_budget
         ]);
     }
     public function projectCalendarTab(Project $project, CalendarController $calendar): Response|ResponseFactory
@@ -1909,7 +1920,6 @@ class ProjectController extends Controller
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'user_filters' => $showCalendar['user_filters'],
             'access_budget' => $project->access_budget,
-            'tabs' => ProjectTab::orderBy('order')->get(),
         ]);
     }
 
@@ -1964,7 +1974,6 @@ class ProjectController extends Controller
             'currentGroup' => $groupOutput,
             'checklist_templates' => ChecklistTemplateIndexResource::collection(ChecklistTemplate::all())->resolve(),
             'access_budget' => $project->access_budget,
-            'tabs' => ProjectTab::orderBy('order')->get(),
         ]);
     }
 
@@ -2113,7 +2122,6 @@ class ProjectController extends Controller
                 ->crafts
                 ->merge(Craft::query()->where('assignable_by_all', '=', true)->get()),
             'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
-            'tabs' => ProjectTab::orderBy('order')->get(),
         ]);
     }
 
@@ -2306,7 +2314,6 @@ class ProjectController extends Controller
             'recentlyCreatedSageAssignedDataComment' => $this->determineRecentlyCreatedSageAssignedDataComment(
                 $sageAssignedDataCommentService
             ),
-            'tabs' => ProjectTab::orderBy('order')->get(),
         ]);
     }
 
@@ -2385,7 +2392,6 @@ class ProjectController extends Controller
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'states' => ProjectStates::all(),
             'access_budget' => $project->access_budget,
-            'tabs' => ProjectTab::orderBy('order')->get(),
         ]);
     }
 

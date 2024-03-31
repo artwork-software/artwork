@@ -14,7 +14,6 @@
                                 :group-projects="groupProjects"
                                 :access_budget="access_budget"
                                 open-tab="calendar"
-                                :project-tabs="tabs"
     >
         <CalendarTab :projectWriteIds="projectWriteIds"
                      :user_filters="user_filters"
@@ -113,7 +112,6 @@ export default {
         'projectDeleteIds',
         'user_filters',
         'access_budget',
-        'tabs'
     ],
     data() {
         return {

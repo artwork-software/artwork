@@ -14,11 +14,12 @@ class ReceivesNewHistoryServiceTraitTest extends TestCase
         $class = new class {
             use ReceivesNewHistoryServiceTrait;
 
-            public function a() {
+            public function a()
+            {
                 return $this->getNewHistoryService('lel');
             }
         };
 
-        $this->assertInstanceOf(NewHistoryService::class,$class->a());
+        $this->assertInstanceOf(NewHistoryService::class, $class->a());
     }
 }

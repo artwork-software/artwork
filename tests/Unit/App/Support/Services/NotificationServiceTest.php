@@ -4,6 +4,7 @@ namespace Tests\Unit\App\Support\Services;
 
 use App\Enums\NotificationConstEnum;
 use App\Models\User;
+use App\Notifications\ShiftNotification;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Shift\Models\Shift;
 use Illuminate\Support\Facades\Notification;
@@ -24,9 +25,11 @@ class NotificationServiceTest extends TestCase
     public function testCreateNotification(): void
     {
         $shift = Shift::factory()->create();
+        $targetUser = $this->adminUser();
+
 
         $service = new NotificationService();
-        $service->setNotificationTo($this->user);
+        $service->setNotificationTo($targetUser);
         $service->setTitle('Test Title');
         $service->setDescription(['Test Description']);
         $service->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_SHIFT_LOCKED);
@@ -50,9 +53,9 @@ class NotificationServiceTest extends TestCase
         $service->createNotification();
 
         Notification::assertSentTo(
-            [$this->user],
-            function (ArtworkNotification $notification) {
-                return $notification->toMail($this->user)->subject === 'Test Title';
+            $targetUser,
+            function (ShiftNotification $notification) {
+                return $notification->toArray()->title === 'Test Title';
             }
         );
     }

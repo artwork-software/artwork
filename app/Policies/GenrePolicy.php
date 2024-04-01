@@ -30,12 +30,4 @@ class GenrePolicy
     {
         return $user->can(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
     }
-
-    public function restore(): void
-    {
-    }
-
-    public function forceDelete(User $user, Genre $genre): void
-    {
-    }
 }

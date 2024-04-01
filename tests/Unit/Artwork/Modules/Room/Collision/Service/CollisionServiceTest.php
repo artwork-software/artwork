@@ -4,6 +4,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Room\Collision\Service\CollisionService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Services\RoomService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 test('find Collisions', function (Room $room, int $expectation): void {
     /** @var CollisionService $collisionService */

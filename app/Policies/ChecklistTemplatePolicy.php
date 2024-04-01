@@ -34,14 +34,4 @@ class ChecklistTemplatePolicy
     {
         return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
     }
-
-    public function restore(): void
-    {
-        //
-    }
-
-    public function forceDelete(): void
-    {
-        //
-    }
 }

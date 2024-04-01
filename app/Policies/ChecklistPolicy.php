@@ -31,14 +31,4 @@ class ChecklistPolicy
     {
         return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
     }
-
-    public function restore(User $user, Checklist $checklist): void
-    {
-        //
-    }
-
-    public function forceDelete(User $user, Checklist $checklist): void
-    {
-        //
-    }
 }

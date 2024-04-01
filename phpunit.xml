@@ -20,6 +20,7 @@
   <source>
     <include>
       <directory suffix=".php">./app</directory>
+      <directory suffix=".php">./artwork</directory>
     </include>
   </source>
 </phpunit>

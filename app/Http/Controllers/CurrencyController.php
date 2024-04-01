@@ -12,7 +12,7 @@ class CurrencyController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request): \Illuminate\Http\RedirectResponse
@@ -26,7 +26,7 @@ class CurrencyController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Currency  $currency
+     * @param \App\Models\Currency $currency
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Currency $currency): \Illuminate\Http\RedirectResponse
@@ -35,7 +35,7 @@ class CurrencyController extends Controller
         return Redirect::back();
     }
 
-    public function forceDelete(int $id)
+    public function forceDelete(int $id): \Illuminate\Http\RedirectResponse
     {
         $currency = Currency::onlyTrashed()->findOrFail($id);
 
@@ -44,7 +44,7 @@ class CurrencyController extends Controller
         return Redirect::route('projects.settings.trashed');
     }
 
-    public function restore(int $id)
+    public function restore(int $id): \Illuminate\Http\RedirectResponse
     {
         $currency = Currency::onlyTrashed()->findOrFail($id);
 

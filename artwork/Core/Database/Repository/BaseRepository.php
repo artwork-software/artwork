@@ -67,7 +67,7 @@ abstract class BaseRepository
 
     public function restore(Model|Pivot|CanSubstituteBaseModel $model): bool
     {
-        if (!in_array(SoftDeletes::class, class_uses($model))) {
+        if (!in_array(SoftDeletes::class, class_uses($model), true)) {
             throw new InvalidArgumentException(
                 'Class is not using SoftDeletes-trait, therefore ' . __FUNCTION__ . ' can not be executed'
             );
@@ -78,7 +78,7 @@ abstract class BaseRepository
 
     public function restoreQuietly(Model|Pivot|CanSubstituteBaseModel $model): bool
     {
-        if (!in_array(SoftDeletes::class, class_uses($model))) {
+        if (!in_array(SoftDeletes::class, class_uses($model), true)) {
             throw new InvalidArgumentException(
                 'Class is not using SoftDeletes-trait, therefore ' . __FUNCTION__ . ' can not be executed'
             );

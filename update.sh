@@ -14,6 +14,7 @@ sudo chown -R www-data:www-data /var/www/html
 
 #Clear cache and update db
 sudo php /var/www/html/artisan cache:clear
+sudo php /var/www/html/artisan optimize
 sudo php /var/www/html/artisan migrate --force
 
 ## Setup js

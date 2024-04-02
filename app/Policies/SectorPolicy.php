@@ -29,12 +29,4 @@ class SectorPolicy
     {
         return $user->can(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
     }
-
-    public function restore(): void
-    {
-    }
-
-    public function forceDelete(): void
-    {
-    }
 }

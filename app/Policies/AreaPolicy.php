@@ -36,15 +36,4 @@ class AreaPolicy
     {
         return $user->can(PermissionNameEnum::ROOM_UPDATE->value);
     }
-
-
-    public function restore(): void
-    {
-        //
-    }
-
-    public function forceDelete(): void
-    {
-        //
-    }
 }

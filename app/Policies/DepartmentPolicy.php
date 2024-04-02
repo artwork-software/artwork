@@ -41,15 +41,4 @@ class DepartmentPolicy
     {
         return $user->can(PermissionNameEnum::TEAM_UPDATE->value);
     }
-
-
-    public function restore(): void
-    {
-        //
-    }
-
-    public function forceDelete(): void
-    {
-        //
-    }
 }

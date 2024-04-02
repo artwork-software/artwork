@@ -299,11 +299,6 @@ export default {
                 </div>
             </div>
         </div>
-
-        <pre>
-            {{ headerObject }}
-        </pre>
-
         <!-- Tab Content -->
         <div class="ml-14">
             <slot />
@@ -317,7 +312,7 @@ export default {
             :project="this.headerObject.project"
             :group-projects="this.headerObject.groupProjects"
             :current-group="this.headerObject.currentGroup"
-            :states="states"
+            :states="headerObject.states"
         />
         <project-history-component
             @closed="closeProjectHistoryModal"

@@ -27,14 +27,9 @@ export default {
         <div class="my-10">
             <div v-for="component in dataObject.currentTab.components">
 
-                <Component :is="component.component?.type" :label="component?.label" :defaults="component.component.defaults" :value="component?.project_value?.value" />
+                <Component :is="component.component?.type" :data="component.component" />
             </div>
         </div>
-
-        <pre>
-            {{ dataObject }}
-        </pre>
-
 
     </ProjectHeaderComponent>
 </template>

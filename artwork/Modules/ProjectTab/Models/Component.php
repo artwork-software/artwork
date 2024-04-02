@@ -13,11 +13,17 @@ class Component extends Model
         'name',
         'description',
         'type',
-        'defaults',
+        'data',
     ];
-
 
     protected $casts = [
-        'defaults' => 'array',
+        'data' => 'array',
     ];
+
+    protected $with = ['projectValue'];
+
+    public function projectValue(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(ProjectComponentValue::class, 'component_id', 'id');
+    }
 }

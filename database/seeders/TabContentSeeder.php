@@ -26,7 +26,7 @@ class TabContentSeeder extends Seeder
         Component::create([
             'name' => 'Title',
             'type' => TabComponentEnums::TITLE->value,
-            'defaults' => [
+            'data' => [
                 'title' => 'Title',
             ],
         ]);
@@ -35,7 +35,7 @@ class TabContentSeeder extends Seeder
         Component::create([
             'name' => 'Text Feld',
             'type' => TabComponentEnums::TEXT_FIELD->value,
-            'defaults' => [],
+            'data' => [],
         ]);
 
 
@@ -43,7 +43,7 @@ class TabContentSeeder extends Seeder
         Component::create([
             'name' => 'Checkbox',
             'type' => TabComponentEnums::CHECKBOX->value,
-            'defaults' => [
+            'data' => [
                 'checked' => false,
             ],
         ]);
@@ -52,7 +52,7 @@ class TabContentSeeder extends Seeder
         Component::create([
             'name' => 'Dropdown',
             'type' => TabComponentEnums::DROPDOWN->value,
-            'defaults' => [
+            'data' => [
                 'options' => [
                     'Option 1',
                     'Option 2',
@@ -66,7 +66,7 @@ class TabContentSeeder extends Seeder
         Component::create([
             'name' => 'Text Area',
             'type' => TabComponentEnums::TEXT_AREA->value,
-            'defaults' => [],
+            'data' => [],
         ]);
     }
 }

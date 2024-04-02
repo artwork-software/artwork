@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Component;
+use Artwork\Modules\ProjectTab\Models\Component;
 use Illuminate\Http\Request;
 
 class ComponentController extends Controller

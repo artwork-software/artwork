@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\PermissionNameEnum;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -11,11 +12,11 @@ class SageApiSettingsPolicy
 
     public function view(User $user): bool
     {
-        return $user->can('change tool settings');
+        return $user->can(PermissionNameEnum::SETTINGS_UPDATE->value);
     }
 
     public function updateInterfaceSettings(User $user): bool
     {
-        return $user->can('change tool settings');
+        return $user->can(PermissionNameEnum::SETTINGS_UPDATE->value);
     }
 }

@@ -47,15 +47,17 @@
                                 :class="isDashboard || isFullscreen? 'stickyDaysNoMarginLeft bg-userBg' : 'stickyDays'"
                                 class="text-secondary text-right -mt-2 pr-1">
                                 <div :style="textStyle">
-                                    {{ zoomFactor > 0.4 ? day.day_string : '' }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
+                                    {{ zoomFactor >= 0.4 ? day.day_string : '' }} {{ day.full_day }} <span v-if="day.is_monday" class="text-[10px] font-normal ml-2">(KW{{ day.week_number }})</span>
                                 </div>
 
                             </th>
+
                             <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}"
                                 class="border-t-2 border-dashed"
                                 :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
                                 v-for="room in calendarData">
                                 <div class="py-0.5" v-for="event in room[day.full_day].events.data">
+
                                     <SingleCalendarEvent
                                         class="relative"
                                         :project="project ? project : false"

@@ -238,7 +238,7 @@ export default {
         'projectManagerIds',
         'projectWriteIds',
         'projectDeleteIds',
-        'access_budget'
+        'access_budget',
     ],
     data() {
         return {

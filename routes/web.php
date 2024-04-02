@@ -1171,4 +1171,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('update/{dayService}', [\App\Http\Controllers\DayServiceController::class, 'update'])
             ->name('day-service.update');
     });
+
+
+    Route::get('/test/project/{project}/tab/{projectTab}', [ProjectController::class, 'projectTabTest'])
+        ->name('project.tab.test');
 });

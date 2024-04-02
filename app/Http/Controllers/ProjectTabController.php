@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\ProjectTab\Models\Component;
+use Artwork\Modules\ProjectTab\Models\ComponentInTab;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Illuminate\Http\Request;
 
@@ -10,9 +12,16 @@ class ProjectTabController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): void
+    public function index(): \Inertia\ResponseFactory|\Inertia\Response
     {
-        //
+        return inertia('Settings/ProjectTab/Index', [
+            'tabs' => ProjectTab::with([
+                'components' => function ($query): void {
+                    $query->orderBy('order');
+                },
+            ])->orderBy('order')->get(),
+            'components' => Component::all(),
+        ]);
     }
 
     /**
@@ -61,5 +70,32 @@ class ProjectTabController extends Controller
     public function destroy(ProjectTab $projectTab): void
     {
         //
+    }
+
+    public function updateComponentOrder(ProjectTab $projectTab, Request $request): void
+    {
+        $order = 1;
+        foreach ($request->input('components') as $component) {
+            ComponentInTab::where('id', $component['id'])->where('project_tab_id', $projectTab->id)->update([
+                'order' => $order,
+            ]);
+            $order++;
+        }
+    }
+
+    public function addComponent(ProjectTab $projectTab, Request $request): void
+    {
+
+        $order = $request->input('order');
+        ComponentInTab::where('project_tab_id', $projectTab->id)->where('order', '>=', $order)->increment('order');
+        $projectTab->components()->create([
+            'component_id' => $request->input('component_id'),
+            'order' => $request->input('order'),
+        ]);
+    }
+
+    public function removeComponent(ProjectTab $projectTab, Request $request): void
+    {
+        $projectTab->components()->where('id', $request->input('component_id'))->delete();
     }
 }

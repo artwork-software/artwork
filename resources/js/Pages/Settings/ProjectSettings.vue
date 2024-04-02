@@ -7,6 +7,9 @@
                     {{$t('Define global settings for projects.')}}
                 </div>
             </div>
+
+            <ProjectTabs />
+
             <div class="flex flex-wrap pb-8">
 
                 <ProjectSettingsItem
@@ -192,10 +195,12 @@ import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDele
 import ProjectSettingsEditModal from "@/Layouts/Components/ProjectSettingsEditModal.vue";
 import ProjectSettingState from "@/Layouts/Components/ProjectSettingState.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
 
 export default {
     mixins: [Permissions],
     components: {
+        ProjectTabs,
         ProjectSettingsEditModal,
         ProjectSettingState,
         ProjectSettingsDeleteModal,

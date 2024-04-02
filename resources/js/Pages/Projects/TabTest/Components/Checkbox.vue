@@ -1,23 +1,29 @@
 <script>
 export default {
     name: "Checkbox",
-    props: ['data'],
-    computed: {
-        getDataValue(){
-            if(this.data.project_value){
-                return this.data.project_value.data.checked;
-            } else {
-                return this.data.data.checked;
+    props: ['data', 'projectId'],
+    data() {
+        return {
+            checkedData: {
+                checked: this.data.project_value ? this.data.project_value.data.checked : this.data.data.checked
             }
         }
+    },
+    methods: {
+        updateCheckedData() {
+            console.log(this.checkedData);
+            this.$inertia.patch(route('project.tab.component.update', {project: this.projectId, component: this.data.id}), {
+                data: this.checkedData
+            })
         }
+    },
 }
 </script>
 
 <template>
     <div class="relative flex items-start">
         <div class="flex h-6 items-center">
-            <input id="comments" aria-describedby="comments-description" :checked="getDataValue" name="comments" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600" />
+            <input id="comments" aria-describedby="comments-description" v-model="checkedData.checked" @change="updateCheckedData" :checked="checkedData.checked" name="comments" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600" />
         </div>
         <div class="ml-3 text-sm leading-6">
             <label for="comments" class="font-medium text-gray-900">

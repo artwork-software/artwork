@@ -1175,4 +1175,29 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::get('/test/project/{project}/tab/{projectTab}', [ProjectController::class, 'projectTabTest'])
         ->name('project.tab.test');
+
+    Route::group(['prefix' => 'settings'], function (): void {
+        Route::group(['prefix' => 'tab'], function (): void {
+            Route::get('index', [\App\Http\Controllers\ProjectTabController::class, 'index'])->name('tab.index');
+            Route::post('/{projectTab}/update/component/order', [\App\Http\Controllers\ProjectTabController::class,
+                'updateComponentOrder'])
+                ->name('tab.update.component.order');
+            //tab.add.component
+            Route::post('/{projectTab}/add/component', [\App\Http\Controllers\ProjectTabController::class,
+                'addComponent'])
+                ->name('tab.add.component');
+            // tab.remove.component
+            Route::delete('/{projectTab}/remove/component', [
+                \App\Http\Controllers\ProjectTabController::class,
+                'removeComponent'
+            ])
+                ->name('tab.remove.component');
+        });
+        Route::group(['prefix' => 'component'], function (): void {
+            // project.tab.component.update
+            Route::patch('/{project}/{component}/update', [\App\Http\Controllers\ProjectComponentValueController::class,
+                'update'])
+                ->name('project.tab.component.update');
+        });
+    });
 });

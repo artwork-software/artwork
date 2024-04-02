@@ -8,7 +8,6 @@ import {XIcon} from "@heroicons/vue/outline";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import EditKeyVisualModal from "@/Pages/Projects/Components/EditKeyVisualModal.vue";
 import {Inertia} from "@inertiajs/inertia";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import IconLib from "@/mixins/IconLib.vue";
@@ -18,7 +17,7 @@ export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib],
     components: {
-        EditKeyVisualModal, JetDialogModal, ProjectHistoryComponent, ProjectDataEditModal, XIcon,
+        JetDialogModal, ProjectHistoryComponent, ProjectDataEditModal, XIcon,
         IconTrash, IconCopy, IconEdit, IconDotsVertical, UserPopoverTooltip, IconUpload, TagComponent, IconChevronRight,
         Link,
         AppLayout, Menu,
@@ -349,10 +348,6 @@ export default {
                 </div>
             </template>
         </jet-dialog-modal>
-        <EditKeyVisualModal :show="this.showEditKeyVisualModal"
-                            :project="this.headerObject.project"
-                            @closed="this.closeEditKeyVisualModal"
-        />
     </AppLayout>
 </template>
 

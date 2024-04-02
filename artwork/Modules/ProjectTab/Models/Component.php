@@ -20,7 +20,6 @@ class Component extends Model
         'data' => 'array',
     ];
 
-    protected $with = ['projectValue'];
 
     public function projectValue(): \Illuminate\Database\Eloquent\Relations\HasOne
     {

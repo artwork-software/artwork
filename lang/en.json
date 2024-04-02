@@ -1669,5 +1669,8 @@
     "Shift end date": "Shift end date",
     "The shift end time cannot be before the shift start time.": "The shift end time cannot be before the shift start time.",
     "Edit Key Visual": "Edit Key Visual",
-    "No budget deadline specified": "No budget deadline specified"
+    "No budget deadline specified": "No budget deadline specified",
+    "Please enter a start time and date.": "Please enter a start time and date.",
+    "Please enter an end time and date.": "Please enter an end time and date.",
+    "Value can't be lower than 0.": "Value can't be lower than 0."
 }

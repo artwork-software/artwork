@@ -1670,5 +1670,8 @@
     "Shift end date": "Schichtende",
     "The shift end time cannot be before the shift start time.": "Die Schichtendzeit kann nicht vor der Schichtstartzeit liegen.",
     "Edit Key Visual": "Key Visual bearbeiten",
-    "No budget deadline specified": "Kein Budget-Stichtag angegeben"
+    "No budget deadline specified": "Kein Budget-Stichtag angegeben",
+    "Please enter a start time and date.": "Bitte gib Schichtbeginn und Uhrzeit an.",
+    "Please enter an end time and date.": "Bitte gib Schichtende und Uhrzeit an.",
+    "Value can't be lower than 0.": "Wert kann nicht kleiner als 0 sein."
 }

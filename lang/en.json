@@ -1672,5 +1672,7 @@
     "No budget deadline specified": "No budget deadline specified",
     "Please enter a start time and date.": "Please enter a start time and date.",
     "Please enter an end time and date.": "Please enter an end time and date.",
-    "Value can't be lower than 0.": "Value can't be lower than 0."
+    "Value can't be lower than 0.": "Value can't be lower than 0.",
+    "Please enter a shift start time.": "Bitte gib einen Startzeitpunkt an.",
+    "Please enter a shift end time.": "Bitte gib einen Endzeitpunkt an."
 }

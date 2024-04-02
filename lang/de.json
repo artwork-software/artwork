@@ -1673,5 +1673,7 @@
     "No budget deadline specified": "Kein Budget-Stichtag angegeben",
     "Please enter a start time and date.": "Bitte gib Schichtbeginn und Uhrzeit an.",
     "Please enter an end time and date.": "Bitte gib Schichtende und Uhrzeit an.",
-    "Value can't be lower than 0.": "Wert kann nicht kleiner als 0 sein."
+    "Value can't be lower than 0.": "Wert kann nicht kleiner als 0 sein.",
+    "Please enter a shift start time.": "Please enter a start time",
+    "Please enter a shift end time.": "Please enter an end time."
 }

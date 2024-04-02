@@ -108,7 +108,11 @@
                                             />
                                         </div>
                                         <div>
-                                            <Listbox as="div" v-model="selectedCraft" @update:modelValue="validateShiftCraft()">
+                                            <Listbox as="div"
+                                                     v-model="selectedCraft"
+                                                     @update:modelValue="validateShiftCraft()"
+                                                     by="id"
+                                            >
                                                 <div class="relative">
                                                     <ListboxButton class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
                                                         <span class="block truncate text-left pl-3">{{ selectedCraft?.name ?? $t('Craft') + '*'}} </span>
@@ -342,7 +346,7 @@ export default defineComponent({
                 (shiftsQualification) => shiftsQualification.shift_qualification_id === computedShiftQualification.id
             ) !== 'undefined'
         },
-        validateShiftDates(dryRun = false) {
+        validateShiftDates() {
             this.validationMessages.warnings.shift_start = [];
             this.validationMessages.warnings.shift_end = [];
             this.validationMessages.errors.shift_start = [];
@@ -385,7 +389,7 @@ export default defineComponent({
             }
 
             //check errors
-            if (this.shiftForm.start === null || this.shiftForm.start_date === null) {
+            if ((this.shiftForm.start === null || this.shiftForm.start === '') || this.shiftForm.start_date === null) {
                 this.validationMessages.errors.shift_start.push(this.$t('Please enter a start time and date.'));
                 hasErrors = true;
             }
@@ -395,7 +399,7 @@ export default defineComponent({
                 );
                 hasErrors = true;
             }
-            if (this.shiftForm.end === null || this.shiftForm.end_date === null) {
+            if ((this.shiftForm.end === null || this.shiftForm.end === '') || this.shiftForm.end_date === null) {
                 this.validationMessages.errors.shift_end.push(this.$t('Please enter an end time and date.'));
                 hasErrors = true;
             }
@@ -419,7 +423,7 @@ export default defineComponent({
             }
 
             //check errors
-            if (this.shiftForm.break_minutes === null) {
+            if (this.shiftForm.break_minutes === null || this.shiftForm.break_minutes === '') {
                 this.validationMessages.errors.break_length.push(this.$t('Please enter a break time.'));
 
                 hasErrors = true;
@@ -427,7 +431,7 @@ export default defineComponent({
 
             return hasErrors;
         },
-        validateShiftCraft(dryRun = false) {
+        validateShiftCraft() {
             this.validationMessages.warnings.craft = [];
             this.validationMessages.errors.craft = [];
 
@@ -537,6 +541,7 @@ export default defineComponent({
         },
         selectableCrafts() {
             let crafts = [];
+
             if (this.selectedCraft) {
                 let selectedCraftIncluded = false;
 

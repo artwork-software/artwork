@@ -21,8 +21,8 @@ export default {
                 },
                 {
                     name: this.$t('Component Settings'),
-                    href: route('rooms.move'),
-                    current: route().current('rooms.move'),
+                    href: route('component.index'),
+                    current: route().current('component.index'),
                     show: true
                 },
             ]

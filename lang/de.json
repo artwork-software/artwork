@@ -1672,5 +1672,9 @@
     "Edit Key Visual": "Key Visual bearbeiten",
     "No budget deadline specified": "Kein Budget-Stichtag angegeben",
     "Tab Settings": "Tab-Einstellungen",
-    "Component Settings": "Komponenten-Einstellungen"
+    "Component Settings": "Komponenten-Einstellungen",
+    "TextField": "Textfeld",
+    "Checkbox": "Checkbox",
+    "TextArea": "Textbereich",
+    "DropDown": "Dropdown"
 }

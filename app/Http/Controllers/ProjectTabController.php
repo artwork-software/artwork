@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ComponentInTab;
+use Artwork\Modules\ProjectTab\Models\ProjectComponentValue;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Illuminate\Http\Request;
 
@@ -20,7 +21,7 @@ class ProjectTabController extends Controller
                     $query->orderBy('order');
                 },
             ])->orderBy('order')->get(),
-            'components' => Component::all(),
+            'components' => Component::get()->groupBy('type'),
         ]);
     }
 
@@ -37,7 +38,13 @@ class ProjectTabController extends Controller
      */
     public function store(Request $request): void
     {
-        //
+        // get all tabs to calculate the order
+        $lastOrder = ProjectTab::orderBy('order', 'desc')->first();
+        $order = $lastOrder ? $lastOrder->order + 1 : 1;
+        ProjectTab::create([
+            'name' => $request->input('name'),
+            'order' => $order,
+        ]);
     }
 
     /**
@@ -61,7 +68,7 @@ class ProjectTabController extends Controller
      */
     public function update(Request $request, ProjectTab $projectTab): void
     {
-        //
+        $projectTab->update($request->only('name'));
     }
 
     /**
@@ -69,7 +76,11 @@ class ProjectTabController extends Controller
      */
     public function destroy(ProjectTab $projectTab): void
     {
-        //
+        foreach ($projectTab->components as $component) {
+            ProjectComponentValue::where('component_id', $component->id)->delete();
+            $component->delete();
+        }
+        $projectTab->delete();
     }
 
     public function updateComponentOrder(ProjectTab $projectTab, Request $request): void
@@ -97,5 +108,18 @@ class ProjectTabController extends Controller
     public function removeComponent(ProjectTab $projectTab, Request $request): void
     {
         $projectTab->components()->where('id', $request->input('component_id'))->delete();
+    }
+
+    public function reorder(ProjectTab $projectTab, Request $request): void
+    {
+        // update the order of $projectTab and re-order the other tabs
+        $order = $request->input('order');
+        $oldOrder = $projectTab->order;
+        if ($oldOrder < $order) {
+            ProjectTab::where('order', '>', $oldOrder)->where('order', '<=', $order)->decrement('order');
+        } else {
+            ProjectTab::where('order', '>=', $order)->where('order', '<', $oldOrder)->increment('order');
+        }
+        $projectTab->update(['order' => $order]);
     }
 }

@@ -10,9 +10,11 @@ class ComponentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): void
+    public function index(): \Inertia\ResponseFactory|\Inertia\Response
     {
-        //
+        return inertia('Settings/ComponentManagement/Index', [
+            'components' => Component::get()->groupBy('type'),
+        ]);
     }
 
     /**

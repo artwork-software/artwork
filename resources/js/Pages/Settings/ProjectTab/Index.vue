@@ -7,22 +7,41 @@ import draggable from "vuedraggable";
 import SingleTabComponent from "@/Pages/Settings/Components/SingleTabComponent.vue";
 import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
 import IconLib from "@/mixins/IconLib.vue";
+import AddEditTabModal from "@/Pages/Settings/Components/AddEditTabModal.vue";
+import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
+import TabDropElement from "@/Pages/Settings/Components/TabDropElement.vue";
 
 export default {
     name: "Index",
-    components: {DragComponentElement, SingleTabComponent, draggable, Link, IconDragDrop, ProjectTabs, AppLayout},
+    components: {
+        TabDropElement,
+        PlusButton,
+        AddEditTabModal,
+        DragComponentElement, SingleTabComponent, draggable, Link, IconDragDrop, ProjectTabs, AppLayout},
     props: ['tabs', 'components'],
     mixins: [IconLib],
     data() {
         return {
             searchComponent: '',
+            showAddEditModal: false,
         }
     },
     computed: {
         filteredComponents() {
-            return this.components.filter(component => {
-                return component.name.toLowerCase().includes(this.searchComponent.toLowerCase())
-            })
+            return Object.keys(this.components).reduce((acc, key) => {
+                const filtered = this.components[key].filter(component => {
+                    return component.name.toLowerCase().includes(this.searchComponent.toLowerCase());
+                });
+
+                if (filtered.length > 0) {
+                    acc[key] = filtered;
+                }
+
+                return acc;
+            }, {
+
+            });
+
         }
     }
 
@@ -41,11 +60,18 @@ export default {
 
             <ProjectTabs />
 
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Tab components -->
                <div class="w-full">
-                   <div v-for="tab in tabs" class="mb-3 w-full">
+                   <div class="flex justify-end mb-5">
+                       <PlusButton @click="showAddEditModal = true" />
+                   </div>
+
+                   <TabDropElement :order="1" />
+                   <div v-for="tab in tabs" class="w-full">
                        <SingleTabComponent :tab="tab" />
+                       <TabDropElement :order="tab.order + 1" />
                    </div>
                </div>
 
@@ -65,14 +91,17 @@ export default {
                             </div>
                         </div>
                     </div>
-                   <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                       <div v-for="component in filteredComponents">
-                           <DragComponentElement :component="component" />
-                       </div>
+                    <div v-for="(componentsArray, index) in filteredComponents">
+                        <h2 class="text-md font-bold mb-3">{{ $t(index) }}</h2>
+                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-7 gap-3">
+                             <DragComponentElement v-for="component in componentsArray" :component="component" />
+                         </div>
                    </div>
                 </div>
             </div>
         </div>
+
+        <AddEditTabModal v-if="showAddEditModal" @close="showAddEditModal = false" />
     </AppLayout>
 </template>
 

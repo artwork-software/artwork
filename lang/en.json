@@ -1671,5 +1671,10 @@
     "Edit Key Visual": "Edit Key Visual",
     "No budget deadline specified": "No budget deadline specified",
     "Tab Settings": "Tab Settings",
-    "Component Settings": "Component Settings"
+    "Component Settings": "Component Settings",
+    "TextField": "Text Field",
+    "Checkbox": "Checkbox",
+    "TextArea": "Text Area",
+    "DropDown": "Drop Down"
+
 }

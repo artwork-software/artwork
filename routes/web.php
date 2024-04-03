@@ -1184,16 +1184,28 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 ->name('tab.update.component.order');
             //tab.add.component
             Route::post('/{projectTab}/add/component', [\App\Http\Controllers\ProjectTabController::class,
-                'addComponent'])
-                ->name('tab.add.component');
+                'addComponent'])->name('tab.add.component');
             // tab.remove.component
             Route::delete('/{projectTab}/remove/component', [
                 \App\Http\Controllers\ProjectTabController::class,
                 'removeComponent'
-            ])
-                ->name('tab.remove.component');
+            ])->name('tab.remove.component');
+            // tab.destroy
+            Route::delete('/{projectTab}/destroy', [\App\Http\Controllers\ProjectTabController::class, 'destroy'])
+                ->name('tab.destroy');
+            // tab.update
+            Route::patch('/{projectTab}/update', [\App\Http\Controllers\ProjectTabController::class, 'update'])
+                ->name('tab.update');
+            // tab.store
+            Route::post('/store', [\App\Http\Controllers\ProjectTabController::class, 'store'])->name('tab.store');
+            //tab.reorder
+            Route::post('/reorder/{projectTab}', [\App\Http\Controllers\ProjectTabController::class, 'reorder'])
+                ->name('tab.reorder');
         });
         Route::group(['prefix' => 'component'], function (): void {
+            // index
+            Route::get('index', [\App\Http\Controllers\ComponentController::class, 'index'])
+                ->name('component.index');
             // project.tab.component.update
             Route::patch('/{project}/{component}/update', [\App\Http\Controllers\ProjectComponentValueController::class,
                 'update'])

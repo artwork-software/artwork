@@ -151,6 +151,7 @@ export default {
         FormButton,
         Dialog,
         DialogTitle,
+        DialogPanel,
         TransitionChild,
         TransitionRoot,
         Menu,

@@ -1,14 +1,12 @@
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {Link} from "@inertiajs/inertia-vue3";
-import {IconChevronRight, IconCopy, IconDotsVertical, IconEdit, IconTrash, IconUpload} from "@tabler/icons-vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {XIcon} from "@heroicons/vue/outline";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import EditKeyVisualModal from "@/Pages/Projects/Components/EditKeyVisualModal.vue";
 import {Inertia} from "@inertiajs/inertia";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import IconLib from "@/mixins/IconLib.vue";
@@ -18,10 +16,15 @@ export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib],
     components: {
-        EditKeyVisualModal, JetDialogModal, ProjectHistoryComponent, ProjectDataEditModal, XIcon,
-        IconTrash, IconCopy, IconEdit, IconDotsVertical, UserPopoverTooltip, IconUpload, TagComponent, IconChevronRight,
+        JetDialogModal,
+        ProjectHistoryComponent,
+        ProjectDataEditModal,
+        XIcon,
+        UserPopoverTooltip,
+        TagComponent,
         Link,
-        AppLayout, Menu,
+        AppLayout,
+        Menu,
         MenuButton,
         MenuItem,
         MenuItems,
@@ -37,8 +40,7 @@ export default {
             showProjectHistory: false,
             editingProject: false,
             deletingProject: false,
-            projectToDelete: null,
-            showEditKeyVisualModal: false
+            projectToDelete: null
         }
     },
     computed: {
@@ -98,12 +100,6 @@ export default {
         },
         closeEditProjectModal() {
             this.editingProject = false;
-        },
-        openEditKeyVisualModal() {
-            this.showEditKeyVisualModal = true;
-        },
-        closeEditKeyVisualModal() {
-            this.showEditKeyVisualModal = false;
         },
         duplicateProject(project) {
             this.$inertia.post(`/projects/${project.id}/duplicate`);
@@ -204,17 +200,6 @@ export default {
                                                       class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                       aria-hidden="true"/>
                                             {{ $t('Edit basic data') }}
-                                        </a>
-                                    </MenuItem>
-                                    <MenuItem
-                                        v-if="$can('write projects') || $role('artwork admin') || $can('admin projects') || headerObject.projectWriteIds.includes(this.$page.props.user.id) || headerObject.projectManagerIds.includes(this.$page.props.user.id) || headerObject.project.isMemberOfADepartment"
-                                        v-slot="{ active }">
-                                        <a @click="this.openEditKeyVisualModal"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor-pointer']">
-                                            <IconUpload stroke-width="1.5"
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
-                                            {{ $t('Edit Key Visual') }}
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
@@ -349,10 +334,6 @@ export default {
                 </div>
             </template>
         </jet-dialog-modal>
-        <EditKeyVisualModal :show="this.showEditKeyVisualModal"
-                            :project="this.headerObject.project"
-                            @closed="this.closeEditKeyVisualModal"
-        />
     </AppLayout>
 </template>
 

@@ -48,6 +48,10 @@ class CalendarShowEventResource extends JsonResource
             'eventTypeColorBackground' => $this->event_type->hex_code . '33',
             'days_of_event' => $this->days_of_event,
             'days_of_shifts' => $this->days_of_shifts,
+            'project' => $this->project,
+            'option_string' => $this->option_string,
+            'projectLeaders' => $this->project->managerUsers,
+            'is_series' => $this->is_series
         ];
     }
 }

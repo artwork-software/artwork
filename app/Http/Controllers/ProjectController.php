@@ -82,6 +82,7 @@ use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
@@ -212,14 +213,13 @@ class ProjectController extends Controller
 
     /**
      * @return array<string, mixed>
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
-    public function search(SearchRequest $request): array
+    public function search(SearchRequest $request, ProjectService $projectService): array
     {
         $this->authorize('viewAny', Project::class);
-        $projects = Project::search($request->input('query'))->get();
 
-
+        $projects = $projectService->getByName($request->get('query'));
         return ProjectIndexResource::collection($projects)->resolve();
     }
 

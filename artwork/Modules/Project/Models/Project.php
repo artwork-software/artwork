@@ -36,12 +36,6 @@ use Laravel\Scout\Searchable;
  * @property string $shift_description
  * @property int $number_of_participants
  * @property string $key_visual_path
- * @property string $num_of_guests
- * @property string $entry_fee
- * @property bool $registration_required
- * @property string $register_by
- * @property string $registration_deadline
- * @property bool $closed_society
  * @property string $created_at
  * @property string $updated_at
  * @property string $deleted_at
@@ -67,12 +61,6 @@ class Project extends Model
         'cost_center_id',
         'key_visual_path',
         'state',
-        'num_of_guests',
-        'entry_fee',
-        'registration_required',
-        'register_by',
-        'registration_deadline',
-        'closed_society',
         'budget_deadline',
         'pinned_by_users',
         'own_copyright',
@@ -83,14 +71,15 @@ class Project extends Model
     ];
 
     protected $casts = [
-        'registration_required' => 'boolean',
-        'closed_society' => 'boolean',
         'pinned_by_users' => 'array',
         'live_music' => 'boolean',
         'own_copyright' => 'boolean',
     ];
 
-    protected $with = ['shiftRelevantEventTypes', 'state'];
+    protected $with = [
+        'shiftRelevantEventTypes',
+        'state'
+    ];
 
     public function costCenter(): BelongsTo
     {

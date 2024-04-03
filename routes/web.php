@@ -284,11 +284,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('projects.export.budget');
     Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])
         ->name('projects.show.comment')->middleware(CanViewProject::class);
-    ;
-
-    //Project Entrance & registration
-    Route::patch('/projects/{project}/entrance', [ProjectController::class, 'updateEntranceData'])
-        ->name('projects.entrance.update');
 
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');

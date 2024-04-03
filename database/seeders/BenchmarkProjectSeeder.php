@@ -22,12 +22,7 @@ class BenchmarkProjectSeeder extends Seeder
             'description' => $faker->text,
             'shift_description' => '',
             'key_visual_path' => 'M8AUVkujRBdqQu9rbS2Gart.JPG',
-            'state' => 4,
-            'num_of_guests' => 23,
-            'entry_fee' => 10,
-            'registration_required' => true,
-            'register_by' => 'email',
-            'closed_society' => false,
+            'state' => 4
         ]);
 
         /*

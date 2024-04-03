@@ -51,13 +51,6 @@ class ProjectInfoResource extends JsonResource
             'project_history' => $historyArray,
             'delete_permission_users' => $this->delete_permission_users,
             'state' => ProjectStates::find($this->state),
-            //needed for project Second Sidenav
-            'entry_fee' => $this->entry_fee,
-            'registration_required' => $this->registration_required,
-            'register_by' => $this->register_by,
-            'registration_deadline' => $this->registration_deadline,
-            'closed_society' => $this->closed_society,
-            'num_of_guests' => $this->num_of_guests,
             'project_managers' => $this->managerUsers,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
             'is_group' => $this->is_group

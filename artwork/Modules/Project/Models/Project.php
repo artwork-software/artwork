@@ -222,9 +222,13 @@ class Project extends Model
         return $this->belongsToMany(MoneySource::class, 'money_source_project');
     }
 
-    public function state(): BelongsTo
+    public function state(): HasOne
     {
-        return $this->belongsTo(ProjectStates::class, 'project_id', 'id', 'state');
+        return $this->hasOne(
+            ProjectStates::class,
+            'id',
+            'state'
+        );
     }
 
 
@@ -247,5 +251,10 @@ class Project extends Model
     public function scopeByCostCenter(Builder $builder, string $costCenter): Builder
     {
         return $builder->whereRelation('costCenter', 'name', $costCenter);
+    }
+
+    public function scopeByName(Builder $builder, string $query): Builder
+    {
+        return $builder->where('name', 'like', $query . "%");
     }
 }

@@ -390,7 +390,6 @@ class EventController extends Controller
     public function storeEvent(EventStoreRequest $request): CalendarEventResource
     {
         $this->authorize('create', Event::class);
-
         $firstEvent = Event::create($request->data());
         $this->adjoiningRoomsCheck($request, $firstEvent);
         if ($request->get('projectName')) {

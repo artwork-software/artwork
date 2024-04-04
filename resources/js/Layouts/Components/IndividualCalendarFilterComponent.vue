@@ -66,88 +66,21 @@
                 </DisclosureButton>
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                     <div>
-                        <!-- TODO: STILL NEEDS TO BE IMPLEMENTED IN THE BACKEND
-                        <SwitchGroup>
-                            <div class="flex items-center">
-                                <Switch v-model="filterArray.roomFilters.showAdjoiningRooms"
-                                        :class="filterArray.roomFilters.showAdjoiningRooms ? 'bg-white' : 'bg-darkGray'"
-                                        class="relative inline-flex h-3 w-7 items-center rounded-full">
-                                            <span
-                                                :class="filterArray.roomFilters.showAdjoiningRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
-                                                class="inline-block h-2 w-2 transform rounded-full transition"/>
-                                </Switch>
-                                <SwitchLabel class="ml-4 text-xs"
-                                             :class="filterArray.roomFilters.showAdjoiningRooms ? 'text-white' : 'text-secondary'">
-                                    Nebenräume anzeigen
-                                </SwitchLabel>
-                            </div>
-                        </SwitchGroup>
-                        <SwitchGroup class="mb-1">
-                            <div class="flex items-center mt-2">
-                                <Switch v-model="filterArray.roomFilters.allDayFree"
-                                        :class="filterArray.roomFilters.allDayFree ? 'bg-white' : 'bg-darkGray'"
-                                        class="relative inline-flex h-3 w-7 items-center rounded-full">
-                                            <span
-                                                :class="filterArray.roomFilters.allDayFree ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
-                                                class="inline-block h-2 w-2 transform rounded-full transition"/>
-                                </Switch>
-                                <SwitchLabel class="ml-4 text-xs"
-                                             :class="filterArray.roomFilters.allDayFree ? 'text-white' : 'text-secondary'">
-                                    ganztägig frei
-                                </SwitchLabel>
-                            </div>
-                        </SwitchGroup>
-                        -->
-                        <div v-if="type !== 'project'">
-                            <div class="flex w-full mb-2">
-                                <input type="checkbox" v-model="filterArray.eventAttributes.adjoiningNotLoud.checked"
-                                       @change="reloadFilterBackend"
-                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                <p :class="[filterArray.eventAttributes.adjoiningNotLoud.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">{{$t('without a loud side event')}}</p>
-                            </div>
-                            <div class="flex w-full mb-2">
-                                <input type="checkbox" v-model="filterArray.eventAttributes.adjoiningNoAudience.checked"
-                                       @change="reloadFilterBackend"
-                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                <p :class="[filterArray.eventAttributes.adjoiningNoAudience.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">{{$t('without side event with audience')}}</p>
-                            </div>
-                            <!-- temporarily not included
-
-                            <Menu as="div" v-if="calendarFilters.allDayFree">
-                                <div>
-                                    <MenuButton
-                                        class="p-2 my-4 text-darkInputText bg-darkInputBg border border-secondary flex w-full justify-between">
-                                        <label v-if="currentInterval === ''" class="text-sm">Zeitraum
-                                            auswählen</label>
-                                        <label v-else class="text-sm">{{ currentInterval }}</label>
-                                        <ChevronDownIcon
-                                            class="h-4 w-4 shadow-sm text-white mt-0.5 float-right"></ChevronDownIcon>
-                                    </MenuButton>
-                                </div>
-                                <transition enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
-                                    <MenuItems
-                                        class="z-40 origin-top-left absolute overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none w-2/3">
-                                        <MenuItem v-for="interval in freeTimeIntervals" v-slot="{ active }">
-                                            <div @click="currentInterval = interval"
-                                                 :class="[active ? 'bg-primaryHover text-white' : 'text-secondary',
-                                      'group px-3 py-2 text-sm subpixel-antialiased']">
-                                                {{ interval }}
-                                            </div>
-                                        </MenuItem>
-                                    </MenuItems>
-                                </transition>
-                            </Menu> -->
-                            <hr class="border-gray-500 mt-2 mb-2">
+                        <div class="flex w-full mb-2">
+                            <input type="checkbox" v-model="filterArray.adjoining.adjoiningNotLoud.checked"
+                                   @change="reloadFilterBackend"
+                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                            <p :class="[filterArray.adjoining.adjoiningNotLoud.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">{{$t('without a loud side event')}}</p>
                         </div>
-
-
+                        <div class="flex w-full mb-2">
+                            <input type="checkbox" v-model="filterArray.adjoining.adjoiningNoAudience.checked"
+                                   @change="reloadFilterBackend"
+                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                            <p :class="[filterArray.adjoining.adjoiningNoAudience.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">{{$t('without side event with audience')}}</p>
+                        </div>
+                        <hr class="border-gray-500 mt-2 mb-2">
                     </div>
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton
@@ -465,8 +398,8 @@ export default {
                     this.filterArray.eventAttributes.isNotLoud.checked = false
                     this.filterArray.eventAttributes.hasAudience.checked = false
                     this.filterArray.eventAttributes.hasNoAudience.checked = false
-                    this.filterArray.eventAttributes.adjoiningNotLoud.checked = false
-                    this.filterArray.eventAttributes.adjoiningNoAudience.checked = false
+                    this.filterArray.adjoining.adjoiningNotLoud.checked = false
+                    this.filterArray.adjoining.adjoiningNoAudience.checked = false
 
                 }
             })
@@ -492,7 +425,6 @@ export default {
             return elementsToChange
         },
         applyFilter(filter) {
-            console.log(filter);
             this.filterArray.rooms = this.changeChecked(this.filterArray.rooms, filter.rooms)
             this.filterArray.areas = this.changeChecked(this.filterArray.areas, filter.areas)
             this.filterArray.roomAttributes = this.changeChecked(this.filterArray.roomAttributes, filter.roomAttributes)
@@ -502,8 +434,8 @@ export default {
             this.filterArray.eventAttributes.isNotLoud.checked = filter.isNotLoud
             this.filterArray.eventAttributes.hasAudience.checked = filter.hasAudience
             this.filterArray.eventAttributes.hasNoAudience.checked = filter.hasNoAudience
-            this.filterArray.eventAttributes.adjoiningNotLoud.checked = filter.adjoiningNotLoud
-            this.filterArray.eventAttributes.adjoiningNoAudience.checked = filter.adjoiningNoAudience
+            this.filterArray.adjoining.adjoiningNotLoud.checked = filter.adjoiningNotLoud
+            this.filterArray.adjoining.adjoiningNoAudience.checked = filter.adjoiningNoAudience
             this.filterArray.roomFilters.showAdjoiningRooms = filter.showAdjoiningRooms
             this.filterArray.roomFilters.allDayFree = filter.allDayFree
             this.reloadChanges();
@@ -534,8 +466,8 @@ export default {
             return {
                 isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
                 isNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),
-                adjoiningNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNoAudience.checked),
-                adjoiningNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
+                adjoiningNoAudience: this.returnNullIfFalse(this.filterArray.adjoining.adjoiningNoAudience.checked),
+                adjoiningNotLoud: this.returnNullIfFalse(this.filterArray.adjoining.adjoiningNotLoud.checked),
                 hasAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
                 hasNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
                 showAdjoiningRooms: this.returnNullIfFalse(this.filterArray.roomFilters.showAdjoiningRooms),
@@ -610,6 +542,19 @@ export default {
                 }
             })
 
+            this.filterArray.adjoining = {
+                adjoiningNoAudience: {
+                    checked: this.user_filters.adjoining_no_audience,
+                    value: 'adjoining_no_audience',
+                    name: this.$t('without side event with audience'),
+                },
+                adjoiningNotLoud: {
+                    checked: this.user_filters.adjoining_not_loud,
+                    value: 'adjoining_not_loud',
+                    name: this.$t('without a loud side event'),
+                },
+            };
+
             this.filterArray.eventAttributes = {
                 isLoud: {
                     checked: this.user_filters.is_loud,
@@ -620,16 +565,6 @@ export default {
                     checked: this.user_filters.is_not_loud,
                     value: 'is_not_loud',
                     name: this.$t('not loud'),
-                },
-                adjoiningNoAudience: {
-                    checked: this.user_filters.adjoining_no_audience,
-                    value: 'adjoining_no_audience',
-                    name: this.$t('without side event with audience'),
-                },
-                adjoiningNotLoud: {
-                    checked: this.user_filters.adjoining_not_loud,
-                    value: 'adjoining_not_loud',
-                    name: this.$t('without a loud side event'),
                 },
                 hasAudience: {
                     checked: this.user_filters.has_audience,
@@ -657,8 +592,8 @@ export default {
             Inertia.patch(route('update.user.calendar.filter', this.$page.props.user.id), {
                 is_loud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
                 is_not_loud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),
-                adjoining_no_audience: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNoAudience.checked),
-                adjoining_not_loud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
+                adjoining_no_audience: this.returnNullIfFalse(this.filterArray.adjoining.adjoiningNoAudience.checked),
+                adjoining_not_loud: this.returnNullIfFalse(this.filterArray.adjoining.adjoiningNotLoud.checked),
                 has_audience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
                 has_no_audience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
                 show_adjoining_rooms: this.returnNullIfFalse(this.filterArray.roomFilters.showAdjoiningRooms),

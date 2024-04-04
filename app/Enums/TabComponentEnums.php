@@ -29,4 +29,62 @@ enum TabComponentEnums: string
     case COMMENT_TAB = 'CommentTab';
     case PROJECT_DOCUMENTS = 'ProjectDocumentsComponent';
     case PROJECT_TITLE = 'ProjectTitleComponent';
+    case SEPARATOR = 'SeparatorComponent';
+
+    /**
+     * Get all available values
+     * @return array[]
+     */
+    public static function getValues(): array
+    {
+        return [
+            self::CHECKBOX->value => [
+                'name' => self::CHECKBOX->value,
+                'availableFields' => [
+                    'label' => '',
+                    'checked' => '',
+                ]
+            ],
+            self::TEXT_FIELD->value => [
+                'name' => self::TEXT_FIELD->value,
+                'availableFields' => [
+                    'label' => '',
+                    'text' => '',
+                    'placeholder' => '',
+                ]
+            ],
+            self::DROPDOWN->value => [
+                'name' => self::DROPDOWN->value,
+                'availableFields' => [
+                    'label' => '',
+                    'options' => [
+                        [
+                            'value' => '',
+                        ]
+                    ],
+                    'selected' => '',
+                ]
+            ],
+            self::TEXT_AREA->value => [
+                'name' => self::TEXT_AREA->value,
+                'availableFields' => [
+                    'label' => '',
+                    'text' => '',
+                    'placeholder' => '',
+                ]
+            ],
+            self::TITLE->value => [
+                'name' => self::TITLE->value,
+                'availableFields' => [
+                    'title' => '',
+                ]
+            ],
+            self::SEPARATOR->value => [
+                'name' => self::SEPARATOR->value,
+                'availableFields' => [
+                    'height' => 0,
+                ]
+            ],
+        ];
+    }
 }

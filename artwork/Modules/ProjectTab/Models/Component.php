@@ -15,18 +15,30 @@ class Component extends Model
         'description',
         'type',
         'data',
-        'special'
+        'special',
+        'sidebar_enabled'
     ];
 
     protected $casts = [
         'data' => 'array',
-        'special' => 'boolean'
+        'special' => 'boolean',
+        'sidebar_enabled' => 'boolean'
     ];
 
 
     public function projectValue(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(ProjectComponentValue::class, 'component_id', 'id');
+    }
+
+    public function sidebarTabComponent(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SidebarTabComponent::class, 'component_id', 'id');
+    }
+
+    public function tabComponent(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ComponentInTab::class, 'component_id', 'id');
     }
 
     public function scopeNotSpecial($query): Builder

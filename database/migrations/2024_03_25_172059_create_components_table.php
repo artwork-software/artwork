@@ -35,10 +35,12 @@ return new class extends Migration
                 \App\Enums\TabComponentEnums::COMMENT_TAB->value,
                 \App\Enums\TabComponentEnums::PROJECT_DOCUMENTS->value,
                 \App\Enums\TabComponentEnums::PROJECT_TITLE->value,
+                \App\Enums\TabComponentEnums::SEPARATOR->value,
             ])->default(\App\Enums\TabComponentEnums::TEXT_FIELD->value);
             $table->string('preview')->nullable();
             $table->json('data')->nullable();
             $table->boolean('special')->default(false);
+            $table->boolean('sidebar_enabled')->default(true);
             $table->timestamps();
         });
     }

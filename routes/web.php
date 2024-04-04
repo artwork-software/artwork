@@ -1203,6 +1203,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             //tab.reorder
             Route::post('/reorder/{projectTab}', [\App\Http\Controllers\ProjectTabController::class, 'reorder'])
                 ->name('tab.reorder');
+            //tab.add.component.sidebar
+            Route::post(
+                '/{projectTabSidebarTab}/add/component/sidebar',
+                [\App\Http\Controllers\ProjectTabController::class,
+                'addComponentSidebar']
+            )
+                ->name('tab.add.component.sidebar');
         });
         Route::group(['prefix' => 'component'], function (): void {
             // index
@@ -1212,6 +1219,22 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::patch('/{project}/{component}/update', [\App\Http\Controllers\ProjectComponentValueController::class,
                 'update'])
                 ->name('project.tab.component.update');
+            //component.store
+            Route::post('/store', [\App\Http\Controllers\ComponentController::class, 'store'])
+                ->name('component.store');
+            //component.update
+            Route::patch('/{component}/update', [\App\Http\Controllers\ComponentController::class, 'update'])
+                ->name('component.update');
+            // component.destroy
+            Route::delete('/{component}/destroy', [\App\Http\Controllers\ComponentController::class, 'destroy'])
+                ->name('component.destroy');
+        });
+        Route::group(['prefix' => 'sidebar'], function (): void {
+            Route::delete('/component/{sidebarTabComponent}/remove', [
+                \App\Http\Controllers\SidebarTabComponentController::class,
+                'removeComponent'
+            ])
+                ->name('sidebar.component.remove');
         });
     });
 });

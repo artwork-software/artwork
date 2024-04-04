@@ -6,6 +6,8 @@ use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ComponentInTab;
 use Artwork\Modules\ProjectTab\Models\ProjectComponentValue;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
+use Artwork\Modules\ProjectTab\Models\ProjectTabSidebarTab;
+use Artwork\Modules\ProjectTab\Models\SidebarTabComponent;
 use Illuminate\Http\Request;
 
 class ProjectTabController extends Controller
@@ -122,5 +124,16 @@ class ProjectTabController extends Controller
             ProjectTab::where('order', '>=', $order)->where('order', '<', $oldOrder)->increment('order');
         }
         $projectTab->update(['order' => $order]);
+    }
+
+    public function addComponentSidebar(ProjectTabSidebarTab $projectTabSidebarTab, Request $request): void
+    {
+        $order = $request->input('order');
+        SidebarTabComponent::where('project_tab_sidebar_id', $projectTabSidebarTab->id)
+            ->where('order', '>=', $order)->increment('order');
+        $projectTabSidebarTab->componentsInSidebar()->create([
+            'component_id' => $request->input('component_id'),
+            'order' => $request->input('order'),
+        ]);
     }
 }

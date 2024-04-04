@@ -27,7 +27,7 @@ export default {
         </div>
         <div class="ml-3 text-sm leading-6">
             <label for="comments" class="font-medium text-gray-900">
-                {{ data.name }}
+                {{ data.data.label }}
             </label>
         </div>
     </div>

@@ -15,7 +15,7 @@ import {
     IconRecycle, IconAlertTriangle, IconList, IconPencil, IconCalculator, IconDragDrop,
     IconAbacus, IconKey, IconSpeakerphone, IconTrolley, IconBuildingWarehouse, IconForklift, IconTruckDelivery, IconHotelService, IconServer, IconDevices2, IconDeviceSpeaker, IconDeviceAudioTape, IconLiveView,
     IconMicroscope, IconGavel, IconHelp, IconInfoCircle, IconFileExport, IconTxt, IconCheckbox, IconArticle, IconHeading, IconSelect, IconPlaystationCircle, IconUserShield,IconFolderPlus, IconCalendarStats,IconCalendarDue,
-    IconMoneybag, IconAddressBook, IconInfoSquare
+    IconMoneybag, IconAddressBook, IconInfoSquare, IconSeparator
 
 } from "@tabler/icons-vue";
 export default {
@@ -38,7 +38,7 @@ export default {
         IconMicroscope, IconGavel, IconHelp, IconInfoCircle, IconFileExport,
 
         IconTxt, IconCheckbox, IconArticle, IconHeading, IconSelect, IconPlaystationCircle, IconUserShield, IconFolderPlus, IconCalendarStats,IconCalendarDue,
-        IconMoneybag, IconAddressBook, IconInfoSquare
+        IconMoneybag, IconAddressBook, IconInfoSquare, IconSeparator
     }
 }
 </script>

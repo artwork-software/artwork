@@ -1,7 +1,7 @@
 <script>
 export default {
     name: "DropNewComponent",
-    props: ['tab', 'order'],
+    props: ['tab', 'order', 'isSidebar'],
     emits: ['tabOpened'],
     data() {
         return {
@@ -23,16 +23,29 @@ export default {
                 return;
             }
 
-            this.$inertia.post(route('tab.add.component', {projectTab: this.tab.id}), {
-                component_id: data.id,
-                order: this.order
-            }, {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.dropOver = false;
-                }
-            });
+            if(this.isSidebar) {
+                this.$inertia.post(route('tab.add.component.sidebar', {projectTabSidebarTab: this.tab.id}), {
+                    component_id: data.id,
+                    order: this.order
+                }, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        this.dropOver = false;
+                    }
+                });
+            } else {
+                this.$inertia.post(route('tab.add.component', {projectTab: this.tab.id}), {
+                    component_id: data.id,
+                    order: this.order
+                }, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        this.dropOver = false;
+                    }
+                });
+            }
         }
     }
 }

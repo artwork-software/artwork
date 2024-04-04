@@ -22,10 +22,22 @@ class ProjectTab extends Model
         'order',
     ];
 
-    protected $with = ['components'];
+    protected $appends = ['hasSidebarTabs'];
+
+    protected $with = ['components', 'sidebarTabs'];
 
     public function components(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ComponentInTab::class, 'project_tab_id', 'id');
+    }
+
+    public function sidebarTabs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ProjectTabSidebarTab::class, 'project_tab_id', 'id')->orderBy('order');
+    }
+
+    public function getHasSidebarTabsAttribute(): bool
+    {
+        return $this->sidebarTabs->isNotEmpty();
     }
 }

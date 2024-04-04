@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TabComponentEnums;
 use Artwork\Modules\ProjectTab\Models\Component;
 use Illuminate\Http\Request;
 
@@ -12,8 +13,16 @@ class ComponentController extends Controller
      */
     public function index(): \Inertia\ResponseFactory|\Inertia\Response
     {
+        // get all TabComponentsEnum names
+        $tabComponentTypes = TabComponentEnums::getValues();
+        // return inertia view with components and special components
+
+
+
         return inertia('Settings/ComponentManagement/Index', [
-            'components' => Component::get()->groupBy('type'),
+            'components' => Component::notSpecial()->get()->groupBy('type'),
+            'componentsSpecial' => Component::isSpecial()->get(),
+            'tabComponentTypes' => $tabComponentTypes
         ]);
     }
 
@@ -30,7 +39,13 @@ class ComponentController extends Controller
      */
     public function store(Request $request): void
     {
-        //
+        Component::create([
+            'name' => $request->name,
+            'type' => $request->type,
+            'data' => $request->data,
+            'special' => false,
+            'sidebar_enabled' => true
+        ]);
     }
 
     /**
@@ -54,7 +69,7 @@ class ComponentController extends Controller
      */
     public function update(Request $request, Component $component): void
     {
-        //
+        $component->update($request->only('name', 'data'));
     }
 
     /**
@@ -62,6 +77,26 @@ class ComponentController extends Controller
      */
     public function destroy(Component $component): void
     {
-        //
+        // first check if the component has projectValues attached
+        if ($component->projectValue()->exists()) {
+            foreach ($component->projectValue()->get() as $projectValue) {
+                $projectValue->delete();
+            }
+        }
+
+        // now check if the component is in the sidebar or in a tab
+        if ($component->sidebarTabComponent()->exists()) {
+            foreach ($component->sidebarTabComponent()->get() as $sidebarTabComponent) {
+                $sidebarTabComponent->delete();
+            }
+        }
+
+        if ($component->tabComponent()->exists()) {
+            foreach ($component->tabComponent()->get() as $tabComponent) {
+                $tabComponent->delete();
+            }
+        }
+
+        $component->delete();
     }
 }

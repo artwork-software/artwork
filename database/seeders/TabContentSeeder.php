@@ -39,92 +39,116 @@ class TabContentSeeder extends Seeder
                 'name' => 'Project Status',
                 'type' => TabComponentEnums::PROJECT_STATUS,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => true
             ],
             [
                 'name' => 'Project Group',
                 'type' => TabComponentEnums::PROJECT_GROUP,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => true
             ],
             [
                 'name' => 'Project Team',
                 'type' => TabComponentEnums::PROJECT_TEAM,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => true
             ],
             [
                 'name' => 'Project Attributes',
                 'type' => TabComponentEnums::PROJECT_ATTRIBUTES,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => true
             ],
             [
                 'name' => 'Calendar',
                 'type' => TabComponentEnums::CALENDAR,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => false
             ],
             [
                 'name' => 'Checklist',
                 'type' => TabComponentEnums::CHECKLIST,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => false
             ],
             [
                 'name' => 'Shift Tab',
                 'type' => TabComponentEnums::SHIFT_TAB,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => false
             ],
             [
                 'name' => 'Relevant Dates For Shift Planning',
                 'type' => TabComponentEnums::RELEVANT_DATES_FOR_SHIFT_PLANNING,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => true
             ],
             [
                 'name' => 'Shift Contact Persons',
                 'type' => TabComponentEnums::SHIFT_CONTACT_PERSONS,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => true
             ],
             [
                 'name' => 'General Shift Information',
                 'type' => TabComponentEnums::GENERAL_SHIFT_INFORMATION,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => true
             ],
             [
                 'name' => 'Budget',
                 'type' => TabComponentEnums::BUDGET,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => false
             ],
             [
                 'name' => 'Project Budget Deadline',
                 'type' => TabComponentEnums::PROJECT_BUDGET_DEADLINE,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => true
             ],
             [
                 'name' => 'Comment Tab',
                 'type' => TabComponentEnums::COMMENT_TAB,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => false
             ],
             [
                 'name' => 'Project Documents',
                 'type' => TabComponentEnums::PROJECT_DOCUMENTS,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => false
             ],
             [
                 'name' => 'Project Title',
                 'type' => TabComponentEnums::PROJECT_TITLE,
                 'data' => [],
-                'special' => true
+                'special' => true,
+                'sidebar_enabled' => true
             ],
+            [
+                'name' => 'Separator 10 Pixel',
+                'type' => TabComponentEnums::SEPARATOR,
+                'data' => [
+                    'height' => '10'
+                ],
+                'special' => false,
+                'sidebar_enabled' => true
+            ]
         ];
 
         foreach ($components as $component) {

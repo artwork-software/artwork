@@ -4,7 +4,7 @@
             <div class="fixed right-0 top-0 z-30 h-screen bg-primary w-[26rem]">
                 <div class="">
                     <div>
-                        <div class="mt-32 ml-8 mr-8 text-secondary">
+                        <div class="mt-5 px-3 text-secondary">
                             <slot></slot>
                         </div>
                     </div>

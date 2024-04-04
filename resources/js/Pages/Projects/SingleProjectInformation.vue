@@ -35,8 +35,6 @@
                 :genres="genres"
                 :project-manager-ids="projectManagerIds"
             />
-
-            <Component :is=""/>
         </BaseSidenav>
     </app-layout>
 </template>

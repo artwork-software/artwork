@@ -21,7 +21,10 @@ export default {
 
 <template>
     <div class="my-2">
-        <textarea class="w-full h-32 border border-gray-300 rounded-md" @focusout="updateTextData" v-model="textData.text"></textarea>
+        <label for="email" class="block text-sm font-medium leading-6 text-gray-900">
+            {{ data.data.label }}
+        </label>
+        <textarea :placeholder="data.data.placeholder" class="w-full h-32 border border-gray-300 rounded-md" @focusout="updateTextData" v-model="textData.text"></textarea>
     </div>
 </template>
 

@@ -30,9 +30,12 @@ export default {
             <span v-if="component.special">
                 {{ $t(component.name) }}
             </span>
-            <span v-else>
+            <div v-else>
                 {{ component.name }}
-            </span>
+                <div class="text-[10px] text-gray-500 font-light" v-if="component.data.height">
+                    {{ component.data.height }} Pixel
+                </div>
+            </div>
         </div>
     </div>
 </template>

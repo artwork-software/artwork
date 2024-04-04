@@ -21,7 +21,8 @@ class ProjectTabController extends Controller
                     $query->orderBy('order');
                 },
             ])->orderBy('order')->get(),
-            'components' => Component::get()->groupBy('type'),
+            'components' => Component::notSpecial()->get()->groupBy('type'),
+            'componentsSpecial' => Component::isSpecial()->get(),
         ]);
     }
 

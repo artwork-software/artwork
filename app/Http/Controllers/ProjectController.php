@@ -1594,7 +1594,7 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($project->id);
     }
 
-    public function projectTabTest(Project $project, ProjectTab $projectTab): Response|ResponseFactory
+    public function projectTabTest(Project $project, ProjectTab $projectTab, CalendarController $calendar): Response|ResponseFactory
     {
         $project->load([
             'categories',
@@ -1665,10 +1665,65 @@ class ProjectController extends Controller
         $dataObject = new stdClass();
         $dataObject->currentTab = $projectTab;
 
+        $loadedProjectInformation = [];
+
+        foreach ($projectTab->components()->with('component')->get() as $component) {
+            if ($component->component->type === 'ProjectStateComponent') {
+                $loadedProjectInformation['ProjectStateComponent'] = ProjectStates::find($project->state);
+            }
+            if ($component->component->type === 'CalendarTab') {
+                $showCalendar = $calendar->createCalendarData(type: '', project: $project);
+                $eventsAtAGlance = [];
+
+                if (\request('atAGlance') === 'true') {
+                    $eventsQuery = $project->events();
+                    $filteredEvents = $calendar->filterEvents($eventsQuery, null, null, null, $project);
+
+                    $eventsAtAGlance = ProjectCalendarShowEventResource::collection(
+                        $filteredEvents
+                            ->with(['room','project','creator'])
+                            ->orderBy('start_time', 'ASC')
+                            ->get()
+                    )->collection->groupBy('room.id');
+                }
+
+                if (\request('startDate') && \request('endDate')) {
+                    $startDate = Carbon::create(\request('startDate'))->startOfDay();
+                    $endDate = Carbon::create(\request('endDate'))->endOfDay();
+                } else {
+                    $startDate = Carbon::now()->startOfDay();
+                    $endDate = Carbon::now()->addWeeks()->endOfDay();
+                }
+
+                $loadedProjectInformation['CalendarTab'] = [
+                    'eventsAtAGlance' => $eventsAtAGlance,
+                    'calendar' => $showCalendar['roomsWithEvents'],
+                    'dateValue' => $showCalendar['dateValue'],
+                    'days' => $showCalendar['days'],
+                    'selectedDate' => $showCalendar['selectedDate'],
+                    'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
+                    'events' => new CalendarEventCollectionResourceModel(
+                        areas: $showCalendar['filterOptions']['areas'],
+                        projects: $showCalendar['filterOptions']['projects'],
+                        eventTypes: $showCalendar['filterOptions']['eventTypes'],
+                        roomCategories: $showCalendar['filterOptions']['roomCategories'],
+                        roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
+                        events: $calendar->getEventsOfInterval($startDate, $endDate, $project),
+                        filter: Filter::query()->where('user_id', Auth::id())->get(),
+                    ),
+                    'filterOptions' => $showCalendar["filterOptions"],
+                    'personalFilters' => $showCalendar['personalFilters'],
+                    'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
+                    'user_filters' => $showCalendar['user_filters'],
+                ];
+            }
+        }
+
 
         return inertia('Projects/TabTest/TabContent', [
             'dataObject' => $dataObject,
             'headerObject' => $headerObject,
+            'loadedProjectInformation' => $loadedProjectInformation
         ]);
     }
 

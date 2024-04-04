@@ -22,12 +22,17 @@ export default {
 </script>
 
 <template>
-    <div class="p-3 rounded-lg border mb-3 hover:cursor-grab" draggable="true" @dragstart="onDragStart">
+    <div class="p-3 rounded-lg border mb-3 hover:cursor-grab flex flex-col h-28 justify-center items-center" draggable="true" @dragstart="onDragStart">
         <div class="flex items-center justify-center mb-2">
             <ComponentIcons :type="component.type" />
         </div>
         <div class="text-center text-sm font-bold">
-            {{ component.name }}
+            <span v-if="component.special">
+                {{ $t(component.name) }}
+            </span>
+            <span v-else>
+                {{ component.name }}
+            </span>
         </div>
     </div>
 </template>

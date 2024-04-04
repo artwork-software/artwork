@@ -21,17 +21,24 @@ return new class extends Migration
                 \App\Enums\TabComponentEnums::DROPDOWN->value,
                 \App\Enums\TabComponentEnums::TITLE->value,
                 \App\Enums\TabComponentEnums::CALENDAR->value,
-                \App\Enums\TabComponentEnums::PROJECT_SHIFTS->value,
                 \App\Enums\TabComponentEnums::PROJECT_STATUS->value,
                 \App\Enums\TabComponentEnums::CHECKLIST->value,
-                \App\Enums\TabComponentEnums::DOCUMENT->value,
-                \App\Enums\TabComponentEnums::PROJECT_BUDGET->value,
-                \App\Enums\TabComponentEnums::KEY_VISUAL->value,
                 \App\Enums\TabComponentEnums::PROJECT_TEAM->value,
-                \App\Enums\TabComponentEnums::PROJECT_INFOS->value,
+                \App\Enums\TabComponentEnums::PROJECT_GROUP->value,
+                \App\Enums\TabComponentEnums::PROJECT_ATTRIBUTES->value,
+                \App\Enums\TabComponentEnums::SHIFT_TAB->value,
+                \App\Enums\TabComponentEnums::RELEVANT_DATES_FOR_SHIFT_PLANNING->value,
+                \App\Enums\TabComponentEnums::SHIFT_CONTACT_PERSONS->value,
+                \App\Enums\TabComponentEnums::GENERAL_SHIFT_INFORMATION->value,
+                \App\Enums\TabComponentEnums::BUDGET->value,
+                \App\Enums\TabComponentEnums::PROJECT_BUDGET_DEADLINE->value,
+                \App\Enums\TabComponentEnums::COMMENT_TAB->value,
+                \App\Enums\TabComponentEnums::PROJECT_DOCUMENTS->value,
+                \App\Enums\TabComponentEnums::PROJECT_TITLE->value,
             ])->default(\App\Enums\TabComponentEnums::TEXT_FIELD->value);
             $table->string('preview')->nullable();
             $table->json('data')->nullable();
+            $table->boolean('special')->default(false);
             $table->timestamps();
         });
     }

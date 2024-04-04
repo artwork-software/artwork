@@ -1667,6 +1667,20 @@
     "Please enter a start time and date.": "Bitte gib Schichtbeginn und Uhrzeit an.",
     "Please enter an end time and date.": "Bitte gib Schichtende und Uhrzeit an.",
     "Value can't be lower than 0.": "Wert kann nicht kleiner als 0 sein.",
-    "Please enter a shift start time.": "Please enter a start time",
-    "Please enter a shift end time.": "Please enter an end time."
+    "Please enter a shift start time.": "Please enter a shift start time.",
+    "Please enter a shift end time.": "Please enter a shift end time.",
+    "Project Group": "Projektgruppe",
+    "Project Team": "Projektteam",
+    "Project Attributes": "Projektattribute",
+    "Calendar": "Kalender",
+    "Checklist": "Checkliste",
+    "Shift Tab": "Schichten",
+    "Relevant Dates For Shift Planning": "Relevante Daten für Schichtplanung",
+    "Shift Contact Persons": "Schicht-Kontaktpersonen",
+    "General Shift Information": "Allgemeine Schichtinformationen",
+    "Project Budget Deadline": "Projekt Budget Stichtag",
+    "Comment Tab": "Kommentare",
+    "Project Documents": "Dokumente",
+    "Project Title": "Projekttitel",
+    "Special components": "Spezielle Komponenten"
 }

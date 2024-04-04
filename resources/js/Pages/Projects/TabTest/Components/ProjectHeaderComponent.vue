@@ -1,9 +1,6 @@
 <script>
 import AppLayout from "@/Layouts/AppLayout.vue";
 import {Link} from "@inertiajs/inertia-vue3";
-import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
-import {XIcon} from "@heroicons/vue/outline";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
@@ -16,8 +13,7 @@ export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib],
     components: {
-        JetDialogModal, ProjectHistoryComponent, ProjectDataEditModal, XIcon,
-        IconTrash, IconCopy, IconEdit, IconDotsVertical, UserPopoverTooltip, IconUpload, TagComponent, IconChevronRight,
+        JetDialogModal, ProjectHistoryComponent, ProjectDataEditModal,
         Link,
         AppLayout,
         Menu,

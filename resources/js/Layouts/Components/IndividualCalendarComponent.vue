@@ -205,7 +205,7 @@ export default {
             };
         },
         filteredEvents() {
-            return this.eventsWithoutRoom.filter((event) => {
+            return this.eventsWithoutRoom?.filter((event) => {
                 let createdBy = event.created_by;
                 let projectLeaders = event.projectLeaders;
 

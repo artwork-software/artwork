@@ -18,7 +18,7 @@ export default {
         PlusButton,
         AddEditTabModal,
         DragComponentElement, SingleTabComponent, draggable, Link, IconDragDrop, ProjectTabs, AppLayout},
-    props: ['tabs', 'components'],
+    props: ['tabs', 'components', 'componentsSpecial'],
     mixins: [IconLib],
     data() {
         return {
@@ -42,6 +42,12 @@ export default {
 
             });
 
+        },
+        filteredSpecialComponents() {
+            // filter special components with translation
+            return this.componentsSpecial.filter(component => {
+                return this.$t(component.name).toLowerCase().includes(this.searchComponent.toLowerCase());
+            });
         }
     }
 
@@ -82,7 +88,7 @@ export default {
                         <div class="w-44 md:w-56 lg:w-72">
                             <div>
                                 <div class="relative rounded-md shadow-sm">
-                                    <input type="text" name="search" v-model="searchComponent" placeholder="Suche" id="account-number" class="block w-full rounded-md border-0 py-1.5 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+                                    <input type="text" name="search" v-model="searchComponent" :placeholder="$t('Search')" id="account-number" class="block w-full rounded-md border-0 py-1.5 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                     <div class=" absolute inset-y-0 right-0 flex items-center pr-3">
                                         <IconSearch class="h-5 w-5 text-gray-400 pointer-events-none" aria-hidden="true" v-if="searchComponent.length === 0" />
                                         <IconCircleX class="h-5 w-5 text-gray-400 cursor-pointer hover:text-red-400" aria-hidden="true" v-else @click="searchComponent = ''" />
@@ -96,6 +102,14 @@ export default {
                          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-7 gap-3">
                              <DragComponentElement v-for="component in componentsArray" :component="component" />
                          </div>
+                   </div>
+
+
+                   <div>
+                       <h2 class="text-md font-bold mb-3">{{ $t('Special components') }}</h2>
+                       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-7 gap-3">
+                           <DragComponentElement v-for="component in filteredSpecialComponents" :component="component" />
+                       </div>
                    </div>
                 </div>
             </div>

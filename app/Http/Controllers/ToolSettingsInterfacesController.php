@@ -8,6 +8,7 @@ use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
@@ -65,6 +66,15 @@ class ToolSettingsInterfacesController extends Controller
     public function initializeSage(): RedirectResponse
     {
         if (Artisan::call(GetSage100Data::class) === 0) {
+            return Redirect::back()->with('success', __('flash-messages.interfaces.import_executed_successfully'));
+        }
+
+        return Redirect::back()->with('error', __('flash-messages.interfaces.import_executed_unsuccessfully'));
+    }
+
+    public function initializeSageSpecificDay(Request $request): RedirectResponse
+    {
+        if (Artisan::call(GetSage100Data::class, ['specificDay' => $request->get('specificDay')]) === 0) {
             return Redirect::back()->with('success', __('flash-messages.interfaces.import_executed_successfully'));
         }
 

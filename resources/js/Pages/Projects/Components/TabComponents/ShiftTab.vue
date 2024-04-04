@@ -4,7 +4,7 @@
             <div class="flex justify-between items-center mt-4 stickyHeader p-4">
                 <div class="flex items-center gap-6">
                     <div class="flex w-full justify-between">
-                        <SwitchGroup as="div" class="flex items-center" v-if="eventsWithRelevant?.length > 0 && (this.$can('can commit shifts') || this.hasAdminRole())">
+                        <SwitchGroup as="div" class="flex items-center" v-if="checkCommitted && (this.$can('can commit shifts') || this.hasAdminRole())">
                             <Switch v-model="hasUncommittedShift"
                                     @update:modelValue="updateCommitmentOfShifts"
                                     :class="[!hasUncommittedShift ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
@@ -111,15 +111,15 @@
                         </div>
                     </div>
                 </transition>
-                <div class="xsDark" v-if="eventsWithRelevant.length === 0">
+                <div class="xsDark" v-if="eventsWithRelevant?.length === 0 ?? loadedProjectInformation['ShiftTab']?.eventsWithRelevant?.length === 0">
                     {{ $t('So far, there are no shift-relevant dates for this project.') }}
                 </div>
-                <SingleRelevantEvent v-for="event in eventsWithRelevant"
-                                     :crafts="crafts"
-                                     :currentUserCrafts="currentUserCrafts"
-                                     :event="event"
-                                     :event-types="eventTypes"
-                                     :shift-qualifications="shiftQualifications"
+                <SingleRelevantEvent v-for="event in eventsWithRelevant ?? loadedProjectInformation['ShiftTab']?.eventsWithRelevant"
+                                     :crafts="crafts ?? loadedProjectInformation['ShiftTab']?.crafts"
+                                     :currentUserCrafts="currentUserCrafts ?? loadedProjectInformation['ShiftTab']?.currentUserCrafts"
+                                     :event="event "
+                                     :event-types="eventTypes ?? headerObject?.eventTypes"
+                                     :shift-qualifications="shiftQualifications ?? loadedProjectInformation['ShiftTab']?.shiftQualifications"
                                      @dropFeedback="showDropFeedback"
                 />
             </div>
@@ -148,10 +148,9 @@ export default defineComponent({
         'eventsWithRelevant',
         'crafts',
         'users',
-        'dropUsers',
         'eventTypes',
         'currentUserCrafts',
-        'shiftQualifications'
+        'shiftQualifications','loadedProjectInformation', 'usersForShifts', 'freelancersForShifts', 'serviceProvidersForShifts', 'headerObject'
     ],
     mixins: [Permissions, IconLib],
     components: {
@@ -186,17 +185,89 @@ export default defineComponent({
         }
     },
     computed: {
-        conflictMessage(){
-            let conflicts = [];
-            this.eventsWithRelevant.forEach(event => {
-                event.shifts.forEach(shift => {
-                    shift.users.forEach(user => {
-                        if(user.formatted_vacation_days?.includes(shift.event_start_day)){
-                            conflicts.push({ date: shift.event_start_day, abbreviation: shift.craft.abbreviation })
-                        }
+        dropUsers(){
+            const users = [];
+
+            if(this.usersForShifts) {
+                this.usersForShifts.forEach((user) => {
+                    users.push({
+                        element: user.user,
+                        type: 0,
+                        plannedWorkingHours: user.plannedWorkingHours,
                     })
                 })
-            })
+            } else if(this.loadedProjectInformation['ShiftTab']) {
+                this.loadedProjectInformation['ShiftTab']?.usersForShifts.forEach((user) => {
+                    users.push({
+                        element: user.user,
+                        type: 0,
+                        plannedWorkingHours: user.plannedWorkingHours,
+                    })
+                })
+            }
+
+            if(this.freelancersForShifts) {
+                this.freelancersForShifts.forEach((freelancer) => {
+                    users.push({
+                        element: freelancer.freelancer,
+                        type: 1,
+                        plannedWorkingHours: freelancer.plannedWorkingHours,
+                    })
+                })
+            } else if(this.loadedProjectInformation['ShiftTab']) {
+                this.loadedProjectInformation['ShiftTab']?.freelancersForShifts.forEach((freelancer) => {
+                    users.push({
+                        element: freelancer.freelancer,
+                        type: 1,
+                        plannedWorkingHours: freelancer.plannedWorkingHours,
+                    })
+                })
+            }
+
+            if(this.serviceProvidersForShifts) {
+                this.serviceProvidersForShifts.forEach((service_provider) => {
+                    users.push({
+                        element: service_provider.service_provider,
+                        type: 2,
+                        plannedWorkingHours: service_provider.plannedWorkingHours,
+                    })
+                })
+            } else if(this.loadedProjectInformation['ShiftTab']) {
+                this.loadedProjectInformation['ShiftTab']?.serviceProvidersForShifts.forEach((service_provider) => {
+                    users.push({
+                        element: service_provider.service_provider,
+                        type: 2,
+                        plannedWorkingHours: service_provider.plannedWorkingHours,
+                    })
+                })
+            }
+
+            return users;
+        },
+        conflictMessage(){
+            let conflicts = [];
+            if(this.eventsWithRelevant){
+                this.eventsWithRelevant.forEach(event => {
+                    event.shifts.forEach(shift => {
+                        shift.users.forEach(user => {
+                            if(user.formatted_vacation_days?.includes(shift.event_start_day)){
+                                conflicts.push({ date: shift.event_start_day, abbreviation: shift.craft.abbreviation })
+                            }
+                        })
+                    })
+                })
+            } else {
+                this.loadedProjectInformation['ShiftTab']?.eventsWithRelevant.forEach(event => {
+                    event.shifts.forEach(shift => {
+                        shift.users.forEach(user => {
+                            if(user.formatted_vacation_days?.includes(shift.event_start_day)){
+                                conflicts.push({ date: shift.event_start_day, abbreviation: shift.craft.abbreviation })
+                            }
+                        })
+                    })
+                })
+            }
+
             return conflicts;
         },
         filteredUsers() {
@@ -225,13 +296,32 @@ export default defineComponent({
             return users;
         },
         hasUncommittedShift() {
-            return this.eventsWithRelevant.some(event => event.shifts.find(shift => shift.is_committed === false));
+            if (this.eventsWithRelevant) {
+                return this.eventsWithRelevant.some(event => event.shifts.find(shift => shift.is_committed === false));
+            } else {
+                return this.loadedProjectInformation['ShiftTab']?.eventsWithRelevant.some(event => event.shifts.find(shift => shift.is_committed === false));
+            }
         }
     },
     mounted() {
         this.makeContainerDraggable();
     },
     methods: {
+        checkCommitted(){
+            if(this.eventsWithRelevant){
+                return eventsWithRelevant?.length > 0;
+            } else if(this.loadedProjectInformation['ShiftTab']) {
+                return this.loadedProjectInformation['ShiftTab']?.eventsWithRelevant?.length > 0;
+            }
+        },
+        projectMembers: function () {
+            let projectMemberArray = [];
+            this.project.users.forEach(member => {
+                    projectMemberArray.push(member.id)
+                }
+            )
+            return projectMemberArray;
+        },
         showDropFeedback(feedback) {
             this.dropFeedback = feedback;
             setTimeout(() => {

@@ -28,7 +28,7 @@ export default {
     <IconMessageDots class="w-6 h-6" v-if="type === 'CommentTab'" />
 
     <IconCalendarDue class="w-6 h-6" v-if="type === 'ProjectBudgetDeadlineComponent'" />
-    <IconMoneybag class="w-6 h-6" v-if="type === 'BudgetComponent'" />
+    <IconMoneybag class="w-6 h-6" v-if="type === 'BudgetTab'" />
     <IconAddressBook class="w-6 h-6" v-if="type === 'ShiftContactPersonsComponent'" />
     <IconInfoSquare class="w-6 h-6" v-if="type === 'GeneralShiftInformationComponent'" />
 

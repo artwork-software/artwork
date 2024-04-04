@@ -20,10 +20,13 @@
                       :eventsWithRelevant="eventsWithRelevant"
                       :crafts="crafts"
                       :currentUserCrafts="currentUserCrafts"
-                      :drop-users="dropUsers"
                       :users="project.users"
                       :event-types="eventTypes"
                       :shift-qualifications="shiftQualifications"
+                      :project="project"
+                      :users-for-shifts="usersForShifts"
+                        :freelancers-for-shifts="freelancersForShifts"
+                        :service-providers-for-shifts="serviceProvidersForShifts"
             />
         </ProjectShowHeaderComponent>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">

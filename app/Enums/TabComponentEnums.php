@@ -24,7 +24,7 @@ enum TabComponentEnums: string
     case RELEVANT_DATES_FOR_SHIFT_PLANNING = 'RelevantDatesForShiftPlanningComponent';
     case SHIFT_CONTACT_PERSONS = 'ShiftContactPersonsComponent';
     case GENERAL_SHIFT_INFORMATION = 'GeneralShiftInformationComponent';
-    case BUDGET = 'BudgetComponent';
+    case BUDGET = 'BudgetTab';
     case PROJECT_BUDGET_DEADLINE = 'ProjectBudgetDeadlineComponent';
     case COMMENT_TAB = 'CommentTab';
     case PROJECT_DOCUMENTS = 'ProjectDocumentsComponent';

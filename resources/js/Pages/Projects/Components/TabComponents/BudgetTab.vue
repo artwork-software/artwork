@@ -1,19 +1,21 @@
 <template>
     <div :class="hideProjectHeader ? 'px-5' : 'mt-6 px-5  bg-lightBackgroundGray'">
-        <ProjectBudgetDeadlineComponent :project="this.project"/>
+        <div class="ml-14 mt-4">
+            <ProjectBudgetDeadlineComponent :project="this.project ?? headerObject.project"/>
+        </div>
         <div class="flex bg-lightBackgroundGray w-[95%]">
-            <BudgetComponent :sage-not-assigned="sageNotAssigned"
-                             :hide-project-header="hideProjectHeader"
-                             :table="budget.table"
-                             :columnCalculatedNames="budget.columnCalculatedNames"
-                             :project="project"
-                             :selectedCell="budget.selectedCell"
-                             :selectedRow="budget.selectedRow"
-                             :templates="budget.templates"
-                             :selected-sum-detail="budget.selectedSumDetail"
-                             :money-sources="moneySources"
-                             :budget-access="projectWriteIds"
-                             :project-manager="projectManagerIds"
+            <BudgetComponent :sage-not-assigned="sageNotAssigned ?? loadedProjectInformation['BudgetTab']?.sageNotAssigned"
+                             :hide-project-header="hideProjectHeader "
+                             :table="budget?.table ?? loadedProjectInformation['BudgetTab'].budget?.table"
+                             :columnCalculatedNames="budget?.columnCalculatedNames ?? loadedProjectInformation['BudgetTab']?.budget.columnCalculatedNames"
+                             :project="project ?? headerObject.project"
+                             :selectedCell="budget?.selectedCell ?? loadedProjectInformation['BudgetTab']?.budget.selectedCell"
+                             :selectedRow="budget?.selectedRow ?? loadedProjectInformation['BudgetTab']?.budget.selectedRow"
+                             :templates="budget?.templates ?? loadedProjectInformation['BudgetTab']?.budget.templates"
+                             :selected-sum-detail="budget?.selectedSumDetail ?? loadedProjectInformation['BudgetTab']?.budget.selectedSumDetail"
+                             :money-sources="moneySources ?? loadedProjectInformation['BudgetTab']?.moneySources"
+                             :budget-access="projectWriteIds ?? headerObject?.projectWriteIds"
+                             :project-manager="projectManagerIds ?? headerObject?.projectManagerIds"
                              @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation"
             />
         </div>
@@ -45,13 +47,18 @@ export default{
         'moneySources',
         'projectWriteIds',
         'projectManagerIds',
-        'hideProjectHeader',
-        'sageNotAssigned'
+        'sageNotAssigned',
+        'loadedProjectInformation',
+        'headerObject'
     ],
-    emits: ['changeProjectHeaderVisualisation'],
+    data(){
+        return {
+            hideProjectHeader: false,
+        }
+    },
     methods: {
         changeProjectHeaderVisualisation(boolean) {
-            this.$emit('changeProjectHeaderVisualisation',boolean);
+            this.hideProjectHeader = boolean;
         },
     },
 }

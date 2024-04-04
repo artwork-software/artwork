@@ -154,7 +154,7 @@
                 {{ $t('Repeat event') }}
             </div>
             <!-- User-Icons -->
-            <div class="-ml-3 mb-0.5 w-full" v-if="$page.props.user.calendar_settings.project_management">
+            <div class="-ml-3 mb-0.5 w-full" v-if="$page.props.user.calendar_settings.project_management && event.projectLeaders?.length > 0">
                 <div v-if="event.projectLeaders && !project && zoomFactor >= 0.8"
                      class="mt-1 ml-5 flex flex-wrap">
                     <div class="flex flex-wrap flex-row -ml-1.5"

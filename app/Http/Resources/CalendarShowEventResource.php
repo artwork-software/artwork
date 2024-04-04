@@ -51,7 +51,8 @@ class CalendarShowEventResource extends JsonResource
             'project' => $this->project,
             'option_string' => $this->option_string,
             'projectLeaders' => $this->project->managerUsers,
-            'is_series' => $this->is_series
+            'is_series' => $this->is_series,
+            'series' => $this->series
         ];
     }
 }

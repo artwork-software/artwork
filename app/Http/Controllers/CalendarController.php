@@ -563,7 +563,7 @@ class CalendarController extends Controller
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
 
-        $better = $this->filterRooms($startDate, $endDate)->get();
+        $better = $this->filterRooms($startDate, $endDate, true)->get();
         $better = $this->roomService->collectEventsForRoomsShift($better, $calendarPeriod, null, true);
 
         return [

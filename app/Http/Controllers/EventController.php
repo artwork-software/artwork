@@ -229,7 +229,17 @@ class EventController extends Controller
         $historyElements = $events->flatMap(function ($event) {
             return $event->shifts->flatMap(function ($shift) {
                 // Sort each shift's historyChanges by created_at in descending order
-                return $shift->historyChanges()->sortByDesc('created_at');
+                $historyArray = [];
+                foreach ($shift->historyChanges()->sortByDesc('created_at') as $history) {
+                    $historyArray[] = [
+                        'changes' => json_decode($history->changes),
+                        'created_at' => $history->created_at->diffInHours() < 24
+                            ? $history->created_at->diffForHumans()
+                            : $history->created_at->format('d.m.Y, H:i'),
+                    ];
+                }
+
+                return $historyArray;
             });
         })->all();
 

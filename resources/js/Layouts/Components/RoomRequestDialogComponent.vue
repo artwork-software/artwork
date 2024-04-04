@@ -625,10 +625,10 @@ export default {
             this.startTime = start?.format('HH:mm');
             this.endDate = end?.format('YYYY-MM-DD');
             this.endTime = end?.format('HH:mm');
-            this.isLoud = this.event.isLoud
-            this.audience = this.event.audience
-            this.title = this.event.title
-            this.eventName = this.event.eventName
+            this.isLoud = this.event.isLoud;
+            this.audience = this.event.audience;
+            this.title = this.event.title;
+            this.eventName = this.event.eventName;
             if (!this.event.eventTypeId) {
                 this.selectedEventType = this.eventTypes[0];
             } else {
@@ -637,23 +637,23 @@ export default {
                     this.disableEventTypeSelector = true;
                 }
             }
-            this.series = this.event.is_series
+            this.series = this.event.is_series;
             if (this.series) {
                 this.seriesEndDate = this.event.series.end_date;
             }
             this.frequencies.forEach((frequency) => {
                 if(frequency.id === this.event.series?.frequency_id) {
-                    this.selectedFrequency = frequency
+                    this.selectedFrequency = frequency;
                 }
             })
-            this.selectedProject = {id: this.event.projectId, name: this.event.projectName}
+            this.selectedProject = {id: this.event.projectId, name: this.event.projectName};
             if (this.wantedRoomId) {
-                this.selectedRoom = this.rooms.find(room => room.id === this.wantedRoomId)
+                this.selectedRoom = this.rooms.find(room => room.id === this.wantedRoomId);
             } else if (this.event) {
-                this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId)
+                this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId);
             }
 
-            this.description = this.event.description
+            this.description = this.event.description;
 
             this.checkCollisions();
         },

@@ -1682,5 +1682,8 @@
     "Comment Tab": "Comments",
     "Project Documents": "Documents",
     "Project Title": "Project Title",
-    "Special components": "Special components"
+    "Special components": "Special components",
+    "Import individual booking days again. Existing data is overwritten with new data.": "Import individual booking days again. Existing data is overwritten with new data.",
+    "Please configure the Sage interface first.": "Please configure the Sage interface first.",
+    "Import a specific booking date": "Import a specific booking date"
 }

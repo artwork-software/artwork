@@ -34,27 +34,23 @@ class Sage100Service
     ) {
     }
 
-    private function getData(int|null $count)
+    private function getData(int|null $count, string|null $specificDay)
     {
-        return app(Sage100::class)->getData($this->buildQuery($count));
+        return app(Sage100::class)->getData($this->buildQuery($count, $specificDay));
     }
 
     //@todo: fix phpcs error - fix complexity and nesting level
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
-    public function importDataToBudget(int|null $count): int
+    public function importDataToBudget(int|null $count, string|null $specificDay): int
     {
         //import php timeout 10 minutes
         ini_set('max_execution_time', '600');
 
         $addedData = [];
 
-        foreach (($data = $this->getData($count)) as $item) {
+        foreach (($data = $this->getData($count, $specificDay)) as $item) {
             $sageAssignedData = $this->sageAssignedDataService->findBySageId($item['ID']);
-
             if ($sageAssignedData instanceof SageAssignedData) {
-                if ($sageAssignedData?->sage_id === 2292 && $sageAssignedData->sage_id === '2292') {
-                    Log::log('info', 'sageAssignedData: ' . $sageAssignedData);
-                }
                 $sageAssignedData->update([
                     'buchungsdatum' => Carbon::parse($item['Buchungsdatum']),
                     'buchungsbetrag' => $item['Buchungsbetrag'],
@@ -275,7 +271,7 @@ class Sage100Service
     /**
      * @return array<string, string>
      */
-    private function buildQuery(int|null $count): array
+    private function buildQuery(int|null $count, string|null $specificDay): array
     {
         $query = [];
 
@@ -283,7 +279,9 @@ class Sage100Service
             $query['count'] = $count;
         }
 
-        if ($desiredBookingDate = $this->sageApiSettingsService->getFirst()?->bookingDate) {
+        if ($specificDay) {
+            $query['where'] = 'Buchungsdatum eq "' . Carbon::parse($specificDay)->format('d.m.Y') . '"';
+        } elseif ($desiredBookingDate = $this->sageApiSettingsService->getFirst()?->bookingDate) {
             $query['where'] = 'Buchungsdatum gt "' . Carbon::parse($desiredBookingDate)->format('d.m.Y') . '"';
         }
 

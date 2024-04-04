@@ -527,8 +527,10 @@ class EventController extends Controller
 
             $userIdHasGetNotification = [];
             // Loop over the shifts and set is_committed to true
+            /** @var Shift $shift */
             foreach ($shifts as $shift) {
                 $shift->is_committed = true;
+                $shift->committing_user_id = Auth::id();
                 $shift->save();
 
                 foreach ($shift->users()->get() as $user) {

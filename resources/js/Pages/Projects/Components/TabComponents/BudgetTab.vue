@@ -1,6 +1,5 @@
 <template>
     <div :class="hideProjectHeader ? 'px-5' : 'mt-6 px-5  bg-lightBackgroundGray'">
-        <ProjectBudgetDeadlineComponent :project="this.project"/>
         <div class="flex bg-lightBackgroundGray w-[95%]">
             <BudgetComponent :sage-not-assigned="sageNotAssigned"
                              :hide-project-header="hideProjectHeader"

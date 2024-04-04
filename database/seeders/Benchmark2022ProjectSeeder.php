@@ -21,11 +21,6 @@ class Benchmark2022ProjectSeeder extends Seeder
             'shift_description' => 'Events of Doom',
             'key_visual_path' => 'M8AUVkujRBdqQu9rbS2Gart.JPG',
             'state' => 4,
-            'num_of_guests' => 23,
-            'entry_fee' => 10,
-            'registration_required' => true,
-            'register_by' => 'email',
-            'closed_society' => false,
         ]);
 
         $startOfYear = Carbon::today()->year(2022)->startOfYear();

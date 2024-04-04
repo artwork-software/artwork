@@ -82,6 +82,7 @@ use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
@@ -212,14 +213,13 @@ class ProjectController extends Controller
 
     /**
      * @return array<string, mixed>
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
-    public function search(SearchRequest $request): array
+    public function search(SearchRequest $request, ProjectService $projectService): array
     {
         $this->authorize('viewAny', Project::class);
-        $projects = Project::search($request->input('query'))->get();
 
-
+        $projects = $projectService->getByName($request->get('query'));
         return ProjectIndexResource::collection($projects)->resolve();
     }
 
@@ -308,79 +308,6 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($eventRelevantEventTypeIds));
 
         return Redirect::route('projects', $project);
-    }
-
-    //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function updateEntranceData(Project $project, Request $request)
-    {
-        $oldNumOfGuest = $project->num_of_guests;
-        $oldEntryFee = $project->entry_fee;
-        $oldRegistrationRequired = $project->registration_required;
-        $oldRegisterBy = $project->register_by;
-        $oldRegistrationDeadline = $project->registration_deadline;
-        $oldClosedSociety = $project->closed_society;
-
-        $project->update($request->all());
-
-        $newNumOfGuest = $project->num_of_guests;
-        $newEntryFee = $project->entry_fee;
-        $newRegistrationRequired = $project->registration_required;
-        $newRegisterBy = $project->register_by;
-        $newRegistrationDeadline = $project->registration_deadline;
-        $newClosedSociety = $project->closed_society;
-
-        if (
-            $oldNumOfGuest !== $newNumOfGuest ||
-            $oldClosedSociety !== $newClosedSociety ||
-            $oldEntryFee !== $newEntryFee ||
-            $oldRegisterBy !== $newRegisterBy ||
-            $oldRegistrationRequired !== $newRegistrationRequired ||
-            $oldRegistrationDeadline !== $newRegistrationDeadline
-        ) {
-            $this->history->createHistory(
-                $project->id,
-                'Entrance and registration has been changed',
-                [],
-                'public_changes'
-            );
-        }
-
-        if (
-            $oldNumOfGuest !== null && $newNumOfGuest === null ||
-            $oldClosedSociety !== null && $newClosedSociety === null ||
-            $oldEntryFee !== null && $newEntryFee === null ||
-            $oldRegisterBy !== null && $newRegisterBy === null ||
-            $oldRegistrationRequired !== null && $newRegistrationRequired === null ||
-            $oldRegistrationDeadline !== null && $newRegistrationDeadline === null
-        ) {
-            $this->history->createHistory(
-                $project->id,
-                'Entrance and registration has been removed',
-                [],
-                'public_changes'
-            );
-        }
-
-        if (
-            $oldNumOfGuest === null && $newNumOfGuest !== null ||
-            $oldClosedSociety === null && $newClosedSociety !== null ||
-            $oldEntryFee === null && $newEntryFee !== null ||
-            $oldRegisterBy === null && $newRegisterBy !== null ||
-            $oldRegistrationRequired === null && $newRegistrationRequired !== null ||
-            $oldRegistrationDeadline === null && $newRegistrationDeadline !== null
-        ) {
-            $this->history->createHistory(
-                $project->id,
-                'Entrance and registration has been added',
-                [],
-                'public_changes'
-            );
-        }
-
-        $this->setPublicChangesNotification($project->id);
-
-        return Redirect::back();
     }
 
     public function generateBasicBudgetValues(Project $project): void

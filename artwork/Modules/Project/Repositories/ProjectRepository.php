@@ -36,4 +36,9 @@ class ProjectRepository extends BaseRepository
     {
         return Project::all();
     }
+
+    public function getByName(string $query): Collection
+    {
+        return Project::byName($query)->get();
+    }
 }

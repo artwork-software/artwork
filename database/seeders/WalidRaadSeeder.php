@@ -66,12 +66,7 @@ class WalidRaadSeeder extends Seeder
                 'der Kunsthalle – und in die Abgründe der Kunst- und Finanzwelt, inklusive Engeln und Untoten.',
             'shift_description' => 'Wird blutig',
             'key_visual_path' => 'M8AUVkujRBdqQu9rbS2Gart.JPG',
-            'state' => 4,
-            'num_of_guests' => 23,
-            'entry_fee' => 10,
-            'registration_required' => true,
-            'register_by' => 'email',
-            'closed_society' => false,
+            'state' => 4
         ]);
 
         /**

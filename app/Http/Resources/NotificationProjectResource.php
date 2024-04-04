@@ -27,12 +27,6 @@ class NotificationProjectResource extends JsonResource
             'categories' => $this->categories,
             'genres' => $this->genres,
             'key_visual_path' => $this->key_visual_path,
-            'num_of_guests' => $this->num_of_guests,
-            'entry_fee' => $this->entry_fee,
-            'registration_required' => $this->registration_required,
-            'register_by' => $this->register_by,
-            'registration_deadline' => $this->registration_deadline,
-            'closed_society' => $this->closed_society,
             'cost_center' => $this->costCenter,
         ];
     }

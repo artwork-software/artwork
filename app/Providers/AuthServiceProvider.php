@@ -20,6 +20,7 @@ use App\Policies\ChecklistTemplatePolicy;
 use App\Policies\CommentPolicy;
 use App\Policies\ContractPolicy;
 use App\Policies\DepartmentPolicy;
+use App\Policies\EventPolicy;
 use App\Policies\FreelancerPolicy;
 use App\Policies\GenrePolicy;
 use App\Policies\InvitationPolicy;
@@ -42,6 +43,7 @@ use Artwork\Modules\BudgetManagementCostUnit\Models\BudgetManagementCostUnit;
 use Artwork\Modules\BudgetManagementCostUnit\Policies\BudgetManagementCostUnitPolicy;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\SageApiSettings\Models\SageApiSettings;
@@ -77,7 +79,8 @@ class AuthServiceProvider extends ServiceProvider
         SageNotAssignedData::class => SageNotAssignedDataPolicy::class,
         BudgetColumnSetting::class => BudgetColumnSettingPolicy::class,
         BudgetManagementAccount::class => BudgetManagementAccountPolicy::class,
-        BudgetManagementCostUnit::class => BudgetManagementCostUnitPolicy::class
+        BudgetManagementCostUnit::class => BudgetManagementCostUnitPolicy::class,
+        Event::class => EventPolicy::class
     ];
 
     public function boot(): void

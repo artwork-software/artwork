@@ -50,7 +50,7 @@ class CalendarShowEventResource extends JsonResource
             'days_of_shifts' => $this->days_of_shifts,
             'project' => $this->project,
             'option_string' => $this->option_string,
-            'projectLeaders' => $this->project->managerUsers,
+            'projectLeaders' => $this->project?->managerUsers,
             'is_series' => $this->is_series,
             'series' => $this->series
         ];

@@ -1662,5 +1662,8 @@
     "Please enter an end time and date.": "Bitte gib Schichtende und Uhrzeit an.",
     "Value can't be lower than 0.": "Wert kann nicht kleiner als 0 sein.",
     "Please enter a shift start time.": "Please enter a start time",
-    "Please enter a shift end time.": "Please enter an end time."
+    "Please enter a shift end time.": "Please enter an end time.",
+    "Import individual booking days again. Existing data is overwritten with new data.": "Importiere einzelne Buchungstage erneut. Vorhandene Daten werden mit neuen Daten überschrieben.",
+    "Please configure the Sage interface first.": "Bitte konfiguriere zunächst die Sage-Schnittstelle.",
+    "Import a specific booking date": "Bestimmten Buchungstag importieren"
 }

@@ -1662,5 +1662,8 @@
     "Please enter an end time and date.": "Please enter an end time and date.",
     "Value can't be lower than 0.": "Value can't be lower than 0.",
     "Please enter a shift start time.": "Bitte gib einen Startzeitpunkt an.",
-    "Please enter a shift end time.": "Bitte gib einen Endzeitpunkt an."
+    "Please enter a shift end time.": "Bitte gib einen Endzeitpunkt an.",
+    "Import individual booking days again. Existing data is overwritten with new data.": "Import individual booking days again. Existing data is overwritten with new data.",
+    "Please configure the Sage interface first.": "Please configure the Sage interface first.",
+    "Import a specific booking date": "Import a specific booking date"
 }

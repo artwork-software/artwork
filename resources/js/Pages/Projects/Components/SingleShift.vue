@@ -217,7 +217,7 @@ import IconLib from "@/mixins/IconLib.vue";
 export default defineComponent({
     name: "SingleShift",
     components: {
-      ShiftQualificationIconCollection,
+        ShiftQualificationIconCollection,
         ShiftsQualificationsDropElement,
         ChooseDeleteUserShiftModal,
         AddShiftModal,

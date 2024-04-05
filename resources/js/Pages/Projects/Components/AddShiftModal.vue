@@ -182,7 +182,9 @@
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                                    @change="this.validateShiftsQualification(computedShiftQualification)"
                                             />
-                                            <div class="mt-2 space-y-2">
+                                            <div v-if="computedShiftQualification.warning || computedShiftQualification.error"
+                                                 class="mt-2 space-y-2"
+                                            >
                                                 <div v-if="computedShiftQualification.warning" class="flex flex-col">
                                                     <span class="text-xs errorText">
                                                         {{ computedShiftQualification.warning }}
@@ -195,7 +197,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="mt-2 col-span-2">
+                                        <div class="col-span-2">
                                             <textarea v-model="shiftForm.description"
                                                       :placeholder="$t('Is there any important information about this shift?')"
                                                       rows="4"
@@ -207,7 +209,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex justify-center mt-5">
+                            <div class="flex justify-center">
                                 <FormButton :text="$t('Save')" @click="saveShift"/>
                             </div>
                         </DialogPanel>

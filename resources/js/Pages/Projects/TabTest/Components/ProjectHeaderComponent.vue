@@ -25,7 +25,11 @@ export default {
         headerObject: {
             type: Object,
             required: true
-        }
+        },
+        inSidebar: {
+            type: Boolean,
+            required: false
+        },
     },
     data() {
         return {

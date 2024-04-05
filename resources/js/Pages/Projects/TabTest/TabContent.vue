@@ -58,12 +58,11 @@ export default {
 
         <div class="my-10 w-full">
             <div v-for="component in dataObject.currentTab.components"  :class="removeML(component.component?.type)">
-                <Component :is="component.component?.type" :loadedProjectInformation="loadedProjectInformation" :header-object="headerObject" :data="component.component" :project-id="headerObject.project.id"  />
+                <Component :in-sidebar="false" :is="component.component?.type" :loadedProjectInformation="loadedProjectInformation" :header-object="headerObject" :data="component.component" :project-id="headerObject.project.id"  />
             </div>
         </div>
 
-
-        <BaseSidenav :show="show" @toggle="this.show =! this.show" v-if="dataObject.currentTab.hasSidebarTabs">
+        <BaseSidenav @toggle="this.show =! this.show" v-if="dataObject.currentTab.hasSidebarTabs">
             <div class="w-full">
                 <div class="mb-5 ml-3">
                     <div class="hidden sm:block">
@@ -78,8 +77,10 @@ export default {
                         </div>
                     </div>
                 </div>
-                <div v-for="component in dataObject.currentTab.sidebar_tabs[currentSideBarTab]?.components_in_sidebar">
-                    <Component :is="component.component?.type" :loadedProjectInformation="loadedProjectInformation" :header-object="headerObject" :data="component.component" :project-id="headerObject.project.id"  />
+                <div class="px-3">
+                    <div v-for="component in dataObject.currentTab.sidebar_tabs[currentSideBarTab]?.components_in_sidebar">
+                        <Component :is="component.component?.type" :loadedProjectInformation="loadedProjectInformation" :in-sidebar="true" :header-object="headerObject" :data="component.component" :project-id="headerObject.project.id"  />
+                    </div>
                 </div>
             </div>
         </BaseSidenav>

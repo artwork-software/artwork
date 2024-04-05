@@ -17,7 +17,7 @@ export default {
         XIcon, DialogPanel
     },
     emits: ['close'],
-    props: ['tabToEdit'],
+    props: ['tabToEdit', 'tab'],
     data(){
         return {
             open: true,
@@ -32,7 +32,7 @@ export default {
         },
         saveTab() {
             if (this.tabToEdit) {
-                this.tabForm.patch(route('tab.update', {projectTab: this.tabToEdit.id}), {
+                this.tabForm.patch(route('tab.sidebar.update', {projectTabSidebarTab: this.tabToEdit.id}), {
                     preserveState: true,
                     preserveScroll: true,
                     onSuccess: () => {
@@ -40,7 +40,7 @@ export default {
                     },
                 })
             } else {
-                this.tabForm.post(route('tab.store'),
+                this.tabForm.post(route('tab.sidebar.store', {projectTab: this.tab.id}),
                     {
                         preserveState: true,
                         preserveScroll: true,

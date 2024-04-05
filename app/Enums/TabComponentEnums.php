@@ -83,6 +83,7 @@ enum TabComponentEnums: string
                 'name' => self::SEPARATOR->value,
                 'availableFields' => [
                     'height' => 0,
+                    'showLine' => false,
                 ]
             ],
         ];

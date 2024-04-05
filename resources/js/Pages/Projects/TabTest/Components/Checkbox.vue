@@ -1,7 +1,7 @@
 <script>
 export default {
     name: "Checkbox",
-    props: ['data', 'projectId'],
+    props: ['data', 'projectId', 'inSidebar'],
     data() {
         return {
             checkedData: {
@@ -14,6 +14,9 @@ export default {
             console.log(this.checkedData);
             this.$inertia.patch(route('project.tab.component.update', {project: this.projectId, component: this.data.id}), {
                 data: this.checkedData
+            }, {
+                preserveScroll: true,
+                preserveState: false
             })
         }
     },
@@ -26,7 +29,7 @@ export default {
             <input id="comments" aria-describedby="comments-description" v-model="checkedData.checked" @change="updateCheckedData" :checked="checkedData.checked" name="comments" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600" />
         </div>
         <div class="ml-3 text-sm leading-6">
-            <label for="comments" class="font-medium text-gray-900">
+            <label for="comments" class="font-medium " :class="inSidebar ? 'text-white' : 'text-gray-900'">
                 {{ data.data.label }}
             </label>
         </div>

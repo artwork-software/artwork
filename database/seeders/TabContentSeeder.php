@@ -144,7 +144,8 @@ class TabContentSeeder extends Seeder
                 'name' => 'Separator 10 Pixel',
                 'type' => TabComponentEnums::SEPARATOR,
                 'data' => [
-                    'height' => '10'
+                    'height' => '10',
+                    'showLine' => true
                 ],
                 'special' => false,
                 'sidebar_enabled' => true

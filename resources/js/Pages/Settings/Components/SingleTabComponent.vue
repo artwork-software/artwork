@@ -8,13 +8,15 @@ import IconLib from "@/mixins/IconLib.vue";
 import AddEditTabModal from "@/Pages/Settings/Components/AddEditTabModal.vue";
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
 import TabDropElement from "@/Pages/Settings/Components/TabDropElement.vue";
-import SingleSidebarElement from "@/Pages/Settings/Components/SingleSidebarElement.vue";
-import AddEditSidebarTab from "@/Pages/Settings/Components/AddEditSidebarTab.vue";
+import SingleSidebarElement from "@/Pages/Settings/Components/Sidebar/SingleSidebarElement.vue";
+import AddEditSidebarTab from "@/Pages/Settings/Components/Sidebar/AddEditSidebarTab.vue";
+import SidebarConfigElement from "@/Pages/Settings/Components/Sidebar/SidebarConfigElement.vue";
 
 export default {
     name: "SingleTabComponent",
     mixins: [IconLib],
     components: {
+        SidebarConfigElement,
         AddEditSidebarTab,
         SingleSidebarElement,
         TabDropElement,
@@ -146,7 +148,12 @@ export default {
                                            <div class="grid gird-cols-1 md:grid-cols-12">
                                                <div class="col-span-6 flex items-center gap-x-3">
                                                    <ComponentIcons :type="element.component.type" />
-                                                   {{element.component.name }}
+                                                   <div class="">
+                                                       {{element.component.name }}
+                                                       <div class="text-[10px] text-gray-500 font-light" v-if="element.component.data.height">
+                                                           {{ element.component.data.height }} Pixel <span v-if="element.component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
+                                                       </div>
+                                                   </div>
 
                                                </div>
                                                <div class="col-span-2 text-xs flex items-center">
@@ -196,15 +203,7 @@ export default {
                    </template>
                </draggable>
            </div>
-           <div>
-               <div class="flex items-center justify-between mr-3">
-                   <h3 class="text-base font-bold my-3">Sidebar</h3>
-                   <IconCirclePlus class="h-5 w-5 text-gray-600 cursor-pointer" @click="showAddEditSidebarTabModal = true"/>
-               </div>
-               <div v-for="sidebarTab in tab.sidebar_tabs">
-                    <SingleSidebarElement :tab="tab" :sidebar-tab="sidebarTab" />
-               </div>
-           </div>
+            <SidebarConfigElement :tab="tab" />
        </div>
     </div>
     <div v-else>
@@ -212,7 +211,7 @@ export default {
     </div>
 </div>
 
-    <AddEditSidebarTab @close="showAddEditSidebarTabModal = false" v-if="showAddEditSidebarTabModal" :tab-to-edit="sidebarTabToEdit" />
+
     <AddEditTabModal @close="showAddEditModal = false" v-if="showAddEditModal" :tab-to-edit="tab" />
 </template>
 

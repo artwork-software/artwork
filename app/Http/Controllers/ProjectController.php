@@ -1663,10 +1663,12 @@ class ProjectController extends Controller
         $headerObject->currentTabId = $projectTab->id;
         $headerObject->currentGruop = $groupOutput;
 
-        $projectTab->load(['components.component.projectValue' => function ($query) use ($projectTab, $project): void {
+        $projectTab->load(['components.component.projectValue' => function ($query) use ($project): void {
             $query->where('project_id', $project->id);
-        }, 'components' => function ($query) use ($projectTab): void {
+        }, 'components' => function ($query): void {
             $query->orderBy('order');
+        }, 'sidebarTabs.componentsInSidebar.component.projectValue'  => function ($query) use ($project): void {
+            $query->where('project_id', $project->id);
         }]);
 
         $dataObject = new stdClass();

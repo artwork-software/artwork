@@ -1715,5 +1715,6 @@
     "ProjectDocumentsComponent": "Dokumente-Komponente",
     "ProjectTitleComponent": "Projekttitel-Komponente",
     "Do you really want to delete the component {0}?": "Möchtest du die Komponente \"{0}\" wirklich löschen?",
-    "This action cannot be undone. Do you really want to delete this component? This will also delete all data associated with this component.": "Diese Aktion kann nicht rückgängig gemacht werden. Möchtest du diese Komponente wirklich löschen? Damit werden auch alle Daten, die mit dieser Komponente verknüpft sind, gelöscht."
+    "This action cannot be undone. Do you really want to delete this component? This will also delete all data associated with this component.": "Diese Aktion kann nicht rückgängig gemacht werden. Möchtest du diese Komponente wirklich löschen? Damit werden auch alle Daten, die mit dieser Komponente verknüpft sind, gelöscht.",
+    "Show a separator line": "Trennlinie anzeigen"
 }

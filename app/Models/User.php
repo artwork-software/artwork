@@ -111,6 +111,7 @@ class User extends Authenticatable implements Vacationer, Available
         'salary_per_hour',
         'salary_description',
         'language',
+        'is_sidebar_opened'
     ];
 
     protected $casts = [
@@ -120,6 +121,7 @@ class User extends Authenticatable implements Vacationer, Available
         'toggle_hints' => 'boolean',
         'temporary' => 'boolean',
         'can_work_shifts' => 'boolean',
+        'is_sidebar_opened' => 'boolean'
     ];
 
     protected $hidden = [

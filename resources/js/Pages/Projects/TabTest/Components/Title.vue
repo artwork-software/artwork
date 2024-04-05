@@ -1,13 +1,13 @@
 <script>
 export default {
     name: "Title",
-    props: ['data'],
+    props: ['data', 'inSidebar'],
 }
 </script>
 
 <template>
     <div class="my-2">
-        <h1 class="text-2xl font-bold text-gray-900">{{ data.name }}</h1>
+        <h1 class="text-2xl font-bold" :class="inSidebar ? 'text-white' : ' text-gray-900' ">{{ data.name }}</h1>
     </div>
 </template>
 

@@ -166,6 +166,15 @@ export default {
                                             <input type="range" v-model="textData.height" min="0" max="150" class="block w-full rounded-md border-0 py-1.5 text-gray-900 ring-0 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6  accent-artwork-buttons-create" />
                                         </div>
                                     </div>
+
+                                    <div class="relative flex items-start"  v-if="index === 'showLine'">
+                                        <div class="flex h-6 items-center">
+                                            <input :id="index"  v-model="textData.showLine" :checked="textData.showLine" aria-describedby="comments-description" name="comments" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600" />
+                                        </div>
+                                        <div class="ml-3 text-sm leading-6">
+                                            <label :for="index" class="font-medium text-gray-900">{{ $t('Show a separator line')}} </label>
+                                        </div>
+                                    </div>
                                     <div class="relative flex items-start"  v-if="index === 'checked'">
                                         <div class="flex h-6 items-center">
                                             <input :id="index"  v-model="textData.checked" :checked="textData.checked" aria-describedby="comments-description" name="comments" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600" />

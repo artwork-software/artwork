@@ -221,6 +221,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::patch('/users/{user}/assignCraft', [UserController::class, 'assignCraft'])->name('user.assign.craft');
     Route::delete('/users/{user}/removeCraft/{craft}', [UserController::class, 'removeCraft'])
         ->name('user.remove.craft');
+    //user.sidebar.update
+    Route::patch('/users/{user}/sidebar/update', [UserController::class, 'updateSidebar'])
+        ->name('user.sidebar.update');
 
     //Departments
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');
@@ -1235,6 +1238,24 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'removeComponent'
             ])
                 ->name('sidebar.component.remove');
+            //tab.sidebar.update
+            Route::patch('/{projectTabSidebarTab}/update', [\App\Http\Controllers\ProjectTabSidebarTabController::class,
+                'update'])
+                ->name('tab.sidebar.update');
+
+            //tab.sidebar.store
+            Route::post('/{projectTab}/store', [\App\Http\Controllers\ProjectTabSidebarTabController::class, 'store'])
+                ->name('tab.sidebar.store');
+            //sidebar.tab.update.component.order
+            Route::post('/{projectTabSidebarTab}/update/component/order', [
+                \App\Http\Controllers\ProjectTabSidebarTabController::class,
+                'updateComponentOrder'
+            ])
+                ->name('sidebar.tab.update.component.order');
+            // tab.sidebar.update
+            Route::patch('/{projectTabSidebarTab}/update', [\App\Http\Controllers\ProjectTabSidebarTabController::class,
+                'update'])
+                ->name('tab.sidebar.update');
         });
     });
 });

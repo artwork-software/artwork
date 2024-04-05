@@ -1715,5 +1715,6 @@
     "ProjectDocumentsComponent": "Documents Component",
     "ProjectTitleComponent": "Project Title Component",
     "Do you really want to delete the component {0}?": "Do you really want to delete the component \"{0}\"?",
-    "This action cannot be undone. Do you really want to delete this component? This will also delete all data associated with this component.": "This action cannot be undone. Do you really want to delete this component? This will also delete all data associated with this component."
+    "This action cannot be undone. Do you really want to delete this component? This will also delete all data associated with this component.": "This action cannot be undone. Do you really want to delete this component? This will also delete all data associated with this component.",
+    "Show a separator line": "Show a separator line"
 }

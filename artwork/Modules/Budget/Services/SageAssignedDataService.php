@@ -64,7 +64,7 @@ class SageAssignedDataService
     ): SageAssignedData {
         return $this->create([
             'column_cell_id' => $columnCellId,
-            'sage_id' => $sageNotAssignedData->id,
+            'sage_id' => $sageNotAssignedData->sage_id,
             'tan' => $sageNotAssignedData->tan,
             'kreditor' => $sageNotAssignedData->kreditor,
             'buchungstext' => $sageNotAssignedData->buchungstext,

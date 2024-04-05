@@ -193,7 +193,6 @@ import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import IconLib from "@/mixins/IconLib.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
-import EditKeyVisualModal from "@/Pages/Projects/Components/EditKeyVisualModal.vue";
 import ProjectTitleComponent from "@/Pages/Projects/Components/ProjectTitleComponent.vue";
 import ProjectStateComponent from "@/Pages/Projects/Components/ProjectStateComponent.vue";
 import ProjectGroupComponent from "@/Pages/Projects/Components/ProjectGroupComponent.vue";
@@ -202,7 +201,6 @@ export default {
     components: {
         ProjectGroupComponent,
         ProjectStateComponent,
-        EditKeyVisualModal,
         JetInputError,
         UserPopoverTooltip,
         ProjectHistoryComponent,
@@ -238,7 +236,7 @@ export default {
         'projectManagerIds',
         'projectWriteIds',
         'projectDeleteIds',
-        'access_budget'
+        'access_budget',
     ],
     data() {
         return {

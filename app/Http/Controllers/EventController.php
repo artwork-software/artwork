@@ -229,7 +229,17 @@ class EventController extends Controller
         $historyElements = $events->flatMap(function ($event) {
             return $event->shifts->flatMap(function ($shift) {
                 // Sort each shift's historyChanges by created_at in descending order
-                return $shift->historyChanges()->sortByDesc('created_at');
+                $historyArray = [];
+                foreach ($shift->historyChanges()->sortByDesc('created_at') as $history) {
+                    $historyArray[] = [
+                        'changes' => json_decode($history->changes),
+                        'created_at' => $history->created_at->diffInHours() < 24
+                            ? $history->created_at->diffForHumans()
+                            : $history->created_at->format('d.m.Y, H:i'),
+                    ];
+                }
+
+                return $historyArray;
             });
         })->all();
 
@@ -390,7 +400,6 @@ class EventController extends Controller
     public function storeEvent(EventStoreRequest $request): CalendarEventResource
     {
         $this->authorize('create', Event::class);
-
         $firstEvent = Event::create($request->data());
         $this->adjoiningRoomsCheck($request, $firstEvent);
         if ($request->get('projectName')) {
@@ -528,8 +537,10 @@ class EventController extends Controller
 
             $userIdHasGetNotification = [];
             // Loop over the shifts and set is_committed to true
+            /** @var Shift $shift */
             foreach ($shifts as $shift) {
                 $shift->is_committed = true;
+                $shift->committing_user_id = Auth::id();
                 $shift->save();
 
                 foreach ($shift->users()->get() as $user) {

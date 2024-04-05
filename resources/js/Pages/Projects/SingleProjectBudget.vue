@@ -14,7 +14,8 @@
                                     :rooms-with-audience="roomsWithAudience"
                                     :group-projects="groupProjects"
                                     :access_budget="access_budget"
-                                    open-tab="budget">
+                                    open-tab="budget"
+        >
             <BudgetTab @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation"
                        :hideProjectHeader="hideProjectHeader"
                        :projectWriteIds="projectWriteIds"
@@ -89,7 +90,7 @@ export default defineComponent({
         'contractTypes',
         'companyTypes',
         'collectingSocieties',
-        'sageNotAssigned'
+        'sageNotAssigned',
     ],
     data() {
         return {

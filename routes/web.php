@@ -124,6 +124,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             ->name('tool.interfaces.sage.update');
         Route::post('/interfaces/sage/initialize', [ToolSettingsInterfacesController::class, 'initializeSage'])
             ->name('tool.interfaces.sage.initialize');
+        Route::post(
+            '/interfaces/sage/initializeSpecificDay',
+            [
+                ToolSettingsInterfacesController::class,
+                'initializeSageSpecificDay'
+            ]
+        )->name('tool.interfaces.sage.initializeSpecificDay');
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {
@@ -284,11 +291,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('projects.export.budget');
     Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])
         ->name('projects.show.comment')->middleware(CanViewProject::class);
-    ;
-
-    //Project Entrance & registration
-    Route::patch('/projects/{project}/entrance', [ProjectController::class, 'updateEntranceData'])
-        ->name('projects.entrance.update');
 
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');
@@ -1171,4 +1173,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('update/{dayService}', [\App\Http\Controllers\DayServiceController::class, 'update'])
             ->name('day-service.update');
     });
+
+
+    Route::get('/test/project/{project}/tab/{projectTab}', [ProjectController::class, 'projectTabTest'])
+        ->name('project.tab.test');
 });

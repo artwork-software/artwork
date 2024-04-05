@@ -87,12 +87,4 @@ class ProjectPolicy
         }
         return $user->can(PermissionNameEnum::PROJECT_DELETE->value) || $isCreator;
     }
-
-    public function restore(User $user, Project $project): void
-    {
-    }
-
-    public function forceDelete(User $user, Project $project): void
-    {
-    }
 }

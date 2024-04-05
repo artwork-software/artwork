@@ -73,6 +73,7 @@ use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\ProjectService;
+use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
@@ -81,6 +82,7 @@ use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
@@ -211,14 +213,13 @@ class ProjectController extends Controller
 
     /**
      * @return array<string, mixed>
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
-    public function search(SearchRequest $request): array
+    public function search(SearchRequest $request, ProjectService $projectService): array
     {
         $this->authorize('viewAny', Project::class);
-        $projects = Project::search($request->input('query'))->get();
 
-
+        $projects = $projectService->getByName($request->get('query'));
         return ProjectIndexResource::collection($projects)->resolve();
     }
 
@@ -307,79 +308,6 @@ class ProjectController extends Controller
         $project->shiftRelevantEventTypes()->sync(collect($eventRelevantEventTypeIds));
 
         return Redirect::route('projects', $project);
-    }
-
-    //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function updateEntranceData(Project $project, Request $request)
-    {
-        $oldNumOfGuest = $project->num_of_guests;
-        $oldEntryFee = $project->entry_fee;
-        $oldRegistrationRequired = $project->registration_required;
-        $oldRegisterBy = $project->register_by;
-        $oldRegistrationDeadline = $project->registration_deadline;
-        $oldClosedSociety = $project->closed_society;
-
-        $project->update($request->all());
-
-        $newNumOfGuest = $project->num_of_guests;
-        $newEntryFee = $project->entry_fee;
-        $newRegistrationRequired = $project->registration_required;
-        $newRegisterBy = $project->register_by;
-        $newRegistrationDeadline = $project->registration_deadline;
-        $newClosedSociety = $project->closed_society;
-
-        if (
-            $oldNumOfGuest !== $newNumOfGuest ||
-            $oldClosedSociety !== $newClosedSociety ||
-            $oldEntryFee !== $newEntryFee ||
-            $oldRegisterBy !== $newRegisterBy ||
-            $oldRegistrationRequired !== $newRegistrationRequired ||
-            $oldRegistrationDeadline !== $newRegistrationDeadline
-        ) {
-            $this->history->createHistory(
-                $project->id,
-                'Entrance and registration has been changed',
-                [],
-                'public_changes'
-            );
-        }
-
-        if (
-            $oldNumOfGuest !== null && $newNumOfGuest === null ||
-            $oldClosedSociety !== null && $newClosedSociety === null ||
-            $oldEntryFee !== null && $newEntryFee === null ||
-            $oldRegisterBy !== null && $newRegisterBy === null ||
-            $oldRegistrationRequired !== null && $newRegistrationRequired === null ||
-            $oldRegistrationDeadline !== null && $newRegistrationDeadline === null
-        ) {
-            $this->history->createHistory(
-                $project->id,
-                'Entrance and registration has been removed',
-                [],
-                'public_changes'
-            );
-        }
-
-        if (
-            $oldNumOfGuest === null && $newNumOfGuest !== null ||
-            $oldClosedSociety === null && $newClosedSociety !== null ||
-            $oldEntryFee === null && $newEntryFee !== null ||
-            $oldRegisterBy === null && $newRegisterBy !== null ||
-            $oldRegistrationRequired === null && $newRegistrationRequired !== null ||
-            $oldRegistrationDeadline === null && $newRegistrationDeadline !== null
-        ) {
-            $this->history->createHistory(
-                $project->id,
-                'Entrance and registration has been added',
-                [],
-                'public_changes'
-            );
-        }
-
-        $this->setPublicChangesNotification($project->id);
-
-        return Redirect::back();
     }
 
     public function generateBasicBudgetValues(Project $project): void
@@ -1666,6 +1594,84 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($project->id);
     }
 
+    public function projectTabTest(Project $project, ProjectTab $projectTab): Response|ResponseFactory
+    {
+        $project->load([
+            'categories',
+            'departments.users.departments',
+            'genres',
+            'managerUsers',
+            'writeUsers',
+            'project_files',
+            'costCenter',
+            'sectors',
+            'users.departments',
+            'state',
+            'delete_permission_users'
+        ]);
+        if (!$project->is_group) {
+            $group = DB::table('project_groups')
+                ->select('*')
+                ->where('project_id', '=', $project->id)
+                ->first();
+            if (!empty($group)) {
+                $groupOutput = Project::find($group->group_id);
+            } else {
+                $groupOutput = '';
+            }
+        } else {
+            $groupOutput = '';
+        }
+        $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
+        $headerObject->project = new ProjectInfoResource($project);
+        $headerObject->firstEventInProject = $project
+            ->events()
+            ->orderBy('start_time', 'ASC')
+            ->limit(1)
+            ->first();
+        $headerObject->lastEventInProject = $project->events()
+            ->orderBy('end_time', 'DESC')
+            ->limit(1)
+            ->first();
+        $headerObject->roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
+        $headerObject->projectManagerIds = $project->managerUsers()->pluck('user_id');
+        $headerObject->projectWriteIds = $project->writeUsers()->pluck('user_id');
+        $headerObject->projectDeleteIds = $project->delete_permission_users()->pluck('user_id');
+        $headerObject->eventTypes = EventTypeResource::collection(EventType::all())->resolve();
+        $headerObject->states = ProjectStates::all();
+        $headerObject->projectGroups = $project->groups()->get();
+        $headerObject->groupProjects = Project::where('is_group', 1)->get();
+        $headerObject->categories = Category::all();
+        $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
+        $headerObject->projectCategories = $project->categories;
+        $headerObject->genres = Genre::all();
+        $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
+        $headerObject->projectGenres = $project->genres;
+        $headerObject->sectors = Sector::all();
+        $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
+        $headerObject->projectSectors = $project->sectors;
+        $headerObject->projectState = $project->state;
+        $headerObject->access_budget = $project->access_budget;
+        $headerObject->tabs = ProjectTab::orderBy('order')->get();
+        $headerObject->currentTabId = $projectTab->id;
+        $headerObject->currentGruop = $groupOutput;
+
+        $projectTab->load(['components.component.projectValue' => function ($query) use ($projectTab, $project): void {
+            $query->where('project_id', $project->id);
+        }, 'components' => function ($query) use ($projectTab): void {
+            $query->orderBy('order');
+        }]);
+
+        $dataObject = new stdClass();
+        $dataObject->currentTab = $projectTab;
+
+
+        return inertia('Projects/TabTest/TabContent', [
+            'dataObject' => $dataObject,
+            'headerObject' => $headerObject,
+        ]);
+    }
+
     public function projectInfoTab(Project $project)
     {
         $project->load([
@@ -1732,7 +1738,7 @@ class ProjectController extends Controller
             'projectSectorIds' => $project->sectors()->pluck('sector_id'),
             'projectSectors' => $project->sectors,
             'projectState' => $project->state,
-            'access_budget' => $project->access_budget,
+            'access_budget' => $project->access_budget
         ]);
     }
     public function projectCalendarTab(Project $project, CalendarController $calendar): Response|ResponseFactory
@@ -2041,7 +2047,7 @@ class ProjectController extends Controller
             'currentUserCrafts' => Auth::user()
                 ->crafts
                 ->merge(Craft::query()->where('assignable_by_all', '=', true)->get()),
-            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending()
+            'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
         ]);
     }
 
@@ -2233,7 +2239,7 @@ class ProjectController extends Controller
             ],
             'recentlyCreatedSageAssignedDataComment' => $this->determineRecentlyCreatedSageAssignedDataComment(
                 $sageAssignedDataCommentService
-            )
+            ),
         ]);
     }
 

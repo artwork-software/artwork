@@ -13,7 +13,8 @@
                                 :rooms-with-audience="roomsWithAudience"
                                 :group-projects="groupProjects"
                                 :access_budget="access_budget"
-                                open-tab="comment">
+                                open-tab="comment"
+    >
         <CommentTab :projectWriteIds="projectWriteIds"
                     :projectManagerIds="projectManagerIds"
                     :project="project"
@@ -86,7 +87,7 @@ export default {
         'projectWriteIds',
         'projectManagerIds',
         'projectDeleteIds',
-        'access_budget'
+        'access_budget',
     ],
     data() {
         return {

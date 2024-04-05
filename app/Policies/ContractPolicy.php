@@ -34,12 +34,4 @@ class ContractPolicy
     {
         return $contract->accessingUsers->contains($user->id) || $contract->project->managerUsers->contains($user->id);
     }
-
-    public function restore(): void
-    {
-    }
-
-    public function forceDelete(): void
-    {
-    }
 }

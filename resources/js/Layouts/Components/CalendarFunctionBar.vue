@@ -1,5 +1,5 @@
 <template>
-    <div id="bar" class="w-[95%] p-2 top-0 left-16 z-40 bg-secondaryHover flex justify-between items-center" :class="[atAGlance || dateValue[0] === dateValue[1]? 'ml-14' : '',project ? isPageScrolled ? 'fixed' : 'sticky':'fixed']">
+    <div id="bar" class="w-[95%] p-2 top-0 left-16 z-40 bg-secondaryHover flex justify-between items-center" :class="[project ? isPageScrolled ? 'fixed' : 'sticky':'fixed']">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue" :is_shift_plan="false"></date-picker-component>
             <div v-if="!project">

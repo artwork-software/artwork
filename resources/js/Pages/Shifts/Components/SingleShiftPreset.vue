@@ -57,7 +57,10 @@
         <div class="flex justify-start mt-3 overflow-x-scroll gap-3 h-full" v-if="showShift">
             <PresetTimeLine :time-line="preset.timeline" :preset-id="preset.id" />
             <div class="w-[175px]" v-for="presetShift in preset.shifts">
-                <SinglePresetShift :preset-shift="presetShift" :shift-qualifications="shiftQualifications"/>
+                <SinglePresetShift :preset-shift="presetShift"
+                                   :shift-qualifications="shiftQualifications"
+                                   :crafts="this.crafts"
+                />
             </div>
             <div class="w-[175px] flex items-center justify-center border-2 border-dashed"
                  @click="showAddShiftPresetModal = true">

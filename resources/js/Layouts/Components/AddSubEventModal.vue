@@ -10,7 +10,7 @@
                     {{ $t('Edit sub-event')}}
                 </div>
                 <p class="mb-3 text-gray-400 text-sm">
-                    {{ $t('Belongs to Blocker in {0}', {0: event.roomName}) }}
+                    {{ $t('Belongs to Blocker in {0}', [event.roomName]) }}
                 </p>
                 <p>
                     {{ $t('Please note that the appointment must take place within the appointment group period.')}}

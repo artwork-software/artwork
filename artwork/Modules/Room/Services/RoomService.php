@@ -96,63 +96,45 @@ class RoomService
                     }
                 )
             )
-            ->where(
-                function ($query) use ($adjoiningNotLoud, $adjoiningNoAudience, $startDate, $endDate): void {
-                    $query->where(
-                        function ($subQuery) use ($adjoiningNotLoud, $adjoiningNoAudience, $startDate, $endDate): void {
-                            $subQuery->unless(
-                                is_null($adjoiningNoAudience) && is_null($adjoiningNotLoud),
-                                fn(Builder $builder) => $builder
-                                    ->whereRelation(
-                                        'adjoining_rooms',
-                                        function ($adjoining_room_query) use (
-                                            $adjoiningNoAudience,
-                                            $adjoiningNotLoud,
-                                            $startDate,
-                                            $endDate
-                                        ): void {
-                                            $adjoining_room_query->whereRelation(
-                                                'events',
-                                                function ($event_query) use (
-                                                    $adjoiningNoAudience,
-                                                    $adjoiningNotLoud,
-                                                    $startDate,
-                                                    $endDate
-                                                ): void {
-                                                    $event_query
-                                                        ->when(
-                                                            $startDate,
-                                                            fn(Builder $builder) => $builder->whereBetween(
-                                                                'start_time',
-                                                                [$startDate, $endDate]
-                                                            )
-                                                        )
-                                                        ->when(
-                                                            $endDate,
-                                                            fn(Builder $builder) => $builder->whereBetween(
-                                                                'end_time',
-                                                                [$startDate, $endDate]
-                                                            )
-                                                        )
-                                                        ->unless(
-                                                            is_null($adjoiningNotLoud),
-                                                            fn(Builder $builder) => $builder->where(
-                                                                'events.is_loud',
-                                                                false
-                                                            )
-                                                        )
-                                                        ->unless(
-                                                            is_null($adjoiningNoAudience),
-                                                            fn(Builder $builder) => $builder->where(
-                                                                'events.audience',
-                                                                false
-                                                            )
-                                                        );
-                                                }
-                                            );
-                                        }
+            ->when(
+                ($adjoiningNotLoud || $adjoiningNoAudience),
+                function (Builder $builder) use ($adjoiningNotLoud, $adjoiningNoAudience, $startDate, $endDate): void {
+                    $builder->whereRelation(
+                        'adjoining_rooms',
+                        function (Builder $builder) use (
+                            $adjoiningNoAudience,
+                            $adjoiningNotLoud,
+                            $startDate,
+                            $endDate
+                        ): void {
+                            $builder->whereRelation(
+                                'events',
+                                function (Builder $builder) use (
+                                    $adjoiningNoAudience,
+                                    $adjoiningNotLoud,
+                                    $startDate,
+                                    $endDate
+                                ): void {
+                                    $builder->when(
+                                        ($startDate && $endDate),
+                                        fn(Builder $builder) => $builder->startAndEndTimeOverlap($startDate, $endDate)
                                     )
-                            );
+                                    ->when(
+                                        $adjoiningNotLoud,
+                                        fn(Builder $builder) => $builder->where(
+                                            'events.is_loud',
+                                            false
+                                        )
+                                    )
+                                    ->when(
+                                        $adjoiningNoAudience,
+                                        fn(Builder $builder) => $builder->where(
+                                            'events.audience',
+                                            false
+                                        )
+                                    );
+                                }
+                            )->orWhereDoesntHave('events');
                         }
                     )->orWhereDoesntHave('adjoining_rooms');
                 }
@@ -464,7 +446,8 @@ class RoomService
         $roomCategoryIds = $calendarFilter->room_categories ?? null;
         $eventsForRoom = $this->fillPeriodWithEmptyEventData($room, $calendarPeriod);
         $actualEvents = [];
-        $room->events()
+
+        $roomEventsQuery = $room->events()
             ->where(function ($query) use ($calendarPeriod): void {
                 $query->where(function ($q) use ($calendarPeriod): void {
                     // Events, die vor der Periode beginnen und nach der Periode enden
@@ -476,7 +459,6 @@ class RoomService
                         ->orWhereBetween('end_time', [$calendarPeriod->start, $calendarPeriod->end]);
                 });
             })
-            ->when($project, fn(Builder $builder) => $builder->where('project_id', $project->id))
             ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project->id))
             ->when($room, fn(EventBuilder $builder) => $builder->where('room_id', $room->id))
             ->unless(
@@ -500,24 +482,38 @@ class RoomService
                             $query->whereIn('event_type_id', $eventTypeIds);
                         });
                 });
-            })
-            ->unless(!$hasAudience, fn(EventBuilder $builder) => $builder->where('audience', true))
-            ->unless(!$hasNoAudience, fn(EventBuilder $builder) => $builder->where('audience', false))
-            ->unless(!$isLoud, fn(EventBuilder $builder) => $builder->where('is_loud', true))
-            ->unless(!$isNotLoud, fn(EventBuilder $builder) => $builder->where('is_loud', false))
-            ->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
-                // Erstelle einen Zeitraum für das Event, der innerhalb der gewünschten Periode liegt
-                $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
-                    $calendarPeriod->start :
-                    $event->start_time;
-                $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
-                $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
-
-                foreach ($eventPeriod as $date) {
-                    $dateKey = $date->format('d.m.Y');
-                    $actualEvents[$dateKey][] = $event;
-                }
             });
+
+        if ($hasAudience && !$hasNoAudience) {
+            $roomEventsQuery->where('audience', true);
+        }
+
+        if (!$hasAudience && $hasNoAudience) {
+            $roomEventsQuery->where('audience', false);
+        }
+
+        if ($isLoud && !$isNotLoud) {
+            $roomEventsQuery->where('is_loud', true);
+        }
+
+        if (!$isLoud && $isNotLoud) {
+            $roomEventsQuery->where('is_loud', false);
+        }
+
+        $roomEventsQuery->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
+            // Erstelle einen Zeitraum für das Event, der innerhalb der gewünschten Periode liegt
+            $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?
+                $calendarPeriod->start :
+                $event->start_time;
+            $eventEnd = $event->end_time->isAfter($calendarPeriod->end) ? $calendarPeriod->end : $event->end_time;
+            $eventPeriod = CarbonPeriod::create($eventStart->startOfDay(), $eventEnd->endOfDay());
+
+            foreach ($eventPeriod as $date) {
+                $dateKey = $date->format('d.m.Y');
+                $actualEvents[$dateKey][] = $event;
+            }
+        });
+
         foreach ($actualEvents as $key => $value) {
             $eventsForRoom[$key] = [
                 'roomName' => $room->name,
@@ -604,7 +600,7 @@ class RoomService
                     // Berechne den Zeitraum für jede Schicht innerhalb der gewünschten Periode
                     $start = $shift->start_date;
                     $end = $shift->end_date;
-                    
+
 
                     if (empty($start) || $start === null) {
                         $start = Carbon::parse($shift->event_start_day);

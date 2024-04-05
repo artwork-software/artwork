@@ -13,7 +13,8 @@
                                 :rooms-with-audience="roomsWithAudience"
                                 :group-projects="groupProjects"
                                 :access_budget="access_budget"
-                                open-tab="calendar">
+                                open-tab="calendar"
+    >
         <CalendarTab :projectWriteIds="projectWriteIds"
                      :user_filters="user_filters"
                      :projectManagerIds="projectManagerIds"
@@ -110,7 +111,7 @@ export default {
         'projectWriteIds',
         'projectDeleteIds',
         'user_filters',
-        'access_budget'
+        'access_budget',
     ],
     data() {
         return {

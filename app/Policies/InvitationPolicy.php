@@ -29,12 +29,4 @@ class InvitationPolicy
     {
         return $user->can(PermissionNameEnum::MA_MANAGER->value);
     }
-
-    public function restore(): void
-    {
-    }
-
-    public function forceDelete(): void
-    {
-    }
 }

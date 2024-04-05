@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             WalidRaadSeeder::class,
             PermissionPresetSeeder::class,
             ChangeEventTypeSvgToHexSeed::class,
+            TabContentSeeder::class
         ]);
     }
 }

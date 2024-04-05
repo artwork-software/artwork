@@ -331,4 +331,9 @@ class ProjectService
     {
         return $this->projectRepository->getAll();
     }
+
+    public function getByName(string $query): Collection
+    {
+        return $this->projectRepository->getByName($query);
+    }
 }

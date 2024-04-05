@@ -276,8 +276,8 @@ class CalendarController extends Controller
             }
 
             // Führe die Abfrage mit den vorbereiteten Beziehungen aus
-            $better = $this->filterRooms($startDate, $endDate)
-                ->get();
+            $better = $this->filterRooms($startDate, $endDate)->get();
+
             $better = $this->roomService->collectEventsForRooms($better, $calendarPeriod, $project);
 
             $events = Event::hasNoRoom()->get();
@@ -563,7 +563,7 @@ class CalendarController extends Controller
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
 
-        $better = $this->filterRooms($startDate, $endDate)->get();
+        $better = $this->filterRooms($startDate, $endDate, true)->get();
         $better = $this->roomService->collectEventsForRoomsShift($better, $calendarPeriod, null, true);
 
         return [

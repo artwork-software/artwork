@@ -37,7 +37,7 @@ readonly class EventService
 
     public function importShiftPreset(Event $event, ShiftPreset $shiftPreset): void
     {
-        $this->timelineService->forceDeleteTimelines($event->timeline);
+        $this->timelineService->forceDeleteTimelines($event->timelines);
         foreach ($shiftPreset->timeline as $shiftPresetTimeline) {
             $this->timelineService->createFromShiftPresetTimeline($shiftPresetTimeline, $event->id);
         }
@@ -142,8 +142,6 @@ readonly class EventService
         $this->subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
 
         broadcast(new OccupancyUpdated())->toOthers();
-
-        //$this->notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
     }
 
     public function forceDeleteAll(Collection|array $events): void

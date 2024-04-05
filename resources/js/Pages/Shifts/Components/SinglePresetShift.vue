@@ -80,6 +80,7 @@
                              :preset-shift="presetShift"
                              :shift-qualifications="shiftQualifications"
                              :edit="true"
+                             :crafts="this.crafts"
                              @closed="showEditShiftModal = false"
     />
 </template>
@@ -118,7 +119,11 @@ export default defineComponent({
         MenuItem,
         MenuButton
     },
-    props: ['presetShift', 'shiftQualifications'],
+    props: [
+        'presetShift',
+        'shiftQualifications',
+        'crafts'
+    ],
     methods: {
         deleteShift(){
             Inertia.delete(route('preset.shift.destroy', {presetShift: this.presetShift.id}))

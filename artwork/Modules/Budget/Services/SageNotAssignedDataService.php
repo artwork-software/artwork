@@ -25,6 +25,13 @@ class SageNotAssignedDataService
         return $sageNotAssignedData;
     }
 
+    public function update(SageNotAssignedData $sageNotAssignedData, array $attributes): SageNotAssignedData
+    {
+        $this->sageNotAssignedDataRepository->update($sageNotAssignedData, $attributes);
+
+        return $sageNotAssignedData;
+    }
+
     public function createFromSageApiData(array $data, int|null $projectId = null): SageNotAssignedData
     {
         return $this->create([

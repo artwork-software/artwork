@@ -1,6 +1,6 @@
 <?php
 
-namespace Artwork\Modules\Craft;
+namespace Artwork\Modules\EventType\Services;
 
 use Artwork\Modules\EventType\Repositories\EventTypeRepository;
 use Illuminate\Database\Eloquent\Collection;

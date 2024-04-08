@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Artwork\Modules\Craft\EventTypeService;
 use Artwork\Modules\Craft\Services\CraftService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
+use Artwork\Modules\EventType\Services\EventTypeService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
 use Artwork\Modules\ShiftPreset\Services\ShiftPresetService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
@@ -17,12 +17,13 @@ use Inertia\Response;
 class ShiftPresetController extends Controller
 {
     public function __construct(
-        private readonly CraftService $craftService,
-        private readonly EventTypeService $eventTypeService,
+        private readonly CraftService              $craftService,
+        private readonly EventTypeService          $eventTypeService,
         private readonly ShiftQualificationService $shiftQualificationService,
-        private readonly ShiftPresetService $shiftPresetService,
-        private readonly EventService $eventService
-    ) {
+        private readonly ShiftPresetService        $shiftPresetService,
+        private readonly EventService              $eventService
+    )
+    {
     }
 
     public function index(): Response
@@ -69,10 +70,11 @@ class ShiftPresetController extends Controller
     }
 
     public function import(
-        Request $request,
-        Event $event,
+        Request     $request,
+        Event       $event,
         ShiftPreset $shiftPreset
-    ): void {
+    ): void
+    {
         if (!$request->boolean('all')) {
             $this->eventService->importShiftPreset($event, $shiftPreset);
             return;

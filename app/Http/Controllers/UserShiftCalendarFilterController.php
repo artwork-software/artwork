@@ -9,26 +9,6 @@ use Illuminate\Http\Request;
 
 class UserShiftCalendarFilterController extends Controller
 {
-    public function index(): void
-    {
-    }
-
-    public function create(): void
-    {
-    }
-
-    public function store(): void
-    {
-    }
-
-    public function show(): void
-    {
-    }
-
-    public function edit(): void
-    {
-    }
-
     public function update(Request $request, User $user): void
     {
         $user->shift_calendar_filter()->update($request->only([
@@ -50,10 +30,6 @@ class UserShiftCalendarFilterController extends Controller
         $user->shift_calendar_filter()->update([
             $request->key => $request->value
         ]);
-    }
-
-    public function destroy(): void
-    {
     }
 
     public function reset(User $user): RedirectResponse

@@ -55,8 +55,10 @@
                                         $currentRowCount
                                     );
                             @endphp
-                            @if($columnCell->column->type === "empty" || $columnCell->column->type === "sage")
+                            @if($columnCell->column->type === "empty")
                                 {{ $columnCell->value }}
+                            @elseif($columnCell->column->type === "sage")
+                                {{ $columnCell->sage_value }}
                             @else
                                 {{
                                     $formulaService->createFormula(
@@ -173,8 +175,10 @@
                                         $currentRowCount
                                     );
                             @endphp
-                            @if($columnCell->column->type === "empty" || $columnCell->column->type === "sage")
+                            @if($columnCell->column->type === "empty")
                                 {{ $columnCell->value }}
+                            @elseif($columnCell->column->type === "sage")
+                                {{ $columnCell->sage_value }}
                             @else
                                 {{
                                     $formulaService->createFormula(

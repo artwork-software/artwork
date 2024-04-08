@@ -25,6 +25,8 @@ use Illuminate\Support\Facades\Redirect;
 
 class Sage100Service
 {
+    private const FILTER_FIELD_BOOKINGDATE = 'Buchungsdatum';
+
     public function __construct(
         private readonly ProjectService $projectService,
         private readonly ColumnService $columnService,
@@ -52,19 +54,24 @@ class Sage100Service
             $sageAssignedData = $this->sageAssignedDataService->findBySageId($item['ID']);
             if ($sageAssignedData instanceof SageAssignedData) {
                 $sageAssignedData->update([
-                    'buchungsdatum' => Carbon::parse($item['Buchungsdatum']),
+                    'buchungsdatum' => $item['Buchungsdatum'],
                     'buchungsbetrag' => $item['Buchungsbetrag'],
                     'belegnummer' => $item['Belegnummer'],
                 ]);
+
+                //dataset already exists, no need to import again
+                continue;
             }
 
             $sageNotAssignedData = $this->sageNotAssignedDataService->findBySageId($item['ID']);
             if ($sageNotAssignedData instanceof SageNotAssignedData) {
                 $sageNotAssignedData->update([
-                    'buchungsdatum' => Carbon::parse($item['Buchungsdatum']),
+                    'buchungsdatum' => $item['Buchungsdatum'],
                     'buchungsbetrag' => $item['Buchungsbetrag'],
                     'belegnummer' => $item['Belegnummer'],
                 ]);
+                //dataset already exists, no need to import again
+                continue;
             }
 
             $projects = $this->projectService->getProjectsByCostCenter($item['KstTraeger']);
@@ -280,9 +287,19 @@ class Sage100Service
         }
 
         if ($specificDay) {
-            $query['where'] = 'Buchungsdatum eq "' . Carbon::parse($specificDay)->format('d.m.Y') . '"';
+            $query['where'] = sprintf(
+                '%s eq "%s"',
+                self::FILTER_FIELD_BOOKINGDATE,
+                Carbon::parse($specificDay)->format('d.m.Y')
+            );
         } elseif ($desiredBookingDate = $this->sageApiSettingsService->getFirst()?->bookingDate) {
-            $query['where'] = 'Buchungsdatum gt "' . Carbon::parse($desiredBookingDate)->format('d.m.Y') . '"';
+            $query['where'] = sprintf(
+                '%s eq "%s" or %s gt "%s"',
+                self::FILTER_FIELD_BOOKINGDATE,
+                Carbon::parse($desiredBookingDate)->format('d.m.Y'),
+                self::FILTER_FIELD_BOOKINGDATE,
+                Carbon::parse($desiredBookingDate)->format('d.m.Y')
+            );
         }
 
         $query['orderBy'] = 'Buchungsdatum asc';

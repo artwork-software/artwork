@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Enums\BudgetTypesEnum;
+use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Project\Models\Project;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +32,7 @@ class ProjectBudgetExport implements FromView, ShouldAutoSize, WithStyles
      */
     public function getData(): array
     {
+        /** @var Table $budgetTable */
         $budgetTable = $this->project->table()
             ->with([
                 'columns',
@@ -42,7 +44,7 @@ class ProjectBudgetExport implements FromView, ShouldAutoSize, WithStyles
                     return $query->orderBy('position');
                 },
                 'mainPositions.subPositions.subPositionRows.cells',
-                'mainPositions.subPositions.subPositionRows.cells.column'
+                'mainPositions.subPositions.subPositionRows.cells.sageAssignedData',
             ])
             ->first();
 

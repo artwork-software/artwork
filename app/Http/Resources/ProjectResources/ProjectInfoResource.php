@@ -6,6 +6,8 @@ use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\ProjectFileResource;
 use App\Http\Resources\ProjectHeadlineResource;
 use App\Http\Resources\UserResourceWithoutShifts;
+use App\Models\Freelancer;
+use App\Models\ServiceProvider;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -53,7 +55,16 @@ class ProjectInfoResource extends JsonResource
             'state' => ProjectStates::find($this->state),
             'project_managers' => $this->managerUsers,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
-            'is_group' => $this->is_group
+            'is_group' => $this->is_group,
+
+
+            'shift_relevant_event_types' => $this->shiftRelevantEventTypes()->get(),
+            'shift_contacts' => $this->shift_contact()->get(),
+            'shiftDescription' => $this->shift_description,
+
+            //needed for ProjectShowHeaderComponent
+            'freelancers' => Freelancer::all(),
+            'serviceProviders' => ServiceProvider::without(['contacts'])->get(),
         ];
     }
 }

@@ -1,10 +1,10 @@
 <template>
     <div>
-        <div class="flex items-center justify-between">
-            <h2 class="mb-3 xWhiteBold">{{ $t('Project team') }}</h2>
-            <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+        <div class="flex items-center gap-x-5">
+            <h2 class=" xWhiteBold">{{ $t('Project team') }}</h2>
+            <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                       @click="showTeamModal = true"
-                      v-if="projectMembersWriteAccess()"
+                      v-if="projectMembersWriteAccess() || hasAdminRole()"
             />
         </div>
         <div class="flex w-full mt-2 flex-wrap">
@@ -25,7 +25,7 @@
                 {{ $t('Project team') }}
             </span>
             <div class="flex w-full">
-                <div class="flex" v-if="this.project.departments !== []">
+                <div class="flex" v-if="this.project.departments.length > 0">
                     <div class="flex mt-2 -mr-3" v-for="department in this.project.departments">
                         <TeamIconCollection :data-tooltip-target="department.name"
                                             :iconName="department.svg_name"
@@ -43,6 +43,7 @@
                 </div>
             </div>
         </div>
+        <!-- Modal -->
         <ProjectEditTeamModal :show="this.showTeamModal"
                               :assigned-users="this.project.users"
                               :assigned-departments="this.project.departments"
@@ -74,7 +75,8 @@ export default defineComponent({
         TeamIconCollection
     },
     props: [
-        'project'
+        'project',
+        'inSidebar'
     ],
     data() {
         return {

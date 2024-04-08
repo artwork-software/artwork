@@ -13,6 +13,16 @@ import ProjectBudgetDeadlineComponent from "@/Pages/Projects/Components/ProjectB
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import SeparatorComponent from "@/Pages/Projects/TabTest/Components/SeparatorComponent.vue";
+import ProjectGroupComponent from "@/Pages/Projects/Components/ProjectGroupComponent.vue";
+import ProjectTeamComponent from "@/Pages/Projects/Components/ProjectTeamComponent.vue";
+import ProjectAttributesComponent from "@/Pages/Projects/Components/ProjectAttributesComponent.vue";
+import RelevantDatesForShiftPlanningComponent
+    from "@/Pages/Projects/Components/RelevantDatesForShiftPlanningComponent.vue";
+import ProjectTitleComponent from "@/Pages/Projects/Components/ProjectTitleComponent.vue";
+import ChecklistComponent from "@/Pages/Projects/Components/ChecklistComponent.vue";
+import ShiftContactPersonsComponent from "@/Pages/Projects/Components/ShiftContactPersonsComponent.vue";
+import GeneralShiftInformationComponent from "@/Pages/Projects/Components/GeneralShiftInformationComponent.vue";
+import CommentTab from "@/Pages/Projects/Components/TabComponents/CommentTab.vue";
 export default {
     name: "TabContent",
     components: {
@@ -20,7 +30,8 @@ export default {
         BaseSidenav,
         ProjectHeaderComponent,
         TextField, Checkbox, Title, TextArea, DropDown, ProjectStateComponent, CalendarTab, ShiftTab,
-        BudgetTab, ProjectBudgetDeadlineComponent, SeparatorComponent
+        BudgetTab, ProjectBudgetDeadlineComponent, SeparatorComponent, ProjectGroupComponent, ProjectTeamComponent, ProjectAttributesComponent, RelevantDatesForShiftPlanningComponent,
+        ShiftContactPersonsComponent, GeneralShiftInformationComponent, CommentTab, ProjectTitleComponent, ChecklistComponent
     },
     props: {
         headerObject: {
@@ -55,10 +66,27 @@ export default {
 
 <template>
     <ProjectHeaderComponent :header-object="headerObject">
-
         <div class="my-10 w-full">
             <div v-for="component in dataObject.currentTab.components"  :class="removeML(component.component?.type)">
-                <Component :in-sidebar="false" :is="component.component?.type" :loadedProjectInformation="loadedProjectInformation" :header-object="headerObject" :data="component.component" :project-id="headerObject.project.id"  />
+                <Component
+                    :project="headerObject.project"
+                    :in-sidebar="false"
+                    :is="component.component?.type"
+                    :loadedProjectInformation="loadedProjectInformation"
+                    :header-object="headerObject"
+                    :data="component.component"
+                    :project-id="headerObject.project.id"
+                    :projectCategories="headerObject.projectCategories"
+                    :projectGenres="headerObject.projectGenres"
+                    :projectSectors="headerObject.projectSectors"
+                    :categories="headerObject.categories"
+                    :sectors="headerObject.sectors"
+                    :genres="headerObject.genres"
+                    :projectCategoryIds="headerObject.projectCategoryIds"
+                    :projectGenreIds="headerObject.projectGenreIds"
+                    :projectSectorIds="headerObject.projectSectorIds"
+                    :eventTypes="headerObject.eventTypes"
+                />
             </div>
         </div>
 
@@ -79,7 +107,25 @@ export default {
                 </div>
                 <div class="px-3">
                     <div v-for="component in dataObject.currentTab.sidebar_tabs[currentSideBarTab]?.components_in_sidebar">
-                        <Component :is="component.component?.type" :loadedProjectInformation="loadedProjectInformation" :in-sidebar="true" :header-object="headerObject" :data="component.component" :project-id="headerObject.project.id"  />
+                        <Component
+                            :project="headerObject.project"
+                            :is="component.component?.type"
+                            :loadedProjectInformation="loadedProjectInformation"
+                            :in-sidebar="true"
+                            :header-object="headerObject"
+                            :data="component.component"
+                            :project-id="headerObject.project.id"
+                            :projectCategories="headerObject.projectCategories"
+                            :projectGenres="headerObject.projectGenres"
+                            :projectSectors="headerObject.projectSectors"
+                            :categories="headerObject.categories"
+                            :sectors="headerObject.sectors"
+                            :genres="headerObject.genres"
+                            :projectCategoryIds="headerObject.projectCategoryIds"
+                            :projectGenreIds="headerObject.projectGenreIds"
+                            :projectSectorIds="headerObject.projectSectorIds"
+                            :eventTypes="headerObject.eventTypes"
+                        />
                     </div>
                 </div>
             </div>

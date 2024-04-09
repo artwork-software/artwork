@@ -70,7 +70,7 @@
                     <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
                     <span class="text-xs">{{ $t('Unoccupied')}}</span>
                     <ShiftQualificationIconCollection
-                        class="w-5 h-5"
+                        :classes="'w-4 h-4'"
                         :icon-name="this.getShiftQualificationById(shiftsQualification.shift_qualification_id).icon"/>
                 </div>
             </div>

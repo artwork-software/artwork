@@ -95,7 +95,7 @@
                         <span class="text-xs">{{ user.full_name }}</span>
                         <span v-if="user.pivot.shift_count > 1" class="text-xs"> 1/{{ user.pivot.shift_count }}</span>
                         <ShiftQualificationIconCollection
-                            class="w-5 h-5"  :classes="'w-4 h-4'"
+                            :classes="'w-4 h-4'"
                             :icon-name="this.getShiftQualificationById(user.pivot.shift_qualification_id).icon"/>
                     </div>
                     <div class="hidden group-hover:block"

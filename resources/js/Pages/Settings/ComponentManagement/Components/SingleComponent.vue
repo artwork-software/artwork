@@ -1,34 +1,3 @@
-<script>
-import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
-import IconLib from "@/mixins/IconLib.vue";
-import EditComponentModal from "@/Pages/Settings/ComponentManagement/Components/EditComponentModal.vue";
-import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-
-export default {
-    name: "SingleComponent",
-    mixins: [IconLib],
-    components: {ConfirmDeleteModal, EditComponentModal, ComponentIcons},
-    props: ['component'],
-    data() {
-        return {
-            showEditComponentModal: false,
-            showConfirmDeleteModal: false,
-        }
-    },
-    methods: {
-        deleteComponent() {
-            this.$inertia.delete(route('component.destroy', {component: this.component.id}), {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.showConfirmDeleteModal = false;
-                }
-            })
-        }
-    }
-}
-</script>
-
 <template>
     <div class="absolute rounded-lg  h-full w-full items-center justify-center hidden group-hover:flex bg-black/40">
         <div class="flex items-center justify-center gap-x-2">
@@ -49,7 +18,6 @@ export default {
             {{ component.data.height }} Pixel <span v-if="component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
         </div>
     </div>
-
     <ConfirmDeleteModal
         v-if="showConfirmDeleteModal"
         @closed="showConfirmDeleteModal = false"
@@ -57,9 +25,45 @@ export default {
         :title="$t('Do you really want to delete the component {0}?', [component.name])"
         :description="$t('This action cannot be undone. Do you really want to delete this component? This will also delete all data associated with this component.')"
     />
-    <EditComponentModal :component-to-edit="component" v-if="showEditComponentModal" @close="showEditComponentModal = false" />
+    <ComponentModal v-if="showEditComponentModal"
+                    :show="showEditComponentModal"
+                    mode="edit"
+                    :component-to-edit="component"
+                    @close="showEditComponentModal = false"
+    />
 </template>
 
-<style scoped>
+<script>
+import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
+import IconLib from "@/mixins/IconLib.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import ComponentModal from "@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue";
 
-</style>
+export default {
+    name: "SingleComponent",
+    mixins: [IconLib],
+    components: {
+        ComponentModal,
+        ConfirmDeleteModal,
+        ComponentIcons
+    },
+    props: ['component'],
+    data() {
+        return {
+            showEditComponentModal: false,
+            showConfirmDeleteModal: false,
+        }
+    },
+    methods: {
+        deleteComponent() {
+            this.$inertia.delete(route('component.destroy', {component: this.component.id}), {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.showConfirmDeleteModal = false;
+                }
+            })
+        }
+    }
+}
+</script>

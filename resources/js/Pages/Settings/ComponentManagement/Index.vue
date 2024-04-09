@@ -1,55 +1,3 @@
-<script>
-import AppLayout from "@/Layouts/AppLayout.vue";
-import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
-import {IconCircleX, IconSearch} from "@tabler/icons-vue";
-import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
-import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
-import IconLib from "@/mixins/IconLib.vue";
-import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
-import AddNewComponentModal from "@/Pages/Settings/ComponentManagement/Components/AddNewComponentModal.vue";
-import SingleComponent from "@/Pages/Settings/ComponentManagement/Components/SingleComponent.vue";
-
-export default {
-    name: "Index",
-    components: {
-        SingleComponent,
-        AddNewComponentModal,
-        PlusButton, ComponentIcons, IconCircleX, DragComponentElement, IconSearch, ProjectTabs, AppLayout},
-    props: ['components', 'componentsSpecial', 'tabComponentTypes'],
-    mixins: [IconLib],
-    data() {
-        return {
-            searchComponent: '',
-            showAddNewComponentModal: false
-        }
-    },
-    computed: {
-        filteredComponents() {
-            return Object.keys(this.components).reduce((acc, key) => {
-                const filtered = this.components[key].filter(component => {
-                    return component.name.toLowerCase().includes(this.searchComponent.toLowerCase());
-                });
-
-                if (filtered.length > 0) {
-                    acc[key] = filtered;
-                }
-
-                return acc;
-            }, {
-
-            });
-
-        },
-        filteredSpecialComponents() {
-            // filter special components with translation
-            return this.componentsSpecial?.filter(component => {
-                return this.$t(component.name).toLowerCase().includes(this.searchComponent.toLowerCase());
-            });
-        }
-    }
-}
-</script>
-
 <template>
     <AppLayout>
         <div class="my-8 ml-14 mr-40">
@@ -59,10 +7,7 @@ export default {
                     {{$t('Define global settings for projects.')}}
                 </div>
             </div>
-
             <ProjectTabs />
-
-
             <div>
                 <div class="flex items-center justify-end w-full mb-3">
                     <div class="flex items-center gap-x-5">
@@ -105,11 +50,67 @@ export default {
                 </div>
             </div>
         </div>
-
-        <AddNewComponentModal v-if="showAddNewComponentModal" @close="showAddNewComponentModal = false" :tab-component-types="tabComponentTypes" />
+        <ComponentModal v-if="showAddNewComponentModal"
+                        :show="showAddNewComponentModal"
+                        mode="create"
+                        :tab-component-types="tabComponentTypes"
+                        @close="showAddNewComponentModal = false"
+        />
     </AppLayout>
 </template>
 
-<style scoped>
+<script>
+import AppLayout from "@/Layouts/AppLayout.vue";
+import ProjectTabs from "@/Pages/Settings/Components/ProjectTabs.vue";
+import DragComponentElement from "@/Pages/Settings/Components/DragComponentElement.vue";
+import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
+import IconLib from "@/mixins/IconLib.vue";
+import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
+import SingleComponent from "@/Pages/Settings/ComponentManagement/Components/SingleComponent.vue";
+import ComponentModal from "@/Pages/Settings/ComponentManagement/Components/ComponentModal.vue";
 
-</style>
+export default {
+    name: "Index",
+    components: {
+        SingleComponent,
+        PlusButton,
+        ComponentIcons,
+        DragComponentElement,
+        ProjectTabs,
+        AppLayout,
+        ComponentModal
+    },
+    props: ['components', 'componentsSpecial', 'tabComponentTypes'],
+    mixins: [IconLib],
+    data() {
+        return {
+            searchComponent: '',
+            showAddNewComponentModal: false
+        }
+    },
+    computed: {
+        filteredComponents() {
+            return Object.keys(this.components).reduce((acc, key) => {
+                const filtered = this.components[key].filter(component => {
+                    return component.name.toLowerCase().includes(this.searchComponent.toLowerCase());
+                });
+
+                if (filtered.length > 0) {
+                    acc[key] = filtered;
+                }
+
+                return acc;
+            }, {
+
+            });
+
+        },
+        filteredSpecialComponents() {
+            // filter special components with translation
+            return this.componentsSpecial?.filter(component => {
+                return this.$t(component.name).toLowerCase().includes(this.searchComponent.toLowerCase());
+            });
+        }
+    }
+}
+</script>

@@ -1614,7 +1614,12 @@ class ProjectController extends Controller
             'sectors',
             'users.departments',
             'state',
-            'delete_permission_users'
+            'delete_permission_users',
+            'checklists.users',
+            'checklists.tasks.checklist.project',
+            'checklists.tasks.user_who_done',
+            'departments.users.departments',
+            'comments.user',
         ]);
         if (!$project->is_group) {
             $group = DB::table('project_groups')
@@ -1663,6 +1668,9 @@ class ProjectController extends Controller
         $headerObject->currentTabId = $projectTab->id;
         $headerObject->currentGruop = $groupOutput;
 
+
+
+
         $projectTab->load(['components.component.projectValue' => function ($query) use ($project): void {
             $query->where('project_id', $project->id);
         }, 'components' => function ($query): void {
@@ -1677,6 +1685,14 @@ class ProjectController extends Controller
         $loadedProjectInformation = [];
 
         foreach ($projectTab->components()->with('component')->get() as $component) {
+            if ($component->component->type === 'ChecklistComponent') {
+                $loadedProjectInformation['ChecklistComponent'] = [
+                    'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
+                    'checklist_templates' => ChecklistTemplateIndexResource::collection(
+                        ChecklistTemplate::all()
+                    )->resolve(),
+                ];
+            }
             if ($component->component->type === 'ProjectStateComponent') {
                 $loadedProjectInformation['ProjectStateComponent'] = ProjectStates::find($project->state);
             }

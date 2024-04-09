@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\ProjectResources;
 
+use App\Http\Resources\ChecklistIndexResource;
 use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\ProjectFileResource;
 use App\Http\Resources\ProjectHeadlineResource;
@@ -65,6 +66,17 @@ class ProjectInfoResource extends JsonResource
             //needed for ProjectShowHeaderComponent
             'freelancers' => Freelancer::all(),
             'serviceProviders' => ServiceProvider::without(['contacts'])->get(),
+            'public_checklists' => ChecklistIndexResource::collection($this->checklists->whereNull('user_id'))
+                ->resolve(),
+            'private_checklists' => ChecklistIndexResource::collection(
+                $this->checklists->where('user_id', Auth::id())
+            )->resolve(),
+            'comments' => $this->comments->map(fn ($comment) => [
+                'id' => $comment->id,
+                'text' => $comment->text,
+                'created_at' => $comment->created_at->format('d.m.Y, H:i'),
+                'user' => $comment->user
+            ]),
         ];
     }
 }

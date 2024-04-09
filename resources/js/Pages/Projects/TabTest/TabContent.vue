@@ -23,15 +23,18 @@ import ChecklistComponent from "@/Pages/Projects/Components/ChecklistComponent.v
 import ShiftContactPersonsComponent from "@/Pages/Projects/Components/ShiftContactPersonsComponent.vue";
 import GeneralShiftInformationComponent from "@/Pages/Projects/Components/GeneralShiftInformationComponent.vue";
 import CommentTab from "@/Pages/Projects/Components/TabComponents/CommentTab.vue";
+import ProjectDocumentsComponent from "@/Pages/Projects/Components/ProjectDocumentsComponent.vue";
 export default {
     name: "TabContent",
+    computed: {
+    },
     components: {
         Link,
         BaseSidenav,
         ProjectHeaderComponent,
         TextField, Checkbox, Title, TextArea, DropDown, ProjectStateComponent, CalendarTab, ShiftTab,
         BudgetTab, ProjectBudgetDeadlineComponent, SeparatorComponent, ProjectGroupComponent, ProjectTeamComponent, ProjectAttributesComponent, RelevantDatesForShiftPlanningComponent,
-        ShiftContactPersonsComponent, GeneralShiftInformationComponent, CommentTab, ProjectTitleComponent, ChecklistComponent
+        ShiftContactPersonsComponent, GeneralShiftInformationComponent, CommentTab, ProjectTitleComponent, ChecklistComponent, ProjectDocumentsComponent
     },
     props: {
         headerObject: {
@@ -56,7 +59,7 @@ export default {
     methods: {
         removeML(componentType) {
             console.log(componentType)
-            if(componentType === 'CalendarTab' || componentType === 'ShiftTab' || componentType === 'BudgetTab'){
+            if(componentType === 'CalendarTab' || componentType === 'ShiftTab' || componentType === 'BudgetTab' || componentType === 'ChecklistComponent' || componentType === 'CommentTab'){
                 return '-ml-14'
             }
         }
@@ -86,6 +89,7 @@ export default {
                     :projectGenreIds="headerObject.projectGenreIds"
                     :projectSectorIds="headerObject.projectSectorIds"
                     :eventTypes="headerObject.eventTypes"
+                    :opened_checklists="loadedProjectInformation['ChecklistComponent']?.opened_checklists"
                 />
             </div>
         </div>

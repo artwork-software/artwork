@@ -12,7 +12,7 @@
                 class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
                 {{ $t('Project management') }}
             </span>
-            <div class="flex flex-wrap mt-2 -mr-3" v-for="user in this.project.project_managers">
+            <div class="flex flex-wrap mt-2 -mr-3" v-for="user in project.project_managers">
                 <img :data-tooltip-target="user.id"
                      :src="user.profile_photo_url"
                      :alt="user.name"
@@ -45,13 +45,14 @@
         </div>
         <!-- Modal -->
         <ProjectEditTeamModal :show="this.showTeamModal"
-                              :assigned-users="this.project.users"
+                              :assigned-users="this.project.usersArray"
                               :assigned-departments="this.project.departments"
                               :project-id="this.project.id"
                               :userIsProjectManager="this.userIsProjectManager"
                               @closed="this.showTeamModal = false"
         />
     </div>
+
 </template>
 
 <script>
@@ -85,7 +86,15 @@ export default defineComponent({
     },
     computed: {
         onlyTeamMember() {
-            return this.project.users.filter(user => user.pivot_is_manager === false);
+            // return all users that are not project managers
+            return this.project.usersArray.filter(user => {
+                let managerIdArray = [];
+                this.project.project_managers.forEach(manager => {
+                        managerIdArray.push(manager.id)
+                    }
+                )
+                return !managerIdArray.includes(user.id);
+            });
         }
     },
     methods: {

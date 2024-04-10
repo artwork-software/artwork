@@ -2,7 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Task;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\MissingValue;
 
@@ -21,18 +23,22 @@ class ChecklistIndexResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'private' => $this->user_id !== null,
-            //determines if the checklist is already opened by default
             'showContent' => true,
-            'tasks' => TaskIndexResource::collection($this->tasks->sortBy('order'))->resolve(),
-            // only show departments on public checklists, not on private
-            'users' => $this->user_id
-                ? new MissingValue()
-                : $this->users->map(fn (User $user) => [
-                    'id' => $user->id,
-                    'profile_photo_url' => $user->profile_photo_url,
-                    'first_name' => $user->first_name,
-                    'last_name' => $user->last_name,
-                ])
+            'tasks' => $this->tasks->map(fn (Task $task) => [
+                'id' => $task->id,
+                'name' => $task->name,
+                'description' => $task->description,
+                'deadline' => $task->deadline ? Carbon::parse($task->deadline)->format('d.m.Y, H:i') : null,
+                'deadlineDate' => $task->deadline ? Carbon::parse($task->deadline)->format('Y-m-d') : null,
+                'deadlineTime' => $task->deadline ? Carbon::parse($task->deadline)->format('H:i') : null,
+                'deadline_dt_local' => $task->deadline ? Carbon::parse($task->deadline)->toDateTimeLocalString() : null,
+                'order' => $task->order,
+                'done' => $task->done,
+                'done_by_user' => $task->user_who_done,
+                'done_at' => Carbon::parse($task->done_at)->format('d.m.Y, H:i'),
+                'done_at_dt_local' => Carbon::parse($task->done_at)->toDateTimeLocalString(),
+                'users' => $task->task_users
+            ]),
         ];
     }
 }

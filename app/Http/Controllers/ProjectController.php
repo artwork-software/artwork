@@ -11,7 +11,9 @@ use App\Exports\ProjectBudgetsByBudgetDeadlineExport;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
+use App\Http\Resources\ChecklistIndexResource;
 use App\Http\Resources\ChecklistTemplateIndexResource;
+use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\FreelancerDropResource;
 use App\Http\Resources\ProjectCalendarShowEventResource;
@@ -67,6 +69,8 @@ use Artwork\Modules\Budget\Services\SubPositionRowService;
 use Artwork\Modules\Budget\Services\SubPositionService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
+use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
@@ -78,6 +82,7 @@ use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Artwork\Modules\Shift\Models\Shift;
+use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
@@ -117,7 +122,10 @@ class ProjectController extends Controller
         private readonly ProjectService $projectService,
         private readonly BudgetService $budgetService,
         private readonly SageApiSettingsService $sageApiSettingsService,
-        private readonly BudgetColumnSettingService $budgetColumnSettingService
+        private readonly BudgetColumnSettingService $budgetColumnSettingService,
+        private readonly ChecklistService $checklistService,
+        private readonly CalendarService $calendarService,
+        private readonly ShiftService $shiftService,
     ) {
         // init notification controller
         $this->notificationService = new NotificationService();
@@ -1579,9 +1587,9 @@ class ProjectController extends Controller
         $newState = $project->state()->first();
 
         if (
-            !empty($newState) && $oldState !== $newState ||
-            empty($oldState) && !empty($newState) ||
-            !empty($oldState) && empty($newState)
+            (!empty($newState) && $oldState !== $newState) ||
+            (empty($oldState) && !empty($newState)) ||
+            (!empty($oldState) && empty($newState))
         ) {
             $this->history->createHistory(
                 $project->id,
@@ -1596,6 +1604,9 @@ class ProjectController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity is rising
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+    /**
+     * @throws \JsonException
+     */
     public function projectTabTest(
         Project $project,
         ProjectTab $projectTab,
@@ -1603,24 +1614,142 @@ class ProjectController extends Controller
         ShiftQualificationService $shiftQualificationService,
         SageAssignedDataCommentService $sageAssignedDataCommentService
     ): Response|ResponseFactory {
-        $project->load([
-            'categories',
-            'departments.users.departments',
-            'genres',
-            'managerUsers',
-            'writeUsers',
-            'project_files',
-            'costCenter',
-            'sectors',
-            'users.departments',
-            'state',
-            'delete_permission_users',
-            'checklists.users',
-            'checklists.tasks.checklist.project',
-            'checklists.tasks.user_who_done',
-            'departments.users.departments',
-            'comments.user',
-        ]);
+        $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
+        $headerObject->project = $project;
+        // define the relations to load
+        $relationsToLoad = new Collection();
+        $loadedProjectInformation = [];
+
+        // Get the project tab content and load the components with the project values for the current project
+        $projectTab->load(['components.component.projectValue' => function ($query) use ($project): void {
+            $query->where('project_id', $project->id);
+        }, 'components' => function ($query): void {
+            $query->orderBy('order');
+        }, 'sidebarTabs.componentsInSidebar.component.projectValue'  => function ($query) use ($project): void {
+            $query->where('project_id', $project->id);
+        }]);
+
+        $projectTabComponents = $projectTab->components()->with('component')->get();
+
+        if ($projectTabComponents->isNotEmpty()) {
+            foreach ($projectTabComponents as $componentInTab) {
+                $component = $componentInTab->component;
+                if ($component->type === 'ChecklistComponent') {
+                    $headerObject = $this->checklistService->getProjectChecklists($project, $headerObject, $projectTab);
+                }
+
+                if ($component->type === 'ChecklistAllComponent') {
+                    $headerObject = $this->checklistService->getProjectChecklistsAll($project, $headerObject);
+                }
+
+                if ($component->type === 'CommentTab') {
+                    $headerObject->project->comments = $project->comments()->where('tab_id', $projectTab->id)
+                        ->with('user')->get();
+                }
+                if ($component->type === 'CommentAllTab') {
+                    $headerObject->project->comments_all = $project->comments()->with('user')->get();
+                }
+
+                if ($component->type === 'ProjectDocumentsComponent') {
+                    $headerObject->project->project_files_tab = $project->project_files()->where('tab_id', $projectTab->id)
+                        ->get();
+                }
+
+                if ($component->type === 'ChecklistAllComponent') {
+                    $headerObject = $this->checklistService->getProjectChecklists($project, $headerObject, $projectTab);
+                }
+
+                if ($component->type === 'ProjectAllDocumentsComponent') {
+                    $headerObject->project->project_files_all = $project->project_files;
+                }
+
+                if ($component->type === 'ProjectStateComponent') {
+                    $headerObject->project->state = ProjectStates::find($project->state);
+                }
+
+                if ($component->type === 'ProjectTeamComponent') {
+                    $relationsToLoad->push(['categories',
+                        'departments.users.departments',
+                        'managerUsers',
+                        'writeUsers',
+                        'users.departments',
+                        'delete_permission_users']);
+
+                    // add value project_management if project user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value)
+                    // is true to the headerObject for the ProjectShowHeaderComponent
+
+
+                    $headerObject->project->usersArray = $project->users->map(fn (User $user) => [
+                            'id' => $user->id,
+                            'first_name' => $user->first_name,
+                            'last_name' => $user->last_name,
+                            'profile_photo_url' => $user->profile_photo_url,
+                            'email' => $user->email,
+                            'departments' => $user->departments,
+                            'position' => $user->position,
+                            'business' => $user->business,
+                            'phone_number' => $user->phone_number,
+                            'project_management' => $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
+                            'pivot_access_budget' => (bool)$user->pivot?->access_budget,
+                            'pivot_is_manager' => (bool)$user->pivot?->is_manager,
+                            'pivot_can_write' => (bool)$user->pivot?->can_write,
+                            'pivot_delete_permission' => (bool)$user->pivot?->delete_permission,
+                        ]);
+
+                    $headerObject->project->departments = DepartmentIndexResource::collection(
+                        $project->departments
+                    )->resolve();
+                    $headerObject->project->project_managers = $project->managerUsers;
+                    $headerObject->project->write_auth = $project->writeUsers;
+                    $headerObject->project->delete_permission_users = $project->delete_permission_users;
+                }
+
+                if ($component->type === 'CalendarTab') {
+                    $loadedProjectInformation = $this->calendarService->getCalendarForProjectTab(
+                        project: $project,
+                        loadedProjectInformation: $loadedProjectInformation,
+                        calendar: $calendar,
+                    );
+                }
+
+                if ($component->type === 'BudgetTab') {
+                    $loadedProjectInformation = $this->budgetService->getBudgetForProjectTab(
+                        project: $project,
+                        loadedProjectInformation: $loadedProjectInformation,
+                        sageAssignedDataCommentService: $sageAssignedDataCommentService,
+                    );
+                }
+
+                if ($component->type === 'ShiftTab') {
+                    /**
+                     * 'shift_relevant_event_types' => $this->shiftRelevantEventTypes()->get(),
+                     * 'shift_contacts' => $this->shift_contact()->get(),
+                     * 'shiftDescription' => $this->shift_description,
+                     *
+                     * //needed for ProjectShowHeaderComponent
+                     * 'freelancers' => Freelancer::all(),
+                     * 'serviceProviders' => ServiceProvider::without(['contacts'])->get()
+                     */
+                    $headerObject->project->shift_relevant_event_types = $project->shiftRelevantEventTypes;
+                    $headerObject->project->shift_contacts = $project->shift_contact;
+                    $headerObject->project->shiftDescription = $project->shift_description;
+                    $headerObject->project->freelancers = Freelancer::all();
+                    $headerObject->project->serviceProviders = ServiceProvider::without(['contacts'])->get();
+
+
+                    $loadedProjectInformation = $this->shiftService->getShiftsForProjectTab(
+                        project: $project,
+                        loadedProjectInformation: $loadedProjectInformation,
+                        shiftQualificationService: $shiftQualificationService,
+                    );
+                }
+            }
+        }
+
+
+
+
+
         if (!$project->is_group) {
             $group = DB::table('project_groups')
                 ->select('*')
@@ -1634,8 +1763,24 @@ class ProjectController extends Controller
         } else {
             $groupOutput = '';
         }
-        $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
-        $headerObject->project = new ProjectInfoResource($project);
+
+
+        // add History to the header object for the ProjectShowHeaderComponent in $headerObject->project
+        $historyArray = [];
+        $historyComplete = $project->historyChanges()->all();
+
+        foreach ($historyComplete as $history) {
+            $historyArray[] = [
+                'changes' => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
+                'created_at' => $history->created_at->diffInHours() < 24
+                    ? $history->created_at->diffForHumans()
+                    : $history->created_at->format('d.m.Y, H:i'),
+            ];
+        }
+
+        $headerObject->project->project_history = $historyArray;
+
+
         $headerObject->firstEventInProject = $project
             ->events()
             ->orderBy('start_time', 'ASC')
@@ -1645,46 +1790,65 @@ class ProjectController extends Controller
             ->orderBy('end_time', 'DESC')
             ->limit(1)
             ->first();
-        $headerObject->roomsWithAudience = Room::withAudience($project->id)->get()->pluck('name', 'id');
-        $headerObject->projectManagerIds = $project->managerUsers()->pluck('user_id');
-        $headerObject->projectWriteIds = $project->writeUsers()->pluck('user_id');
-        $headerObject->projectDeleteIds = $project->delete_permission_users()->pluck('user_id');
+        $headerObject->roomsWithAudience = Room::withAudience($project->id)->pluck('name', 'id');
         $headerObject->eventTypes = EventTypeResource::collection(EventType::all())->resolve();
         $headerObject->states = ProjectStates::all();
-        $headerObject->projectGroups = $project->groups()->get();
+        $headerObject->projectGroups = $project->groups;
         $headerObject->groupProjects = Project::where('is_group', 1)->get();
         $headerObject->categories = Category::all();
-        $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
         $headerObject->projectCategories = $project->categories;
         $headerObject->genres = Genre::all();
-        $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
         $headerObject->projectGenres = $project->genres;
         $headerObject->sectors = Sector::all();
-        $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
         $headerObject->projectSectors = $project->sectors;
         $headerObject->projectState = $project->state;
         $headerObject->access_budget = $project->access_budget;
         $headerObject->tabs = ProjectTab::orderBy('order')->get();
         $headerObject->currentTabId = $projectTab->id;
         $headerObject->currentGruop = $groupOutput;
+        $headerObject->projectManagerIds = $project->managerUsers()->pluck('user_id');
+        $headerObject->projectWriteIds = $project->writeUsers()->pluck('user_id');
+        $headerObject->projectDeleteIds = $project->delete_permission_users()->pluck('user_id');
+        $headerObject->project->projectSectors = $project->sectors;
+        $headerObject->projectCategoryIds = $project->categories()->pluck('category_id');
+        $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
+        $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
 
 
 
+        /*
 
-        $projectTab->load(['components.component.projectValue' => function ($query) use ($project): void {
-            $query->where('project_id', $project->id);
-        }, 'components' => function ($query): void {
-            $query->orderBy('order');
-        }, 'sidebarTabs.componentsInSidebar.component.projectValue'  => function ($query) use ($project): void {
-            $query->where('project_id', $project->id);
-        }]);
+
+            'projectManagerIds' => $project->managerUsers()->pluck('user_id'),
+            'projectWriteIds' => $project->writeUsers()->pluck('user_id'),
+            'projectDeleteIds' => $project->delete_permission_users()->pluck('user_id'),
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'currentGroup' => $groupOutput,
+            'states' => ProjectStates::all(),
+            'projectGroups' => $project->groups()->get(),
+            'groupProjects' => Project::where('is_group', 1)->get(),
+            // needed for ProjectSecondSidenav
+            'categories' => Category::all(),
+            'projectCategoryIds' => $project->categories()->pluck('category_id'),
+            'projectCategories' => $project->categories,
+            'genres' => Genre::all(),
+            'projectGenreIds' => $project->genres()->pluck('genre_id'),
+            'projectGenres' => $project->genres,
+            'sectors' => Sector::all(),
+            'projectSectorIds' => $project->sectors()->pluck('sector_id'),
+            'projectSectors' => $project->sectors,
+            'projectState' => $project->state,
+            'access_budget' => $project->access_budget
+         */
+
+
+
 
         $dataObject = new stdClass();
         $dataObject->currentTab = $projectTab;
 
-        $loadedProjectInformation = [];
 
-        foreach ($projectTab->components()->with('component')->get() as $component) {
+        /*foreach ($projectTab->components()->with('component')->get() as $component) {
             if ($component->component->type === 'ChecklistComponent') {
                 $loadedProjectInformation['ChecklistComponent'] = [
                     'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
@@ -1743,250 +1907,14 @@ class ProjectController extends Controller
                 ];
             }
             if ($component->component->type === 'ShiftTab') {
-                $shiftRelevantEventTypes = $project->shiftRelevantEventTypes()->pluck('event_type_id');
-                $shiftRelevantEvents = $project->events()
-                    ->whereIn('event_type_id', $shiftRelevantEventTypes)
-                    ->with(['timelines', 'shifts', 'event_type', 'room'])
-                    ->get();
 
-                $eventsWithRelevant = [];
-                foreach ($shiftRelevantEvents as $event) {
-                    $timeline = $event->timelines()->get()->toArray();
-
-                    foreach ($timeline as &$singleTimeLine) {
-                        $singleTimeLine['description_without_html'] = strip_tags($singleTimeLine['description']);
-                    }
-
-                    usort($timeline, function ($a, $b) {
-                        if ($a['start'] === null && $b['start'] === null) {
-                            return 0;
-                        } elseif ($a['start'] === null) {
-                            return 1; // $a should come later in the array
-                        } elseif ($b['start'] === null) {
-                            return -1; // $b should come later in the array
-                        }
-
-                        // Compare the 'start' values for ascending order
-                        return strtotime($a['start']) - strtotime($b['start']);
-                    });
-
-                    /** @var Shift $shift */
-                    foreach ($event->shifts as $shift) {
-                        $shift->load('shiftsQualifications');
-                    }
-
-                    $eventsWithRelevant[$event->id] = [
-                        'event' => $event,
-                        'timeline' => $timeline,
-                        'shifts' => $event->shifts,
-                        'event_type' => $event->event_type,
-                        'room' => $event->room,
-                    ];
-                }
-                rsort($eventsWithRelevant);
-
-                $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->limit(1)->first();
-                $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->limit(1)->first();
-                if ($firstEventInProject && $lastEventInProject) {
-                    //get the start of day of the firstEventInProject
-                    $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
-                    //get the end of day of the lastEventInProject
-                    $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
-                } else {
-                    $startDate = Carbon::now()->startOfDay();
-                    $endDate = Carbon::now()->addWeeks()->endOfDay();
-                }
-                //get the diff of startDate and endDate in days, +1 to include the current date
-                $diffInDays = $startDate->diffInDays($endDate) + 1;
-
-                $usersWithPlannedWorkingHours = [];
-                foreach (User::query()->where('can_work_shifts', true)->get() as $user) {
-                    $usersWithPlannedWorkingHours[] = [
-                        'user' => UserDropResource::make($user),
-                        'plannedWorkingHours' => $user->plannedWorkingHours($startDate, $endDate),
-                        'expectedWorkingHours' => ($user->weekly_working_hours / 7) * $diffInDays,
-                        'vacations' => $user->hasVacationDays(),
-                    ];
-                }
-
-                $freelancersWithPlannedWorkingHours = [];
-                foreach (Freelancer::query()->where('can_work_shifts', true)->get() as $freelancer) {
-                    $freelancersWithPlannedWorkingHours[] = [
-                        'freelancer' => FreelancerDropResource::make($freelancer),
-                        'plannedWorkingHours' => $freelancer->plannedWorkingHours($startDate, $endDate),
-                    ];
-                }
-
-                $serviceProvidersWithPlannedWorkingHours = [];
-                foreach (
-                    ServiceProvider::query()
-                        ->where('can_work_shifts', true)
-                        ->without(['contacts'])
-                        ->get() as $service_provider
-                ) {
-                    $serviceProvidersWithPlannedWorkingHours[] = [
-                        'service_provider' => ServiceProviderDropResource::make($service_provider),
-                        'plannedWorkingHours' => $service_provider->plannedWorkingHours($startDate, $endDate),
-                    ];
-                }
-                $loadedProjectInformation['ShiftTab'] = [
-                    'usersForShifts' => $usersWithPlannedWorkingHours,
-                    'freelancersForShifts' => $freelancersWithPlannedWorkingHours,
-                    'serviceProvidersForShifts' => $serviceProvidersWithPlannedWorkingHours,
-                    'eventsWithRelevant' => $eventsWithRelevant,
-                    'crafts' => Craft::all(),
-                    'currentUserCrafts' => Auth::user()->crafts
-                        ->merge(Craft::query()->where('assignable_by_all', '=', true)->get()),
-                    'shiftQualifications' => $shiftQualificationService->getAllOrderedByCreationDateAscending(),
-                ];
             }
             if ($component->component->type === 'BudgetTab') {
-                $columns = $project->table()->first()->columns()->get();
 
-                $calculateNames = [];
-                foreach ($columns as $column) {
-                    $calculateName = '';
-                    if ($column->type === 'difference' || $column->type === 'sum') {
-                        $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
-                        $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
-                        if ($column->type === 'difference') {
-                            $calculateName = $firstName . ' - ' . $secondName;
-                        } else {
-                            $calculateName = $firstName . ' + ' . $secondName;
-                        }
-                    }
-                    $calculateNames[$column->id] = $calculateName;
-                }
-
-                $selectedCell = request('selectedCell')
-                    ? ColumnCell::find(request('selectedCell'))
-                    : null;
-
-                $selectedRow = request('selectedRow')
-                    ? SubPositionRow::find(request('selectedRow'))
-                    : null;
-
-                $templates = Table::where('is_template', true)->get();
-
-                $selectedSumDetail = null;
-
-                if (request('selectedSubPosition') && request('selectedColumn')) {
-                    $selectedSumDetail = Collection::make(
-                        SubPositionSumDetail::with(['comments.user', 'sumMoneySource.moneySource'])
-                            ->where('sub_position_id', request('selectedSubPosition'))
-                            ->where('column_id', request('selectedColumn'))
-                            ->first()
-                    )->merge(['class' => SubPositionSumDetail::class]);
-                }
-
-                if (request('selectedMainPosition') && request('selectedColumn')) {
-                    $selectedSumDetail = Collection::make(
-                        MainPositionDetails::with(['comments.user', 'sumMoneySource.moneySource'])
-                            ->where('main_position_id', request('selectedMainPosition'))
-                            ->where('column_id', request('selectedColumn'))
-                            ->first()
-                    )->merge(['class' => MainPositionDetails::class]);
-                }
-
-                if (request('selectedBudgetType') && request('selectedColumn')) {
-                    $selectedSumDetail = Collection::make(
-                        BudgetSumDetails::with(['comments.user', 'sumMoneySource.moneySource'])
-                            ->where('type', request('selectedBudgetType'))
-                            ->where('column_id', request('selectedColumn'))
-                            ->first()
-                    )->merge(['class' => BudgetSumDetails::class]);
-                }
-
-                //load commented budget items setting for given user
-                Auth::user()->load(['commentedBudgetItemsSetting']);
-                $projectsGroup = collect();
-                $globalGroup = collect();
-
-                if ($this->sageApiSettingsService->getFirst()?->enabled) {
-                    $sageNotAssigned = SageNotAssignedData::query()
-                        ->where('project_id', $project->id)
-                        ->orWhere('project_id', null)
-                        ->orderBy('buchungsdatum', 'desc')
-                        ->get();
-
-                    $sageNotAssigned->each(function ($item) use ($projectsGroup, $globalGroup, $project): void {
-                        if ($item->project_id === null) {
-                            $globalGroup->push($item);
-                        } elseif ($item->project_id === $project->id) {
-                            $projectsGroup->push($item);
-                        }
-                    });
-                }
-
-
-                $loadedProjectInformation['BudgetTab'] = [
-                    'moneySources' => MoneySource::all(),
-                    'budget' => [
-                        'table' => $project->table()
-                            ->with([
-                                'columns' => function ($query): void {
-                                    $query->orderByRaw("CASE WHEN type = 'sage' THEN 1 ELSE 0 END");
-                                },
-                                'mainPositions',
-                                'mainPositions.verified',
-                                'mainPositions.subPositions' => function ($query) {
-                                    return $query->orderBy('position');
-                                },
-                                'mainPositions.subPositions.verified',
-                                'mainPositions.subPositions.subPositionRows' => function ($query) {
-                                    return $query->orderBy('position');
-                                },
-                                'mainPositions.subPositions.subPositionRows.cells' => function (HasMany $query): void {
-                                    $query
-                                        ->with([
-                                            'sageAssignedData',
-                                            'sageAssignedData.comments' => function (HasMany $hasMany): HasMany {
-                                                return $hasMany->orderBy('created_at', 'desc');
-                                            },
-                                            'sageAssignedData.comments.user'
-                                        ])
-                                        // sage cells should be at the end
-                                        ->join('columns', 'column_sub_position_row.column_id', '=', 'columns.id')
-                                        ->orderByRaw("CASE WHEN columns.type = 'sage' THEN 1 ELSE 0 END,
-                                 column_sub_position_row.id ASC")
-                                        ->select('column_sub_position_row.*')
-                                        ->withCount('comments')
-                                        ->withCount(['calculations' => function ($query) {
-                                            // count if value is not 0
-                                            return $query->where('value', '!=', 0);
-                                        }]);
-                                },
-                                'mainPositions.subPositions.subPositionRows.cells.column',
-                            ])
-                            ->first(),
-                        'selectedCell' => $selectedCell?->load(['calculations' => function ($calculations): void {
-                            $calculations->orderBy('position', 'asc');
-                        }, 'comments.user', 'comments', 'column' => function ($query): void {
-                            $query->orderBy('created_at', 'desc');
-                        }]),
-                        'selectedSumDetail' => $selectedSumDetail,
-                        'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query): void {
-                            $query->orderBy('created_at', 'desc');
-                        }]),
-                        'templates' => $templates,
-                        'columnCalculatedNames' => $calculateNames,
-                    ],
-                    'projectMoneySources' => $project->moneySources()->get(),
-                    'contractTypes' => ContractType::all()->toArray(),
-                    'companyTypes' => CompanyType::all()->toArray(),
-                    'currencies' => Currency::all()->toArray(),
-                    'collectingSocieties' => CollectingSociety::all()->toArray(),
-                    'sageNotAssigned' => [
-                        'projectsGroup' => $projectsGroup,
-                        'globalGroup' => $globalGroup
-                    ],
-                    'recentlyCreatedSageAssignedDataComment' => $this->determineRecentlyCreatedSageAssignedDataComment(
-                        $sageAssignedDataCommentService
-                    ),
-                ];
             }
         }
 
+        */
 
 
         return inertia('Projects/TabTest/TabContent', [
@@ -2567,26 +2495,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function determineRecentlyCreatedSageAssignedDataComment(
-        SageAssignedDataCommentService $sageAssignedDataCommentService
-    ): SageAssignedDataComment|null {
-        //if there's a recently created comment for any SageAssignedData-Models retrieve corresponding model by id
-        //to display it right after the request finished without reopening the SageAssignedDataModal
-        $recentlyCreatedSageAssignedDataComment = null;
 
-        if ($recentlyCreatedSageAssignedDataCommentId = session('recentlyCreatedSageAssignedDataCommentId')) {
-            $recentlyCreatedSageAssignedDataComment = $sageAssignedDataCommentService->getById(
-                $recentlyCreatedSageAssignedDataCommentId
-            );
-        }
-
-        if ($recentlyCreatedSageAssignedDataComment instanceof SageAssignedDataComment) {
-            //load corresponding user for UserPopoverTooltip
-            $recentlyCreatedSageAssignedDataComment->load('user');
-        }
-
-        return $recentlyCreatedSageAssignedDataComment;
-    }
 
     public function projectCommentTab(Project $project): Response|ResponseFactory
     {
@@ -2713,7 +2622,6 @@ class ProjectController extends Controller
 
     public function updateTeam(Request $request, Project $project): JsonResponse|RedirectResponse
     {
-
         if (!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             // authorization
             if (

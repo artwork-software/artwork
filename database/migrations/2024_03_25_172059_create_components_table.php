@@ -36,6 +36,9 @@ return new class extends Migration
                 \App\Enums\TabComponentEnums::PROJECT_DOCUMENTS->value,
                 \App\Enums\TabComponentEnums::PROJECT_TITLE->value,
                 \App\Enums\TabComponentEnums::SEPARATOR->value,
+                \App\Enums\TabComponentEnums::COMMENT_ALL_TAB->value,
+                \App\Enums\TabComponentEnums::PROJECT_ALL_DOCUMENTS->value,
+                \App\Enums\TabComponentEnums::CHECKLIST_ALL->value,
             ])->default(\App\Enums\TabComponentEnums::TEXT_FIELD->value);
             $table->string('preview')->nullable();
             $table->json('data')->nullable();

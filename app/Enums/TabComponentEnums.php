@@ -20,6 +20,7 @@ enum TabComponentEnums: string
     case PROJECT_ATTRIBUTES = 'ProjectAttributesComponent';
     case CALENDAR = 'CalendarTab';
     case CHECKLIST = 'ChecklistComponent';
+    case CHECKLIST_ALL = 'ChecklistAllComponent';
     case SHIFT_TAB = 'ShiftTab';
     case RELEVANT_DATES_FOR_SHIFT_PLANNING = 'RelevantDatesForShiftPlanningComponent';
     case SHIFT_CONTACT_PERSONS = 'ShiftContactPersonsComponent';
@@ -27,7 +28,9 @@ enum TabComponentEnums: string
     case BUDGET = 'BudgetTab';
     case PROJECT_BUDGET_DEADLINE = 'ProjectBudgetDeadlineComponent';
     case COMMENT_TAB = 'CommentTab';
+    case COMMENT_ALL_TAB = 'CommentAllTab';
     case PROJECT_DOCUMENTS = 'ProjectDocumentsComponent';
+    case PROJECT_ALL_DOCUMENTS = 'ProjectAllDocumentsComponent';
     case PROJECT_TITLE = 'ProjectTitleComponent';
     case SEPARATOR = 'SeparatorComponent';
 

@@ -84,7 +84,7 @@ export default {
     ],
     computed:{
         sortedComments: function () {
-            let commentCopy = this.project.comments.slice();
+            let commentCopy = this.project.comments_all.slice();
 
             function compare(a, b) {
                 if (b.created_at === null) {

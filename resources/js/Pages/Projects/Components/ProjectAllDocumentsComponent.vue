@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="flex w-full items-center my-4">
-            <h3 class="sDark">{{ $t('Documents') }}</h3>
+            <h3 class="sDark">{{ $t('All Documents') }}</h3>
         </div>
         <div
             v-if="$role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id)">
@@ -25,7 +25,7 @@
         <div class="mb-3">
             <div class="space-y-1"
                  v-if="$role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                <div v-for="project_file in project.project_files_tab"
+                <div v-for="project_file in project.project_files_all"
                      class="cursor-pointer group flex items-center">
                     <div :data-tooltip-target="project_file.name" class="flex truncate">
                         <IconFileText class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>

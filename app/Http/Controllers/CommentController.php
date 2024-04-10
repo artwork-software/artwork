@@ -45,7 +45,8 @@ class CommentController extends Controller
             $comment = $this->commentService->create(
                 text: $request->text,
                 user: $user,
-                project: $project
+                project: $project,
+                tabId: $request->tab_id,
             );
         }
 

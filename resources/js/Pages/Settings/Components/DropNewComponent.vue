@@ -18,6 +18,12 @@ export default {
             event.preventDefault();
             const data = JSON.parse(event.dataTransfer.getData('application/json'));
 
+
+            if(this.isSidebar && !data.sidebar_enabled) {
+                this.dropOver = false;
+                return;
+            }
+
             if(data.drop_type !== 'component') {
                 this.dropOver = false;
                 return;

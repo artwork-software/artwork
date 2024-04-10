@@ -12,7 +12,7 @@
         <div v-if="this.project?.project_managers?.length > 0" class="my-2" v-for="projectManager in this.project?.project_managers">
             <div class="flex w-full">
                 <div class="mr-4">
-                    <img :data-tooltip-target="projectManager?.id" :src="user?.profile_photo_url"
+                    <img :data-tooltip-target="projectManager?.id" :src="projectManager?.profile_photo_url"
                          :alt="projectManager?.name"
                          class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
                 </div>

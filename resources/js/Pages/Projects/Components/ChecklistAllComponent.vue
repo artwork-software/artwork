@@ -2,7 +2,7 @@
     <div class="col-span-2 ml-14 pt-4 pr-14">
         <div class="flex w-full items-center mb-8 gap-x-4">
             <h2 class="text-xl leading-6 font-bold font-lexend text-primary">
-                {{ $t('Checklists') }}
+                {{ $t('All Checklists') }}
             </h2>
             <div class="flex items-center"
                  v-if="$role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
@@ -16,13 +16,13 @@
             </div>
         </div>
         <div class="w-full">
-            <span v-if="project.public_checklists.length === 0 && project.private_checklists.length === 0"
+            <span v-if="project.public_all_checklists.length === 0 && project.private_all_checklists.length === 0"
                   class="xsDark mb-4">
                 {{ $t('No checklists added yet. Create checklists with tasks. You can assign the checklists to teams. Use templates and save time.') }}
             </span>
             <div v-else>
                 <div class="flex w-full flex-wrap">
-                    <div v-for="checklist in project.public_checklists"
+                    <div v-for="checklist in project.public_all_checklists"
                          class="flex w-full bg-white my-2 inputMain">
                         <button class="bg-buttonBlue flex"
                                 @click="changeChecklistStatus(checklist)">
@@ -270,7 +270,7 @@
                             </div>
                         </div>
                     </div>
-                    <div v-for="checklist in project.private_checklists"
+                    <div v-for="checklist in project.private_all_checklists"
                          class="flex w-full bg-white my-2 inputMain">
                         <button class="bg-buttonBlue flex"
                                 @click="changeChecklistStatus(checklist)">
@@ -1121,8 +1121,8 @@ export default {
             return new Date((new Date(date + ' ' + time)).getTime() - ((new Date(date + ' ' + time)).getTimezoneOffset() * 60000)).toISOString();
         },
         deleteChecklistFromProject() {
-            if (this.project.public_checklists.findIndex((publicChecklist) => publicChecklist.id === this.checklistToDelete.id) !== -1) {
-                this.project.public_checklists.splice(this.project.public_checklists.indexOf(this.checklistToDelete), 1);
+            if (this.project.public_all_checklists.findIndex((publicChecklist) => publicChecklist.id === this.checklistToDelete.id) !== -1) {
+                this.project.public_all_checklists.splice(this.project.public_checklists.indexOf(this.checklistToDelete), 1);
                 this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`, {
                     preserveState: true,
                     preserveScroll: true
@@ -1130,8 +1130,8 @@ export default {
                 this.closeDeleteChecklistModal();
                 return;
             }
-            if (this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === this.checklistToDelete.id) !== -1) {
-                this.project.private_checklists.splice(this.project.private_checklists.indexOf(this.checklistToDelete), 1);
+            if (this.project.private_all_checklists.findIndex((privateChecklist) => privateChecklist.id === this.checklistToDelete.id) !== -1) {
+                this.project.private_all_checklists.splice(this.project.private_checklists.indexOf(this.checklistToDelete), 1);
                 this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`, {
                     preserveState: true,
                     preserveScroll: true
@@ -1168,7 +1168,7 @@ export default {
             this.duplicateForm.name = checklist.name + " (Kopie)";
             this.duplicateForm.tasks = checklist.tasks;
 
-            if (this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === checklist.id) !== -1) {
+            if (this.project.private_all_checklists.findIndex((privateChecklist) => privateChecklist.id === checklist.id) !== -1) {
                 this.duplicateForm.user_id = this.$page.props.user.id;
             } else {
                 checklist.users.forEach((user) => {

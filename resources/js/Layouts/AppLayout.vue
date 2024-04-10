@@ -93,21 +93,8 @@
                             </div>
                         </div>
                     </a>
-                    <Menu as="div" class="flex flex-col items-center" v-show="
-                        $canAny([
-                            'usermanagement',
-                            'admin checklistTemplates',
-                            'teammanagement',
-                            'update departments',
-                            'change tool settings',
-                            'change project settings',
-                            'change event settings',
-                            'change system notification',
-                            'view budget templates',
-                            'create, delete and update rooms'
-                        ]) || hasAdminRole()
-                        ">
-                        <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.managementRoutes) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
+                    <Menu as="div" class="flex flex-col items-center">
+                        <MenuButton ref="menuButton" @click="setHeightOfMenuItems" :class="[isCurrent(this.userNavigation) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
                             <div class="flex items-center" :class="fullSidenav ? '' : ''">
                                 <img class="h-7 w-7 rounded-full object-cover" :src="$page.props.user.profile_photo_url" alt=""/>
                                 <div class="ml-4 w-32 text-left" v-if="fullSidenav">

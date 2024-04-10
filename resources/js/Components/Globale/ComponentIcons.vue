@@ -22,10 +22,13 @@ export default {
     <IconCalendar class="w-6 h-6" v-if="type === 'CalendarTab'" />
     <IconCalendarUser class="w-6 h-6" v-if="type === 'ShiftTab'" />
     <IconListCheck class="w-6 h-6" v-if="type === 'ChecklistComponent'" />
+    <IconListCheck class="w-6 h-6" v-if="type === 'ChecklistAllComponent'" />
     <IconCalendarStats class="w-6 h-6" v-if="type === 'RelevantDatesForShiftPlanningComponent'" />
     <IconHeading class="w-6 h-6" v-if="type === 'ProjectTitleComponent'" />
     <IconFiles class="w-6 h-6" v-if="type === 'ProjectDocumentsComponent'" />
+    <IconFiles class="w-6 h-6" v-if="type === 'ProjectAllDocumentsComponent'" />
     <IconMessageDots class="w-6 h-6" v-if="type === 'CommentTab'" />
+    <IconMessageDots class="w-6 h-6" v-if="type === 'CommentAllTab'" />
 
     <IconCalendarDue class="w-6 h-6" v-if="type === 'ProjectBudgetDeadlineComponent'" />
     <IconMoneybag class="w-6 h-6" v-if="type === 'BudgetTab'" />

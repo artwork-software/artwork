@@ -106,8 +106,10 @@ class Project extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
+            ->using(ProjectUserPivot::class)
             ->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission');
     }
+
 
     public function headlines(): BelongsToMany
     {
@@ -120,7 +122,7 @@ class Project extends Model
     public function access_budget(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
-            ->wherePivot('access_budget', true);
+            ->wherePivot('access_budget', true)->withCasts(['access_budget' => 'boolean']);
     }
 
     public function writeUsers(): BelongsToMany

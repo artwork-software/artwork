@@ -44,8 +44,10 @@ class ProjectFileController extends Controller
         Storage::putFileAs('project_files', $file, $basename);
 
         $projectFile = $project->project_files()->create([
+            'tab_id' => $request->input('tabId'),
             'name' => $original_name,
             'basename' => $basename,
+
         ]);
 
         $projectFile->accessingUsers()->sync(collect($request->accessibleUsers));

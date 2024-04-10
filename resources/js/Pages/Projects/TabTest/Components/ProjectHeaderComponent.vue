@@ -30,6 +30,10 @@ export default {
             type: Boolean,
             required: false
         },
+        project: {
+            type: Object,
+            required: true
+        },
     },
     data() {
         return {
@@ -139,7 +143,7 @@ export default {
                 <!-- if in group -->
                 <div v-if="headerObject.currentGroup" class="bg-secondaryHover -mb-6 z-20 w-fit pr-6 pb-0.5">
                     <div class="flex items-center">
-                        <span v-if="!headerObject.project.is_group">
+                        <span v-if="!project?.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
                         </span>
                         {{ $t('Belongs to') }} <a :href="'/projects/' + headerObject.currentGroup.id" class="text-buttonBlue ml-1">
@@ -147,8 +151,8 @@ export default {
                     </div>
                 </div>
                 <div>
-                    <div class="flex z-10" v-if="this.headerObject.project.key_visual_path !== null">
-                        <img :src="'/storage/keyVisual/' + this.headerObject.project.key_visual_path"
+                    <div class="flex z-10" v-if="project?.key_visual_path !== null">
+                        <img :src="'/storage/keyVisual/' + project?.key_visual_path"
                              :alt="$t('Current key visual')"
                              class="rounded-md mx-auto h-[200px]">
                     </div>
@@ -159,13 +163,13 @@ export default {
                 </div>
                 <div class="flex justify-between items-center mt-4">
                     <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl items-center">
-                        <span v-if="headerObject.project.is_group">
+                        <span v-if="project?.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
                         </span>
-                        {{ headerObject.project?.name }}
+                        {{ project?.name }}
                         <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex"
-                              :class="headerObject.project?.state?.color">
-                            {{ headerObject.project?.state?.name }}
+                              :class="project?.state?.color">
+                            {{ project?.state?.name }}
                         </span>
                     </h2>
                     <Menu as="div" class="my-auto mt-3 relative"

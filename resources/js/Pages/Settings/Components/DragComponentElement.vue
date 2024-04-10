@@ -13,7 +13,8 @@ export default {
                     id: this.component.id,
                     type: this.component.type,
                     name: this.component.name,
-                    drop_type: 'component'
+                    drop_type: 'component',
+                    sidebar_enabled: this.component.sidebar_enabled
                 })
             );
         }

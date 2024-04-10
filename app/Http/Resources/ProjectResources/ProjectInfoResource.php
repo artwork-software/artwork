@@ -59,13 +59,7 @@ class ProjectInfoResource extends JsonResource
             'is_group' => $this->is_group,
 
 
-            'shift_relevant_event_types' => $this->shiftRelevantEventTypes()->get(),
-            'shift_contacts' => $this->shift_contact()->get(),
-            'shiftDescription' => $this->shift_description,
 
-            //needed for ProjectShowHeaderComponent
-            'freelancers' => Freelancer::all(),
-            'serviceProviders' => ServiceProvider::without(['contacts'])->get(),
             'public_checklists' => ChecklistIndexResource::collection($this->checklists->whereNull('user_id'))
                 ->resolve(),
             'private_checklists' => ChecklistIndexResource::collection(

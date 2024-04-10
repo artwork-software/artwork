@@ -34,13 +34,21 @@ export default {
                 });
 
                 if (filtered.length > 0) {
-                    acc[key] = filtered;
+                    acc[key] = {
+                        name: key,
+                        components: filtered,
+                        closed: false
+                    };
+                } else {
+                    acc[key] = {
+                        name: key,
+                        components: filtered,
+                        closed: true
+                    };
                 }
 
                 return acc;
-            }, {
-
-            });
+            }, {});
 
         },
         filteredSpecialComponents() {
@@ -97,17 +105,21 @@ export default {
                             </div>
                         </div>
                     </div>
-                    <div v-for="(componentsArray, index) in filteredComponents">
-                        <h2 class="text-md font-bold mb-3">{{ $t(index) }}</h2>
-                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-7 gap-3">
-                             <DragComponentElement v-for="component in componentsArray" :component="component" />
-                         </div>
+                    <div v-for="componentsArray in filteredComponents">
+                        <div>
+                            <div class="flex items-center gap-x-4 cursor-pointer">
+                                <h2 class="text-md font-bold">{{ $t(componentsArray.name) }}</h2>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-3">
+                                <DragComponentElement v-for="component in componentsArray.components" :component="component" />
+                            </div>
+                        </div>
                    </div>
 
 
                    <div>
                        <h2 class="text-md font-bold mb-3">{{ $t('Special components') }}</h2>
-                       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-7 gap-3">
+                       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-3">
                            <DragComponentElement v-for="component in filteredSpecialComponents" :component="component" />
                        </div>
                    </div>

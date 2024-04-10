@@ -78,6 +78,13 @@ class TabContentSeeder extends Seeder
                 'sidebar_enabled' => false
             ],
             [
+                'name' => 'All Checklists',
+                'type' => TabComponentEnums::CHECKLIST_ALL,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => false
+            ],
+            [
                 'name' => 'Shift Tab',
                 'type' => TabComponentEnums::SHIFT_TAB,
                 'data' => [],
@@ -127,8 +134,22 @@ class TabContentSeeder extends Seeder
                 'sidebar_enabled' => false
             ],
             [
+                'name' => 'All Comment Tab',
+                'type' => TabComponentEnums::COMMENT_ALL_TAB,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => false
+            ],
+            [
                 'name' => 'Project Documents',
                 'type' => TabComponentEnums::PROJECT_DOCUMENTS,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => false
+            ],
+            [
+                'name' => 'All Project Documents',
+                'type' => TabComponentEnums::PROJECT_ALL_DOCUMENTS,
                 'data' => [],
                 'special' => true,
                 'sidebar_enabled' => false
@@ -152,8 +173,40 @@ class TabContentSeeder extends Seeder
             ]
         ];
 
+
+        $tabs = [
+            [
+                'name' => 'Project Information',
+                'order' => 1
+            ],
+            [
+                'name' => 'Project Team',
+                'order' => 2
+            ],
+            [
+                'name' => 'Shift Planning',
+                'order' => 3
+            ],
+            [
+                'name' => 'Budget',
+                'order' => 4
+            ],
+            [
+                'name' => 'Documents',
+                'order' => 5
+            ],
+            [
+                'name' => 'Comments',
+                'order' => 6
+            ]
+        ];
+
         foreach ($components as $component) {
             Component::create($component);
+        }
+
+        foreach ($tabs as $tab) {
+            ProjectTab::create($tab);
         }
     }
 }

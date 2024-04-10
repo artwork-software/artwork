@@ -24,6 +24,9 @@ import ShiftContactPersonsComponent from "@/Pages/Projects/Components/ShiftConta
 import GeneralShiftInformationComponent from "@/Pages/Projects/Components/GeneralShiftInformationComponent.vue";
 import CommentTab from "@/Pages/Projects/Components/TabComponents/CommentTab.vue";
 import ProjectDocumentsComponent from "@/Pages/Projects/Components/ProjectDocumentsComponent.vue";
+import ProjectAllDocumentsComponent from "@/Pages/Projects/Components/ProjectAllDocumentsComponent.vue";
+import ChecklistAllComponent from "@/Pages/Projects/Components/ChecklistAllComponent.vue";
+import CommentAllTab from "@/Pages/Projects/Components/TabComponents/CommentAllTab.vue";
 export default {
     name: "TabContent",
     computed: {
@@ -34,7 +37,8 @@ export default {
         ProjectHeaderComponent,
         TextField, Checkbox, Title, TextArea, DropDown, ProjectStateComponent, CalendarTab, ShiftTab,
         BudgetTab, ProjectBudgetDeadlineComponent, SeparatorComponent, ProjectGroupComponent, ProjectTeamComponent, ProjectAttributesComponent, RelevantDatesForShiftPlanningComponent,
-        ShiftContactPersonsComponent, GeneralShiftInformationComponent, CommentTab, ProjectTitleComponent, ChecklistComponent, ProjectDocumentsComponent
+        ShiftContactPersonsComponent, GeneralShiftInformationComponent, CommentTab, ProjectTitleComponent, ChecklistComponent, ProjectDocumentsComponent, ProjectAllDocumentsComponent,
+        ChecklistAllComponent, CommentAllTab
     },
     props: {
         headerObject: {
@@ -59,7 +63,15 @@ export default {
     methods: {
         removeML(componentType) {
             console.log(componentType)
-            if(componentType === 'CalendarTab' || componentType === 'ShiftTab' || componentType === 'BudgetTab' || componentType === 'ChecklistComponent' || componentType === 'CommentTab'){
+            if(
+                componentType === 'CalendarTab' ||
+                componentType === 'ShiftTab' ||
+                componentType === 'BudgetTab' ||
+                componentType === 'ChecklistComponent' ||
+                componentType === 'ChecklistAllComponent' ||
+                componentType === 'CommentTab' ||
+                componentType === 'CommentAllTab'
+            ){
                 return '-ml-14'
             }
         }
@@ -68,7 +80,7 @@ export default {
 </script>
 
 <template>
-    <ProjectHeaderComponent :header-object="headerObject">
+    <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project">
         <div class="my-10 w-full">
             <div v-for="component in dataObject.currentTab.components"  :class="removeML(component.component?.type)">
                 <Component
@@ -89,10 +101,13 @@ export default {
                     :projectGenreIds="headerObject.projectGenreIds"
                     :projectSectorIds="headerObject.projectSectorIds"
                     :eventTypes="headerObject.eventTypes"
-                    :opened_checklists="loadedProjectInformation['ChecklistComponent']?.opened_checklists"
+                    :opened_checklists="headerObject.project?.opened_checklists"
+                    :projectManagerIds="headerObject.projectManagerIds"
+                    :tab_id="dataObject.currentTab.id"
                 />
             </div>
         </div>
+
 
         <BaseSidenav @toggle="this.show =! this.show" v-if="dataObject.currentTab.hasSidebarTabs">
             <div class="w-full">

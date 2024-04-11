@@ -488,4 +488,9 @@ class UserController extends Controller
             'work_shifts'
         ]));
     }
+
+    public function updateZoomFactor(User $user, Request $request): void
+    {
+        $user->update($request->only('zoom_factor'));
+    }
 }

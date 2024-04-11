@@ -278,7 +278,6 @@ class ProjectController extends Controller
 
         $project = Project::create([
             'name' => $request->name,
-            'description' => nl2br($request->description),
             'number_of_participants' => $request->number_of_participants,
             'budget_deadline' => $request->budgetDeadline
         ]);

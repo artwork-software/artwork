@@ -5,10 +5,7 @@ namespace App\Http\Resources\ProjectResources;
 use App\Http\Resources\ChecklistIndexResource;
 use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\ProjectFileResource;
-use App\Http\Resources\ProjectHeadlineResource;
 use App\Http\Resources\UserResourceWithoutShifts;
-use App\Models\Freelancer;
-use App\Models\ServiceProvider;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -43,7 +40,6 @@ class ProjectInfoResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'description_without_html' => strip_tags($this->description),
-            'project_headlines' => ProjectHeadlineResource::collection($this->headlines->sortBy('order'))->resolve(),
             'isMemberOfADepartment' => $this->departments
                 ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'key_visual_path' => $this->key_visual_path,

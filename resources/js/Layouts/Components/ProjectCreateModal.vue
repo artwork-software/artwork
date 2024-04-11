@@ -180,12 +180,6 @@
                                               :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <textarea
-                                :placeholder="$t('Short description')"
-                                v-model="createProjectForm.description" rows="4"
-                                class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
-                        </div>
                         <div class="flex items-center mb-2">
                             <input id="addToProjectGroup" type="checkbox" v-model="this.addToProjectGroup"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
@@ -383,7 +377,7 @@
                                 </transition>
                             </Menu>
                         </div>
-                        <div class="flex mb-2">
+                        <div class="flex">
                             <div v-for="categoryId in createProjectForm.assignedCategoryIds">
                                 <TagComponent hide-x="true"
                                               :displayed-text="this.categories.find(category => category.id === categoryId).name"
@@ -399,12 +393,6 @@
                                               :displayed-text="this.sectors.find(sector => sector.id === sectorId).name"
                                               :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
                             </div>
-                        </div>
-                        <div class="mb-2">
-                            <textarea
-                                :placeholder="$t('Short description')"
-                                v-model="createProjectForm.description" rows="4"
-                                class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
                         </div>
                         <div class="mb-2">
                             <div class="relative w-full">
@@ -522,7 +510,6 @@ export default {
             addToProjectGroup: false,
             createProjectForm: useForm({
                 name: "",
-                description: "",
                 assignedSectorIds: [],
                 assignedCategoryIds: [],
                 assignedGenreIds: [],

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\BudgetTypesEnum;
+use App\Enums\TabComponentEnums;
 use App\Models\EventType;
 use App\Models\MoneySource;
 use App\Models\SeriesEvents;
@@ -12,8 +13,9 @@ use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Models\ProjectHeadline;
 use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\ProjectTab\Models\Component;
+use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Carbon\Carbon;
@@ -63,34 +65,57 @@ class WalidRaadSeeder extends Seeder
 
         $project = Project::create([
             'name' => 'Walid Raad',
-            'description' => 'COTTON UNDER MY FEET: THE HAMBURG CHAPTER Eine Performance-Tour durch die Sammlung ' .
-                'der Kunsthalle – und in die Abgründe der Kunst- und Finanzwelt, inklusive Engeln und Untoten.',
             'shift_description' => 'Wird blutig',
             'key_visual_path' => 'M8AUVkujRBdqQu9rbS2Gart.JPG',
             'state' => 4
         ]);
 
+        /** @var Component $shortDescriptionComponent */
+        $shortDescriptionComponent = Component::query()
+            ->where('name', 'Short Description')
+            ->where('type', 'TextArea')
+            ->first();
+
+        $shortDescriptionComponent->projectValue()->create([
+            'project_id' => $project->id,
+            'data' => [
+                'text' => 'COTTON UNDER MY FEET: THE HAMBURG CHAPTER. Eine Performance-Tour durch die Sammlung ' .
+                    'der Kunsthalle – und in die Abgründe der Kunst- und Finanzwelt, inklusive Engeln und Untoten.'
+            ]
+        ]);
+
+
+        $firstChecklistTabWithChecklistComponentId = ProjectTab::query()
+            ->where('name', 'Checklists')
+            ->whereRelation('components.component', 'type', TabComponentEnums::CHECKLIST->value)
+            ->first()
+            ->id;
         /**
          * create project Checklist with tasks
          */
         $checkListBudgetErstellen = $project->checklists()->create([
-            'name' => 'Budget erstellen'
+            'name' => 'Budget erstellen',
+            'tab_id' => $firstChecklistTabWithChecklistComponentId
         ]);
 
         $checkListMarketing = $project->checklists()->create([
-            'name' => 'Marketing'
+            'name' => 'Marketing',
+            'tab_id' => $firstChecklistTabWithChecklistComponentId
         ]);
 
         $checkListCatering = $project->checklists()->create([
-            'name' => 'Catering'
+            'name' => 'Catering',
+            'tab_id' => $firstChecklistTabWithChecklistComponentId
         ]);
 
         $checkListEinlass = $project->checklists()->create([
-            'name' => 'Einlass'
+            'name' => 'Einlass',
+            'tab_id' => $firstChecklistTabWithChecklistComponentId
         ]);
 
         $checkListBudgetErstellenKopie = $project->checklists()->create([
-            'name' => 'Budget erstellen (Kopie)'
+            'name' => 'Budget erstellen (Kopie)',
+            'tab_id' => $firstChecklistTabWithChecklistComponentId
         ]);
 
         $checklist1Task1 = $checkListBudgetErstellen->tasks()->create([
@@ -186,32 +211,7 @@ class WalidRaadSeeder extends Seeder
             'order' => 7,
         ]);
 
-        /**
-         * Create Project Headlines
-         */
-
-        ProjectHeadline::create([
-            'name' => 'Website-Text',
-            'order' => 1
-        ]);
-
-        ProjectHeadline::create([
-            'name' => 'ÖA',
-            'order' => 2
-        ]);
-
-        /**
-         * Attach Project Headlines to Project
-         */
-
-
         $projects = Project::all();
-
-        foreach ($projects as $project) {
-            $project->headlines()->attach(1, ['text' => '']);
-            $project->headlines()->attach(2, ['text' => 'Hallo']);
-        }
-
 
         /**
          * Create Project States
@@ -230,29 +230,40 @@ class WalidRaadSeeder extends Seeder
         $moneySourceSuperQuelle->projects()->attach($project->id);
         $moneySourceTolleQuelle->projects()->attach($project->id);
 
+        $firstCommentsTabWithCommentsComponentId = ProjectTab::query()
+            ->where('name', 'Comments')
+            ->whereRelation('components.component', 'type', TabComponentEnums::COMMENT_TAB->value)
+            ->first()
+            ->id;
+
         $project->comments()->create([
             'text' => 'Artwork ist toll!',
-            'user_id' => 1
+            'user_id' => 1,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
         ]);
 
         $project->comments()->create([
             'text' => 'Ich weiß, ich habe schon eine Benachrichtigung erhalten ;)',
-            'user_id' => 2
+            'user_id' => 2,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
         ]);
 
         $project->comments()->create([
             'text' => 'ich habe dich in die Marketing-Checkliste aufgenommen ;)',
-            'user_id' => 1
+            'user_id' => 1,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
         ]);
 
         $project->comments()->create([
             'text' => 'Ich freue mich :)',
-            'user_id' => 2
+            'user_id' => 2,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
         ]);
 
         $project->comments()->create([
             'text' => 'Hi, das Projekt wird toll',
-            'user_id' => 1
+            'user_id' => 1,
+            'tab_id' => $firstCommentsTabWithCommentsComponentId
         ]);
 
 

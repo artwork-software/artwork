@@ -113,17 +113,15 @@ class ProjectTabController extends Controller
         $projectTab->components()->where('id', $request->input('component_id'))->delete();
     }
 
-    public function reorder(ProjectTab $projectTab, Request $request): void
+    public function reorder(Request $request): void
     {
-        // update the order of $projectTab and re-order the other tabs
-        $order = $request->input('order');
-        $oldOrder = $projectTab->order;
-        if ($oldOrder < $order) {
-            ProjectTab::where('order', '>', $oldOrder)->where('order', '<=', $order)->decrement('order');
-        } else {
-            ProjectTab::where('order', '>=', $order)->where('order', '<', $oldOrder)->increment('order');
+        $order = 1;
+        foreach ($request->input('components') as $component) {
+            ProjectTab::where('id', $component['id'])->update([
+                'order' => $order,
+            ]);
+            $order++;
         }
-        $projectTab->update(['order' => $order]);
     }
 
     public function addComponentSidebar(ProjectTabSidebarTab $projectTabSidebarTab, Request $request): void

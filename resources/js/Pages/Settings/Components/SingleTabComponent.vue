@@ -53,6 +53,8 @@ export default {
 
             this.$inertia.post(route('tab.update.component.order', {projectTab: this.tab.id}), {
                 components: components,
+            }, {
+                preserveScroll: true
             });
         },
         removeComponentFromTab(componentId) {

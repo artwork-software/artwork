@@ -84,4 +84,15 @@ class ProjectTabSidebarTabController extends Controller
             $order++;
         }
     }
+
+    public function reorder(Request $request): void
+    {
+        $order = 1;
+        foreach ($request->input('components') as $component) {
+            ProjectTabSidebarTab::where('id', $component['id'])->update([
+                'order' => $order,
+                ]);
+            $order++;
+        }
+    }
 }

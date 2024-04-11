@@ -24,6 +24,7 @@ export default {
         return {
             searchComponent: '',
             showAddEditModal: false,
+            dragging: false,
         }
     },
     computed: {
@@ -56,6 +57,19 @@ export default {
             return this.componentsSpecial.filter(component => {
                 return this.$t(component.name).toLowerCase().includes(this.searchComponent.toLowerCase());
             });
+        },
+    },
+    methods:{
+        updateComponentOrder(components) {
+            components.map((component, index) => {
+                component.order = index + 1
+            })
+
+            this.$inertia.post(route('tab.reorder'), {
+                components: components,
+            }, {
+                preserveScroll: true
+            });
         }
     }
 
@@ -82,11 +96,16 @@ export default {
                        <PlusButton @click="showAddEditModal = true" />
                    </div>
 
-                   <TabDropElement :order="1" />
-                   <div v-for="tab in tabs" class="w-full">
-                       <SingleTabComponent :tab="tab" />
-                       <TabDropElement :order="tab.order + 1" />
-                   </div>
+
+                   <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="tabs" @start="dragging=true" @end="dragging=false" @change="updateComponentOrder(tabs)">
+                       <template #item="{element}" :key="element.id">
+                           <div class="mb-2">
+                               <div class="" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
+                                   <SingleTabComponent :tab="element" />
+                               </div>
+                           </div>
+                        </template>
+                    </draggable>
                </div>
 
                 <!-- Components List -->

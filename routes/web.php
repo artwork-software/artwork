@@ -1204,7 +1204,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             // tab.store
             Route::post('/store', [\App\Http\Controllers\ProjectTabController::class, 'store'])->name('tab.store');
             //tab.reorder
-            Route::post('/reorder/{projectTab}', [\App\Http\Controllers\ProjectTabController::class, 'reorder'])
+            Route::post('/reorder', [\App\Http\Controllers\ProjectTabController::class, 'reorder'])
                 ->name('tab.reorder');
             //tab.add.component.sidebar
             Route::post(
@@ -1256,6 +1256,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
             Route::patch('/{projectTabSidebarTab}/update', [\App\Http\Controllers\ProjectTabSidebarTabController::class,
                 'update'])
                 ->name('tab.sidebar.update');
+            //sidebar.tab.reorder
+            Route::post('/reorder', [\App\Http\Controllers\ProjectTabSidebarTabController::class,
+                'reorder'])
+                ->name('sidebar.tab.reorder');
         });
     });
 });

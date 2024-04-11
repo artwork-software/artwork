@@ -31,6 +31,10 @@ export default {
     },
     methods: {
         onDragStart(event) {
+            event.dataTransfer.setData(
+                'application/json',
+                JSON.stringify( this.sidebarTab )
+            );
         },
         removeComponentFromSidebar(id) {
             this.$inertia.delete(route('sidebar.component.remove', {sidebarTabComponent: id}), {
@@ -45,6 +49,8 @@ export default {
 
             this.$inertia.post(route('sidebar.tab.update.component.order', {projectTabSidebarTab: this.sidebarTab.id}), {
                 components: components,
+            }, {
+                preserveScroll: true
             });
         },
         openTab(){

@@ -9,13 +9,12 @@ use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Models\ProjectTabSidebarTab;
 use Artwork\Modules\ProjectTab\Models\SidebarTabComponent;
 use Illuminate\Http\Request;
+use Inertia\Response;
+use Inertia\ResponseFactory;
 
 class ProjectTabController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): \Inertia\ResponseFactory|\Inertia\Response
+    public function index(): ResponseFactory|Response
     {
         return inertia('Settings/ProjectTab/Index', [
             'tabs' => ProjectTab::with([
@@ -28,17 +27,6 @@ class ProjectTabController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): void
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request): void
     {
         // get all tabs to calculate the order
@@ -50,33 +38,11 @@ class ProjectTabController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(ProjectTab $projectTab): void
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ProjectTab $projectTab): void
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, ProjectTab $projectTab): void
     {
         $projectTab->update($request->only('name'));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(ProjectTab $projectTab): void
     {
         foreach ($projectTab->components as $component) {

@@ -17,6 +17,7 @@ use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\Room\Models\Room;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
@@ -53,12 +55,8 @@ class Project extends Model
     use Searchable;
     use HasChangesHistory;
 
-    /**
-     * @var User[]|Collection|\LaravelIdea\Helper\App\Models\_IH_User_C|mixed
-     */
     protected $fillable = [
         'name',
-        'description',
         'shift_description',
         'number_of_participants',
         'cost_center_id',
@@ -111,13 +109,6 @@ class Project extends Model
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
             ->using(ProjectUserPivot::class)
             ->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission');
-    }
-
-
-    public function headlines(): BelongsToMany
-    {
-        return $this->belongsToMany(ProjectHeadline::class, 'project_project_headlines', 'project_id')
-            ->withPivot('text');
     }
 
     //@todo: fix phpcs error - refactor function name to accessBudget
@@ -207,11 +198,6 @@ class Project extends Model
         return $this->belongsToMany(Room::class, 'events');
     }
 
-    public function prunable(): Builder
-    {
-        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
-    }
-
     public function groups(): BelongsToMany
     {
         return $this->belongsToMany(__CLASS__, 'project_groups', 'group_id');
@@ -236,6 +222,10 @@ class Project extends Model
         );
     }
 
+    public function prunable(): Builder
+    {
+        return static::where('deleted_at', '<=', now()->subMonth())->withTrashed();
+    }
 
     /**
      * @return array<string, mixed>

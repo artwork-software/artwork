@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             SettingsSeeder::class,
+            DefaultComponentSeeder::class,
             ContentSeeder::class,
             CraftSeeder::class,
             ShiftQualificationSeeder::class,
@@ -25,7 +26,6 @@ class DatabaseSeeder extends Seeder
             WalidRaadSeeder::class,
             PermissionPresetSeeder::class,
             ChangeEventTypeSvgToHexSeed::class,
-            DefaultComponentSeeder::class
         ]);
     }
 }

@@ -4,6 +4,7 @@ namespace Artwork\Modules\ProjectTab\Models;
 
 use Artwork\Core\Database\Models\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Class ProjectTab
@@ -26,12 +27,12 @@ class ProjectTab extends Model
 
     protected $with = ['components', 'sidebarTabs'];
 
-    public function components(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function components(): HasMany
     {
         return $this->hasMany(ComponentInTab::class, 'project_tab_id', 'id');
     }
 
-    public function sidebarTabs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function sidebarTabs(): HasMany
     {
         return $this->hasMany(ProjectTabSidebarTab::class, 'project_tab_id', 'id')->orderBy('order');
     }

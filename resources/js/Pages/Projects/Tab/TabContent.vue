@@ -1,18 +1,18 @@
 <script>
-import ProjectHeaderComponent from "@/Pages/Projects/TabTest/Components/ProjectHeaderComponent.vue";
-import TextField from "@/Pages/Projects/TabTest/Components/TextField.vue";
-import Checkbox from "@/Pages/Projects/TabTest/Components/Checkbox.vue";
-import Title from "@/Pages/Projects/TabTest/Components/Title.vue";
-import TextArea from "@/Pages/Projects/TabTest/Components/TextArea.vue";
-import DropDown from "@/Pages/Projects/TabTest/Components/DropDown.vue";
+import ProjectHeaderComponent from "@/Pages/Projects/Tab/Components/ProjectHeaderComponent.vue";
+import TextField from "@/Pages/Projects/Tab/Components/TextField.vue";
+import Checkbox from "@/Pages/Projects/Tab/Components/Checkbox.vue";
+import Title from "@/Pages/Projects/Tab/Components/Title.vue";
+import TextArea from "@/Pages/Projects/Tab/Components/TextArea.vue";
+import DropDown from "@/Pages/Projects/Tab/Components/DropDown.vue";
 import ProjectStateComponent from "@/Pages/Projects/Components/ProjectStateComponent.vue";
-import CalendarTab from "@/Pages/Projects/Components/TabComponents/CalendarTab.vue";
-import ShiftTab from "@/Pages/Projects/Components/TabComponents/ShiftTab.vue";
-import BudgetTab from "@/Pages/Projects/Components/TabComponents/BudgetTab.vue";
+import CalendarTab from "@/Pages/Projects/Tab/Components/CalendarTab.vue";
+import ShiftTab from "@/Pages/Projects/Tab/Components/ShiftTab.vue";
+import BudgetTab from "@/Pages/Projects/Tab/Components/BudgetTab.vue";
 import ProjectBudgetDeadlineComponent from "@/Pages/Projects/Components/ProjectBudgetDeadlineComponent.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import {Link} from "@inertiajs/inertia-vue3";
-import SeparatorComponent from "@/Pages/Projects/TabTest/Components/SeparatorComponent.vue";
+import SeparatorComponent from "@/Pages/Projects/Tab/Components/SeparatorComponent.vue";
 import ProjectGroupComponent from "@/Pages/Projects/Components/ProjectGroupComponent.vue";
 import ProjectTeamComponent from "@/Pages/Projects/Components/ProjectTeamComponent.vue";
 import ProjectAttributesComponent from "@/Pages/Projects/Components/ProjectAttributesComponent.vue";
@@ -22,11 +22,11 @@ import ProjectTitleComponent from "@/Pages/Projects/Components/ProjectTitleCompo
 import ChecklistComponent from "@/Pages/Projects/Components/ChecklistComponent.vue";
 import ShiftContactPersonsComponent from "@/Pages/Projects/Components/ShiftContactPersonsComponent.vue";
 import GeneralShiftInformationComponent from "@/Pages/Projects/Components/GeneralShiftInformationComponent.vue";
-import CommentTab from "@/Pages/Projects/Components/TabComponents/CommentTab.vue";
+import CommentTab from "@/Pages/Projects/Tab/Components/CommentTab.vue";
 import ProjectDocumentsComponent from "@/Pages/Projects/Components/ProjectDocumentsComponent.vue";
 import ProjectAllDocumentsComponent from "@/Pages/Projects/Components/ProjectAllDocumentsComponent.vue";
 import ChecklistAllComponent from "@/Pages/Projects/Components/ChecklistAllComponent.vue";
-import CommentAllTab from "@/Pages/Projects/Components/TabComponents/CommentAllTab.vue";
+import CommentAllTab from "@/Pages/Projects/Tab/Components/CommentAllTab.vue";
 import Permissions from "@/mixins/Permissions.vue";
 export default {
     name: "TabContent",

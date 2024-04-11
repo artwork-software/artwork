@@ -44,10 +44,7 @@
 </template>
 
 <script>
-
-
-import ProjectShowHeaderComponent from "@/Pages/Projects/Components/ProjectShowHeaderComponent.vue";
-import InfoTab from "@/Pages/Projects/Components/TabComponents/InfoTab.vue";
+import InfoTab from "@/Pages/Projects/Tab/Components/InfoTab.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue";

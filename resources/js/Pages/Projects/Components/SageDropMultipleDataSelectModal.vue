@@ -77,9 +77,6 @@ export default {
                     },
                 });
             }
-
-            console.log(checkedData);
-            console.log(this.type)
         },
         currencyFormattedValue(value) {
             return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);

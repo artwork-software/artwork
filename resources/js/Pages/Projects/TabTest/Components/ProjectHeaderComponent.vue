@@ -8,11 +8,13 @@ import {Inertia} from "@inertiajs/inertia";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import IconLib from "@/mixins/IconLib.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import UserPopoverTooltip from "@/Layouts/Components/UserPopoverTooltip.vue";
 
 export default {
     name: "ProjectHeaderComponent",
     mixins: [Permissions, IconLib],
     components: {
+        UserPopoverTooltip,
         JetDialogModal, ProjectHistoryComponent, ProjectDataEditModal,
         Link,
         AppLayout,

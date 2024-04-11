@@ -199,7 +199,6 @@ export default {
             this.usersWithAccess.forEach((user) => {
                 userIds.push(user.id);
             })
-            console.log(this.projectFileForm.comment)
             this.projectFileForm.accessibleUsers = userIds;
             this.projectFileForm.post(this.route('project_files.update', this.file.id))
         },

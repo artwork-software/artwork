@@ -4,7 +4,7 @@
             <div class="sLight">
                 {{ $t('Relevant dates for shift planning') }}
             </div>
-            <div>
+            <div v-if="this.canEditComponent">
                 <PencilAltIcon class=" w-5 h-5 rounded-full" :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                                @click="openShiftRelevantEventTypeModal"/>
             </div>
@@ -38,7 +38,8 @@ export default defineComponent({
     props: [
         'project',
         'eventTypes',
-        'inSidebar'
+        'inSidebar',
+        'canEditComponent'
     ],
     data() {
         return {

@@ -1,7 +1,7 @@
 <script>
 export default {
     name: "TextArea",
-    props: ['data', 'projectId', 'inSidebar'],
+    props: ['data', 'projectId', 'inSidebar', 'canEditComponent'],
     data() {
         return {
             textData: {
@@ -27,7 +27,8 @@ export default {
         <label for="email" class="block text-sm font-medium leading-6" :class="inSidebar ? 'text-white' : 'text-gray-900'">
             {{ data.data.label }}
         </label>
-        <textarea :placeholder="data.data.placeholder"
+        <textarea :disabled="!this.canEditComponent"
+                  :placeholder="data.data.placeholder"
                   class="placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                   :class="inSidebar ? 'bg-primary text-white' : 'inputMain '"
                   @focusout="updateTextData"

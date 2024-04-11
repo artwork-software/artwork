@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             SettingsSeeder::class,
             ContentSeeder::class,
-            CraftSeed::class,
+            CraftSeeder::class,
             ShiftQualificationSeeder::class,
             AuthUserSeeder::class,
             FreelancerSeeder::class,
@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
             WalidRaadSeeder::class,
             PermissionPresetSeeder::class,
             ChangeEventTypeSvgToHexSeed::class,
-            TabContentSeeder::class
+            DefaultComponentSeeder::class
         ]);
     }
 }

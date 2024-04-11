@@ -4,7 +4,7 @@
             <div class="sLight">
                 {{ $t('Contact persons') }}
             </div>
-            <div>
+            <div v-if="this.canEditComponent">
                 <PencilAltIcon class=" w-5 h-5 rounded-full" :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                                @click="openContactModal"/>
             </div>
@@ -89,7 +89,8 @@ export default defineComponent({
     },
     props: [
         'project',
-        'inSidebar'
+        'inSidebar',
+        'canEditComponent'
     ],
     data() {
         return {

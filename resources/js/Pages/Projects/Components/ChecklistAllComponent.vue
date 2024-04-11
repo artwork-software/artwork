@@ -5,7 +5,7 @@
                 {{ $t('All Checklists') }}
             </h2>
             <div class="flex items-center"
-                 v-if="$role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                 v-if="this.canEditComponent && ($role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id))">
                 <AddButtonSmall @click="openAddChecklistModal" :text="$t('New checklist')" />
                 <div v-if="this.$page.props.show_hints" class="flex ml-2">
                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -50,7 +50,7 @@
                                         </div>
                                     </div>
                                     <Menu
-                                        v-if="$role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="this.canEditComponent && ($role('artwork admin') || projectCanWriteIds?.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id))"
                                         as="div" class="my-auto relative">
                                         <div class="flex">
                                             <MenuButton
@@ -144,7 +144,7 @@
                                 </div>
                             </div>
                             <div class="flex w-full mt-6"
-                                 v-if="this.opened_checklists.includes(checklist.id)">
+                                 v-if="this.canEditComponent && this.opened_checklists.includes(checklist.id)">
                                 <div class="flex"
                                      v-if="this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin')">
                                     <div>
@@ -162,7 +162,8 @@
                             </div>
                             <div class="mt-6 mb-12"
                                  v-if="this.opened_checklists.includes(checklist.id)">
-                                <draggable ghost-class="opacity-50"
+                                <draggable :disabled="!this.canEditComponent"
+                                           ghost-class="opacity-50"
                                            key="draggableKey"
                                            item-key="draggableID" :list="checklist.tasks"
                                            @start="dragging=true" @end="dragging=false"
@@ -172,9 +173,9 @@
                                              :key="element.id"
                                              @mouseout="showMenu = null">
                                             <div class="flex mt-6 flex-wrap w-full"
-                                                 :class="dragging ? 'cursor-grabbing' : 'cursor-grab'">
+                                                 :class="dragging ? 'cursor-grabbing' : this.canEditComponent ? 'cursor-grab' : ''">
                                                 <div class="flex w-full items-center">
-                                                    <div v-if="showMenu === element.id"
+                                                    <div v-if="this.canEditComponent && showMenu === element.id"
                                                          class="flex -mt-1 items-center">
                                                         <DotsVerticalIcon stroke-width="1.5" class="h-5 w-5 -mr-3.5 text-secondary"/>
                                                         <DotsVerticalIcon stroke-width="1.5" class="h-5 w-5 text-secondary"/>
@@ -183,6 +184,7 @@
                                                     <input @change="updateTaskStatus(element)"
                                                            v-model="element.done"
                                                            type="checkbox"
+                                                           :disabled="!this.canEditComponent"
                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                     <p class="ml-4 my-auto text-lg font-black xsDark font-semibold"
                                                        :class="element.done ? 'text-secondary line-through' : 'text-primary'">
@@ -215,7 +217,7 @@
                                                         </span>
                                                     </span>
                                                     <Menu
-                                                        v-if="this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin')"
+                                                        v-if="this.canEditComponent && (this.project.write_auth?.includes(this.$page.props.user.id) || this.project.project_managers?.includes(this.$page.props.user.id) || $role('artwork admin'))"
                                                         as="div" class="ml-3 relative z-10"
                                                         v-show="showMenu === element.id">
                                                         <div class="flex items-center">
@@ -963,7 +965,8 @@ export default {
         'opened_checklists',
         'checklist_templates',
         'projectManagerIds',
-        'tab_id'
+        'tab_id',
+        'canEditComponent'
     ],
     components: {
         AddButtonBig,

@@ -219,11 +219,8 @@ export default defineComponent({
                     }
                 }
             );
-
-            console.debug(this.specificDayImportDate);
         },
         saveSageInterface(closedToSave) {
-            console.debug('saveSageInterface', closedToSave);
             this.showConfirmationComponent = false;
 
             if (!closedToSave) {

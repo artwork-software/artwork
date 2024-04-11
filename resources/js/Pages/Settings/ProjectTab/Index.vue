@@ -115,8 +115,6 @@ export default {
                             </div>
                         </div>
                    </div>
-
-
                    <div>
                        <h2 class="text-md font-bold mb-3">{{ $t('Special components') }}</h2>
                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-3">

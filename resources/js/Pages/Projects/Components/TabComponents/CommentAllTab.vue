@@ -3,7 +3,7 @@
         <div
             class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
             <div
-                v-if="$role('artwork admin') || $can('write projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
+                v-if="this.canEditComponent && ($role('artwork admin') || $can('write projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment)"
                 class="relative border-2 hover:border-gray-400 w-full bg-white border-gray-300">
                         <textarea
                             :placeholder="$t('What should the other project members know about the project?')"
@@ -38,7 +38,7 @@
                                 {{ comment.created_at }}
                             </div>
                         </div>
-                        <button v-show="commentHovered === comment.id && ($role('artwork admin') || $can('write projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.user.id)" type="button"
+                        <button v-show="this.canEditComponent && (commentHovered === comment.id && ($role('artwork admin') || $can('write projects') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment || comment.user?.id === this.$page.props.user.id))" type="button"
                                 @click="deleteCommentFromProject(comment)">
                             <span class="sr-only">{{ $t('Remove comment from project') }}</span>
                             <IconCircleXFilled class="ml-2 h-7 w-7 hover:text-error"/>
@@ -80,7 +80,8 @@ export default {
         'isMemberOfADepartment',
         'projectWriteIds',
         'projectManagerIds',
-        'tab_id'
+        'tab_id',
+        'canEditComponent'
     ],
     computed:{
         sortedComments: function () {

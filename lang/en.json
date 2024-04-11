@@ -1725,6 +1725,10 @@
     "All Project Documents": "All Documents",
     "ChecklistAllComponent": "Checklist All Component",
     "CommentAllTab": "Comment All Component",
-    "ProjectAllDocumentsComponent": "Documents All Component"
-
+    "ProjectAllDocumentsComponent": "Documents All Component",
+    "Configure component permissions": "Configure component permissions",
+    "Everyone can see and edit": "Everyone can see and edit",
+    "Everyone can see, but editing is just allowed for:":"Everyone can see, but editing is just allowed for:",
+    "Search for teams and/or users": "Search for teams and/or users",
+    "The permissions for this component are administered via the user settings and the project.": "The permissions for this component are administered via the user settings and the project."
 }

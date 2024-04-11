@@ -4,7 +4,7 @@
             <h3 class="sDark">{{ $t('All Documents') }}</h3>
         </div>
         <div
-            v-if="$role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id)">
+            v-if="this.canEditComponent && ($role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id))">
             <input
                 @change="uploadChosenDocuments"
                 class="hidden"
@@ -33,7 +33,7 @@
                             {{ project_file.name }}</p>
 
                         <IconCircleX
-                            v-if="$role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                            v-if="this.canEditComponent && ($role('artwork admin') || projectWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id))"
                             @click="openConfirmDeleteModal(project_file)"
                             class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                             aria-hidden="true"/>
@@ -81,7 +81,8 @@ export default defineComponent({
         'project',
         'projectWriteIds',
         'projectManagerIds',
-        'tab_id'
+        'tab_id',
+        'canEditComponent'
     ],
     data() {
         return {

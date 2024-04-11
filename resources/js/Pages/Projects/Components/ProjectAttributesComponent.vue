@@ -4,7 +4,7 @@
             <h2 class="xWhiteBold">{{ $t('Project properties') }}</h2>
             <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                       @click="openProjectAttributeEditModal"
-                      v-if="projectMembersWriteAccess()"
+                      v-if="this.canEditComponent && projectMembersWriteAccess()"
             />
         </div>
         <div class="flex mt-3">
@@ -63,7 +63,8 @@ export default defineComponent({
         'projectCategoryIds',
         'projectGenreIds',
         'projectSectorIds',
-        'inSidebar'
+        'inSidebar',
+        'canEditComponent'
     ],
     data() {
         return {

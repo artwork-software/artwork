@@ -10,6 +10,7 @@ use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
+use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHeadline;
 use Artwork\Modules\Project\Models\ProjectStates;
@@ -66,12 +67,7 @@ class WalidRaadSeeder extends Seeder
                 'der Kunsthalle – und in die Abgründe der Kunst- und Finanzwelt, inklusive Engeln und Untoten.',
             'shift_description' => 'Wird blutig',
             'key_visual_path' => 'M8AUVkujRBdqQu9rbS2Gart.JPG',
-            'state' => 4,
-            'num_of_guests' => 23,
-            'entry_fee' => 10,
-            'registration_required' => true,
-            'register_by' => 'email',
-            'closed_society' => false,
+            'state' => 4
         ]);
 
         /**
@@ -434,10 +430,11 @@ class WalidRaadSeeder extends Seeder
             'allDay' => true
         ]);
 
+        /** @var Event $eventWithManyShifts */
         $eventWithManyShifts = $project->events()->create([
             'eventName' => 'Einrichtung',
-            'start_time' => Carbon::now()->subDays(6)->startOfDay(),
-            'end_time' => Carbon::now()->subDays(6)->endOfDay(),
+            'start_time' => Carbon::now()->subDays(6),
+            'end_time' => Carbon::now()->subDays(6)->addHours(5),
             'occupancy_option' => false,
             'audience' => false,
             'is_loud' => false,
@@ -479,6 +476,7 @@ class WalidRaadSeeder extends Seeder
             'allDay' => false
         ]);
 
+        /** @var Event $eventWithShift */
         $eventWithShift = $project->events()->create([
             'eventName' => 'Meeting',
             'start_time' => Carbon::now()->subDays(10)->format('Y-m-d H:i:s'),
@@ -496,8 +494,10 @@ class WalidRaadSeeder extends Seeder
 
         /** @var Shift $shift */
         $shift = $eventWithShift->shifts()->create([
-            'start' => '10:00:00',
-            'end' => '13:00:00',
+            'start_date' =>  $eventWithShift->start_time->format('Y-m-d'),
+            'end_date' => $eventWithShift->end_time->format('Y-m-d'),
+            'start' => $eventWithShift->start_time->format('H:i:s'),
+            'end' => $eventWithShift->end_time->format('H:i:s'),
             'break_minutes' => '11',
             'craft_id' => 1,
             'shift_uuid' => Str::uuid(),
@@ -525,8 +525,10 @@ class WalidRaadSeeder extends Seeder
         );
 
         $shift = $eventWithManyShifts->shifts()->create([
-            'start' => '08:00:00',
-            'end' => '10:00:00',
+            'start_date' =>  $eventWithManyShifts->start_time->format('Y-m-d'),
+            'end_date' => $eventWithManyShifts->end_time->format('Y-m-d'),
+            'start' => $eventWithManyShifts->start_time->format('H:i:s'),
+            'end' => $eventWithManyShifts->end_time->format('H:i:s'),
             'break_minutes' => '5',
             'craft_id' => 1,
             'shift_uuid' => Str::uuid(),
@@ -551,8 +553,10 @@ class WalidRaadSeeder extends Seeder
         );
 
         $shift = $eventWithManyShifts->shifts()->create([
-            'start' => '10:00:00',
-            'end' => '15:00:00',
+            'start_date' =>  $eventWithManyShifts->start_time->format('Y-m-d'),
+            'end_date' => $eventWithManyShifts->end_time->format('Y-m-d'),
+            'start' => $eventWithManyShifts->start_time->format('H:i:s'),
+            'end' => $eventWithManyShifts->end_time->format('H:i:s'),
             'break_minutes' => '5',
             'craft_id' => 1,
             'shift_uuid' => Str::uuid(),
@@ -577,8 +581,10 @@ class WalidRaadSeeder extends Seeder
         );
 
         $shift = $eventWithManyShifts->shifts()->create([
-            'start' => '15:00:00',
-            'end' => '19:00:00',
+            'start_date' =>  $eventWithManyShifts->start_time->format('Y-m-d'),
+            'end_date' => $eventWithManyShifts->end_time->format('Y-m-d'),
+            'start' => $eventWithManyShifts->start_time->format('H:i:s'),
+            'end' => $eventWithManyShifts->end_time->format('H:i:s'),
             'break_minutes' => '60',
             'craft_id' => 1,
             'shift_uuid' => Str::uuid(),
@@ -603,8 +609,10 @@ class WalidRaadSeeder extends Seeder
         );
 
         $shift = $eventWithManyShifts->shifts()->create([
-            'start' => '10:00:00',
-            'end' => '12:00:00',
+            'start_date' =>  $eventWithManyShifts->start_time->format('Y-m-d'),
+            'end_date' => $eventWithManyShifts->end_time->format('Y-m-d'),
+            'start' => $eventWithManyShifts->start_time->format('H:i:s'),
+            'end' => $eventWithManyShifts->end_time->format('H:i:s'),
             'break_minutes' => '1',
             'craft_id' => 1,
             'shift_uuid' => Str::uuid(),
@@ -629,8 +637,10 @@ class WalidRaadSeeder extends Seeder
         );
 
         $eventWithManyShifts->shifts()->create([
-            'start' => '10:00:00',
-            'end' => '20:00:00',
+            'start_date' =>  $eventWithManyShifts->start_time->format('Y-m-d'),
+            'end_date' => $eventWithManyShifts->end_time->format('Y-m-d'),
+            'start' => $eventWithManyShifts->start_time->format('H:i:s'),
+            'end' => $eventWithManyShifts->end_time->format('H:i:s'),
             'break_minutes' => '2',
             'craft_id' => 1,
             'shift_uuid' => Str::uuid(),

@@ -24,16 +24,21 @@ class ProjectRepository extends BaseRepository
         return Project::findOrFail($id);
     }
 
-    public function getProjectsByCostCenter(string $costCenter): Collection
+    public function getProjectByCostCenter(string $costCenter): Project|null
     {
         return Project::byCostCenter($costCenter)
-            ->without(['shiftRelevantEventTypes', 'state'])
             ->with(['table', 'table.columns', 'table.mainPositions.subPositions.subPositionRows.cells'])
-            ->get();
+            ->without(['shiftRelevantEventTypes', 'state'])
+            ->first();
     }
 
     public function getAll(): Collection
     {
         return Project::all();
+    }
+
+    public function getByName(string $query): Collection
+    {
+        return Project::byName($query)->get();
     }
 }

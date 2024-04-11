@@ -257,6 +257,7 @@ class CalendarController extends Controller
                 'day_string' => $period->shortDayName,
                 'is_weekend' => $period->isWeekend(),
                 'full_day' => $period->format('d.m.Y'),
+                'short_day' => $period->format('d.m'),
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),
             ];
@@ -276,8 +277,8 @@ class CalendarController extends Controller
             }
 
             // Führe die Abfrage mit den vorbereiteten Beziehungen aus
-            $better = $this->filterRooms($startDate, $endDate)
-                ->get();
+            $better = $this->filterRooms($startDate, $endDate)->get();
+
             $better = $this->roomService->collectEventsForRooms($better, $calendarPeriod, $project);
 
             $events = Event::hasNoRoom()->get();
@@ -365,6 +366,7 @@ class CalendarController extends Controller
                 'day' => $date->format('d.m.'),
                 'day_string' => $date->shortDayName,
                 'full_day' => $date->format('d.m.Y'),
+                'short_day' => $date->format('d.m'),
                 'events' => $events,
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'is_monday' => $date->isMonday(),
@@ -445,6 +447,7 @@ class CalendarController extends Controller
                 'day' => $date->format('d.m.'),
                 'day_string' => $date->shortDayName,
                 'full_day' => $date->format('d.m.Y'),
+                'short_day' => $date->format('d.m'),
                 'events' => $events,
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'is_monday' => $date->isMonday(),
@@ -506,6 +509,7 @@ class CalendarController extends Controller
                 'day' => $date->format('d.m.'),
                 'day_string' => $date->shortDayName,
                 'full_day' => $date->format('d.m.Y'),
+                'short_day' => $date->format('d.m'),
                 'events' => $events,
                 'plannedWorkingHours' => $plannedWorkingHours,
                 'is_monday' => $date->isMonday(),
@@ -549,6 +553,7 @@ class CalendarController extends Controller
                 'day_string' => $period->shortDayName,
                 'is_weekend' => $period->isWeekend(),
                 'full_day' => $period->format('d.m.Y'),
+                'short_day' => $period->format('d.m'),
                 'without_format' => $period->format('Y-m-d'),
                 'week_number' => $period->weekOfYear,
                 'is_monday' => $period->isMonday(),
@@ -563,7 +568,7 @@ class CalendarController extends Controller
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
 
-        $better = $this->filterRooms($startDate, $endDate)->get();
+        $better = $this->filterRooms($startDate, $endDate, true)->get();
         $better = $this->roomService->collectEventsForRoomsShift($better, $calendarPeriod, null, true);
 
         return [

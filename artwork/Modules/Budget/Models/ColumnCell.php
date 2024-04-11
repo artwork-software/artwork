@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -22,7 +21,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property Column $column
  * @property Collection<CellComment> $comments
  * @property Collection<CellCalculation> $calculations
- * @property SageAssignedData|null $sageAssignedData
+ * @property Collection<SageAssignedData> $sageAssignedData
  * @property SubPositionRow $subPositionRow
  * @property string $created_at
  * @property string $updated_at

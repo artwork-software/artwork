@@ -47,14 +47,14 @@
             <div :style="{lineHeight: lineHeight,fontSize: fontSize, color: TextColorWithDarken}"
                  :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
                  class="flex justify-between ">
-                <div v-if="!project" class="flex items-center">
+                <div v-if="!project" class="flex items-center relative w-full">
                     <div v-if="event.eventTypeAbbreviation" class="mr-1">
                         {{ event.eventTypeAbbreviation }}:
                     </div>
                     <div :style="{ width: width - (64 * zoomFactor) + 'px'}" class=" truncate">
                         {{ event.title }}
                     </div>
-                    <div v-if="$page.props.user.calendar_settings.project_status">
+                    <div v-if="$page.props.user.calendar_settings.project_status" class="absolute right-1">
                         <div v-if="event.project?.state?.color"
                              :class="[event.project.state.color,zoomFactor <= 0.8 ? 'border-2' : 'border-4']"
                              class="rounded-full">
@@ -144,7 +144,6 @@
                         ({{ event.option_string.charAt(7) }})
                     </div>
                 </div>
-
             </div>
             <!-- repeating Event -->
             <div :style="{lineHeight: lineHeight,fontSize: fontSize}"
@@ -155,7 +154,7 @@
                 {{ $t('Repeat event') }}
             </div>
             <!-- User-Icons -->
-            <div class="-ml-3 mb-0.5 w-full" v-if="$page.props.user.calendar_settings.project_management">
+            <div class="-ml-3 mb-0.5 w-full" v-if="$page.props.user.calendar_settings.project_management && event.projectLeaders?.length > 0">
                 <div v-if="event.projectLeaders && !project && zoomFactor >= 0.8"
                      class="mt-1 ml-5 flex flex-wrap">
                     <div class="flex flex-wrap flex-row -ml-1.5"
@@ -296,18 +295,6 @@
                                     new Date(subEvent.start).format("DD.MM. HH:mm")
                                 }} - {{ new Date(subEvent.end).format("DD.MM. HH:mm") }}
                             </div>
-                        </div>
-                    </div>
-                    <div v-if="subEvent.option_string && $page.props.user.calendar_settings.options"
-                         class="flex items-center">
-                        <div
-                            v-if="!atAGlance && new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString()"
-                            class="flex eventTime font-medium subpixel-antialiased"
-                            :style="{lineHeight: lineHeight,fontSize: fontSize}">
-                            , {{ subEvent.option_string }}
-                        </div>
-                        <div class="flex eventTime font-medium subpixel-antialiased ml-0.5" v-else>
-                            ({{ subEvent.option_string.charAt(7) }})
                         </div>
                     </div>
                     <div v-if="$page.props.user.calendar_settings.work_shifts" class="ml-0.5 text-xs">

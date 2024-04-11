@@ -134,7 +134,6 @@
                         </div>
                         <div class="mt-4">
                             <input :placeholder="$t('Abbreviation of the event type')"
-                                   id="entry_fee"
                                    v-model="eventTypeForm.abbreviation"
                                    class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
@@ -220,7 +219,6 @@
                         </div>
                         <div class="mt-4">
                             <input :placeholder="editEventTypeForm.abbreviation !== '' ? editEventTypeForm.abbreviation : $t('Abbreviation of the event type')"
-                                   id="entry_fee"
                                    v-model="editEventTypeForm.abbreviation"
                                    class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>

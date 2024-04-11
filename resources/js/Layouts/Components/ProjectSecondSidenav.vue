@@ -16,42 +16,10 @@
                                         :project-sector-ids="this.projectSectorIds"
             />
         </div>
-        <div class="w-full flex items-center mb-4">
-            <div class="xWhiteBold">{{ $t('Entry & registration') }}</div>
-            <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                           @click="openEntranceModal"
-                           v-if="projectMembersWriteAccess()"
-            />
-        </div>
-        <div>
-            <div class="text-secondary text-sm mb-1">
-                {{ $t('Guests') }}: {{ project.num_of_guests ? project.num_of_guests : $t('Not defined') }}
-            </div>
-            <div class="text-secondary text-sm mb-1">
-                {{ $t('Entrance') }}: {{ project.entry_fee ? project.entry_fee : $t('Not defined') }}
-            </div>
-            <div class="text-secondary text-sm mb-1">
-                {{ $t('Registration required') }}: {{ project.registration_required ? $t('Yes') : $t('No') }}
-            </div>
-            <div v-if="project.registration_required">
-                <div class="text-secondary text-sm mb-1">
-                    {{ $t('Registration via') }}: {{ project.register_by ? project.register_by : $t('Not defined') }}
-                </div>
-                <div class="text-secondary text-sm mb-1">
-                    {{ $t('Registration deadline') }}:
-                    {{ project.registration_deadline ? project.registration_deadline : $t('No deadline') }}
-                </div>
-            </div>
-            <div class="text-secondary text-sm">
-                {{ $t('Closed society') }}: {{ project.closed_society ? $t('Yes') : $t('No') }}
-            </div>
-        </div>
     </div>
-    <ProjectEntranceModal :show="show" :close-modal="closeEntranceModal" :project="project"/>
 </template>
 
 <script>
-import ProjectEntranceModal from "@/Layouts/Components/ProjectEntranceModal.vue";
 import {PencilAltIcon} from "@heroicons/vue/outline";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import SidebarTagComponent from "@/Layouts/Components/SidebarTagComponent.vue";
@@ -86,7 +54,6 @@ export default {
         TeamIconCollection,
         UserTooltip,
         SidebarTagComponent,
-        ProjectEntranceModal,
         PencilAltIcon,
         TagComponent,
         ProjectAttributeEditModal,
@@ -95,17 +62,10 @@ export default {
     },
     data() {
         return {
-            show: false,
             showTeamModal: false,
         }
     },
     methods: {
-        openEntranceModal() {
-            this.show = true;
-        },
-        closeEntranceModal() {
-            this.show = false;
-        },
         projectMembersWriteAccess: function () {
             if (this.$can('write projects')) {
                 return true;

@@ -16,7 +16,7 @@
                                     'bg-buttonBlue cursor-pointer',
                                 'w-10 h-10 rounded-full text-white p-2'
                              ]"
-                             @click="this.initializeSageImport"
+                             @click="this.initializeSageImport()"
                 />
             </div>
         </div>
@@ -69,6 +69,36 @@
                    :value="$t('Save interface settings')"
                    @click="this.showConfirmationComponent = true;"
             />
+        </div>
+        <div class="flex flex-col space-y-4">
+            <hr class="mt-5"/>
+            <h2 class="headline2">{{ $t('Import a specific booking date') }}</h2>
+            <div class="xsLight mt-4 col-span-9">
+                {{ $t('Import individual booking days again. Existing data is overwritten with new data.') }}
+            </div>
+            <div v-if="!this.sageInterfaceIsConfigured()" class="errorText">{{ $t('Please configure the Sage interface first.') }}</div>
+            <div class="flex flex-row items-center space-x-4">
+                <input type="date"
+                       v-model="this.specificDayImportDate"
+                       :disabled="!this.sageInterfaceIsConfigured()"
+                       :class="[
+                                !this.sageInterfaceIsConfigured() ?
+                                    'cursor-not-allowed' :
+                                    'cursor-pointer',
+                                ''
+                             ]"
+                />
+                <RefreshIcon :class="[
+                                !this.sageInterfaceIsConfigured() ||
+                                this.importProcessing ||
+                                this.specificDayImportDate === null || this.specificDayImportDate === '' ?
+                                    'bg-gray-600 cursor-not-allowed' :
+                                    'bg-buttonBlue cursor-pointer',
+                                'w-10 h-10 rounded-full text-white p-2'
+                             ]"
+                             @click="this.initializeSageImportForSpecificDay()"
+                />
+            </div>
         </div>
     </ToolSettingsHeader>
     <confirmation-component v-if="this.showConfirmationComponent"
@@ -136,7 +166,8 @@ export default defineComponent({
                 fetchTime: this.sageSettings ? this.sageSettings.fetchTime : null,
                 enabled: this.sageSettings ? this.sageSettings.enabled : false
             }),
-            importProcessing: false
+            importProcessing: false,
+            specificDayImportDate: null,
         }
     },
     methods: {
@@ -164,7 +195,35 @@ export default defineComponent({
                 }
             );
         },
+        initializeSageImportForSpecificDay() {
+            if (
+                !this.sageInterfaceIsConfigured() ||
+                this.importProcessing ||
+                this.specificDayImportDate === null ||
+                this.specificDayImportDate === ''
+            ) {
+                return;
+            }
+
+            this.importProcessing = true;
+            this.$inertia.post(
+                route('tool.interfaces.sage.initializeSpecificDay'),
+                {
+                    specificDay: this.specificDayImportDate
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: false,
+                    onFinish() {
+                        this.importProcessing = false;
+                    }
+                }
+            );
+
+            console.debug(this.specificDayImportDate);
+        },
         saveSageInterface(closedToSave) {
+            console.debug('saveSageInterface', closedToSave);
             this.showConfirmationComponent = false;
 
             if (!closedToSave) {

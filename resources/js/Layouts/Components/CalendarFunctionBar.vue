@@ -52,10 +52,10 @@
                </div>
             </div>
             <div class="flex items-center gap-x-4">
-                <IconZoomIn @click="incrementZoomFactor" :disabled="zoomFactor <= 0.2" v-if="!atAGlance && isFullscreen"
+                <IconZoomIn @click="incrementZoomFactor" :disabled="zoomFactor <= 0.2" v-if="!atAGlance"
                             class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomIn>
                 <IconZoomOut @click="decrementZoomFactor" :disabled="zoomFactor >= 1.4"
-                             v-if="!atAGlance && isFullscreen" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomOut>
+                             v-if="!atAGlance" class="h-7 w-7 text-artwork-buttons-context cursor-pointer"></IconZoomOut>
                 <IconArrowsDiagonal  class="h-7 w-7 text-artwork-buttons-context cursor-pointer" @click="enterFullscreenMode" v-if="!atAGlance && !isFullscreen"/>
                 <IndividualCalendarFilterComponent
                     class=""

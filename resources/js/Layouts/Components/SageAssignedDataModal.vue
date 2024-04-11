@@ -14,93 +14,103 @@
                         {{ $t('No booking has been linked yet.') }}
                     </div>
                     <div v-else class="flex flex-col w-full">
-
                         <!-- index change -->
-                        <nav class="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0 mb-5">
-                            <div class="-mt-px flex w-0 flex-1">
-                                <div v-if="currentIndex > 0" @click="currentIndex--" class="inline-flex items-center border-t-2 border-transparent pr-1 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 cursor-pointer">
-                                    <IconChevronLeft class="mr-3 h-5 w-5 text-gray-400" aria-hidden="true" />
-                                    {{ $t('Previous') }}
+                        <nav class="w-full h-10 flex items-center border-t border-gray-200 mb-5">
+                            <div class="w-1/6 h-10 flex">
+                                <div v-show="currentIndex > 0"
+                                     @click="currentIndex--"
+                                     class="justify-around w-full inline-flex items-center border-t-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 cursor-pointer">
+                                    <IconChevronLeft class="h-4 w-4 text-gray-400" aria-hidden="true" />
+                                    <span>{{ $t('Previous') }}</span>
                                 </div>
                             </div>
-                            <div class="hidden md:-mt-px md:flex">
-                                <span v-for="(index, position) in maxIndex" @click="currentIndex = position" class="cursor-pointer inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700" :class="currentIndex === position ? 'text-artwork-buttons-create font-extrabold' : ''">
+                            <div v-if="this.cell.sage_assigned_data.length <= 9" class="w-4/6 h-10 flex justify-center">
+                                <span v-for="(index) in maxIndex"
+                                      @click="currentIndex = (index - 1)"
+                                      class="cursor-pointer inline-flex items-center justify-center border-t-2 px-4 text-sm  text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                                      :class="currentIndex === (index - 1) ? 'border-gray-300 text-gray-700 font-bold' : 'border-transparent text-gray-500 font-medium'">
                                     {{ index }}
                                 </span>
                             </div>
-                            <div class="-mt-px flex w-0 flex-1 justify-end">
-                                <div v-if="currentIndex < maxIndex -1" @click="currentIndex++" class="inline-flex items-center border-t-2 border-transparent pl-1 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 cursor-pointer">
-                                    {{ $t('Next')}}
-                                    <IconChevronRight class="ml-3 h-5 w-5 text-gray-400" aria-hidden="true"  />
+                            <div v-else class="w-4/6 h-10 flex justify-center">
+                                <select v-model="currentIndex" class="h-10">
+                                    <option v-for="(index) in maxIndex" :key="index" :value="(index - 1)">
+                                        {{ index }}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="w-1/6 h-10 flex">
+                                <div v-show="currentIndex < (maxIndex - 1)"
+                                     @click="currentIndex++"
+                                     class="justify-around w-full inline-flex items-center border-t-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 cursor-pointer">
+                                    <span>{{ $t('Next')}}</span>
+                                    <IconChevronRight class="h-4 w-4 text-gray-400" aria-hidden="true"/>
                                 </div>
                             </div>
                         </nav>
+                        <div v-if="this.currentSageAssignedData">
+                            <div class="grid grid-cols-2">
+                                <span class="xsLight">{{ $t('Creditor') }}</span>
+                                <span class="xsLight text-black">{{ this.currentSageAssignedData.kreditor }}</span>
+                                <span class="xsLight">{{ $t('Amount') }}</span>
+                                <span class="xsLight text-black">{{ this.currentSageAssignedData.buchungsbetrag }} EUR</span>
+                                <span class="xsLight">{{ $t('Booking text') }}</span>
+                                <span class="xsLight text-black">{{ this.currentSageAssignedData.buchungstext }}</span>
 
-                        <div v-for="(item, position) in cell.sage_assigned_data">
-                            <div v-show="currentIndex === position">
-                                <div class="grid grid-cols-2">
-                                    <span class="xsLight">{{ $t('Creditor') }}</span>
-                                    <span class="xsLight text-black">{{ item.kreditor }}</span>
-                                    <span class="xsLight">{{ $t('Amount') }}</span>
-                                    <span class="xsLight text-black">{{ item.buchungsbetrag }} EUR</span>
-                                    <span class="xsLight">{{ $t('Booking text') }}</span>
-                                    <span class="xsLight text-black">{{ item.buchungstext }}</span>
+                                <span class="xsLight mt-4">{{ $t('Document number') }}</span>
+                                <span class="xsLight text-black mt-4">{{ this.currentSageAssignedData.belegnummer }}</span>
+                                <span class="xsLight">{{ $t('Document date') }}</span>
+                                <span class="xsLight text-black">
+                                    {{ this.formatBookingDataDate(this.currentSageAssignedData.belegdatum) }}
+                                </span>
 
-                                    <span class="xsLight mt-4">{{ $t('Document number') }}</span>
-                                    <span class="xsLight text-black mt-4">{{ item.belegnummer }}</span>
-                                    <span class="xsLight">{{ $t('Document date') }}</span>
-                                    <span class="xsLight text-black">
-                                {{ this.formatBookingDataDate(item.belegdatum) }}
-                            </span>
+                                <span class="xsLight mt-4">{{ $t('General ledger account') }}</span>
+                                <span class="xsLight text-black mt-4">{{ this.currentSageAssignedData.sa_kto }}</span>
+                                <span class="xsLight">{{ $t('Cost bearer') }}</span>
+                                <span class="xsLight text-black">{{ this.currentSageAssignedData.kst_traeger }}</span>
+                                <span class="xsLight">{{ $t('Cost center') }}</span>
+                                <span class="xsLight text-black">{{ this.currentSageAssignedData.kst_stelle }}</span>
 
-                                    <span class="xsLight mt-4">{{ $t('General ledger account') }}</span>
-                                    <span class="xsLight text-black mt-4">{{ item.sa_kto }}</span>
-                                    <span class="xsLight">{{ $t('Cost bearer') }}</span>
-                                    <span class="xsLight text-black">{{ item.kst_traeger }}</span>
-                                    <span class="xsLight">{{ $t('Cost center') }}</span>
-                                    <span class="xsLight text-black">{{ item.kst_stelle }}</span>
-
-                                    <span class="xsLight mt-4">{{ $t('Booking date') }}</span>
-                                    <span class="xsLight text-black mt-4">
-                                {{ this.formatBookingDataDate(item.buchungsdatum) }}
-                            </span>
+                                <span class="xsLight mt-4">{{ $t('Booking date') }}</span>
+                                <span class="xsLight text-black mt-4">
+                                    {{ this.formatBookingDataDate(this.currentSageAssignedData.buchungsdatum) }}
+                                </span>
+                            </div>
+                            <hr class="mt-6 mb-6"/>
+                            <div class="flex flex-col">
+                                <textarea v-model="this.bookingDataCommentForm.comment"
+                                          rows="5"
+                                          :placeholder="$t('Enter comment')"
+                                          class="resize-none border-2 border-gray-300 text-md p-4"
+                                />
+                                <div class="flex justify-center mt-6">
+                                    <FormButton :disabled="
+                                                    this.bookingDataCommentForm.comment === null ||
+                                                    this.bookingDataCommentForm.comment === ''
+                                                "
+                                                @click="this.saveComment(this.currentSageAssignedData)"
+                                                :text="$t('Save')"
+                                    />
                                 </div>
-                                <hr class="mt-6 mb-6"/>
-                                <div class="flex flex-col">
-                            <textarea v-model="this.bookingDataCommentForm.comment"
-                                      rows="5"
-                                      :placeholder="$t('Enter comment')"
-                                      class="resize-none border-2 border-gray-300 text-md p-4"
-                            />
-                                    <div class="flex justify-center mt-6">
-                                        <FormButton :disabled="
-                                                this.bookingDataCommentForm.comment === null ||
-                                                this.bookingDataCommentForm.comment === ''
-                                           "
-                                                    @click="this.saveComment(item)"
-                                                    :text="$t('Save')"
+                            </div>
+                            <div class="flex flex-col mt-6">
+                                <div v-for="comment in this.currentSageAssignedData.comments" class="my-2">
+                                    <div class="flex flex-row items-center mb-2 text-xs text-gray-500 justify-between">
+                                        <div class="flex flex-row items-center">
+                                            <UserPopoverTooltip class="mr-1"
+                                                                :user="comment.user"
+                                                                :height="5"
+                                                                :width="5"
+                                            />
+                                            {{ comment.created_at }}
+                                        </div>
+                                        <IconTrash v-if="this.$page.props.user.id === comment.user.id"
+                                                   class="w-6 h-6 hover:text-red-600 cursor-pointer"
+                                                   @click="this.removeComment(comment.id)"
                                         />
                                     </div>
-                                </div>
-                                <div class="flex flex-col mt-6">
-                                    <div v-for="comment in item.comments" class="my-2">
-                                        <div class="flex flex-row items-center mb-2 text-xs text-gray-500 justify-between">
-                                            <div class="flex flex-row items-center">
-                                                <UserPopoverTooltip class="mr-1"
-                                                                    :user="comment.user"
-                                                                    :height="5"
-                                                                    :width="5"
-                                                />
-                                                {{ comment.created_at }}
-                                            </div>
-                                            <IconTrash v-if="this.$page.props.user.id === comment.user.id"
-                                                       class="w-6 h-6 hover:text-red-600 cursor-pointer"
-                                                       @click="this.removeComment(comment.id)"
-                                            />
-                                        </div>
-                                        <div class="text-sm">
-                                            {{ comment.comment }}
-                                        </div>
+                                    <div class="text-sm">
+                                        {{ comment.comment }}
                                     </div>
                                 </div>
                             </div>
@@ -153,6 +163,11 @@ export default defineComponent({
             maxIndex: this.cell.sage_assigned_data.length
         }
     },
+    computed: {
+        currentSageAssignedData() {
+            return this.cell.sage_assigned_data[this.currentIndex];
+        }
+    },
     methods: {
         formatBookingDataDate(dateString) {
             let parts = dateString.split('T');
@@ -160,15 +175,15 @@ export default defineComponent({
 
             return parts[2] + '.' + parts[1] + '.' + parts[0];
         },
-        saveComment(SageData) {
-            this.bookingDataCommentForm.sageAssignedDataId = SageData.id;
+        saveComment(sageAssignedData) {
+            this.bookingDataCommentForm.sageAssignedDataId = sageAssignedData.id;
             this.bookingDataCommentForm.post(
                 route('sageAssignedDataComments.store'),
                 {
                     preserveScroll: true,
                     onSuccess: () => {
                         //add created comment at first position in comments
-                        SageData.comments.unshift(
+                        sageAssignedData.comments.unshift(
                             this.$page.props.recentlyCreatedSageAssignedDataComment
                         );
                         this.bookingDataCommentForm.reset();
@@ -182,11 +197,11 @@ export default defineComponent({
                 {
                     preserveScroll: true,
                     onSuccess: () => {
-                        let indexOfRemovedElement = this.cell.sage_assigned_data.comments.findIndex((comment) => {
+                        let indexOfRemovedElement = this.currentSageAssignedData.comments.findIndex((comment) => {
                             return comment.id === id;
                         });
 
-                        this.cell.sage_assigned_data.comments.splice(indexOfRemovedElement, 1);
+                        this.currentSageAssignedData.comments.splice(indexOfRemovedElement, 1);
                     }
                 }
             );

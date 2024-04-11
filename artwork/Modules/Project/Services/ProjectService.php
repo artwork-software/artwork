@@ -28,9 +28,9 @@ class ProjectService
         return $this->projectRepository->findManagers($project)->contains($user);
     }
 
-    public function getProjectsByCostCenter(string $costCenter): Collection
+    public function getProjectByCostCenter(string $costCenter): Project|null
     {
-        return $this->projectRepository->getProjectsByCostCenter($costCenter);
+        return $this->projectRepository->getProjectByCostCenter($costCenter);
     }
 
     public function pin(Project $project): bool
@@ -330,5 +330,10 @@ class ProjectService
     public function getAll(): Collection
     {
         return $this->projectRepository->getAll();
+    }
+
+    public function getByName(string $query): Collection
+    {
+        return $this->projectRepository->getByName($query);
     }
 }

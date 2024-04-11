@@ -86,7 +86,6 @@ readonly class ShiftService
 
     public function restoreShifts(Collection|array $shifts): void
     {
-
         /** @var Shift $shift */
         foreach ($shifts as $shift) {
             $shift->restore();
@@ -106,22 +105,6 @@ readonly class ShiftService
             $shift->serviceProvider()->each(
                 fn($serviceProvider) => $this->shiftServiceProviderService->restore($serviceProvider->pivot)
             );
-
-            /*foreach ($shift->shiftsQualifications()->onlyTrashed()->get() as $shiftsQualification) {
-                $this->shiftsQualificationsService->restore($shiftsQualification);
-            }*/
-
-            /*$shift->users()->onlyTrashed()->each(
-                fn($user) => $this->shiftUserService->restore($user->pivot)
-            );
-
-            $shift->freelancer()->onlyTrashed()->each(
-                fn($freelancer) => $this->shiftFreelancerService->restore($freelancer->pivot)
-            );
-
-            $shift->serviceProvider()->onlyTrashed()->each(
-                fn($serviceProvider) => $this->shiftServiceProviderService->restore($serviceProvider->pivot)
-            );*/
         }
     }
 

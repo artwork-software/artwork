@@ -36,6 +36,7 @@ use Illuminate\Support\Collection;
  * @property string|null $event_end_day
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property int $committing_user_id
  * @property-read Craft $craft
  * @property-read Event $event
  * @property-read Collection<Freelancer> $freelancer

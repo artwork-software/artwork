@@ -315,31 +315,10 @@ export default {
             }
         },
         reloadChanges() {
-            //console.log(this.arrayToIds(this.filterArray.rooms));
             Inertia.patch(route('update.user.shift.calendar.filter', this.$page.props.user.id), {
                 rooms: this.arrayToIds(this.filterArray.rooms),
                 event_types: this.arrayToIds(this.filterArray.eventTypes),
             })
-            /*const pageRoute = this.getRoute(window.location.pathname.split('/')[1])
-            Inertia.reload( {
-                data: {
-                    isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
-                    isNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),
-                    adjoiningNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNoAudience.checked),
-                    adjoiningNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
-                    hasAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
-                    hasNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
-                    showAdjoiningRooms: this.returnNullIfFalse(this.filterArray.roomFilters.showAdjoiningRooms),
-                    allDayFree: this.returnNullIfFalse(this.filterArray.roomFilters.allDayFree),
-                    roomIds: this.arrayToIds(this.filterArray.rooms),
-                    areaIds: this.arrayToIds(this.filterArray.areas),
-                    eventTypeIds: this.arrayToIds(this.filterArray.eventTypes),
-                    roomAttributeIds: this.arrayToIds(this.filterArray.roomAttributes),
-                    roomCategoryIds: this.arrayToIds(this.filterArray.roomCategories),
-                    atAGlance: this.atAGlance
-                },
-                preserveState: true
-            })*/
         }
     },
     computed: {

@@ -30,8 +30,8 @@
                                                    v-model="shiftForm.start"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                                    required
+                                                   @change="this.validateShiftDates()"
                                             />
-                                            <span class="text-xs text-red-500" v-show="helpTexts.start.length > 0">{{ helpTexts.start }}</span>
                                         </div>
                                         <div>
                                             <input type="time"
@@ -39,9 +39,47 @@
                                                    v-model="shiftForm.end"
                                                    maxlength="3"
                                                    required
-                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                            <span class="text-xs text-red-500" v-show="helpTexts.end.length > 0">{{ helpTexts.end }}</span>
-                                            <span class="text-xs text-red-500" v-show="helpTexts.time.length > 0">{{ helpTexts.time }}</span>
+                                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                   @change="this.validateShiftDates()"
+                                            />
+                                        </div>
+                                        <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
+                                                    this.validationMessages.errors.shift_start.length > 0 ||
+                                                    this.validationMessages.warnings.shift_end.length > 0 ||
+                                                    this.validationMessages.errors.shift_end.length > 0">
+                                            <div v-if="this.validationMessages.warnings.shift_start.length > 0"
+                                                 class="flex flex-col">
+                                                <span v-for="warning in this.validationMessages.warnings.shift_start"
+                                                      class="text-xs text-orange-500">
+                                                    {{ warning }}
+                                                </span>
+                                            </div>
+                                            <div v-if="this.validationMessages.errors.shift_start.length > 0"
+                                                 class="flex flex-col">
+                                                <span v-for="error in this.validationMessages.errors.shift_start"
+                                                      class="text-xs errorText">
+                                                    {{ error }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div v-if="this.validationMessages.warnings.shift_start.length > 0 ||
+                                                    this.validationMessages.errors.shift_start.length > 0 ||
+                                                    this.validationMessages.warnings.shift_end.length > 0 ||
+                                                    this.validationMessages.errors.shift_end.length > 0">
+                                            <div v-if="this.validationMessages.warnings.shift_end.length > 0"
+                                                 class="flex flex-col">
+                                                <span v-for="warning in this.validationMessages.warnings.shift_end"
+                                                      class="text-xs text-orange-500">
+                                                    {{ warning }}
+                                                </span>
+                                            </div>
+                                            <div v-if="this.validationMessages.errors.shift_end.length > 0"
+                                                 class="flex flex-col">
+                                                <span v-for="error in this.validationMessages.errors.shift_end"
+                                                      class="text-xs errorText">
+                                                    {{ error }}
+                                                </span>
+                                            </div>
                                         </div>
                                         <div>
                                             <input type="number"
@@ -50,11 +88,15 @@
                                                    minlength="0"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
                                                    required
+                                                   @change="this.validateShiftBreak()"
                                             />
-                                            <span class="text-xs text-red-500" v-show="helpTexts.breakText.length > 0">{{ helpTexts.breakText }}</span>
                                         </div>
                                         <div>
-                                            <Listbox as="div" v-model="selectedCraft">
+                                            <Listbox as="div"
+                                                     v-model="selectedCraft"
+                                                     @update:modelValue="this.validateShiftCraft()"
+                                                     by="id"
+                                            >
                                                 <div class="relative">
                                                     <ListboxButton class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
                                                         <span class="block truncate text-left pl-3">{{ selectedCraft?.name ?? $t('Craft') + '*'}} </span>
@@ -76,7 +118,44 @@
                                                     </transition>
                                                 </div>
                                             </Listbox>
-                                            <span class="text-xs text-red-500" v-show="helpTexts.craftText.length > 0">{{ helpTexts.craftText }}</span>
+                                        </div>
+                                        <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
+                                                    this.validationMessages.errors.break_length.length > 0 ||
+                                                    this.validationMessages.warnings.craft.length > 0 ||
+                                                    this.validationMessages.errors.craft.length > 0">
+                                            <div v-if="this.validationMessages.warnings.break_length.length > 0"
+                                                 class="flex flex-col">
+                                                <span v-for="warning in this.validationMessages.warnings.break_length"
+                                                      class="text-xs text-orange-500">
+                                                    {{ warning }}
+                                                </span>
+                                            </div>
+                                            <div v-if="this.validationMessages.errors.break_length.length > 0"
+                                                 class="flex flex-col">
+                                                <span v-for="error in this.validationMessages.errors.break_length"
+                                                      class="text-xs errorText">
+                                                    {{ error }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div v-if="this.validationMessages.warnings.break_length.length > 0 ||
+                                                    this.validationMessages.errors.break_length.length > 0 ||
+                                                    this.validationMessages.warnings.craft.length > 0 ||
+                                                    this.validationMessages.errors.craft.length > 0">
+                                            <div v-if="this.validationMessages.warnings.craft.length > 0"
+                                                 class="flex flex-col">
+                                                <span v-for="warning in this.validationMessages.warnings.craft"
+                                                      class="text-xs text-orange-500">
+                                                    {{ warning }}
+                                                </span>
+                                            </div>
+                                            <div v-if="this.validationMessages.errors.craft.length > 0"
+                                                 class="flex flex-col">
+                                                <span v-for="error in this.validationMessages.errors.craft"
+                                                      class="text-xs errorText">
+                                                    {{ error }}
+                                                </span>
+                                            </div>
                                         </div>
                                         <div v-for="computedShiftQualification in this.computedShiftQualifications"
                                              v-show="this.canComputedShiftQualificationBeShown(computedShiftQualification)">
@@ -85,15 +164,30 @@
                                                    type="number"
                                                    :placeholder="$t('Amount {0}', [computedShiftQualification.name])"
                                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                                   @change="this.validateShiftsQualification(computedShiftQualification)"
                                             />
+                                            <div v-if="computedShiftQualification.warning || computedShiftQualification.error"
+                                                 class="mt-2 space-y-2"
+                                            >
+                                                <div v-if="computedShiftQualification.warning" class="flex flex-col">
+                                                    <span class="text-xs errorText">
+                                                        {{ computedShiftQualification.warning }}
+                                                    </span>
+                                                </div>
+                                                <div v-if="computedShiftQualification.error" class="flex flex-col">
+                                                    <span class="text-xs errorText">
+                                                        {{ computedShiftQualification.error }}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="mt-2 col-span-2">
+                                        <div class="col-span-2">
                                             <textarea v-model="shiftForm.description" :placeholder="$t('Is there any important information about this shift?')" rows="4" name="comment" id="comment" class="block w-full inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300" />
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex justify-between mt-5">
+                            <div class="flex justify-between">
                                 <FormButton
                                     :text="$t('Save')"
                                     @click="saveShift" />
@@ -106,7 +200,7 @@
     </TransitionRoot>
 </template>
 <script>
-import {defineComponent} from 'vue'
+import {defineComponent, reactive} from 'vue'
 import {CheckIcon, XIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
 import {
@@ -161,12 +255,19 @@ export default defineComponent({
                 presetShiftsQualifications: []
             }),
             selectedCraft: this.presetShift ? this.presetShift.craft : null,
-            helpTexts: {
-                craftText: '',
-                breakText: '',
-                start: '',
-                end: '',
-                time: '',
+            validationMessages: {
+                warnings: {
+                    shift_start: [],
+                    shift_end: [],
+                    break_length: [],
+                    craft: [],
+                },
+                errors: {
+                    shift_start: [],
+                    shift_end: [],
+                    break_length: [],
+                    craft: [],
+                }
             },
             showChangeAllModal: false
         }
@@ -192,7 +293,7 @@ export default defineComponent({
                 });
             });
 
-            return computedShiftQualifications;
+            return reactive(computedShiftQualifications);
         },
     },
     methods: {
@@ -225,63 +326,88 @@ export default defineComponent({
         closeModal(bool){
             this.$emit('closed', bool);
         },
+        validateShiftDates() {
+            this.validationMessages.warnings.shift_start = [];
+            this.validationMessages.warnings.shift_end = [];
+            this.validationMessages.errors.shift_start = [];
+            this.validationMessages.errors.shift_end = [];
+
+            let hasErrors = false;
+
+            //check errors
+            if (this.shiftForm.start === null || this.shiftForm.start === '') {
+                this.validationMessages.errors.shift_start.push(this.$t('Please enter a shift start time.'));
+                hasErrors = true;
+            }
+            if (this.shiftForm.end === null || this.shiftForm.end === '') {
+                this.validationMessages.errors.shift_end.push(this.$t('Please enter a shift end time.'));
+                hasErrors = true;
+            }
+
+            return hasErrors;
+        },
+        validateShiftBreak() {
+            this.validationMessages.warnings.break_length = [];
+            this.validationMessages.errors.break_length = [];
+
+            let hasErrors = false;
+
+            //check errors
+            if (this.shiftForm.break_minutes === null || this.shiftForm.break_minutes === '') {
+                this.validationMessages.errors.break_length.push(this.$t('Please enter a break time.'));
+
+                hasErrors = true;
+            }
+
+            return hasErrors;
+        },
+        validateShiftCraft() {
+            this.validationMessages.warnings.craft = [];
+            this.validationMessages.errors.craft = [];
+
+            //check errors
+            if (this.selectedCraft === null) {
+                this.validationMessages.errors.craft.push(this.$t('Please select a trade.'));
+
+                return true;
+            }
+
+            return false;
+        },
+        validateShiftsQualification(computedShiftsQualification) {
+            computedShiftsQualification.warning = null;
+            computedShiftsQualification.error = null;
+
+            if (computedShiftsQualification.value < 0) {
+                computedShiftsQualification.error = this.$t("Value can't be lower than 0.");
+
+                return true;
+            }
+
+            return false;
+        },
+        validateShiftsQualifications() {
+            let hasErrors = false;
+
+            this.computedShiftQualifications.forEach((computedShiftQualification) => {
+                if (this.validateShiftsQualification(computedShiftQualification)) {
+                    hasErrors = true;
+                }
+            });
+
+            return hasErrors;
+        },
+        validate() {
+            let hasShiftDateError = this.validateShiftDates(),
+                hasShiftBreakError = this.validateShiftBreak(),
+                hasShiftCraftError = this.validateShiftCraft(),
+                hasShiftsQualificationsError = this.validateShiftsQualifications();
+
+            return hasShiftDateError || hasShiftBreakError || hasShiftCraftError || hasShiftsQualificationsError;
+        },
         saveShift(){
-            this.shiftForm.craft_id = this.selectedCraft?.id;
-
-            if (this.shiftForm.start > this.shiftForm.start) {
-                this.helpTexts.time = this.$t('The shift cannot start before the deadline.');
+            if (this.validate()) {
                 return;
-            } else {
-                this.helpTexts.time = '';
-            }
-
-            if (this.shiftForm.start === null){
-                this.helpTexts.start = this.$t('Please enter a start time.');
-                return;
-            } else {
-                this.helpTexts.start = '';
-            }
-
-            if (this.shiftForm.end === null){
-                this.helpTexts.end = this.$t('Please enter an end date.');
-                return;
-            } else {
-                this.helpTexts.end = '';
-            }
-
-            if (this.selectedCraft === null){
-                this.helpTexts.craftText = this.$t('Please select a trade.');
-                return;
-            } else {
-                this.helpTexts.craftText = '';
-            }
-
-            if (this.shiftForm.break_minutes === null){
-                this.helpTexts.breakText = this.$t('Please enter a break time.');
-                return;
-            } else {
-                this.helpTexts.breakText = '';
-            }
-
-            if (this.shiftForm.break_minutes < 0) {
-                this.helpTexts.breakText = this.$t('The pause time cannot be negative.');
-                return;
-            } else {
-                this.helpTexts.breakText = '';
-            }
-
-            if (this.shiftForm.break_minutes >= (this.shiftForm.end - this.shiftForm.start)) {
-                this.helpTexts.breakText = this.$t('The break time cannot be longer than the shift.');
-                return;
-            } else {
-                this.helpTexts.breakText = '';
-            }
-
-            if (this.shiftForm.start >= this.shiftForm.end) {
-                this.helpTexts.time = this.$t('The end time must be after the start time.');
-                return;
-            } else {
-                this.helpTexts.time = '';
             }
 
             this.shiftForm.craft_id = this.selectedCraft.id;

@@ -70,7 +70,7 @@
                     <span class="h-4 w-4 rounded-full block bg-gray-500"></span>
                     <span class="text-xs">{{ $t('Unoccupied')}}</span>
                     <ShiftQualificationIconCollection
-                        class="w-5 h-5"
+                        :classes="'w-4 h-4'"
                         :icon-name="this.getShiftQualificationById(shiftsQualification.shift_qualification_id).icon"/>
                 </div>
             </div>
@@ -80,6 +80,7 @@
                              :preset-shift="presetShift"
                              :shift-qualifications="shiftQualifications"
                              :edit="true"
+                             :crafts="this.crafts"
                              @closed="showEditShiftModal = false"
     />
 </template>
@@ -118,7 +119,11 @@ export default defineComponent({
         MenuItem,
         MenuButton
     },
-    props: ['presetShift', 'shiftQualifications'],
+    props: [
+        'presetShift',
+        'shiftQualifications',
+        'crafts'
+    ],
     methods: {
         deleteShift(){
             Inertia.delete(route('preset.shift.destroy', {presetShift: this.presetShift.id}))

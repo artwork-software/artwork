@@ -69,7 +69,7 @@
             :show="showContactModal"
             :assigned-shift-contacts="this.project.shift_contacts"
             :project-id="this.project.id"
-            :project-managers="this.project.project_managers"
+            :project-managers="this.project?.project_managers"
             @close-modal="closeContactModal"
         />
     </div>

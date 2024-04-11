@@ -15,25 +15,6 @@ class TabContentSeeder extends Seeder
      */
     public function run(): void
     {
-        /*
-         * Create Components form this:
-         *   case PROJECT_STATUS = 'ProjectStatusComponent';
-    case PROJECT_GROUP = 'ProjectGroupComponent';
-    case PROJECT_TEAM = 'ProjectTeamComponent';
-    case PROJECT_ATTRIBUTES = 'ProjectAttributesComponent';
-    case CALENDAR = 'CalendarTab';
-    case CHECKLIST = 'ChecklistComponent';
-    case SHIFT_TAB = 'ShiftTab';
-    case RELEVANT_DATES_FOR_SHIFT_PLANNING = 'RelevantDatesForShiftPlanningComponent';
-    case SHIFT_CONTACT_PERSONS = 'ShiftContactPersonsComponent';
-    case GENERAL_SHIFT_INFORMATION = 'GeneralShiftInformationComponent';
-    case BUDGET = 'BudgetComponent';
-    case PROJECT_BUDGET_DEADLINE = 'ProjectBudgetDeadlineComponent';
-    case COMMENT_TAB = 'CommentTab';
-    case PROJECT_DOCUMENTS = 'ProjectDocumentsComponent';
-    case PROJECT_TITLE = 'ProjectTitleComponent';
-         */
-
         $components = [
             [
                 'name' => 'Project Status',

@@ -53,6 +53,9 @@ class Project extends Model
     use Searchable;
     use HasChangesHistory;
 
+    /**
+     * @var User[]|Collection|\LaravelIdea\Helper\App\Models\_IH_User_C|mixed
+     */
     protected $fillable = [
         'name',
         'description',

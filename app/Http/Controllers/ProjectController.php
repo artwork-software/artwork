@@ -1721,17 +1721,9 @@ class ProjectController extends Controller
                 }
 
                 if ($component->type === 'ShiftTab') {
-                    /**
-                     * 'shift_relevant_event_types' => $this->shiftRelevantEventTypes()->get(),
-                     * 'shift_contacts' => $this->shift_contact()->get(),
-                     * 'shiftDescription' => $this->shift_description,
-                     *
-                     * //needed for ProjectShowHeaderComponent
-                     * 'freelancers' => Freelancer::all(),
-                     * 'serviceProviders' => ServiceProvider::without(['contacts'])->get()
-                     */
                     $headerObject->project->shift_relevant_event_types = $project->shiftRelevantEventTypes;
                     $headerObject->project->shift_contacts = $project->shift_contact;
+                    $headerObject->project->project_managers = $project->managerUsers;
                     $headerObject->project->shiftDescription = $project->shift_description;
                     $headerObject->project->freelancers = Freelancer::all();
                     $headerObject->project->serviceProviders = ServiceProvider::without(['contacts'])->get();
@@ -1743,11 +1735,13 @@ class ProjectController extends Controller
                         shiftQualificationService: $shiftQualificationService,
                     );
                 }
+
+                if ($component->type === 'ShiftContactPersonsComponent') {
+                    $headerObject->project->shift_contacts = $project->shift_contact;
+                    $headerObject->project->project_managers = $project->managerUsers;
+                }
             }
         }
-
-
-
 
 
         if (!$project->is_group) {
@@ -1779,8 +1773,6 @@ class ProjectController extends Controller
         }
 
         $headerObject->project->project_history = $historyArray;
-
-
         $headerObject->firstEventInProject = $project
             ->events()
             ->orderBy('start_time', 'ASC')
@@ -1814,108 +1806,8 @@ class ProjectController extends Controller
         $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
         $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
 
-
-
-        /*
-
-
-            'projectManagerIds' => $project->managerUsers()->pluck('user_id'),
-            'projectWriteIds' => $project->writeUsers()->pluck('user_id'),
-            'projectDeleteIds' => $project->delete_permission_users()->pluck('user_id'),
-            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-            'currentGroup' => $groupOutput,
-            'states' => ProjectStates::all(),
-            'projectGroups' => $project->groups()->get(),
-            'groupProjects' => Project::where('is_group', 1)->get(),
-            // needed for ProjectSecondSidenav
-            'categories' => Category::all(),
-            'projectCategoryIds' => $project->categories()->pluck('category_id'),
-            'projectCategories' => $project->categories,
-            'genres' => Genre::all(),
-            'projectGenreIds' => $project->genres()->pluck('genre_id'),
-            'projectGenres' => $project->genres,
-            'sectors' => Sector::all(),
-            'projectSectorIds' => $project->sectors()->pluck('sector_id'),
-            'projectSectors' => $project->sectors,
-            'projectState' => $project->state,
-            'access_budget' => $project->access_budget
-         */
-
-
-
-
         $dataObject = new stdClass();
         $dataObject->currentTab = $projectTab;
-
-
-        /*foreach ($projectTab->components()->with('component')->get() as $component) {
-            if ($component->component->type === 'ChecklistComponent') {
-                $loadedProjectInformation['ChecklistComponent'] = [
-                    'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
-                    'checklist_templates' => ChecklistTemplateIndexResource::collection(
-                        ChecklistTemplate::all()
-                    )->resolve(),
-                ];
-            }
-            if ($component->component->type === 'ProjectStateComponent') {
-                $loadedProjectInformation['ProjectStateComponent'] = ProjectStates::find($project->state);
-            }
-            if ($component->component->type === 'CalendarTab') {
-                $showCalendar = $calendar->createCalendarData(type: '', project: $project);
-                $eventsAtAGlance = [];
-
-                if (\request('atAGlance') === 'true') {
-                    $eventsQuery = $project->events();
-                    $filteredEvents = $calendar->filterEvents($eventsQuery, null, null, null, $project);
-
-                    $eventsAtAGlance = ProjectCalendarShowEventResource::collection(
-                        $filteredEvents
-                            ->with(['room','project','creator'])
-                            ->orderBy('start_time', 'ASC')
-                            ->get()
-                    )->collection->groupBy('room.id');
-                }
-
-                if (\request('startDate') && \request('endDate')) {
-                    $startDate = Carbon::create(\request('startDate'))->startOfDay();
-                    $endDate = Carbon::create(\request('endDate'))->endOfDay();
-                } else {
-                    $startDate = Carbon::now()->startOfDay();
-                    $endDate = Carbon::now()->addWeeks()->endOfDay();
-                }
-
-                $loadedProjectInformation['CalendarTab'] = [
-                    'eventsAtAGlance' => $eventsAtAGlance,
-                    'calendar' => $showCalendar['roomsWithEvents'],
-                    'dateValue' => $showCalendar['dateValue'],
-                    'days' => $showCalendar['days'],
-                    'selectedDate' => $showCalendar['selectedDate'],
-                    'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
-                    'events' => new CalendarEventCollectionResourceModel(
-                        areas: $showCalendar['filterOptions']['areas'],
-                        projects: $showCalendar['filterOptions']['projects'],
-                        eventTypes: $showCalendar['filterOptions']['eventTypes'],
-                        roomCategories: $showCalendar['filterOptions']['roomCategories'],
-                        roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
-                        events: $calendar->getEventsOfInterval($startDate, $endDate, $project),
-                        filter: Filter::query()->where('user_id', Auth::id())->get(),
-                    ),
-                    'filterOptions' => $showCalendar["filterOptions"],
-                    'personalFilters' => $showCalendar['personalFilters'],
-                    'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
-                    'user_filters' => $showCalendar['user_filters'],
-                ];
-            }
-            if ($component->component->type === 'ShiftTab') {
-
-            }
-            if ($component->component->type === 'BudgetTab') {
-
-            }
-        }
-
-        */
-
 
         return inertia('Projects/TabTest/TabContent', [
             'dataObject' => $dataObject,

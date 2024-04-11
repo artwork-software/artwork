@@ -2,7 +2,6 @@
 import SingleSidebarElement from "@/Pages/Settings/Components/Sidebar/SingleSidebarElement.vue";
 import IconLib from "@/mixins/IconLib.vue";
 import AddEditSidebarTab from "@/Pages/Settings/Components/Sidebar/AddEditSidebarTab.vue";
-import DropSidebarElement from "@/Pages/Settings/Components/Sidebar/DropSidebarElement.vue";
 import draggable from "vuedraggable";
 
 
@@ -11,7 +10,6 @@ export default {
     mixins: [IconLib],
     components: {
         draggable,
-        DropSidebarElement,
         AddEditSidebarTab,
         SingleSidebarElement
     },

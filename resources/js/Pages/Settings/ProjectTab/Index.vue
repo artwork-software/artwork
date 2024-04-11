@@ -9,15 +9,14 @@ import DragComponentElement from "@/Pages/Settings/Components/DragComponentEleme
 import IconLib from "@/mixins/IconLib.vue";
 import AddEditTabModal from "@/Pages/Settings/Components/AddEditTabModal.vue";
 import PlusButton from "@/Layouts/Components/General/Buttons/PlusButton.vue";
-import TabDropElement from "@/Pages/Settings/Components/TabDropElement.vue";
 
 export default {
     name: "Index",
     components: {
-        TabDropElement,
         PlusButton,
         AddEditTabModal,
-        DragComponentElement, SingleTabComponent, draggable, Link, IconDragDrop, ProjectTabs, AppLayout},
+        DragComponentElement, SingleTabComponent, draggable, Link, IconDragDrop, ProjectTabs, AppLayout
+    },
     props: ['tabs', 'components', 'componentsSpecial'],
     mixins: [IconLib],
     data() {

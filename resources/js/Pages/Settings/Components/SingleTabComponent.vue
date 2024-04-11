@@ -1,5 +1,4 @@
 <script>
-import {IconCopy, IconDotsVertical, IconDragDrop, IconEdit, IconTrash} from "@tabler/icons-vue";
 import draggable from "vuedraggable";
 import DropNewComponent from "@/Pages/Settings/Components/DropNewComponent.vue";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
@@ -7,7 +6,6 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import IconLib from "@/mixins/IconLib.vue";
 import AddEditTabModal from "@/Pages/Settings/Components/AddEditTabModal.vue";
 import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
-import TabDropElement from "@/Pages/Settings/Components/TabDropElement.vue";
 import SingleSidebarElement from "@/Pages/Settings/Components/Sidebar/SingleSidebarElement.vue";
 import AddEditSidebarTab from "@/Pages/Settings/Components/Sidebar/AddEditSidebarTab.vue";
 import SidebarConfigElement from "@/Pages/Settings/Components/Sidebar/SidebarConfigElement.vue";
@@ -19,7 +17,6 @@ export default {
         SidebarConfigElement,
         AddEditSidebarTab,
         SingleSidebarElement,
-        TabDropElement,
         ComponentIcons,
         AddEditTabModal,
         SvgCollection,

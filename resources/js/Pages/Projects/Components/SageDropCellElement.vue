@@ -36,13 +36,7 @@ export default {
                     multiple: false
                 }, {
                     preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        console.log('success');
-                    },
-                    onError: () => {
-                        console.log('error');
-                    }
+                    preserveScroll: true
                 });
             }
 

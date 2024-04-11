@@ -135,7 +135,6 @@ export default defineComponent({
                 }
             });
             if (!hasInvalid) {
-                console.log('is valid')
                 if (this.showAddTimeLineForm) {
                     if (this.checkTime()) {
                         this.addTimeLineForm.post(
@@ -144,7 +143,6 @@ export default defineComponent({
                                 preserveState: true,
                                 preserveScroll: true,
                                 onFinish: () => {
-                                    console.log('before')
                                     //handle existing timelines which may be updated
                                     this.updateTimes();
                                 }
@@ -153,13 +151,11 @@ export default defineComponent({
                     }
                     return;
                 }
-                console.log('update')
                 //handle existing timelines which may be updated
                 this.updateTimes();
             }
         },
         updateTimes(){
-            console.log('in update');
             this.$inertia.patch(route('preset.timeline.update'), {
                 timelines: this.timeLine
             }, {

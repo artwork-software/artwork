@@ -5,21 +5,15 @@ namespace App\Http\Controllers;
 use App\Enums\TabComponentEnums;
 use Artwork\Modules\ProjectTab\Models\Component;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ComponentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): \Inertia\ResponseFactory|\Inertia\Response
+    public function index(): Response
     {
-        // get all TabComponentsEnum names
         $tabComponentTypes = TabComponentEnums::getValues();
-        // return inertia view with components and special components
-
-
-
-        return inertia('Settings/ComponentManagement/Index', [
+        return Inertia::render('Settings/ComponentManagement/Index', [
             'components' => Component::notSpecial()->get()->groupBy('type'),
             'componentsSpecial' => Component::isSpecial()->get(),
             'tabComponentTypes' => $tabComponentTypes
@@ -27,54 +21,44 @@ class ComponentController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): void
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request): void
     {
-        Component::create([
+        /** @var Component $component */
+        $component = Component::create([
             'name' => $request->name,
             'type' => $request->type,
             'data' => $request->data,
+            'permission_type' => $request->permission_type,
             'special' => false,
             'sidebar_enabled' => true
         ]);
+
+        foreach ($request->get('users', []) as $user) {
+            $component->users()->attach($user['user_id'], ['can_write' => $user['can_write']]);
+        }
+
+        foreach ($request->get('departments', []) as $department) {
+            $component->departments()->attach($department['department_id'], ['can_write' => $department['can_write']]);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Component $component): void
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Component $component): void
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Component $component): void
     {
-        $component->update($request->only('name', 'data'));
+        $component->users()->detach();
+        foreach ($request->get('users', []) as $user) {
+            $component->users()->attach($user['user_id'], ['can_write' => $user['can_write']]);
+        }
+
+        $component->departments()->detach();
+        foreach ($request->get('departments', []) as $department) {
+            $component->departments()->attach($department['department_id'], ['can_write' => $department['can_write']]);
+        }
+
+        $component->update($request->only('name', 'data', 'permission_type'));
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Component $component): void
     {
         // first check if the component has projectValues attached

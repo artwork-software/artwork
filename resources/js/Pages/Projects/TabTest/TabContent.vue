@@ -27,18 +27,40 @@ import ProjectDocumentsComponent from "@/Pages/Projects/Components/ProjectDocume
 import ProjectAllDocumentsComponent from "@/Pages/Projects/Components/ProjectAllDocumentsComponent.vue";
 import ChecklistAllComponent from "@/Pages/Projects/Components/ChecklistAllComponent.vue";
 import CommentAllTab from "@/Pages/Projects/Components/TabComponents/CommentAllTab.vue";
+import Permissions from "@/mixins/Permissions.vue";
 export default {
     name: "TabContent",
+    mixins: [Permissions],
     computed: {
     },
     components: {
         Link,
         BaseSidenav,
         ProjectHeaderComponent,
-        TextField, Checkbox, Title, TextArea, DropDown, ProjectStateComponent, CalendarTab, ShiftTab,
-        BudgetTab, ProjectBudgetDeadlineComponent, SeparatorComponent, ProjectGroupComponent, ProjectTeamComponent, ProjectAttributesComponent, RelevantDatesForShiftPlanningComponent,
-        ShiftContactPersonsComponent, GeneralShiftInformationComponent, CommentTab, ProjectTitleComponent, ChecklistComponent, ProjectDocumentsComponent, ProjectAllDocumentsComponent,
-        ChecklistAllComponent, CommentAllTab
+        TextField,
+        Checkbox,
+        Title,
+        TextArea,
+        DropDown,
+        ProjectStateComponent,
+        CalendarTab,
+        ShiftTab,
+        BudgetTab,
+        ProjectBudgetDeadlineComponent,
+        SeparatorComponent,
+        ProjectGroupComponent,
+        ProjectTeamComponent,
+        ProjectAttributesComponent,
+        RelevantDatesForShiftPlanningComponent,
+        ShiftContactPersonsComponent,
+        GeneralShiftInformationComponent,
+        CommentTab,
+        ProjectTitleComponent,
+        ChecklistComponent,
+        ProjectDocumentsComponent,
+        ProjectAllDocumentsComponent,
+        ChecklistAllComponent,
+        CommentAllTab
     },
     props: {
         headerObject: {
@@ -62,7 +84,6 @@ export default {
     },
     methods: {
         removeML(componentType) {
-            console.log(componentType)
             if(
                 componentType === 'CalendarTab' ||
                 componentType === 'ShiftTab' ||
@@ -84,6 +105,8 @@ export default {
         <div class="my-10 w-full">
             <div v-for="component in dataObject.currentTab.components"  :class="removeML(component.component?.type)">
                 <Component
+                    v-if="this.$canSeeComponent(component.component)"
+                    :can-edit-component="this.$canEditComponent(component.component)"
                     :project="headerObject.project"
                     :in-sidebar="false"
                     :is="component.component?.type"

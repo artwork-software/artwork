@@ -24,6 +24,10 @@ export default {
         inSidebar: {
             type: Boolean,
             required: false
+        },
+        canEditComponent: {
+            type: Boolean,
+            required: true
         }
     },
     data() {
@@ -51,8 +55,7 @@ export default {
 </script>
 
 <template>
-
-    <Listbox as="div" v-model="checkedData.selected">
+    <Listbox as="div" v-model="checkedData.selected" :disabled="!this.canEditComponent">
         <ListboxLabel class="block text-sm font-medium leading-6"  :class="inSidebar ? 'text-white' : 'text-gray-900'">
             {{ data.data.label }}
         </ListboxLabel>

@@ -4,7 +4,7 @@
             <div class="sLight">
                 {{ $t('General shift information') }}
             </div>
-            <div>
+            <div v-if="this.canEditComponent">
                 <PencilAltIcon class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                                @click="openShiftInformationModal"/>
             </div>
@@ -37,7 +37,8 @@ export default defineComponent({
     },
     props: [
         'project',
-        'inSidebar'
+        'inSidebar',
+        'canEditComponent'
     ],
     data() {
         return {

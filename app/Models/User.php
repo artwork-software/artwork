@@ -13,6 +13,8 @@ use Artwork\Modules\Notification\Models\NotificationSetting;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
+use Artwork\Modules\ProjectTab\Models\Component;
+use Artwork\Modules\ProjectTab\Models\ComponentUser;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftUser;

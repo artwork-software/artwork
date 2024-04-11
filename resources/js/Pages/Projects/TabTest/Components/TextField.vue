@@ -1,7 +1,12 @@
 <script>
 export default {
     name: "TextField",
-    props: ['data', 'projectId', 'inSidebar'],
+    props: [
+        'data',
+        'projectId',
+        'inSidebar',
+        'canEditComponent'
+    ],
     data() {
         return {
             textData: {
@@ -29,12 +34,13 @@ export default {
         </label>
         <div class="mt-2">
             <input type="text"
+                   :disabled="!this.canEditComponent"
                    @focusout="updateTextData"
                    v-model="textData.text"
                    :placeholder="textData.text"
                    name="email" id="email"
                    class="h-10 placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
-                   :class="inSidebar ? 'bg-primary text-white' : 'inputMain '"
+                   :class="inSidebar ? 'bg-primary text-white' : 'inputMain'"
             />
         </div>
     </div>

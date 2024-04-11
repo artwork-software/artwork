@@ -4,7 +4,7 @@
             <h2 class=" xWhiteBold">{{ $t('Project team') }}</h2>
             <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                       @click="showTeamModal = true"
-                      v-if="projectMembersWriteAccess() || hasAdminRole()"
+                      v-if="this.canEditComponent && (projectMembersWriteAccess() || hasAdminRole())"
             />
         </div>
         <div class="flex w-full mt-2 flex-wrap">
@@ -77,7 +77,8 @@ export default defineComponent({
     },
     props: [
         'project',
-        'inSidebar'
+        'inSidebar',
+        'canEditComponent'
     ],
     data() {
         return {

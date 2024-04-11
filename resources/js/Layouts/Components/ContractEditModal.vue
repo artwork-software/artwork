@@ -492,8 +492,6 @@ export default {
                  userIds.push(user.id);
             })
 
-            console.log(userIds);
-
             this.contractForm.accessibleUsers = userIds;
             this.contractForm.tasks = this.tasks
             this.contractForm.patch(this.route('contracts.update', this.contract.id), {

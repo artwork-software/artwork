@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Artwork\Modules\Craft\Models\Craft;
 use Illuminate\Database\Seeder;
 
-class CraftSeed extends Seeder
+class CraftSeeder extends Seeder
 {
     /**
      * Run the database seeds.

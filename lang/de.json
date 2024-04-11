@@ -1725,5 +1725,11 @@
     "All Project Documents": "Alle Dokumente",
     "ChecklistAllComponent": "Alle Checklisten-Komponente",
     "CommentAllTab": "Alle Kommentare-Komponente",
-    "ProjectAllDocumentsComponent": "Alle Dokumente-Komponente"
+    "ProjectAllDocumentsComponent": "Alle Dokumente-Komponente",
+    "Show a separator line": "Trennlinie anzeigen",
+    "Configure component permissions": "Komponenten-Berechtigungen konfigurieren",
+    "Everyone can see and edit": "Alle dürfen sehen und bearbeiten",
+    "Everyone can see, but editing is just allowed for:":"Alle dürfen sehen, aber bearbeiten darf nur:",
+    "Search for teams and/or users": "Teams und/oder Nutzer*innen suchen",
+    "The permissions for this component are administered via the user settings and the project.": "Die Berechtigungen für diese Komponente werden über die Benutzereinstellungen und das Projekt administriert."
 }

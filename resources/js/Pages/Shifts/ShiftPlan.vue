@@ -829,7 +829,6 @@ export default {
                 // Erstelle eine Kopie von shiftsAreChecked, um zu bestimmen, welche entfernt wurden
                 let currentCheckedIds = [...this.shiftsAreChecked];
 
-                console.log('hier')
                 // Durchlaufe den neuen shiftPlan, um Änderungen zu identifizieren
                 newShiftPlan.forEach(room => {
                     this.days.forEach(day => {

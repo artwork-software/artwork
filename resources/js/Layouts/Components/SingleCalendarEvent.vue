@@ -455,7 +455,6 @@ export default {
                 heightSubtraction += 17;
             }
             if (this.$page.props.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)) {
-                console.log("event");
                 heightSubtraction += 20;
             }
             if (this.$page.props.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)) {

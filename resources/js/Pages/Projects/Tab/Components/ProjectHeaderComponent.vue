@@ -45,48 +45,6 @@ export default {
             projectToDelete: null
         }
     },
-    computed: {
-        tabs() {
-            return [
-                {
-                    name: this.$t('Project information'),
-                    href: route('projects.show.info', {project: this.project.id}),
-                    current: this.openTab === 'info',
-                    show: true
-                },
-                {
-                    name: this.$t('Schedule'),
-                    href: route('projects.show.calendar', {project: this.project.id}),
-                    current: this.openTab === 'calendar',
-                    show: true
-                },
-                {
-                    name: this.$t('Checklists'),
-                    href: route('projects.show.checklist', {project: this.project.id}),
-                    current: this.openTab === 'checklist',
-                    show: true
-                },
-                {
-                    name: this.$t('Shifts'),
-                    href: route('projects.show.shift', {project: this.project.id}),
-                    current: this.openTab === 'shift',
-                    show: this.hasAdminRole() || this.$can('can plan shifts')
-                },
-                {
-                    name: this.$t('Budget'),
-                    href: route('projects.show.budget', {project: this.project.id}),
-                    current: this.openTab === 'budget',
-                    show: this.hasAdminRole() || this.hasBudgetAccess() || this.projectManagerIds.includes(this.$page.props.user.id) || this.$canAny(['can manage global project budgets','can manage all project budgets without docs'])
-                },
-                {
-                    name: this.$t('Comments'),
-                    href: route('projects.show.comment', {project: this.project.id}),
-                    current: this.openTab === 'comment',
-                    show: true
-                },
-            ]
-        },
-    },
     methods: {
         hasBudgetAccess() {
             return this.access_budget.filter((user) => user.id === this.$page.props.user.id).length > 0;
@@ -276,7 +234,7 @@ export default {
                     <div class="border-gray-200">
                         <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                             <Link v-for="tab in headerObject.tabs" :key="tab?.name"
-                                  :href="route('project.tab.test', {project: headerObject.project.id, projectTab: tab.id})"
+                                  :href="route('projects.tab', {project: headerObject.project.id, projectTab: tab.id})"
                                   :class="[tab.id === headerObject.currentTabId ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
                                   :aria-current="tab.id === headerObject.currentTabId ? 'page' : undefined">
                                 {{ tab.name }}

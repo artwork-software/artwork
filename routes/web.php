@@ -275,22 +275,25 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])
         ->name('projects.update_team');
-
+    Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
+        ->name('projects.export.budget');
 
     //ProjectTabs
+    Route::get('/projects/{project}/tab/{projectTab}', [ProjectController::class, 'projectTab'])
+        ->name('projects.tab');
+
     Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])
         ->name('projects.show.info')
         ->middleware(CanViewProject::class);
     Route::get('/projects/{project}/calendar', [ProjectController::class, 'projectCalendarTab'])
         ->name('projects.show.calendar')->middleware(CanViewProject::class);
-    ;
+
     Route::get('/projects/{project}/checklist', [ProjectController::class, 'projectChecklistTab'])
         ->name('projects.show.checklist')->middleware(CanViewProject::class);
-    ;
+
     Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])
         ->name('projects.show.shift')->can('can plan shifts');
-    Route::get('/projects/{project}/export/budget', [ProjectController::class, 'projectBudgetExport'])
-        ->name('projects.export.budget');
+
     Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])
         ->name('projects.show.comment')->middleware(CanViewProject::class);
 
@@ -1160,10 +1163,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         Route::patch('update/{dayService}', [\App\Http\Controllers\DayServiceController::class, 'update'])
             ->name('day-service.update');
     });
-
-
-    Route::get('/test/project/{project}/tab/{projectTab}', [ProjectController::class, 'projectTabTest'])
-        ->name('project.tab.test');
 
     Route::group(['prefix' => 'settings'], function (): void {
         Route::group(['prefix' => 'tab'], function (): void {

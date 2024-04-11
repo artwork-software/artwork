@@ -45,7 +45,6 @@ return new class extends Migration
                     TabComponentEnums::CHECKLIST_ALL->value,
                 ]
             )->default(TabComponentEnums::TEXT_FIELD->value);
-            $table->string('preview')->nullable();
             $table->json('data')->nullable();
             $table->boolean('special')->default(false);
             $table->boolean('sidebar_enabled')->default(true);

@@ -9,7 +9,6 @@ use App\Models\ContractType;
 use App\Models\Currency;
 use App\Models\Genre;
 use App\Models\Sector;
-use Artwork\Modules\Project\Models\ProjectHeadline;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,10 +56,6 @@ class CategoryController extends Controller
             'currencies' => Currency::all()->map(fn($currency) => [
                 'id' => $currency->id,
                 'name' => $currency->name,
-            ]),
-            'project_headlines' => ProjectHeadline::orderBy('order')->get()->map(fn($headline) => [
-                'id' => $headline->id,
-                'name' => $headline->name,
             ]),
             'states' => ProjectStates::all()->map(fn($state) => [
                 'id' => $state->id,

@@ -4,6 +4,7 @@ namespace Artwork\Modules\ProjectTab\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ComponentInTab extends Model
 {
@@ -13,12 +14,12 @@ class ComponentInTab extends Model
         'project_tab_id',
         'component_id',
         'order',
-        'data'
+        'scope'
     ];
 
     protected $with = ['component'];
 
-    public function component(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function component(): BelongsTo
     {
         return $this->belongsTo(Component::class, 'component_id', 'id', 'component');
     }

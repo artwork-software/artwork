@@ -83,18 +83,6 @@
                     @add="addCurrency"
                     @openDeleteModal="openDeleteCurrencyModal"
                 />
-
-                <ProjectSettingsItem
-                    :title="$t('Project Headlines')"
-                    :description="$t('Define project headlines that can be assigned to projects later.')"
-                    :input-label="$t('Enter Project Headline')"
-                    :items="project_headlines"
-                    item-style="list"
-                    @add="addProjectHeadline"
-                    @open-edit-modal="openEditProjectHeadlineModal"
-                    @openDeleteModal="openDeleteProjectHeadlineModal"
-                />
-
             </div>
         </div>
 
@@ -161,24 +149,6 @@
             @delete="deleteCurrency"
             @closeModal="closeDeleteCurrencyModal"
         />
-
-        <ProjectSettingsDeleteModal
-            :show="deletingProjectHeadline"
-            :title="$t('Delete Project Headline')"
-            :description="$t('Are you sure you want to delete the project headline {headline} from the system?',{ headline: projectHeadlineToDelete?.name})"
-            @delete="deleteProjectHeadline"
-            @closeModal="closeDeleteProjectHeadlineModal"
-        />
-
-        <ProjectSettingsEditModal
-            :show="editingProjectHeadline"
-            :title="$t('Edit Project Headline')"
-            :editedItem="projectHeadlineToEdit"
-            :description="$t('Edit the selected project headline.')"
-            @update="updateProjectHeadline"
-            @closeModal="closeEditProjectHeadlineModal"
-        />
-
     </app-layout>
 </template>
 
@@ -222,7 +192,16 @@ export default {
         PencilAltIcon,
         XIcon
     },
-    props: ['genres', 'categories', 'sectors', 'contractTypes', 'companyTypes', 'collectingSocieties','currencies', 'project_headlines', 'states'],
+    props: [
+        'genres',
+        'categories',
+        'sectors',
+        'contractTypes',
+        'companyTypes',
+        'collectingSocieties',
+        'currencies',
+        'states'
+    ],
     data() {
         return {
             genreToDelete: null,
@@ -239,10 +218,6 @@ export default {
             collectingSocietyToDelete: null,
             deletingCurrency: false,
             currencyToDelete: null,
-            deletingProjectHeadline: false,
-            projectHeadlineToDelete: null,
-            projectHeadlineToEdit: null,
-            editingProjectHeadline: false,
             deletingState: false,
             stateToDelete: null
         }
@@ -371,37 +346,6 @@ export default {
         deleteCurrency() {
             this.$inertia.delete(`/currencies/${this.currencyToDelete.id}`, { preserveScroll: true});
             this.closeDeleteCurrencyModal();
-        },
-        addProjectHeadline(headlineInput) {
-            if(headlineInput !== ''){
-                this.$inertia.post(route('project_headlines.store'), {name: headlineInput}, { preserveScroll: true});
-            }
-        },
-        updateProjectHeadline(headlineInput) {
-            if(headlineInput !== ''){
-                this.$inertia.patch(route('project_headlines.update', this.projectHeadlineToEdit.id), {name: headlineInput}, { preserveScroll: true});
-            }
-            this.closeEditProjectHeadlineModal()
-        },
-        openDeleteProjectHeadlineModal(headline) {
-            this.projectHeadlineToDelete = headline;
-            this.deletingProjectHeadline = true;
-        },
-        closeDeleteProjectHeadlineModal() {
-            this.deletingProjectHeadline = false;
-            this.projectHeadlineToDelete = null;
-        },
-        openEditProjectHeadlineModal(headline) {
-            this.projectHeadlineToEdit = headline;
-            this.editingProjectHeadline = true;
-        },
-        closeEditProjectHeadlineModal() {
-            this.editingProjectHeadline = false;
-            this.projectHeadlineToEdit = null;
-        },
-        deleteProjectHeadline() {
-            this.$inertia.delete(`/project_headlines/${this.projectHeadlineToDelete.id}`, { preserveScroll: true});
-            this.closeDeleteProjectHeadlineModal();
         },
         addState(stateInput, stateColor){
             this.$inertia.post(route('state.store'), {

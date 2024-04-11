@@ -172,40 +172,211 @@ class DefaultComponentSeeder extends Seeder
             ]
         ];
 
-
-        $tabs = [
-            [
-                'name' => 'Project Information',
-                'order' => 1
-            ],
-            [
-                'name' => 'Project Team',
-                'order' => 2
-            ],
-            [
-                'name' => 'Shift Planning',
-                'order' => 3
-            ],
-            [
-                'name' => 'Budget',
-                'order' => 4
-            ],
-            [
-                'name' => 'Documents',
-                'order' => 5
-            ],
-            [
-                'name' => 'Comments',
-                'order' => 6
-            ]
-        ];
-
         foreach ($components as $component) {
             Component::create($component);
         }
 
-        foreach ($tabs as $tab) {
-            ProjectTab::create($tab);
-        }
+        $this->createProjectInformationTab();
+        $this->createScheduleTab();
+        $this->createChecklistsTab();
+        $this->createShiftsTab();
+        $this->createBudgetTab();
+        $this->createCommentsTab();
+    }
+
+    private function createProjectInformationTab(): void
+    {
+        /** @var ProjectTab $projectInformationTab */
+        $projectInformationTab = ProjectTab::create([
+            'name' => 'Project Information',
+            'order' => 1
+        ]);
+
+        $shortDescriptionLabel = Component::create([
+            'name' => 'Short Description',
+            'type' => TabComponentEnums::TITLE,
+            'data' => [
+                'title' => 'Short Description'
+            ],
+            'special' => false,
+            'sidebar_enabled' => true,
+            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+        ]);
+
+        $projectInformationTab->components()->create([
+            'component_id' => $shortDescriptionLabel->id,
+            'order' => 1,
+        ]);
+
+        /** @var Component $shortDescriptionComponent */
+        $shortDescriptionComponent = Component::create([
+            'name' => 'Short Description',
+            'type' => TabComponentEnums::TEXT_AREA,
+            'data' => [
+                'label' => '',
+                'text' => '',
+                'placeholder' => 'Short Description'
+            ],
+            'special' => false,
+            'sidebar_enabled' => true,
+            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+        ]);
+
+        $projectInformationTab->components()->create([
+            'component_id' => $shortDescriptionComponent->id,
+            'order' => 2,
+        ]);
+
+        $websiteTextTitleComponent = Component::create([
+            'name' => 'Website-Text',
+            'type' => TabComponentEnums::TITLE,
+            'data' => [
+                'title' => 'Website-Text',
+            ],
+            'special' => false,
+            'sidebar_enabled' => true,
+            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+        ]);
+
+        $projectInformationTab->components()->create([
+            'component_id' => $websiteTextTitleComponent->id,
+            'order' => 3,
+        ]);
+
+        $websiteTextComponent = Component::create([
+            'name' => 'Website-Text',
+            'type' => TabComponentEnums::TEXT_AREA,
+            'data' => [
+                'label' => '',
+                'text' => '',
+                'placeholder' => 'Website-Text'
+            ],
+            'special' => false,
+            'sidebar_enabled' => true,
+            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+        ]);
+
+        $projectInformationTab->components()->create([
+            'component_id' => $websiteTextComponent->id,
+            'order' => 4,
+        ]);
+
+        $oeaTitleComponent = Component::create([
+            'name' => 'ÖA',
+            'type' => TabComponentEnums::TITLE,
+            'data' => [
+                'title' => 'ÖA',
+            ],
+            'special' => false,
+            'sidebar_enabled' => true,
+            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+        ]);
+
+        $projectInformationTab->components()->create([
+            'component_id' => $oeaTitleComponent->id,
+            'order' => 5,
+        ]);
+
+        $oeaComponent = Component::create([
+            'name' => 'ÖA',
+            'type' => TabComponentEnums::TEXT_AREA,
+            'data' => [
+                'label' => '',
+                'text' => '',
+                'placeholder' => 'ÖA'
+            ],
+            'special' => false,
+            'sidebar_enabled' => true,
+            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+        ]);
+
+        $projectInformationTab->components()->create([
+            'component_id' => $oeaComponent->id,
+            'order' => 6,
+        ]);
+
+        $documentsComponent = Component::create([
+            'name' => 'Project-Documents',
+            'type' => TabComponentEnums::PROJECT_DOCUMENTS,
+            'data' => [],
+            'special' => false,
+            'sidebar_enabled' => true,
+            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
+        ]);
+
+        $projectInformationTab->components()->create([
+            'component_id' => $documentsComponent->id,
+            'order' => 7,
+        ]);
+    }
+
+    private function createScheduleTab(): void
+    {
+        /** @var ProjectTab $scheduleTab */
+        $scheduleTab = ProjectTab::create([
+            'name' => 'Schedule',
+            'order' => 2
+        ]);
+
+        $scheduleTab->components()->create([
+            'component_id' => Component::query()->where('name', 'Calendar')->first()->id,
+            'order' => 1,
+        ]);
+    }
+
+    private function createChecklistsTab(): void
+    {
+        /** @var ProjectTab $checklistsTab */
+        $checklistsTab = ProjectTab::create([
+            'name' => 'Checklists',
+            'order' => 3
+        ]);
+
+        $checklistsTab->components()->create([
+            'component_id' => Component::query()->where('name', 'Checklist')->first()->id,
+            'order' => 1,
+        ]);
+    }
+
+    private function createShiftsTab(): void
+    {
+        /** @var ProjectTab $shiftsTab */
+        $shiftsTab = ProjectTab::create([
+            'name' => 'Shifts',
+            'order' => 4
+        ]);
+
+        $shiftsTab->components()->create([
+            'component_id' => Component::query()->where('name', 'Shift Tab')->first()->id,
+            'order' => 1,
+        ]);
+    }
+
+    private function createBudgetTab(): void
+    {
+        /** @var ProjectTab $budgetTab */
+        $budgetTab = ProjectTab::create([
+            'name' => 'Budget',
+            'order' => 5
+        ]);
+
+        $budgetTab->components()->create([
+            'component_id' => Component::query()->where('name', 'Budget')->first()->id,
+            'order' => 1,
+        ]);
+    }
+
+    private function createCommentsTab(): void
+    {
+        /** @var ProjectTab $commentsTab */
+        $commentsTab = ProjectTab::create([
+            'name' => 'Comments',
+            'order' => 6
+        ]);
+
+        $commentsTab->components()->create([
+            'component_id' => Component::query()->where('name', 'Comment Tab')->first()->id,
+            'order' => 1,
+        ]);
     }
 }

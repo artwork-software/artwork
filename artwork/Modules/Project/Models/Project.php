@@ -55,12 +55,8 @@ class Project extends Model
     use Searchable;
     use HasChangesHistory;
 
-    /**
-     * @var User[]|Collection|\LaravelIdea\Helper\App\Models\_IH_User_C|mixed
-     */
     protected $fillable = [
         'name',
-        'description',
         'shift_description',
         'number_of_participants',
         'cost_center_id',
@@ -113,13 +109,6 @@ class Project extends Model
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
             ->using(ProjectUserPivot::class)
             ->withPivot('access_budget', 'is_manager', 'can_write', 'delete_permission');
-    }
-
-
-    public function headlines(): BelongsToMany
-    {
-        return $this->belongsToMany(ProjectHeadline::class, 'project_project_headlines', 'project_id')
-            ->withPivot('text');
     }
 
     //@todo: fix phpcs error - refactor function name to accessBudget

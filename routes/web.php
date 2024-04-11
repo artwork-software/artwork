@@ -44,7 +44,6 @@ use App\Http\Controllers\PresetTimeLineController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\ProjectStatesController;
-use App\Http\Controllers\ProjectHeadlineController;
 use App\Http\Controllers\RoomAttributeController;
 use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
@@ -949,21 +948,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.delete');
     Route::patch('/currencies/{currency}/restore', [CurrencyController::class, 'restore'])->name('currencies.restore');
     Route::delete('/currencies/{id}/force', [CurrencyController::class, 'forceDelete'])->name('currencies.force');
-
-    // Project Headlines
-    Route::post('/project_headlines', [ProjectHeadlineController::class, 'store'])->name('project_headlines.store');
-    Route::put('/project_headlines/order', [ProjectHeadlineController::class, 'updateOrder'])
-        ->name('project_headlines.order');
-    Route::patch('/project_headlines/{project_headline}', [ProjectHeadlineController::class, 'update'])
-        ->name('project_headlines.update');
-    Route::patch(
-        '/project_headlines/{project_headline}/{project}/text',
-        [ProjectHeadlineController::class, 'updateText']
-    )->name('project_headlines.update.text');
-    Route::delete(
-        '/project_headlines/{project_headline}',
-        [ProjectHeadlineController::class, 'destroy']
-    )->name('project_headlines.delete');
 
     // Project States
     Route::post('/state', [ProjectStatesController::class, 'store'])->name('state.store');

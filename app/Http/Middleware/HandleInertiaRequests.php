@@ -25,6 +25,7 @@ class HandleInertiaRequests extends Middleware
         return array_merge(
             parent::share($request),
             [
+                'name' => config('app.name'),
                 'small_logo' => $generalSettings->small_logo_path !== "" ?
                     Storage::disk('public')->url($generalSettings->small_logo_path) :
                     null,

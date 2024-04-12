@@ -16,7 +16,14 @@ export default {
         onDrop(event) {
             this.$emit('tabOpened', this.tab.id);
             event.preventDefault();
-            const data = JSON.parse(event.dataTransfer.getData('application/json'));
+
+            // add check if JSON is valid
+            if (!event.dataTransfer?.getData('application/json')) {
+                this.dropOver = false;
+                return;
+            }
+
+            const data = JSON?.parse(event.dataTransfer?.getData('application/json'));
 
 
             if(this.isSidebar && !data.sidebar_enabled) {

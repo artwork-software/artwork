@@ -98,6 +98,12 @@
                                                 <input type="range" v-model="textData.height" min="0" max="150" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
                                             </div>
                                         </div>
+                                        <div class="mb-1" v-if="index === 'title_size'">
+                                            <label :for="index" class="xsLight">{{ $t('Font Size - ({0} pixels)', [textData.title_size])}}</label>
+                                            <div class="mt-1">
+                                                <input type="range" v-model="textData.title_size" min="10" max="35" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
+                                            </div>
+                                        </div>
                                         <div class="relative flex items-start"  v-if="index === 'showLine'">
                                             <div class="flex h-6 items-center">
                                                 <input :id="index"  v-model="textData.showLine" :checked="textData.showLine" aria-describedby="comments-description" name="comments" type="checkbox" class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300" />

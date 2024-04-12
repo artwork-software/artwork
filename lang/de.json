@@ -1690,6 +1690,7 @@
     "Text": "Text",
     "label": "Beschriftung",
     "Height - ({0} pixels)": "Höhe - ({0} Pixel)",
+    "Font Size - ({0} pixels)": "Schriftgröße - ({0} Pixel)",
     "This checkbox is activated by default": "Dieses Kontrollkästchen ist standardmäßig aktiviert",
     "Add another option": "Weitere Option hinzufügen",
     "Standard Option": "Standard-Option",

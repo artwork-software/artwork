@@ -36,6 +36,9 @@ export default {
                 <div class="text-[10px] text-gray-500 font-light" v-if="component.data.height">
                     {{ component.data.height }} Pixel <span v-if="component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
                 </div>
+                <div class="text-[10px] text-gray-500 font-light" v-if="component.data.title_size">
+                    {{ component.data.title_size }} Pixel
+                </div>
             </div>
         </div>
     </div>

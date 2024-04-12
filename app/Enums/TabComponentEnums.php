@@ -80,6 +80,7 @@ enum TabComponentEnums: string
                 'name' => self::TITLE->value,
                 'availableFields' => [
                     'title' => '',
+                    'title_size' => 12,
                 ]
             ],
             self::SEPARATOR->value => [

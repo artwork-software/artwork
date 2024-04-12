@@ -9,11 +9,13 @@ import ComponentIcons from "@/Components/Globale/ComponentIcons.vue";
 import SingleSidebarElement from "@/Pages/Settings/Components/Sidebar/SingleSidebarElement.vue";
 import AddEditSidebarTab from "@/Pages/Settings/Components/Sidebar/AddEditSidebarTab.vue";
 import SidebarConfigElement from "@/Pages/Settings/Components/Sidebar/SidebarConfigElement.vue";
+import SingleComponent from "@/Pages/Settings/Components/SingleComponent.vue";
 
 export default {
     name: "SingleTabComponent",
     mixins: [IconLib],
     components: {
+        SingleComponent,
         SidebarConfigElement,
         AddEditSidebarTab,
         SingleSidebarElement,
@@ -54,27 +56,14 @@ export default {
                 preserveScroll: true
             });
         },
-        removeComponentFromTab(componentId) {
-            this.$inertia.delete(route('tab.remove.component', {projectTab: this.tab.id}),
-                {
-                    data: {
-                        component_id: componentId
-                    }
-                }
-            );
-        },
+
         removeTab() {
             this.$inertia.delete(route('tab.destroy', {projectTab: this.tab.id}));
         },
         editTab(){
             this.showAddEditModal = true;
         },
-        onDragStart(event) {
-            event.dataTransfer.setData(
-                'application/json',
-                JSON.stringify( this.tab )
-            );
-        },
+
         openTab(){
             this.tabClosed = false;
         }
@@ -84,7 +73,7 @@ export default {
 
 <template>
     <!-- DropTabComponent -->
-<div class="border rounded-md px-4 py-5 bg-gray-50/50" draggable="true" @dragstart="onDragStart">
+<div class="border rounded-md px-4 py-5 bg-gray-50/50">
     <div class="flex items-center justify-between hover:cursor-grab pb-3 border-b border-dashed border-gray-300">
         <div class="flex items-center gap-2 cursor-pointer" @click="tabClosed = !tabClosed">
             <h3 class="headline3">{{ tab.name }}</h3>
@@ -140,68 +129,8 @@ export default {
                <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="tab.components" @start="dragging=true" @end="dragging=false" @change="updateComponentOrder(tab.components)">
                    <template #item="{element}" :key="element.id">
                        <div v-show="!element.temporary" class="" @mouseover="showMenu = element.id" :key="element.id" @mouseout="showMenu = null">
-                           <div class="flex group w-full items-center">
-                               <div class="flex items-center bg-artwork-project-background py-5 px-4 my-1 rounded-lg flex-wrap w-full" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                   <div class="flex justify-between w-full items-center">
-                                       <div class="w-full">
-                                           <div class="grid gird-cols-1 md:grid-cols-12">
-                                               <div class="col-span-6 flex items-center gap-x-3">
-                                                   <ComponentIcons :type="element.component.type" />
-                                                   <div class="">
-                                                       <span v-if="element.component.special">
-                                                           {{ $t(element.component.name) }}
-                                                       </span>
-                                                       <span v-else>
-                                                           {{element.component.name }}
-                                                       </span>
-                                                       <div class="text-[10px] text-gray-500 font-light" v-if="element.component.data.height">
-                                                           {{ element.component.data.height }} Pixel <span v-if="element.component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
-                                                       </div>
-                                                   </div>
+                            <SingleComponent :element="element" :tab="tab" />
 
-                                               </div>
-                                               <div class="col-span-2 text-xs flex items-center">
-                                                   {{ $t(element.component.type)}}
-                                               </div>
-                                           </div>
-                                       </div>
-                                       <IconDragDrop class="xsDark h-5 w-5 hidden group-hover:block"/>
-                                       <div  class="hidden group-hover:block">
-                                           <Menu as="div" class="my-auto relative">
-                                               <div class="flex">
-                                                   <MenuButton
-                                                       class="flex">
-                                                       <IconDotsVertical stroke-width="1.5"
-                                                                         class="flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                                         aria-hidden="true"/>
-                                                   </MenuButton>
-                                               </div>
-                                               <transition enter-active-class="transition ease-out duration-100"
-                                                           enter-from-class="transform opacity-0 scale-95"
-                                                           enter-to-class="transform opacity-100 scale-100"
-                                                           leave-active-class="transition ease-in duration-75"
-                                                           leave-from-class="transform opacity-100 scale-100"
-                                                           leave-to-class="transform opacity-0 scale-95">
-                                                   <MenuItems
-                                                       class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                       <div class="py-1">
-                                                           <MenuItem v-slot="{ active }">
-                                                               <a href="#" @click="removeComponentFromTab(element.id)"
-                                                                  :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                   <IconTrash stroke-width="1.5"
-                                                                              class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                              aria-hidden="true"/>
-                                                                   {{ $t('Delete') }}
-                                                               </a>
-                                                           </MenuItem>
-                                                       </div>
-                                                   </MenuItems>
-                                               </transition>
-                                           </Menu>
-                                       </div>
-                                   </div>
-                               </div>
-                           </div>
                            <DropNewComponent :is-sidebar="false" :tab="tab" :order="element.order + 1" @tab-opened="openTab" />
                        </div>
                    </template>

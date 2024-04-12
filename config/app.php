@@ -1,7 +1,11 @@
 <?php
 
+use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\Facades\Storage;
 
+/** @var GeneralSettings $generalSettings */
+$generalSettings = app(GeneralSettings::class);
 return [
 
     /*
@@ -16,7 +20,6 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
-
     /*
     |--------------------------------------------------------------------------
     | Application Environment

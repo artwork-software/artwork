@@ -546,7 +546,7 @@
     "Are you sure you want to delete the selected file from the project?": "Are you sure you want to delete the selected file from the project?",
     "Delete series entry completely": "Delete series entry completely",
     "Continue without saving": "Continue without saving",
-    "Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted.": "Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted.",
+    "Only logos and illustrations of the type .jpeg, .svg, .png, .webp and .gif are accepted.": "Only logos and illustrations of the type .jpeg, .svg, .png, .webp and .gif are accepted.",
     "Select project status": "Select project status",
     "Belongs to project group": "Belongs to project group",
     "No project group has been created yet": "No project group has been created yet",
@@ -1665,5 +1665,8 @@
     "Please enter a shift end time.": "Bitte gib einen Endzeitpunkt an.",
     "Import individual booking days again. Existing data is overwritten with new data.": "Import individual booking days again. Existing data is overwritten with new data.",
     "Please configure the Sage interface first.": "Please configure the Sage interface first.",
-    "Import a specific booking date": "Import a specific booking date"
+    "Import a specific booking date": "Import a specific booking date",
+    "The small logo field must not be greater than 2048 kilobytes.": "The small logo field must not be greater than 2048 kilobytes.",
+    "The big logo field must not be greater than 2048 kilobytes.": "The big logo field must not be greater than 2048 kilobytes.",
+    "The banner field must not be greater than 2048 kilobytes.": "The banner field must not be greater than 2048 kilobytes."
 }

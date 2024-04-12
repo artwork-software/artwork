@@ -206,8 +206,17 @@
                     </div>
                 </div>
                 <div v-else>
-                    <SingleRoomCalendarComponent  :personal-filters="personalFilters" :filter-options="filterOptions" :eventsWithoutRoom="eventsWithoutRoom" :dateValue="dateValue" :eventTypes=this.event_types
-                                                 :calendarData="calendar" :days="days" :rooms="rooms" :user_filters="user_filters" />
+                    <SingleRoomCalendarComponent  :personal-filters="personalFilters"
+                                                  :filter-options="filterOptions"
+                                                  :eventsWithoutRoom="eventsWithoutRoom"
+                                                  :dateValue="dateValue"
+                                                  :eventTypes=this.event_types
+                                                 :calendarData="calendar"
+                                                  :days="days"
+                                                  :rooms="rooms"
+                                                  :user_filters="user_filters"
+                                                  :first_project_tab_id="this.first_project_tab_id"
+                    />
                 </div>
             </div>
         </div>
@@ -603,7 +612,8 @@ export default {
         'eventsWithoutRoom',
         'filterOptions',
         'personalFilters',
-        'user_filters'
+        'user_filters',
+        'first_project_tab_id'
     ],
     components: {
         FormButton,

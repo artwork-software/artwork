@@ -10,6 +10,7 @@ use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
 use Artwork\Modules\Event\Models\Event;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftFreelancerService;
 use Artwork\Modules\Shift\Services\ShiftService;
@@ -203,7 +204,8 @@ class ShiftController extends Controller
     public function updateShift(
         Request $request,
         Shift $shift,
-        ShiftsQualificationsService $shiftsQualificationsService
+        ShiftsQualificationsService $shiftsQualificationsService,
+        ProjectTabService $projectTabService
     ): RedirectResponse {
         $projectId =  $shift->event()->first()->project()->first()->id;
         if ($shift->is_committed) {
@@ -302,7 +304,11 @@ class ShiftController extends Controller
             $shiftsQualificationsService->updateShiftsQualificationForShift($shift->id, $shiftsQualification);
         }
 
-        return Redirect::route('projects.show.shift', $projectId);
+        if ($projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent()) {
+            return Redirect::route('projects.tab', [$projectId, $projectTab->id]);
+        }
+
+        return Redirect::back();
     }
 
     private function sendShiftAddedNotificationToUser(Shift $shift, User $user): void
@@ -355,7 +361,7 @@ class ShiftController extends Controller
 
     //@todo: fix phpcs error - complexity too high, nesting too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
-    public function updateCommitments(Request $request): RedirectResponse
+    public function updateCommitments(Request $request, ProjectTabService $projectTabService): RedirectResponse
     {
         $projectId = $request->input('project_id');
         $shiftIds = $request->input('shifts');
@@ -568,7 +574,11 @@ class ShiftController extends Controller
             }
         }
 
-        return Redirect::route('projects.show.shift', $projectId);
+        if ($projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent()) {
+            return Redirect::route('projects.tab', [$projectId, $projectTab->id]);
+        }
+
+        return Redirect::back();
     }
 
     public function destroy(Shift $shift): void

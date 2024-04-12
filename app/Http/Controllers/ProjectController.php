@@ -78,6 +78,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
@@ -1610,6 +1611,7 @@ class ProjectController extends Controller
     public function projectTab(
         Project $project,
         ProjectTab $projectTab,
+        ProjectTabService $projectTabService,
         CalendarController $calendar,
         ShiftQualificationService $shiftQualificationService,
         SageAssignedDataCommentService $sageAssignedDataCommentService
@@ -1814,7 +1816,8 @@ class ProjectController extends Controller
         return inertia('Projects/Tab/TabContent', [
             'dataObject' => $dataObject,
             'headerObject' => $headerObject,
-            'loadedProjectInformation' => $loadedProjectInformation
+            'loadedProjectInformation' => $loadedProjectInformation,
+            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id
         ]);
     }
 
@@ -2371,8 +2374,11 @@ class ProjectController extends Controller
         }
     }
 
-    public function duplicate(Project $project, HistoryService $historyService)
-    {
+    public function duplicate(
+        Project $project,
+        HistoryService $historyService,
+        ProjectTabService $projectTabService
+    ) {
         // authorization
         if ($project->users->isNotEmpty() || !Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             if (
@@ -2401,8 +2407,6 @@ class ProjectController extends Controller
         ]);
         $historyService->projectUpdated($newProject);
 
-        //$this->generateBasicBudgetValues($newProject);
-
         $this->budgetService->generateBasicBudgetValues($newProject);
 
         $newProject->users()->attach([Auth::id() => ['access_budget' => true]]);
@@ -2412,25 +2416,17 @@ class ProjectController extends Controller
         $newProject->departments()->sync($project->departments->pluck('id'));
         $newProject->users()->sync($project->users->pluck('id'));
 
-
         $historyService->updateHistory($project, config('history.project.duplicated'));
 
-        // copy project headlines to the newProject
-        $project->headlines()->each(function ($headline) use ($newProject): void {
-            $newProject->headlines()->attach($headline->id, ['text' => $headline->pivot->text]);
-        });
+        if ($projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent()) {
+            return Redirect::route('projects.tab', [$newProject->id, $projectTab->id]);
+        }
 
-        return Redirect::route('projects.show.info', $newProject->id);
+        return Redirect::back();
     }
 
     public function destroy(Project $project): RedirectResponse
     {
-        //$project->events()->delete();
-
-        /*foreach ($project->checklists() as $checklist) {
-            $checklist->tasks()->delete();
-        }*/
-
         foreach ($project->users()->get() as $user) {
             $notificationTitle = __('notification.project.delete', [
                 'project' => $project->name

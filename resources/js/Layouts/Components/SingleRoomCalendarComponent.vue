@@ -23,8 +23,13 @@
                     </th>
                     <td :style="{ height: zoomFactor * 115 + 'px'}" class="cell flex-row w-full  flex overflow-y-auto border-t-2 border-dashed">
                         <div class="py-0.5 pr-2" v-for="event in calendarData[day.full_day].events.data">
-                            <SingleCalendarEvent :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
-                                                 @open-edit-event-modal="openEditEventModal"/>
+                            <SingleCalendarEvent :zoom-factor="zoomFactor"
+                                                 :width="zoomFactor * 204"
+                                                 :event="event"
+                                                 :event-types="eventTypes"
+                                                 @open-edit-event-modal="openEditEventModal"
+                                                 :first_project_tab_id="this.first_project_tab_id"
+                            />
                         </div>
                     </td>
                 </tr>
@@ -91,7 +96,20 @@ export default {
             zoomFactor: 1
         }
     },
-    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue','project','eventsWithoutRoom','filterOptions','personalFilters', 'user_filters'],
+    props: [
+        'calendarData',
+        'rooms',
+        'days',
+        'atAGlance',
+        'eventTypes',
+        'dateValue',
+        'project',
+        'eventsWithoutRoom',
+        'filterOptions',
+        'personalFilters',
+        'user_filters',
+        'first_project_tab_id'
+    ],
     emits: ['changeAtAGlance'],
     mounted(){
         window.addEventListener('resize', this.listenToFullscreen);

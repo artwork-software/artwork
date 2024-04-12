@@ -16,6 +16,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
@@ -39,7 +40,7 @@ class ContractController extends Controller
         $this->notificationService = new NotificationService();
     }
 
-    public function viewIndex(): Response|ResponseFactory
+    public function viewIndex(ProjectTabService $projectTabService): Response|ResponseFactory
     {
         // get all contracts where i am creator or i am accessing user
         $contracts = Contract::where('creator_id', Auth::id())->get();
@@ -54,6 +55,7 @@ class ContractController extends Controller
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
             'currencies' => Currency::all(),
+            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id
         ]);
     }
 

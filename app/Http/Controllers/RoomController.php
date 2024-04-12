@@ -13,6 +13,7 @@ use App\Models\EventType;
 use Artwork\Modules\Area\Models\Area;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Collision\Service\CollisionService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomAttribute;
@@ -121,8 +122,11 @@ class RoomController extends Controller
         return Redirect::route('areas.management');
     }
 
-    public function show(Room $room, CalendarController $calendarController): Response|ResponseFactory
-    {
+    public function show(
+        Room $room,
+        CalendarController $calendarController,
+        ProjectTabService $projectTabService
+    ): Response|ResponseFactory {
         $room->load('creator');
         $projects = Project::query()->with(['access_budget', 'managerUsers'])->get();
 
@@ -156,6 +160,7 @@ class RoomController extends Controller
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
             'user_filters' => $showCalendar['user_filters'],
+            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id
         ]);
     }
 

@@ -31,6 +31,7 @@ use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftService;
@@ -78,8 +79,10 @@ class EventController extends Controller
         $this->notificationKey = Str::random(15);
     }
 
-    public function viewEventIndex(CalendarController $calendarController): Response
-    {
+    public function viewEventIndex(
+        CalendarController $calendarController,
+        ProjectTabService $projectTabService
+    ): Response {
         $this->user = Auth::user();
         $userCalendarFilter = $this->user->calendar_filter()->first();
         $this->userShiftCalendarFilter = $this->user
@@ -150,6 +153,7 @@ class EventController extends Controller
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters'],
             'user_filters' => $showCalendar['user_filters'],
+            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id
         ]);
     }
 
@@ -280,7 +284,7 @@ class EventController extends Controller
 
     //@todo: fix phpcs error - fix complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function showDashboardPage(): Response
+    public function showDashboardPage(ProjectTabService $projectTabService): Response
     {
         $event = null;
         $tasks = Task::query()
@@ -379,6 +383,10 @@ class EventController extends Controller
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'rooms' => Room::all(),
             'historyObjects' => $historyObjects,
+            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id,
+            'first_project_shift_tab_id' => $projectTabService->findFirstProjectTabWithShiftsComponent()?->id,
+            'first_project_tasks_tab_id' => $projectTabService->findFirstProjectTabWithTasksComponent()?->id,
+            'first_project_budget_tab_id' => $projectTabService->findFirstProjectTabWithBudgetComponent()?->id
         ]);
     }
 

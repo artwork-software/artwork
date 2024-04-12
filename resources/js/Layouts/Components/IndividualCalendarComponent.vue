@@ -70,6 +70,7 @@
                                         :checked-events="checkedEvents"
                                         @open-edit-event-modal="openEditEventModal"
                                         @check-event="updateCheckedEvents"
+                                        :first_project_tab_id="this.first_project_tab_id"
                                     />
                                 </div>
                             </td>
@@ -187,7 +188,8 @@ export default {
         'isDashboard',
         'filterOptions',
         'personalFilters',
-        'user_filters'
+        'user_filters',
+        'first_project_tab_id'
     ],
     emits: ['changeAtAGlance'],
     mounted() {

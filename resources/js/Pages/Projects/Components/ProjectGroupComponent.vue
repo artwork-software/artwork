@@ -4,7 +4,7 @@
             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true" alt=""/>
         </span>
         {{ $t('Belongs to') }}
-        <Link :href="route('projects.show.info', {project: currentGroup?.id ?? headerObject.currentGroup?.id})" class="text-buttonBlue ml-1">
+        <Link :href="route('projects.tab', {project: currentGroup?.id ?? headerObject.currentGroup?.id, projectTab: this.first_project_tab_id})" class="text-buttonBlue ml-1">
             {{ currentGroup?.name ?? headerObject.currentGroup?.name }}
         </Link>
     </div>
@@ -19,7 +19,8 @@ export default defineComponent({
         'project',
         'currentGroup',
         'headerObject',
-        'loadedProjectInformation'
+        'loadedProjectInformation',
+        'first_project_tab_id'
     ],
     components: {
         Link

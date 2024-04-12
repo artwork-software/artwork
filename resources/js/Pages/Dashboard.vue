@@ -4,7 +4,6 @@
             <div class="headline1 mb-10">
                 Dashboard
             </div>
-
             <div class="grid grid-cols-1 sm:grid-cols-5 gap-x-20">
                 <div class="col-span-2">
                     <div class="mb-10">
@@ -128,7 +127,14 @@
                                 <div v-for="notificationGroup in Object.values(notificationOfToday)">
                                     <div v-for="(notification, index) in notificationGroup">
                                         <div class="bg-white shadow-cardShadow p-3 mb-4" >
-                                            <NotificationBlock :history-objects="historyObjects" :notification="notification" :event="event" :event-types="eventTypes" :rooms="rooms"/>
+                                            <NotificationBlock :history-objects="historyObjects"
+                                                               :notification="notification"
+                                                               :event="event"
+                                                               :event-types="eventTypes"
+                                                               :rooms="rooms"
+                                                               :first_project_shift_tab_id="first_project_shift_tab_id"
+                                                               :first_project_budget_tab_id="first_project_budget_tab_id"
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -191,7 +197,7 @@
                                     </div>
 
 
-                                    <Link v-if="task.projectId" :href="route('projects.show.checklist',{project: task.projectId})"
+                                    <Link v-if="task.projectId" :href="route('projects.tab', {project: task.projectId, projectTab: this.first_project_tasks_tab_id})"
                                           class="my-1 flex ml-10 xsDark">
                                         {{ task.projectName }}
                                         <ChevronRightIcon class="h-5 w-5 my-auto mx-3" aria-hidden="true"/>
@@ -265,7 +271,11 @@ export default defineComponent({
         'event',
         'eventTypes',
         'rooms',
-        'historyObjects'
+        'historyObjects',
+        'first_project_tab_id',
+        'first_project_shift_tab_id',
+        'first_project_tasks_tab_id',
+        'first_project_budget_tab_id'
     ],
     components: {
         NotificationBlock,
@@ -311,7 +321,7 @@ export default defineComponent({
             this.atAGlance = !this.atAGlance;
         },
         getHref(project) {
-            return route('projects.show.info', {project: project?.id});
+            return route('projects.tab', {project: project?.id, projectTab: this.first_project_tab_id});
         },
     },
     data() {

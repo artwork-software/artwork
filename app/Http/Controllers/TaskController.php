@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -44,7 +45,7 @@ class TaskController extends Controller
         return inertia('Tasks/Create');
     }
 
-    public function indexOwnTasks(): Response|ResponseFactory
+    public function indexOwnTasks(ProjectTabService $projectTabService): Response|ResponseFactory
     {
         $tasks = Task::query()
             ->with(['checklist.project', 'checklist.users'])
@@ -58,7 +59,8 @@ class TaskController extends Controller
             'tasks' => TaskShowResource::collection($tasks),
             'money_source_task' => MoneySourceTask::with(['money_source_task_users' => function ($query) {
                 return $query->where('user_id', Auth::id());
-            }])->where('done', false)->get()
+            }])->where('done', false)->get(),
+            'first_project_tasks_tab_id' => $projectTabService->findFirstProjectTabWithTasksComponent()?->id
         ]);
     }
 

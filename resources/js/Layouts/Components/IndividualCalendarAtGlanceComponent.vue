@@ -31,6 +31,7 @@
                         :event="event"
                         :event-types="eventTypes"
                         @open-edit-event-modal="openEditEventModal"
+                        :first_project_tab_id="this.first_project_tab_id"
                     />
                 </div>
             </div>
@@ -139,7 +140,8 @@ export default {
         'project',
         'filterOptions',
         'personalFilters',
-        'user_filters'
+        'user_filters',
+        'first_project_tab_id'
     ],
     emits:['changeAtAGlance'],
     methods: {

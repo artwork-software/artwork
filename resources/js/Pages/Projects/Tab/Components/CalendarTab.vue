@@ -29,6 +29,7 @@
                     :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab']?.personalFilters"
                     :user_filters="user_filters ?? loadedProjectInformation['CalendarTab']?.user_filters"
                     @change-at-a-glance="changeAtAGlance"
+                    :first_project_tab_id="this.first_project_tab_id"
                 >
                 </IndividualCalendarAtGlanceComponent>
 
@@ -46,6 +47,7 @@
                     :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab']?.personalFilters"
                     :user_filters="user_filters     ?? loadedProjectInformation['CalendarTab']?.user_filters"
                     @change-at-a-glance="changeAtAGlance"
+                    :first_project_tab_id="this.first_project_tab_id"
                 />
             </div>
         </div>
@@ -93,7 +95,8 @@ export default {
         'projectManagerIds',
         'user_filters',
         'loadedProjectInformation',
-        'headerObject'
+        'headerObject',
+        'first_project_tab_id'
     ],
     data() {
         return {

@@ -34,6 +34,8 @@
                     :project="project"
                     :wanted-split="wantedSplit"
                     :isArchive="false"
+                    :first_project_shift_tab_id="first_project_shift_tab_id"
+                    :first_project_budget_tab_id="first_project_budget_tab_id"
                 />
             </div>
             <div @click="showReadSection = true" v-if="showSection && !showReadSection"
@@ -65,6 +67,8 @@
                     :project="project"
                     :wanted-split="wantedSplit"
                     :isArchive="true"
+                    :first_project_shift_tab_id="first_project_shift_tab_id"
+                    :first_project_budget_tab_id="first_project_budget_tab_id"
                 />
             </div>
         </div>
@@ -177,7 +181,21 @@ export default  {
             })
         }
     },
-    props: ['eventTypes', 'rooms', 'notifications', 'readNotifications', 'projects', 'name', 'historyObjects', 'event', 'project', 'wantedSplit', 'roomCollisions'],
+    props: [
+        'eventTypes',
+        'rooms',
+        'notifications',
+        'readNotifications',
+        'projects',
+        'name',
+        'historyObjects',
+        'event',
+        'project',
+        'wantedSplit',
+        'roomCollisions',
+        'first_project_shift_tab_id',
+        'first_project_budget_tab_id'
+    ],
     methods: {
         formatDate(isoDate) {
             if(isoDate?.split('T').length > 1){

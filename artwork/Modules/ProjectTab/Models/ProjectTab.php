@@ -3,6 +3,7 @@
 namespace Artwork\Modules\ProjectTab\Models;
 
 use Artwork\Core\Database\Models\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -40,5 +41,10 @@ class ProjectTab extends Model
     public function getHasSidebarTabsAttribute(): bool
     {
         return $this->sidebarTabs->isNotEmpty();
+    }
+
+    public function scopeByComponentsComponentType(Builder $builder, string $type): Builder
+    {
+        return $builder->whereRelation('components.component', 'type', $type);
     }
 }

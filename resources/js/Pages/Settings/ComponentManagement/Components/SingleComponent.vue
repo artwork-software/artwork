@@ -1,5 +1,5 @@
 <template>
-    <div class="absolute rounded-lg  h-full w-full items-center justify-center hidden group-hover:flex bg-black/40">
+    <div class="absolute rounded-lg h-full w-full items-center justify-center hidden group-hover:flex bg-black/40">
         <div class="flex items-center justify-center gap-x-2">
             <div class="rounded-full p-2 bg-artwork-buttons-create cursor-pointer" @click="showEditComponentModal = true">
                 <IconEdit class="text-white h-4 w-4" />
@@ -14,7 +14,7 @@
     </div>
     <div class="text-center text-sm font-bold">
         {{ component.name }}
-        <div class="text-[10px] text-gray-500 font-light" v-if="component.data.height">
+        <div class="text-[8px] text-gray-500 font-light truncate" v-if="component.data.height">
             {{ component.data.height }} Pixel <span v-if="component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
         </div>
     </div>

@@ -295,18 +295,12 @@ class DefaultComponentSeeder extends Seeder
             'order' => 6,
         ]);
 
-        $documentsComponent = Component::create([
-            'name' => 'Project-Documents',
-            'type' => TabComponentEnums::PROJECT_DOCUMENTS,
-            'data' => [],
-            'special' => false,
-            'sidebar_enabled' => true,
-            'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT
-        ]);
-
         $projectInformationTab->components()->create([
-            'component_id' => $documentsComponent->id,
-            'order' => 7,
+            'component_id' => Component::query()
+                ->where('type', TabComponentEnums::PROJECT_DOCUMENTS)
+                ->first()
+                ?->id,
+            'order' => 7
         ]);
     }
 

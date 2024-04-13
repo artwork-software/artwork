@@ -14,6 +14,7 @@
                     :filter-options="filterOptions ?? loadedProjectInformation['CalendarTab']?.filterOptions"
                     :personal-filters="personalFilters ?? loadedProjectInformation['CalendarTab']?.personalFilters"
                     :user_filters="user_filters ?? loadedProjectInformation['CalendarTab']?.user_filters"
+                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                 />
             </div>
             <div v-else>
@@ -30,6 +31,7 @@
                     :user_filters="user_filters ?? loadedProjectInformation['CalendarTab']?.user_filters"
                     @change-at-a-glance="changeAtAGlance"
                     :first_project_tab_id="this.first_project_tab_id"
+                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                 >
                 </IndividualCalendarAtGlanceComponent>
 
@@ -48,6 +50,7 @@
                     :user_filters="user_filters     ?? loadedProjectInformation['CalendarTab']?.user_filters"
                     @change-at-a-glance="changeAtAGlance"
                     :first_project_tab_id="this.first_project_tab_id"
+                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                 />
             </div>
         </div>
@@ -96,7 +99,8 @@ export default {
         'user_filters',
         'loadedProjectInformation',
         'headerObject',
-        'first_project_tab_id'
+        'first_project_tab_id',
+        'first_project_calendar_tab_id'
     ],
     data() {
         return {

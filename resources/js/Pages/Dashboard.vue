@@ -134,6 +134,7 @@
                                                                :rooms="rooms"
                                                                :first_project_shift_tab_id="first_project_shift_tab_id"
                                                                :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                               :first_project_calendar_tab_id="first_project_calendar_tab_id"
                                             />
                                         </div>
                                     </div>
@@ -275,7 +276,8 @@ export default defineComponent({
         'first_project_tab_id',
         'first_project_shift_tab_id',
         'first_project_tasks_tab_id',
-        'first_project_budget_tab_id'
+        'first_project_budget_tab_id',
+        'first_project_calendar_tab_id'
     ],
     components: {
         NotificationBlock,

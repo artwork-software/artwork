@@ -69,7 +69,8 @@ class EventController extends Controller
         private readonly BudgetService $budgetService,
         private readonly EventService $eventService,
         private readonly ShiftService $shiftService,
-        private readonly TimelineService $timelineService
+        private readonly TimelineService $timelineService,
+        private readonly ProjectTabService $projectTabService
     ) {
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
@@ -80,8 +81,7 @@ class EventController extends Controller
     }
 
     public function viewEventIndex(
-        CalendarController $calendarController,
-        ProjectTabService $projectTabService
+        CalendarController $calendarController
     ): Response {
         $this->user = Auth::user();
         $userCalendarFilter = $this->user->calendar_filter()->first();
@@ -153,7 +153,8 @@ class EventController extends Controller
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters'],
             'user_filters' => $showCalendar['user_filters'],
-            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id
+            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 
@@ -284,7 +285,7 @@ class EventController extends Controller
 
     //@todo: fix phpcs error - fix complexity too high
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
-    public function showDashboardPage(ProjectTabService $projectTabService): Response
+    public function showDashboardPage(): Response
     {
         $event = null;
         $tasks = Task::query()
@@ -383,10 +384,11 @@ class EventController extends Controller
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'rooms' => Room::all(),
             'historyObjects' => $historyObjects,
-            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id,
-            'first_project_shift_tab_id' => $projectTabService->findFirstProjectTabWithShiftsComponent()?->id,
-            'first_project_tasks_tab_id' => $projectTabService->findFirstProjectTabWithTasksComponent()?->id,
-            'first_project_budget_tab_id' => $projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'first_project_shift_tab_id' => $this->projectTabService->findFirstProjectTabWithShiftsComponent()?->id,
+            'first_project_tasks_tab_id' => $this->projectTabService->findFirstProjectTabWithTasksComponent()?->id,
+            'first_project_budget_tab_id' => $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id,
+            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 
@@ -400,6 +402,7 @@ class EventController extends Controller
 
         return inertia('Events/EventRequestsManagement', [
             'event_requests' => EventShowResource::collection($events)->resolve(),
+            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 
@@ -652,7 +655,13 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project->name,
-                'href' => route('projects.show.calendar', $project->id)
+                'href' => route(
+                    'projects.tab',
+                    [
+                        $project->id,
+                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                    ]
+                )
             ],
             4 => [
                 'type' => 'string',
@@ -696,7 +705,13 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project->name,
-                'href' => route('projects.show.calendar', $project->id)
+                'href' => route(
+                    'projects.tab',
+                    [
+                        $project->id,
+                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                    ]
+                )
             ],
             4 => [
                 'type' => 'string',
@@ -764,7 +779,13 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.calendar', $project->id) : null
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        ]
+                    ) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -828,7 +849,13 @@ class EventController extends Controller
                         'type' => 'link',
                         'title' => $event->project()->first()->name ?? '',
                         'href' => $event->project()->first() ?
-                            route('projects.show.calendar', $event->project()->first()->id) :
+                            route(
+                                'projects.tab',
+                                [
+                                    $event->project->id,
+                                    $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                ]
+                            ) :
                             null
                     ],
                     4 => [
@@ -868,7 +895,13 @@ class EventController extends Controller
                     'type' => 'link',
                     'title' => $event->project()->first()->name ?? '',
                     'href' => $event->project()->first() ?
-                        route('projects.show.calendar', $event->project()->first()->id) :
+                        route(
+                            'projects.tab',
+                            [
+                                $event->project->id,
+                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            ]
+                        ) :
                         null
                 ],
                 4 => [
@@ -951,7 +984,13 @@ class EventController extends Controller
                         3 => [
                             'type' => 'link',
                             'title' => $project ? $project->name : '',
-                            'href' => $project ? route('projects.show.calendar', $project->id) : null
+                            'href' => $project ? route(
+                                'projects.tab',
+                                [
+                                    $project->id,
+                                    $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                ]
+                            ) : null
                         ],
                         4 => [
                             'type' => 'string',
@@ -994,7 +1033,13 @@ class EventController extends Controller
                     3 => [
                         'type' => 'link',
                         'title' => $project ? $project->name : '',
-                        'href' => $project ? route('projects.show.calendar', $project->id) : null
+                        'href' => $project ? route(
+                            'projects.tab',
+                            [
+                                $project->id,
+                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            ]
+                        ) : null
                     ],
                     4 => [
                         'type' => 'string',
@@ -1052,7 +1097,13 @@ class EventController extends Controller
                     3 => [
                         'type' => 'link',
                         'title' => $project ? $project->name : '',
-                        'href' => $project ? route('projects.show.calendar', $project->id) : null
+                        'href' => $project ? route(
+                            'projects.tab',
+                            [
+                                $project->id,
+                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            ]
+                        ) : null
                     ],
                     4 => [
                         'type' => 'string',
@@ -1097,7 +1148,13 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.calendar', $project->id) : null
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        ]
+                    ) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -1300,7 +1357,13 @@ class EventController extends Controller
                         'type' => 'link',
                         'title' => $event->project()->first()->name ?? '',
                         'href' => $event->project()->first() ?
-                            route('projects.show.calendar', $event->project()->first()->id) :
+                            route(
+                                'projects.tab',
+                                [
+                                    $event->project->id,
+                                    $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                ]
+                            ) :
                             null
                     ],
                     4 => [
@@ -1345,7 +1408,13 @@ class EventController extends Controller
                     'type' => 'link',
                     'title' => $event->project()->first()->name ?? '',
                     'href' => $event->project()->first() ?
-                        route('projects.show.calendar', $event->project()->first()->id) :
+                        route(
+                            'projects.tab',
+                            [
+                                $event->project->id,
+                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            ]
+                        ) :
                         null
                 ],
                 4 => [
@@ -1430,7 +1499,13 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.calendar', $project->id) : null
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        ]
+                    ) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -1470,7 +1545,13 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project ? $project->name : '',
-                'href' => $project ? route('projects.show.calendar', $project->id) : null
+                'href' => $project ? route(
+                    'projects.tab',
+                    [
+                        $project->id,
+                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                    ]
+                ) : null
             ],
             4 => [
                 'type' => 'string',
@@ -1552,7 +1633,13 @@ class EventController extends Controller
                     3 => [
                         'type' => 'link',
                         'title' => $project ? $project->name : '',
-                        'href' => $project ? route('projects.show.calendar', $project->id) : null
+                        'href' => $project ? route(
+                            'projects.tab',
+                            [
+                                $project->id,
+                                $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                            ]
+                        ) : null
                     ],
                     4 => [
                         'type' => 'string',
@@ -1593,7 +1680,13 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.calendar', $project->id) : null
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        ]
+                    ) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -1653,7 +1746,13 @@ class EventController extends Controller
                 3 => [
                     'type' => 'link',
                     'title' => $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.calendar', $project->id) : null
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        ]
+                    ) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -1694,7 +1793,13 @@ class EventController extends Controller
             3 => [
                 'type' => 'link',
                 'title' => $project ? $project->name : '',
-                'href' => $project ? route('projects.show.calendar', $project->id) : null
+                'href' => $project ? route(
+                    'projects.tab',
+                    [
+                        $project->id,
+                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                    ]
+                ) : null
             ],
             4 => [
                 'type' => 'string',
@@ -1739,7 +1844,8 @@ class EventController extends Controller
                 'start' => $event->start_time->format('d.m.Y, H:i'),
                 'end' => $event->end_time->format('d.m.Y, H:i'),
                 'room_name' => $event->room?->label,
-            ])
+            ]),
+            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 

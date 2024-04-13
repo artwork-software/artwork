@@ -49,6 +49,7 @@
         :wantedRoomId="wantedRoom"
         :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
         :roomCollisions="roomCollisions"
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
     <!-- Termine ohne Raum Modal -->
     <events-without-room-component
@@ -58,6 +59,7 @@
         :eventTypes="eventTypes"
         :eventsWithoutRoom="this.filteredEvents"
         :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
 
 </template>
@@ -108,7 +110,8 @@ export default {
         'filterOptions',
         'personalFilters',
         'user_filters',
-        'first_project_tab_id'
+        'first_project_tab_id',
+        'first_project_calendar_tab_id'
     ],
     emits: ['changeAtAGlance'],
     mounted(){

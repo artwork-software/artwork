@@ -119,6 +119,7 @@
             :company-types="company_types"
             :contract-types="contract_types"
             :currencies="currencies"
+            :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
         />
 
     </app-layout>
@@ -167,7 +168,8 @@ export default {
         'company_types',
         'contract_types',
         'currencies',
-        'first_project_tab_id'
+        'first_project_tab_id',
+        'first_project_calendar_tab_id'
     ],
     data() {
         return {

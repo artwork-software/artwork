@@ -55,7 +55,8 @@ class ContractController extends Controller
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
             'currencies' => Currency::all(),
-            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id
+            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id,
+            'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 

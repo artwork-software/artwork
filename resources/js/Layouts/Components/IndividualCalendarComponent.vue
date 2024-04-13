@@ -90,6 +90,7 @@
                 :wantedRoomId="wantedRoom"
                 :isAdmin="this.hasAdminRole()"
                 :roomCollisions="roomCollisions"
+                :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
             />
 
         </div>
@@ -102,6 +103,7 @@
             :rooms="rooms"
             :eventsWithoutRoom="this.filteredEvents"
             :isAdmin="this.hasAdminRole()"
+            :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
         />
 
         <div v-show="multiEdit"
@@ -189,7 +191,8 @@ export default {
         'filterOptions',
         'personalFilters',
         'user_filters',
-        'first_project_tab_id'
+        'first_project_tab_id',
+        'first_project_calendar_tab_id'
     ],
     emits: ['changeAtAGlance'],
     mounted() {

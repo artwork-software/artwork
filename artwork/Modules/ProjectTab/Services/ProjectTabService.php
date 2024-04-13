@@ -2,6 +2,7 @@
 
 namespace Artwork\Modules\ProjectTab\Services;
 
+use App\Enums\TabComponentEnums;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 
@@ -18,16 +19,21 @@ class ProjectTabService
 
     public function findFirstProjectTabWithShiftsComponent(): ProjectTab|null
     {
-        return $this->projectTabRepository->findFirstProjectTabWithShiftsComponent();
+        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::SHIFT_TAB);
     }
 
     public function findFirstProjectTabWithTasksComponent(): ProjectTab|null
     {
-        return $this->projectTabRepository->findFirstProjectTabWithTasksComponent();
+        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::CHECKLIST);
     }
 
     public function findFirstProjectTabWithBudgetComponent(): ProjectTab|null
     {
-        return $this->projectTabRepository->findFirstProjectTabWithBudgetComponent();
+        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::BUDGET);
+    }
+
+    public function findFirstProjectTabWithCalendarComponent(): ProjectTab|null
+    {
+        return $this->projectTabRepository->findFirstProjectTabByComponentsComponentType(TabComponentEnums::CALENDAR);
     }
 }

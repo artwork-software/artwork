@@ -147,7 +147,8 @@ class NotificationController extends Controller
                 []
             ),
             'first_project_shift_tab_id' => $projectTabService->findFirstProjectTabWithShiftsComponent()?->id,
-            'first_project_budget_tab_id' => $projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+            'first_project_budget_tab_id' => $projectTabService->findFirstProjectTabWithBudgetComponent()?->id,
+            'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 

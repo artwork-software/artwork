@@ -12,6 +12,7 @@ use Artwork\Modules\EventComment\Services\EventCommentService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
 use Artwork\Modules\PresetShift\Models\PresetShiftShiftsQualifications;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\Shift\Services\ShiftsQualificationsService;
 use Artwork\Modules\ShiftPreset\Models\ShiftPreset;
@@ -31,7 +32,8 @@ readonly class EventService
         private TimelineService $timelineService,
         private NotificationService $notificationService,
         private SubEventService $subEventService,
-        private EventCommentService $eventCommentService
+        private EventCommentService $eventCommentService,
+        private ProjectTabService $projectTabService
     ) {
     }
 
@@ -217,7 +219,13 @@ readonly class EventService
                 3 => [
                     'type' => 'link',
                     'title' => $event->project?->name ?? '',
-                    'href' => $event->project ? route('projects.show.calendar', $event->project->id) : null
+                    'href' => $event->project ? route(
+                        'projects.tab',
+                        [
+                            $event->project->id,
+                            $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                        ]
+                    ) : null
                 ],
                 4 => [
                     'type' => 'string',
@@ -257,7 +265,13 @@ readonly class EventService
             3 => [
                 'type' => 'link',
                 'title' => $event->project?->name ?? '',
-                'href' => $event->project ? route('projects.show.calendar', $event->project->id) : null
+                'href' => $event->project ? route(
+                    'projects.tab',
+                    [
+                        $event->project->id,
+                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                    ]
+                ) : null
             ],
             4 => [
                 'type' => 'string',

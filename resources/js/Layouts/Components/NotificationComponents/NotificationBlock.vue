@@ -105,6 +105,7 @@
         :wantedRoomId="wantedSplit"
         :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
         :roomCollisions="roomCollisions"
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
 
     <room-request-dialog-component
@@ -119,6 +120,7 @@
         :wantedRoomId="wantedSplit"
         :isAdmin="this.hasAdminRole()"
         :roomCollisions="roomCollisions"
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
 
     <!-- Termine ohne Raum Modal -->
@@ -131,6 +133,7 @@
         :eventsWithoutRoom="[event]"
         :isAdmin="this.hasAdminRole()"
         :removeNotificationOnAction="true"
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
 
     <ConfirmDeleteModal
@@ -183,7 +186,8 @@ export default {
         'roomCollisions',
         'isArchive',
         'first_project_shift_tab_id',
-        'first_project_budget_tab_id'
+        'first_project_budget_tab_id',
+        'first_project_calendar_tab_id'
     ],
     data() {
         return {

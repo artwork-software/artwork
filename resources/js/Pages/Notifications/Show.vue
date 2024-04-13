@@ -47,6 +47,7 @@
                                                       :room-collisions="roomCollisions"
                                                       :first_project_shift_tab_id="first_project_shift_tab_id"
                                                       :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
                         />
                         <!-- Räume und Raumbelegungsanfragen -->
                         <NotificationSectionComponent :readNotifications="readNotifications['ROOMS']"
@@ -60,6 +61,7 @@
                                                       :room-collisions="roomCollisions"
                                                       :first_project_shift_tab_id="first_project_shift_tab_id"
                                                       :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
                         />
                         <!-- Aufgaben -->
                         <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" :name="$t('Tasks')"
@@ -72,6 +74,7 @@
                                                       :room-collisions="roomCollisions"
                                                       :first_project_shift_tab_id="first_project_shift_tab_id"
                                                       :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
                         />
                         <!-- Projekte & Teams -->
                         <NotificationSectionComponent :readNotifications="readNotifications['PROJECTS']"
@@ -85,6 +88,7 @@
                                                       :room-collisions="roomCollisions"
                                                       :first_project_shift_tab_id="first_project_shift_tab_id"
                                                       :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
                         />
                         <NotificationSectionComponent :readNotifications="readNotifications['BUDGET']"
                                                       :name="$t('Project budgets & sources of funding')" :rooms="rooms" :projects="projects"
@@ -97,6 +101,7 @@
                                                       :room-collisions="roomCollisions"
                                                       :first_project_shift_tab_id="first_project_shift_tab_id"
                                                       :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
                         />
                         <NotificationSectionComponent :readNotifications="readNotifications['SHIFTS']"
                                                       :name="$t('Shift planning')" :rooms="rooms" :projects="projects"
@@ -109,6 +114,7 @@
                                                       :room-collisions="roomCollisions"
                                                       :first_project_shift_tab_id="first_project_shift_tab_id"
                                                       :first_project_budget_tab_id="first_project_budget_tab_id"
+                                                      :first_project_calendar_tab_id="first_project_calendar_tab_id"
                         />
                     </div>
                     <div  class="col-span-4 pr-8">
@@ -197,7 +203,6 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
-import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
 import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings";
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent";
@@ -252,7 +257,6 @@ export default defineComponent({
         InputComponent,
         EventTypeIconCollection,
         ChevronRightIcon,
-        NotificationEventInfoRow,
         NotificationUserIcon,
         AnswerEventRequestComponent,
     },
@@ -272,7 +276,8 @@ export default defineComponent({
         'roomCollisions',
         'globalNotification',
         'first_project_shift_tab_id',
-        'first_project_budget_tab_id'
+        'first_project_budget_tab_id',
+        'first_project_calendar_tab_id'
     ],
     data() {
         return {

@@ -283,9 +283,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         ->name('projects.tab')
         ->middleware(CanViewProject::class);
 
-    Route::get('/projects/{project}/calendar', [ProjectController::class, 'projectCalendarTab'])
-        ->name('projects.show.calendar')->middleware(CanViewProject::class);
-
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');
     Route::post('/project_files/{project_file}', [ProjectFileController::class, 'update'])

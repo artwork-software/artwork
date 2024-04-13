@@ -14,6 +14,7 @@
                         :filter-options="filterOptions"
                         :personal-filters="personalFilters"
                         :user_filters="user_filters"
+                        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                     />
                 </div>
             </div>
@@ -31,6 +32,7 @@
                     :user_filters="user_filters"
                     @change-at-a-glance="changeAtAGlance"
                     :first_project_tab_id="this.first_project_tab_id"
+                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                 >
                 </IndividualCalendarAtGlanceComponent>
 
@@ -49,6 +51,7 @@
                     :user_filters="user_filters"
                     @change-at-a-glance="changeAtAGlance"
                     :first_project_tab_id="this.first_project_tab_id"
+                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
                 />
             </div>
         </div>
@@ -91,7 +94,8 @@ export default defineComponent({
         'personalFilters',
         'user_filters',
         'events',
-        'first_project_tab_id'
+        'first_project_tab_id',
+        'first_project_calendar_tab_id'
     ],
     methods: {
         usePage,

@@ -1817,7 +1817,8 @@ class ProjectController extends Controller
             'dataObject' => $dataObject,
             'headerObject' => $headerObject,
             'loadedProjectInformation' => $loadedProjectInformation,
-            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id
+            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id,
+            'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 

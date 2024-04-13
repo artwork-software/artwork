@@ -160,7 +160,8 @@ class RoomController extends Controller
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
             'user_filters' => $showCalendar['user_filters'],
-            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id
+            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id,
+            'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 

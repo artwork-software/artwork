@@ -41,7 +41,7 @@
                     <div class="flex xsDark my-2 items-center" v-if="selectedProject">
                     {{ $t('Currently assigned to:')}}
                     <a v-if="this.selectedProject?.id"
-                       :href="route('projects.show.calendar', {project: selectedProject.id})"
+                       :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
                        class="ml-3 flex xsDark">
                         {{ this.selectedProject?.name }}
                     </a>
@@ -389,17 +389,16 @@ export default {
     name: "ContractUploadModal",
     mixins: [Permissions, IconLib],
     emits: ['closeModal'],
-    props: ['show', 'projectId', 'extraSettings', 'budgetAccess', 'contractTypes', 'companyTypes', 'currencies'],
-    /*props: {
-        show: Boolean,
-        closeModal: Function,
-        projectId: Number,
-        extraSettings: Array,
-        budgetAccess: Array,
-        contractTypes: Array,
-        companyTypes: Array,
-        currencies: Array,
-    },*/
+    props: [
+        'show',
+        'projectId',
+        'extraSettings',
+        'budgetAccess',
+        'contractTypes',
+        'companyTypes',
+        'currencies',
+        'first_project_calendar_tab_id'
+    ],
     components: {
         Input,
         InputComponent,

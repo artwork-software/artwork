@@ -36,6 +36,7 @@
                     :isArchive="false"
                     :first_project_shift_tab_id="first_project_shift_tab_id"
                     :first_project_budget_tab_id="first_project_budget_tab_id"
+                    :first_project_calendar_tab_id="first_project_calendar_tab_id"
                 />
             </div>
             <div @click="showReadSection = true" v-if="showSection && !showReadSection"
@@ -69,6 +70,7 @@
                     :isArchive="true"
                     :first_project_shift_tab_id="first_project_shift_tab_id"
                     :first_project_budget_tab_id="first_project_budget_tab_id"
+                    :first_project_calendar_tab_id="first_project_calendar_tab_id"
                 />
             </div>
         </div>
@@ -97,7 +99,9 @@
         :creator="this.creatorOfRequest"
         :eventTypes="this.eventTypes"
         :projects="this.projects"
-        @closed="afterRequestAnswerWithRoomChange"/>
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+        @closed="afterRequestAnswerWithRoomChange"
+    />
     <!-- Room History Modal-->
     <room-history-component
         v-if="showRoomHistory"
@@ -194,7 +198,8 @@ export default  {
         'wantedSplit',
         'roomCollisions',
         'first_project_shift_tab_id',
-        'first_project_budget_tab_id'
+        'first_project_budget_tab_id',
+        'first_project_calendar_tab_id'
     ],
     methods: {
         formatDate(isoDate) {

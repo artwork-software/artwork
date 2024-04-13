@@ -16,31 +16,11 @@ class ProjectTabRepository extends BaseRepository
         return $projectTab;
     }
 
-    public function findFirstProjectTabWithShiftsComponent(): ProjectTab|null
+    public function findFirstProjectTabByComponentsComponentType(TabComponentEnums $type): ProjectTab|null
     {
         /** @var ProjectTab $projectTab */
         $projectTab = ProjectTab::query()
-            ->byComponentsComponentType(TabComponentEnums::SHIFT_TAB->value)
-            ->first();
-
-        return $projectTab;
-    }
-
-    public function findFirstProjectTabWithTasksComponent(): ProjectTab|null
-    {
-        /** @var ProjectTab $projectTab */
-        $projectTab = ProjectTab::query()
-            ->byComponentsComponentType(TabComponentEnums::CHECKLIST->value)
-            ->first();
-
-        return $projectTab;
-    }
-
-    public function findFirstProjectTabWithBudgetComponent(): ProjectTab|null
-    {
-        /** @var ProjectTab $projectTab */
-        $projectTab = ProjectTab::query()
-            ->byComponentsComponentType(TabComponentEnums::BUDGET->value)
+            ->byComponentsComponentType($type->value)
             ->first();
 
         return $projectTab;

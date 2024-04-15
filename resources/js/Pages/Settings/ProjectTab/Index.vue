@@ -100,7 +100,7 @@ export default {
                        <template #item="{element}" :key="element.id">
                            <div class="mb-2">
                                <div class="" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                   <SingleTabComponent :tab="element" />
+                                   <SingleTabComponent :all-tabs="tabs" :tab="element" />
                                </div>
                            </div>
                         </template>

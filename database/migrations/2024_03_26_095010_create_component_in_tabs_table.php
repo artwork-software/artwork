@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('project_tab_id')->constrained('project_tabs')->cascadeOnDelete();
             $table->foreignId('component_id')->constrained('components')->cascadeOnDelete();
             $table->integer('order');
+            $table->json('scope')->nullable()->default('[]');
             $table->timestamps();
         });
     }

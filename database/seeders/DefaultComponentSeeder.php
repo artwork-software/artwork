@@ -303,7 +303,7 @@ class DefaultComponentSeeder extends Seeder
                 ->where('type', TabComponentEnums::PROJECT_DOCUMENTS)
                 ->first()
                 ?->id,
-            'order' => 7
+            'order' => 7,
         ]);
     }
 

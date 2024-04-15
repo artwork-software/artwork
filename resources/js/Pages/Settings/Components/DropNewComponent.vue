@@ -1,11 +1,16 @@
 <script>
+import SelectTabsModal from "@/Pages/Settings/Components/SelectTabsModal.vue";
+
 export default {
     name: "DropNewComponent",
-    props: ['tab', 'order', 'isSidebar'],
+    components: {SelectTabsModal},
+    props: ['tab', 'order', 'isSidebar', 'allTabs'],
     emits: ['tabOpened'],
     data() {
         return {
-            dropOver: false
+            dropOver: false,
+            showSelectTabsModal: false,
+            componentData: null,
         }
     },
     methods: {
@@ -14,7 +19,6 @@ export default {
             event.preventDefault();
         },
         onDrop(event) {
-            this.$emit('tabOpened', this.tab.id);
             event.preventDefault();
 
             // add check if JSON is valid
@@ -25,6 +29,15 @@ export default {
 
             const data = JSON?.parse(event.dataTransfer?.getData('application/json'));
 
+
+            if(!this.isSidebar){
+                if(data.type === 'ProjectDocumentsComponent' || data.type === 'CommentTab' || data.type === 'ChecklistComponent') {
+                    this.componentData = data;
+                    this.showSelectTabsModal = true;
+                    this.dropOver = false;
+                    return;
+                }
+            }
 
             if(this.isSidebar && !data.sidebar_enabled) {
                 this.dropOver = false;
@@ -59,6 +72,10 @@ export default {
                     }
                 });
             }
+            this.openTab(this.tab.id)
+        },
+        openTab(tabId){
+            this.$emit('tabOpened', tabId);
         }
     }
 }
@@ -70,6 +87,7 @@ export default {
             Zum hinzufügen hier loslassen
         </span>
     </div>
+    <SelectTabsModal :tabs="allTabs" v-if="showSelectTabsModal" :position="order" :component-data="componentData" :current-tab="tab" @close="showSelectTabsModal = false" @open-tab="openTab" />
 </template>
 
 <style scoped>

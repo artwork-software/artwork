@@ -28,7 +28,7 @@ export default {
         MenuItems,
         MenuItem,
     },
-    props: ['tab'],
+    props: ['tab', 'allTabs'],
     data() {
         return {
             dragging: false,
@@ -125,13 +125,13 @@ export default {
        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
            <div>
                <h3 class="text-base font-bold my-3">Komponenten</h3>
-               <DropNewComponent :is-sidebar="false" :tab="tab" :order="1" @tab-opened="openTab" />
+               <DropNewComponent :is-sidebar="false" :all-tabs="allTabs" :tab="tab" :order="1" @tab-opened="openTab" />
                <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="tab.components" @start="dragging=true" @end="dragging=false" @change="updateComponentOrder(tab.components)">
                    <template #item="{element}" :key="element.id">
                        <div v-show="!element.temporary" class="" @mouseover="showMenu = element.id" :key="element.id" @mouseout="showMenu = null">
                             <SingleComponent :element="element" :tab="tab" />
 
-                           <DropNewComponent :is-sidebar="false" :tab="tab" :order="element.order + 1" @tab-opened="openTab" />
+                           <DropNewComponent :is-sidebar="false" :all-tabs="allTabs" :tab="tab" :order="element.order + 1" @tab-opened="openTab" />
                        </div>
                    </template>
                </draggable>
@@ -140,7 +140,7 @@ export default {
        </div>
     </div>
     <div v-else>
-        <DropNewComponent :is-sidebar="false" :tab="tab" :order="lastComponentOrder" @tab-opened="openTab"/>
+        <DropNewComponent :all-tabs="allTabs" :is-sidebar="false" :tab="tab" :order="lastComponentOrder" @tab-opened="openTab"/>
     </div>
 </div>
 

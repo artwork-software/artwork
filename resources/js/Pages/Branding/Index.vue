@@ -40,6 +40,9 @@
                     </span>
                 </div>
             </div>
+            <div v-if="form.errors?.bigLogo" class="mt-1 text-xs text-red-500">
+                {{ $t(form.errors?.bigLogo) }}
+            </div>
             <label class="block mt-12 mb-4 xsDark">
                 {{ $t('Small Logo (Upload by click or drag & drop') }}
             </label>
@@ -59,12 +62,17 @@
                         <img :src="$page.props.small_logo" alt="Logo" class="rounded-md h-40 w-40">
                     </div>
                 </div>
+
                 <div v-if="this.$page.props.show_hints" class="col-span-4 items-center flex">
                     <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                     <span class="hind ml-2 my-auto">
                         {{ $t('Upload your logo in .svg, .png, .gif, or .jpg format. The logo will be used in the header of your artwork.') }}
                     </span>
                 </div>
+
+            </div>
+            <div v-if="form.errors?.smallLogo" class="mt-1 text-xs text-red-500">
+                {{ $t(form.errors?.smallLogo) }}
             </div>
             <label class="block mt-12 mb-4 xsDark">
                 {{ $t('Login Illustration (Upload by click or drag & drop)') }}
@@ -109,6 +117,9 @@
                     </span>
                 </div>
             </div>
+            <div v-if="form.errors?.banner" class="mt-1 text-xs text-red-500">
+                {{ $t(form.errors?.banner) }}
+            </div>
             <div class="mt-6 items-center">
                 <FormButton
                     :text="$t('Save changes')"
@@ -116,6 +127,7 @@
                     />
             </div>
         </form>
+
     </ToolSettingsHeader>
 </template>
 
@@ -158,7 +170,8 @@ export default defineComponent({
               "image/jpeg",
               "image/svg+xml",
               "image/png",
-              "image/gif"
+              "image/gif",
+              "image/webp",
             ]
 
             if (allowedTypes.includes(file?.type)) {
@@ -184,7 +197,7 @@ export default defineComponent({
                 reader.readAsDataURL(file);
             } else {
                 this.uploadDocumentFeedback = this.$t(
-                    'Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted.'
+                    'Only logos and illustrations of the type .jpeg, .svg, .png, .webp and .gif are accepted.'
                 );
             }
         },

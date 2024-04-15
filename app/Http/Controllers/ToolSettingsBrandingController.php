@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UploadBrandingGraphicRequest;
 use Artwork\Modules\GeneralSettings\Models\GeneralSettings;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
@@ -25,7 +26,7 @@ class ToolSettingsBrandingController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function update(Request $request, GeneralSettings $generalSettings): RedirectResponse
+    public function update(UploadBrandingGraphicRequest $request, GeneralSettings $generalSettings): RedirectResponse
     {
         $this->authorize('updateImages', $generalSettings);
 

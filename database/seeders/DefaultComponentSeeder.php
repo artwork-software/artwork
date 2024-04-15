@@ -170,6 +170,14 @@ class DefaultComponentSeeder extends Seeder
                 'special' => false,
                 'sidebar_enabled' => true,
                 'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
+            ],
+            [
+                'name' => 'Budgetinformationen',
+                'type' => TabComponentEnums::BUDGET_INFORMATIONS,
+                'data' => [],
+                'special' => true,
+                'sidebar_enabled' => true,
+                'permission_type' => ComponentPermissionNameEnum::PERMISSION_TYPE_ALL_SEE_AND_EDIT->value
             ]
         ];
 
@@ -181,7 +189,7 @@ class DefaultComponentSeeder extends Seeder
         $this->createInformationSidebar($this->createScheduleTab());
         $this->createInformationSidebar($this->createChecklistsTab());
         $this->createShiftsSidebar($this->createShiftsTab());
-        $this->createBudgetTab();
+        $this->createBudgetSidebar($this->createBudgetTab());
         $this->createInformationSidebar($this->createCommentsTab());
     }
 
@@ -194,20 +202,23 @@ class DefaultComponentSeeder extends Seeder
         ]);
         $projectInformationSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::PROJECT_TEAM)
-                ->first()->id,
+                ->where('type', TabComponentEnums::PROJECT_TEAM->value)
+                ->first()
+                ->id,
             'order' => 1,
         ]);
         $projectInformationSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::SEPARATOR)
-                ->first()->id,
+                ->where('type', TabComponentEnums::SEPARATOR->value)
+                ->first()
+                ->id,
             'order' => 2,
         ]);
         $projectInformationSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::PROJECT_ATTRIBUTES)
-                ->first()->id,
+                ->where('type', TabComponentEnums::PROJECT_ATTRIBUTES->value)
+                ->first()
+                ->id,
             'order' => 3,
         ]);
     }
@@ -221,33 +232,54 @@ class DefaultComponentSeeder extends Seeder
         ]);
         $projectShiftsSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::RELEVANT_DATES_FOR_SHIFT_PLANNING)
-                ->first()->id,
+                ->where('type', TabComponentEnums::RELEVANT_DATES_FOR_SHIFT_PLANNING->value)
+                ->first()
+                ->id,
             'order' => 1,
         ]);
         $projectShiftsSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::SEPARATOR)
-                ->first()->id,
+                ->where('type', TabComponentEnums::SEPARATOR->value)
+                ->first()
+                ->id,
             'order' => 2,
         ]);
         $projectShiftsSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::SHIFT_CONTACT_PERSONS)
-                ->first()->id,
+                ->where('type', TabComponentEnums::SHIFT_CONTACT_PERSONS->value)
+                ->first()
+                ->id,
             'order' => 3,
         ]);
         $projectShiftsSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::SEPARATOR)
-                ->first()->id,
+                ->where('type', TabComponentEnums::SEPARATOR->value)
+                ->first()
+                ->id,
             'order' => 4,
         ]);
         $projectShiftsSidebarTab->componentsInSidebar()->create([
             'component_id' => Component::query()
-                ->where('type', TabComponentEnums::GENERAL_SHIFT_INFORMATION)
-                ->first()->id,
+                ->where('type', TabComponentEnums::GENERAL_SHIFT_INFORMATION->value)
+                ->first()
+                ->id,
             'order' => 5,
+        ]);
+    }
+
+    private function createBudgetSidebar(ProjectTab $projectTab): void
+    {
+        /** @var ProjectTabSidebarTab $budgetInformationSidebarTab */
+        $budgetInformationSidebarTab = $projectTab->sidebarTabs()->create([
+            'name' => 'Budgetinformationen',
+            'order' => 1
+        ]);
+        $budgetInformationSidebarTab->componentsInSidebar()->create([
+            'component_id' => Component::query()
+                ->where('type', TabComponentEnums::BUDGET_INFORMATIONS)
+                ->first()
+                ->id,
+            'order' => 1,
         ]);
     }
 

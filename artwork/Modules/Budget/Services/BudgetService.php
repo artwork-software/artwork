@@ -3,10 +3,12 @@
 namespace Artwork\Modules\Budget\Services;
 
 use App\Enums\BudgetTypesEnum;
+use App\Http\Resources\EventTypeResource;
 use App\Models\CollectingSociety;
 use App\Models\CompanyType;
 use App\Models\ContractType;
 use App\Models\Currency;
+use App\Models\EventType;
 use App\Models\MoneySource;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\Column;
@@ -19,6 +21,7 @@ use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
@@ -346,5 +349,24 @@ readonly class BudgetService
         }
 
         return $recentlyCreatedSageAssignedDataComment;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getBudgetInformationsForProjectTab(Project $project, array $loadedProjectInformation): array
+    {
+        $loadedProjectInformation['BudgetInformations'] = [
+            'projectManagerIds' => $project->managerUsers()->pluck('user_id'),
+            'project_files' => $project->project_files,
+            'contracts' => $project->contracts()->with(['tasks', 'company_type', 'contract_type', 'currency'])->get(),
+            'access_budget' => $project->access_budget,
+            'projectMoneySources' => $project->moneySources()->get(),
+            'contractTypes' => ContractType::all()->toArray(),
+            'companyTypes' => CompanyType::all()->toArray(),
+            'currencies' => Currency::all()->toArray(),
+            'collectingSocieties' => CollectingSociety::all()->toArray(),
+        ];
+        return $loadedProjectInformation;
     }
 }

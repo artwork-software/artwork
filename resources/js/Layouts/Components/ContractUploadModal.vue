@@ -23,9 +23,7 @@
                     <div @click="selectNewFiles" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
                         border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-buttonBlue font-bold text-center">
-                            {{ $t('Drag document here to upload or click in the field') }}
-                        </p>
+                        <p class="text-buttonBlue font-bold text-center" v-html="$t('Drag document here to upload or click in the field')"></p>
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
@@ -474,7 +472,7 @@ export default {
                 company_type_id: null,
                 contract_type_id: null,
                 amount: '',
-                currency_id: null,
+                currency_id: 1,
                 ksk_liable: false,
                 resident_abroad: false,
                 has_power_of_attorney: false,

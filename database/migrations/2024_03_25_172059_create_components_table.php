@@ -43,6 +43,7 @@ return new class extends Migration
                     TabComponentEnums::COMMENT_ALL_TAB->value,
                     TabComponentEnums::PROJECT_ALL_DOCUMENTS->value,
                     TabComponentEnums::CHECKLIST_ALL->value,
+                    TabComponentEnums::BUDGET_INFORMATIONS->value
                 ]
             )->default(TabComponentEnums::TEXT_FIELD->value);
             $table->json('data')->nullable();

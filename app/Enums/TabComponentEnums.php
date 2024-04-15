@@ -34,6 +34,8 @@ enum TabComponentEnums: string
     case PROJECT_TITLE = 'ProjectTitleComponent';
     case SEPARATOR = 'SeparatorComponent';
 
+    case BUDGET_INFORMATIONS = 'BudgetInformations';
+
     /**
      * Get all available values
      * @return array[]

@@ -1793,6 +1793,13 @@ class ProjectController extends Controller
                     $headerObject->project->shift_contacts = $project->shift_contact;
                     $headerObject->project->project_managers = $project->managerUsers;
                 }
+
+                if ($component->type === 'BudgetInformations') {
+                    $loadedProjectInformation = $this->budgetService->getBudgetInformationsForProjectTab(
+                        $project,
+                        $loadedProjectInformation
+                    );
+                }
             }
         }
 

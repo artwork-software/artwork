@@ -570,6 +570,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
         [UserShiftCalendarFilterController::class, 'updateDates']
     )->name('update.user.shift.calendar.filter.dates');
 
+    //user.update.zoom_factor
+    Route::patch('/user/{user}/update/zoom_factor', [UserController::class, 'updateZoomFactor'])
+        ->name('user.update.zoom_factor');
+
     Route::resource(
         'user.commentedBudgetItemsSettings',
         UserCommentedBudgetItemsSettingController::class

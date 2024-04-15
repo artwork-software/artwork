@@ -21,7 +21,7 @@
                                     {{ this.isCreateMode() ? $t('Create a new component') : $t('Edit component') }}
                                 </div>
                                 <Listbox v-if="this.isCreateMode()" as="div" v-model="selectedType">
-                                    <ListboxLabel class="block text-sm font-medium leading-6 text-gray-900">{{$t('Component Layout')}}</ListboxLabel>
+                                    <ListboxLabel class="xsLight">{{$t('Component Layout')}}</ListboxLabel>
                                     <div class="relative mt-2">
                                         <ListboxButton class="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
                                             <span class="block truncate">{{ $t(selectedType?.name) }}</span>
@@ -45,7 +45,7 @@
                                     </div>
                                 </Listbox>
                                 <div>
-                                    <label for="componentName" class="block text-sm font-medium leading-6 text-gray-900">{{$t('Name of the component')}}</label>
+                                    <label for="componentName" class="xsLight">{{$t('Name of the component')}}</label>
                                     <div class="mt-2">
                                         <input :disabled="this.componentToEdit?.special"
                                                type="text"
@@ -64,38 +64,44 @@
                                     </span>
                                 </div>
                                 <div v-if="!this.componentToEdit?.special">
-                                    <div class="my-3 font-bold text-sm">
+                                    <div class="mt-4 headline4">
                                         {{ this.isCreateMode() ? $t('Enter basic data') : $t('Edit basic data') }}
                                     </div>
                                     <div v-for="(text, index) in textData">
-                                        <div class="mb-3" v-if="index === 'title'">
-                                            <label :for="index" class="block text-sm font-medium leading-6 text-gray-900">{{ $t('Title')}}</label>
-                                            <div class="mt-2">
+                                        <div class="mb-1" v-if="index === 'title'">
+                                            <label :for="index" class="xsLight">{{ $t('Title')}}</label>
+                                            <div class="mt-1">
                                                 <input type="text" v-model="textData.title" :id="index" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
                                             </div>
                                         </div>
-                                        <div class="mb-3" v-if="index === 'label'">
-                                            <label :for="index" class="block text-sm font-medium leading-6 text-gray-900">{{ $t('label')}}</label>
-                                            <div class="mt-2">
+                                        <div class="mb-1" v-if="index === 'label'">
+                                            <label :for="index" class="xsLight">{{ $t('label')}}</label>
+                                            <div class="mt-1">
                                                 <input type="text" v-model="textData.label" :id="index" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
                                             </div>
                                         </div>
-                                        <div class="mb-3" v-if="index === 'text'">
-                                            <label :for="index" class="block text-sm font-medium leading-6 text-gray-900">{{ $t('Text')}}</label>
-                                            <div class="mt-2">
+                                        <div class="mb-1" v-if="index === 'text'">
+                                            <label :for="index" class="xsLight">{{ $t('Text')}}</label>
+                                            <div class="mt-1">
                                                 <input type="text" v-model="textData.text" :id="index" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
                                             </div>
                                         </div>
-                                        <div class="mb-3" v-if="index === 'placeholder'">
-                                            <label :for="index" class="block text-sm font-medium leading-6 text-gray-900">{{ $t('Placeholder')}}</label>
-                                            <div class="mt-2">
+                                        <div class="mb-1" v-if="index === 'placeholder'">
+                                            <label :for="index" class="xsLight">{{ $t('Placeholder')}}</label>
+                                            <div class="mt-1">
                                                 <input type="text" v-model="textData.placeholder" :id="index" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
                                             </div>
                                         </div>
-                                        <div class="mb-3" v-if="index === 'height'">
-                                            <label :for="index" class="block text-sm font-medium leading-6 text-gray-900">{{ $t('Height - ({0} pixels)', [textData.height])}}</label>
-                                            <div class="mt-2">
+                                        <div class="mb-1" v-if="index === 'height'">
+                                            <label :for="index" class="xsLight">{{ $t('Height - ({0} pixels)', [textData.height])}}</label>
+                                            <div class="mt-1">
                                                 <input type="range" v-model="textData.height" min="0" max="150" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
+                                            </div>
+                                        </div>
+                                        <div class="mb-1" v-if="index === 'title_size'">
+                                            <label :for="index" class="xsLight">{{ $t('Font Size - ({0} pixels)', [textData.title_size])}}</label>
+                                            <div class="mt-1">
+                                                <input type="range" v-model="textData.title_size" min="10" max="35" class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300" />
                                             </div>
                                         </div>
                                         <div class="relative flex items-start"  v-if="index === 'showLine'">
@@ -103,7 +109,7 @@
                                                 <input :id="index"  v-model="textData.showLine" :checked="textData.showLine" aria-describedby="comments-description" name="comments" type="checkbox" class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300" />
                                             </div>
                                             <div class="ml-3 text-sm leading-6">
-                                                <label :for="index" class="font-medium text-gray-900">{{ $t('Show a separator line')}} </label>
+                                                <label :for="index" class="xsLight">{{ $t('Show a separator line')}} </label>
                                             </div>
                                         </div>
                                         <div class="relative flex items-start"  v-if="index === 'checked'">
@@ -111,13 +117,13 @@
                                                 <input :id="index"  v-model="textData.checked" :checked="textData.checked" aria-describedby="comments-description" name="comments" type="checkbox" class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300" />
                                             </div>
                                             <div class="ml-3 text-sm leading-6">
-                                                <label :for="index" class="font-medium text-gray-900">{{ $t('This checkbox is activated by default')}} </label>
+                                                <label :for="index" class="xsLight">{{ $t('This checkbox is activated by default')}} </label>
                                             </div>
                                         </div>
                                     </div>
                                     <div v-if="textData.options?.length > 0">
                                         <div class="mb-3" v-for="(field, optionIndex) in textData.options">
-                                            <label :for="'option-' + optionIndex" class="text-sm font-medium leading-6 text-gray-900 flex items-center justify-between">Option ({{ optionIndex + 1 }})
+                                            <label :for="'option-' + optionIndex" class="xsLight flex items-center justify-between">Option ({{ optionIndex + 1 }})
                                                 <span v-if="optionIndex !== 0" class="text-xs text-end underline underline-offset-2 text-artwork-buttons-create cursor-pointer" @click="removeOption(optionIndex)">
                                                     {{ $t('Remove') }}
                                                 </span>
@@ -131,7 +137,7 @@
                                         </div>
                                         <div  v-if="textData.options[0].value">
                                             <Listbox as="div" v-model="textData.selected">
-                                                <ListboxLabel class="block text-sm font-medium leading-6 text-gray-900">{{ $t('Standard Option') }}</ListboxLabel>
+                                                <ListboxLabel class="xsLight">{{ $t('Standard Option') }}</ListboxLabel>
                                                 <div class="relative mt-2">
                                                     <ListboxButton class="relative w-full cursor-default rounded-md bg-white h-10 py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
                                                         <span class="block truncate">{{ textData.selected }}</span>
@@ -161,7 +167,7 @@
                                     </div>
                                 </div>
                                 <div v-if="this.isComponentQualifiedForPermissions()">
-                                    <div class="my-3 font-bold text-sm">
+                                    <div class="mt-3 mb-2 font-bold text-sm">
                                         {{ $t('Configure component permissions') }}
                                     </div>
                                     <div class="flex flex-col space-y-1">
@@ -187,7 +193,7 @@
                                                        :placeholder="$t('Search for teams and/or users')"
                                                        @input="this.searchUsersAndTeams()"
                                                        v-model="this.userAndTeamsQuery"
-                                                       class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                                       class="h-12 mt-1 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                                 <div v-if="(this.userAndTeamsSearchResult?.users.length > 0 || this.userAndTeamsSearchResult?.users.length > 0) && this.userAndTeamsQuery.length > 0"
                                                      class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                                             text-base ring-1 ring-black ring-opacity-5
@@ -254,7 +260,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="flex flex-col space-y-1">
+                                        <div class="flex flex-col">
                                             <div class="flex flex-row items-center space-x-1">
                                                 <input id="someSeeSomeEdit" type="radio" v-model="this.modulePermissions.permission_type" value="someSeeSomeEdit"/>
                                                 <label for="someSeeSomeEdit" class="xsLight">Sehen darf nur:</label>
@@ -264,7 +270,7 @@
                                                        :placeholder="$t('Search for teams and/or users')"
                                                        @input="this.searchUsersAndTeams()"
                                                        v-model="this.userAndTeamsQuery"
-                                                       class="h-12 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                                       class="h-12 mt-1 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                                 <div v-if="(this.userAndTeamsSearchResult?.users.length > 0 || this.userAndTeamsSearchResult?.users.length > 0) && this.userAndTeamsQuery.length > 0"
                                                      class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                                             text-base ring-1 ring-black ring-opacity-5

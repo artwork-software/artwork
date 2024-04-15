@@ -45,10 +45,20 @@ class ProjectTabController extends Controller
 
     public function destroy(ProjectTab $projectTab): void
     {
+        // check if tab in ComponentsInTab in scopes and delete them
+        $componentsInTabWithTabAsScope = ComponentInTab::whereJsonContains('scope', $projectTab->id)->get();
+        // now remove the tab from the scope
+        foreach ($componentsInTabWithTabAsScope as $componentInTab) {
+            $componentInTab->scope = array_diff($componentInTab->scope, [$projectTab->id]);
+            $componentInTab->save();
+        }
+
         foreach ($projectTab->components as $component) {
             ProjectComponentValue::where('component_id', $component->id)->delete();
             $component->delete();
         }
+
+
         $projectTab->delete();
     }
 
@@ -98,6 +108,17 @@ class ProjectTabController extends Controller
         $projectTabSidebarTab->componentsInSidebar()->create([
             'component_id' => $request->input('component_id'),
             'order' => $request->input('order'),
+        ]);
+    }
+
+    public function addComponentWithScopes(ProjectTab $projectTab, Request $request): void
+    {
+        $order = $request->input('order');
+        ComponentInTab::where('project_tab_id', $projectTab->id)->where('order', '>=', $order)->increment('order');
+        $projectTab->components()->create([
+            'component_id' => $request->input('component_id'),
+            'order' => $request->input('order'),
+            'scope' => $request->input('scope'),
         ]);
     }
 }

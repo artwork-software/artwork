@@ -1669,7 +1669,7 @@ class ProjectController extends Controller
             foreach ($projectTabComponents as $componentInTab) {
                 $component = $componentInTab->component;
                 if ($component->type === 'ChecklistComponent') {
-                    $headerObject = $this->checklistService->getProjectChecklists($project, $headerObject, $projectTab);
+                    $headerObject = $this->checklistService->getProjectChecklists($project, $headerObject, $componentInTab);
                 }
 
                 if ($component->type === 'ChecklistAllComponent') {
@@ -1677,7 +1677,7 @@ class ProjectController extends Controller
                 }
 
                 if ($component->type === 'CommentTab') {
-                    $headerObject->project->comments = $project->comments()->where('tab_id', $projectTab->id)
+                    $headerObject->project->comments = $project->comments()->whereIn('tab_id', $componentInTab->scope)
                         ->with('user')->get();
                 }
                 if ($component->type === 'CommentAllTab') {
@@ -1687,7 +1687,7 @@ class ProjectController extends Controller
                 if ($component->type === 'ProjectDocumentsComponent') {
                     $headerObject->project->project_files_tab = $project
                         ->project_files()
-                        ->where('tab_id', $projectTab->id)
+                        ->whereIn('tab_id', $componentInTab->scope)
                         ->get();
                 }
 

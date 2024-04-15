@@ -1690,6 +1690,7 @@
     "Text": "Text",
     "label": "label",
     "Height - ({0} pixels)": "Height - ({0} pixels)",
+    "Font Size - ({0} pixels)": "Font Size - ({0} pixels)",
     "This checkbox is activated by default": "This checkbox is activated by default",
     "Add another option": "Add another option",
     "Standard Option": "Standard Option",

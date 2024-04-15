@@ -112,7 +112,7 @@ export default {
                 </transition>
             </Menu>
         </div>
-        <DropNewComponent :is-sidebar="true" :tab="sidebarTab" :order="1" @tab-opened="openTab" />
+        <DropNewComponent :is-sidebar="true" :all-tabs="null" :tab="sidebarTab" :order="1" @tab-opened="openTab" />
         <div v-if="!tabClosed">
             <draggable ghost-class="opacity-50" key="draggableKey" item-key="id" :list="sidebarTab.components_in_sidebar" @start="dragging=true" @end="dragging=false" @change="updateComponentOrder(sidebarTab.components_in_sidebar)">
                 <template #item="{element}" :key="element.id">
@@ -174,7 +174,7 @@ export default {
                                 </div>
                             </div>
                         </div>
-                        <DropNewComponent :is-sidebar="true" :tab="sidebarTab" :order="element.order + 1" @tab-opened="openTab" />
+                        <DropNewComponent :is-sidebar="true" :all-tabs="null" :tab="sidebarTab" :order="element.order + 1" @tab-opened="openTab" />
                     </div>
                 </template>
             </draggable>

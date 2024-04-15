@@ -1179,6 +1179,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
                 'addComponentSidebar']
             )
                 ->name('tab.add.component.sidebar');
+            // tab.add.component.with.scopes
+            Route::post('/{projectTab}/add/component/with/scopes', [
+                \App\Http\Controllers\ProjectTabController::class,
+                'addComponentWithScopes'
+            ])->name('tab.add.component.with.scopes');
         });
         Route::group(['prefix' => 'component'], function (): void {
             // index

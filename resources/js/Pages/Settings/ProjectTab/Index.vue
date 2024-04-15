@@ -100,7 +100,7 @@ export default {
                        <template #item="{element}" :key="element.id">
                            <div class="mb-2">
                                <div class="" :key="element.id" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                   <SingleTabComponent :tab="element" />
+                                   <SingleTabComponent :all-tabs="tabs" :tab="element" />
                                </div>
                            </div>
                         </template>
@@ -126,16 +126,16 @@ export default {
                     <div v-for="componentsArray in filteredComponents">
                         <div>
                             <div class="flex items-center gap-x-4 cursor-pointer">
-                                <h2 class="text-md font-bold">{{ $t(componentsArray.name) }}</h2>
+                                <h2 class="text-md font-bold mb-2">{{ $t(componentsArray.name) }}</h2>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-3">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-2">
                                 <DragComponentElement v-for="component in componentsArray.components" :component="component" />
                             </div>
                         </div>
                    </div>
                    <div>
-                       <h2 class="text-md font-bold mb-3">{{ $t('Special components') }}</h2>
-                       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-3">
+                       <h2 class="text-md font-bold mb-2">{{ $t('Special components') }}</h2>
+                       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-2">
                            <DragComponentElement v-for="component in filteredSpecialComponents" :component="component" />
                        </div>
                    </div>

@@ -12,6 +12,7 @@ use Artwork\Modules\Checklist\Http\Requests\ChecklistUpdateRequest;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Checklist\Repositories\ChecklistRepository;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Models\ComponentInTab;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\Tasks\Services\TaskService;
 use Illuminate\Database\Eloquent\Collection;
@@ -86,19 +87,22 @@ class ChecklistService
         $this->taskService->restoreAll($checklist->tasks);
     }
 
-    public function getProjectChecklists(Project $project, stdClass $headerObject, ProjectTab $projectTab): stdClass
-    {
+    public function getProjectChecklists(
+        Project $project,
+        stdClass $headerObject,
+        ComponentInTab $componentInTab
+    ): stdClass {
         $headerObject->project->opened_checklists = User::where('id', Auth::id())
             ->first()->opened_checklists;
         $headerObject->project->checklist_templates = ChecklistTemplateIndexResource::collection(
             ChecklistTemplate::all()
         )->resolve();
         $headerObject->project->public_checklists = ChecklistIndexResource::collection(
-            $project->checklists->whereNull('user_id')->where('tab_id', $projectTab->id)
+            $project->checklists->whereNull('user_id')->whereIn('tab_id', $componentInTab->scope)
         )
             ->resolve();
         $headerObject->project->private_checklists = ChecklistIndexResource::collection(
-            $project->checklists->where('user_id', Auth::id())->where('tab_id', $projectTab->id)
+            $project->checklists->where('user_id', Auth::id())->whereIn('tab_id', $componentInTab->scope)
         )->resolve();
         return $headerObject;
     }

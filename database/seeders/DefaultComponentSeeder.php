@@ -196,7 +196,8 @@ class DefaultComponentSeeder extends Seeder
             'name' => 'Short Description',
             'type' => TabComponentEnums::TITLE,
             'data' => [
-                'title' => 'Short Description'
+                'title' => 'Short Description',
+                'title_size' => '15'
             ],
             'special' => false,
             'sidebar_enabled' => true,
@@ -232,6 +233,7 @@ class DefaultComponentSeeder extends Seeder
             'type' => TabComponentEnums::TITLE,
             'data' => [
                 'title' => 'Website-Text',
+                'title_size' => '15'
             ],
             'special' => false,
             'sidebar_enabled' => true,
@@ -266,6 +268,7 @@ class DefaultComponentSeeder extends Seeder
             'type' => TabComponentEnums::TITLE,
             'data' => [
                 'title' => 'ÖA',
+                'title_size' => '15'
             ],
             'special' => false,
             'sidebar_enabled' => true,
@@ -300,7 +303,7 @@ class DefaultComponentSeeder extends Seeder
                 ->where('type', TabComponentEnums::PROJECT_DOCUMENTS)
                 ->first()
                 ?->id,
-            'order' => 7
+            'order' => 7,
         ]);
     }
 

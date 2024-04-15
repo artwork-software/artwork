@@ -6,6 +6,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+* Class ComponentInTab
+ * @package Artwork\Modules\ProjectTab\Models
+ * @property Component component
+ * @property int id
+ * @property int project_tab_id
+ * @property int component_id
+ * @property int order
+ * @property array scope
+ */
 class ComponentInTab extends Model
 {
     use HasFactory;
@@ -15,6 +25,10 @@ class ComponentInTab extends Model
         'component_id',
         'order',
         'scope'
+    ];
+
+    protected $casts = [
+        'scope' => 'array'
     ];
 
     protected $with = ['component'];

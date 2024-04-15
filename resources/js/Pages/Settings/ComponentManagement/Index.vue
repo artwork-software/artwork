@@ -29,8 +29,8 @@
                 </div>
                 <div v-for="(componentsArray, index) in filteredComponents">
                     <h2 class="text-md font-bold mb-3">{{ $t(index) }}</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-12 gap-3">
-                        <div class="p-3 rounded-lg border mb-3 flex flex-col h-28 justify-center items-center group relative" v-for="component in componentsArray">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 3xl:grid-cols-12 gap-3 w-full">
+                        <div class="p-3 rounded-lg border mb-3 flex flex-col h-28 min-w-28 justify-center items-center group relative" v-for="component in componentsArray">
                             <SingleComponent :component="component" />
                         </div>
                     </div>

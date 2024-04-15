@@ -13,6 +13,7 @@
                              :money-sources="moneySources ?? loadedProjectInformation['BudgetTab']?.moneySources"
                              :budget-access="projectWriteIds ?? headerObject?.projectWriteIds"
                              :project-manager="projectManagerIds ?? headerObject?.projectManagerIds"
+                             :first_project_budget_tab_id="this.first_project_budget_tab_id"
                              @changeProjectHeaderVisualisation="changeProjectHeaderVisualisation"
             />
         </div>
@@ -46,7 +47,8 @@ export default{
         'projectManagerIds',
         'sageNotAssigned',
         'loadedProjectInformation',
-        'headerObject'
+        'headerObject',
+        'first_project_budget_tab_id'
     ],
     data(){
         return {

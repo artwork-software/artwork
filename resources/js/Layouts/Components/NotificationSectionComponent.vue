@@ -117,11 +117,9 @@
 </template>
 
 <script>
-
-
 import {ChevronDownIcon} from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
-import {ChevronRightIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
+import {ChevronRightIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
@@ -131,7 +129,6 @@ import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequest
 import AnswerEventRequestWithRoomChangeComponent from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent";
-import NotificationBudgetRequest from "@/Layouts/Components/NotificationBudgetRequest.vue";
 import NotificationPublicChangesInfo from "@/Layouts/Components/NotificationPublicChangesInfo.vue";
 import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 import Permissions from "@/mixins/Permissions.vue";
@@ -142,7 +139,6 @@ export default  {
     components: {
         NotificationBlock,
         NotificationPublicChangesInfo,
-        NotificationBudgetRequest,
         TeamIconCollection,
         EventTypeIconCollection,
         ChevronDownIcon,

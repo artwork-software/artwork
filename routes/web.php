@@ -133,9 +133,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {
-        Route::get('/projects/{project}/budget', [ProjectController::class, 'projectBudgetTab'])
-            ->name('projects.show.budget');
-
         Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
     });
 

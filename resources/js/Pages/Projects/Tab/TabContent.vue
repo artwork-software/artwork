@@ -67,7 +67,8 @@ export default {
         'dataObject',
         'loadedProjectInformation',
         'first_project_tab_id',
-        'first_project_calendar_tab_id'
+        'first_project_calendar_tab_id',
+        'first_project_budget_tab_id'
     ],
     data() {
         return {
@@ -122,6 +123,7 @@ export default {
                     :tab_id="dataObject.currentTab.id"
                     :first_project_tab_id="this.first_project_tab_id"
                     :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+                    :first_project_budget_tab_id="this.first_project_budget_tab_id"
                 />
             </div>
         </div>

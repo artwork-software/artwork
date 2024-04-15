@@ -11,34 +11,19 @@ use App\Exports\ProjectBudgetsByBudgetDeadlineExport;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
-use App\Http\Resources\ChecklistIndexResource;
-use App\Http\Resources\ChecklistTemplateIndexResource;
 use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\FreelancerDropResource;
-use App\Http\Resources\ProjectCalendarShowEventResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectIndexShowResource;
-use App\Http\Resources\ProjectResources\ProjectBudgetResource;
-use App\Http\Resources\ProjectResources\ProjectCalendarResource;
-use App\Http\Resources\ProjectResources\ProjectChecklistResource;
-use App\Http\Resources\ProjectResources\ProjectCommentResource;
-use App\Http\Resources\ProjectResources\ProjectInfoResource;
-use App\Http\Resources\ProjectResources\ProjectShiftResource;
-use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
-use App\Http\Resources\ServiceProviderDropResource;
-use App\Http\Resources\UserDropResource;
 use App\Http\Resources\UserResourceWithoutShifts;
 use App\Models\Category;
-use App\Models\ChecklistTemplate;
 use App\Models\CollectingSociety;
 use App\Models\CompanyType;
 use App\Models\ContractType;
 use App\Models\CostCenter;
 use App\Models\Currency;
 use App\Models\EventType;
-use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\Genre;
 use App\Models\MoneySource;
@@ -54,12 +39,8 @@ use Artwork\Modules\Budget\Models\CellCalculation;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
-use Artwork\Modules\Budget\Models\MainPositionDetails;
-use Artwork\Modules\Budget\Models\SageAssignedDataComment;
-use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
-use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Budget\Services\BudgetService;
 use Artwork\Modules\Budget\Services\ColumnService;
@@ -71,7 +52,6 @@ use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
 use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
-use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
@@ -81,8 +61,6 @@ use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sage100\Services\Sage100Service;
-use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
-use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
@@ -90,7 +68,6 @@ use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -123,11 +100,11 @@ class ProjectController extends Controller
     public function __construct(
         private readonly ProjectService $projectService,
         private readonly BudgetService $budgetService,
-        private readonly SageApiSettingsService $sageApiSettingsService,
         private readonly BudgetColumnSettingService $budgetColumnSettingService,
         private readonly ChecklistService $checklistService,
         private readonly CalendarService $calendarService,
         private readonly ShiftService $shiftService,
+        private readonly ProjectTabService $projectTabService
     ) {
         // init notification controller
         $this->notificationService = new NotificationService();
@@ -512,7 +489,14 @@ class ProjectController extends Controller
             2 => [
                 'type' => 'link',
                 'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show.budget', $project->id) : null,
+                'href' => $project ?
+                    route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
             ]
         ];
         $this->notificationService->setTitle($notificationTitle);
@@ -573,7 +557,13 @@ class ProjectController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ]
             ];
             $this->notificationService->setTitle($notificationTitle);
@@ -624,7 +614,13 @@ class ProjectController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ]
             ];
 
@@ -691,7 +687,13 @@ class ProjectController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ]
             ];
             $this->notificationService->setTitle($notificationTitle);
@@ -741,7 +743,13 @@ class ProjectController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ]
             ];
 
@@ -798,7 +806,13 @@ class ProjectController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ]
             ];
             $this->notificationService->setTitle($notificationTitle);
@@ -835,7 +849,13 @@ class ProjectController extends Controller
             2 => [
                 'type' => 'link',
                 'title' =>  $project ? $project->name : '',
-                'href' => $project ? route('projects.show.budget', $project->id) : null,
+                'href' => $project ? route(
+                    'projects.tab',
+                    [
+                        $project->id,
+                        $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                    ]
+                ) : null,
             ]
         ];
         $this->notificationService->setTitle($notificationTitle);
@@ -919,7 +939,13 @@ class ProjectController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ]
             ];
             $this->notificationService->setTitle($notificationTitle);
@@ -976,7 +1002,13 @@ class ProjectController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ]
             ];
 
@@ -1818,7 +1850,8 @@ class ProjectController extends Controller
             'headerObject' => $headerObject,
             'loadedProjectInformation' => $loadedProjectInformation,
             'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id,
-            'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+            'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id,
+            'first_project_budget_tab_id' => $projectTabService->findFirstProjectTabWithBudgetComponent()?->id
         ]);
     }
 

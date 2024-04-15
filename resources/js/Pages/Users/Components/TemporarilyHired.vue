@@ -109,6 +109,10 @@ export default defineComponent({
                 }
             }
 
+            if (this.disabled) {
+                return;
+            }
+
             this.updateTemporaryEmploy();
         }
     }

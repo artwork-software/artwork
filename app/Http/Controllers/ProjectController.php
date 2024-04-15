@@ -1665,6 +1665,12 @@ class ProjectController extends Controller
 
         $projectTabComponents = $projectTab->components()->with('component')->get();
 
+        // merge the sidebar components with the project tab components
+        $sidebarComponents = $projectTab->sidebarTabs->map(fn ($sidebarTab) => $sidebarTab->componentsInSidebar)
+            ->flatten()->unique('id');
+
+        $projectTabComponents = $projectTabComponents->merge($sidebarComponents);
+
         if ($projectTabComponents->isNotEmpty()) {
             foreach ($projectTabComponents as $componentInTab) {
                 $component = $componentInTab->component;

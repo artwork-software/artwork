@@ -495,4 +495,9 @@ class UserController extends Controller
             'is_sidebar_opened'
         ]));
     }
+
+    public function updateZoomFactor(User $user, Request $request): void
+    {
+        $user->update($request->only('zoom_factor'));
+    }
 }

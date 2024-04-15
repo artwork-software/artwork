@@ -6,6 +6,7 @@ use App\Enums\BudgetTypesEnum;
 use App\Enums\NotificationConstEnum;
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
+use App\Enums\TabComponentEnums;
 use App\Exports\ProjectBudgetExport;
 use App\Exports\ProjectBudgetsByBudgetDeadlineExport;
 use App\Http\Requests\SearchRequest;
@@ -1677,7 +1678,7 @@ class ProjectController extends Controller
         if ($projectTabComponents->isNotEmpty()) {
             foreach ($projectTabComponents as $componentInTab) {
                 $component = $componentInTab->component;
-                if ($component->type === 'ChecklistComponent') {
+                if ($component->type === TabComponentEnums::CHECKLIST->value) {
                     $headerObject = $this->checklistService->getProjectChecklists(
                         $project,
                         $headerObject,
@@ -1685,42 +1686,35 @@ class ProjectController extends Controller
                     );
                 }
 
-                if ($component->type === 'ChecklistAllComponent') {
+                if ($component->type === TabComponentEnums::CHECKLIST_ALL->value) {
                     $headerObject = $this->checklistService->getProjectChecklistsAll($project, $headerObject);
                 }
 
-                if ($component->type === 'CommentTab') {
+                if ($component->type === TabComponentEnums::COMMENT_TAB->value) {
                     $headerObject->project->comments = $project->comments()->whereIn('tab_id', $componentInTab->scope)
                         ->with('user')->get();
                 }
-                if ($component->type === 'CommentAllTab') {
+
+                if ($component->type === TabComponentEnums::COMMENT_ALL_TAB->value) {
                     $headerObject->project->comments_all = $project->comments()->with('user')->get();
                 }
 
-                if ($component->type === 'ProjectDocumentsComponent') {
+                if ($component->type === TabComponentEnums::PROJECT_DOCUMENTS->value) {
                     $headerObject->project->project_files_tab = $project
                         ->project_files()
                         ->whereIn('tab_id', $componentInTab->scope)
                         ->get();
                 }
 
-                if ($component->type === 'ChecklistAllComponent') {
-                    $headerObject = $this->checklistService->getProjectChecklists(
-                        $project,
-                        $headerObject,
-                        $componentInTab
-                    );
-                }
-
-                if ($component->type === 'ProjectAllDocumentsComponent') {
+                if ($component->type === TabComponentEnums::PROJECT_ALL_DOCUMENTS->value) {
                     $headerObject->project->project_files_all = $project->project_files;
                 }
 
-                if ($component->type === 'ProjectStateComponent') {
+                if ($component->type === TabComponentEnums::PROJECT_STATUS->value) {
                     $headerObject->project->state = ProjectStates::find($project->state);
                 }
 
-                if ($component->type === 'ProjectTeamComponent') {
+                if ($component->type === TabComponentEnums::PROJECT_TEAM->value) {
                     $relationsToLoad->push(['categories',
                         'departments.users.departments',
                         'managerUsers',
@@ -1757,7 +1751,7 @@ class ProjectController extends Controller
                     $headerObject->project->delete_permission_users = $project->delete_permission_users;
                 }
 
-                if ($component->type === 'CalendarTab') {
+                if ($component->type === TabComponentEnums::CALENDAR->value) {
                     $loadedProjectInformation = $this->calendarService->getCalendarForProjectTab(
                         project: $project,
                         loadedProjectInformation: $loadedProjectInformation,
@@ -1765,7 +1759,7 @@ class ProjectController extends Controller
                     );
                 }
 
-                if ($component->type === 'BudgetTab') {
+                if ($component->type === TabComponentEnums::BUDGET->value) {
                     $loadedProjectInformation = $this->budgetService->getBudgetForProjectTab(
                         project: $project,
                         loadedProjectInformation: $loadedProjectInformation,
@@ -1773,7 +1767,7 @@ class ProjectController extends Controller
                     );
                 }
 
-                if ($component->type === 'ShiftTab') {
+                if ($component->type === TabComponentEnums::SHIFT_TAB->value) {
                     $headerObject->project->shift_relevant_event_types = $project->shiftRelevantEventTypes;
                     $headerObject->project->shift_contacts = $project->shift_contact;
                     $headerObject->project->project_managers = $project->managerUsers;
@@ -1789,12 +1783,12 @@ class ProjectController extends Controller
                     );
                 }
 
-                if ($component->type === 'ShiftContactPersonsComponent') {
+                if ($component->type === TabComponentEnums::SHIFT_CONTACT_PERSONS->value) {
                     $headerObject->project->shift_contacts = $project->shift_contact;
                     $headerObject->project->project_managers = $project->managerUsers;
                 }
 
-                if ($component->type === 'BudgetInformations') {
+                if ($component->type === TabComponentEnums::BUDGET_INFORMATIONS->value) {
                     $loadedProjectInformation = $this->budgetService->getBudgetInformationsForProjectTab(
                         $project,
                         $loadedProjectInformation

@@ -270,7 +270,6 @@ export default {
             this.$emit('previousTimeRange')
         },
         nextTimeRange(){
-            //console.log('nextTimeRange')
             this.$emit('nextTimeRange')
         },
         filtersChanged(activeFilters) {

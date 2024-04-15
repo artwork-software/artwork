@@ -16,8 +16,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             SettingsSeeder::class,
+            DefaultComponentSeeder::class,
             ContentSeeder::class,
-            CraftSeed::class,
+            CraftSeeder::class,
             ShiftQualificationSeeder::class,
             AuthUserSeeder::class,
             FreelancerSeeder::class,
@@ -25,7 +26,6 @@ class DatabaseSeeder extends Seeder
             WalidRaadSeeder::class,
             PermissionPresetSeeder::class,
             ChangeEventTypeSvgToHexSeed::class,
-            TabContentSeeder::class
         ]);
     }
 }

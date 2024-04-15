@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\SchedulingController;
+use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Illuminate\Console\Command;
 
 class NotificationScheduling extends Command

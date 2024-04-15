@@ -578,16 +578,6 @@ export default {
                 },
             }
         },
-        getRoute(pathName) {
-            switch (pathName) {
-                case 'dashboard':
-                    return route('dashboard')
-                case 'events':
-                    return route('events')
-                case 'projects':
-                    return route('projects.show.calendar', {project: window.location.pathname.split('/')[2]})
-            }
-        },
         reloadChanges() {
             Inertia.patch(route('update.user.calendar.filter', this.$page.props.user.id), {
                 is_loud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),

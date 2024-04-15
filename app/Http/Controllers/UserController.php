@@ -488,4 +488,11 @@ class UserController extends Controller
             'work_shifts'
         ]));
     }
+
+    public function updateSidebar(User $user, Request $request): void
+    {
+        $user->update($request->only([
+            'is_sidebar_opened'
+        ]));
+    }
 }

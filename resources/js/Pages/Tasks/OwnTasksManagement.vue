@@ -35,7 +35,8 @@
                     <!--     Task Index   -->
                     <div class="w-full">
                         <div v-for="task in tasksToDisplay" :key="task.id"  :id="task.id">
-                            <SingleTask :task="task" />
+                            wefwef
+                            <SingleTask :task="task" :first_project_tasks_tab_id="this.first_project_tasks_tab_id" />
                         </div>
                         <div v-for="task in money_source_task" :key="task.id" :id="task.id">
                             <SingleMoneySourceTask :task="task" />
@@ -63,7 +64,11 @@ import SingleTask from "@/Pages/Tasks/Components/SingleTask.vue";
 export default {
     mixins: [Permissions],
     name: "OwnTasksManagement",
-    props: ['tasks', 'money_source_task'],
+    props: [
+        'tasks',
+        'money_source_task',
+        'first_project_tasks_tab_id'
+    ],
     components: {
         SingleTask,
         SingleMoneySourceTask,

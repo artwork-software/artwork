@@ -163,7 +163,6 @@ export default defineComponent({
         },
         addOrRemoveFormUserList(user){
             const userIds = this.users.map(user => user.id);
-            console.log(user)
             if(userIds.includes(user.id)){
                 this.users = this.users.filter(u => u.id !== user.id)
             } else {

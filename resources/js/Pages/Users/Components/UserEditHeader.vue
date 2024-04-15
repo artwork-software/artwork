@@ -44,15 +44,11 @@
 </template>
 
 <script>
-
-
-import ProjectShowHeaderComponent from "@/Pages/Projects/Components/ProjectShowHeaderComponent.vue";
-import InfoTab from "@/Pages/Projects/Components/TabComponents/InfoTab.vue";
+import InfoTab from "@/Pages/Projects/Tab/Components/InfoTab.vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue";
 import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
-import ProjectSidenav from "@/Layouts/Components/ProjectSidenav.vue";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
 
@@ -60,11 +56,11 @@ export default {
     mixins: [Permissions],
     name: "UserEditHeader",
     components: {
-        ProjectSidenav,
         ProjectShiftSidenav,
         ProjectSecondSidenav,
         BaseSidenav,
-        AppLayout, InfoTab, ProjectShowHeaderComponent
+        AppLayout,
+        InfoTab
     },
 
     props: [

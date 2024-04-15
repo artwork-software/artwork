@@ -375,7 +375,8 @@ export default {
         'multiEdit',
         'atAGlance',
         'rooms',
-        "checkedEvents"
+        "checkedEvents",
+        'first_project_tab_id'
     ],
     emits: ['openEditEventModal', 'checkEvent'],
     computed: {
@@ -455,7 +456,6 @@ export default {
                 heightSubtraction += 17;
             }
             if (this.$page.props.user.calendar_settings.repeating_events && (!event.is_series || event.is_series === false)) {
-                console.log("event");
                 heightSubtraction += 20;
             }
             if (this.$page.props.user.calendar_settings.work_shifts && (!event.shifts || event.shifts?.length < 1)) {
@@ -549,7 +549,7 @@ export default {
             this.showAddSubEventModal = true;
         },
         getEditHref(projectId) {
-            return route('projects.show.info', {project: projectId});
+            return route('projects.tab', {project: projectId, projectTab: this.first_project_tab_id});
         },
     },
     watch: {

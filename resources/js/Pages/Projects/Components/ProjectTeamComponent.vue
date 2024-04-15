@@ -1,10 +1,10 @@
 <template>
     <div>
-        <div class="flex items-center justify-between">
-            <h2 class="mb-3 xWhiteBold">{{ $t('Project team') }}</h2>
-            <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+        <div class="flex items-center gap-x-5">
+            <h2 class=" xWhiteBold">{{ $t('Project team') }}</h2>
+            <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                       @click="showTeamModal = true"
-                      v-if="projectMembersWriteAccess()"
+                      v-if="this.canEditComponent && (projectMembersWriteAccess() || hasAdminRole())"
             />
         </div>
         <div class="flex w-full mt-2 flex-wrap">
@@ -12,7 +12,7 @@
                 class="flex font-black w-full xxsLightSidebar subpixel-antialiased tracking-widest uppercase">
                 {{ $t('Project management') }}
             </span>
-            <div class="flex flex-wrap mt-2 -mr-3" v-for="user in this.project.project_managers">
+            <div class="flex flex-wrap mt-2 -mr-3" v-for="user in project.project_managers">
                 <img :data-tooltip-target="user.id"
                      :src="user.profile_photo_url"
                      :alt="user.name"
@@ -25,7 +25,7 @@
                 {{ $t('Project team') }}
             </span>
             <div class="flex w-full">
-                <div class="flex" v-if="this.project.departments !== []">
+                <div class="flex" v-if="this.project.departments.length > 0">
                     <div class="flex mt-2 -mr-3" v-for="department in this.project.departments">
                         <TeamIconCollection :data-tooltip-target="department.name"
                                             :iconName="department.svg_name"
@@ -43,14 +43,16 @@
                 </div>
             </div>
         </div>
+        <!-- Modal -->
         <ProjectEditTeamModal :show="this.showTeamModal"
-                              :assigned-users="this.project.users"
+                              :assigned-users="this.project.usersArray"
                               :assigned-departments="this.project.departments"
                               :project-id="this.project.id"
                               :userIsProjectManager="this.userIsProjectManager"
                               @closed="this.showTeamModal = false"
         />
     </div>
+
 </template>
 
 <script>
@@ -74,7 +76,9 @@ export default defineComponent({
         TeamIconCollection
     },
     props: [
-        'project'
+        'project',
+        'inSidebar',
+        'canEditComponent'
     ],
     data() {
         return {
@@ -83,7 +87,15 @@ export default defineComponent({
     },
     computed: {
         onlyTeamMember() {
-            return this.project.users.filter(user => user.pivot_is_manager === false);
+            // return all users that are not project managers
+            return this.project.usersArray.filter(user => {
+                let managerIdArray = [];
+                this.project.project_managers.forEach(manager => {
+                        managerIdArray.push(manager.id)
+                    }
+                )
+                return !managerIdArray.includes(user.id);
+            });
         }
     },
     methods: {

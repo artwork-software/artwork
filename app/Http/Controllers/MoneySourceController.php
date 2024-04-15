@@ -22,6 +22,7 @@ use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Models\SubPositionSumDetail;
 use Artwork\Modules\Budget\Models\Table;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -185,7 +186,7 @@ class MoneySourceController extends Controller
 
     //@todo: fix phpcs error - refactor function because complexity exceeds allowed maximum
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
-    public function show(MoneySource $moneySource): Response|ResponseFactory
+    public function show(MoneySource $moneySource, ProjectTabService $projectTabService): Response|ResponseFactory
     {
         $moneySource->load([
             'moneySourceFiles'
@@ -467,7 +468,8 @@ class MoneySourceController extends Controller
                 'id' => $project->id,
                 'name' => $project->name,
             ]),
-            'linkedProjects' => $moneySource->projects()->get()
+            'linkedProjects' => $moneySource->projects()->get(),
+            'first_project_budget_tab_id' => $projectTabService->findFirstProjectTabWithBudgetComponent()?->id
         ]);
     }
 

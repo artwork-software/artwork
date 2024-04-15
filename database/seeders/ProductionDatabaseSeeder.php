@@ -18,7 +18,8 @@ class ProductionDatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             SettingsSeeder::class,
             PermissionPresetSeeder::class,
-            ShiftQualificationSeeder::class
+            ShiftQualificationSeeder::class,
+            DefaultComponentSeeder::class
         ]);
 
         DB::table('event_types')->insert([

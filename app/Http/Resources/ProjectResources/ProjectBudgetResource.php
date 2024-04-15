@@ -3,10 +3,8 @@
 namespace App\Http\Resources\ProjectResources;
 
 use App\Http\Resources\ContractResource;
-use App\Http\Resources\CopyrightResource;
 use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\ProjectFileResource;
-use App\Http\Resources\ProjectHeadlineResource;
 use App\Http\Resources\UserResourceWithoutShifts;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -41,7 +39,6 @@ class ProjectBudgetResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'project_headlines' => ProjectHeadlineResource::collection($this->headlines->sortBy('order'))->resolve(),
             'isMemberOfADepartment' => $this->departments
                 ->contains(fn ($department) => $department->users->contains(Auth::user())),
             'key_visual_path' => $this->key_visual_path,

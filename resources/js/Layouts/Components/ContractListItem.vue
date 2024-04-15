@@ -85,9 +85,7 @@ import IconLib from "@/mixins/IconLib.vue";
 export default {
     name: "ContractListItem",
     mixins: [Permissions, IconLib],
-    props: {
-        contract: Object
-    },
+    props: ['contract', 'first_project_tab_id'],
     emits: ['openDeleteContractModal', 'openEditContractModal'],
     components: {
         IconCopy,
@@ -106,7 +104,7 @@ export default {
             link.click();
         },
         getEditHref(project) {
-            //return route('projects.show.info', {project: project?.id});
+            return route('projects.tab', {project: project?.id, projectTab: this.first_project_tab_id});
         },
     }
 }

@@ -1,7 +1,11 @@
 <template>
-
     <div class="flex flex-row mt-2">
-        <span class="xxsLight">{{ budget.requested_position.name }}</span><span class="xxsLight ml-3"><a :href="route('projects.show.budget', budget.project.id)" class="text-indigo-700">{{ budget.project.name }}</a></span>
+        <span class="xxsLight">{{ budget.requested_position.name }}</span>
+        <span class="xxsLight ml-3">
+            <a :href="route('projects.tab', {project: this.budget.project.id, projectTab: this.first_project_budget_tab_id})" class="text-indigo-700">
+                {{ budget.project.name }}
+            </a>
+        </span>
     </div>
     <div class="mt-2 flex" v-if="budget.changeType === 'BUDGET_VERIFICATION_REQUEST'">
         <FormButton
@@ -23,10 +27,21 @@ export default {
     mixins: [Permissions],
     name: "NotificationBudgetRequest",
     components: {FormButton, Button, XIcon, Link},
-    props: ['budget'],
+    props: [
+        'budget',
+        'first_project_budget_tab_id'
+    ],
     methods: {
         redirectToBudget(){
-            location.replace(route('projects.show.budget', this.budget.requested_position.project_id))
+            location.replace(
+                route(
+                    'projects.tab',
+                    {
+                        project: this.budget.requested_position.project_id,
+                        projectTab: this.first_project_budget_tab_id
+                    }
+                )
+            );
         }
     }
 }

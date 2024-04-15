@@ -39,7 +39,8 @@ class Checklist extends Model
     protected $fillable = [
         'name',
         'project_id',
-        'user_id'
+        'user_id',
+        'tab_id'
     ];
 
     public function tasks(): HasMany

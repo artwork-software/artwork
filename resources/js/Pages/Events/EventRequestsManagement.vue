@@ -62,7 +62,7 @@
                                         <div class="ml-16 xsLight flex items-center">
                                             {{ $t('assigned to')}}
                                             <Link
-                                                :href="route('projects.show.calendar',{project: eventRequest.project.id})"
+                                                :href="route('projects.tab',{project: eventRequest.project.id, projectTab: this.first_project_calendar_tab_id})"
                                                 class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                                 {{ eventRequest.project?.name }}
                                             </Link>
@@ -371,7 +371,7 @@ export default defineComponent({
         Switch,
         UserTooltip
     },
-    props: ['event_requests'],
+    props: ['event_requests', 'first_project_calendar_tab_id'],
     methods: {
         usePage,
         getGermanWeekdayAbbreviation(englishWeekday) {

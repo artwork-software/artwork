@@ -23,9 +23,7 @@
                     <div @click="selectNewFiles" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
                         border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher ziehen
-                            <br>oder ins Feld klicken
-                        </p>
+                        <p class="text-buttonBlue font-bold text-center" v-html="$t('Drag document here to upload or click in the field')"></p>
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
@@ -408,7 +406,7 @@ export default {
         },
     },
     mounted() {
-        this.contract?.tasks.forEach(task => {
+        this.contract?.tasks?.forEach(task => {
             this.tasks.push(task)
         })
     },
@@ -491,8 +489,6 @@ export default {
             this.usersWithAccess.forEach((user) => {
                  userIds.push(user.id);
             })
-
-            console.log(userIds);
 
             this.contractForm.accessibleUsers = userIds;
             this.contractForm.tasks = this.tasks

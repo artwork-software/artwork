@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ProjectComponentValue;
 use Illuminate\Http\Request;
 
@@ -50,9 +52,22 @@ class ProjectComponentValueController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, ProjectComponentValue $projectComponentValue): void
+    public function update(Request $request, Project $project, Component $component): void
     {
-        //
+        $value = ProjectComponentValue::where('project_id', $project->id)
+            ->where('component_id', $component->id)->first();
+
+        if ($value === null) {
+            ProjectComponentValue::create([
+                'project_id' => $project->id,
+                'component_id' => $component->id,
+                'data' => $request->input('data'),
+            ]);
+        } else {
+            $value->update([
+                'data' => $request->input('data'),
+            ]);
+        }
     }
 
     /**

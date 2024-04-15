@@ -1,11 +1,11 @@
 <template>
     <div>
-        <div class="flex justify-between">
+        <div class="flex items-center gap-x-5">
             <div class="sLight">
                 {{ $t('General shift information') }}
             </div>
-            <div>
-                <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <div v-if="this.canEditComponent">
+                <PencilAltIcon class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                                @click="openShiftInformationModal"/>
             </div>
         </div>
@@ -36,7 +36,9 @@ export default defineComponent({
         PencilAltIcon
     },
     props: [
-        'project'
+        'project',
+        'inSidebar',
+        'canEditComponent'
     ],
     data() {
         return {

@@ -1,10 +1,10 @@
 <template>
     <div>
-        <div class="flex items-center justify-between">
-            <h2 class="mb-3 xWhiteBold">{{ $t('Project properties') }}</h2>
-            <IconEdit class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+        <div class="flex items-center gap-x-5">
+            <h2 class="xWhiteBold">{{ $t('Project properties') }}</h2>
+            <IconEdit class=" w-5 h-5 rounded-full " :class="inSidebar ? 'text-white' : 'text-artwork-buttons-context'"
                       @click="openProjectAttributeEditModal"
-                      v-if="projectMembersWriteAccess()"
+                      v-if="this.canEditComponent && projectMembersWriteAccess()"
             />
         </div>
         <div class="flex mt-3">
@@ -62,7 +62,9 @@ export default defineComponent({
         'genres',
         'projectCategoryIds',
         'projectGenreIds',
-        'projectSectorIds'
+        'projectSectorIds',
+        'inSidebar',
+        'canEditComponent'
     ],
     data() {
         return {

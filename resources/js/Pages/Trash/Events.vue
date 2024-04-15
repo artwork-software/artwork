@@ -35,7 +35,7 @@
                         <div v-if="event.project" class="mt-1.5 flex">
                             {{ $t('assigned to')}}:
                             <a v-if="event.project?.id"
-                               :href="route('projects.show.calendar', {project: event.project.id})"
+                               :href="route('projects.tab', {project: event.project.id, projectTab: this.first_project_calendar_tab_id})"
                                class="ml-3 text-md flex font-bold font-lexend text-primary">
                                 {{ event.project.name }}
                             </a>
@@ -118,7 +118,7 @@ import Input from "@/Layouts/Components/InputComponent.vue";
 export default {
     name: "Events",
     layout: [AppLayout, TrashLayout],
-    props: ['trashed_events'],
+    props: ['trashed_events', 'first_project_calendar_tab_id'],
     components: {
         Input, XIcon, SearchIcon,
         ChevronDownIcon,

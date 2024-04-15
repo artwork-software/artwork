@@ -16,11 +16,12 @@ use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
@@ -33,13 +34,16 @@ class ContractController extends Controller
 {
     protected ?NotificationService $notificationService = null;
 
+    private ?ProjectTabService $projectTabService = null;
+
     public function __construct()
     {
         //$this->authorizeResource(Contract::class);
         $this->notificationService = new NotificationService();
+        $this->projectTabService = new ProjectTabService(new ProjectTabRepository());
     }
 
-    public function viewIndex(): Response|ResponseFactory
+    public function viewIndex(ProjectTabService $projectTabService): Response|ResponseFactory
     {
         // get all contracts where i am creator or i am accessing user
         $contracts = Contract::where('creator_id', Auth::id())->get();
@@ -54,6 +58,8 @@ class ContractController extends Controller
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
             'currencies' => Currency::all(),
+            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id,
+            'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 
@@ -165,7 +171,13 @@ class ContractController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ]
             ];
 
@@ -244,7 +256,13 @@ class ContractController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ]
             ];
 
@@ -299,7 +317,13 @@ class ContractController extends Controller
                 2 => [
                     'type' => 'link',
                     'title' =>  $project ? $project->name : '',
-                    'href' => $project ? route('projects.show.budget', $project->id) : null,
+                    'href' => $project ? route(
+                        'projects.tab',
+                        [
+                            $project->id,
+                            $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+                        ]
+                    ) : null,
                 ],
                 3 => [
                     'type' => 'string',

@@ -28,10 +28,12 @@ class CommentService
         ?ProjectFile $projectFile = null,
         ?MoneySourceFile $moneySourceFile = null,
         ?Contract $contract = null,
+        ?int $tabId = null
     ): Comment {
         $comment = new Comment();
         $comment->text = $text;
         $comment->user()->associate($user);
+        $comment->tab_id = $tabId;
         if ($project) {
             $comment->project()->associate($project);
             $this->historyService->createHistory($project->id, 'Comment added');

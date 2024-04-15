@@ -1,5 +1,5 @@
 <template>
-    <Listbox as="div" v-model="selectedCollectingSociety" @change="console.log(selectedCollectingSociety)" id="collecting_society">
+    <Listbox as="div" v-model="selectedCollectingSociety" id="collecting_society">
         <ListboxButton
             class="border-2 border-gray-300 w-full cursor-pointer truncate flex p-4">
             <div v-if="selectedCollectingSociety" class="flex-grow text-left">

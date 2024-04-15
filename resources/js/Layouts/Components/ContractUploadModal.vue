@@ -23,9 +23,7 @@
                     <div @click="selectNewFiles" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
                         border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                        <p class="text-buttonBlue font-bold text-center">
-                            {{ $t('Drag document here to upload or click in the field') }}
-                        </p>
+                        <p class="text-buttonBlue font-bold text-center" v-html="$t('Drag document here to upload or click in the field')"></p>
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
@@ -41,7 +39,7 @@
                     <div class="flex xsDark my-2 items-center" v-if="selectedProject">
                     {{ $t('Currently assigned to:')}}
                     <a v-if="this.selectedProject?.id"
-                       :href="route('projects.show.calendar', {project: selectedProject.id})"
+                       :href="route('projects.tab', {project: selectedProject.id, projectTab: this.first_project_calendar_tab_id})"
                        class="ml-3 flex xsDark">
                         {{ this.selectedProject?.name }}
                     </a>
@@ -389,17 +387,16 @@ export default {
     name: "ContractUploadModal",
     mixins: [Permissions, IconLib],
     emits: ['closeModal'],
-    props: ['show', 'projectId', 'extraSettings', 'budgetAccess', 'contractTypes', 'companyTypes', 'currencies'],
-    /*props: {
-        show: Boolean,
-        closeModal: Function,
-        projectId: Number,
-        extraSettings: Array,
-        budgetAccess: Array,
-        contractTypes: Array,
-        companyTypes: Array,
-        currencies: Array,
-    },*/
+    props: [
+        'show',
+        'projectId',
+        'extraSettings',
+        'budgetAccess',
+        'contractTypes',
+        'companyTypes',
+        'currencies',
+        'first_project_calendar_tab_id'
+    ],
     components: {
         Input,
         InputComponent,
@@ -475,7 +472,7 @@ export default {
                 company_type_id: null,
                 contract_type_id: null,
                 amount: '',
-                currency_id: null,
+                currency_id: 1,
                 ksk_liable: false,
                 resident_abroad: false,
                 has_power_of_attorney: false,

@@ -27,7 +27,7 @@ class ProjectFile extends Model
     use SoftDeletes;
 
     protected $guarded = [
-        'id'
+        'id',
     ];
 
     public function accessingUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany

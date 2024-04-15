@@ -878,7 +878,8 @@ export default {
         'projectManager',
         'columns',
         'isBudgetTemplateManagement',
-        'sageNotAssigned'
+        'sageNotAssigned',
+        'first_project_budget_tab_id'
     ],
     emits: ['changeProjectHeaderVisualisation'],
     computed: {
@@ -1259,7 +1260,7 @@ export default {
         },
         openCellDetailModal(cell, type) {
             Inertia.get(
-                route('projects.show.budget', {project: this.project.id}),
+                route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}),
                 {
                     selectedCell: cell.id,
                 },
@@ -1274,7 +1275,7 @@ export default {
             );
         },
         openBudgetSumDetailModal(type, column, tab = 'comment') {
-            Inertia.get(route('projects.show.budget', {project: this.project.id}), {
+            Inertia.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}), {
                 selectedBudgetType: type,
                 selectedColumn: column.id,
             }, {
@@ -1287,7 +1288,7 @@ export default {
             })
         },
         openSubPositionSumDetailModal(subPosition, column, type) {
-            Inertia.get(route('projects.show.budget', {project: this.project.id}), {
+            Inertia.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}), {
                 selectedSubPosition: subPosition.id,
                 selectedColumn: column.id,
             }, {
@@ -1301,7 +1302,7 @@ export default {
             })
         },
         openMainPositionSumDetailModal(mainPosition, column, type) {
-            Inertia.get(route('projects.show.budget', {project: this.project.id}),
+            Inertia.get(route('projects.tab', {project: this.project.id, projectTab: this.first_project_budget_tab_id}),
                 {
                     selectedMainPosition: mainPosition.id,
                     selectedColumn: column.id,

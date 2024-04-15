@@ -105,6 +105,7 @@
         :wantedRoomId="wantedSplit"
         :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
         :roomCollisions="roomCollisions"
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
 
     <room-request-dialog-component
@@ -119,6 +120,7 @@
         :wantedRoomId="wantedSplit"
         :isAdmin="this.hasAdminRole()"
         :roomCollisions="roomCollisions"
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
 
     <!-- Termine ohne Raum Modal -->
@@ -131,6 +133,7 @@
         :eventsWithoutRoom="[event]"
         :isAdmin="this.hasAdminRole()"
         :removeNotificationOnAction="true"
+        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
     />
 
     <ConfirmDeleteModal
@@ -172,7 +175,20 @@ export default {
         RoomRequestDialogComponent
     },
     mixins: [Permissions],
-    props: ['notification', 'eventTypes', 'historyObjects', 'event', 'rooms', 'project', 'wantedSplit', 'roomCollisions', 'isArchive'],
+    props: [
+        'notification',
+        'eventTypes',
+        'historyObjects',
+        'event',
+        'rooms',
+        'project',
+        'wantedSplit',
+        'roomCollisions',
+        'isArchive',
+        'first_project_shift_tab_id',
+        'first_project_budget_tab_id',
+        'first_project_calendar_tab_id'
+    ],
     data() {
         return {
             showDeclineModal: false,
@@ -314,18 +330,33 @@ export default {
             }, {
                 preserveScroll: true,
                 preserveState: true
-            })
-            //this.setOnRead();
+            });
             this.showDeleteConfirmModal = false;
-        },
-        openProjectBudget(projectId) {
-            window.location.href = route('projects.show.budget', projectId);
         },
         checkNotificationKey(key){
             return key !== null || key !== '' || key.length > 0;
         },
-        openProjectShift(projectId, eventId, shiftId){
-            window.location.href = route('projects.show.shift', projectId) + '?eventId=' + eventId + '&shiftId=' + shiftId;
+        openProjectBudget(projectId) {
+            if (this.first_project_budget_tab_id) {
+                window.location.href = route(
+                    'projects.tab',
+                    {
+                        project: projectId,
+                        projectTab: this.first_project_budget_tab_id
+                    }
+                );
+            }
+        },
+        openProjectShift(projectId, eventId, shiftId) {
+            if (this.first_project_shift_tab_id) {
+                window.location.href = route(
+                    'projects.tab',
+                    {
+                        project: projectId,
+                        projectTab: this.first_project_shift_tab_id
+                    }
+                ) + '?eventId=' + eventId + '&shiftId=' + shiftId;
+            }
         },
         openProjectTasks(taskId){
             window.location.href = route('tasks.own') + '?taskId=' + taskId;

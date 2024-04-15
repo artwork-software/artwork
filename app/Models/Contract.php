@@ -97,9 +97,9 @@ class Contract extends Model
             ->without(['calender_settings', 'shifts', 'vacations', 'vacation_series', 'vacationer']);
     }
 
-    public function tasks(): BelongsToMany
+    public function tasks(): HasMany
     {
-        return $this->belongsToMany(Task::class);
+        return $this->hasMany(Task::class);
     }
 
     public function comments(): HasMany

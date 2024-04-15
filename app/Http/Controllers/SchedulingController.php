@@ -11,6 +11,8 @@ use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Models\GlobalNotification;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
+use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Carbon\Carbon;
 use DateTime;
@@ -23,6 +25,8 @@ class SchedulingController extends Controller
 
     protected ?stdClass $notificationData = null;
 
+    private ?ProjectTabService $projectTabService = null;
+
     public function __construct()
     {
         $this->notificationService = new NotificationService();
@@ -30,6 +34,7 @@ class SchedulingController extends Controller
         $this->notificationData->project = new stdClass();
         $this->notificationData->task = new stdClass();
         $this->notificationData->room = new stdClass();
+        $this->projectTabService = new ProjectTabService(new ProjectTabRepository());
     }
 
 
@@ -342,7 +347,13 @@ class SchedulingController extends Controller
                             'type' => 'link',
                             'title' => $event->project()->first() ? $event->project()->first()->name : '',
                             'href' => $event->project()->first() ?
-                                route('projects.show.calendar', $event->project()->first()->id) :
+                                route(
+                                    'projects.tab',
+                                    [
+                                        $event->project->id,
+                                        $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+                                    ]
+                                ) :
                                 null
                         ],
                         4 => [

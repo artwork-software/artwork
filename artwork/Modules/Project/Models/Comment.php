@@ -41,6 +41,12 @@ class Comment extends Model
         'money_source_file_id',
         'contract_id',
         'user_id',
+        'tab_id'
+    ];
+
+    protected $casts = [
+        'created_at' => 'datetime: d. M Y H:i:s',
+        'updated_at' => 'datetime',
     ];
 
     //@todo: fix phpcs error - refactor function name to projectFile

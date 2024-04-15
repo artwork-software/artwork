@@ -207,6 +207,7 @@ class DefaultComponentSeeder extends Seeder
         $projectInformationTab->components()->create([
             'component_id' => $shortDescriptionLabel->id,
             'order' => 1,
+            'scope' => []
         ]);
 
         /** @var Component $shortDescriptionComponent */
@@ -226,6 +227,7 @@ class DefaultComponentSeeder extends Seeder
         $projectInformationTab->components()->create([
             'component_id' => $shortDescriptionComponent->id,
             'order' => 2,
+            'scope' => []
         ]);
 
         $websiteTextTitleComponent = Component::create([
@@ -243,6 +245,7 @@ class DefaultComponentSeeder extends Seeder
         $projectInformationTab->components()->create([
             'component_id' => $websiteTextTitleComponent->id,
             'order' => 3,
+            'scope' => []
         ]);
 
         $websiteTextComponent = Component::create([
@@ -261,6 +264,7 @@ class DefaultComponentSeeder extends Seeder
         $projectInformationTab->components()->create([
             'component_id' => $websiteTextComponent->id,
             'order' => 4,
+            'scope' => []
         ]);
 
         $oeaTitleComponent = Component::create([
@@ -278,6 +282,7 @@ class DefaultComponentSeeder extends Seeder
         $projectInformationTab->components()->create([
             'component_id' => $oeaTitleComponent->id,
             'order' => 5,
+            'scope' => []
         ]);
 
         $oeaComponent = Component::create([
@@ -296,6 +301,7 @@ class DefaultComponentSeeder extends Seeder
         $projectInformationTab->components()->create([
             'component_id' => $oeaComponent->id,
             'order' => 6,
+            'scope' => []
         ]);
 
         $projectInformationTab->components()->create([
@@ -304,6 +310,7 @@ class DefaultComponentSeeder extends Seeder
                 ->first()
                 ?->id,
             'order' => 7,
+            'scope' => [$projectInformationTab->id]
         ]);
     }
 
@@ -318,6 +325,7 @@ class DefaultComponentSeeder extends Seeder
         $scheduleTab->components()->create([
             'component_id' => Component::query()->where('name', 'Calendar')->first()->id,
             'order' => 1,
+            'scope' => []
         ]);
     }
 
@@ -332,6 +340,7 @@ class DefaultComponentSeeder extends Seeder
         $checklistsTab->components()->create([
             'component_id' => Component::query()->where('name', 'Checklist')->first()->id,
             'order' => 1,
+            'scope' => [$checklistsTab->id]
         ]);
     }
 
@@ -346,6 +355,7 @@ class DefaultComponentSeeder extends Seeder
         $shiftsTab->components()->create([
             'component_id' => Component::query()->where('name', 'Shift Tab')->first()->id,
             'order' => 1,
+            'scope' => []
         ]);
     }
 
@@ -360,6 +370,7 @@ class DefaultComponentSeeder extends Seeder
         $budgetTab->components()->create([
             'component_id' => Component::query()->where('name', 'Budget')->first()->id,
             'order' => 1,
+            'scope' => []
         ]);
     }
 
@@ -374,6 +385,7 @@ class DefaultComponentSeeder extends Seeder
         $commentsTab->components()->create([
             'component_id' => Component::query()->where('name', 'Comment Tab')->first()->id,
             'order' => 1,
+            'scope' => [$commentsTab->id]
         ]);
     }
 }

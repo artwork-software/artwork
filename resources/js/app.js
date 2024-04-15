@@ -41,7 +41,7 @@ const appName = window.document.getElementsByTagName('title')[0]?.innerText || '
 
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: (title) => `${appName}`,
     resolve: (name) => require(`./Pages/${name}.vue`),
     setup({ el, app: inertiaApp, props, plugin }) {
         const app = createApp({ render: () => h(inertiaApp, props) })

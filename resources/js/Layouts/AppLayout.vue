@@ -1,4 +1,8 @@
 <template>
+    <Head>
+        <link rel="icon" type="image/png" :href="$page.props.small_logo" />
+        <title>{{ $page.props.name }}</title>
+    </Head>
     <!-- Static sidebar for desktop -->
     <div class="my-auto w-full">
         <div :class="this.fullSidenav ? 'sm:w-64' : 'sm:w-16'"
@@ -6,15 +10,16 @@
             <div class="w-full py-2 flex flex-col h-[100%] items-center justify-between">
                 <div>
                     <div class="flex items-center" :class="fullSidenav ? 'w-full' : ''">
-                        <div @mouseover="hoveredIcon = true" @mouseleave="hoveredIcon = false">
-                            <div v-if="!hoveredIcon" class="text-2xl font-bold text-secondaryHover">
-                                <img src="/Svgs/Logos/artwork_logo_small.svg"
-                                     :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" alt="artwork-logo"/>
+                        <div class="group relative">
+                            <div class="cursor-pointer absolute group-hover:block hidden bg-primary/70 z-10 h-full w-full" @click="changeSidenavMode()">
+                                <div class="flex items-center justify-center h-full w-full">
+                                    <IconChevronsRight v-if="!fullSidenav" class="h-6 w-6 text-white" aria-hidden="true"/>
+                                    <IconChevronsLeft v-else class="h-6 w-6 text-white" aria-hidden="true"/>
+                                </div>
                             </div>
-                            <div v-else class="cursor-pointer" :class="fullSidenav ? 'rotate-180' : ''"
-                                 @click="changeSidenavMode()">
-                                <img src="/Svgs/IconSvgs/icon_mainnav_arrows.svg" class=""
-                                     :class="fullSidenav ? 'h-12 w-12' : 'h-16 w-16'" aria-hidden="true"/>
+                            <div class="font-bold text-secondaryHover block">
+                                <img :src="$page.props.small_logo"
+                                     :class="fullSidenav ? 'h-fit w-12' : 'h-fit w-16'" alt="artwork-logo"/>
                             </div>
                         </div>
                         <div v-if="fullSidenav" class="ml-4">
@@ -162,6 +167,7 @@
             </main>
         </div>
     </div>
+
 </template>
 
 <script>
@@ -169,7 +175,7 @@ import {ref} from 'vue'
 import {Dialog, DialogOverlay, Menu, MenuButton, MenuItem, MenuItems, Switch,} from '@headlessui/vue'
 import {BellIcon, ChevronDownIcon, ChevronUpIcon, MenuAlt2Icon, TrashIcon, XIcon} from '@heroicons/vue/outline'
 import {SearchIcon} from '@heroicons/vue/solid'
-import {Link, usePage} from "@inertiajs/inertia-vue3";
+import {Link, usePage, Head} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {isAdmin} from "@/Helper/PermissionHelper";
 import Permissions from "@/mixins/Permissions.vue";
@@ -219,7 +225,7 @@ export default {
         ChevronUpIcon,
         Link,
         Switch,
-        TrashIcon
+        TrashIcon, Head
     },
     computed: {
         managementNavigation() {

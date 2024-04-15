@@ -579,7 +579,7 @@
     "Are you sure you want to delete the selected file from the project?": "Bist du sicher, dass du die ausgewählte Datei aus dem Projekt löschen willst?",
     "Delete series entry completely": "Serieneintrag komplett löschen",
     "Continue without saving": "Weiter ohne zu speichern",
-    "Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted.": "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert.",
+    "Only logos and illustrations of the type .jpeg, .svg, .png, .webp and .gif are accepted.": "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png, .webp und .gif akzeptiert.",
     "Select project status": "Wähle Projekt Status",
     "Belongs to project group": "Gehört zu Projektgruppe",
     "No project group has been created yet": "Bisher ist keine Projektgruppe angelegt",
@@ -1725,4 +1725,7 @@
     "Everyone can see, but editing is just allowed for:":"Alle dürfen sehen, aber bearbeiten darf nur:",
     "Search for teams and/or users": "Teams und/oder Nutzer*innen suchen",
     "The permissions for this component are administered via the user settings and the project.": "Die Berechtigungen für diese Komponente werden über die Benutzereinstellungen und das Projekt administriert."
+    "The small logo field must not be greater than 2048 kilobytes.": "Das kleine Logo-Feld darf nicht größer als 2048 Kilobyte sein.",
+    "The big logo field must not be greater than 2048 kilobytes.": "Das große Logo-Feld darf nicht größer als 2048 Kilobyte sein.",
+    "The banner field must not be greater than 2048 kilobytes.": "Das Banner-Feld darf nicht größer als 2048 Kilobyte sein."
 }

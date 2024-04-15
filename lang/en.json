@@ -539,7 +539,7 @@
     "Are you sure you want to delete the selected file from the project?": "Are you sure you want to delete the selected file from the project?",
     "Delete series entry completely": "Delete series entry completely",
     "Continue without saving": "Continue without saving",
-    "Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted.": "Only logos and illustrations of the type .jpeg, .svg, .png and .gif are accepted.",
+    "Only logos and illustrations of the type .jpeg, .svg, .png, .webp and .gif are accepted.": "Only logos and illustrations of the type .jpeg, .svg, .png, .webp and .gif are accepted.",
     "Select project status": "Select project status",
     "Belongs to project group": "Belongs to project group",
     "No project group has been created yet": "No project group has been created yet",
@@ -1725,4 +1725,7 @@
     "Everyone can see, but editing is just allowed for:":"Everyone can see, but editing is just allowed for:",
     "Search for teams and/or users": "Search for teams and/or users",
     "The permissions for this component are administered via the user settings and the project.": "The permissions for this component are administered via the user settings and the project."
+    "The small logo field must not be greater than 2048 kilobytes.": "The small logo field must not be greater than 2048 kilobytes.",
+    "The big logo field must not be greater than 2048 kilobytes.": "The big logo field must not be greater than 2048 kilobytes.",
+    "The banner field must not be greater than 2048 kilobytes.": "The banner field must not be greater than 2048 kilobytes."
 }

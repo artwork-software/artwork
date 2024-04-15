@@ -248,6 +248,7 @@
                 :write-access="access_member"
                 :money-source-categories="moneySourceCategories"
                 :positionSumsPerProject="positionSumsPerProject"
+                :first_project_budget_tab_id="this.first_project_budget_tab_id"
             ></MoneySourceSidenav>
         </BaseSidenav>
     </app-layout>
@@ -300,7 +301,15 @@ import IconLib from "@/mixins/IconLib.vue";
 export default {
     mixins: [Permissions, IconLib],
     name: "MoneySourceShow",
-    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'moneySourceCategories', 'projects', 'linkedProjects'],
+    props: [
+        'moneySource',
+        'moneySourceGroups',
+        'moneySources',
+        'moneySourceCategories',
+        'projects',
+        'linkedProjects',
+        'first_project_budget_tab_id'
+    ],
     components: {
         UserPopoverTooltip,
         ConfirmDeleteModal,
@@ -399,7 +408,7 @@ export default {
     },
     methods: {
         getProjectHref(project) {
-            return route('projects.show.budget', {project: project.id});
+            return route('projects.tab', {project: project.id, projectTab: this.first_project_budget_tab_id});
         },
         currencyFormat(number) {
             const formatter = new Intl.NumberFormat('de-DE', {

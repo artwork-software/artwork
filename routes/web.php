@@ -133,9 +133,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     });
 
     Route::group(['middleware' => CanEditMoneySource::class], function (): void {
-        Route::get('/projects/{project}/budget', [ProjectController::class, 'projectBudgetTab'])
-            ->name('projects.show.budget');
-
         Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
     });
 
@@ -280,22 +277,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
 
     //ProjectTabs
     Route::get('/projects/{project}/tab/{projectTab}', [ProjectController::class, 'projectTab'])
-        ->name('projects.tab');
-
-    Route::get('/projects/{project}/info', [ProjectController::class, 'projectInfoTab'])
-        ->name('projects.show.info')
+        ->name('projects.tab')
         ->middleware(CanViewProject::class);
-    Route::get('/projects/{project}/calendar', [ProjectController::class, 'projectCalendarTab'])
-        ->name('projects.show.calendar')->middleware(CanViewProject::class);
-
-    Route::get('/projects/{project}/checklist', [ProjectController::class, 'projectChecklistTab'])
-        ->name('projects.show.checklist')->middleware(CanViewProject::class);
-
-    Route::get('/projects/{project}/shift', [ProjectController::class, 'projectShiftTab'])
-        ->name('projects.show.shift')->can('can plan shifts');
-
-    Route::get('/projects/{project}/comment', [ProjectController::class, 'projectCommentTab'])
-        ->name('projects.show.comment')->middleware(CanViewProject::class);
 
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');

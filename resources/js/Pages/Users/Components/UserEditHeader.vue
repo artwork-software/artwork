@@ -49,7 +49,6 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue";
 import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
-import ProjectSidenav from "@/Layouts/Components/ProjectSidenav.vue";
 import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
 
@@ -57,7 +56,6 @@ export default {
     mixins: [Permissions],
     name: "UserEditHeader",
     components: {
-        ProjectSidenav,
         ProjectShiftSidenav,
         ProjectSecondSidenav,
         BaseSidenav,

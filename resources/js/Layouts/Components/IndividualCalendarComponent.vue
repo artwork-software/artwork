@@ -70,6 +70,7 @@
                                         :checked-events="checkedEvents"
                                         @open-edit-event-modal="openEditEventModal"
                                         @check-event="updateCheckedEvents"
+                                        :first_project_tab_id="this.first_project_tab_id"
                                     />
                                 </div>
                             </td>
@@ -89,6 +90,7 @@
                 :wantedRoomId="wantedRoom"
                 :isAdmin="this.hasAdminRole()"
                 :roomCollisions="roomCollisions"
+                :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
             />
 
         </div>
@@ -101,6 +103,7 @@
             :rooms="rooms"
             :eventsWithoutRoom="this.filteredEvents"
             :isAdmin="this.hasAdminRole()"
+            :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
         />
 
         <div v-show="multiEdit"
@@ -187,7 +190,9 @@ export default {
         'isDashboard',
         'filterOptions',
         'personalFilters',
-        'user_filters'
+        'user_filters',
+        'first_project_tab_id',
+        'first_project_calendar_tab_id'
     ],
     emits: ['changeAtAGlance'],
     mounted() {

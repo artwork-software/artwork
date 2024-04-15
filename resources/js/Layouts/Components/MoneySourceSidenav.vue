@@ -71,7 +71,7 @@
                 </div>
             </div>
             <div v-if="showLinkedProjects" class="text-secondary text-md" v-for="linkedProject in linkedProjects">
-                <Link class="underline" v-if="linkedProject.id" :href="route('projects.show.budget',{project: linkedProject.id})">{{ linkedProject.name }} </Link>
+                <Link class="underline" v-if="linkedProject.id" :href="route('projects.tab',{project: linkedProject.id, projectTab: this.first_project_budget_tab_id})">{{ linkedProject.name }} </Link>
                  | {{ positionSumsPerProject[linkedProject.id] }} € {{$t('used')}}
             </div>
         </div>
@@ -211,7 +211,8 @@ export default {
         'competent',
         'writeAccess',
         'moneySourceCategories',
-        'positionSumsPerProject'
+        'positionSumsPerProject',
+        'first_project_budget_tab_id'
     ],
     components: {
         Link,

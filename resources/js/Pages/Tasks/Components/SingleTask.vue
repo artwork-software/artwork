@@ -1,38 +1,3 @@
-<script>
-import {ChevronRightIcon} from "@heroicons/vue/solid";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
-
-export default {
-    name: "SingleTask",
-    components: {TeamIconCollection, Link, ChevronRightIcon},
-    props: ['task'],
-    methods: {
-        updateTaskStatus(task) {
-            this.doneTaskForm.done = task.done;
-            this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
-        },
-    },
-    data() {
-        return {
-            doneTaskForm: useForm({
-                done: false
-            }),
-            highlight: null
-        }
-    },
-    mounted() {
-        if(parseInt(this.$page.props.urlParameters.taskId) === this.task.id){
-            this.highlight = 'border-2 border-orange-300 rounded-md p-1';
-
-            setTimeout(() => {
-                this.highlight = null;
-            }, 5000);
-        }
-    },
-}
-</script>
-
 <template>
     <div :class="highlight">
         <div class="flex w-full flex-wrap md:flex-nowrap align-baseline">
@@ -66,9 +31,8 @@ export default {
                      alt=""/>
             </div>
         </div>
-
-
-        <Link v-if="task.projectId" :href="route('projects.show.checklist',{project: task.projectId})"
+        <Link v-if="task.projectId"
+              :href="route('projects.tab', {project: task.projectId, projectTab: this.first_project_tasks_tab_id})"
               class="my-1 flex ml-10 xsDark">
             {{ task.projectName }}
             <ChevronRightIcon class="h-5 w-5 my-auto mx-3" aria-hidden="true"/>
@@ -83,6 +47,40 @@ export default {
 
 </template>
 
-<style scoped>
+<script>
+import {ChevronRightIcon} from "@heroicons/vue/solid";
+import {Link, useForm} from "@inertiajs/inertia-vue3";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 
-</style>
+export default {
+    name: "SingleTask",
+    components: {TeamIconCollection, Link, ChevronRightIcon},
+    props: [
+        'task',
+        'first_project_tasks_tab_id'
+    ],
+    methods: {
+        updateTaskStatus(task) {
+            this.doneTaskForm.done = task.done;
+            this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
+        },
+    },
+    data() {
+        return {
+            doneTaskForm: useForm({
+                done: false
+            }),
+            highlight: null
+        }
+    },
+    mounted() {
+        if(parseInt(this.$page.props.urlParameters.taskId) === this.task.id){
+            this.highlight = 'border-2 border-orange-300 rounded-md p-1';
+
+            setTimeout(() => {
+                this.highlight = null;
+            }, 5000);
+        }
+    },
+}
+</script>

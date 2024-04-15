@@ -89,7 +89,12 @@
                                 </div>
 
                                 <div v-for="contract in filteredContracts" class="mt-6 w-full">
-                                    <ContractListItem @open-delete-contract-modal="openContractDeleteModal" @open-edit-contract-modal="openContractEditModal" :contract="contract" class="mb-6"></ContractListItem>
+                                    <ContractListItem @open-delete-contract-modal="openContractDeleteModal"
+                                                      @open-edit-contract-modal="openContractEditModal"
+                                                      :contract="contract"
+                                                      :first_project_tab_id="this.first_project_tab_id"
+                                                      class="mb-6"
+                                    />
                                     <ContractDeleteModal :show="showContractDeleteModal === contract?.id"
                                                          :close-modal="closeContractDeleteModal" :contract="contract"/>
                                     <ContractEditModal :contract-types="contract_types" :currencies="currencies" :company-types="company_types" :show="showContractEditModal === contract?.id"
@@ -114,6 +119,7 @@
             :company-types="company_types"
             :contract-types="contract_types"
             :currencies="currencies"
+            :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
         />
 
     </app-layout>
@@ -161,7 +167,9 @@ export default {
         'contract_modules',
         'company_types',
         'contract_types',
-        'currencies'
+        'currencies',
+        'first_project_tab_id',
+        'first_project_calendar_tab_id'
     ],
     data() {
         return {

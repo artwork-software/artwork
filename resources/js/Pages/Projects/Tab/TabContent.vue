@@ -62,20 +62,14 @@ export default {
         ChecklistAllComponent,
         CommentAllTab
     },
-    props: {
-        headerObject: {
-            type: Object,
-            required: true
-        },
-        dataObject: {
-            type: Object,
-            required: true
-        },
-        loadedProjectInformation: {
-            type: Object,
-            required: false
-        }
-    },
+    props: [
+        'headerObject',
+        'dataObject',
+        'loadedProjectInformation',
+        'first_project_tab_id',
+        'first_project_calendar_tab_id',
+        'first_project_budget_tab_id'
+    ],
     data() {
         return {
             show: false,
@@ -127,6 +121,9 @@ export default {
                     :opened_checklists="headerObject.project?.opened_checklists"
                     :projectManagerIds="headerObject.projectManagerIds"
                     :tab_id="dataObject.currentTab.id"
+                    :first_project_tab_id="this.first_project_tab_id"
+                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+                    :first_project_budget_tab_id="this.first_project_budget_tab_id"
                 />
             </div>
         </div>

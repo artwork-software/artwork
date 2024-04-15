@@ -26,7 +26,7 @@
                 </div>
             </div>
             <Link v-if="this.event.project_id"
-                :href="route('projects.show.calendar',{project: this.event.project_id})"
+                :href="route('projects.tab',{project: this.event.project_id, projectTab: this.first_project_calendar_tab_id})"
                 class="text-buttonBlue text-xs cursor-pointer flex items-center">
                 <p class="mx-1 xxsLight">|</p>
                 {{ this.projects.find(project => project.id === this.event.project_id)?.name }}
@@ -50,7 +50,7 @@ export default {
     mixins: [Permissions],
     name: "NotificationEventInfoRow",
     components: {Button, XIcon, Link},
-    props: ['event', 'rooms', 'eventTypes','projects','declinedRoomId'],
+    props: ['event', 'rooms', 'eventTypes','projects','declinedRoomId', 'first_project_calendar_tab_id'],
     methods: {
 
     },

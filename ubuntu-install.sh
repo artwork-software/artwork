@@ -88,7 +88,8 @@ sudo pm2 start soketi -- start
 ## Setup laravel
 sudo php /var/www/html/artisan key:generate --force
 sudo php /var/www/html/artisan storage:link
-sudo php /var/www/html/artisan migrate:fresh --seed --force
+sudo php /var/www/html/artisan migrate:fresh --force
+sudo php /var/www/html/artisan db:seed:production
 
 ## Setup js
 sudo npm --prefix /var/www/html install

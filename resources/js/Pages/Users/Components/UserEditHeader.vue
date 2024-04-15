@@ -59,7 +59,8 @@ export default {
         ProjectShiftSidenav,
         ProjectSecondSidenav,
         BaseSidenav,
-        AppLayout, InfoTab, ProjectShowHeaderComponent
+        AppLayout,
+        InfoTab
     },
 
     props: [

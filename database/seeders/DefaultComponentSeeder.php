@@ -6,6 +6,7 @@ use App\Enums\ComponentPermissionNameEnum;
 use App\Enums\TabComponentEnums;
 use Artwork\Modules\ProjectTab\Models\Component;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
+use Artwork\Modules\ProjectTab\Models\ProjectTabSidebarTab;
 use Illuminate\Database\Seeder;
 
 class DefaultComponentSeeder extends Seeder
@@ -176,15 +177,81 @@ class DefaultComponentSeeder extends Seeder
             Component::create($component);
         }
 
-        $this->createProjectInformationTab();
-        $this->createScheduleTab();
-        $this->createChecklistsTab();
-        $this->createShiftsTab();
+        $this->createInformationSidebar($this->createProjectInformationTab());
+        $this->createInformationSidebar($this->createScheduleTab());
+        $this->createInformationSidebar($this->createChecklistsTab());
+        $this->createShiftsSidebar($this->createShiftsTab());
         $this->createBudgetTab();
-        $this->createCommentsTab();
+        $this->createInformationSidebar($this->createCommentsTab());
     }
 
-    private function createProjectInformationTab(): void
+    private function createInformationSidebar(ProjectTab $projectTab): void
+    {
+        /** @var ProjectTabSidebarTab $projectInformationSidebarTab */
+        $projectInformationSidebarTab = $projectTab->sidebarTabs()->create([
+            'name' => 'Projektinformationen',
+            'order' => 1
+        ]);
+        $projectInformationSidebarTab->componentsInSidebar()->create([
+            'component_id' => Component::query()
+                ->where('type', TabComponentEnums::PROJECT_TEAM)
+                ->first()->id,
+            'order' => 1,
+        ]);
+        $projectInformationSidebarTab->componentsInSidebar()->create([
+            'component_id' => Component::query()
+                ->where('type', TabComponentEnums::SEPARATOR)
+                ->first()->id,
+            'order' => 2,
+        ]);
+        $projectInformationSidebarTab->componentsInSidebar()->create([
+            'component_id' => Component::query()
+                ->where('type', TabComponentEnums::PROJECT_ATTRIBUTES)
+                ->first()->id,
+            'order' => 3,
+        ]);
+    }
+
+    private function createShiftsSidebar(ProjectTab $projectTab): void
+    {
+        /** @var ProjectTabSidebarTab $projectShiftsSidebarTab */
+        $projectShiftsSidebarTab = $projectTab->sidebarTabs()->create([
+            'name' => 'Schichtinformationen',
+            'order' => 1
+        ]);
+        $projectShiftsSidebarTab->componentsInSidebar()->create([
+            'component_id' => Component::query()
+                ->where('type', TabComponentEnums::RELEVANT_DATES_FOR_SHIFT_PLANNING)
+                ->first()->id,
+            'order' => 1,
+        ]);
+        $projectShiftsSidebarTab->componentsInSidebar()->create([
+            'component_id' => Component::query()
+                ->where('type', TabComponentEnums::SEPARATOR)
+                ->first()->id,
+            'order' => 2,
+        ]);
+        $projectShiftsSidebarTab->componentsInSidebar()->create([
+            'component_id' => Component::query()
+                ->where('type', TabComponentEnums::SHIFT_CONTACT_PERSONS)
+                ->first()->id,
+            'order' => 3,
+        ]);
+        $projectShiftsSidebarTab->componentsInSidebar()->create([
+            'component_id' => Component::query()
+                ->where('type', TabComponentEnums::SEPARATOR)
+                ->first()->id,
+            'order' => 4,
+        ]);
+        $projectShiftsSidebarTab->componentsInSidebar()->create([
+            'component_id' => Component::query()
+                ->where('type', TabComponentEnums::GENERAL_SHIFT_INFORMATION)
+                ->first()->id,
+            'order' => 5,
+        ]);
+    }
+
+    private function createProjectInformationTab(): ProjectTab
     {
         /** @var ProjectTab $projectInformationTab */
         $projectInformationTab = ProjectTab::create([
@@ -312,9 +379,11 @@ class DefaultComponentSeeder extends Seeder
             'order' => 7,
             'scope' => [$projectInformationTab->id]
         ]);
+
+        return $projectInformationTab;
     }
 
-    private function createScheduleTab(): void
+    private function createScheduleTab(): ProjectTab
     {
         /** @var ProjectTab $scheduleTab */
         $scheduleTab = ProjectTab::create([
@@ -327,9 +396,11 @@ class DefaultComponentSeeder extends Seeder
             'order' => 1,
             'scope' => []
         ]);
+
+        return $scheduleTab;
     }
 
-    private function createChecklistsTab(): void
+    private function createChecklistsTab(): ProjectTab
     {
         /** @var ProjectTab $checklistsTab */
         $checklistsTab = ProjectTab::create([
@@ -342,9 +413,11 @@ class DefaultComponentSeeder extends Seeder
             'order' => 1,
             'scope' => [$checklistsTab->id]
         ]);
+
+        return $checklistsTab;
     }
 
-    private function createShiftsTab(): void
+    private function createShiftsTab(): ProjectTab
     {
         /** @var ProjectTab $shiftsTab */
         $shiftsTab = ProjectTab::create([
@@ -357,9 +430,11 @@ class DefaultComponentSeeder extends Seeder
             'order' => 1,
             'scope' => []
         ]);
+
+        return $shiftsTab;
     }
 
-    private function createBudgetTab(): void
+    private function createBudgetTab(): ProjectTab
     {
         /** @var ProjectTab $budgetTab */
         $budgetTab = ProjectTab::create([
@@ -372,9 +447,11 @@ class DefaultComponentSeeder extends Seeder
             'order' => 1,
             'scope' => []
         ]);
+
+        return $budgetTab;
     }
 
-    private function createCommentsTab(): void
+    private function createCommentsTab(): ProjectTab
     {
         /** @var ProjectTab $commentsTab */
         $commentsTab = ProjectTab::create([
@@ -387,5 +464,7 @@ class DefaultComponentSeeder extends Seeder
             'order' => 1,
             'scope' => [$commentsTab->id]
         ]);
+
+        return $commentsTab;
     }
 }

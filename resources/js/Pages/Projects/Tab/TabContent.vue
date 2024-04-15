@@ -147,6 +147,8 @@ export default {
                 <div class="px-3">
                     <div v-for="component in dataObject.currentTab.sidebar_tabs[currentSideBarTab]?.components_in_sidebar">
                         <Component
+                            v-if="this.$canSeeComponent(component.component)"
+                            :can-edit-component="this.$canEditComponent(component.component)"
                             :project="headerObject.project"
                             :is="component.component?.type"
                             :loadedProjectInformation="loadedProjectInformation"

@@ -58,6 +58,7 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
+use Artwork\Modules\ProjectTab\Models\ProjectTabSidebarTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Sage100\Services\Sage100Service;
@@ -1666,16 +1667,22 @@ class ProjectController extends Controller
         $projectTabComponents = $projectTab->components()->with('component')->get();
 
         // merge the sidebar components with the project tab components
-        $sidebarComponents = $projectTab->sidebarTabs->map(fn ($sidebarTab) => $sidebarTab->componentsInSidebar)
-            ->flatten()->unique('id');
+        $sidebarComponents = $projectTab->sidebarTabs
+            ->map(fn ($sidebarTab) => $sidebarTab->componentsInSidebar)
+            ->flatten()
+            ->unique('id');
 
-        $projectTabComponents = $projectTabComponents->merge($sidebarComponents);
+        $projectTabComponents = $projectTabComponents->concat($sidebarComponents);
 
         if ($projectTabComponents->isNotEmpty()) {
             foreach ($projectTabComponents as $componentInTab) {
                 $component = $componentInTab->component;
                 if ($component->type === 'ChecklistComponent') {
-                    $headerObject = $this->checklistService->getProjectChecklists($project, $headerObject, $componentInTab);
+                    $headerObject = $this->checklistService->getProjectChecklists(
+                        $project,
+                        $headerObject,
+                        $componentInTab
+                    );
                 }
 
                 if ($component->type === 'ChecklistAllComponent') {
@@ -1698,7 +1705,11 @@ class ProjectController extends Controller
                 }
 
                 if ($component->type === 'ChecklistAllComponent') {
-                    $headerObject = $this->checklistService->getProjectChecklists($project, $headerObject, $projectTab);
+                    $headerObject = $this->checklistService->getProjectChecklists(
+                        $project,
+                        $headerObject,
+                        $componentInTab
+                    );
                 }
 
                 if ($component->type === 'ProjectAllDocumentsComponent') {

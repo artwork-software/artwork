@@ -7,7 +7,6 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <!-- Styles -->
         <link rel="stylesheet" href="{{ mix('css/app.css') }}">
-        <link rel="icon" href="{{ asset('Svgs/IconSvgs/artwork_aqua.svg') }}" type="image/svg+xml">
 
         <!-- Scripts -->
         @routes
@@ -15,6 +14,7 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
+
         @env ('local')
             <script src="{{config('app.url')}}:3000/browser-sync/browser-sync-client.js"></script>
         @endenv

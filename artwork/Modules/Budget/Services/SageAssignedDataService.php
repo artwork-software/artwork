@@ -23,10 +23,16 @@ class SageAssignedDataService
         return $sageAssignedData;
     }
 
-    public function createOrUpdateFromSageApiData(
+    public function update(SageAssignedData $sageAssignedData, array $attributes): SageAssignedData
+    {
+        $this->sageAssignedDataRepository->update($sageAssignedData, $attributes);
+
+        return $sageAssignedData;
+    }
+
+    public function createFromSageApiData(
         int $columnCellId,
-        array $sageApiData,
-        int|null $projectId
+        array $sageApiData
     ): SageAssignedData {
         $attributes = [
             'column_cell_id' => $columnCellId,
@@ -43,18 +49,6 @@ class SageAssignedDataService
             'buchungsdatum' => $sageApiData['Buchungsdatum'],
         ];
 
-        //if there's already a sage_assigned_data-row for given column cell it must be written
-        //to sage_not_assigned_data again
-        $sageAssignedData = $this->sageAssignedDataRepository->getByColumnCellId($columnCellId);
-        if ($sageAssignedData instanceof SageAssignedData) {
-            $this->sageNotAssignedDataService->createFromSageAssignedData($sageAssignedData, $projectId);
-
-            //existing row is updated then
-            $this->sageAssignedDataRepository->update($sageAssignedData, $attributes);
-
-            return $sageAssignedData;
-        }
-
         return $this->create($attributes);
     }
 
@@ -62,9 +56,9 @@ class SageAssignedDataService
         int $columnCellId,
         SageNotAssignedData $sageNotAssignedData
     ): SageAssignedData {
-        return $this->create([
+        $sageAssignedData = $this->create([
             'column_cell_id' => $columnCellId,
-            'sage_id' => $sageNotAssignedData->id,
+            'sage_id' => $sageNotAssignedData->sage_id,
             'tan' => $sageNotAssignedData->tan,
             'kreditor' => $sageNotAssignedData->kreditor,
             'buchungstext' => $sageNotAssignedData->buchungstext,
@@ -76,6 +70,10 @@ class SageAssignedDataService
             'kst_stelle' => $sageNotAssignedData->kst_stelle,
             'buchungsdatum' => $sageNotAssignedData->buchungsdatum
         ]);
+
+        $this->sageNotAssignedDataService->forceDelete($sageNotAssignedData);
+
+        return $sageAssignedData;
     }
 
     public function delete(SageAssignedData $sageAssignedData): void

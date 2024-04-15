@@ -9,7 +9,7 @@ use Artwork\Modules\Vacation\Repository\VacationSeriesRepository;
 class VacationSeriesService
 {
     public function __construct(
-        private VacationSeriesRepository $vacationSeriesRepository,
+        private readonly VacationSeriesRepository $vacationSeriesRepository,
     ) {
     }
 
@@ -29,5 +29,6 @@ class VacationSeriesService
             });
             $vacation->delete();
         });
+        $vacationSeries->delete();
     }
 }

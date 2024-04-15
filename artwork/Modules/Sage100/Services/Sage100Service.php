@@ -6,7 +6,6 @@ use App\Sage100\Sage100;
 use Artwork\Modules\Budget\Models\Column;
 use Artwork\Modules\Budget\Models\ColumnCell;
 use Artwork\Modules\Budget\Models\MainPosition;
-use Artwork\Modules\Budget\Models\SageAssignedData;
 use Artwork\Modules\Budget\Models\SageNotAssignedData;
 use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
@@ -18,13 +17,15 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\SageApiSettings\Services\SageApiSettingsService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 
 class Sage100Service
 {
+    private const FILTER_FIELD_BOOKINGDATE = 'Buchungsdatum';
+
     public function __construct(
         private readonly ProjectService $projectService,
         private readonly ColumnService $columnService,
@@ -39,141 +40,155 @@ class Sage100Service
         return app(Sage100::class)->getData($this->buildQuery($count, $specificDay));
     }
 
-    //@todo: fix phpcs error - fix complexity and nesting level
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh, Generic.Metrics.NestingLevel.TooHigh
     public function importDataToBudget(int|null $count, string|null $specificDay): int
     {
         //import php timeout 10 minutes
         ini_set('max_execution_time', '600');
 
-        $addedData = [];
-
         foreach (($data = $this->getData($count, $specificDay)) as $item) {
-            $sageAssignedData = $this->sageAssignedDataService->findBySageId($item['ID']);
-            if ($sageAssignedData instanceof SageAssignedData) {
-                $sageAssignedData->update([
-                    'buchungsdatum' => Carbon::parse($item['Buchungsdatum']),
-                    'buchungsbetrag' => $item['Buchungsbetrag'],
-                    'belegnummer' => $item['Belegnummer'],
-                ]);
+            if ($this->updateExistingSageAssignedDataIfExists($item)) {
+                continue;
             }
 
-            $sageNotAssignedData = $this->sageNotAssignedDataService->findBySageId($item['ID']);
+            $sageNotAssignedData = $this->updateExistingSageNotAssignedDataIfExists($item);
+
+            //KstTrager (Kostenstelle) is unique and exists only in one Project, find it
+            $project = $this->projectService->getProjectByCostCenter($item['KstTraeger']);
+            if (is_null($project)) {
+                //create project unrelated SageNotAssignedData if no Project is found
+                $this->createSageNotAssignedData($item);
+
+                continue;
+            }
+
+            //find SubPositionRows containing ColumnCells with SaKto (KTO) and KstStelle (KST)
+            $subPositionRows = $this->findSubPositionRowsByKtoAndKst(
+                $item['SaKto'],
+                $item['KstStelle'],
+                $project
+            );
+
+            //create project related SageNotAssignedData if not exactly one SubPositionRow
+            if ($subPositionRows->count() !== 1) {
+                $this->createSageNotAssignedData($item, $project->id);
+
+                continue;
+            }
+
+            /** @var Column|null $sageColumn */
+            $sageColumn = $project->table->columns->where('type', 'sage')->first();
+            if (!$sageColumn instanceof Column) {
+                $sageColumn = $this->createSageColumnForTable($project->table);
+            }
+
+            $subPositionRowsSageColumnCellId = $sageColumn
+                ->cells
+                ->where('sub_position_row_id', $subPositionRows->first()->id)
+                ->first()
+                ->id;
+
+            //check if SageNotAssignedData exists, if so create SageAssignedData from it
             if ($sageNotAssignedData instanceof SageNotAssignedData) {
-                $sageNotAssignedData->update([
-                    'buchungsdatum' => Carbon::parse($item['Buchungsdatum']),
-                    'buchungsbetrag' => $item['Buchungsbetrag'],
-                    'belegnummer' => $item['Belegnummer'],
-                ]);
+                $this->sageAssignedDataService->createFromSageNotAssignedData(
+                    $subPositionRowsSageColumnCellId,
+                    $sageNotAssignedData
+                );
+
+                continue;
             }
 
-            $projects = $this->projectService->getProjectsByCostCenter($item['KstTraeger']);
-            /** @var Project $project */
-            foreach ($projects as $project) {
-                    /** @var Column|null $sageColumn */
-                    $sageColumn = $project->table->columns->where('type', 'sage')->first();
-                if (!$sageColumn instanceof Column) {
-                    $sageColumn = $this->createSageColumnForTable($project->table);
-                }
-
-                $foundKTOs = ColumnCell::where('value', $item['SaKto'])->get();
-                if ($foundKTOs->count() > 1) {
-                    foreach ($foundKTOs as $foundKTO) {
-                        $foundKSTs = ColumnCell::where('value', $item['KstStelle'])
-                            ->where('sub_position_row_id', $foundKTO->sub_position_row_id)->get();
-                        if ($foundKSTs->count() > 1) {
-                            foreach ($foundKSTs as $kst) {
-                                SageNotAssignedData::query()
-                                    ->where('sage_id', $item['ID'])
-                                    ->firstOr(function () use ($item, $project): void {
-                                        $this->sageNotAssignedDataService->createFromSageApiData(
-                                            $item,
-                                            $project->id
-                                        );
-                                    });
-                                $addedData[] = $item;
-                            }
-                        } else {
-                            if ($foundKTO->sub_position_row_id === $foundKSTs->first()->sub_position_row_id) {
-                                $sageColumnCell = $sageColumn->cells()
-                                    ->where('column_id', $sageColumn->id)
-                                    ->where('sub_position_row_id', $foundKTO->sub_position_row_id)
-                                    ->first();
-
-                                $this->sageAssignedDataService->createOrUpdateFromSageApiData(
-                                    $sageColumnCell->id,
-                                    $item,
-                                    $project->id
-                                );
-
-                                $addedData[] = $item;
-                            } else {
-                                SageNotAssignedData::where('sage_id', $item['ID'])
-                                    ->firstOr(function () use ($project, $item): void {
-                                        $this->sageNotAssignedDataService->createFromSageApiData(
-                                            $item,
-                                            $project->id
-                                        );
-                                    });
-                                $addedData[] = $item;
-                            }
-                        }
-                    }
-                } else {
-                    $foundKTO = $foundKTOs->first();
-                    $foundKST = ColumnCell::where('value', $item['KstStelle'])->first();
-
-                    if ($foundKTO && $foundKST) {
-                        if ($foundKTO->sub_position_row_id === $foundKST->sub_position_row_id) {
-                            $sageColumnCell = $sageColumn->cells()
-                                ->where('column_id', $sageColumn->id)
-                                ->where('sub_position_row_id', $foundKTO->sub_position_row_id)
-                                ->first();
-
-                            $this->sageAssignedDataService->createOrUpdateFromSageApiData(
-                                $sageColumnCell->id,
-                                $item,
-                                $project->id
-                            );
-                        } else {
-                            SageNotAssignedData::where('sage_id', $item['ID'])
-                                ->firstOr(function () use ($project, $item): void {
-                                    $this->sageNotAssignedDataService->createFromSageApiData($item, $project->id);
-                                });
-                        }
-                        $addedData[] = $item;
-                    } else {
-                        SageNotAssignedData::where('sage_id', $item['ID'])
-                            ->firstOr(function () use ($project, $item): void {
-                                $this->sageNotAssignedDataService->createFromSageApiData($item, $project->id);
-                            });
-                        $addedData[] = $item;
-                    }
-                }
-
-                if (!in_array($item, $addedData)) {
-                    SageNotAssignedData::where('sage_id', $item['ID'])
-                        ->firstOr(function () use ($project, $item): void {
-                            $this->sageNotAssignedDataService->createFromSageApiData($item, $project->id);
-                        });
-                    $addedData[] = $item;
-                }
-            }
-
-            // check if item is in addedData array and if not add it
-            if (!in_array($item, $addedData)) {
-                // check if item is in sage_not_assigned_data table and if not add it
-                SageNotAssignedData::where('sage_id', $item['ID'])
-                    ->firstOr(function () use ($item): void {
-                        $this->sageNotAssignedDataService->createFromSageApiData($item);
-                    });
-            }
+            //otherwise create a new SageAssignedData entity
+            $this->sageAssignedDataService->createFromSageApiData(
+                $subPositionRowsSageColumnCellId,
+                $item
+            );
         }
 
+        //if data was imported update import date from latest given booking-date (Buchungsdatum)
         if (!empty($data)) {
             $this->updateSageApiSettingsBookingDateFromData($data);
         }
+
         return 0;
+    }
+
+    private function findSubPositionRowsByKtoAndKst(string $kto, string $kst, Project $project): Collection
+    {
+        $subPositionRows = Collection::make();
+
+        $project->table->mainPositions->each(
+            function (MainPosition $mainPosition) use ($kto, $kst, $subPositionRows): void {
+                $mainPosition->subPositions->each(
+                    function (SubPosition $subPosition) use ($kto, $kst, $subPositionRows): void {
+                        $subPosition->subPositionRows->each(
+                            function (SubPositionRow $subPositionRow) use ($kto, $kst, $subPositionRows): void {
+                                if (
+                                    $subPositionRow->cells->where('value', $kto)->first() &&
+                                    $subPositionRow->cells->where('value', $kst)->first()
+                                ) {
+                                    $subPositionRows->push($subPositionRow);
+                                }
+                            }
+                        );
+                    }
+                );
+            }
+        );
+
+        return $subPositionRows;
+    }
+
+    private function updateExistingSageAssignedDataIfExists(array $item): bool
+    {
+        $sageAssignedData = $this->sageAssignedDataService->findBySageId($item['ID']);
+
+        if (is_null($sageAssignedData)) {
+            return false;
+        }
+
+        $this->sageAssignedDataService->update(
+            $sageAssignedData,
+            [
+                'buchungsdatum' => $item['Buchungsdatum'],
+                'buchungsbetrag' => $item['Buchungsbetrag'],
+                'belegnummer' => $item['Belegnummer'],
+            ]
+        );
+
+        //dataset already assigned, no need to import again or check if it can be assigned
+        return true;
+    }
+
+    private function updateExistingSageNotAssignedDataIfExists(array $item): SageNotAssignedData|null
+    {
+        $sageNotAssignedData = $this->sageNotAssignedDataService->findBySageId($item['ID']);
+
+        if ($sageNotAssignedData instanceof SageNotAssignedData) {
+            $this->sageNotAssignedDataService->update(
+                $sageNotAssignedData,
+                [
+                    'buchungsdatum' => $item['Buchungsdatum'],
+                    'buchungsbetrag' => $item['Buchungsbetrag'],
+                    'belegnummer' => $item['Belegnummer'],
+                ]
+            );
+        }
+
+        return $sageNotAssignedData;
+    }
+
+    private function createSageNotAssignedData(array $item, int $projectId = null): void
+    {
+        SageNotAssignedData::query()
+            ->where('sage_id', $item['ID'])
+            ->existsOr(
+                function () use ($item, $projectId): void {
+                    $this->sageNotAssignedDataService->createFromSageApiData(
+                        $item,
+                        $projectId
+                    );
+                }
+            );
     }
 
     private function updateSageApiSettingsBookingDateFromData(array $data): void
@@ -265,7 +280,6 @@ class Sage100Service
             $sageColumnCell->id,
             $sageNotAssignedData
         );
-        $this->sageNotAssignedDataService->forceDelete($sageNotAssignedData);
     }
 
     /**
@@ -280,9 +294,19 @@ class Sage100Service
         }
 
         if ($specificDay) {
-            $query['where'] = 'Buchungsdatum eq "' . Carbon::parse($specificDay)->format('d.m.Y') . '"';
+            $query['where'] = sprintf(
+                '%s eq "%s"',
+                self::FILTER_FIELD_BOOKINGDATE,
+                Carbon::parse($specificDay)->format('d.m.Y')
+            );
         } elseif ($desiredBookingDate = $this->sageApiSettingsService->getFirst()?->bookingDate) {
-            $query['where'] = 'Buchungsdatum gt "' . Carbon::parse($desiredBookingDate)->format('d.m.Y') . '"';
+            $query['where'] = sprintf(
+                '%s eq "%s" or %s gt "%s"',
+                self::FILTER_FIELD_BOOKINGDATE,
+                Carbon::parse($desiredBookingDate)->format('d.m.Y'),
+                self::FILTER_FIELD_BOOKINGDATE,
+                Carbon::parse($desiredBookingDate)->format('d.m.Y')
+            );
         }
 
         $query['orderBy'] = 'Buchungsdatum asc';

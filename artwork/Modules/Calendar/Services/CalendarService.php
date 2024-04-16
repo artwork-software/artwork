@@ -146,27 +146,4 @@ class CalendarService
             'dateToShow' => $dateToShow
         ];
     }
-
-    public function createCalendarDto(
-        array $calendarData,
-        Collection $eventsAtAGlance,
-        EloquentCollection $filteredRooms,
-        CalendarEventCollectionResourceModel $calendarEventCollectionResourceModel
-    ): CalendarDto {
-        $calendarDto = new CalendarDto();
-
-        $calendarDto->setCalendar($calendarData['roomsWithEvents']);
-        $calendarDto->setDateValue($calendarData['dateValue']);
-        $calendarDto->setDays($calendarData['days']);
-        $calendarDto->setSelectedDate($calendarData['selectedDate']);
-        $calendarDto->setFilterOptions($calendarData["filterOptions"]);
-        $calendarDto->setPersonalFilters($calendarData['personalFilters']);
-        $calendarDto->setEventsWithoutRoom($calendarData['eventsWithoutRoom']);
-        $calendarDto->setUserFilters($calendarData['user_filters']);
-        $calendarDto->setEventsAtAGlance($eventsAtAGlance);
-        $calendarDto->setRooms($filteredRooms);
-        $calendarDto->setEvents($calendarEventCollectionResourceModel);
-
-        return $calendarDto;
-    }
 }

@@ -14,6 +14,7 @@ use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 use Artwork\Modules\Room\Services\RoomService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -72,7 +73,7 @@ class ProjectTabService
                     ->get()
             )->collection->groupBy('room.id');
         }
-        return $this->calendarService->createCalendarDto(
+        return $this->createCalendarDto(
             $calendarData,
             $eventsAtAGlance,
             $this->roomService->filterRooms($startDate, $endDate)->get(),
@@ -86,5 +87,28 @@ class ProjectTabService
                 Filter::query()->where('user_id', Auth::id())->get(),
             )
         );
+    }
+
+    public function createCalendarDto(
+        array $calendarData,
+        Collection $eventsAtAGlance,
+        EloquentCollection $filteredRooms,
+        CalendarEventCollectionResourceModel $calendarEventCollectionResourceModel
+    ): CalendarDto {
+        $calendarDto = new CalendarDto();
+
+        $calendarDto->setCalendar($calendarData['roomsWithEvents']);
+        $calendarDto->setDateValue($calendarData['dateValue']);
+        $calendarDto->setDays($calendarData['days']);
+        $calendarDto->setSelectedDate($calendarData['selectedDate']);
+        $calendarDto->setFilterOptions($calendarData["filterOptions"]);
+        $calendarDto->setPersonalFilters($calendarData['personalFilters']);
+        $calendarDto->setEventsWithoutRoom($calendarData['eventsWithoutRoom']);
+        $calendarDto->setUserFilters($calendarData['user_filters']);
+        $calendarDto->setEventsAtAGlance($eventsAtAGlance);
+        $calendarDto->setRooms($filteredRooms);
+        $calendarDto->setEvents($calendarEventCollectionResourceModel);
+
+        return $calendarDto;
     }
 }

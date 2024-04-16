@@ -14,9 +14,11 @@ use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\EventTypeResource;
+use App\Http\Resources\ProjectCalendarShowEventResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectIndexShowResource;
+use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\UserResourceWithoutShifts;
 use App\Models\Category;
 use App\Models\CollectingSociety;
@@ -25,6 +27,7 @@ use App\Models\ContractType;
 use App\Models\CostCenter;
 use App\Models\Currency;
 use App\Models\EventType;
+use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\Genre;
 use App\Models\MoneySource;
@@ -62,6 +65,7 @@ use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Models\ProjectTabSidebarTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
 use Artwork\Modules\Shift\Services\ShiftService;
 use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
@@ -106,7 +110,8 @@ class ProjectController extends Controller
         private readonly ChecklistService $checklistService,
         private readonly CalendarService $calendarService,
         private readonly ShiftService $shiftService,
-        private readonly ProjectTabService $projectTabService
+        private readonly ProjectTabService $projectTabService,
+        private readonly RoomService $roomService
     ) {
         // init notification controller
         $this->notificationService = new NotificationService();
@@ -1752,11 +1757,7 @@ class ProjectController extends Controller
                 }
 
                 if ($component->type === TabComponentEnums::CALENDAR->value) {
-                    $loadedProjectInformation = $this->calendarService->getCalendarForProjectTab(
-                        project: $project,
-                        loadedProjectInformation: $loadedProjectInformation,
-                        calendar: $calendar,
-                    );
+                    $loadedProjectInformation['CalendarTab'] = $projectTabService->getCalendarTab($project);
                 }
 
                 if ($component->type === TabComponentEnums::BUDGET->value) {

@@ -2,19 +2,19 @@
 
 namespace Artwork\Modules\Calendar\Services;
 
-use App\Http\Controllers\CalendarController;
 use App\Http\Resources\ProjectCalendarShowEventResource;
 use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\User;
 use Artwork\Modules\Project\Models\Project;
+use Artwork\Modules\ProjectTab\DTOs\CalendarDto;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
-
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 class CalendarService
 {
     public function createVacationAndAvailabilityPeriodCalendar($month = null): Collection
@@ -147,56 +147,26 @@ class CalendarService
         ];
     }
 
-    public function getCalendarForProjectTab(
-        Project $project,
-        array $loadedProjectInformation,
-        CalendarController $calendar
-    ) {
-        $showCalendar = $calendar->createCalendarData(type: '', project: $project);
-        $eventsAtAGlance = [];
+    public function createCalendarDto(
+        array $calendarData,
+        Collection $eventsAtAGlance,
+        EloquentCollection $filteredRooms,
+        CalendarEventCollectionResourceModel $calendarEventCollectionResourceModel
+    ): CalendarDto {
+        $calendarDto = new CalendarDto();
 
-        if (\request('atAGlance') === 'true') {
-            $eventsQuery = $project->events();
-            $filteredEvents = $calendar->filterEvents($eventsQuery, null, null, null, $project);
+        $calendarDto->setCalendar($calendarData['roomsWithEvents']);
+        $calendarDto->setDateValue($calendarData['dateValue']);
+        $calendarDto->setDays($calendarData['days']);
+        $calendarDto->setSelectedDate($calendarData['selectedDate']);
+        $calendarDto->setFilterOptions($calendarData["filterOptions"]);
+        $calendarDto->setPersonalFilters($calendarData['personalFilters']);
+        $calendarDto->setEventsWithoutRoom($calendarData['eventsWithoutRoom']);
+        $calendarDto->setUserFilters($calendarData['user_filters']);
+        $calendarDto->setEventsAtAGlance($eventsAtAGlance);
+        $calendarDto->setRooms($filteredRooms);
+        $calendarDto->setEvents($calendarEventCollectionResourceModel);
 
-            $eventsAtAGlance = ProjectCalendarShowEventResource::collection(
-                $filteredEvents
-                    ->with(['room','project','creator'])
-                    ->orderBy('start_time', 'ASC')
-                    ->get()
-            )->collection->groupBy('room.id');
-        }
-
-        if (\request('startDate') && \request('endDate')) {
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
-        } else {
-            $startDate = Carbon::now()->startOfDay();
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
-        }
-
-        $loadedProjectInformation['CalendarTab'] = [
-            'eventsAtAGlance' => $eventsAtAGlance,
-            'calendar' => $showCalendar['roomsWithEvents'],
-            'dateValue' => $showCalendar['dateValue'],
-            'days' => $showCalendar['days'],
-            'selectedDate' => $showCalendar['selectedDate'],
-            'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
-            'events' => new CalendarEventCollectionResourceModel(
-                areas: $showCalendar['filterOptions']['areas'],
-                projects: $showCalendar['filterOptions']['projects'],
-                eventTypes: $showCalendar['filterOptions']['eventTypes'],
-                roomCategories: $showCalendar['filterOptions']['roomCategories'],
-                roomAttributes: $showCalendar['filterOptions']['roomAttributes'],
-                events: $calendar->getEventsOfInterval($startDate, $endDate, $project),
-                filter: Filter::query()->where('user_id', Auth::id())->get(),
-            ),
-            'filterOptions' => $showCalendar["filterOptions"],
-            'personalFilters' => $showCalendar['personalFilters'],
-            'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
-            'user_filters' => $showCalendar['user_filters'],
-        ];
-
-        return $loadedProjectInformation;
+        return $calendarDto;
     }
 }

@@ -6,8 +6,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class CalendarShowEventResource extends JsonResource
 {
-    public static $wrap = null;
-
     /**
      * @return array<string, mixed>
      */

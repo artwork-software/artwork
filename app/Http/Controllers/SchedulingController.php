@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
+use App\Http\Controllers\Calendar\FilterProvider;
 use App\Models\Scheduling;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Calendar\Services\CalendarService;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Models\GlobalNotification;
@@ -14,6 +17,8 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
+use Artwork\Modules\Room\Repositories\RoomRepository;
+use Artwork\Modules\Room\Services\RoomService;
 use Carbon\Carbon;
 use DateTime;
 use Exception;
@@ -29,12 +34,28 @@ class SchedulingController extends Controller
 
     public function __construct()
     {
+        /**
+         * @todo: use dependency injection, fix direct usage of Controller in whole project -> use Service
+         **/
         $this->notificationService = new NotificationService();
         $this->notificationData = new stdClass();
         $this->notificationData->project = new stdClass();
         $this->notificationData->task = new stdClass();
         $this->notificationData->room = new stdClass();
-        $this->projectTabService = new ProjectTabService(new ProjectTabRepository());
+        $roomService = new RoomService(
+            new RoomRepository(),
+            new NotificationService(),
+            new NewHistoryService()
+        );
+        $this->projectTabService = new ProjectTabService(
+            new ProjectTabRepository(),
+            new CalendarService(),
+            $roomService,
+            new CalendarController(
+                new FilterProvider(),
+                $roomService
+            )
+        );
     }
 
 

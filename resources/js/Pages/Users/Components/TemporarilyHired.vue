@@ -37,19 +37,18 @@
             {{ helpText }}
         </div>
     </div>
-    <FormButton :disabled="disabled" :text="$t('Save')" class="mt-3" @click="updateTemporaryEmploy" />
 </template>
 <script>
 import {defineComponent} from 'vue'
 import { Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue'
 import {useForm} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 export default defineComponent({
     name: "TemporarilyHired",
     components: {
-        FormButton,
-        Switch, SwitchGroup, SwitchLabel
+        Switch,
+        SwitchGroup,
+        SwitchLabel
     },
     props: ['user'],
     data(){
@@ -75,28 +74,25 @@ export default defineComponent({
     },
     methods: {
         updateTemporaryEmploy(){
-            if(!this.userEdit.temporary){
+            if (!this.userEdit.temporary) {
                 this.userEdit.employEnd = null;
                 this.userEdit.employStart = null;
             }
-            if(dayjs(this.userEdit.employStart) > dayjs(this.userEdit.employEnd)){
+
+            if (dayjs(this.userEdit.employStart) > dayjs(this.userEdit.employEnd)) {
                 this.helpText = this.$t('Start date must not be after the end date!')
                 return
             } else {
                 this.helpText = '';
             }
 
-            if(this.checkChanges()){
-               return;
-            }
-
             this.userEdit.patch(route('update.user.temporary', this.user.id), {
                 preserveState: true, preserveScroll: true
             })
         },
-        checkChanges(){
-            if(this.userEdit.temporary){
-                if(this.userEdit.employStart === null){
+        checkChanges() {
+            if (this.userEdit.temporary) {
+                if (this.userEdit.employStart === null) {
                     this.employStartText = this.$t('Please choose a start date!')
                     this.disabled = true
                 } else {
@@ -104,15 +100,20 @@ export default defineComponent({
                     this.disabled = false
                 }
 
-                if(this.userEdit.employEnd === null){
+                if (this.userEdit.employEnd === null) {
                     this.employEndText = this.$t('Please choose an end date!')
                     this.disabled = true
                 } else {
                     this.employEndText = ''
                     this.disabled = false
                 }
-                return this.disabled;
             }
+
+            if (this.disabled) {
+                return;
+            }
+
+            this.updateTemporaryEmploy();
         }
     }
 })

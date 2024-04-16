@@ -19,6 +19,8 @@ use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Repositories\RoomRepository;
 use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Carbon\Carbon;
 use DateTime;
 use Exception;
@@ -48,8 +50,10 @@ class SchedulingController extends Controller
             new NewHistoryService()
         );
         $this->projectTabService = new ProjectTabService(
+            new ShiftQualificationService(
+                new ShiftQualificationRepository()
+            ),
             new ProjectTabRepository(),
-            new CalendarService(),
             $roomService,
             new CalendarController(
                 new FilterProvider(),

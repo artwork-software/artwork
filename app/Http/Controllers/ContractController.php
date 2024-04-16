@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
+use App\Http\Controllers\Calendar\FilterProvider;
 use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
+use App\Support\Services\NewHistoryService;
 use Artwork\Modules\Project\Models\Comment;
 use App\Models\CompanyType;
 use App\Models\Contract;
@@ -18,6 +20,10 @@ use App\Support\Services\NotificationService;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Room\Repositories\RoomRepository;
+use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
@@ -38,12 +44,26 @@ class ContractController extends Controller
 
     public function __construct()
     {
-        //$this->authorizeResource(Contract::class);
         $this->notificationService = new NotificationService();
-        $this->projectTabService = new ProjectTabService(new ProjectTabRepository());
+        $roomService = new RoomService(
+            new RoomRepository(),
+            new NotificationService(),
+            new NewHistoryService()
+        );
+        $this->projectTabService = new ProjectTabService(
+            new ShiftQualificationService(
+                new ShiftQualificationRepository()
+            ),
+            new ProjectTabRepository(),
+            $roomService,
+            new CalendarController(
+                new FilterProvider(),
+                $roomService
+            )
+        );
     }
 
-    public function viewIndex(ProjectTabService $projectTabService): Response|ResponseFactory
+    public function viewIndex(): Response|ResponseFactory
     {
         // get all contracts where i am creator or i am accessing user
         $contracts = Contract::where('creator_id', Auth::id())->get();
@@ -58,12 +78,15 @@ class ContractController extends Controller
             'contract_types' => ContractType::all(),
             'company_types' => CompanyType::all(),
             'currencies' => Currency::all(),
-            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id,
-            'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id
+            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
     }
 
-    public function index(Request $request)
+    /**
+     * @return array<string, mixed>
+     */
+    public function index(Request $request): array
     {
         $contracts = Contract::all();
         $costsFilter = json_decode($request->input('costsFilter'));
@@ -195,8 +218,6 @@ class ContractController extends Controller
 
     public function download(Contract $contract): StreamedResponse
     {
-        //$this->authorize('view contracts');
-
         return Storage::download('contracts/' . $contract->basename, $contract->name);
     }
 
@@ -297,8 +318,6 @@ class ContractController extends Controller
     {
         $project = $contract->project()->first();
         $contractUsers =  $contract->accessingUsers()->get();
-
-
 
         foreach ($contractUsers as $contractUser) {
             // notification.contract.delete

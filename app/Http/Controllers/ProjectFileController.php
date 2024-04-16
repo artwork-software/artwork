@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
+use App\Http\Controllers\Calendar\FilterProvider;
 use App\Http\Requests\FileUpload;
 use Artwork\Modules\Project\Models\Comment;
 use App\Support\Services\NewHistoryService;
@@ -11,6 +12,10 @@ use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
+use Artwork\Modules\Room\Repositories\RoomRepository;
+use Artwork\Modules\Room\Services\RoomService;
+use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
+use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,7 +36,22 @@ class ProjectFileController extends Controller
     {
         $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
         $this->notificationService = new NotificationService();
-        $this->projectTabService = new ProjectTabService(new ProjectTabRepository());
+        $roomService = new RoomService(
+            new RoomRepository(),
+            new NotificationService(),
+            new NewHistoryService()
+        );
+        $this->projectTabService = new ProjectTabService(
+            new ShiftQualificationService(
+                new ShiftQualificationRepository()
+            ),
+            new ProjectTabRepository(),
+            $roomService,
+            new CalendarController(
+                new FilterProvider(),
+                $roomService
+            )
+        );
     }
 
     public function store(FileUpload $request, Project $project, ProjectController $projectController): RedirectResponse

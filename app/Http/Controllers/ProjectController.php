@@ -108,10 +108,8 @@ class ProjectController extends Controller
         private readonly BudgetService $budgetService,
         private readonly BudgetColumnSettingService $budgetColumnSettingService,
         private readonly ChecklistService $checklistService,
-        private readonly CalendarService $calendarService,
         private readonly ShiftService $shiftService,
-        private readonly ProjectTabService $projectTabService,
-        private readonly RoomService $roomService
+        private readonly ProjectTabService $projectTabService
     ) {
         // init notification controller
         $this->notificationService = new NotificationService();
@@ -1776,12 +1774,7 @@ class ProjectController extends Controller
                     $headerObject->project->freelancers = Freelancer::all();
                     $headerObject->project->serviceProviders = ServiceProvider::without(['contacts'])->get();
 
-
-                    $loadedProjectInformation = $this->shiftService->getShiftsForProjectTab(
-                        project: $project,
-                        loadedProjectInformation: $loadedProjectInformation,
-                        shiftQualificationService: $shiftQualificationService,
-                    );
+                    $loadedProjectInformation["ShiftTab"] = $this->projectTabService->getShiftTab($project);
                 }
 
                 if ($component->type === TabComponentEnums::SHIFT_CONTACT_PERSONS->value) {

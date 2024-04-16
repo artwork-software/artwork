@@ -115,15 +115,15 @@
                         </div>
                     </div>
                 </transition>
-                <div class="xsDark" v-if="loadedProjectInformation['ShiftTab'].eventsWithRelevant.length === 0">
+                <div class="xsDark" v-if="loadedProjectInformation['ShiftTab'].events_with_relevant.length === 0">
                     {{ $t('So far, there are no shift-relevant dates for this project.') }}
                 </div>
-                <SingleRelevantEvent v-for="event in loadedProjectInformation['ShiftTab'].eventsWithRelevant"
+                <SingleRelevantEvent v-for="event in loadedProjectInformation['ShiftTab'].events_with_relevant"
                                      :crafts="loadedProjectInformation['ShiftTab'].crafts"
-                                     :currentUserCrafts="loadedProjectInformation['ShiftTab'].currentUserCrafts"
+                                     :currentUserCrafts="loadedProjectInformation['ShiftTab'].current_user_crafts"
                                      :event="event"
                                      :event-types="headerObject.eventTypes"
-                                     :shift-qualifications="loadedProjectInformation['ShiftTab'].shiftQualifications"
+                                     :shift-qualifications="loadedProjectInformation['ShiftTab'].shift_qualifications"
                                      @dropFeedback="showDropFeedback"
                 />
             </div>
@@ -189,7 +189,7 @@ export default defineComponent({
             const users = [];
 
             if (this.loadedProjectInformation['ShiftTab']) {
-                this.loadedProjectInformation['ShiftTab'].usersForShifts.forEach((user) => {
+                this.loadedProjectInformation['ShiftTab'].users_for_shifts.forEach((user) => {
                     users.push({
                         element: user.user,
                         type: 0,
@@ -199,7 +199,7 @@ export default defineComponent({
             }
 
             if (this.loadedProjectInformation['ShiftTab']) {
-                this.loadedProjectInformation['ShiftTab'].freelancersForShifts.forEach((freelancer) => {
+                this.loadedProjectInformation['ShiftTab'].freelancers_for_shifts.forEach((freelancer) => {
                     users.push({
                         element: freelancer.freelancer,
                         type: 1,
@@ -209,7 +209,7 @@ export default defineComponent({
             }
 
             if (this.loadedProjectInformation['ShiftTab']) {
-                this.loadedProjectInformation['ShiftTab'].serviceProvidersForShifts.forEach((service_provider) => {
+                this.loadedProjectInformation['ShiftTab'].service_providers_for_shifts.forEach((service_provider) => {
                     users.push({
                         element: service_provider.service_provider,
                         type: 2,
@@ -223,7 +223,7 @@ export default defineComponent({
         conflictMessage(){
             let conflicts = [];
 
-            this.loadedProjectInformation['ShiftTab'].eventsWithRelevant.forEach(event => {
+            this.loadedProjectInformation['ShiftTab'].events_with_relevant.forEach(event => {
                 event.shifts.forEach(shift => {
                     shift.users.forEach(user => {
                         if(user.formatted_vacation_days?.includes(shift.event_start_day)){
@@ -261,7 +261,7 @@ export default defineComponent({
             return users;
         },
         hasUncommittedShift() {
-            return this.loadedProjectInformation['ShiftTab']?.eventsWithRelevant.some(
+            return this.loadedProjectInformation['ShiftTab']?.events_with_relevant.some(
                 event => event.shifts.find(shift => shift.is_committed === false)
             );
         }
@@ -271,7 +271,7 @@ export default defineComponent({
     },
     methods: {
         checkCommitted(){
-            return this.loadedProjectInformation['ShiftTab'].eventsWithRelevant?.length > 0;
+            return this.loadedProjectInformation['ShiftTab'].events_with_relevant?.length > 0;
         },
         projectMembers: function () {
             let projectMemberArray = [];
@@ -292,7 +292,7 @@ export default defineComponent({
         updateCommitmentOfShifts() {
             this.$inertia.patch(route('update.shift.commitment'), {
                 project_id: this.headerObject.project.id,
-                shifts: this.loadedProjectInformation['ShiftTab']?.eventsWithRelevant.flatMap(
+                shifts: this.loadedProjectInformation['ShiftTab']?.events_with_relevant.flatMap(
                     event => event.shifts.map(shift => shift.id)
                 ),
                 is_committed: this.hasUncommittedShift,

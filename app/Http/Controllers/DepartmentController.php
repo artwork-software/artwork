@@ -98,13 +98,13 @@ class DepartmentController extends Controller
     public function update(UpdateDepartmentRequest $updateDepartmentRequest, Department $department): RedirectResponse
     {
         $this->departmentService->updateByRequest($updateDepartmentRequest, $department);
-        return Redirect::route('departments', $department->id);
+        return Redirect::route('departments.show', $department->id);
     }
 
     public function removeAllMembers(Department $department)
     {
         $this->departmentService->removeAllMembers($department);
-        return Redirect::route('departments', $department->id);
+        return Redirect::route('departments.show', $department->id);
     }
 
     /**

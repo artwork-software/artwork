@@ -107,7 +107,7 @@
                     <div class="col-span-7">
                         <label for="first_name" class="xxsLight">{{$t('Company name')}}</label>
                         <div>
-                            <input type="text" v-model="providerData.provider_name" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('First name')" />
+                            <input type="text" v-model="providerData.provider_name" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('First name')" />
                         </div>
                     </div>
                 </div>
@@ -117,27 +117,24 @@
                         <input type="text" readonly class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8 bg-gray-200" placeholder="Dienstleister" disabled value="Dienstleister (extern)" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="providerData.street" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Street')" />
+                        <input type="email" v-model="providerData.street" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Street')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="providerData.zip_code" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Zip code')" />
+                        <input type="email" v-model="providerData.zip_code" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Zip code')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="providerData.location" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Location')" />
+                        <input type="email" v-model="providerData.location" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Location')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="providerData.email" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Email')" />
+                        <input type="email" v-model="providerData.email" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Email')" />
                     </div>
                     <div class="col-span-1">
-                        <input type="email" v-model="providerData.phone_number" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Phone number')" />
+                        <input type="email" v-model="providerData.phone_number" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" :placeholder="$t('Phone number')" />
                     </div>
                     <div class="col-span-full">
-                        <textarea rows="4" v-model="providerData.note" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :placeholder="$t('Note')" :class="checkCanEdit ? 'bg-gray-200' : ''" />
+                        <textarea rows="4" v-model="providerData.note" @focusout="saveProvider" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :placeholder="$t('Note')" :class="checkCanEdit ? 'bg-gray-200' : ''" />
                     </div>
                 </div>
-
-                <FormButton class="mt-5 !ml-0" :text="$t('Save change')" @click="saveProvider" />
-
 
                 <div class="mt-10 mb-10">
                     <h3 class="headline3">
@@ -280,13 +277,15 @@ export default defineComponent({
             })
         },
         saveProvider(){
-            this.providerData.patch(route('service_provider.update', this.serviceProvider.id), {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.openSuccessModal()
-                }
-            })
+            if (this.providerData.isDirty) {
+                this.providerData.patch(route('service_provider.update', this.serviceProvider.id), {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        this.openSuccessModal()
+                    }
+                })
+            }
         },
         openSuccessModal() {
             this.showSuccessModal = true;

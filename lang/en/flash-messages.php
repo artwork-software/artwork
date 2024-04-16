@@ -2,13 +2,6 @@
 
 //phpcs:disable
 return [
-    'workProfile' => [
-        'changed' => 'Work profile successfully updated'
-    ],
-    'craft' => [
-        'assigned' => 'Craft successfully assigned',
-        'removed' => 'Craft successfully removed'
-    ],
     'permission-preset' => [
         'success' => [
             'create' => 'Permission preset successfully createdt',

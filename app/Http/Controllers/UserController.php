@@ -372,7 +372,7 @@ class UserController extends Controller
             'work_description' => $request->get('workDescription')
         ]);
 
-        return Redirect::back()->with('success', ['workProfile' => __('flash-messages.workProfile.changed')]);
+        return Redirect::back();
     }
 
     /**
@@ -427,7 +427,7 @@ class UserController extends Controller
             $user->assignedCrafts()->attach(Craft::find($request->get('craftId')));
         }
 
-        return Redirect::back()->with('success', ['craft' => __('flash-messages.craft.assigned')]);
+        return Redirect::back();
     }
 
     /**
@@ -439,7 +439,7 @@ class UserController extends Controller
 
         $user->assignedCrafts()->detach($craft);
 
-        return Redirect::back()->with('success', ['craft' => __('flash-messages.craft.removed')]);
+        return Redirect::back();
     }
 
     public function destroy(User $user): RedirectResponse

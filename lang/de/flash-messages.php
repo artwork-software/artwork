@@ -2,13 +2,6 @@
 
 //phpcs:disable
 return [
-    'workProfile' => [
-        'changed' => 'Arbeitsprofil erfolgreich aktualisiert'
-    ],
-    'craft' => [
-        'assigned' => 'Gewerk erfolgreich zugeordnet',
-        'removed' => 'Gewerk erfolgreich entfernt'
-    ],
     'permission-preset' => [
         'success' => [
             'create' => 'Rechte-Preset erfolgreich erstellt',

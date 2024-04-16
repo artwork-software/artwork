@@ -23,8 +23,11 @@
                         <input
                             v-model="userForm.roles"
                             :value="role.name"
-                            name="roles" type="checkbox"
-                            class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
+                            name="roles"
+                            type="checkbox"
+                            class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"
+                            @change="this.editUser()"
+                        />
 
                         <div class="ml-3 text-sm">
                             <label for="roles"
@@ -65,8 +68,11 @@
                                 :key="permission.name"
                                 v-model="userForm.permissions"
                                 :value="permission.name"
-                                name="permissions" type="checkbox"
-                                class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
+                                name="permissions"
+                                type="checkbox"
+                                class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"
+                                @change="this.editUser()"
+                            />
 
                             <div class="ml-3 text-sm">
                                 <label for="permissions"
@@ -79,28 +85,11 @@
                     </div>
                 </div>
             </div>
-            <div class="mt-8">
-                <div class="flex">
-                    <FormButton
-                        @click="editUser"
-                        text="Einstellungen ändern"
-                        />
-                </div>
-            </div>
             <div class="flex mt-12">
                 <span @click="openDeleteUserModal()" class="xsLight cursor-pointer">{{ $t('Permanently delete user')}}</span>
             </div>
         </div>
     </div>
-
-    <!-- Success Modal -->
-    <SuccessModal
-        :show="showSuccessModal"
-        @closed="closeSuccessModal"
-        :title="$t('User successfully edited')"
-        :description="$t('The changes have been saved successfully.')"
-        :button="$t('Close')"
-    />
     <!-- Nutzer*in löschen Modal -->
     <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
         <template #content>
@@ -134,7 +123,6 @@
 </template>
 
 <script>
-
 import {
     CheckIcon,
     DotsVerticalIcon,
@@ -150,17 +138,14 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import {Inertia} from "@inertiajs/inertia";
-import SuccessModal from "@/Layouts/Components/General/SuccessModal.vue";
 import {reactive} from "vue";
-import FormButton from "@/Layouts/Components/General/Buttons/FormButton.vue";
 import ToolTipDefault from "@/Components/ToolTips/ToolTipDefault.vue";
 
 export default {
     components: {
         ToolTipDefault,
-        FormButton,
-        SuccessModal,
-        JetDialogModal, CheckIcon,
+        JetDialogModal,
+        CheckIcon,
         XIcon,
         PencilAltIcon,
         JetInputError,
@@ -184,7 +169,6 @@ export default {
         return {
             showGlobalRoles: true,
             showUserPermissions: true,
-            showSuccessModal: false,
             deletingUser: false,
             userForm: useForm({
                 permissions: this.user_to_edit.permissions,
@@ -228,15 +212,9 @@ export default {
             this.userForm.patch(
                 route('user.update.permissions-and-roles', {user: this.user_to_edit.id}),
                 {
-                    onFinish: () => {
-                        this.showSuccessModal = true;
-                        setTimeout(() => this.closeSuccessModal(), 2000)
-                    }
+                    preserveScroll: true
                 }
             );
-        },
-        closeSuccessModal() {
-            this.showSuccessModal = false;
         },
         openDeleteUserModal() {
             this.deletingUser = true;

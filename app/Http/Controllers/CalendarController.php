@@ -614,7 +614,7 @@ class CalendarController extends Controller
         ?Room $room,
         ?Project $project,
         $shiftPlan = false
-    ): mixed {
+    ): EventBuilder {
         $user = Auth::user();
         if (!$shiftPlan) {
             $calendarFilter = $user->calendar_filter()->first();
@@ -632,7 +632,6 @@ class CalendarController extends Controller
         $areaIds = $calendarFilter->areas ?? null;
         $roomAttributeIds = $calendarFilter->room_attributes ?? null;
         $roomCategoryIds = $calendarFilter->room_categories ?? null;
-
 
         return $query
             ->when($project, fn(EventBuilder $builder) => $builder->where('project_id', $project->id))

@@ -16,7 +16,12 @@ class BudgetManagementAccount extends Model
 
     protected $fillable = [
         'account_number',
-        'title'
+        'title',
+        'is_account_for_revenue'
+    ];
+
+    protected $casts = [
+        'is_account_for_revenue'
     ];
 
     public function scopeByAccountNumberOrTitle(Builder $builder, string $search): Builder
@@ -24,5 +29,10 @@ class BudgetManagementAccount extends Model
         return $builder
             ->where('account_number', 'like', $search . '%')
             ->orWhere('title', 'like', $search . '%');
+    }
+
+    public function scopeIsAccountForRevenue(Builder $builder, bool $isAccountForRevenue): Builder
+    {
+        return $builder->where('is_account_for_revenue', $isAccountForRevenue);
     }
 }

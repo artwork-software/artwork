@@ -24,9 +24,9 @@ readonly class BudgetManagementAccountService
     ) {
     }
 
-    public function getAll(): Collection
+    public function getAllOrderedByIsAccountForRevenue(): Collection
     {
-        return $this->budgetManagementAccountRepository->getAll();
+        return $this->budgetManagementAccountRepository->getAllOrderedByIsAccountForRevenue();
     }
 
     public function getAllTrashed(): Collection
@@ -36,7 +36,10 @@ readonly class BudgetManagementAccountService
 
     public function searchByRequest(Request $request): Collection
     {
-        return $this->budgetManagementAccountRepository->getByAccountNumberOrTitle($request->get('search'));
+        return $this->budgetManagementAccountRepository->getByCostUnitNumberOrTitleAndIsAccountForRevenue(
+            $request->get('search'),
+            $request->boolean('is_account_for_revenue')
+        );
     }
 
     /**

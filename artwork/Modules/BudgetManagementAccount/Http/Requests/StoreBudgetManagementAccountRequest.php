@@ -22,7 +22,8 @@ class StoreBudgetManagementAccountRequest extends FormRequest
     {
         return [
             'account_number' => 'string',
-            'title' => 'string'
+            'title' => 'string',
+            'is_account_for_revenue' => 'boolean'
         ];
     }
 }

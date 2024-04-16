@@ -12,7 +12,7 @@
                 {{ $t('Job title') }}
             </label>
             <input id="jobTitle"
-                   v-model="workProfileForm.workName"
+                   v-model="workProfileForm.workName" @focusout="updateWorkProfile"
                    :placeholder="$t('No designation specified yet')"
                    type="text"
                    class="w-full text-base font-normal mt-1 inputMain focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"
@@ -25,12 +25,10 @@
             </label>
             <textarea
                 id="jobDescription"
-                v-model="workProfileForm.workDescription"
+                v-model="workProfileForm.workDescription" @focusout="updateWorkProfile"
                 :placeholder="$t('No description given yet')"
                 rows="4"
-                class="w-full text-base font-normal mt-1 inputMain resize-none xsDark focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"
-                @focusout="this.updateWorkProfile()"
-            />
+                class="w-full text-base font-normal mt-1 inputMain resize-none xsDark focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"/>
         </div>
     </div>
     <div class="headline3 mb-2">
@@ -291,13 +289,15 @@ export default {
             }
 
             if (desiredRoute) {
-                this.workProfileForm.patch(
-                    route(desiredRoute, routeParameter),
-                    {
-                        preserveScroll:true,
-                        preserveState:true
-                    }
-                );
+                if (this.workProfileForm.isDirty) {
+                    this.workProfileForm.patch(
+                        route(desiredRoute, routeParameter),
+                        {
+                            preserveScroll:true,
+                            preserveState:true
+                        }
+                    );
+                }
             }
         },
         assignCraft() {

@@ -34,6 +34,17 @@
                 <input-component :placeholder="$t('Description')"
                                  v-model="this.accountForm.title"
                 />
+                <SwitchGroup as="div" class="flex items-center">
+                    <SwitchLabel as="span" class="mr-3 text-sm" :class="this.accountForm.is_account_for_revenue ? 'text-gray-400' : 'font-bold'">
+                        {{ $t('Expense account') }}
+                    </SwitchLabel>
+                    <Switch v-model="this.accountForm.is_account_for_revenue " class="bg-indigo-600 relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
+                        <span aria-hidden="true" :class="[this.accountForm.is_account_for_revenue  ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                    </Switch>
+                    <SwitchLabel as="span" class="ml-3 text-sm" :class="this.accountForm.is_account_for_revenue ? 'font-bold' : 'text-gray-400'">
+                        {{ $t('Revenue account') }}
+                    </SwitchLabel>
+                </SwitchGroup>
                 <AddButton :text="$t('Add')"
                            class="!mt-0"
                            @click="this.saveAccount()"
@@ -83,12 +94,16 @@
                 <div class="flex flex-row">
                     <span class="w-56 xsLight">{{ $t('Account number') }}</span>
                     <span class="w-96 xsLight">{{ $t('Description') }}</span>
+                    <span class="w-48 xsLight">{{ $t('Account type') }}</span>
                 </div>
                 <div class="flex flex-row items-center"
                      v-for="account in this.filteredAccounts"
                 >
                     <span class="w-56">{{ account.account_number }}</span>
                     <span class="w-96 text-wrap">{{ account.title }}</span>
+                    <span class="w-48">
+                        {{ account.is_account_for_revenue ? $t('Revenue account') : $t('Expense account') }}
+                    </span>
                     <TrashIcon class="w-5 h-5 hover:text-error cursor-pointer"
                                @click="this.showRemoveConfirmModal(account, 'account')"
                     />
@@ -185,7 +200,8 @@ export default defineComponent({
             budgetAccountManagementGlobal: this.$page.props.budgetAccountManagementGlobal,
             accountForm: useForm({
                 account_number: '',
-                title: ''
+                title: '',
+                is_account_for_revenue: false
             }),
             accountFormHelpText: null,
             costUnitForm: useForm({

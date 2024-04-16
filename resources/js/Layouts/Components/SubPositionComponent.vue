@@ -112,7 +112,6 @@
                                         <div :class="cell.value === '' ? 'w-6 cursor-pointer h-6' : ''"
                                              @click="this.handleCellClick(cell, '', index, row)">
                                             {{ cell.value }}
-
                                         </div>
                                     </div>
                                 </div>
@@ -124,7 +123,7 @@
                                                :ref="`cell-${cell.id}`"
                                                type="text"
                                                class="w-full"
-                                               @keyup="this.handleBudgetManagementSearch(index, cell)"
+                                               @keyup="this.handleBudgetManagementSearch(index, cell, (this.mainPosition.type !== 'BUDGET_TYPE_COST'))"
                                         />
                                         <XIcon class="w-10 h-10 cursor-pointer"
                                                @click="this.handleBudgetManagementSearchCancel(cell)"
@@ -800,13 +799,14 @@ export default {
                 preserveState: true
             })
         },
-        handleBudgetManagementSearch(index, cell) {
+        handleBudgetManagementSearch(index, cell, is_account_for_revenue) {
             if (index === 0) {
                 axios.get(
                     route('budget-settings.account-management.search-accounts'),
                     {
                         params: {
-                            search: cell.searchValue
+                            search: cell.searchValue,
+                            is_account_for_revenue: is_account_for_revenue
                         }
                     }
                 ).then((response) => cell.accountSearchResults = response.data);

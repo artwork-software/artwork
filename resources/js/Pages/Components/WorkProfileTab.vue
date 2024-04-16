@@ -12,7 +12,7 @@
                 {{ $t('Job title') }}
             </label>
             <input id="jobTitle"
-                   v-model="workProfileForm.workName" @focusout="updateWorkProfile"
+                   v-model="workProfileForm.workName"
                    :placeholder="$t('No designation specified yet')"
                    type="text"
                    class="w-full text-base font-normal mt-1 inputMain focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 placeholder:text-gray-400"

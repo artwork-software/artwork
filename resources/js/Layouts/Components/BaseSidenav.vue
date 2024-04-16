@@ -1,7 +1,7 @@
 <template>
     <TransitionRoot as="template" :show="show">
         <TransitionChild as="template" enter="transform transition ease-in-out duration-500 sm:duration-700" enter-from="translate-x-full" enter-to="translate-x-0" leave="transform transition ease-in-out duration-500 sm:duration-700" leave-from="translate-x-0" leave-to="translate-x-full">
-            <div class="fixed right-0 top-0 z-30 h-screen bg-primary w-[26rem]">
+            <div class="fixed right-0 top-0 z-40 h-screen bg-primary w-[26rem]">
                 <div class="h-full max-h-screen overflow-y-scroll">
                     <div>
                         <div class="mt-5 px-3 text-secondary">

@@ -1730,5 +1730,6 @@
     "The banner field must not be greater than 2048 kilobytes.": "The banner field must not be greater than 2048 kilobytes.",
     "Expense account": "Expense account",
     "Revenue account": "Revenue account",
-    "Account type": "Account type"
+    "Account type": "Account type",
+    "Schedule restored": "Schedule restored"
 }

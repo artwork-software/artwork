@@ -1730,5 +1730,6 @@
     "The banner field must not be greater than 2048 kilobytes.": "Das Banner-Feld darf nicht größer als 2048 Kilobyte sein.",
     "Expense account": "Ausgabekonto",
     "Revenue account": "Einnahmekonto",
-    "Account type": "Kontotyp"
+    "Account type": "Kontotyp",
+    "Schedule restored": "Termin wiederhergestellt"
 }

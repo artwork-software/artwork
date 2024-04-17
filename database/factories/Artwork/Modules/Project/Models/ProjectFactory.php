@@ -20,7 +20,6 @@ class ProjectFactory extends Factory
     {
         return [
             'name' => 'Project ' . $this->faker->firstNameFemale,
-            'description' => $this->faker->paragraph,
             'number_of_participants' => $this->faker->numberBetween(5, 500)
         ];
     }

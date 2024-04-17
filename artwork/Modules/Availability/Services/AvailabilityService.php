@@ -5,28 +5,23 @@ namespace Artwork\Modules\Availability\Services;
 use App\Http\Controllers\SchedulingController;
 use App\Models\Freelancer;
 use App\Models\User;
-use App\Support\Services\NewHistoryService;
 use Artwork\Modules\Availability\Models\Availability;
 use Artwork\Modules\Availability\Models\Available;
 use Artwork\Modules\Availability\Repositories\AvailabilityRepository;
-use Artwork\Modules\Availability\Repositories\AvailabilitySeriesRepository;
-use Artwork\Modules\Vacation\Models\Vacation;
-use Artwork\Modules\Vacation\Models\Vacationer;
-use Artwork\Modules\Vacation\Repository\VacationRepository;
+use Artwork\Modules\Change\Services\ChangeService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
-class AvailabilityService
+readonly class AvailabilityService
 {
     public function __construct(
-        private readonly AvailabilityRepository $availabilityRepository,
-        private readonly NewHistoryService $historyService,
-        private readonly SchedulingController $scheduler, //@todo refactor
-        private readonly AvailabilitySeriesService $availabilitySeriesService,
-        private readonly AvailabilityConflictService $availabilityConflictService
+        private AvailabilityRepository $availabilityRepository,
+        private ChangeService $changeService,
+        private SchedulingController $scheduler,
+        private AvailabilitySeriesService $availabilitySeriesService,
+        private AvailabilityConflictService $availabilityConflictService
     ) {
-        $this->historyService->setModel(Availability::class);
     }
 
     //@todo: fix phpcs error - fix complexity
@@ -122,10 +117,7 @@ class AvailabilityService
         $availability->comment = $data->comment;
         $availability->is_series = $data->is_series;
 
-
-
         $newAvailability = $this->availabilityRepository->save($availability);
-
 
         $this->availabilityConflictService->checkAvailabilityConflictsOnDay(
             $availability->date,
@@ -165,10 +157,14 @@ class AvailabilityService
 
     protected function createHistory(Availability $availability, string $translationKey): void
     {
-        $this->historyService->setTranslationKey($translationKey);
-        $this->historyService->setModelId($availability->id);
-        $this->historyService->setType('vacation');
-        $this->historyService->create();
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('vacation')
+                ->setModelClass(Availability::class)
+                ->setModelId($availability->id)
+                ->setTranslationKey($translationKey)
+        );
     }
 
     protected function announceChanges(Availability $availability): void

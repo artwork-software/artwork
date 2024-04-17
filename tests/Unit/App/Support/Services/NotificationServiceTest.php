@@ -28,7 +28,7 @@ class NotificationServiceTest extends TestCase
         $targetUser = $this->adminUser();
 
 
-        $service = new NotificationService();
+        $service = app()->get(NotificationService::class);
         $service->setNotificationTo($targetUser);
         $service->setTitle('Test Title');
         $service->setDescription(['Test Description']);

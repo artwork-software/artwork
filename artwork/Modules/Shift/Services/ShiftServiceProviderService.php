@@ -3,8 +3,7 @@
 namespace Artwork\Modules\Shift\Services;
 
 use App\Models\ServiceProvider;
-use Artwork\Core\Database\Traits\ReceivesNewHistoryServiceTrait;
-use Artwork\Modules\Availability\Services\AvailabilityConflictService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftServiceProvider;
 use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;
@@ -13,22 +12,18 @@ use Artwork\Modules\Shift\Repositories\ShiftServiceProviderRepository;
 use Artwork\Modules\Shift\Repositories\ShiftsQualificationsRepository;
 use Artwork\Modules\Shift\Repositories\ShiftUserRepository;
 use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
-use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 
-class ShiftServiceProviderService
+readonly class ShiftServiceProviderService
 {
-    use ReceivesNewHistoryServiceTrait;
-
     public function __construct(
-        private readonly ShiftRepository $shiftRepository,
-        private readonly ShiftUserRepository $shiftUserRepository,
-        private readonly ShiftFreelancerRepository $shiftFreelancerRepository,
-        private readonly ShiftServiceProviderRepository $shiftServiceProviderRepository,
-        private readonly ShiftsQualificationsRepository $shiftsQualificationsRepository,
-        private readonly ShiftCountService $shiftCountService,
-        private readonly VacationConflictService $vacationConflictService,
-        private readonly AvailabilityConflictService $availabilityConflictService,
+        private ShiftRepository $shiftRepository,
+        private ShiftUserRepository $shiftUserRepository,
+        private ShiftFreelancerRepository $shiftFreelancerRepository,
+        private ShiftServiceProviderRepository $shiftServiceProviderRepository,
+        private ShiftsQualificationsRepository $shiftsQualificationsRepository,
+        private ShiftCountService $shiftCountService,
+        private ChangeService $changeService
     ) {
     }
 
@@ -75,16 +70,20 @@ class ShiftServiceProviderService
         ServiceProvider $serviceProvider,
         ShiftQualification $shiftQualification
     ): void {
-        $this->getNewHistoryService(Shift::class)->createHistory(
-            $shift->id,
-            'Service provider was added to the shift as',
-            [
-                $serviceProvider->getNameAttribute(),
-                $shift->craft->abbreviation,
-                $shift->event->eventName,
-                $shiftQualification->name
-            ],
-            'shift'
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('shift')
+                ->setModelClass(Shift::class)
+                ->setModelId($shift->id)
+                ->setShift($shift)
+                ->setTranslationKey('Service provider was added to the shift as')
+                ->setTranslationKeyPlaceholderValues([
+                    $serviceProvider->getNameAttribute(),
+                    $shift->craft->abbreviation,
+                    $shift->event->eventName,
+                    $shiftQualification->name
+                ])
         );
     }
 
@@ -178,15 +177,19 @@ class ShiftServiceProviderService
         $this->shiftCountService->handleShiftServiceProvidersShiftCount($shift, $serviceProvider->id);
 
         if ($shift->is_committed) {
-            $this->getNewHistoryService(Shift::class)->createHistory(
-                $shift->id,
-                'Service provider was removed from shift',
-                [
-                    $serviceProvider->getNameAttribute(),
-                    $shift->craft->abbreviation,
-                    $shift->event->eventName
-                ],
-                'shift'
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('shift')
+                    ->setModelClass(Shift::class)
+                    ->setModelId($shift->id)
+                    ->setShift($shift)
+                    ->setTranslationKey('Service provider was removed from shift')
+                    ->setTranslationKeyPlaceholderValues([
+                        $serviceProvider->getNameAttribute(),
+                        $shift->craft->abbreviation,
+                        $shift->event->eventName
+                    ])
             );
         }
 

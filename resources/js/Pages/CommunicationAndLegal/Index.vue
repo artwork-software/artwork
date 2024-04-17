@@ -11,12 +11,12 @@
         <div class="mt-4">
             <div class="mt-4 col-span-9 grid grid-cols-9">
                 <div class="sm:col-span-3">
-                    <inputComponent v-model="mailForm.businessName" :placeholder="$t('Our Organization')"/>
+                    <inputComponent @focusout="changeEmailData" v-model="mailForm.businessName" :placeholder="$t('Our Organization')"/>
                 </div>
             </div>
             <div class="mt-4 col-span-9 grid grid-cols-9">
                 <div class="sm:col-span-3">
-                    <inputComponent v-model="mailForm.impressumLink" :placeholder="$t('Link to Legal Notice')"/>
+                    <inputComponent @focusout="changeEmailData" v-model="mailForm.impressumLink" :placeholder="$t('Link to Legal Notice')"/>
                     <span v-if="showInvalidImpressumLinkErrorText"
                           class="errorText">
                         {{ $t('Invalid URL (Example: https://google.com)') }}
@@ -25,7 +25,7 @@
             </div>
             <div class="mt-4 col-span-9 grid grid-cols-9">
                 <div class="sm:col-span-3">
-                    <inputComponent v-model="mailForm.privacyLink" :placeholder="$t('Link to Privacy Policy')"/>
+                    <inputComponent @focusout="changeEmailData" v-model="mailForm.privacyLink" :placeholder="$t('Link to Privacy Policy')"/>
                     <span v-if="showInvalidPrivacyLinkErrorText"
                           class="errorText">
                         {{ $t('Invalid URL (Example: https://google.com)') }}
@@ -34,7 +34,7 @@
             </div>
             <div class="mt-4 col-span-9 grid grid-cols-9">
                 <div class="sm:col-span-3">
-                    <inputComponent v-model="mailForm.businessEmail" :placeholder="$t('Business Email')"/>
+                    <inputComponent @focusout="changeEmailData" v-model="mailForm.businessEmail" :placeholder="$t('Business Email')"/>
                     <span v-if="showInvalidBusinessEmailAddressErrorText"
                           class="errorText">
                         {{ $t('Invalid Email Address') }}
@@ -46,16 +46,11 @@
                     <textarea
                         :placeholder="$t('Email-Footer')"
                         v-model="mailForm.emailFooter"
+                        @focusout="changeEmailData"
                         rows="4"
                         class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-2 w-full placeholder:xsLight border-2 border-gray-300 "/>
                 </div>
             </div>
-        </div>
-        <div class="mt-4 items-center">
-            <FormButton
-                @click.prevent="changeEmailData"
-                :text="$t('Save changes')"
-            />
         </div>
     </ToolSettingsHeader>
 </template>
@@ -108,7 +103,10 @@ export default defineComponent({
                 return;
             }
 
-            this.mailForm.patch(route('tool.communication-and-legal.update'));
+            if(this.mailForm.isDirty){
+                this.mailForm.patch(route('tool.communication-and-legal.update'));
+            }
+
         }
     }
 })

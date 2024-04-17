@@ -17,7 +17,7 @@ readonly class ChangeService
 
     public function createBuilder(): ChangeBuilder
     {
-        return new ChangeBuilder();
+        return ChangeBuilder::newInstance();
     }
 
     /**

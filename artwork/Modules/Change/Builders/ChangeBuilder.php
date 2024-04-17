@@ -23,6 +23,11 @@ class ChangeBuilder implements Builder
 
     private Shift $shift;
 
+    public static function newInstance(): self
+    {
+        return new self();
+    }
+
     public function setModelClass(string|object $modelClass): self
     {
         if (is_object($modelClass)) {

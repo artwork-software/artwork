@@ -123,7 +123,7 @@
                                                :ref="`cell-${cell.id}`"
                                                type="text"
                                                class="w-full"
-                                               @keyup="this.handleBudgetManagementSearch(index, cell, (this.mainPosition.type !== 'BUDGET_TYPE_COST'))"
+                                               @input="this.handleBudgetManagementSearch(index, cell, (this.mainPosition.type !== 'BUDGET_TYPE_COST'))"
                                         />
                                         <XIcon class="w-10 h-10 cursor-pointer"
                                                @click="this.handleBudgetManagementSearchCancel(cell)"
@@ -152,7 +152,7 @@
                                                 {{ $t('No Accounts found') }}
                                             </div>
                                         </div>
-                                        <div v-if="cell.costUnitSearchResults" class="absolute z-20 top-10">
+                                        <div v-if="cell.costUnitSearchResults" class="absolute w-64 z-20 top-10">
                                             <div v-if="cell.costUnitSearchResults.length > 0"
                                                  v-for="cost_unit in cell.costUnitSearchResults"
                                                  class="flex flex-col"
@@ -800,6 +800,12 @@ export default {
             })
         },
         handleBudgetManagementSearch(index, cell, is_account_for_revenue) {
+            if (cell.searchValue === '') {
+                //return if search input is emptied, reset search results
+                cell.accountSearchResults = null;
+                cell.costUnitSearchResults = null;
+                return;
+            }
             if (index === 0) {
                 axios.get(
                     route('budget-settings.account-management.search-accounts'),
@@ -833,13 +839,12 @@ export default {
             this.updateCellValue(cell, mainPositionIsVerified, subPositionIsVerified);
         },
         handleBudgetManagementSearchCancel(cell) {
-            cell.searchValue = '';
             cell.clicked = false;
+            cell.searchValue = '';
             cell.accountSearchResults = null;
             cell.costUnitSearchResults = null;
         }
     }
-
 }
 </script>
 

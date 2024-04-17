@@ -171,9 +171,14 @@ class EventController extends Controller
         }
 
         $events = Event::with(['shifts', 'event_type', 'room'])
-            ->whereHas('shifts', function ($query): void {
-                $query->whereNotNull('shifts.id')->without('crafts');
-            })->whereBetween('start_time', [$startDate, $endDate])->without(['series'])
+            ->whereHas(
+                'shifts',
+                function ($query): void {
+                    $query->whereNotNull('shifts.id')->without('crafts');
+                }
+            )
+            ->startAndEndTimeOverlap($startDate, $endDate)
+            ->without(['series'])
             ->get();
         $usersWithPlannedWorkingHours = [];
 

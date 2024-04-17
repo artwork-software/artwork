@@ -375,7 +375,7 @@ export default {
 
                 {
                     name: this.$t('Contracts'),
-                    href: route('contracts.view.index'),
+                    href: route('contracts.index'),
                     route: ['/contracts/view'],
                     svgSrc: '/Svgs/Sidebar/icon_contract.svg',
                     svgSrc_active: '/Svgs/Sidebar/icon_contract_active.svg',

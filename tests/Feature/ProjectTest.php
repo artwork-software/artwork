@@ -143,7 +143,6 @@ test('users with the permission can duplicate projects', function() {
 
     $old_project = Project::factory()->create([
         'name' => 'TestProject',
-        'description' => 'a description',
         'number_of_participants' => '1000',
     ]);
 

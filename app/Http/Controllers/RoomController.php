@@ -34,7 +34,8 @@ class RoomController extends Controller
 {
     public function __construct(
         protected readonly RoomService $roomService,
-        protected readonly CollisionService $collisionService
+        protected readonly CollisionService $collisionService,
+        private readonly SchedulingController $schedulingController
     ) {
     }
 
@@ -257,10 +258,9 @@ class RoomController extends Controller
             $newEndDate
         );
 
-        $scheduling = new SchedulingController();
         $roomId = $room->id;
         foreach ($room->users()->wherePivot('is_admin', true)->get() as $user) {
-            $scheduling->create($user->id, 'ROOM_CHANGES', 'ROOMS', $roomId);
+            $this->schedulingController->create($user->id, 'ROOM_CHANGES', 'ROOMS', $roomId);
         }
 
         return Redirect::back();

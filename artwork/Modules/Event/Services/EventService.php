@@ -4,8 +4,8 @@ namespace Artwork\Modules\Event\Services;
 
 use App\Enums\NotificationConstEnum;
 use App\Events\OccupancyUpdated;
-use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Repositories\EventRepository;
 use Artwork\Modules\EventComment\Services\EventCommentService;
@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Collection;
 readonly class EventService
 {
     public function __construct(
+        private ChangeService $changeService,
         private EventRepository $eventRepository,
         private ShiftService $shiftService,
         private ShiftsQualificationsService $shiftsQualificationsService,
@@ -87,8 +88,13 @@ readonly class EventService
     public function delete(Event $event): void
     {
         if (!empty($event->project_id)) {
-            $projectHistory = new NewHistoryService(Project::class);
-            $projectHistory->createHistory($event->project->id, 'Schedule deleted');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($event->project->id)
+                    ->setTranslationKey('Schedule deleted')
+            );
         }
 
         $this->createEventDeletedNotificationsForProjectManagers($event);
@@ -111,8 +117,13 @@ readonly class EventService
         /** @var Event $event */
         foreach ($events as $event) {
             if (!empty($event->project_id)) {
-                $projectHistory = new NewHistoryService(Project::class);
-                $projectHistory->createHistory($event->project->id, 'Schedule deleted');
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Project::class)
+                        ->setModelId($event->project->id)
+                        ->setTranslationKey('Schedule deleted')
+                );
             }
 
             $this->createEventDeletedNotificationsForProjectManagers($event);
@@ -135,8 +146,13 @@ readonly class EventService
     {
         $this->eventRepository->restore($event);
         if (!empty($event->project_id)) {
-            $projectHistory = new NewHistoryService(Project::class);
-            $projectHistory->createHistory($event->project_id, 'Schedule deleted');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($event->project->id)
+                    ->setTranslationKey('Schedule restored')
+            );
         }
         $this->eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
         $this->timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
@@ -167,22 +183,24 @@ readonly class EventService
         foreach ($events as $event) {
             $this->eventRepository->restore($event);
             if (!empty($event->project_id)) {
-                $projectHistory = new NewHistoryService(Project::class);
-                $projectHistory->createHistory($event->project_id, 'Schedule deleted');
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Project::class)
+                        ->setModelId($event->project->id)
+                        ->setTranslationKey('Schedule restored')
+                );
             }
 
-            //$this->createEventDeletedNotificationsForProjectManagers($event);
-            //$this->createEventDeletedNotification($event);
             $this->eventCommentService->restoreEventComments($event->comments()->onlyTrashed()->get());
             $this->timelineService->restoreTimelines($event->timelines()->onlyTrashed()->get());
             $this->shiftService->restoreShifts($event->shifts()->onlyTrashed()->get());
             $this->subEventService->restoreSubEvents($event->subEvents()->onlyTrashed()->get());
 
             broadcast(new OccupancyUpdated())->toOthers();
-
-            //$this->notificationService->deleteUpsertRoomRequestNotificationByEventId($event->id);
         }
     }
+
     private function createEventDeletedNotificationsForProjectManagers(Event $event): void
     {
         if (is_null($event->project) || $event->project->managerUsers->isEmpty()) {
@@ -194,7 +212,7 @@ readonly class EventService
         $this->notificationService->setNotificationConstEnum(NotificationConstEnum::NOTIFICATION_ROOM_ANSWER);
 
         foreach ($event->project->managerUsers as $projectManager) {
-            if ($projectManager->id === $event->creator) {
+            if ($projectManager->id === $event->creator->id) {
                 continue;
             }
 
@@ -208,7 +226,7 @@ readonly class EventService
             $this->notificationService->setDescription([
                 1 => [
                     'type' => 'link',
-                    'title' => $event->room?->name ?? '',
+                    'title' => $event->room?->name,
                     'href' => $event->room ? route('rooms.show', $event->room->id) : null
                 ],
                 2 => [

@@ -2,33 +2,21 @@
 
 namespace Artwork\Modules\Shift\Services;
 
-use App\Http\Resources\FreelancerDropResource;
-use App\Http\Resources\ServiceProviderDropResource;
-use App\Http\Resources\UserDropResource;
-use App\Models\Freelancer;
-use App\Models\ServiceProvider;
-use App\Models\User;
-use Artwork\Core\Database\Traits\ReceivesNewHistoryServiceTrait;
-use Artwork\Modules\Craft\Models\Craft;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\PresetShift\Models\PresetShift;
-use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Repositories\ShiftRepository;
-use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Auth;
 
 readonly class ShiftService
 {
-    use ReceivesNewHistoryServiceTrait;
-
     public function __construct(
         private ShiftRepository $shiftRepository,
         private ShiftsQualificationsService $shiftsQualificationsService,
         private ShiftUserService $shiftUserService,
         private ShiftFreelancerService $shiftFreelancerService,
-        private ShiftServiceProviderService $shiftServiceProviderService
+        private ShiftServiceProviderService $shiftServiceProviderService,
+        private ChangeService $changeService
     ) {
     }
 
@@ -55,14 +43,18 @@ readonly class ShiftService
 
     public function createRemovedAllUsersFromShiftHistoryEntry(Shift $shift): void
     {
-        $this->getNewHistoryService(Shift::class)->createHistory(
-            $shift->id,
-            'All scheduled employees have been removed from shift',
-            [
-                $shift->craft->abbreviation,
-                $shift->event->eventName
-            ],
-            'shift'
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('shift')
+                ->setModelClass(Shift::class)
+                ->setModelId($shift->id)
+                ->setShift($shift)
+                ->setTranslationKey('All scheduled employees have been removed from shift')
+                ->setTranslationKeyPlaceholderValues([
+                    $shift->craft->abbreviation,
+                    $shift->event->eventName
+                ])
         );
     }
 

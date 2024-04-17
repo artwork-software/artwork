@@ -3,19 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
-use App\Http\Controllers\Calendar\FilterProvider;
 use App\Http\Requests\FileUpload;
-use Artwork\Modules\Project\Models\Comment;
-use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Change\Services\ChangeService;
+use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
-use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
-use Artwork\Modules\Room\Repositories\RoomRepository;
-use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
-use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,34 +21,16 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProjectFileController extends Controller
 {
-    protected ?NewHistoryService $history = null;
-
-    protected ?NotificationService $notificationService = null;
-
-    private ?ProjectTabService $projectTabService = null;
-
-    public function __construct()
-    {
-        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-        $this->notificationService = new NotificationService();
-        $roomService = new RoomService(
-            new RoomRepository(),
-            new NotificationService(),
-            new NewHistoryService()
-        );
-        $this->projectTabService = new ProjectTabService(
-            new ShiftQualificationService(
-                new ShiftQualificationRepository()
-            ),
-            new ProjectTabRepository(),
-            $roomService,
-            new CalendarController(
-                new FilterProvider(),
-                $roomService
-            )
-        );
+    public function __construct(
+        private readonly ChangeService $changeService,
+        private readonly NotificationService $notificationService,
+        private readonly ProjectTabService $projectTabService
+    ) {
     }
 
+    /**
+     * @throws AuthorizationException
+     */
     public function store(FileUpload $request, Project $project, ProjectController $projectController): RedirectResponse
     {
         $this->authorize('view', $project);
@@ -94,12 +71,16 @@ class ProjectFileController extends Controller
             $projectFile->comments()->save($comment);
         }
 
-        $this->history->createHistory(
-            $project->id,
-            'Added file',
-            [$original_name],
-            'public_changes'
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('public_changes')
+                ->setModelClass(Project::class)
+                ->setModelId($project->id)
+                ->setTranslationKey('Added file')
+                ->setTranslationKeyPlaceholderValues([$original_name])
         );
+
         $projectController->setPublicChangesNotification($project->id);
 
         $projectFileUsers =  $projectFile->accessingUsers()->get();
@@ -234,12 +215,17 @@ class ProjectFileController extends Controller
     {
         $this->authorize('view', $projectFile->project);
         $project = $projectFile->project()->first();
-        $this->history->createHistory(
-            $project->id,
-            'Deleted file',
-            [$projectFile->name],
-            'public_changes'
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('public_changes')
+                ->setModelClass(Project::class)
+                ->setModelId($project->id)
+                ->setTranslationKey('Deleted file')
+                ->setTranslationKeyPlaceholderValues([$projectFile->name])
         );
+
         $projectController->setPublicChangesNotification($project->id);
 
         $projectFileUsers =  $projectFile->accessingUsers()->get();

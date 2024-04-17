@@ -7,9 +7,9 @@ use App\Http\Controllers\Calendar\FilterProvider;
 use App\Models\Scheduling;
 use App\Models\Task;
 use App\Models\User;
-use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
-use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Change\Repositories\ChangeRepository;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Notification\Models\GlobalNotification;
@@ -28,38 +28,10 @@ use stdClass;
 
 class SchedulingController extends Controller
 {
-    protected ?NotificationService $notificationService = null;
-
-    protected ?stdClass $notificationData = null;
-
-    private ?ProjectTabService $projectTabService = null;
-
-    public function __construct()
-    {
-        /**
-         * @todo: use dependency injection, fix direct usage of Controller in whole project -> use Service
-         **/
-        $this->notificationService = new NotificationService();
-        $this->notificationData = new stdClass();
-        $this->notificationData->project = new stdClass();
-        $this->notificationData->task = new stdClass();
-        $this->notificationData->room = new stdClass();
-        $roomService = new RoomService(
-            new RoomRepository(),
-            new NotificationService(),
-            new NewHistoryService()
-        );
-        $this->projectTabService = new ProjectTabService(
-            new ShiftQualificationService(
-                new ShiftQualificationRepository()
-            ),
-            new ProjectTabRepository(),
-            $roomService,
-            new CalendarController(
-                new FilterProvider(),
-                $roomService
-            )
-        );
+    public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly ProjectTabService $projectTabService
+    ) {
     }
 
 

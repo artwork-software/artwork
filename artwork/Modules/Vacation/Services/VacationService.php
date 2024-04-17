@@ -5,7 +5,7 @@ namespace Artwork\Modules\Vacation\Services;
 use App\Http\Controllers\SchedulingController;
 use App\Models\Freelancer;
 use App\Models\User;
-use App\Support\Services\NewHistoryService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Vacation\Models\Vacation;
 use Artwork\Modules\Vacation\Models\Vacationer;
 use Artwork\Modules\Vacation\Repository\VacationRepository;
@@ -17,12 +17,11 @@ class VacationService
 {
     public function __construct(
         private readonly VacationRepository $vacationRepository,
-        private readonly NewHistoryService $historyService,
+        private readonly ChangeService $changeService,
         private readonly SchedulingController $scheduler, //@todo refactor
         private readonly VacationSeriesService $vacationSeriesService,
         private readonly VacationConflictService $vacationConflictService,
     ) {
-        $this->historyService->setModel(Vacation::class);
     }
 
     public function create(Vacationer $vacationer, $data): Vacation|Model
@@ -170,10 +169,13 @@ class VacationService
 
     protected function createHistory(Vacation $vacation, string $translationKey): void
     {
-        $this->historyService->setTranslationKey($translationKey);
-        $this->historyService->setModelId($vacation->id);
-        $this->historyService->setType('vacation');
-        $this->historyService->create();
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Vacation::class)
+                ->setModelId($vacation->id)
+                ->setTranslationKey($translationKey)
+        );
     }
 
     protected function announceChanges(Vacation $vacation): void

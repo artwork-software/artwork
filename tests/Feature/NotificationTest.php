@@ -7,7 +7,7 @@ use Artwork\Modules\Event\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Notification;
 
-test('notifications that were archived more than 7 days ago are getting deleted', function () {
+test('notifications that were archived more than 7 days ago are getting deleted', function (): void {
 
     $auth_user = User::factory()->create();
     $event = Event::factory()->create();
@@ -26,16 +26,15 @@ test('notifications that were archived more than 7 days ago are getting deleted'
     $notification->read_at = Carbon::now()->subDays(8);
     $notification->save();
 
-    $taskScheduling = new SchedulingController();
+    $taskScheduling = app()->get(SchedulingController::class);
     $taskScheduling->deleteOldNotifications();
 
     $this->assertDatabaseMissing('notifications', [
         'id' => $notification->id
     ]);
-
 });
 
-test('notifications that were archived less than 7 days ago arent getting deleted', function () {
+test('notifications that were archived less than 7 days ago arent getting deleted', function (): void {
 
     $auth_user = User::factory()->create();
     $event = Event::factory()->create();
@@ -54,11 +53,10 @@ test('notifications that were archived less than 7 days ago arent getting delete
     $notification->read_at = Carbon::now()->subDays(5);
     $notification->save();
 
-    $taskScheduling = new SchedulingController();
+    $taskScheduling = app()->get(SchedulingController::class);
     $taskScheduling->deleteOldNotifications();
 
     $this->assertDatabaseHas('notifications', [
         'id' => $notification->id
     ]);
-
 });

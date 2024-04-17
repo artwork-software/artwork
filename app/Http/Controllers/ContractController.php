@@ -3,12 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
-use App\Http\Controllers\Calendar\FilterProvider;
 use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
-use App\Support\Services\NewHistoryService;
-use Artwork\Modules\Project\Models\Comment;
 use App\Models\CompanyType;
 use App\Models\Contract;
 use App\Models\ContractModule;
@@ -17,14 +14,9 @@ use App\Models\Currency;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\NotificationService;
+use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\ProjectTab\Repositories\ProjectTabRepository;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
-use Artwork\Modules\Room\Repositories\RoomRepository;
-use Artwork\Modules\Room\Services\RoomService;
-use Artwork\Modules\ShiftQualification\Repositories\ShiftQualificationRepository;
-use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,32 +30,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ContractController extends Controller
 {
-    protected ?NotificationService $notificationService = null;
-
-    private ?ProjectTabService $projectTabService = null;
-
-    public function __construct()
-    {
-        $this->notificationService = new NotificationService();
-        $roomService = new RoomService(
-            new RoomRepository(),
-            new NotificationService(),
-            new NewHistoryService()
-        );
-        $this->projectTabService = new ProjectTabService(
-            new ShiftQualificationService(
-                new ShiftQualificationRepository()
-            ),
-            new ProjectTabRepository(),
-            $roomService,
-            new CalendarController(
-                new FilterProvider(),
-                $roomService
-            )
-        );
+    public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly ProjectTabService $projectTabService
+    ) {
     }
 
-    public function viewIndex(): Response|ResponseFactory
+    public function index(): Response|ResponseFactory
     {
         // get all contracts where i am creator or i am accessing user
         $contracts = Contract::where('creator_id', Auth::id())->get();
@@ -81,47 +54,6 @@ class ContractController extends Controller
             'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
             'first_project_calendar_tab_id' => $this->projectTabService->findFirstProjectTabWithCalendarComponent()?->id
         ]);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function index(Request $request): array
-    {
-        $contracts = Contract::all();
-        $costsFilter = json_decode($request->input('costsFilter'));
-        $companyTypesFilter = json_decode($request->input('companyTypesFilter'));
-        $contractTypesFilter = json_decode($request->input('contractTypesFilter'));
-
-        if (
-            count($costsFilter->array) != 0 ||
-            count($companyTypesFilter->array) != 0 ||
-            count($contractTypesFilter->array) != 0
-        ) {
-            $company_type_ids = collect($companyTypesFilter->array);
-            $contract_type_ids = collect($contractTypesFilter->array);
-            $cost_filters = collect($costsFilter->array);
-
-            Debugbar::info($company_type_ids);
-            Debugbar::info($cost_filters);
-
-            if ($cost_filters->contains('KSK-pflichtig')) {
-                $contracts = $contracts->where('ksk_liable', true);
-            }
-            if ($cost_filters->contains('Im Ausland ansässig')) {
-                $contracts = $contracts->where('resident_abroad', true);
-            }
-            if (count($company_type_ids) > 0) {
-                $contracts = $contracts->whereIn('company_type_id', $company_type_ids);
-            }
-            if (count($contract_type_ids) > 0) {
-                $contracts = $contracts->whereIn('contract_type_id', $contract_type_ids);
-            }
-        }
-        return [
-            'contracts' => ContractResource::collection($contracts),
-            'contract_modules' => ContractModuleResource::collection(ContractModule::all())
-        ];
     }
 
     public function show(Contract $contract): Response|ResponseFactory
@@ -213,7 +145,7 @@ class ContractController extends Controller
 
         $contract->save();
 
-        return Redirect::route('contracts.view.index');
+        return Redirect::route('contracts.index');
     }
 
     public function download(Contract $contract): StreamedResponse

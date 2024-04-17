@@ -46,6 +46,6 @@ class ContractModuleController extends Controller
     public function destroy(ContractModule $module): RedirectResponse
     {
         $module->delete();
-        return Redirect::route('contracts.view.index');
+        return Redirect::route('contracts.index');
     }
 }

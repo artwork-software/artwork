@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\FileUpload;
-use App\Support\Services\NewHistoryService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Room\Models\Room;
 use Artwork\Modules\Room\Models\RoomFile;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -15,11 +15,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RoomFileController extends Controller
 {
-    protected ?NewHistoryService $historyController = null;
-
-    public function __construct()
+    public function __construct(private readonly ChangeService $changeService)
     {
-        $this->historyController = new NewHistoryService(Room::class);
     }
 
     /**
@@ -44,10 +41,13 @@ class RoomFileController extends Controller
             'basename' => $basename,
         ]);
 
-        $this->historyController->createHistory(
-            $room->id,
-            'Document was added',
-            [$original_name]
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Room::class)
+                ->setModelId($room->id)
+                ->setTranslationKey('Document was added')
+                ->setTranslationKeyPlaceholderValues([$original_name])
         );
 
         return Redirect::back();
@@ -57,10 +57,13 @@ class RoomFileController extends Controller
     {
         $this->authorize('view projects');
 
-        $this->historyController->createHistory(
-            $roomFile->room_id,
-            'Document has been downloaded',
-            [$roomFile->name]
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Room::class)
+                ->setModelId($roomFile->room_id)
+                ->setTranslationKey('Document has been downloaded')
+                ->setTranslationKeyPlaceholderValues([$roomFile->name])
         );
 
         return Storage::download('room_files/' . $roomFile->basename, $roomFile->name);
@@ -71,10 +74,13 @@ class RoomFileController extends Controller
         //dd($roomFile);
         $this->authorize('view', $roomFile->room->area);
 
-        $this->historyController->createHistory(
-            $roomFile->room_id,
-            'Document has been removed',
-            [$roomFile->name]
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Room::class)
+                ->setModelId($roomFile->room_id)
+                ->setTranslationKey('Document has been removed')
+                ->setTranslationKeyPlaceholderValues([$roomFile->name])
         );
 
         $roomFile->delete();

@@ -6,9 +6,9 @@ use App\Builders\EventBuilder;
 use App\Enums\NotificationConstEnum;
 use App\Http\Resources\CalendarShowEventResource;
 use App\Models\User;
-use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Area\Models\Area;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Room\Models\Room;
@@ -21,14 +21,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
-class RoomService
+readonly class RoomService
 {
     public function __construct(
-        private readonly RoomRepository $roomRepository,
-        private readonly NotificationService $notificationService,
-        private readonly NewHistoryService $history
+        private RoomRepository $roomRepository,
+        private NotificationService $notificationService,
+        private ChangeService $changeService
     ) {
-        $this->history->setModel(Room::class);
     }
 
     public function delete(Room $room): bool
@@ -151,7 +150,15 @@ class RoomService
         $room->adjoiningRooms()->sync($request->adjoiningRooms);
         $room->roomAdmins()->sync($request->roomAdmins);
         $this->roomRepository->save($room);
-        $this->history->createHistory($room->id, 'Room created');
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Room::class)
+                ->setModelId($room->id)
+                ->setTranslationKey('Room created')
+        );
+
         return $room;
     }
 
@@ -175,19 +182,36 @@ class RoomService
         $newEndDate
     ): void {
         if ($oldTemporary && !$newTemporary) {
-            $this->history->createHistory($roomId, 'Temporary time period deleted');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Room::class)
+                    ->setModelId($roomId)
+                    ->setTranslationKey('Temporary time period deleted')
+            );
             return;
         }
         if ($newTemporary && !$oldTemporary) {
-            $this->history->createHistory($roomId, 'Temporary time period added');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Room::class)
+                    ->setModelId($roomId)
+                    ->setTranslationKey('Temporary time period added')
+            );
             return;
         }
 
         // add check if temporary not changed
         if ($oldTemporary && $newTemporary) {
             if ($oldStartDate !== $newStartDate || $oldEndDate !== $newEndDate) {
-                $this->history->createHistory($roomId, 'Temporary time period changed');
-                return;
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Temporary time period changed')
+                );
             }
         }
     }
@@ -212,20 +236,26 @@ class RoomService
         foreach ($newCategories as $newCategory) {
             $newCategoryIds[] = $newCategory->id;
             if (!in_array($newCategory->id, $oldCategoryIds)) {
-                $this->history->createHistory(
-                    $roomId,
-                    'Added category',
-                    [$newCategory->name]
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Added category')
+                        ->setTranslationKeyPlaceholderValues([$newCategory->name])
                 );
             }
         }
 
         foreach ($oldCategoryIds as $oldCategoryId) {
             if (!in_array($oldCategoryId, $newCategoryIds)) {
-                $this->history->createHistory(
-                    $roomId,
-                    'Deleted category',
-                    [$oldCategoryNames[$oldCategoryId]]
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Deleted category')
+                        ->setTranslationKeyPlaceholderValues([$oldCategoryNames[$oldCategoryId]])
                 );
             }
         }
@@ -251,20 +281,26 @@ class RoomService
         foreach ($newAttributes as $newAttribute) {
             $newAttributeIds[] = $newAttribute->id;
             if (!in_array($newAttribute->id, $oldAttributeIds)) {
-                $this->history->createHistory(
-                    $roomId,
-                    'Added attribute',
-                    [$newAttribute->name]
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Added attribute')
+                        ->setTranslationKeyPlaceholderValues([$newAttribute->name])
                 );
             }
         }
 
         foreach ($oldAttributeIds as $oldAttributeId) {
             if (!in_array($oldAttributeId, $newAttributeIds)) {
-                $this->history->createHistory(
-                    $roomId,
-                    'Deleted attribute',
-                    [$oldAttributeNames[$oldAttributeId]]
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Deleted attribute')
+                        ->setTranslationKeyPlaceholderValues([$oldAttributeNames[$oldAttributeId]])
                 );
             }
         }
@@ -279,7 +315,13 @@ class RoomService
     public function checkTitleChanges($roomId, $oldTitle, $newTitle): void
     {
         if ($oldTitle !== $newTitle) {
-            $this->history->createHistory($roomId, 'Room name has been changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Room::class)
+                    ->setModelId($roomId)
+                    ->setTranslationKey('Room name has been changed')
+            );
         }
     }
 
@@ -293,7 +335,13 @@ class RoomService
     {
         // check changes in room description
         if ($oldDescription !== $newDescription) {
-            $this->history->createHistory($roomId, 'Description has been changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Room::class)
+                    ->setModelId($roomId)
+                    ->setTranslationKey('Description has been changed')
+            );
         }
     }
 
@@ -317,20 +365,26 @@ class RoomService
         foreach ($newAdjoiningRooms as $newAdjoiningRoom) {
             $newAdjoiningRoomIds[] = $newAdjoiningRoom->id;
             if (!in_array($newAdjoiningRoom->id, $oldAdjoiningRoomIds)) {
-                $this->history->createHistory(
-                    $roomId,
-                    'Adjoining room was added',
-                    [$newAdjoiningRoom->name]
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Adjoining room was added')
+                        ->setTranslationKeyPlaceholderValues([$newAdjoiningRoom->name])
                 );
             }
         }
 
         foreach ($oldAdjoiningRoomIds as $oldAdjoiningRoomId) {
             if (!in_array($oldAdjoiningRoomId, $newAdjoiningRoomIds)) {
-                $this->history->createHistory(
-                    $roomId,
-                    'Adjoining room has been removed',
-                    [$oldAdjoiningRoomName[$oldAdjoiningRoomId]]
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($roomId)
+                        ->setTranslationKey('Adjoining room has been removed')
+                        ->setTranslationKeyPlaceholderValues([$oldAdjoiningRoomName[$oldAdjoiningRoomId]])
                 );
             }
         }
@@ -371,10 +425,13 @@ class RoomService
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
-                $this->history->createHistory(
-                    $room->id,
-                    'Added as room admin',
-                    [$user->first_name]
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($room->id)
+                        ->setTranslationKey('Added as room admin')
+                        ->setTranslationKeyPlaceholderValues([$user->first_name])
                 );
             }
         }
@@ -400,10 +457,13 @@ class RoomService
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
-                $this->history->createHistory(
-                    $room->id,
-                    'Removed as room admin',
-                    [$user->first_name]
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Room::class)
+                        ->setModelId($room->id)
+                        ->setTranslationKey('Removed as room admin')
+                        ->setTranslationKeyPlaceholderValues([$user->first_name])
                 );
             }
         }

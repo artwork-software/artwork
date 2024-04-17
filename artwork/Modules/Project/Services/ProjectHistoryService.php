@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Support\Services;
+namespace Artwork\Modules\Project\Services;
 
-use Artwork\Modules\Checklist\Models\Checklist;
 use App\Models\Task;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectHistory;
@@ -11,7 +10,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
-class HistoryService
+class ProjectHistoryService
 {
     public function projectUpdated(Project $project): Collection
     {
@@ -88,10 +87,5 @@ class HistoryService
 
                 return $this->updateHistory($project, $description);
             })->filter();
-    }
-
-    public function checklistUpdated(Checklist $checklist): Collection
-    {
-        return $this->modelUpdated($checklist, $checklist->project, ['name' => $checklist->name]);
     }
 }

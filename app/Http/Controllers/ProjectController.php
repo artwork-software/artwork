@@ -14,11 +14,9 @@ use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\DepartmentIndexResource;
 use App\Http\Resources\EventTypeResource;
-use App\Http\Resources\ProjectCalendarShowEventResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectIndexShowResource;
-use App\Http\Resources\ResourceModels\CalendarEventCollectionResourceModel;
 use App\Http\Resources\UserResourceWithoutShifts;
 use App\Models\Category;
 use App\Models\CollectingSociety;
@@ -27,16 +25,13 @@ use App\Models\ContractType;
 use App\Models\CostCenter;
 use App\Models\Currency;
 use App\Models\EventType;
-use App\Models\Filter;
 use App\Models\Freelancer;
 use App\Models\Genre;
 use App\Models\MoneySource;
 use App\Models\Sector;
 use App\Models\ServiceProvider;
 use App\Models\User;
-use App\Support\Services\HistoryService;
 use App\Support\Services\MoneySourceThresholdReminderService;
-use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Models\BudgetSumDetails;
 use Artwork\Modules\Budget\Models\CellCalculation;
@@ -54,21 +49,18 @@ use Artwork\Modules\Budget\Services\SubPositionRowService;
 use Artwork\Modules\Budget\Services\SubPositionService;
 use Artwork\Modules\Budget\Services\TableService;
 use Artwork\Modules\BudgetColumnSetting\Services\BudgetColumnSettingService;
-use Artwork\Modules\Calendar\Services\CalendarService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Services\ChecklistService;
 use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
+use Artwork\Modules\Project\Services\ProjectHistoryService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
-use Artwork\Modules\ProjectTab\Models\ProjectTabSidebarTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Room\Models\Room;
-use Artwork\Modules\Room\Services\RoomService;
 use Artwork\Modules\Sage100\Services\Sage100Service;
-use Artwork\Modules\Shift\Services\ShiftService;
-use Artwork\Modules\ShiftQualification\Services\ShiftQualificationService;
 use Artwork\Modules\Timeline\Models\Timeline;
 use Artwork\Modules\Timeline\Services\TimelineService;
 use Carbon\Carbon;
@@ -95,29 +87,16 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProjectController extends Controller
 {
-    // init empty notification controller
-    protected ?NotificationService $notificationService = null;
-
-    protected ?stdClass $notificationData = null;
-
-    protected ?NewHistoryService $history = null;
-
-    protected ?SchedulingController $schedulingController = null;
     public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly SchedulingController $schedulingController,
         private readonly ProjectService $projectService,
         private readonly BudgetService $budgetService,
         private readonly BudgetColumnSettingService $budgetColumnSettingService,
         private readonly ChecklistService $checklistService,
-        private readonly ShiftService $shiftService,
-        private readonly ProjectTabService $projectTabService
+        private readonly ProjectTabService $projectTabService,
+        private readonly ChangeService $changeService
     ) {
-        // init notification controller
-        $this->notificationService = new NotificationService();
-        $this->notificationData = new stdClass();
-        $this->notificationData->project = new stdClass();
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
-        $this->history = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-        $this->schedulingController = new SchedulingController();
     }
 
     /**
@@ -519,11 +498,15 @@ class ProjectController extends Controller
             'requested_by' => Auth::id(),
             'requested' => $request->user
         ]);
-        $this->history->createHistory(
-            $project->id,
-            'Main position requested for verification',
-            [$mainPosition->name],
-            'budget'
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('budget')
+                ->setModelClass(Project::class)
+                ->setModelId($project->id)
+                ->setTranslationKey('Main position requested for verification')
+                ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
         return Redirect::back();
@@ -583,11 +566,15 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
             $verifiedRequest->forceDelete();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            $this->history->createHistory(
-                $project->id,
-                'Main position Verification request canceled',
-                [$mainPosition->name],
-                'budget'
+
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('budget')
+                    ->setModelClass(Project::class)
+                    ->setModelId($project->id)
+                    ->setTranslationKey('Main position Verification request canceled')
+                    ->setTranslationKeyPlaceholderValues([$mainPosition->name])
             );
         }
 
@@ -641,11 +628,15 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->forceDelete();
-            $this->history->createHistory(
-                $project->id,
-                'Sub position Verification request canceled',
-                [$subPosition->name],
-                'budget'
+
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('budget')
+                    ->setModelClass(Project::class)
+                    ->setModelId($project->id)
+                    ->setTranslationKey('Sub position Verification request canceled')
+                    ->setTranslationKeyPlaceholderValues([$subPosition->name])
             );
         }
         return Redirect::back();
@@ -714,11 +705,15 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->forceDelete();
-            $this->history->createHistory(
-                $project->id,
-                'Main position Verification canceled',
-                [$mainPosition->name],
-                'budget'
+
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('budget')
+                    ->setModelClass(Project::class)
+                    ->setModelId($project->id)
+                    ->setTranslationKey('Main position Verification canceled')
+                    ->setTranslationKeyPlaceholderValues([$mainPosition->name])
             );
         }
 
@@ -771,11 +766,15 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->forceDelete();
-            $this->history->createHistory(
-                $project->id,
-                'Sub position Verification removed',
-                [$subPosition->name],
-                'budget'
+
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('budget')
+                    ->setModelClass(Project::class)
+                    ->setModelId($project->id)
+                    ->setTranslationKey('Sub position Verification removed')
+                    ->setTranslationKeyPlaceholderValues([$subPosition->name])
             );
         }
 
@@ -880,12 +879,16 @@ class ProjectController extends Controller
             'requested' => $request->user
         ]);
 
-        $this->history->createHistory(
-            $project->id,
-            'Sub position requested for verification',
-            [$subPosition->name],
-            'budget'
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('budget')
+                ->setModelClass(Project::class)
+                ->setModelId($project->id)
+                ->setTranslationKey('Sub position requested for verification')
+                ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
+
         return Redirect::back();
     }
 
@@ -902,11 +905,14 @@ class ProjectController extends Controller
             ->whereJsonContains("data->budgetData->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
             ->delete();
 
-        $this->history->createHistory(
-            $request->project_id,
-            'Sub position verified',
-            [$subPosition->name],
-            'budget'
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('budget')
+                ->setModelClass(Project::class)
+                ->setModelId($request->project_id)
+                ->setTranslationKey('Sub position verified')
+                ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
         return Redirect::back();
@@ -966,11 +972,14 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $this->history->createHistory(
-            $project->id,
-            'Sub position fixed',
-            [$subPosition->name],
-            'budget'
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('budget')
+                ->setModelClass(Project::class)
+                ->setModelId($project->id)
+                ->setTranslationKey('Sub position fixed')
+                ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
         return Redirect::back();
@@ -1029,11 +1038,14 @@ class ProjectController extends Controller
             $this->notificationService->createNotification();
         }
 
-        $this->history->createHistory(
-            $request->project_id,
-            'Sub position Fixing canceled',
-            [$subPosition->name],
-            'budget'
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('budget')
+                ->setModelClass(Project::class)
+                ->setModelId($request->project_id)
+                ->setTranslationKey('Sub position Fixing canceled')
+                ->setTranslationKeyPlaceholderValues([$subPosition->name])
         );
 
         return Redirect::back();
@@ -1044,12 +1056,17 @@ class ProjectController extends Controller
         $mainPosition = MainPosition::find($request->mainPositionId);
         $this->setMainPositionCellVerifiedValue($mainPosition);
         $mainPosition->update(['is_fixed' => true]);
-        $this->history->createHistory(
-            $request->project_id,
-            'Main position fixed',
-            [$mainPosition->name],
-            'budget'
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('budget')
+                ->setModelClass(Project::class)
+                ->setModelId($request->project_id)
+                ->setTranslationKey('Main position fixed')
+                ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
+
         return Redirect::back();
     }
 
@@ -1058,12 +1075,17 @@ class ProjectController extends Controller
         $mainPosition = MainPosition::find($request->mainPositionId);
         $this->removeMainPositionCellVerifiedValue($mainPosition);
         $mainPosition->update(['is_fixed' => false]);
-        $this->history->createHistory(
-            $request->project_id,
-            'Main position Fixing canceled',
-            [$mainPosition->name],
-            'budget'
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('budget')
+                ->setModelClass(Project::class)
+                ->setModelId($request->project_id)
+                ->setTranslationKey('Main position Fixing canceled')
+                ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
+
         return Redirect::back();
     }
 
@@ -1090,11 +1112,15 @@ class ProjectController extends Controller
             ->whereJsonContains("data->budgetData->requested_by", $verifiedRequest->requested)
             ->whereJsonContains("data->budgetData->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
             ->delete();
-        $this->history->createHistory(
-            $request->project_id,
-            'Main position verified',
-            [$mainPosition->name],
-            'budget'
+
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('budget')
+                ->setModelClass(Project::class)
+                ->setModelId($request->project_id)
+                ->setTranslationKey('Main position verified')
+                ->setTranslationKeyPlaceholderValues([$mainPosition->name])
         );
 
         return Redirect::back();
@@ -1360,14 +1386,17 @@ class ProjectController extends Controller
             ->first();
 
         if ($request->is_verified) {
-            $this->history->createHistory(
-                $project->id,
-                'Cell value changed',
-                [
-                    $cell->value,
-                    $request->value
-                ],
-                'budget'
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('budget')
+                    ->setModelClass(Project::class)
+                    ->setModelId($project->id)
+                    ->setTranslationKey('Cell value changed')
+                    ->setTranslationKeyPlaceholderValues([
+                        $cell->value,
+                        $request->value
+                    ])
             );
         }
 
@@ -1629,11 +1658,13 @@ class ProjectController extends Controller
             (empty($oldState) && !empty($newState)) ||
             (!empty($oldState) && empty($newState))
         ) {
-            $this->history->createHistory(
-                $project->id,
-                'Project status has changed',
-                [],
-                'public_changes'
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('public_changes')
+                    ->setModelClass(Project::class)
+                    ->setModelId($project->id)
+                    ->setTranslationKey('Project status has changed')
             );
         }
 
@@ -1649,8 +1680,6 @@ class ProjectController extends Controller
         Project $project,
         ProjectTab $projectTab,
         ProjectTabService $projectTabService,
-        CalendarController $calendar,
-        ShiftQualificationService $shiftQualificationService,
         SageAssignedDataCommentService $sageAssignedDataCommentService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
@@ -2030,22 +2059,28 @@ class ProjectController extends Controller
         foreach ($newSectors as $newSector) {
             $newSectorIds[] = $newSector->id;
             if (!in_array($newSector->id, $oldSectorIds)) {
-                $this->history->createHistory(
-                    $projectId,
-                    'Added area',
-                    [$newSector->name],
-                    'public_changes'
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setType('public_changes')
+                        ->setModelClass(Project::class)
+                        ->setModelId($projectId)
+                        ->setTranslationKey('Added area')
+                        ->setTranslationKeyPlaceholderValues([$newSector->name])
                 );
             }
         }
 
         foreach ($oldSectorIds as $oldSectorId) {
             if (!in_array($oldSectorId, $newSectorIds)) {
-                $this->history->createHistory(
-                    $projectId,
-                    'Deleted area',
-                    [$oldSectorNames[$oldSectorId]],
-                    'public_changes'
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setType('public_changes')
+                        ->setModelClass(Project::class)
+                        ->setModelId($projectId)
+                        ->setTranslationKey('Deleted area')
+                        ->setTranslationKeyPlaceholderValues([$oldSectorNames[$oldSectorId]])
                 );
             }
         }
@@ -2073,22 +2108,26 @@ class ProjectController extends Controller
         foreach ($newGenres as $newGenre) {
             $newGenreIds[] = $newGenre->id;
             if (!in_array($newGenre->id, $oldGenreIds)) {
-                $this->history->createHistory(
-                    $projectId,
-                    'Added genre',
-                    [$newGenre->name],
-                    'public_changes'
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setType('public_changes')
+                        ->setModelClass(Project::class)
+                        ->setModelId($projectId)
+                        ->setTranslationKey('Added genre')
                 );
             }
         }
 
         foreach ($oldGenreIds as $oldGenreId) {
             if (!in_array($oldGenreId, $newGenreIds)) {
-                $this->history->createHistory(
-                    $projectId,
-                    'Deleted genre',
-                    [$oldGenreNames[$oldGenreId]],
-                    'public_changes'
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setType('public_changes')
+                        ->setModelClass(Project::class)
+                        ->setModelId($projectId)
+                        ->setTranslationKey('Deleted genre')
                 );
             }
         }
@@ -2110,22 +2149,28 @@ class ProjectController extends Controller
         foreach ($newCategories as $newCategory) {
             $newCategoryIds[] = $newCategory->id;
             if (!in_array($newCategory->id, $oldCategoryIds)) {
-                $this->history->createHistory(
-                    $projectId,
-                    'Added category',
-                    [$newCategory->name],
-                    'public_changes'
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setType('public_changes')
+                        ->setModelClass(Project::class)
+                        ->setModelId($projectId)
+                        ->setTranslationKey('Added category')
+                        ->setTranslationKeyPlaceholderValues([$newCategory->name])
                 );
             }
         }
 
         foreach ($oldCategoryIds as $oldCategoryId) {
             if (!in_array($oldCategoryId, $newCategoryIds)) {
-                $this->history->createHistory(
-                    $projectId,
-                    'Deleted category',
-                    [$oldCategoryNames[$oldCategoryId]],
-                    'public_changes'
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setType('public_changes')
+                        ->setModelClass(Project::class)
+                        ->setModelId($projectId)
+                        ->setTranslationKey('Deleted category')
+                        ->setTranslationKeyPlaceholderValues([$oldCategoryNames[$oldCategoryId]])
                 );
             }
         }
@@ -2136,11 +2181,13 @@ class ProjectController extends Controller
     private function checkProjectNameChanges($projectId, $oldName, $newName): void
     {
         if ($oldName !== $newName) {
-            $this->history->createHistory(
-                $projectId,
-                'Project name changed',
-                [],
-                'public_changes'
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('public_changes')
+                    ->setModelClass(Project::class)
+                    ->setModelId($projectId)
+                    ->setTranslationKey('Project name changed')
             );
             $this->setPublicChangesNotification($projectId);
         }
@@ -2152,11 +2199,13 @@ class ProjectController extends Controller
         string|null $newProjectBudgetDeadline
     ): void {
         if ($oldProjectBudgetDeadline !== $newProjectBudgetDeadline) {
-            $this->history->createHistory(
-                $projectId,
-                'Project budget deadline changed',
-                [],
-                'public_changes'
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('public_changes')
+                    ->setModelClass(Project::class)
+                    ->setModelId($projectId)
+                    ->setTranslationKey('Project budget deadline changed')
             );
             $this->setPublicChangesNotification($projectId);
         }
@@ -2184,20 +2233,26 @@ class ProjectController extends Controller
         foreach ($newDepartments as $newDepartment) {
             $newDepartmentIds[] = $newDepartment->id;
             if (!in_array($newDepartment->id, $oldDepartmentIds)) {
-                $this->history->createHistory(
-                    $projectId,
-                    'Department added to project team',
-                    [$newDepartment->name]
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Project::class)
+                        ->setModelId($projectId)
+                        ->setTranslationKey('Department added to project team')
+                        ->setTranslationKeyPlaceholderValues([$newDepartment->name])
                 );
             }
         }
 
         foreach ($oldDepartmentIds as $oldDepartmentId) {
             if (!in_array($oldDepartmentId, $newDepartmentIds)) {
-                $this->history->createHistory(
-                    $projectId,
-                    'Department removed from project team',
-                    [$oldDepartmentNames[$oldDepartmentId]]
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Project::class)
+                        ->setModelId($projectId)
+                        ->setTranslationKey('Department removed from project team')
+                        ->setTranslationKeyPlaceholderValues([$oldDepartmentNames[$oldDepartmentId]])
                 );
             }
         }
@@ -2206,27 +2261,33 @@ class ProjectController extends Controller
     private function checkProjectDescriptionChanges($projectId, $oldDescription, $newDescription): void
     {
         if (strlen($newDescription) === null) {
-            $this->history->createHistory(
-                $projectId,
-                'Short description deleted',
-                [],
-                'public_changes'
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('public_changes')
+                    ->setModelClass(Project::class)
+                    ->setModelId($projectId)
+                    ->setTranslationKey('Short description deleted')
             );
         }
         if ($oldDescription === null && $newDescription !== null) {
-            $this->history->createHistory(
-                $projectId,
-                'Short description added',
-                [],
-                'public_changes'
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('public_changes')
+                    ->setModelClass(Project::class)
+                    ->setModelId($projectId)
+                    ->setTranslationKey('Short description added')
             );
         }
         if ($oldDescription !== $newDescription && $oldDescription !== null && strlen($newDescription) !== null) {
-            $this->history->createHistory(
-                $projectId,
-                'Short description changed',
-                [],
-                'public_changes'
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('public_changes')
+                    ->setModelClass(Project::class)
+                    ->setModelId($projectId)
+                    ->setTranslationKey('Short description changed')
             );
         }
         $this->setPublicChangesNotification($projectId);
@@ -2384,10 +2445,13 @@ class ProjectController extends Controller
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
 
-                $this->history->createHistory(
-                    $project->id,
-                    'User added to project team',
-                    [$user->first_name . ' ' . $user->last_name]
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Project::class)
+                        ->setModelId($project->id)
+                        ->setTranslationKey('User added to project team')
+                        ->setTranslationKeyPlaceholderValues([$user->first_name . ' ' . $user->last_name])
                 );
             }
         }
@@ -2411,10 +2475,14 @@ class ProjectController extends Controller
                 $this->notificationService->setNotificationTo($user);
                 $this->notificationService->createNotification();
 
-                $this->history->createHistory(
-                    $project->id,
-                    'User removed from project team',
-                    [$user->first_name . ' ' . $user->last_name]
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setType('public_changes')
+                        ->setModelClass(Project::class)
+                        ->setModelId($project->id)
+                        ->setTranslationKey('User removed from project team')
+                        ->setTranslationKeyPlaceholderValues([$user->first_name . ' ' . $user->last_name])
                 );
             }
         }
@@ -2422,7 +2490,7 @@ class ProjectController extends Controller
 
     public function duplicate(
         Project $project,
-        HistoryService $historyService,
+        ProjectHistoryService $projectHistoryService,
         ProjectTabService $projectTabService
     ) {
         // authorization
@@ -2451,7 +2519,7 @@ class ProjectController extends Controller
             'cost_center' => $project->cost_center,
             'state' => $project->state,
         ]);
-        $historyService->projectUpdated($newProject);
+        $projectHistoryService->projectUpdated($newProject);
 
         $this->budgetService->generateBasicBudgetValues($newProject);
 
@@ -2462,7 +2530,7 @@ class ProjectController extends Controller
         $newProject->departments()->sync($project->departments->pluck('id'));
         $newProject->users()->sync($project->users->pluck('id'));
 
-        $historyService->updateHistory($project, config('history.project.duplicated'));
+        $projectHistoryService->updateHistory($project, config('history.project.duplicated'));
 
         if ($projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent()) {
             return Redirect::route('projects.tab', [$newProject->id, $projectTab->id]);
@@ -2625,20 +2693,24 @@ class ProjectController extends Controller
         $newKeyVisual = $project->key_visual_path;
 
         if ($oldKeyVisual !== $newKeyVisual) {
-            $this->history->createHistory(
-                $project->id,
-                'Key visual has been changed',
-                [],
-                'public_changes'
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('public_changes')
+                    ->setModelClass(Project::class)
+                    ->setModelId($project->id)
+                    ->setTranslationKey('Key visual has been changed')
             );
         }
 
         if ($newKeyVisual === '') {
-            $this->history->createHistory(
-                $project->id,
-                'Key visual has been removed',
-                [],
-                'public_changes'
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('public_changes')
+                    ->setModelClass(Project::class)
+                    ->setModelId($project->id)
+                    ->setTranslationKey('Key visual has been removed')
             );
         }
 
@@ -2798,13 +2870,31 @@ class ProjectController extends Controller
     private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter): void
     {
         if ($newCostCenter === null && $oldCostCenter !== null) {
-            $this->history->createHistory($projectId, 'Cost center deleted');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($projectId)
+                    ->setTranslationKey('Cost center deleted')
+            );
         }
         if ($oldCostCenter === null && $newCostCenter !== null) {
-            $this->history->createHistory($projectId, 'Cost center added');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($projectId)
+                    ->setTranslationKey('Cost center added')
+            );
         }
         if ($oldCostCenter !== $newCostCenter && $oldCostCenter !== null && $newCostCenter !== null) {
-            $this->history->createHistory($projectId, 'Cost center changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($projectId)
+                    ->setTranslationKey('Cost center changed')
+            );
         }
     }
 }

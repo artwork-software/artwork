@@ -524,8 +524,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function (): void {
     Route::resource('money_source.reminder', MoneySourceReminderController::class)->only('store');
 
     //Contracts
-    Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');
-    Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.index');
+    Route::get('/contracts/view', [ContractController::class, 'index'])->name('contracts.index');
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');

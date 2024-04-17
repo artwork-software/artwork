@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Enums\RoleNameEnum;
 use App\Models\User;
-use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Availability\Models\AvailabilitiesConflict;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Artwork\Modules\Shift\Models\Shift;
@@ -28,17 +28,13 @@ use Illuminate\Support\Str;
 
 class ShiftController extends Controller
 {
-    protected ?NewHistoryService $history = null;
-
-    protected ?NotificationService $notificationService = null;
-
     public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly ChangeService $changeService,
         private readonly AvailabilityConflictService $availabilityConflictService,
         private readonly VacationConflictService $vacationConflictService,
         private readonly ShiftService $shiftService
     ) {
-        $this->history = new NewHistoryService('Artwork\Modules\Shift\Models\Shift');
-        $this->notificationService = new NotificationService();
     }
 
     public function store(
@@ -46,6 +42,7 @@ class ShiftController extends Controller
         Event $event,
         ShiftsQualificationsService $shiftsQualificationsService
     ): void {
+        /** @var Shift $shift */
         $shift = $event->shifts()->create($request->only([
             'start_date',
             'end_date',
@@ -159,11 +156,15 @@ class ShiftController extends Controller
             }
         }
 
-        $this->history->createHistory(
-            $shift->id,
-            'Shift of event was created',
-            [$event->eventName],
-            'shift'
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('shift')
+                ->setModelClass(Shift::class)
+                ->setModelId($shift->id)
+                ->setShift($shift)
+                ->setTranslationKey('Shift of event was created')
+                ->setTranslationKeyPlaceholderValues([$event->eventName])
         );
     }
 
@@ -179,13 +180,19 @@ class ShiftController extends Controller
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory(
-                $shift->id,
-                'Shift of event has been edited',
-                [$event->eventName],
-                'shift'
+
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('shift')
+                    ->setModelClass(Shift::class)
+                    ->setModelId($shift->id)
+                    ->setShift($shift)
+                    ->setTranslationKey('Shift of event has been edited')
+                    ->setTranslationKeyPlaceholderValues([$event->eventName])
             );
         }
+
         $shift->update($request->only([
             'start_date',
             'end_date',
@@ -210,11 +217,16 @@ class ShiftController extends Controller
         $projectId =  $shift->event()->first()->project()->first()->id;
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory(
-                $shift->id,
-                'Shift of event has been edited',
-                [$event->eventName],
-                'shift'
+
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('shift')
+                    ->setModelClass(Shift::class)
+                    ->setModelId($shift->id)
+                    ->setShift($shift)
+                    ->setTranslationKey('Shift of event has been edited')
+                    ->setTranslationKeyPlaceholderValues([$event->eventName])
             );
 
             $this->notificationService->setIcon('red');
@@ -585,11 +597,16 @@ class ShiftController extends Controller
     {
         if ($shift->is_committed) {
             $event = $shift->event;
-            $this->history->createHistory(
-                $shift->id,
-                'Shift of event was deleted',
-                [$event->eventName],
-                'shift'
+
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setType('shift')
+                    ->setModelClass(Shift::class)
+                    ->setModelId($shift->id)
+                    ->setShift($shift)
+                    ->setTranslationKey('Shift of event was deleted')
+                    ->setTranslationKeyPlaceholderValues([$event->eventName])
             );
 
             $this->notificationService->setIcon('green');

@@ -25,9 +25,9 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\UserShiftCalendarFilter;
 use App\Support\Services\CollisionService;
-use App\Support\Services\NewHistoryService;
 use App\Support\Services\NotificationService;
 use Artwork\Modules\Budget\Services\BudgetService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Event\Services\EventService;
 use Artwork\Modules\Project\Models\Project;
@@ -53,12 +53,6 @@ use Inertia\ResponseFactory;
 
 class EventController extends Controller
 {
-    protected ?\stdClass $notificationData = null;
-
-    protected ?NewHistoryService $history = null;
-
-    protected ?string $notificationKey = '';
-
     protected Authenticatable $user;
 
     protected UserShiftCalendarFilter $userShiftCalendarFilter;
@@ -70,14 +64,10 @@ class EventController extends Controller
         private readonly EventService $eventService,
         private readonly ShiftService $shiftService,
         private readonly TimelineService $timelineService,
-        private readonly ProjectTabService $projectTabService
+        private readonly ProjectTabService $projectTabService,
+        private readonly ChangeService $changeService,
+        private readonly SchedulingController $schedulingController
     ) {
-        $this->notificationData = new \stdClass();
-        $this->notificationData->event = new \stdClass();
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
-        $this->history = new NewHistoryService(Event::class);
-
-        $this->notificationKey = Str::random(15);
     }
 
     public function viewEventIndex(
@@ -487,8 +477,13 @@ class EventController extends Controller
             $eventProject = $firstEvent->project()->first();
 
             if ($eventProject) {
-                $projectHistory = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-                $projectHistory->createHistory($eventProject->id, 'Schedule added');
+                $this->changeService->saveFromBuilder(
+                    $this->changeService
+                        ->createBuilder()
+                        ->setModelClass(Project::class)
+                        ->setModelId($eventProject->id)
+                        ->setTranslationKey('Schedule added')
+                );
             }
         }
 
@@ -932,7 +927,7 @@ class EventController extends Controller
         $this->authorize('update', $event);
         if (!$request->noNotifications) {
             $projectManagers = [];
-            $this->notificationService->setNotificationKey($this->notificationKey);
+            $this->notificationService->setNotificationKey(Str::random(15));
             $room = $event->room()->first();
             $project = $event->project()->first();
             if (!empty($project)) {
@@ -940,7 +935,7 @@ class EventController extends Controller
             }
             if (!empty($request->adminComment)) {
                 $projectManagers = [];
-                $this->notificationService->setNotificationKey($this->notificationKey);
+                $this->notificationService->setNotificationKey(Str::random(15));
                 $project = $event->project()->first();
                 if (!empty($project)) {
                     $projectManagers = $project->managerUsers()->get();
@@ -1007,7 +1002,7 @@ class EventController extends Controller
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setBroadcastMessage($broadcastMessage);
                     $this->notificationService->setDescription($notificationDescription);
-                    $this->notificationService->setNotificationKey($this->notificationKey);
+                    $this->notificationService->setNotificationKey(Str::random(15));
                     $this->notificationService->setNotificationTo($projectManager);
                     $this->notificationService->createNotification();
                 }
@@ -1056,7 +1051,7 @@ class EventController extends Controller
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setDescription($notificationDescription);
-                $this->notificationService->setNotificationKey($this->notificationKey);
+                $this->notificationService->setNotificationKey(Str::random(15));
                 $this->notificationService->setNotificationTo($event->creator);
                 $this->notificationService->createNotification();
             }
@@ -1197,9 +1192,13 @@ class EventController extends Controller
         }
 
         if (!empty($event->project_id)) {
-            $eventProject = $event->project()->first();
-            $projectHistory = new NewHistoryService(Project::class);
-            $projectHistory->createHistory($eventProject->id, 'Schedule modified');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($event->project()->first()->id)
+                    ->setTranslationKey('Schedule modified')
+            );
         }
 
         $newEventDescription = $event->description;
@@ -1298,13 +1297,12 @@ class EventController extends Controller
 
     private function createEventScheduleNotification(Event $event): void
     {
-        $schedule = new SchedulingController();
         if (!empty($event->project)) {
             foreach ($event->project->users->all() as $eventUser) {
-                $schedule->create($eventUser->id, 'EVENT_CHANGES', 'EVENT', $event->id);
+                $this->schedulingController->create($eventUser->id, 'EVENT_CHANGES', 'EVENT', $event->id);
             }
         } else {
-            $schedule->create($event->creator->id, 'EVENT_CHANGES', 'EVENT', $event->id);
+            $this->schedulingController->create($event->creator->id, 'EVENT_CHANGES', 'EVENT', $event->id);
         }
     }
 
@@ -1321,7 +1319,7 @@ class EventController extends Controller
             'is_admin_comment' => false
         ]);
 
-        $this->notificationService->setNotificationKey($this->notificationKey);
+        $this->notificationService->setNotificationKey(Str::random(15));
         $room = Room::find($event->room_id);
         $admins = collect();
         if (!empty($room)) {
@@ -1458,7 +1456,13 @@ class EventController extends Controller
 
         $event->occupancy_option = false;
 
-        $this->history->createHistory($event->id, 'Room confirmed');
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Event::class)
+                ->setModelId($event->id)
+                ->setTranslationKey('Room confirmed')
+        );
 
         $event->save();
         $room = Room::find($event->room_id);
@@ -1656,7 +1660,7 @@ class EventController extends Controller
                 $this->notificationService->setTitle($notificationTitle);
                 $this->notificationService->setBroadcastMessage($broadcastMessage);
                 $this->notificationService->setDescription($notificationDescription);
-                $this->notificationService->setNotificationKey($this->notificationKey);
+                $this->notificationService->setNotificationKey(Str::random(15));
                 $this->notificationService->setNotificationTo($projectManager);
                 $this->notificationService->createNotification();
             }
@@ -1703,13 +1707,19 @@ class EventController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setNotificationKey($this->notificationKey);
+            $this->notificationService->setNotificationKey(Str::random(15));
             $this->notificationService->setNotificationTo($event->creator);
             $this->notificationService->createNotification();
         }
 
-        $this->notificationKey = Str::random(15);
-        $this->history->createHistory($event->id, 'Room declined');
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Event::class)
+                ->setModelId($event->id)
+                ->setTranslationKey('Room declined')
+        );
+
         $room = Room::find($roomId);
         $project = Project::find($event->project_id);
 
@@ -1769,7 +1779,7 @@ class EventController extends Controller
             $this->notificationService->setTitle($notificationTitle);
             $this->notificationService->setBroadcastMessage($broadcastMessage);
             $this->notificationService->setDescription($notificationDescription);
-            $this->notificationService->setNotificationKey($this->notificationKey);
+            $this->notificationService->setNotificationKey(Str::random(15));
             $this->notificationService->setNotificationTo($projectManager);
             $this->notificationService->createNotification();
         }
@@ -1816,7 +1826,7 @@ class EventController extends Controller
         $this->notificationService->setTitle($notificationTitle);
         $this->notificationService->setBroadcastMessage($broadcastMessage);
         $this->notificationService->setDescription($notificationDescription);
-        $this->notificationService->setNotificationKey($this->notificationKey);
+        $this->notificationService->setNotificationKey(Str::random(15));
         $this->notificationService->setNotificationTo($event->creator);
         $this->notificationService->createNotification();
     }
@@ -1886,8 +1896,13 @@ class EventController extends Controller
         $this->authorize('delete', $event);
 
         if (!empty($event->project)) {
-            $projectHistory = new NewHistoryService('Artwork\Modules\Project\Models\Project');
-            $projectHistory->createHistory($event->project->id, 'Schedule deleted');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($event->project->id)
+                    ->setTranslationKey('Schedule deleted')
+            );
         }
 
         if (!empty($request->notificationKey)) {
@@ -1945,51 +1960,105 @@ class EventController extends Controller
             strtotime($oldEventStartDate) !== strtotime($newEventStartDate) ||
             strtotime($oldEventEndDate) !== strtotime($newEventEndDate)
         ) {
-            $this->history->createHistory($eventId, 'Date/time changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Date/time changed')
+            );
         }
     }
 
     private function checkEventTypeChanges($eventId, $oldType, $newType): void
     {
         if ($oldType !== $newType) {
-            $this->history->createHistory($eventId, 'Appointment type changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment type changed')
+            );
         }
     }
 
     private function checkEventNameChanges($eventId, $oldName, $newName): void
     {
         if ($oldName === null && $newName !== null) {
-            $this->history->createHistory($eventId, 'Appointment name added');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment name added')
+            );
         }
 
         if ($oldName !== $newName && $newName !== null && $oldName !== null) {
-            $this->history->createHistory($eventId, 'Appointment name changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment name changed')
+            );
         }
 
         if ($oldName !== null && $newName === null) {
-            $this->history->createHistory($eventId, 'Appointment name deleted');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment name deleted')
+            );
         }
     }
 
     private function checkProjectChanges($eventId, $oldProject, $newProject): void
     {
         if ($newProject !== null && $oldProject === null) {
-            $this->history->createHistory($eventId, 'Added project assignment');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Added project assignment')
+            );
         }
 
         if ($oldProject !== null && $newProject === null) {
-            $this->history->createHistory($eventId, 'Deleted project assignment');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Deleted project assignment')
+            );
         }
 
         if ($newProject !== null && $oldProject !== null && $newProject !== $oldProject) {
-            $this->history->createHistory($eventId, 'Changed project assignment');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Changed project assignment')
+            );
         }
     }
 
     private function checkRoomChanges($eventId, $oldRoom, $newRoom): void
     {
         if ($oldRoom !== $newRoom) {
-            $this->history->createHistory($eventId, 'Room changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Room changed')
+            );
 
             $this->notificationService->deleteUpsertRoomRequestNotificationByEventId($eventId);
         }
@@ -1998,20 +2067,44 @@ class EventController extends Controller
     private function checkShortDescriptionChanges(int $eventId, $oldDescription, $newDescription): void
     {
         if ($newDescription === null && $oldDescription !== null) {
-            $this->history->createHistory($eventId, 'Appointment notice deleted');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment notice deleted')
+            );
         }
         if ($oldDescription === null && $newDescription !== null) {
-            $this->history->createHistory($eventId, 'Appointment notice added');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment notice added')
+            );
         }
         if ($oldDescription !== $newDescription && $oldDescription !== null && $newDescription !== null) {
-            $this->history->createHistory($eventId, 'Appointment notice changed');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Appointment notice changed')
+            );
         }
     }
 
     private function checkEventOptionChanges(int $eventId, $isLoudOld, $isLoudNew, $audienceOld, $audienceNew): void
     {
         if ($isLoudOld !== $isLoudNew || $audienceOld !== $audienceNew) {
-            $this->history->createHistory($eventId, 'Changed appointment property');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Event::class)
+                    ->setModelId($eventId)
+                    ->setTranslationKey('Changed appointment property')
+            );
         }
     }
 

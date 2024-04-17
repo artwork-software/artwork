@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\SchedulingController;
+use Exception;
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class DeadLine extends Command
 {
@@ -11,10 +13,13 @@ class DeadLine extends Command
 
     protected $description = 'Create Deadline Notification';
 
-    public function handle(): int
+    /**
+     * @throws Exception
+     */
+    public function handle(SchedulingController $schedulingController): int
     {
-        $scheduling = new SchedulingController();
-        $scheduling->sendDeadlineNotification();
-        return 1;
+        $schedulingController->sendDeadlineNotification();
+
+        return CommandAlias::SUCCESS;
     }
 }

@@ -3,8 +3,8 @@
 namespace Artwork\Modules\Shift\Services;
 
 use App\Models\Freelancer;
-use Artwork\Core\Database\Traits\ReceivesNewHistoryServiceTrait;
 use Artwork\Modules\Availability\Services\AvailabilityConflictService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Shift\Models\Shift;
 use Artwork\Modules\Shift\Models\ShiftFreelancer;
 use Artwork\Modules\Shift\Repositories\ShiftFreelancerRepository;
@@ -16,19 +16,18 @@ use Artwork\Modules\ShiftQualification\Models\ShiftQualification;
 use Artwork\Modules\Vacation\Services\VacationConflictService;
 use Carbon\Carbon;
 
-class ShiftFreelancerService
+readonly class ShiftFreelancerService
 {
-    use ReceivesNewHistoryServiceTrait;
-
     public function __construct(
-        private readonly ShiftRepository $shiftRepository,
-        private readonly ShiftUserRepository $shiftUserRepository,
-        private readonly ShiftFreelancerRepository $shiftFreelancerRepository,
-        private readonly ShiftServiceProviderRepository $shiftServiceProviderRepository,
-        private readonly ShiftsQualificationsRepository $shiftsQualificationsRepository,
-        private readonly ShiftCountService $shiftCountService,
-        private readonly VacationConflictService $vacationConflictService,
-        private readonly AvailabilityConflictService $availabilityConflictService
+        private ShiftRepository $shiftRepository,
+        private ShiftUserRepository $shiftUserRepository,
+        private ShiftFreelancerRepository $shiftFreelancerRepository,
+        private ShiftServiceProviderRepository $shiftServiceProviderRepository,
+        private ShiftsQualificationsRepository $shiftsQualificationsRepository,
+        private ShiftCountService $shiftCountService,
+        private VacationConflictService $vacationConflictService,
+        private AvailabilityConflictService $availabilityConflictService,
+        private ChangeService $changeService
     ) {
     }
 
@@ -85,16 +84,20 @@ class ShiftFreelancerService
         Freelancer $freelancer,
         ShiftQualification $shiftQualification
     ): void {
-        $this->getNewHistoryService(Shift::class)->createHistory(
-            $shift->id,
-            'Freelancer was added to the shift as',
-            [
-                $freelancer->getNameAttribute(),
-                $shift->craft->abbreviation,
-                $shift->event->eventName,
-                $shiftQualification->name
-            ],
-            'shift'
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('shift')
+                ->setModelClass(Shift::class)
+                ->setModelId($shift->id)
+                ->setShift($shift)
+                ->setTranslationKey('Freelancer was added to the shift as')
+                ->setTranslationKeyPlaceholderValues([
+                    $freelancer->getNameAttribute(),
+                    $shift->craft->abbreviation,
+                    $shift->event->eventName,
+                    $shiftQualification->name
+                ])
         );
     }
 
@@ -237,15 +240,19 @@ class ShiftFreelancerService
 
     private function createRemovedFromShiftHistoryEntry(Shift $shift, Freelancer $freelancer): void
     {
-        $this->getNewHistoryService(Shift::class)->createHistory(
-            $shift->id,
-            'Freelancer was removed from shiftFreelancer',
-            [
-                $freelancer->getNameAttribute(),
-                $shift->craft->abbreviation,
-                $shift->event->eventName
-            ],
-            'shift'
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setType('shift')
+                ->setModelClass(Shift::class)
+                ->setModelId($shift->id)
+                ->setShift($shift)
+                ->setTranslationKey('Freelancer was removed from shift')
+                ->setTranslationKeyPlaceholderValues([
+                    $freelancer->getNameAttribute(),
+                    $shift->craft->abbreviation,
+                    $shift->event->eventName
+                ])
         );
     }
 

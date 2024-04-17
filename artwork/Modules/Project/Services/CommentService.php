@@ -5,20 +5,19 @@ namespace Artwork\Modules\Project\Services;
 use App\Models\Contract;
 use App\Models\MoneySourceFile;
 use App\Models\User;
-use App\Support\Services\NewHistoryService;
+use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectFile;
 use Artwork\Modules\Project\Repositories\CommentRepository;
 use Illuminate\Database\Eloquent\Collection;
 
-class CommentService
+readonly class CommentService
 {
     public function __construct(
-        private readonly CommentRepository $commentRepository,
-        private readonly NewHistoryService $historyService
+        private CommentRepository $commentRepository,
+        private ChangeService $changeService
     ) {
-        $this->historyService->setModel(Project::class);
     }
 
     public function create(
@@ -36,7 +35,13 @@ class CommentService
         $comment->tab_id = $tabId;
         if ($project) {
             $comment->project()->associate($project);
-            $this->historyService->createHistory($project->id, 'Comment added');
+            $this->changeService->saveFromBuilder(
+                $this->changeService
+                    ->createBuilder()
+                    ->setModelClass(Project::class)
+                    ->setModelId($project->id)
+                    ->setTranslationKey('Comment added')
+            );
         }
         if ($projectFile) {
             $comment->project_file()->associate($projectFile);
@@ -59,7 +64,14 @@ class CommentService
 
     public function delete(Comment $comment): void
     {
-        $this->historyService->createHistory($comment->project->id, 'Comment deleted');
+        $this->changeService->saveFromBuilder(
+            $this->changeService
+                ->createBuilder()
+                ->setModelClass(Project::class)
+                ->setModelId($comment->project->id)
+                ->setTranslationKey('Comment deleted')
+        );
+
         $comment->delete();
     }
 

@@ -20,7 +20,7 @@ export default {
         },
         top: {
             type: Boolean,
-            default: true
+            default: false
         }
     }
 }

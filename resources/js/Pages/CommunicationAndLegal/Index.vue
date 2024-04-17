@@ -19,7 +19,7 @@
                     <inputComponent v-model="mailForm.impressumLink" :placeholder="$t('Link to Legal Notice')"/>
                     <span v-if="showInvalidImpressumLinkErrorText"
                           class="errorText">
-                        {{ $t('Invalid URL (Example: http://google.com)') }}
+                        {{ $t('Invalid URL (Example: https://google.com)') }}
                     </span>
                 </div>
             </div>
@@ -28,7 +28,7 @@
                     <inputComponent v-model="mailForm.privacyLink" :placeholder="$t('Link to Privacy Policy')"/>
                     <span v-if="showInvalidPrivacyLinkErrorText"
                           class="errorText">
-                        {{ $t('Invalid URL (Example: http://google.com)') }}
+                        {{ $t('Invalid URL (Example: https://google.com)') }}
                     </span>
                 </div>
             </div>
@@ -94,7 +94,7 @@ export default defineComponent({
             this.showInvalidBusinessEmailAddressErrorText =
                 this.mailForm.businessEmail !== '' && !emailRegex.test(this.mailForm.businessEmail);
 
-            const urlRegex = /^http:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:[0-9]+)?(\/[^]*)?$/;
+            const urlRegex = /^https:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(:[0-9]+)?(\/[^]*)?$/;
             this.showInvalidImpressumLinkErrorText =
                 this.mailForm.impressumLink !== '' && !urlRegex.test(this.mailForm.impressumLink);
             this.showInvalidPrivacyLinkErrorText =

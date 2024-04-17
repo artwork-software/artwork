@@ -120,12 +120,6 @@
             <div v-if="form.errors?.banner" class="mt-1 text-xs text-red-500">
                 {{ $t(form.errors?.banner) }}
             </div>
-            <div class="mt-6 items-center">
-                <FormButton
-                    :text="$t('Save changes')"
-                    @click.prevent="changeLogos"
-                    />
-            </div>
         </form>
 
     </ToolSettingsHeader>
@@ -174,6 +168,7 @@ export default defineComponent({
               "image/webp",
             ]
 
+
             if (allowedTypes.includes(file?.type)) {
                 const reader = new FileReader();
 
@@ -200,6 +195,10 @@ export default defineComponent({
                     'Only logos and illustrations of the type .jpeg, .svg, .png, .webp and .gif are accepted.'
                 );
             }
+
+            setTimeout(() => {
+                this.changeLogos();
+            }, 100);
         },
         uploadDraggedBigLogo(event) {
             this.validateTypeAndUpload(event.dataTransfer.files[0], 'bigLogo');

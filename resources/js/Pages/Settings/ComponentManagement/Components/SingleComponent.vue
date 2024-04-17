@@ -13,12 +13,17 @@
         <ComponentIcons :type="component.type" />
     </div>
     <div class="text-center text-sm font-bold">
-        {{ component.name }}
-        <div class="text-[8px] text-gray-500 font-light truncate" v-if="component.data.height">
-            {{ component.data.height }} Pixel <span v-if="component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
-        </div>
-        <div class="text-[8px] text-gray-500 font-light truncate" v-if="component.data.title_size">
-            {{ component.data.title_size }} Pixel
+         <span v-if="component.special">
+                {{ $t(component.name) }}
+         </span>
+        <div v-else>
+            {{ component.name }}
+            <div class="text-[8px] text-gray-500 font-light truncate" v-if="component.data.height">
+                {{ component.data.height }} Pixel <span v-if="component.data.showLine === true">| {{ $t('Show a separator line')}}</span>
+            </div>
+            <div class="text-[8px] text-gray-500 font-light truncate" v-if="component.data.title_size">
+                {{ component.data.title_size }} Pixel
+            </div>
         </div>
     </div>
     <ConfirmDeleteModal

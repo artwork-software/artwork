@@ -812,9 +812,6 @@ class EventController extends Controller
 
     private function createRequestNotification($request, Event $event): void
     {
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
-        $this->notificationData->event = $event;
-        $this->notificationData->accepted = false;
         $room = Room::find($request->roomId);
         $admins = $room->users()->wherePivot('is_admin', true)->get();
 

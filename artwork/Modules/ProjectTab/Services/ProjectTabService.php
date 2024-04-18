@@ -26,13 +26,13 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
-class ProjectTabService
+readonly class ProjectTabService
 {
     public function __construct(
-        private readonly ShiftQualificationService $shiftQualificationService,
-        private readonly ProjectTabRepository $projectTabRepository,
-        private readonly RoomService $roomService,
-        private readonly CalendarController $calendarController
+        private ShiftQualificationService $shiftQualificationService,
+        private ProjectTabRepository $projectTabRepository,
+        private RoomService $roomService,
+        private CalendarController $calendarController
     ) {
     }
 

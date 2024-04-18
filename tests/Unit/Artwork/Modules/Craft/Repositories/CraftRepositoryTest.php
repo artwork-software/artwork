@@ -41,11 +41,14 @@ class CraftRepositoryTest extends TestCase
 
     public function testGetAll(): void
     {
-        Craft::factory()->count(3)->create();
+        $currentCount = Craft::all()->count();
+        $createCount = 3;
+
+        Craft::factory()->count($createCount)->create();
 
         $result = $this->craftRepository->getAll();
 
         $this->assertInstanceOf(Collection::class, $result);
-        $this->assertCount(3, $result);
+        $this->assertCount(($currentCount + $createCount), $result);
     }
 }

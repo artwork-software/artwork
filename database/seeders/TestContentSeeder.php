@@ -14,7 +14,6 @@ use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Comment;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Services\ProjectHistoryService;
 use Artwork\Modules\Room\Models\RoomAttribute;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Auth;
@@ -25,8 +24,6 @@ class TestContentSeeder extends Seeder
     {
         $this->seedModelsThatRequireNoRelationships();
         $this->seedRooms();
-
-        $projectHistoryService = new ProjectHistoryService();
 
         // Users
         $users = User::factory()->count(10)->create();
@@ -63,11 +60,8 @@ class TestContentSeeder extends Seeder
                 $task = Task::factory()->create([
                     'checklist_id' => $checklist->id,
                 ]);
-                $projectHistoryService->taskUpdated($task);
             }
         }
-
-        $checklists = Checklist::all();
 
         // Events
         $this->seedEvents();
@@ -113,7 +107,6 @@ class TestContentSeeder extends Seeder
 
     private function seedProjects(): void
     {
-        $projectHistoryService = new ProjectHistoryService();
         $sectors = Sector::all();
         $categories = Category::all();
         $genres = Genre::all();
@@ -136,10 +129,6 @@ class TestContentSeeder extends Seeder
             'category_id' => $categories->random()->id,
             'genre_id' => $genres->random()->id,
         ]);
-
-        $projectHistoryService->projectUpdated($project1);
-        $projectHistoryService->projectUpdated($project2);
-        $projectHistoryService->projectUpdated($project3);
     }
 
     private function seedEvents(): void

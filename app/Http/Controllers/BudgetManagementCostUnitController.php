@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\StoreBudgetManagementCostUnitRequest;
+use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\UpdateBudgetManagementCostUnitRequest;
 use Artwork\Modules\BudgetManagementCostUnit\Models\BudgetManagementCostUnit;
 use Artwork\Modules\BudgetManagementCostUnit\Services\BudgetManagementCostUnitService;
 use Illuminate\Database\Eloquent\Collection;
@@ -48,6 +49,27 @@ class BudgetManagementCostUnitController extends Controller
         return Redirect::back()->with(
             'success',
             __('flash-messages.budget-account-management.success.cost-unit.create')
+        );
+    }
+
+    public function update(
+        BudgetManagementCostUnit $budgetManagementCostUnit,
+        UpdateBudgetManagementCostUnitRequest $request
+    ): RedirectResponse {
+        try {
+            $this->budgetManagementCostUnitService->updateFromRequest($budgetManagementCostUnit, $request);
+        } catch (\Throwable $t) {
+            Log::error('Can not create budget management cost unit for reason: ' . $t->getMessage());
+
+            return Redirect::back()->with(
+                'error',
+                __('flash-messages.budget-account-management.error.cost-unit.update')
+            );
+        }
+
+        return Redirect::back()->with(
+            'success',
+            __('flash-messages.budget-account-management.success.cost-unit.update')
         );
     }
 

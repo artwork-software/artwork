@@ -3,6 +3,7 @@
 namespace Artwork\Modules\Permission\Models;
 
 use Artwork\Core\Database\Models\CanSubstituteBaseModel;
+use BadMethodCallException;
 use Carbon\Carbon;
 use Spatie\Permission\Models\Role as SpatieRole;
 
@@ -16,5 +17,17 @@ use Spatie\Permission\Models\Role as SpatieRole;
  */
 class Role extends SpatieRole implements CanSubstituteBaseModel
 {
+    public function restore(): bool
+    {
+        throw new BadMethodCallException(
+            'Implement SoftDeletes-Trait in "' . __CLASS__ . '" to use this function.'
+        );
+    }
 
+    public function restoreQuietly(): bool
+    {
+        throw new BadMethodCallException(
+            'Implement SoftDeletes-Trait in "' . __CLASS__ . '" to use this function.'
+        );
+    }
 }

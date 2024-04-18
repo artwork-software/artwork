@@ -7,6 +7,7 @@ use Artwork\Modules\Budget\Models\SubPosition;
 use Artwork\Modules\Budget\Models\SubPositionRow;
 use Artwork\Modules\Budget\Services\ColumnCellService;
 use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\StoreBudgetManagementCostUnitRequest;
+use Artwork\Modules\BudgetManagementCostUnit\Http\Requests\UpdateBudgetManagementCostUnitRequest;
 use Artwork\Modules\BudgetManagementCostUnit\Models\BudgetManagementCostUnit;
 use Artwork\Modules\BudgetManagementCostUnit\Repositories\BudgetManagementCostUnitRepository;
 use Artwork\Modules\Project\Models\Project;
@@ -50,6 +51,18 @@ readonly class BudgetManagementCostUnitService
         );
 
         $this->budgetManagementCostUnitRepository->saveOrFail($budgetManagementCostUnit);
+
+        return $budgetManagementCostUnit;
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function updateFromRequest(
+        BudgetManagementCostUnit $budgetManagementCostUnit,
+        UpdateBudgetManagementCostUnitRequest $request
+    ): BudgetManagementCostUnit {
+        $this->budgetManagementCostUnitRepository->updateOrFail($budgetManagementCostUnit, $request->validated());
 
         return $budgetManagementCostUnit;
     }

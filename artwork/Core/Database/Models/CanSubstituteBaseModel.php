@@ -2,6 +2,7 @@
 
 namespace Artwork\Core\Database\Models;
 
+// phpcs:ignoreFile
 // Exists to let models from third party interact with services/repositories
 interface CanSubstituteBaseModel
 {
@@ -12,4 +13,6 @@ interface CanSubstituteBaseModel
     public function updateOrFail();
     public function saveOrFail();
     public function save();
+    public function restore();
+    public function restoreQuietly();
 }

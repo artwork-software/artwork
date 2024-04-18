@@ -49,21 +49,25 @@ return [
         'success' => [
             'account' => [
                 'create' => 'Account successfully saved.',
+                'update' => 'Account successfully updated.',
                 'delete' => 'Account successfully deleted.'
             ],
             'cost-unit' => [
                 'create' => 'Cost unit successfully saved.',
+                'update' => 'Cost unit successfully updated.',
                 'delete' => 'Cost unit successfully deleted.'
             ]
         ],
         'error' => [
             'account' => [
                 'create' => 'Account could not be saved, please try again.',
+                'update' => 'Account could not be updated, please try again.',
                 'delete' => 'Account could not be deleted, please try again.'
             ],
             'cost_unit' => [
-                'create' => 'Cost center could not be saved, please try again.',
-                'delete' => 'Cost center could not be deleted, please try again.'
+                'create' => 'Cost unit could not be saved, please try again.',
+                'update' => 'Cost unit could not be updated, please try again.',
+                'delete' => 'Cost unit could not be deleted, please try again.'
             ]
         ]
     ]

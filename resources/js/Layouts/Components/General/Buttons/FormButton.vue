@@ -7,12 +7,13 @@ export default {
     props: {
         text: String,
         disabled: Boolean,
+        classes: String
     }
 }
 </script>
 
 <template>
-    <BaseButton :text="text" :disabled="disabled" horizontalPadding="px-24" vertical-padding="py-4" class="font-semibold" />
+    <BaseButton :classes="classes" :text="text" :disabled="disabled" horizontalPadding="px-24" vertical-padding="py-4" class="font-semibold" />
 </template>
 
 <style scoped>

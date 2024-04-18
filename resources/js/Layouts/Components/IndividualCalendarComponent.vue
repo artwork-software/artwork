@@ -1,5 +1,5 @@
 <template>
-    <div id="myCalendar" class="bg-white w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
+    <div id="myCalendar" class="bg-white min-w-[98%] w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
         <div class="w-full flex flex-wrap bg-secondaryHover ml-14">
             <div class="flex justify-center w-full bg-white">
                 <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
@@ -33,7 +33,7 @@
                         <tr class="flex w-full bg-userBg stickyHeader mb-4" :class="{'rounded-t-full': !isPageScrolled}">
                             <th :style="{minWidth: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}">
                             </th>
-                            <th v-for="room in rooms" :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth:zoomFactor * 212 + 'px'}" class="py-3  border-r-4 border-secondaryHover truncate mx-2">
+                            <th v-for="room in rooms" :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth: zoomFactor * 212 + 'px'}" class="py-3  border-r-4 border-secondaryHover truncate mx-2">
                                 <Link :style="textStyle" class="flex font-semibold items-center ml-4"
                                       :href="route('rooms.show',{room: room.id})">
                                     {{ room.name }}
@@ -169,7 +169,7 @@ export default {
             wantedRoom: null,
             roomCollisions: [],
             isFullscreen: false,
-            zoomFactor: this.$page.props.user ? this.$page.props.user.zoom_factor : 1,
+            zoomFactor: this.$page.props.user.zoom_factor ? this.$page.props.user.zoom_factor : 1,
             multiEdit: false,
             editEvents: [],
             showMultiEditModal: false,

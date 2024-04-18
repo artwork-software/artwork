@@ -109,7 +109,7 @@
                                             {{ $t(role.translation_key)}}
                                         </label>
 
-                                        <ToolTipDefault :tooltip-text="$t(role.tooltipKey)" />
+                                        <ToolTipDefault :top="true" :tooltip-text="$t(role.tooltipKey)" />
                                     </div>
                                 </div>
                             </div>
@@ -181,7 +181,7 @@
                                                 {{ $t(permission.translation_key)}}
                                             </label>
 
-                                            <ToolTipDefault :tooltip-text="$t(permission.tooltipKey)" />
+                                            <ToolTipDefault :top="true" :tooltip-text="$t(permission.tooltipKey)" />
                                         </div>
                                     </div>
                                 </div>

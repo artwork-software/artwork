@@ -90,6 +90,8 @@ export default {
                 componentType === 'CommentAllTab'
             ){
                 return '-ml-14'
+            } else {
+                return 'max-w-7xl'
             }
         }
     }

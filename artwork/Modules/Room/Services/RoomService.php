@@ -560,6 +560,9 @@ readonly class RoomService
             $roomEventsQuery->where('is_loud', false);
         }
 
+        // order $roomEventsQuery by start_time
+        $roomEventsQuery->orderBy('start_time', 'asc');
+
         $roomEventsQuery->each(function (Event $event) use (&$actualEvents, $calendarPeriod): void {
             // Erstelle einen Zeitraum für das Event, der innerhalb der gewünschten Periode liegt
             $eventStart = $event->start_time->isBefore($calendarPeriod->start) ?

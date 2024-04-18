@@ -7,6 +7,7 @@ use Artwork\Modules\Craft\Http\Requests\CraftStoreRequest;
 use Artwork\Modules\Craft\Http\Requests\CraftUpdateRequest;
 use Artwork\Modules\Craft\Models\Craft;
 use Artwork\Modules\Craft\Services\CraftService;
+use Illuminate\Database\Eloquent\Collection;
 use Tests\TestCase;
 
 class CraftServiceTest extends TestCase
@@ -21,10 +22,15 @@ class CraftServiceTest extends TestCase
 
     public function testGetAll(): void
     {
-        Craft::factory(3)->create();
+        $currentCount = $this->craftService->getAll()->count();
+        $createCount = 3;
+
+        Craft::factory($createCount)->create();
+
         $result = $this->craftService->getAll();
 
-        $this->assertCount(3, $result);
+        $this->assertInstanceOf(Collection::class, $result);
+        $this->assertCount(($currentCount + $createCount), $result);
     }
 
     public function testStoreByRequest(): void

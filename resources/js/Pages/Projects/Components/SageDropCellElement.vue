@@ -63,7 +63,7 @@ export default {
 
 <template>
     <div  @dragover="onDragOver" @drop="onDrop" @dragleave.prevent="onDragLeave">
-        {{ value}}
+        {{ value }}
     </div>
     <SageDropMultipleDataSelectModal v-if="showMultipleDataSelectModal" @close="showMultipleDataSelectModal = false" :cell-data="DataSelect" :cell="cell" type="dropOnValue"/>
 </template>

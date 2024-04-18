@@ -1731,5 +1731,6 @@
     "Expense account": "Expense account",
     "Revenue account": "Revenue account",
     "Account type": "Account type",
-    "Schedule restored": "Schedule restored"
+    "Schedule restored": "Schedule restored",
+    "Enter filter name": "Please enter a name."
 }

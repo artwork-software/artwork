@@ -74,9 +74,12 @@ class SubPosition extends Model
             ->get()
             ->groupBy('column_id')
             ->skip(3)
-            ->mapWithKeys(fn ($cells, $column_id) => [
+            ->mapWithKeys(fn (Collection $cells, $column_id) => [
                 $column_id => [
-                    'sum' => $cells->sum('value'),
+                    //replace , with . to cast properly to float
+                    'sum' => $cells->sum(
+                        fn (ColumnCell $columnCell) => floatval(str_replace(',', '.', $columnCell->value))
+                    ),
                     'hasComments' => isset($sumDetails[$column_id]) &&
                         $sumDetails[$column_id]->comments_count > 0,
                     'hasMoneySource' => isset($sumDetails[$column_id]) &&

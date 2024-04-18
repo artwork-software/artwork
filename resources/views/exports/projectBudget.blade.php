@@ -58,7 +58,7 @@
                             @if($columnCell->column->type === "empty")
                                 {{ $columnCell->value }}
                             @elseif($columnCell->column->type === "sage")
-                                {{ $columnCell->sage_value }}
+                                {{ $columnCell->sage_value ?: 0 }}
                             @else
                                 {{
                                     $formulaService->createFormula(
@@ -78,19 +78,19 @@
             <tr>
                 <td style="background-color: #CECDD8;" colspan="3"></td>
                 <td style="background-color: #CECDD8;" align="right">SUM</td>
-                    @foreach($subPositionRowSumCellsCollection as $columnId => $subPositionRowSumCells)
-                        @continue($loop->index <= 2)
-                            @php
-                                $subPositionSumCellsCollection[$columnId][] = $formulaService->determineExcelColumn(
-                                      $data['budgetTable']->columns,
-                                      $columnId,
-                                      $currentRowCount,
-                                );
-                            @endphp
-                            <td style="background-color: #CECDD8;">
-                                {{ $formulaService->createColumnSumRangeFormula($subPositionRowSumCells) }}
-                            </td>
-                    @endforeach
+                @foreach($subPositionRowSumCellsCollection as $columnId => $subPositionRowSumCells)
+                    @continue($loop->index <= 2)
+                    @php
+                        $subPositionSumCellsCollection[$columnId][] = $formulaService->determineExcelColumn(
+                              $data['budgetTable']->columns,
+                              $columnId,
+                              $currentRowCount,
+                        );
+                    @endphp
+                    <td style="background-color: #CECDD8;">
+                        {{ $formulaService->createColumnSumRangeFormula($subPositionRowSumCells) }}
+                    </td>
+                @endforeach
             </tr>
             @php $currentRowCount++; @endphp
         @endforeach
@@ -178,7 +178,7 @@
                             @if($columnCell->column->type === "empty")
                                 {{ $columnCell->value }}
                             @elseif($columnCell->column->type === "sage")
-                                {{ $columnCell->sage_value }}
+                                {{ $columnCell->sage_value ?: 0 }}
                             @else
                                 {{
                                     $formulaService->createFormula(

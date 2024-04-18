@@ -12,7 +12,6 @@ use App\Models\User;
 use Artwork\Modules\Change\Services\ChangeService;
 use Artwork\Modules\Checklist\Models\Checklist;
 use Artwork\Modules\Project\Models\Project;
-use Artwork\Modules\Project\Services\ProjectHistoryService;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -57,8 +56,7 @@ class TaskController extends Controller
     }
 
     public function store(
-        StoreTaskRequest $request,
-        ProjectHistoryService $projectHistoryService
+        StoreTaskRequest $request
     ): JsonResponse|RedirectResponse {
         $checklist = Checklist::where('id', $request->checklist_id)->first();
         $authorized = false;
@@ -68,13 +66,13 @@ class TaskController extends Controller
         $isAdmin = Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value);
         if ($isAdmin || $isManager) {
             $authorized = true;
-            $this->createTask($request, $projectHistoryService);
+            $this->createTask($request);
         } else {
             foreach ($checklist->users()->get() as $user) {
                 if ($user->id === Auth::id()) {
                     if ($created === false) {
                         $authorized = true;
-                        $this->createTask($request, $projectHistoryService);
+                        $this->createTask($request);
                         $created = true;
                     }
                 }
@@ -118,7 +116,7 @@ class TaskController extends Controller
         }
     }
 
-    private function createTask(StoreTaskRequest $request, ProjectHistoryService $projectHistoryService): void
+    private function createTask(StoreTaskRequest $request): void
     {
         $task = Task::create([
             'name' => $request->name,
@@ -139,8 +137,6 @@ class TaskController extends Controller
         $checklistUsers = $checklist->users()->get();
 
         $task->task_users()->syncWithoutDetaching(collect($checklistUsers)->pluck('id'));
-
-        $projectHistoryService->taskUpdated($task);
     }
 
     public function edit(Task $task): Response|ResponseFactory
@@ -205,14 +201,13 @@ class TaskController extends Controller
         }
     }
 
-    public function updateOrder(Request $request, ProjectHistoryService $projectHistoryService): RedirectResponse
+    public function updateOrder(Request $request): RedirectResponse
     {
         $firstTask = Task::findOrFail($request->tasks[0]['id']);
 
         foreach ($request->tasks as $task) {
             Task::findOrFail($task['id'])->update(['order' => $task['order']]);
         }
-        $projectHistoryService->taskUpdated($firstTask);
 
         return Redirect::back();
     }

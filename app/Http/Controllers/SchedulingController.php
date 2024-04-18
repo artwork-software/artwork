@@ -71,7 +71,6 @@ class SchedulingController extends Controller
     //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     public function sendDeadlineNotification(): void
     {
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_REMINDER;
         // Deadline Notification
         $checklists = Checklist::all();
         $taskWithReachedDeadline = [];
@@ -199,7 +198,7 @@ class SchedulingController extends Controller
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'error',
-                        'message' => $this->notificationData->title
+                        'message' => $notificationTitle
                     ];
                     $this->notificationService->setTitle($notificationTitle);
                     $this->notificationService->setIcon('red');

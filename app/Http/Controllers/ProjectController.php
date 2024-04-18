@@ -55,7 +55,6 @@ use Artwork\Modules\Department\Models\Department;
 use Artwork\Modules\Event\Models\Event;
 use Artwork\Modules\Project\Models\Project;
 use Artwork\Modules\Project\Models\ProjectStates;
-use Artwork\Modules\Project\Services\ProjectHistoryService;
 use Artwork\Modules\Project\Services\ProjectService;
 use Artwork\Modules\ProjectTab\Models\ProjectTab;
 use Artwork\Modules\ProjectTab\Services\ProjectTabService;
@@ -1699,127 +1698,124 @@ class ProjectController extends Controller
 
         $projectTabComponents = $projectTab->components()->with('component')->get();
 
-        // merge the sidebar components with the project tab components
-        $sidebarComponents = $projectTab->sidebarTabs
-            ->map(fn ($sidebarTab) => $sidebarTab->componentsInSidebar)
-            ->flatten()
-            ->unique('id');
+        //concat sidebar components with project tab components
+        $projectTabComponents = $projectTabComponents->concat(
+            $projectTab->sidebarTabs
+                ->map(fn ($sidebarTab) => $sidebarTab->componentsInSidebar)
+                ->flatten()
+                ->unique('id')
+        );
 
-        $projectTabComponents = $projectTabComponents->concat($sidebarComponents);
+        foreach ($projectTabComponents as $componentInTab) {
+            $component = $componentInTab->component;
+            if ($component->type === TabComponentEnums::CHECKLIST->value) {
+                $headerObject = $this->checklistService->getProjectChecklists(
+                    $project,
+                    $headerObject,
+                    $componentInTab
+                );
+            }
 
-        if ($projectTabComponents->isNotEmpty()) {
-            foreach ($projectTabComponents as $componentInTab) {
-                $component = $componentInTab->component;
-                if ($component->type === TabComponentEnums::CHECKLIST->value) {
-                    $headerObject = $this->checklistService->getProjectChecklists(
-                        $project,
-                        $headerObject,
-                        $componentInTab
-                    );
-                }
+            if ($component->type === TabComponentEnums::CHECKLIST_ALL->value) {
+                $headerObject = $this->checklistService->getProjectChecklistsAll($project, $headerObject);
+            }
 
-                if ($component->type === TabComponentEnums::CHECKLIST_ALL->value) {
-                    $headerObject = $this->checklistService->getProjectChecklistsAll($project, $headerObject);
-                }
+            if ($component->type === TabComponentEnums::COMMENT_TAB->value) {
+                $headerObject->project->comments = $project->comments()->whereIn('tab_id', $componentInTab->scope)
+                    ->with('user')->get();
+            }
 
-                if ($component->type === TabComponentEnums::COMMENT_TAB->value) {
-                    $headerObject->project->comments = $project->comments()->whereIn('tab_id', $componentInTab->scope)
-                        ->with('user')->get();
-                }
+            if ($component->type === TabComponentEnums::COMMENT_ALL_TAB->value) {
+                $headerObject->project->comments_all = $project->comments()->with('user')->get();
+            }
 
-                if ($component->type === TabComponentEnums::COMMENT_ALL_TAB->value) {
-                    $headerObject->project->comments_all = $project->comments()->with('user')->get();
-                }
+            if ($component->type === TabComponentEnums::PROJECT_DOCUMENTS->value) {
+                $headerObject->project->project_files_tab = $project
+                    ->project_files()
+                    ->whereIn('tab_id', $componentInTab->scope)
+                    ->get();
+            }
 
-                if ($component->type === TabComponentEnums::PROJECT_DOCUMENTS->value) {
-                    $headerObject->project->project_files_tab = $project
-                        ->project_files()
-                        ->whereIn('tab_id', $componentInTab->scope)
-                        ->get();
-                }
+            if ($component->type === TabComponentEnums::PROJECT_ALL_DOCUMENTS->value) {
+                $headerObject->project->project_files_all = $project->project_files;
+            }
 
-                if ($component->type === TabComponentEnums::PROJECT_ALL_DOCUMENTS->value) {
-                    $headerObject->project->project_files_all = $project->project_files;
-                }
+            if ($component->type === TabComponentEnums::PROJECT_STATUS->value) {
+                $headerObject->project->state = ProjectStates::find($project->state);
+            }
 
-                if ($component->type === TabComponentEnums::PROJECT_STATUS->value) {
-                    $headerObject->project->state = ProjectStates::find($project->state);
-                }
+            if ($component->type === TabComponentEnums::PROJECT_TEAM->value) {
+                $relationsToLoad->push(['categories',
+                    'departments.users.departments',
+                    'managerUsers',
+                    'writeUsers',
+                    'users.departments',
+                    'delete_permission_users']);
 
-                if ($component->type === TabComponentEnums::PROJECT_TEAM->value) {
-                    $relationsToLoad->push(['categories',
-                        'departments.users.departments',
-                        'managerUsers',
-                        'writeUsers',
-                        'users.departments',
-                        'delete_permission_users']);
-
-                    // add value project_management if project user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value)
-                    // is true to the headerObject for the ProjectShowHeaderComponent
+                // add value project_management if project user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value)
+                // is true to the headerObject for the ProjectShowHeaderComponent
 
 
-                    $headerObject->project->usersArray = $project->users->map(fn (User $user) => [
-                            'id' => $user->id,
-                            'first_name' => $user->first_name,
-                            'last_name' => $user->last_name,
-                            'profile_photo_url' => $user->profile_photo_url,
-                            'email' => $user->email,
-                            'departments' => $user->departments,
-                            'position' => $user->position,
-                            'business' => $user->business,
-                            'phone_number' => $user->phone_number,
-                            'project_management' => $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
-                            'pivot_access_budget' => (bool)$user->pivot?->access_budget,
-                            'pivot_is_manager' => (bool)$user->pivot?->is_manager,
-                            'pivot_can_write' => (bool)$user->pivot?->can_write,
-                            'pivot_delete_permission' => (bool)$user->pivot?->delete_permission,
-                        ]);
+                $headerObject->project->usersArray = $project->users->map(fn (User $user) => [
+                        'id' => $user->id,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'profile_photo_url' => $user->profile_photo_url,
+                        'email' => $user->email,
+                        'departments' => $user->departments,
+                        'position' => $user->position,
+                        'business' => $user->business,
+                        'phone_number' => $user->phone_number,
+                        'project_management' => $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
+                        'pivot_access_budget' => (bool)$user->pivot?->access_budget,
+                        'pivot_is_manager' => (bool)$user->pivot?->is_manager,
+                        'pivot_can_write' => (bool)$user->pivot?->can_write,
+                        'pivot_delete_permission' => (bool)$user->pivot?->delete_permission,
+                    ]);
 
-                    $headerObject->project->departments = DepartmentIndexResource::collection(
-                        $project->departments
-                    )->resolve();
-                    $headerObject->project->project_managers = $project->managerUsers;
-                    $headerObject->project->write_auth = $project->writeUsers;
-                    $headerObject->project->delete_permission_users = $project->delete_permission_users;
-                }
+                $headerObject->project->departments = DepartmentIndexResource::collection(
+                    $project->departments
+                )->resolve();
+                $headerObject->project->project_managers = $project->managerUsers;
+                $headerObject->project->write_auth = $project->writeUsers;
+                $headerObject->project->delete_permission_users = $project->delete_permission_users;
+            }
 
-                if ($component->type === TabComponentEnums::CALENDAR->value) {
-                    $loadedProjectInformation['CalendarTab'] = $projectTabService->getCalendarTab($project);
-                }
+            if ($component->type === TabComponentEnums::CALENDAR->value) {
+                $loadedProjectInformation['CalendarTab'] = $projectTabService->getCalendarTab($project);
+            }
 
-                if ($component->type === TabComponentEnums::BUDGET->value) {
-                    $loadedProjectInformation = $this->budgetService->getBudgetForProjectTab(
-                        project: $project,
-                        loadedProjectInformation: $loadedProjectInformation,
-                        sageAssignedDataCommentService: $sageAssignedDataCommentService,
-                    );
-                }
+            if ($component->type === TabComponentEnums::BUDGET->value) {
+                $loadedProjectInformation = $this->budgetService->getBudgetForProjectTab(
+                    project: $project,
+                    loadedProjectInformation: $loadedProjectInformation,
+                    sageAssignedDataCommentService: $sageAssignedDataCommentService,
+                );
+            }
 
-                if ($component->type === TabComponentEnums::SHIFT_TAB->value) {
-                    $headerObject->project->shift_relevant_event_types = $project->shiftRelevantEventTypes;
-                    $headerObject->project->shift_contacts = $project->shift_contact;
-                    $headerObject->project->project_managers = $project->managerUsers;
-                    $headerObject->project->shiftDescription = $project->shift_description;
-                    $headerObject->project->freelancers = Freelancer::all();
-                    $headerObject->project->serviceProviders = ServiceProvider::without(['contacts'])->get();
+            if ($component->type === TabComponentEnums::SHIFT_TAB->value) {
+                $headerObject->project->shift_relevant_event_types = $project->shiftRelevantEventTypes;
+                $headerObject->project->shift_contacts = $project->shift_contact;
+                $headerObject->project->project_managers = $project->managerUsers;
+                $headerObject->project->shiftDescription = $project->shift_description;
+                $headerObject->project->freelancers = Freelancer::all();
+                $headerObject->project->serviceProviders = ServiceProvider::without(['contacts'])->get();
 
-                    $loadedProjectInformation["ShiftTab"] = $this->projectTabService->getShiftTab($project);
-                }
+                $loadedProjectInformation["ShiftTab"] = $this->projectTabService->getShiftTab($project);
+            }
 
-                if ($component->type === TabComponentEnums::SHIFT_CONTACT_PERSONS->value) {
-                    $headerObject->project->shift_contacts = $project->shift_contact;
-                    $headerObject->project->project_managers = $project->managerUsers;
-                }
+            if ($component->type === TabComponentEnums::SHIFT_CONTACT_PERSONS->value) {
+                $headerObject->project->shift_contacts = $project->shift_contact;
+                $headerObject->project->project_managers = $project->managerUsers;
+            }
 
-                if ($component->type === TabComponentEnums::BUDGET_INFORMATIONS->value) {
-                    $loadedProjectInformation = $this->budgetService->getBudgetInformationsForProjectTab(
-                        $project,
-                        $loadedProjectInformation
-                    );
-                }
+            if ($component->type === TabComponentEnums::BUDGET_INFORMATIONS->value) {
+                $loadedProjectInformation = $this->budgetService->getBudgetInformationsForProjectTab(
+                    $project,
+                    $loadedProjectInformation
+                );
             }
         }
-
 
         if (!$project->is_group) {
             $group = DB::table('project_groups')
@@ -1835,13 +1831,13 @@ class ProjectController extends Controller
             $groupOutput = '';
         }
 
-
         // add History to the header object for the ProjectShowHeaderComponent in $headerObject->project
         $historyArray = [];
         $historyComplete = $project->historyChanges()->all();
 
+        $headerObject->project_history = [];
         foreach ($historyComplete as $history) {
-            $historyArray[] = [
+            $headerObject->project_history[] = [
                 'changes' => json_decode($history->changes, false, 512, JSON_THROW_ON_ERROR),
                 'created_at' => $history->created_at->diffInHours() < 24
                     ? $history->created_at->diffForHumans()
@@ -1849,7 +1845,6 @@ class ProjectController extends Controller
             ];
         }
 
-        $headerObject->project->project_history = $historyArray;
         $headerObject->firstEventInProject = $project
             ->events()
             ->orderBy('start_time', 'ASC')
@@ -1883,11 +1878,8 @@ class ProjectController extends Controller
         $headerObject->projectGenreIds = $project->genres()->pluck('genre_id');
         $headerObject->projectSectorIds = $project->sectors()->pluck('sector_id');
 
-        $dataObject = new stdClass();
-        $dataObject->currentTab = $projectTab;
-
         return inertia('Projects/Tab/TabContent', [
-            'dataObject' => $dataObject,
+            'currentTab' => $projectTab,
             'headerObject' => $headerObject,
             'loadedProjectInformation' => $loadedProjectInformation,
             'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id,
@@ -2012,21 +2004,16 @@ class ProjectController extends Controller
     public function updateAttributes(Request $request, Project $project): JsonResponse|RedirectResponse
     {
         $oldProjectCategories = $project->categories()->get();
-        $oldProjectGenres = $project->genres()->get();
-        $oldProjectSectors = $project->sectors()->get();
-
         $project->categories()->sync($request->assignedCategoryIds);
+        $this->checkProjectCategoryChanges($project->id, $oldProjectCategories, $project->categories()->get());
+
+        $oldProjectGenres = $project->genres()->get();
         $project->genres()->sync($request->assignedGenreIds);
+        $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $project->genres()->get());
+
+        $oldProjectSectors = $project->sectors()->get();
         $project->sectors()->sync($request->assignedSectorIds);
-
-        $newProjectGenres = $project->genres()->get();
-        $newProjectSectors = $project->sectors()->get();
-        $newProjectCategories = $project->sectors()->get();
-
-        // history functions
-        $this->checkProjectCategoryChanges($project->id, $oldProjectCategories, $newProjectCategories);
-        $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $newProjectGenres);
-        $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $newProjectSectors);
+        $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $project->sectors()->get());
 
         return Redirect::back();
     }
@@ -2115,6 +2102,7 @@ class ProjectController extends Controller
                         ->setModelClass(Project::class)
                         ->setModelId($projectId)
                         ->setTranslationKey('Added genre')
+                        ->setTranslationKeyPlaceholderValues([$newGenre->name])
                 );
             }
         }
@@ -2128,6 +2116,7 @@ class ProjectController extends Controller
                         ->setModelClass(Project::class)
                         ->setModelId($projectId)
                         ->setTranslationKey('Deleted genre')
+                        ->setTranslationKeyPlaceholderValues([$oldGenreNames[$oldGenreId]])
                 );
             }
         }
@@ -2490,7 +2479,6 @@ class ProjectController extends Controller
 
     public function duplicate(
         Project $project,
-        ProjectHistoryService $projectHistoryService,
         ProjectTabService $projectTabService
     ) {
         // authorization
@@ -2519,7 +2507,6 @@ class ProjectController extends Controller
             'cost_center' => $project->cost_center,
             'state' => $project->state,
         ]);
-        $projectHistoryService->projectUpdated($newProject);
 
         $this->budgetService->generateBasicBudgetValues($newProject);
 
@@ -2529,8 +2516,6 @@ class ProjectController extends Controller
         $newProject->genres()->sync($project->genres->pluck('id'));
         $newProject->departments()->sync($project->departments->pluck('id'));
         $newProject->users()->sync($project->users->pluck('id'));
-
-        $projectHistoryService->updateHistory($project, config('history.project.duplicated'));
 
         if ($projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent()) {
             return Redirect::route('projects.tab', [$newProject->id, $projectTab->id]);

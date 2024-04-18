@@ -90,6 +90,8 @@ export default {
                 componentType === 'CommentAllTab'
             ){
                 return '-ml-14'
+            } else {
+                return 'max-w-7xl'
             }
         }
     }
@@ -99,35 +101,38 @@ export default {
 <template>
     <ProjectHeaderComponent :header-object="headerObject" :project="headerObject.project">
         <div class="my-10 w-full">
-            <div v-for="component in dataObject.currentTab.components"  :class="removeML(component.component?.type)">
-                <Component
-                    v-if="this.$canSeeComponent(component.component)"
-                    :can-edit-component="this.$canEditComponent(component.component)"
-                    :project="headerObject.project"
-                    :in-sidebar="false"
-                    :is="component.component?.type"
-                    :loadedProjectInformation="loadedProjectInformation"
-                    :header-object="headerObject"
-                    :data="component.component"
-                    :project-id="headerObject.project.id"
-                    :projectCategories="headerObject.projectCategories"
-                    :projectGenres="headerObject.projectGenres"
-                    :projectSectors="headerObject.projectSectors"
-                    :categories="headerObject.categories"
-                    :sectors="headerObject.sectors"
-                    :genres="headerObject.genres"
-                    :projectCategoryIds="headerObject.projectCategoryIds"
-                    :projectGenreIds="headerObject.projectGenreIds"
-                    :projectSectorIds="headerObject.projectSectorIds"
-                    :eventTypes="headerObject.eventTypes"
-                    :opened_checklists="headerObject.project?.opened_checklists"
-                    :projectManagerIds="headerObject.projectManagerIds"
-                    :tab_id="dataObject.currentTab.id"
-                    :first_project_tab_id="this.first_project_tab_id"
-                    :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
-                    :first_project_budget_tab_id="this.first_project_budget_tab_id"
-                />
+            <div>
+                <div v-for="component in dataObject.currentTab.components"  :class="removeML(component.component?.type)">
+                    <Component
+                        v-if="this.$canSeeComponent(component.component)"
+                        :can-edit-component="this.$canEditComponent(component.component)"
+                        :project="headerObject.project"
+                        :in-sidebar="false"
+                        :is="component.component?.type"
+                        :loadedProjectInformation="loadedProjectInformation"
+                        :header-object="headerObject"
+                        :data="component.component"
+                        :project-id="headerObject.project.id"
+                        :projectCategories="headerObject.projectCategories"
+                        :projectGenres="headerObject.projectGenres"
+                        :projectSectors="headerObject.projectSectors"
+                        :categories="headerObject.categories"
+                        :sectors="headerObject.sectors"
+                        :genres="headerObject.genres"
+                        :projectCategoryIds="headerObject.projectCategoryIds"
+                        :projectGenreIds="headerObject.projectGenreIds"
+                        :projectSectorIds="headerObject.projectSectorIds"
+                        :eventTypes="headerObject.eventTypes"
+                        :opened_checklists="headerObject.project?.opened_checklists"
+                        :projectManagerIds="headerObject.projectManagerIds"
+                        :tab_id="dataObject.currentTab.id"
+                        :first_project_tab_id="this.first_project_tab_id"
+                        :first_project_calendar_tab_id="this.first_project_calendar_tab_id"
+                        :first_project_budget_tab_id="this.first_project_budget_tab_id"
+                    />
+                </div>
             </div>
+            <!-- Content goes here -->
         </div>
 
 

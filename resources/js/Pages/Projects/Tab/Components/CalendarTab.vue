@@ -1,6 +1,6 @@
 <template>
     <div class="mt-6 bg-lightBackgroundGray">
-        <div class="mt-6 max-w-screen-2xl bg-lightBackgroundGray">
+        <div class="mt-6 bg-lightBackgroundGray">
             <div v-if="calendarType && calendarType === 'daily'">
                 Daily
                 <CalendarComponent

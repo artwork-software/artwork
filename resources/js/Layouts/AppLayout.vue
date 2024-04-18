@@ -18,12 +18,11 @@
                                 </div>
                             </div>
                             <div class="font-bold text-secondaryHover block">
-                                <img :src="$page.props.small_logo"
-                                     :class="fullSidenav ? 'h-fit w-12' : 'h-fit w-16'" alt="artwork-logo"/>
+                                <img :src="$page.props.small_logo" :class="fullSidenav ? 'h-fit w-12' : 'h-fit w-16'" alt="artwork-logo"/>
                             </div>
                         </div>
                         <div v-if="fullSidenav" class="ml-4">
-                            <img src="/Svgs/Logos/artwork_logo_white.svg"/>
+                            <img :src="$page.props.big_logo" :class="fullSidenav ? 'h-fit w-12' : 'h-fit w-16'" alt="artwork-logo"/>
                         </div>
                     </div>
 

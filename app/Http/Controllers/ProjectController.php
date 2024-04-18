@@ -1670,15 +1670,14 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($project->id);
     }
 
-    //@todo: fix phpcs error - refactor function because complexity is rising
-    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
     /**
      * @throws JsonException
      */
+    //@todo: fix phpcs error - refactor function because complexity is rising
+    //phpcs:ignore Generic.Metrics.CyclomaticComplexity.MaxExceeded
     public function projectTab(
         Project $project,
         ProjectTab $projectTab,
-        ProjectTabService $projectTabService,
         SageAssignedDataCommentService $sageAssignedDataCommentService
     ): Response|ResponseFactory {
         $headerObject = new stdClass(); // needed for the ProjectShowHeaderComponent
@@ -1782,7 +1781,7 @@ class ProjectController extends Controller
             }
 
             if ($component->type === TabComponentEnums::CALENDAR->value) {
-                $loadedProjectInformation['CalendarTab'] = $projectTabService->getCalendarTab($project);
+                $loadedProjectInformation['CalendarTab'] = $this->projectTabService->getCalendarTab($project);
             }
 
             if ($component->type === TabComponentEnums::BUDGET->value) {
@@ -1882,9 +1881,10 @@ class ProjectController extends Controller
             'currentTab' => $projectTab,
             'headerObject' => $headerObject,
             'loadedProjectInformation' => $loadedProjectInformation,
-            'first_project_tab_id' => $projectTabService->findFirstProjectTab()?->id,
-            'first_project_calendar_tab_id' => $projectTabService->findFirstProjectTabWithCalendarComponent()?->id,
-            'first_project_budget_tab_id' => $projectTabService->findFirstProjectTabWithBudgetComponent()?->id
+            'first_project_tab_id' => $this->projectTabService->findFirstProjectTab()?->id,
+            'first_project_calendar_tab_id' => $this->projectTabService
+                ->findFirstProjectTabWithCalendarComponent()?->id,
+            'first_project_budget_tab_id' => $this->projectTabService->findFirstProjectTabWithBudgetComponent()?->id
         ]);
     }
 
@@ -2477,10 +2477,8 @@ class ProjectController extends Controller
         }
     }
 
-    public function duplicate(
-        Project $project,
-        ProjectTabService $projectTabService
-    ) {
+    public function duplicate(Project $project): JsonResponse|RedirectResponse
+    {
         // authorization
         if ($project->users->isNotEmpty() || !Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             if (
@@ -2517,7 +2515,7 @@ class ProjectController extends Controller
         $newProject->departments()->sync($project->departments->pluck('id'));
         $newProject->users()->sync($project->users->pluck('id'));
 
-        if ($projectTab = $projectTabService->findFirstProjectTabWithShiftsComponent()) {
+        if ($projectTab = $this->projectTabService->findFirstProjectTabWithShiftsComponent()) {
             return Redirect::route('projects.tab', [$newProject->id, $projectTab->id]);
         }
 

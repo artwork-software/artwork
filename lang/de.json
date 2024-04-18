@@ -1731,5 +1731,6 @@
     "Expense account": "Ausgabekonto",
     "Revenue account": "Einnahmekonto",
     "Account type": "Kontotyp",
-    "Schedule restored": "Termin wiederhergestellt"
+    "Schedule restored": "Termin wiederhergestellt",
+    "Enter filter name": "Bitte Name eingeben."
 }

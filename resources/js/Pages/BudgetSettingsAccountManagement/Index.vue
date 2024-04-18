@@ -98,8 +98,8 @@
                 </div>
                 <div class="flex flex-col"
                      v-for="account in this.filteredAccounts">
-                    <!-- If not edit for given account -->
                     <div class="flex flex-row items-center">
+                        <!-- If not edit for given account -->
                         <div v-if="this.accountIdToEdit !== account.id" class="flex flex-row">
                             <span class="w-56 text-wrap break-words mr-2">{{ account.account_number }}</span>
                             <span class="w-96 text-wrap break-words mr-2">{{ account.title }}</span>
@@ -185,13 +185,13 @@
                 </div>
                 <div class="flex flex-col"
                      v-for="cost_unit in this.filteredCostUnits">
-                    <!-- If not edit for given account -->
                     <div class="flex flex-row items-center">
+                        <!-- If not edit for given cost_unit -->
                         <div v-if="this.costUnitIdToEdit !== cost_unit.id" class="flex flex-row">
                             <span class="w-56 text-wrap break-words mr-2">{{ cost_unit.cost_unit_number }}</span>
                             <span class="w-96 text-wrap break-words">{{ cost_unit.title }}</span>
                         </div>
-                        <!-- if account is edited -->
+                        <!-- if cost_unit is edited -->
                         <div v-if="this.costUnitIdToEdit === cost_unit.id" class="flex flex-row items-center">
                             <span class="w-56 mr-2">
                                 <input-component v-model="this.editCostUnitForm.cost_unit_number"
@@ -204,7 +204,7 @@
                                 />
                             </span>
                         </div>
-                        <!-- only display edit/trash icons if no account is edited currently -->
+                        <!-- only display edit/trash icons if no cost_unit is edited currently -->
                         <div v-if="this.costUnitIdToEdit === null"
                              class="flex flex-row items-center">
                             <IconEdit class="w-5 h-5 hover:text-error cursor-pointer"
@@ -213,7 +213,7 @@
                                        @click="this.showRemoveConfirmModal(cost_unit, 'cost_unit')"
                             />
                         </div>
-                        <!-- only display save/x icons if current account is edited -->
+                        <!-- only display save/x icons if current cost_unit is edited -->
                         <div v-if="this.costUnitIdToEdit === cost_unit.id" class="flex flex-row items-center ml-2">
                             <IconDeviceFloppy @click="this.saveCostUnitEdit()"
                                               class="w-5 h-5 hover:text-error cursor-pointer"
